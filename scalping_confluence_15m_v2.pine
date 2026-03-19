@@ -1,0 +1,262 @@
+// ============================================================
+// SCALPING CONFLUENCE INDICATOR v2.0
+// 15 Dakikalık Kripto Scalping — Repaint-free, Zaman Dilimi İyileştirilmiş
+// Değişiklikler: lookahead_off (repaint yok), 1h+2h trend (4h yerine)
+// ============================================================
+//@version=5
+indicator("Scalping Confluence [15M] v2", overlay=true, max_lines_count=100, max_labels_count=100)
+
+// ─────────────────────────────────────────────
+// AYARLAR
+// ─────────────────────────────────────────────
+
+// Trend (v2: 4h yerine 2h — scalping için daha uyumlu)
+htf          = input.timeframe("60",  "Üst Zaman Dilimi (Trend)",   group="📈 Trend")
+htf2         = input.timeframe("120", "2. Üst Zaman Dilimi (2h)",   group="📈 Trend")
+
+// EMA
+ema_fast_len = input.int(9,   "Hızlı EMA",  group="📊 EMA")
+ema_slow_len = input.int(21,  "Yavaş EMA",  group="📊 EMA")
+ema_trend_len= input.int(50,  "Trend EMA",  group="📊 EMA")
+
+// RSI
+rsi_len      = input.int(14,  "RSI Periyot",  group="⚡ RSI")
+rsi_ob       = input.int(70,  "Aşırı Alım",   group="⚡ RSI")
+rsi_os       = input.int(30,  "Aşırı Satım",  group="⚡ RSI")
+
+// MACD
+macd_fast    = input.int(12,  "MACD Hızlı",   group="📉 MACD")
+macd_slow    = input.int(26,  "MACD Yavaş",   group="📉 MACD")
+macd_signal  = input.int(9,   "MACD Sinyal",  group="📉 MACD")
+
+// Hacim
+vol_ma_len   = input.int(20,  "Hacim MA Periyot", group="📦 Hacim")
+vol_mult     = input.float(1.5, "Hacim Çarpanı (x ortalamanın kaç katı)", group="📦 Hacim", step=0.1)
+
+// Yapı (Structure) — v2: 4'e düşürüldü (daha hızlı tepki)
+struct_len   = input.int(4,   "Swing Uzunluğu (HH/LL tespiti)", group="🏗️ Yapı")
+
+// Risk / Confluence
+min_conf     = input.int(3,   "Min Confluence Sayısı (1-6)", group="⚖️ Risk", minval=1, maxval=6)
+atr_mult_sl  = input.float(1.5,"Stop: ATR Çarpanı",           group="⚖️ Risk", step=0.1)
+rr_ratio     = input.float(2.0,"Hedef R:R Oranı",             group="⚖️ Risk", step=0.1)
+
+// Görsel
+show_ema     = input.bool(true,  "EMA Çizgileri",    group="🎨 Görsel")
+show_signals = input.bool(true,  "Al/Sat Sinyalleri", group="🎨 Görsel")
+show_sl_tp   = input.bool(true,  "SL / TP Seviyeleri",group="🎨 Görsel")
+show_table   = input.bool(true,  "Confluence Tablosu",group="🎨 Görsel")
+
+// ─────────────────────────────────────────────
+// HESAPLAMALAR
+// ─────────────────────────────────────────────
+
+// ATR
+atr14 = ta.atr(14)
+
+// EMA
+ema_fast  = ta.ema(close, ema_fast_len)
+ema_slow  = ta.ema(close, ema_slow_len)
+ema_trend = ta.ema(close, ema_trend_len)
+
+// RSI
+rsi = ta.rsi(close, rsi_len)
+
+// MACD
+[macd_line, signal_line, hist] = ta.macd(close, macd_fast, macd_slow, macd_signal)
+
+// Hacim MA
+vol_ma   = ta.sma(volume, vol_ma_len)
+high_vol = volume >= vol_ma * vol_mult
+
+// ─────────────────────────────────────────────
+// ÜST ZAMAN DİLİMİ TREND (v2: REPAINT-FREE)
+// barmerge.lookahead_off = sadece kapanan HTF bar verisi kullan
+// gaps_off = boş bar yok, önceki değer taşınır
+// ─────────────────────────────────────────────
+
+htf_close  = request.security(syminfo.tickerid, htf,  close,  barmerge.gaps_off, barmerge.lookahead_off)
+htf2_close = request.security(syminfo.tickerid, htf2, close,  barmerge.gaps_off, barmerge.lookahead_off)
+htf_ema50  = request.security(syminfo.tickerid, htf,  ta.ema(close, 50), barmerge.gaps_off, barmerge.lookahead_off)
+htf2_ema50 = request.security(syminfo.tickerid, htf2, ta.ema(close, 50), barmerge.gaps_off, barmerge.lookahead_off)
+
+htf_bull  = htf_close  > htf_ema50
+htf2_bull = htf2_close > htf2_ema50
+htf_bear  = htf_close  < htf_ema50
+htf2_bear = htf2_close < htf2_ema50
+
+trend_bull = htf_bull and htf2_bull
+trend_bear = htf_bear and htf2_bear
+
+// ─────────────────────────────────────────────
+// YÜKSEK / DÜŞÜK YAPI (HH, HL, LH, LL)
+// ─────────────────────────────────────────────
+
+swing_high = ta.pivothigh(high, struct_len, struct_len)
+swing_low  = ta.pivotlow (low,  struct_len, struct_len)
+
+var float last_sh = na
+var float last_sl = na
+var float prev_sh = na
+var float prev_sl = na
+
+if not na(swing_high)
+    prev_sh := last_sh
+    last_sh := swing_high
+if not na(swing_low)
+    prev_sl := last_sl
+    last_sl := swing_low
+
+struct_bull = not na(last_sh) and not na(prev_sh) and not na(last_sl) and not na(prev_sl) and
+             last_sh > prev_sh and last_sl > prev_sl
+
+struct_bear = not na(last_sh) and not na(prev_sh) and not na(last_sl) and not na(prev_sl) and
+             last_sh < prev_sh and last_sl < prev_sl
+
+// ─────────────────────────────────────────────
+// DESTEK / DİRENÇ (Yakın swing seviyeleri)
+// ─────────────────────────────────────────────
+
+near_support  = not na(last_sl) and math.abs(close - last_sl) / close < 0.005
+near_resist   = not na(last_sh) and math.abs(close - last_sh) / close < 0.005
+
+// ─────────────────────────────────────────────
+// CONFLUENCE PUANLAMA
+// ─────────────────────────────────────────────
+
+c_trend_bull  = trend_bull
+c_struct_bull = struct_bull
+c_ema_bull    = ema_fast > ema_slow and close > ema_trend
+c_rsi_bull    = rsi > 50 and rsi < rsi_ob
+c_macd_bull   = macd_line > signal_line and hist > 0
+c_vol_bull    = high_vol
+
+c_trend_bear  = trend_bear
+c_struct_bear = struct_bear
+c_ema_bear    = ema_fast < ema_slow and close < ema_trend
+c_rsi_bear    = rsi < 50 and rsi > rsi_os
+c_macd_bear   = macd_line < signal_line and hist < 0
+c_vol_bear    = high_vol
+
+long_score  = (c_trend_bull  ? 1 : 0) + (c_struct_bull ? 1 : 0) + (c_ema_bull  ? 1 : 0) +
+              (c_rsi_bull    ? 1 : 0) + (c_macd_bull   ? 1 : 0) + (c_vol_bull  ? 1 : 0)
+
+short_score = (c_trend_bear  ? 1 : 0) + (c_struct_bear ? 1 : 0) + (c_ema_bear  ? 1 : 0) +
+              (c_rsi_bear    ? 1 : 0) + (c_macd_bear   ? 1 : 0) + (c_vol_bear  ? 1 : 0)
+
+// ─────────────────────────────────────────────
+// SİNYAL OLUŞTURMA
+// ─────────────────────────────────────────────
+
+long_signal  = long_score  >= min_conf and not near_resist
+short_signal = short_score >= min_conf and not near_support
+
+ema_cross_up   = ta.crossover (ema_fast, ema_slow)
+ema_cross_down = ta.crossunder(ema_fast, ema_slow)
+
+long_entry  = long_signal  and ema_cross_up
+short_entry = short_signal and ema_cross_down
+
+// ─────────────────────────────────────────────
+// SL / TP HESAPLAMA
+// ─────────────────────────────────────────────
+
+var float entry_price = na
+var float sl_price    = na
+var float tp1_price   = na
+var float tp2_price   = na
+
+if long_entry
+    entry_price := close
+    sl_price    := close - atr14 * atr_mult_sl
+    tp1_price   := close + (close - sl_price) * rr_ratio
+    tp2_price   := close + (close - sl_price) * rr_ratio * 1.5
+
+if short_entry
+    entry_price := close
+    sl_price    := close + atr14 * atr_mult_sl
+    tp1_price   := close - (sl_price - close) * rr_ratio
+    tp2_price   := close - (sl_price - close) * rr_ratio * 1.5
+
+// ─────────────────────────────────────────────
+// ÇIZIMLER — EMA
+// ─────────────────────────────────────────────
+
+plot(show_ema ? ema_fast  : na, "EMA 9",  color=color.new(#00BCD4, 0),  linewidth=1)
+plot(show_ema ? ema_slow  : na, "EMA 21", color=color.new(#FF9800, 0),  linewidth=1)
+plot(show_ema ? ema_trend : na, "EMA 50", color=color.new(#9E9E9E, 40), linewidth=2)
+
+// ─────────────────────────────────────────────
+// ÇIZIMLER — SİNYAL OKLARI
+// ─────────────────────────────────────────────
+
+plotshape(show_signals and long_entry,  title="LONG",  location=location.belowbar,
+         style=shape.triangleup,   color=color.new(color.lime, 0),   size=size.normal, text="AL")
+plotshape(show_signals and short_entry, title="SHORT", location=location.abovebar,
+         style=shape.triangledown, color=color.new(color.red,  0),   size=size.normal, text="SAT")
+
+// ─────────────────────────────────────────────
+// SL / TP ÇİZGİLERİ
+// ─────────────────────────────────────────────
+
+var line sl_line  = na
+var line tp1_line = na
+var line tp2_line = na
+
+if (long_entry or short_entry) and show_sl_tp
+    line.delete(sl_line)
+    line.delete(tp1_line)
+    line.delete(tp2_line)
+
+    sl_line  := line.new(bar_index, sl_price,  bar_index + 20, sl_price,  color=color.new(color.red,   20), style=line.style_dashed, width=2)
+    tp1_line := line.new(bar_index, tp1_price, bar_index + 20, tp1_price, color=color.new(color.lime,  20), style=line.style_dashed, width=1)
+    tp2_line := line.new(bar_index, tp2_price, bar_index + 20, tp2_price, color=color.new(color.aqua,  20), style=line.style_dashed, width=1)
+
+    label.new(bar_index + 21, sl_price,  "SL",  style=label.style_label_left, color=color.new(color.red,  30), textcolor=color.white, size=size.small)
+    label.new(bar_index + 21, tp1_price, "TP1", style=label.style_label_left, color=color.new(color.lime, 30), textcolor=color.white, size=size.small)
+    label.new(bar_index + 21, tp2_price, "TP2", style=label.style_label_left, color=color.new(color.aqua, 30), textcolor=color.white, size=size.small)
+
+// ─────────────────────────────────────────────
+// CONFLUENCE TABLOSU
+// ─────────────────────────────────────────────
+
+if show_table
+    var table t = table.new(position.top_right, 3, 10,
+         bgcolor=color.new(color.black, 60), border_color=color.new(color.gray, 50), border_width=1)
+
+    table.cell(t, 0, 0, "FAKTÖR",  text_color=color.gray,  text_size=size.small, bgcolor=color.new(color.gray, 80))
+    table.cell(t, 1, 0, "LONG",    text_color=color.lime,  text_size=size.small, bgcolor=color.new(color.gray, 80))
+    table.cell(t, 2, 0, "SHORT",   text_color=color.red,   text_size=size.small, bgcolor=color.new(color.gray, 80))
+
+    rows = array.from("Trend (HTF)", "Yapı HH/HL", "EMA düzeni", "RSI", "MACD", "Hacim")
+    long_vals  = array.from(c_trend_bull,  c_struct_bull, c_ema_bull,  c_rsi_bull,  c_macd_bull,  c_vol_bull)
+    short_vals = array.from(c_trend_bear,  c_struct_bear, c_ema_bear,  c_rsi_bear,  c_macd_bear,  c_vol_bear)
+
+    for i = 0 to 5
+        lv = array.get(long_vals,  i)
+        sv = array.get(short_vals, i)
+        table.cell(t, 0, i + 1, array.get(rows, i), text_color=color.white, text_size=size.small)
+        table.cell(t, 1, i + 1, lv ? "✔" : "–", text_color=lv ? color.lime : color.gray, text_size=size.small)
+        table.cell(t, 2, i + 1, sv ? "✔" : "–", text_color=sv ? color.red  : color.gray, text_size=size.small)
+
+    table.cell(t, 0, 7, "SKOR", text_color=color.yellow, text_size=size.small, bgcolor=color.new(color.navy, 60))
+    table.cell(t, 1, 7, str.tostring(long_score)  + "/6", text_color=long_score  >= min_conf ? color.lime  : color.gray, text_size=size.small, bgcolor=color.new(color.navy, 60))
+    table.cell(t, 2, 7, str.tostring(short_score) + "/6", text_color=short_score >= min_conf ? color.red   : color.gray, text_size=size.small, bgcolor=color.new(color.navy, 60))
+
+    table.cell(t, 0, 8, "Min Conf:", text_color=color.gray,   text_size=size.tiny)
+    table.cell(t, 1, 8, str.tostring(min_conf), text_color=color.yellow, text_size=size.tiny)
+    table.cell(t, 2, 8, "R:R " + str.tostring(rr_ratio), text_color=color.yellow, text_size=size.tiny)
+
+// ─────────────────────────────────────────────
+// ARKA PLAN — TREND RENGI
+// ─────────────────────────────────────────────
+
+bgcolor(trend_bull ? color.new(color.lime, 96) : trend_bear ? color.new(color.red, 96) : na,
+       title="Trend Arka Plan")
+
+// ─────────────────────────────────────────────
+// ALERT KOŞULLARI
+// ─────────────────────────────────────────────
+
+alertcondition(long_entry,  title="LONG Sinyali",  message="Scalping LONG v2 | {{ticker}} {{interval}}")
+alertcondition(short_entry, title="SHORT Sinyali", message="Scalping SHORT v2 | {{ticker}} {{interval}}")

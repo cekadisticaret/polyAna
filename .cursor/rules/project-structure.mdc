@@ -1,0 +1,26 @@
+---
+description: PROJECT.md'yi her değişiklikte güncel tut
+alwaysApply: true
+---
+
+# Proje Yapısı Güncel Tutma Kuralı
+
+`PROJECT.md` bu projenin canlı dokümantasyonudur. Her geliştirmeden sonra mutlaka güncelle.
+
+## Ne Zaman Güncellenecek
+
+Aşağıdaki durumlarda `PROJECT.md` güncellenmeli:
+
+- Yeni dosya eklendi / silindi
+- Mevcut bir modülün amacı veya davranışı değişti
+- Cron job eklendi / güncellendi / silindi
+- Strateji parametreleri değişti (kaldıraç, SL, TP, vb.)
+- Yeni bir Telegram / Twitter entegrasyonu eklendi
+
+## Güncelleme Kuralları
+
+- Tablolarda her satır `| dosya.py | kısa açıklama |` formatında olmalı
+- Strateji parametreleri her zaman **Kripto — Paper Trading** altında güncel değerleriyle yazılmalı
+- Cron ifadesi değişirse hemen yansıt
+- Silinen dosyaları tablodan kaldır, eklenen dosyaları ekle
+- Açıklama maksimum 1 satır, sade Türkçe

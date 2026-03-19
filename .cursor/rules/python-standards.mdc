@@ -1,0 +1,35 @@
+---
+description: Python kodlama standartları
+globs: **/*.py
+alwaysApply: false
+---
+
+# Python Kodlama Standartları
+
+## Bağımlılıklar
+- Harici kütüphane (`requests`, `pandas` vb.) KULLANMA — yalnızca standart kütüphane (`urllib`, `json`, `os`, `datetime`)
+- Yeni bağımlılık gerekiyorsa önce sor
+
+## HTTP İstekleri
+```python
+# ✅ DOĞRU
+req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+with urllib.request.urlopen(req, timeout=10) as r:
+    data = json.loads(r.read())
+
+# ❌ YANLIŞ
+import requests
+requests.get(url)
+```
+
+## Hata Yönetimi
+- Her API çağrısı `try/except Exception` ile sarılmalı, sessizce `None` veya `False` döndürmeli
+- Kritik hatalar Telegram'a bildirilmeli
+
+## Dosya Yapısı
+- Sabitler dosyanın en üstünde `BÜYÜK_HARF` ile
+- Bölümler `# ========== BÖLÜM ADI ==========` başlığıyla ayrılmalı
+
+## Telegram Bildirimi
+- Kullanıcıya giden tüm mesajlar HTML parse mode ile, `<b>` bold, emoji ile zenginleştirilmeli
+- `tg_send()` her zaman `try/except` içinde çağrılmalı

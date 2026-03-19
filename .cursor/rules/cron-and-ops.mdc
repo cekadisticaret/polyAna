@@ -1,0 +1,43 @@
+---
+description: Cron job ve operasyonel kurallar
+alwaysApply: true
+---
+
+# Operasyonel Kurallar
+
+## Aktif Cron Jobs
+| Zamanlama | Komut | Log |
+|---|---|---|
+| `*/5 * * * *` | `cd /root/aiProject && python3 binance_trader.py` | `/tmp/binance_trader.log` |
+| `*/5 * * * *` | `cd /root/aiProject && python3 paper_trader.py` | `/tmp/paper_trader.log` |
+| `*/5 * * * *` | `cd /root/aiProject && python3 paper_trader_alternatif.py` | `/tmp/paper_trader_alt.log` |
+| `1 7-15 * * 1-5` | `cd /root/aiProject && python3 bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
+| `31 14 * * 1-5` | `cd /root/aiProject && python3 bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
+| `0 8 * * *` | `cd /root/aiProject && python3 twitter_poster.py both` | `/tmp/twitter_poster.log` |
+| `59 23 * * *` | `cd /root/aiProject && python3 backup.py` | `/tmp/backup.log` |
+| `0 21 * * *` | `cd /root/aiProject && python3 win_prob_report.py` | `/tmp/win_prob_report.log` |
+| `*/5 * * * 1-5` | `cd /root/aiProject && python3 bist_scalping_alerts.py` | `/tmp/bist_scalping_alerts.log` |
+| `* * * * *` | `cd /root/aiProject && python3 scalp_trader.py` | `/tmp/scalp_trader.log` |
+
+## Cron Yönetimi
+- Yeni cron eklemeden önce `crontab -l` ile mevcut listeyi kontrol et
+- Her cron'un çıktısı `>> /tmp/<script_adı>.log 2>&1` ile loglanmalı
+- Cron ekleme/silme sonrası `PROJECT.md` güncellenir
+
+## Zamanlama Mantığı
+- `paper_trader.py` her 5 dk çalışır:
+  - **Her çalışmada:** 5m bar ile trailing stop güncelle, SL kontrol et, 1h çıkış sinyali kontrol et
+  - **Sadece saat başı (`minute <= 5`):** 1h bar ile yeni giriş sinyali tara
+- Çıkış sinyali saat başı beklenmez — her 5 dk kontrol edilir
+- BIST 1h barlar: seans saatleri 10:00–18:00 İST → cron `1 7-15 * * 1-5`
+
+## Zamanlama Notları
+- BIST seansı 10:00–18:00 İST (= 07:00–15:00 UTC) → cron `1 7-15 * * 1-5` ile haftaiçi her saat başı +1 dk çalışır
+- `bist_visual_v2.py` → `bist_scanner.py`'yi içeriden çağırır, mobil kart görseli üretir, Telegram'a gönderir
+- `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy` (kurulu), `matplotlib` (kurulu)
+
+## Log Takibi
+```bash
+tail -f /tmp/paper_trader.log   # kripto canlı izleme
+tail -f /tmp/bist_visual.log    # bist canlı izleme
+```

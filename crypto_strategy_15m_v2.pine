@@ -1,0 +1,130 @@
+//@version=5
+strategy("COIN 15dk Long+Short v2.0", 
+ shorttitle="COIN 15m v2.0", overlay=true,
+ initial_capital=1000,
+ default_qty_type=strategy.percent_of_equity, default_qty_value=50,
+ commission_type=strategy.commission.percent, commission_value=0.05,
+ pyramiding=0, calc_on_order_fills=true, calc_on_every_tick=false)
+
+// ===== GİRDİLER =====
+rsiLength     = input.int(14, "RSI Periyodu", minval=1)
+volMult       = input.float(1.2, "Hacim Çarpanı", minval=0.1, step=0.1)
+volLength     = input.int(20, "Hacim Ortalama Periyodu", minval=1)
+emaShortLen   = input.int(21, "EMA Kısa", minval=1)
+emaLongLen    = input.int(100, "EMA Uzun", minval=1)
+dmiLen        = input.int(14, "DMI/ADX Periyodu", minval=1)
+adxThreshold  = input.float(22, "ADX Trend Eşiği", minval=1, step=0.5)
+distThreshold = input.float(3.5, "Maks. Mesafe % (Fiyat/EMA100)", minval=0.0, step=0.1)
+atrLen        = input.int(14, "ATR Uzunluğu", minval=1, group="Risk")
+stopATR       = input.float(2.5, "SL = ATR x", minval=0.1, step=0.1, group="Risk")
+takeATR       = input.float(4.0, "TP = ATR x", minval=0.1, step=0.1, group="Risk")
+maxSLpct      = input.float(0.6, "Max Stop %", minval=0.1, step=0.1, group="Risk")
+cooldownBars  = input.int(4, "Cooldown (bar)", minval=0, group="Risk")
+atrPctLen     = input.int(100, "ATR% Referans Len", minval=10, group="Filtreler")
+atrHotMult    = input.float(1.8, "ATR% Hot Mult", minval=1.0, step=0.1, group="Filtreler")
+showShapes    = input.bool(true, "Şekilleri Göster", group="Görünüm")
+showTable     = input.bool(true, "Durum Tablosu", group="Görünüm")
+
+// ===== HESAPLAMALAR =====
+rsi      = ta.rsi(close, rsiLength)
+volAvg   = ta.sma(volume, volLength)
+volSpike = volume > volAvg * volMult
+ema21    = ta.ema(close, emaShortLen)
+ema100   = ta.ema(close, emaLongLen)
+[diplus, diminus, adx] = ta.dmi(dmiLen, dmiLen)
+atr      = ta.atr(atrLen)
+[macdLine, signalLine, _] = ta.macd(close, 8, 21, 5)
+priceDistPct = math.abs((close - ema100) / ema100) * 100
+isNotTooFar  = priceDistPct < distThreshold
+atrPct    = (atr / close) * 100.0
+atrPctRef = ta.sma(atrPct, atrPctLen)
+isHotVol  = atrPctRef > 0 ? (atrPct > atrPctRef * atrHotMult) : false
+confirmed = barstate.isconfirmed
+
+// ===== COOLDOWN =====
+var int lastExitBar = na
+exitNow = confirmed and strategy.position_size == 0 and strategy.position_size[1] != 0
+if exitNow
+    lastExitBar := bar_index
+inCooldown = not na(lastExitBar) and (bar_index - lastExitBar) <= cooldownBars
+
+// ===== SİNYALLER =====
+trendUp   = close > ema100
+trendDown = close < ema100
+
+strongBuyCondition =
+ confirmed and not inCooldown and not isHotVol and
+ trendUp and close > ema21 and
+ (ta.crossover(rsi, 40) or (rsi > 50 and rsi > rsi[1])) and
+ volSpike and adx > adxThreshold and macdLine > signalLine and
+ isNotTooFar and rsi > 55 and
+ (volume > ta.highest(volume, 10)[1] * 1.2)
+
+strongShortCondition =
+ confirmed and not inCooldown and not isHotVol and
+ trendDown and close < ema21 and
+ (ta.crossunder(rsi, 60) or (rsi < 50 and rsi < rsi[1])) and
+ volSpike and adx > adxThreshold and macdLine < signalLine and
+ isNotTooFar and rsi < 45 and
+ (volume > ta.highest(volume, 10)[1] * 1.2)
+
+// ===== EMİRLER =====
+if strongBuyCondition
+    strategy.entry("LONG", strategy.long,
+     alert_message="🟢 LONG | RSI=" + str.tostring(rsi, "#.##") + " ADX=" + str.tostring(adx, "#.##"))
+
+if strongShortCondition
+    strategy.entry("SHORT", strategy.short,
+     alert_message="🔴 SHORT | RSI=" + str.tostring(rsi, "#.##") + " ADX=" + str.tostring(adx, "#.##"))
+
+if strategy.position_size > 0
+    avg = strategy.position_avg_price
+    sl  = math.max(avg - atr * stopATR, avg * (1 - maxSLpct / 100.0))
+    tp  = avg + atr * takeATR
+    strategy.exit("EXIT L", "LONG", stop=sl, limit=tp)
+
+if strategy.position_size < 0
+    avg = strategy.position_avg_price
+    sl  = math.min(avg + atr * stopATR, avg * (1 + maxSLpct / 100.0))
+    tp  = avg - atr * takeATR
+    strategy.exit("EXIT S", "SHORT", stop=sl, limit=tp)
+
+// ===== GÖRSEL =====
+plot(ema21,  "EMA 21",  color=color.orange, linewidth=2)
+plot(ema100, "EMA 100", color=color.blue,   linewidth=2)
+
+plotshape(series=strongBuyCondition,
+ title="LONG", style=shape.labelup,
+ location=location.belowbar,
+ color=color.new(color.green, 0),
+ size=size.normal, text="LONG", textcolor=color.white)
+
+plotshape(series=strongShortCondition,
+ title="SHORT", style=shape.labeldown,
+ location=location.abovebar,
+ color=color.new(color.red, 0),
+ size=size.normal, text="SHORT", textcolor=color.white)
+
+// ===== DURUM TABLOSU =====
+var table tbl = table.new(position.top_right, 2, 7, border_width=1)
+
+if showTable and barstate.islast
+    table.cell(tbl, 0, 0, "RSI", text_color=color.white, bgcolor=color.new(color.blue, 50))
+    table.cell(tbl, 1, 0, str.tostring(rsi, "#.#"), text_color=color.white, bgcolor=rsi > 55 ? color.new(color.green, 40) : rsi < 45 ? color.new(color.red, 40) : color.gray)
+    table.cell(tbl, 0, 1, "ADX", text_color=color.white, bgcolor=color.new(color.blue, 50))
+    table.cell(tbl, 1, 1, str.tostring(adx, "#.#"), text_color=color.white, bgcolor=adx > adxThreshold ? color.new(color.green, 40) : color.new(color.red, 40))
+    table.cell(tbl, 0, 2, "MACD", text_color=color.white, bgcolor=color.new(color.blue, 50))
+    table.cell(tbl, 1, 2, macdLine > signalLine ? "BULL" : "BEAR", text_color=color.white, bgcolor=macdLine > signalLine ? color.new(color.green, 40) : color.new(color.red, 40))
+    table.cell(tbl, 0, 3, "Hacim", text_color=color.white, bgcolor=color.new(color.blue, 50))
+    table.cell(tbl, 1, 3, volSpike ? "SPIKE" : "NORMAL", text_color=color.white, bgcolor=volSpike ? color.new(color.green, 40) : color.new(color.gray, 40))
+    table.cell(tbl, 0, 4, "Uzaklik", text_color=color.white, bgcolor=color.new(color.blue, 50))
+    table.cell(tbl, 1, 4, str.tostring(priceDistPct, "#.##") + "%", text_color=color.white, bgcolor=isNotTooFar ? color.new(color.green, 40) : color.new(color.red, 40))
+    table.cell(tbl, 0, 5, "Cooldown", text_color=color.white, bgcolor=color.new(color.blue, 50))
+    table.cell(tbl, 1, 5, inCooldown ? "BEKLIYOR" : "HAZIR", text_color=color.white, bgcolor=inCooldown ? color.new(color.orange, 40) : color.new(color.green, 40))
+    table.cell(tbl, 0, 6, "VolATR", text_color=color.white, bgcolor=color.new(color.blue, 50))
+    table.cell(tbl, 1, 6, isHotVol ? "ASIRI" : "NORMAL", text_color=color.white, bgcolor=isHotVol ? color.new(color.red, 40) : color.new(color.green, 40))
+
+// ===== UYARILAR =====
+alertcondition(strongBuyCondition,   title="Güçlü LONG",  message="🟢 LONG sinyali!")
+alertcondition(strongShortCondition, title="Güçlü SHORT", message="🔴 SHORT sinyali!")
+alertcondition(isHotVol, title="Volatilite Aşırı", message="⚠️ ATR% çok yüksek!")
