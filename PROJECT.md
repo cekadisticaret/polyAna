@@ -74,7 +74,7 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 ### Altyapı & Konfigürasyon
 | Dosya | Açıklama |
 |---|---|
-| `telegram_config.py` | Telegram bot token ve chat ID ayarları. |
+| `telegram_config.py` | Telegram bot token ve chat ID (git’e girmez); şablon: `telegram_config.example.py`. |
 | `crypto_list.py` | Genel kripto sembol listesi (spot). |
 | `backup.py` | Günlük 23:59'da tüm proje dosyalarını `backups/` klasörüne tar.gz olarak yedekler. Son 7 gün saklanır. |
 
