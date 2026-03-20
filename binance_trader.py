@@ -389,10 +389,24 @@ def analyze(symbol, interval="15m"):
     long_score  = sum([c_trend_bull, c_struct_bull, c_ema_bull, c_rsi_bull, c_macd_bull, c_vol_bull])
     short_score = sum([c_trend_bear, c_struct_bear, c_ema_bear, c_rsi_bear, c_macd_bear, c_vol_bear])
 
+    # ── Dinamik R:R (alternatif mantığı — swing bazlı) ──
+    long_risk    = (price - last_sl) if (last_sl and last_sl < price) else atr_val * STOP_ATR_MULT
+    long_reward  = (last_sh - price) if (last_sh and last_sh > price) else atr_val * TAKE_ATR_MULT
+    real_rr_long = round(long_reward / long_risk, 2) if long_risk > 0 else 0
+
+    short_risk    = (last_sh - price) if (last_sh and last_sh > price) else atr_val * STOP_ATR_MULT
+    short_reward  = (price - last_sl) if (last_sl and last_sl < price) else atr_val * TAKE_ATR_MULT
+    real_rr_short = round(short_reward / short_risk, 2) if short_risk > 0 else 0
+
+    rr_ok_long  = real_rr_long  >= MIN_RR_RATIO
+    rr_ok_short = real_rr_short >= MIN_RR_RATIO
+
     strong_buy  = (not is_hot_vol and long_score  >= MIN_CONFLUENCE
-                   and recent_cross_up   and not near_resist  and adx_val > ADX_MIN)
+                   and recent_cross_up   and not near_resist  and adx_val > ADX_MIN
+                   and rr_ok_long)
     strong_sell = (not is_hot_vol and short_score >= MIN_CONFLUENCE
-                   and recent_cross_down and not near_support and adx_val > ADX_MIN)
+                   and recent_cross_down and not near_support and adx_val > ADX_MIN
+                   and rr_ok_short)
 
     exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 48)
     exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > 52)
@@ -412,6 +426,8 @@ def analyze(symbol, interval="15m"):
         "vol_spike":    vol_spike,
         "long_score":   long_score,
         "short_score":  short_score,
+        "real_rr_long":  real_rr_long,
+        "real_rr_short": real_rr_short,
         "strong_buy":   strong_buy,
         "strong_sell":  strong_sell,
         "exit_long":    exit_long,
@@ -800,6 +816,7 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
     if rr_ratio < MIN_RR_RATIO:
         _log_open(f"{symbol}: R:R 1:{rr_ratio} < min {MIN_RR_RATIO} (sl%{sl_pct} tp%{tp_pct}) — atlandı")
         return False
+    swing_rr = (result or {}).get("real_rr_long" if direction == "LONG" else "real_rr_short", rr_ratio)
     reasons        = build_entry_reason(result or {}, direction)
     reason_str     = "\n".join(f"   • {r}" for r in reasons)
     htf_bias_val   = (result or {}).get("htf_bias", bias)
@@ -867,7 +884,7 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
             f"📉 ATR : {atr} (%{atr_pct}) → {atr_lvl}\n"
             f"━━━━━━━━━━━━━━\n"
             f"{prob_emoji} <b>Başarı Tahmini : %{win_prob}</b>\n"
-            f"{prob_bar} R:R = 1:{rr_ratio}\n"
+            f"{prob_bar} R:R = 1:{rr_ratio} (swing: 1:{swing_rr})\n"
             f"━━━━━━━━━━━━━━\n"
             f"⚖️ Piyasa: {bias_label} -> {lev}x kaldıraç\n"
             f"Margin: {margin:.2f} USDT | Açık pozisyon: {n_open}\n"
