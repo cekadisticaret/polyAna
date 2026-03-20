@@ -351,6 +351,7 @@ def open_position(data, symbol, direction, price, sl, tp, atr_val, result):
 
     # Margin her zaman toplam sermayenin %10'u (kalan değil) — 170$ → 17$, binance_trader ile uyumlu
     size = round(data["capital"] * POS_SIZE_PCT, 2)
+    win_prob = round(score / 6 * 100)
     data["open"].append({
         "symbol": symbol,
         "direction": direction,
@@ -365,6 +366,7 @@ def open_position(data, symbol, direction, price, sl, tp, atr_val, result):
         "best_price": price,
         "trail_mult": TRAIL_ATR_MULT,
         "trail_level": 0,
+        "win_prob": win_prob,
     })
     data.setdefault("bar_counter", {})[symbol] = data["total_bars"]
 
@@ -615,7 +617,87 @@ def run_scan(symbols):
                     )
 
     save_state(data)
+
+    if is_new_15m and data.get("total_bars", 0) % 288 == 0 and data.get("total_bars", 0) > 0:
+        send_win_prob_report(data)
+
     return data
+
+
+def send_win_prob_report(data):
+    from datetime import timedelta, timezone
+    trades   = data.get("closed", [])
+    with_wp  = [t for t in trades if t.get("win_prob") is not None]
+    if not with_wp:
+        return
+
+    now_ist   = datetime.now(timezone.utc) + timedelta(hours=3)
+    yesterday = (now_ist - timedelta(days=1)).strftime("%d.%m.%Y")
+
+    def _ist_date(s):
+        try:    return s.split(" ")[0]
+        except: return ""
+
+    day_trades = [t for t in with_wp if _ist_date(t.get("exit_time", "")) == yesterday]
+
+    def _build(trades, label):
+        if not trades:
+            return None
+        wins      = [t for t in trades if t.get("pnl_pct", 0) > 0]
+        wr        = len(wins) / len(trades) * 100
+        total_pnl = sum(t.get("pnl_usdt", 0) for t in trades)
+        avg_wp    = sum(t["win_prob"] for t in trades) / len(trades)
+
+        wp_50 = [t for t in trades if t["win_prob"] >= 50]
+        wp_55 = [t for t in trades if t["win_prob"] >= 55]
+        wp_60 = [t for t in trades if t["win_prob"] >= 60]
+
+        bands = {}
+        for t in trades:
+            wp  = t["win_prob"]
+            low = max(35, min(85, (wp // 5) * 5))
+            key = f"{int(low)}-{int(low+5)}"
+            bands.setdefault(key, []).append(t)
+
+        lines = [
+            f"📊 <b>Win Prob Analiz (ALT) — {label}</b>",
+            f"━━━━━━━━━━━━━━━━━━━━",
+            f"🔢 İşlem sayısı : {len(trades)}",
+            f"📈 Ort. Tahmin  : %{avg_wp:.1f}",
+            f"🎯 Gerçek WR    : %{wr:.1f} ({len(wins)}K / {len(trades)-len(wins)}Z)",
+            f"💰 Toplam PnL   : {total_pnl:+.2f} USDT",
+            f"━━━━━━━━━━━━━━━━━━━━",
+        ]
+        for thresh, lst in [(50, wp_50), (55, wp_55), (60, wp_60)]:
+            if lst:
+                w = len([t for t in lst if t.get("pnl_pct", 0) > 0])
+                lines.append(f"📌 wp≥{thresh} ({len(lst)} işlem) → Gerçek WR: %{w/len(lst)*100:.1f}")
+
+        band_stats = []
+        for key, b in bands.items():
+            if len(b) < 2:
+                continue
+            w = len([t for t in b if t.get("pnl_pct", 0) > 0])
+            band_stats.append((key, len(b), w, w / len(b) * 100))
+        band_stats.sort(key=lambda x: -x[3])
+
+        lines.append(f"━━━━━━━━━━━━━━━━━━━━")
+        lines.append(f"🏆 <b>En Başarılı Aralıklar (Gerçek WR)</b>")
+        lines.append(f"━━━━━━━━━━━━━━━━━━━━")
+        for key, cnt, w, wr_b in band_stats[:6]:
+            lines.append(f"  %{key} → {w}K/{cnt} işlem (WR %{wr_b:.0f})")
+        lines.append(f"━━━━━━━━━━━━━━━━━━━━")
+        return "\n".join(lines)
+
+    msg = _build(with_wp, "Tüm Zamanlar")
+    if msg:
+        tg_send(msg)
+    if day_trades:
+        msg_day = _build(day_trades, f"Dün ({yesterday})")
+        if msg_day:
+            tg_send(msg_day)
+    print(f"   📊 Win prob raporu gönderildi (tüm: {len(with_wp)}, dün: {len(day_trades)})")
+
 
 # ========== MAIN ==========
 
