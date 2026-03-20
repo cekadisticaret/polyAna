@@ -1018,6 +1018,35 @@ def run_scan(symbols):
                     exit_triggered = (pos["direction"] == "LONG" and r["exit_long"]) or (pos["direction"] == "SHORT" and r["exit_short"])
                     if exit_triggered:
                         close_position(state, pos, r["price"], _exit_reason(pos["direction"], r))
+            else:
+                # 45 dk geçti ve kârdaysa → SL'yi breakeven'a çek (bir kez)
+                if held >= MAX_LOSS_BARS and not pos.get("breakeven_set"):
+                    entry = pos["entry_price"]
+                    be_sl = round_price(sym, entry)
+                    if pos["direction"] == "LONG" and pos["sl"] < entry:
+                        try:
+                            cancel_all_orders(sym)
+                            place_stop_market(sym, "SELL", be_sl)
+                            place_take_profit_market(sym, "SELL", pos["tp"])
+                        except Exception as e:
+                            _log_open(f"{sym}: breakeven emir hatası: {e}")
+                        pos["sl"] = be_sl
+                        pos["breakeven_set"] = True
+                        _log_open(f"{sym}: BREAKEVEN — SL giriş fiyatına çekildi ({be_sl})")
+                        print(f"  🔒 BREAKEVEN [{sym}]: SL → {be_sl}")
+                        tg_send(f"🔒 <b>Breakeven</b> | {sym}\n45dk+ kârda → SL giriş fiyatına çekildi: {be_sl}")
+                    elif pos["direction"] == "SHORT" and pos["sl"] > entry:
+                        try:
+                            cancel_all_orders(sym)
+                            place_stop_market(sym, "BUY", be_sl)
+                            place_take_profit_market(sym, "BUY", pos["tp"])
+                        except Exception as e:
+                            _log_open(f"{sym}: breakeven emir hatası: {e}")
+                        pos["sl"] = be_sl
+                        pos["breakeven_set"] = True
+                        _log_open(f"{sym}: BREAKEVEN — SL giriş fiyatına çekildi ({be_sl})")
+                        print(f"  🔒 BREAKEVEN [{sym}]: SL → {be_sl}")
+                        tg_send(f"🔒 <b>Breakeven</b> | {sym}\n45dk+ kârda → SL giriş fiyatına çekildi: {be_sl}")
 
         # Yeni giriş
         if daily_limit_hit:

@@ -787,12 +787,26 @@ def run_scan(symbols):
                             else (pd["price"] < pos["entry_price"])
                 if not in_profit:
                     if held >= MAX_LOSS_BARS:
-                        close_position(data, pos, pd["price"], f"ZAMAN AŞIMI (45dk zararda)")
+                        close_position(data, pos, pd["price"], "ZAMAN AŞIMI (45dk zararda)")
                     elif held >= MIN_HOLD_BARS:
                         exit_triggered = (pos["direction"] == "LONG" and pd["exit_long"]) or \
                                          (pos["direction"] == "SHORT" and pd["exit_short"])
                         if exit_triggered:
                             close_position(data, pos, pd["price"], _exit_reason(pos["direction"], pd))
+                else:
+                    # 45 dk geçti ve kârdaysa → SL'yi breakeven'a çek (bir kez)
+                    if held >= MAX_LOSS_BARS and not pos.get("breakeven_set"):
+                        entry = pos["entry_price"]
+                        if pos["direction"] == "LONG" and pos["sl"] < entry:
+                            pos["sl"] = entry
+                            pos["breakeven_set"] = True
+                            print(f"  🔒 BREAKEVEN [{pos['symbol']}]: SL giriş fiyatına çekildi ({entry})")
+                            tg_send(f"🔒 <b>Breakeven</b> | {pos['symbol']}\n45dk+ kârda → SL giriş fiyatına çekildi: {entry}")
+                        elif pos["direction"] == "SHORT" and pos["sl"] > entry:
+                            pos["sl"] = entry
+                            pos["breakeven_set"] = True
+                            print(f"  🔒 BREAKEVEN [{pos['symbol']}]: SL giriş fiyatına çekildi ({entry})")
+                            tg_send(f"🔒 <b>Breakeven</b> | {pos['symbol']}\n45dk+ kârda → SL giriş fiyatına çekildi: {entry}")
 
         # ── Yeni Giriş Sinyali ──
         if len(data["open"]) < MAX_OPEN:
