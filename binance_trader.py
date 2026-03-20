@@ -39,6 +39,9 @@ USE_HTF_FILTER  = False
 STRUCT_LEN      = 5
 MIN_RR_RATIO    = 2.0
 
+TRAIL_ATR_MULT       = 1.5   # Trailing stop mesafesi: en iyi fiyattan ATR × 1.5 geride
+TRAIL_MIN_PROFIT_ATR = 0.8   # Trailing başlama eşiği: kâr ATR × 0.8'i geçince aktifleşir
+
 BULL_LONG_LEV   = 12
 BULL_SHORT_LEV  = 8
 BEAR_LONG_LEV   = 8
@@ -541,6 +544,35 @@ def _binance_close_fill_summary(symbol):
     except Exception:
         return None
 
+def _notify_trail(sym, old_sl, new_sl, entry, entry_atr, direction):
+    """Trailing stop güncellemesinde Telegram bildirimi — sadece anlamlı kademede."""
+    if direction == "LONG":
+        old_locked = (old_sl - entry) / entry_atr
+        new_locked = (new_sl - entry) / entry_atr
+        was_profit = old_sl > entry
+        now_profit = new_sl > entry
+    else:
+        old_locked = (entry - old_sl) / entry_atr
+        new_locked = (entry - new_sl) / entry_atr
+        was_profit = old_sl < entry
+        now_profit = new_sl < entry
+
+    # SL ilk defa kâr bölgesine girdi
+    if not was_profit and now_profit:
+        tg_send(
+            f"🔒 <b>Trailing Stop — Breakeven</b> | {sym}\n"
+            f"SL kâr bölgesine girdi: {old_sl} → <b>{new_sl}</b>"
+        )
+    # Her tam ATR kademesinde bildir
+    elif now_profit and int(new_locked) > int(max(0, old_locked)):
+        tier = int(new_locked)
+        emoji = "📈" if direction == "LONG" else "📉"
+        tg_send(
+            f"{emoji} <b>Trailing Stop +{tier} ATR</b> | {sym}\n"
+            f"SL: {old_sl} → <b>{new_sl}</b>\n"
+            f"✅ Kilitli kâr: +{round(new_locked, 1)} ATR"
+        )
+
 def _log_open(msg):
     print(f"   [binance_open] {msg}")
 
@@ -647,6 +679,7 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
         _log_open(f"{symbol}: swing kullanıldı ({', '.join(swing_note)})")
 
     atr_pct            = round((atr / price) * 100, 3) if price else 0
+    atr_lvl            = round(price + atr, 6) if direction == "LONG" else round(price - atr, 6)
     sl_pct             = round(abs(price - sl) / price * 100, 3)
     tp_pct             = round(abs(tp - price) / price * 100, 3)
     win_prob, rr_ratio = calc_win_prob(result or {}, direction, sl_pct, tp_pct)
@@ -714,7 +747,7 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
             f"🎯 Giriş : {fill_price}\n"
             f"🛑 SL : {sl} (-%{sl_pct})\n"
             f"✅ TP : {tp} (+%{tp_pct})\n"
-            f"📉 ATR : {atr} (%{atr_pct})\n"
+            f"📉 ATR : {atr} (%{atr_pct}) → {atr_lvl}\n"
             f"━━━━━━━━━━━━━━\n"
             f"{prob_emoji} <b>Başarı Tahmini : %{win_prob}</b>\n"
             f"{prob_bar} R:R = 1:{rr_ratio}\n"
@@ -803,7 +836,12 @@ def close_position(
     emoji      = "✅" if pnl_pct > 0 else "🔴"
     dir_emoji  = "📈" if direction == "LONG" else "📉"
     entry_atr  = pos.get("entry_atr")
-    atr_line   = f"📉 ATR     : {entry_atr} (%{round(entry_atr/entry*100, 3)})\n" if entry_atr and entry else ""
+    if entry_atr and entry:
+        _atr_pct  = round(entry_atr / entry * 100, 3)
+        _atr_lvl  = round(entry + entry_atr, 6) if direction == "LONG" else round(entry - entry_atr, 6)
+        atr_line  = f"📉 ATR     : {entry_atr} (%{_atr_pct}) → {_atr_lvl}\n"
+    else:
+        atr_line  = ""
     held_bars  = state.get("total_bars", 0) - pos.get("open_bar", 0)
     held_min   = held_bars * 15
     duration_str = f"{held_min} dk" if held_min < 60 else (f"{held_min // 60}s {held_min % 60}dk" if held_min % 60 else f"{held_min // 60} saat")
@@ -895,7 +933,7 @@ def run_scan(symbols):
                         pass
                     close_position(state, pos, exit_price, reason, already_closed=True)
 
-        # 5m bar ile SL/TP kontrolü (daha sık tepki)
+        # 5m bar ile SL/TP kontrolü + Trailing Stop
         for sym, pos in list(state["positions"].items()):
             if sym not in state["positions"]:
                 continue
@@ -905,18 +943,67 @@ def run_scan(symbols):
                 if not highs or len(highs) < 2:
                     continue
                 b_high, b_low = highs[-2], lows[-2]
+
+                # ── SL / TP Kontrolü ──
+                closed = False
                 if pos["direction"] == "LONG":
                     if b_low <= pos["sl"]:
                         close_position(state, pos_with_sym, pos["sl"], "STOP LOSS (5m)")
-                        continue
-                    if b_high >= pos["tp"]:
+                        closed = True
+                    elif b_high >= pos["tp"]:
                         close_position(state, pos_with_sym, pos["tp"], "TAKE PROFIT (5m)")
+                        closed = True
                 else:
                     if b_high >= pos["sl"]:
                         close_position(state, pos_with_sym, pos["sl"], "STOP LOSS (5m)")
-                        continue
-                    if b_low <= pos["tp"]:
+                        closed = True
+                    elif b_low <= pos["tp"]:
                         close_position(state, pos_with_sym, pos["tp"], "TAKE PROFIT (5m)")
+                        closed = True
+
+                if closed or sym not in state["positions"]:
+                    continue
+
+                # ── Trailing Stop ──
+                entry     = pos["entry_price"]
+                entry_atr = pos.get("entry_atr", 0)
+                if entry_atr <= 0:
+                    continue
+
+                if pos["direction"] == "LONG":
+                    new_best = max(pos.get("best_price", entry), b_high)
+                    pos["best_price"] = new_best
+                    profit_atr = (new_best - entry) / entry_atr
+                    if profit_atr >= TRAIL_MIN_PROFIT_ATR:
+                        new_sl = round_price(sym, new_best - entry_atr * TRAIL_ATR_MULT)
+                        if new_sl > pos["sl"] + entry_atr * 0.1:
+                            old_sl = pos["sl"]
+                            try:
+                                cancel_all_orders(sym)
+                                place_stop_market(sym, "SELL", new_sl)
+                                place_take_profit_market(sym, "SELL", pos["tp"])
+                                pos["sl"] = new_sl
+                                print(f"  📈 TRAIL [{sym}]: SL {old_sl} → {new_sl} (best={round(new_best,4)})")
+                                _notify_trail(sym, old_sl, new_sl, entry, entry_atr, "LONG")
+                            except Exception as e:
+                                _log_open(f"{sym}: trail SL hatası: {e}")
+                else:
+                    new_best = min(pos.get("best_price", entry), b_low)
+                    pos["best_price"] = new_best
+                    profit_atr = (entry - new_best) / entry_atr
+                    if profit_atr >= TRAIL_MIN_PROFIT_ATR:
+                        new_sl = round_price(sym, new_best + entry_atr * TRAIL_ATR_MULT)
+                        if new_sl < pos["sl"] - entry_atr * 0.1:
+                            old_sl = pos["sl"]
+                            try:
+                                cancel_all_orders(sym)
+                                place_stop_market(sym, "BUY", new_sl)
+                                place_take_profit_market(sym, "BUY", pos["tp"])
+                                pos["sl"] = new_sl
+                                print(f"  📉 TRAIL [{sym}]: SL {old_sl} → {new_sl} (best={round(new_best,4)})")
+                                _notify_trail(sym, old_sl, new_sl, entry, entry_atr, "SHORT")
+                            except Exception as e:
+                                _log_open(f"{sym}: trail SL hatası: {e}")
             except Exception:
                 pass
 

@@ -333,6 +333,7 @@ def open_position(data, symbol, direction, price, atr, result=None):
         tp = round(price - atr * TAKE_ATR_MULT, 6)
 
     atr_pct     = round((atr / price) * 100, 3) if price else 0
+    atr_lvl     = round(price + atr, 6) if direction == "LONG" else round(price - atr, 6)
     score       = calc_entry_score(result, direction) if result else 0
     score_bar   = "█" * (score // 10) + "░" * (10 - score // 10)
     score_label = "🔥 Güçlü" if score >= 75 else "✅ İyi" if score >= 55 else "⚠️ Orta"
@@ -363,7 +364,7 @@ def open_position(data, symbol, direction, price, atr, result=None):
         f"🎯 Giriş  : {price}\n"
         f"🛑 SL     : {sl}\n"
         f"✅ TP     : {tp}\n"
-        f"📉 ATR    : {atr} (%{atr_pct})\n"
+        f"📉 ATR    : {atr} (%{atr_pct}) → {atr_lvl}\n"
         f"━━━━━━━━━━━━━━\n"
         f"📊 Sinyal : {score_bar} %{score} {dir_label} uygun {score_label}\n"
         f"━━━━━━━━━━━━━━\n"
@@ -410,8 +411,10 @@ def close_position(data, pos, price, reason, cur_atr=None):
     atr_line   = ""
     if entry_atr:
         atr_pct  = round((entry_atr / pos["entry_price"]) * 100, 3) if pos["entry_price"] else 0
-        cur_line = f" → {cur_atr}" if cur_atr and cur_atr != entry_atr else ""
-        atr_line = f"📉 ATR     : {entry_atr}{cur_line} (%{atr_pct})\n"
+        atr_lvl  = round(pos["entry_price"] + entry_atr, 6) if pos["direction"] == "LONG" \
+                   else round(pos["entry_price"] - entry_atr, 6)
+        cur_line = f" / şimdi {cur_atr}" if cur_atr and cur_atr != entry_atr else ""
+        atr_line = f"📉 ATR     : {entry_atr}{cur_line} (%{atr_pct}) → {atr_lvl}\n"
 
     best_line  = ""
     if pos.get("best_price") and pos["best_price"] != pos["entry_price"]:
