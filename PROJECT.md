@@ -3,6 +3,11 @@
 ## Genel Bakış
 Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya paylaşım sistemi.
 
+## 🏆 Kilometre Taşları
+| Tarih | Not |
+|---|---|
+| 20.03.2026 | 🎉 Bayram 1. gün — SSVUSDT SHORT ile ilk başarılı gerçek Binance işlemi. TP extension + dinamik trailing stop devreye alındı. |
+
 ---
 
 ## Modüller
