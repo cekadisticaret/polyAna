@@ -761,7 +761,9 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
         atr_sl = max(price - atr * STOP_ATR_MULT, price * (1 - MAX_SL_PCT/100))
         atr_tp = price + atr * TAKE_ATR_MULT
         if last_sl and last_sl < price:
-            sl_pre = max(last_sl, price * (1 - MAX_SL_PCT/100))
+            pivot_sl = max(last_sl, price * (1 - MAX_SL_PCT/100))
+            # Pivot ATR'den daha geniş (daha güvenli) ise kullan, aksi halde ATR bazlıya dön
+            sl_pre = pivot_sl if pivot_sl <= atr_sl else atr_sl
         else:
             sl_pre = atr_sl
         if last_sh and last_sh > price:
@@ -777,7 +779,9 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
         atr_sl = min(price + atr * STOP_ATR_MULT, price * (1 + MAX_SL_PCT/100))
         atr_tp = price - atr * TAKE_ATR_MULT
         if last_sh and last_sh > price:
-            sl_pre = min(last_sh, price * (1 + MAX_SL_PCT/100))
+            pivot_sl = min(last_sh, price * (1 + MAX_SL_PCT/100))
+            # Pivot ATR'den daha geniş (daha güvenli) ise kullan, aksi halde ATR bazlıya dön
+            sl_pre = pivot_sl if pivot_sl >= atr_sl else atr_sl
         else:
             sl_pre = atr_sl
         if last_sl and last_sl < price:
