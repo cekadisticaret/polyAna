@@ -672,20 +672,18 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
             place_stop_market(symbol, "BUY", sl)
             place_take_profit_market(symbol, "BUY", tp)
 
-        # Gerçek fill fiyatını Binance'ten çek (market emri anlık fiyattan dolar)
+        # Gerçek fill fiyatını Binance position'dan çek (entryPrice en güvenilir kaynak)
         fill_price = price
         try:
             import time as _time
-            _time.sleep(0.5)  # emir işlenmesi için kısa bekleme
-            trades = get_user_trades(symbol, limit=5)
-            if trades:
-                side_filter = "BUY" if direction == "LONG" else "SELL"
-                recent = [t for t in trades if t.get("side") == side_filter and not t.get("maker")]
-                if recent:
-                    total_qty = sum(float(t["qty"]) for t in recent[-3:])
-                    total_val = sum(float(t["price"]) * float(t["qty"]) for t in recent[-3:])
-                    if total_qty > 0:
-                        fill_price = round(total_val / total_qty, 8)
+            _time.sleep(1.0)  # pozisyon kayıt süresi
+            positions = get_positions()
+            for p in positions:
+                if p.get("symbol") == symbol:
+                    ep = float(p.get("entryPrice", 0))
+                    if ep > 0:
+                        fill_price = ep
+                    break
         except Exception:
             pass
 
