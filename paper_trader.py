@@ -608,7 +608,6 @@ def open_position(data, symbol, direction, price, atr, result=None, bias="NEUTRA
     if sl <= 0 or tp <= 0:
         return False
 
-    atr_pct = round((atr / price) * 100, 3) if price else 0
     sl_pct  = round(abs(price - sl) / price * 100, 3)
     tp_pct  = round(abs(tp - price) / price * 100, 3)
 
@@ -649,7 +648,7 @@ def open_position(data, symbol, direction, price, atr, result=None, bias="NEUTRA
         f"🎯 Giriş : {price}\n"
         f"🛑 SL : {sl} (-%{sl_pct})\n"
         f"✅ TP : {tp} (+%{tp_pct})\n"
-        f"📉 ATR : {atr} (%{atr_pct})\n"
+        f"📉 ATR : {atr}\n"
         f"━━━━━━━━━━━━━━\n"
         f"{prob_emoji} <b>Başarı Tahmini : %{win_prob}</b>\n"
         f"{prob_bar} R:R = 1:{rr_ratio}\n"
@@ -700,8 +699,7 @@ def close_position(data, pos, price, reason):
     entry_atr = pos.get("entry_atr")
     atr_line  = ""
     if entry_atr and pos["entry_price"]:
-        atr_pct  = round((entry_atr / pos["entry_price"]) * 100, 3)
-        atr_line = f"📉 ATR     : {entry_atr} (%{atr_pct})\n"
+        atr_line = f"📉 ATR     : {entry_atr}\n"
 
     held_bars = data.get("total_bars", 0) - pos.get("open_bar", data.get("total_bars", 0))
     held_min  = held_bars * 15
