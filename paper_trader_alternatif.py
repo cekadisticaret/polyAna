@@ -431,35 +431,61 @@ def _notify_tp_extension(pos, old_tp, new_tp, new_mult, capital):
 
 
 def close_position(data, pos, price, reason):
-    symbol = pos["symbol"]
+    symbol    = pos["symbol"]
     direction = pos["direction"]
-    entry = pos["entry_price"]
-    lev = pos.get("leverage", LEVERAGE)
-    margin = pos.get("size_usdt", 10)
+    entry     = pos["entry_price"]
+    lev       = pos.get("leverage", LEVERAGE)
+    margin    = pos.get("size_usdt", 10)
     if direction == "LONG":
         pnl_pct = (price - entry) / entry * 100 * lev
     else:
         pnl_pct = (entry - price) / entry * 100 * lev
-    notional = margin * lev
+    notional   = margin * lev
     commission = notional * COMMISSION_PCT
-    pnl_usdt = margin * pnl_pct / 100 - commission
+    pnl_usdt   = margin * pnl_pct / 100 - commission
     data["capital"] += pnl_usdt
 
-    trade = {**pos, "exit_price": price, "exit_time": now_str(), "reason": reason,
+    close_time = now_str()
+    trade = {**pos, "exit_price": price, "exit_time": close_time, "reason": reason,
              "pnl_pct": round(pnl_pct, 2), "pnl_usdt": round(pnl_usdt, 2),
              "commission": commission, "trade_no": len(data["closed"]) + 1}
     data["closed"].append(trade)
     data["open"] = [p for p in data["open"] if p["symbol"] != symbol]
     data.setdefault("bar_counter", {})[symbol] = data["total_bars"]
 
-    emoji = "✅" if pnl_pct > 0 else "🔴"
-    print(f"  {emoji} KAPANDI [{direction}]: {symbol} @ {price} | {'+' if pnl_pct>0 else ''}{pnl_pct}% | {reason}")
+    entry_atr = pos.get("entry_atr")
+    atr_line  = ""
+    if entry_atr and entry:
+        atr_pct  = round((entry_atr / entry) * 100, 3)
+        atr_line = f"📉 ATR     : {entry_atr} (%{atr_pct})\n"
+
+    held_bars = data.get("total_bars", 0) - pos.get("open_bar", data.get("total_bars", 0))
+    held_min  = held_bars * 15
+    if held_min < 60:
+        duration_str = f"{held_min} dk"
+    else:
+        duration_str = f"{held_min // 60}s {held_min % 60}dk" if held_min % 60 else f"{held_min // 60} saat"
+
+    emoji     = "✅" if pnl_pct > 0 else "🔴"
+    dir_emoji = "📈" if direction == "LONG" else "📉"
+    print(f"  {emoji} KAPANDI [{direction}]: {symbol} @ {price} | {'+' if pnl_pct>0 else ''}{round(pnl_pct,2)}% | {reason}")
     tg_send(
         f"{emoji} <b>Alternatif — İşlem Kapandı #{trade['trade_no']}</b>\n"
-        f"{'📈' if direction=='LONG' else '📉'} {direction} | <b>{symbol}</b>\n"
-        f"Sonuç: {'+' if pnl_pct>0 else ''}{pnl_pct}% ({'+' if pnl_usdt>0 else ''}{pnl_usdt:.2f} USDT)\n"
-        f"Neden: {reason}\n"
-        f"💰 Sermaye: {data['capital']:.2f} USDT"
+        f"{dir_emoji} {direction} | <b>{symbol}</b>\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"🕐 Açılış  : {pos.get('open_time', '-')}\n"
+        f"🏁 Kapanış : {close_time}\n"
+        f"⏱ Süre    : {duration_str}\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"🎯 Giriş   : {entry}\n"
+        f"🚪 Çıkış   : {price}\n"
+        f"📊 Sonuç   : <b>{'+' if pnl_pct>0 else ''}{round(pnl_pct,2)}%</b> ({'+' if pnl_usdt>0 else ''}{pnl_usdt:.2f} USDT) — {lev}x\n"
+        f"💸 Komisyon: -{commission:.3f} USDT\n"
+        f"{atr_line}"
+        f"💡 Neden   : {reason}\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"💰 Sermaye : {data['capital']:.2f} USDT\n"
+        f"─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─"
     )
 
 # ========== ANA DÖNGÜ ==========
@@ -526,7 +552,8 @@ def run_scan(symbols):
 
                 # SL hit → kapat
                 if bl <= pos["sl"]:
-                    reason = "TRAIL STOP" if trail_level > 0 else "STOP LOSS"
+                    in_profit = pos["sl"] > pos["entry_price"]
+                    reason = "TRAIL STOP" if (trail_level > 0 or in_profit) else "STOP LOSS"
                     close_position(data, pos, pos["sl"], reason)
                     continue
 
@@ -553,7 +580,8 @@ def run_scan(symbols):
 
                 # SL hit → kapat
                 if bh >= pos["sl"]:
-                    reason = "TRAIL STOP" if trail_level > 0 else "STOP LOSS"
+                    in_profit = pos["sl"] < pos["entry_price"]
+                    reason = "TRAIL STOP" if (trail_level > 0 or in_profit) else "STOP LOSS"
                     close_position(data, pos, pos["sl"], reason)
                     continue
 

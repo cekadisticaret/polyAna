@@ -32,6 +32,33 @@ def tg_send(text):
     except Exception:
         pass
 
+def _notify_trail(sym, old_sl, new_sl, entry, entry_atr, direction):
+    """Trailing stop güncellemesinde Telegram bildirimi — sadece anlamlı kademede."""
+    if direction == "LONG":
+        old_locked = (old_sl - entry) / entry_atr
+        new_locked = (new_sl - entry) / entry_atr
+        was_profit = old_sl > entry
+        now_profit = new_sl > entry
+    else:
+        old_locked = (entry - old_sl) / entry_atr
+        new_locked = (entry - new_sl) / entry_atr
+        was_profit = old_sl < entry
+        now_profit = new_sl < entry
+
+    if not was_profit and now_profit:
+        tg_send(
+            f"🔒 <b>Trailing Stop — Breakeven</b> | {sym}\n"
+            f"SL kâr bölgesine girdi: {old_sl} → <b>{new_sl}</b>"
+        )
+    elif now_profit and int(new_locked) > int(max(0, old_locked)):
+        tier  = int(new_locked)
+        emoji = "📈" if direction == "LONG" else "📉"
+        tg_send(
+            f"{emoji} <b>Trailing Stop +{tier} ATR</b> | {sym}\n"
+            f"SL: {old_sl} → <b>{new_sl}</b>\n"
+            f"✅ Kilitli kâr: +{round(new_locked, 1)} ATR"
+        )
+
 TRADES_FILE     = os.path.join(os.path.dirname(__file__), "paper_trades.json")
 VIRTUAL_CAPITAL = 200.0
 LEVERAGE        = 10
@@ -48,6 +75,9 @@ ADX_MIN         = 25   # v4: 18 → 25 (trend başlangıcı zonunu ele)
 USE_HTF_FILTER  = False    # False yapınca 1h EMA21 filtresi devre dışı (eski davranış)
 STRUCT_LEN      = 5        # Pivot swing uzunluğu (swing varsa SL/TP swing, yoksa ATR)
 MIN_RR_RATIO    = 2.0      # Min R:R — grafikteki gibi, 0.55 gibi kötü R:R'da işlem açma
+
+TRAIL_ATR_MULT       = 1.5   # Trailing stop mesafesi: en iyi fiyattan ATR × 1.5 geride
+TRAIL_MIN_PROFIT_ATR = 0.8   # Trailing başlama eşiği: kâr ATR × 0.8'i geçince aktifleşir
 
 # Piyasa yönüne göre dinamik kaldıraç
 BULL_LONG_LEV   = 12       # Boğa: LONG 12x, SHORT 8x
@@ -680,19 +710,23 @@ def close_position(data, pos, price, reason):
     else:
         duration_str = f"{held_min // 60}s {held_min % 60}dk" if held_min % 60 else f"{held_min // 60} saat"
 
+    close_time = trade["exit_time"]
     tg_send(
         f"{emoji} <b>İşlem Kapandı #{trade['trade_no']}</b>\n"
         f"{dir_emoji} {pos['direction']} | <b>{pos['symbol']}</b>\n"
         f"━━━━━━━━━━━━━━\n"
-        f"🕐 Açılış : {pos.get('open_time', '-')}\n"
-        f"⏱ Süre   : {duration_str}\n"
-        f"🎯 Giriş  : {pos['entry_price']}\n"
-        f"🏁 Çıkış  : {price}\n"
-        f"📊 Sonuç  : <b>{'+' if pnl_pct>0 else ''}{pnl_pct}%</b> ({'+' if pnl_usdt>0 else ''}{pnl_usdt:.3f} USDT) — {lev}x\n"
+        f"🕐 Açılış  : {pos.get('open_time', '-')}\n"
+        f"🏁 Kapanış : {close_time}\n"
+        f"⏱ Süre    : {duration_str}\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"🎯 Giriş   : {pos['entry_price']}\n"
+        f"🚪 Çıkış   : {price}\n"
+        f"📊 Sonuç   : <b>{'+' if pnl_pct>0 else ''}{pnl_pct}%</b> ({'+' if pnl_usdt>0 else ''}{pnl_usdt:.3f} USDT) — {lev}x\n"
         f"💸 Komisyon: -{commission:.3f} USDT\n"
         f"{atr_line}"
-        f"💡 Neden  : {reason}\n"
-        f"💰 Sermaye: {data['capital']:.2f} USDT\n"
+        f"💡 Neden   : {reason}\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"💰 Sermaye : {data['capital']:.2f} USDT\n"
         f"─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─"
     )
     save_trades(data)
@@ -794,9 +828,37 @@ def run_scan(symbols):
                         if exit_triggered:
                             close_position(data, pos, pd["price"], _exit_reason(pos["direction"], pd))
                 else:
-                    # 45 dk geçti ve kârdaysa → SL'yi breakeven'a çek (bir kez)
+                    entry     = pos["entry_price"]
+                    entry_atr = pos.get("entry_atr", pd["atr"])
+
+                    # ── Trailing Stop ──
+                    if entry_atr > 0:
+                        sym = pos["symbol"]
+                        if pos["direction"] == "LONG":
+                            new_best = max(pos.get("best_price", entry), b_high)
+                            pos["best_price"] = new_best
+                            profit_atr = (new_best - entry) / entry_atr
+                            if profit_atr >= TRAIL_MIN_PROFIT_ATR:
+                                new_sl = round(new_best - entry_atr * TRAIL_ATR_MULT, 6)
+                                if new_sl > pos["sl"] + entry_atr * 0.1:
+                                    old_sl = pos["sl"]
+                                    pos["sl"] = new_sl
+                                    print(f"  📈 TRAIL [{sym}]: SL {old_sl} → {new_sl} (best={round(new_best,4)})")
+                                    _notify_trail(sym, old_sl, new_sl, entry, entry_atr, "LONG")
+                        else:
+                            new_best = min(pos.get("best_price", entry), b_low)
+                            pos["best_price"] = new_best
+                            profit_atr = (entry - new_best) / entry_atr
+                            if profit_atr >= TRAIL_MIN_PROFIT_ATR:
+                                new_sl = round(new_best + entry_atr * TRAIL_ATR_MULT, 6)
+                                if new_sl < pos["sl"] - entry_atr * 0.1:
+                                    old_sl = pos["sl"]
+                                    pos["sl"] = new_sl
+                                    print(f"  📉 TRAIL [{sym}]: SL {old_sl} → {new_sl} (best={round(new_best,4)})")
+                                    _notify_trail(sym, old_sl, new_sl, entry, entry_atr, "SHORT")
+
+                    # ── Breakeven (45dk) — trailing geçmediyse tetikle ──
                     if held >= MAX_LOSS_BARS and not pos.get("breakeven_set"):
-                        entry = pos["entry_price"]
                         if pos["direction"] == "LONG" and pos["sl"] < entry:
                             pos["sl"] = entry
                             pos["breakeven_set"] = True
