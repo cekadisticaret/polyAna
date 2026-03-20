@@ -39,7 +39,7 @@ STRUCT_LEN      = 5
 MIN_RR_RATIO    = 2.0
 
 # Confluence (paper_trader ile aynı)
-MIN_CONFLUENCE  = 3
+MIN_CONFLUENCE  = 4
 CROSS_LOOKBACK  = 3
 EMA_FAST_LEN    = 9
 EMA_TREND_LEN   = 50
