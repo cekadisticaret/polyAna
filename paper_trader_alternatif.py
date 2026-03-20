@@ -34,10 +34,15 @@ POS_SIZE_PCT   = 0.10
 COMMISSION_PCT = 0.001
 
 # Confluence (Pine'dan)
-MIN_CONF       = 3
-ATR_MULT_SL    = 1.5
+MIN_CONF       = 4        # 3→4: zayıf girişleri filtrele
+ATR_MULT_SL    = 2.0      # 1.5→2.0: wick'lere karşı daha geniş SL
 RR_RATIO       = 2.0
 MIN_RR         = 1.5      # Kripto: 2.0 çok sıkı, 1.5 deneyelim
+
+# Dinamik Trailing Stop
+TRAIL_ATR_MULT = 1.5   # Başlangıç trail mesafesi = ATR_MULT_SL ile aynı
+TRAIL_TIGHTEN  = 0.4   # TP her geçilince trail_mult bu kadar azalır
+TRAIL_MIN_MULT = 0.6   # Minimum trail mesafesi (çok sıkmaması için)
 STRUCT_LEN     = 5
 VOL_MULT       = 1.5
 EMA_FAST       = 9
@@ -251,7 +256,7 @@ def analyze_confluence(symbol):
     c_trend_bear = htf_bear
     c_struct_bear = struct_bear
     c_ema_bear = ema_fast < ema_slow and price < ema_trend
-    c_rsi_bear = RSI_OS < rsi_val < 50
+    c_rsi_bear = RSI_OS < rsi_val < 45  # 50→45: bounce zone'dan uzak tut
     c_macd_bear = macd_line < sig_line and hist < 0
     c_vol_bear = high_vol
 
@@ -357,6 +362,9 @@ def open_position(data, symbol, direction, price, sl, tp, atr_val, result):
         "open_bar": data.get("total_bars", 0),
         "entry_atr": atr_val,
         "leverage": LEVERAGE,
+        "best_price": price,
+        "trail_mult": TRAIL_ATR_MULT,
+        "trail_level": 0,
     })
     data.setdefault("bar_counter", {})[symbol] = data["total_bars"]
 
@@ -396,6 +404,31 @@ def open_position(data, symbol, direction, price, sl, tp, atr_val, result):
         f"─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─"
     )
     return True
+
+def _notify_tp_extension(pos, old_tp, new_tp, new_mult, capital):
+    """TP aşıldığında trail sıkıştırma + TP uzatma bildirimi."""
+    level     = pos.get("trail_level", 1)
+    symbol    = pos["symbol"]
+    direction = pos["direction"]
+    entry     = pos["entry_price"]
+    lev       = pos.get("leverage", LEVERAGE)
+    best      = pos.get("best_price", entry)
+    pnl_pct   = ((best - entry) / entry * 100 * lev) if direction == "LONG" \
+                else ((entry - best) / entry * 100 * lev)
+    emoji     = "📈" if direction == "LONG" else "📉"
+    stars     = "🟢" * min(level, 5)
+    print(f"  {stars} TRAIL SEV.{level} [{direction}]: {symbol} | TP uzatıldı → {new_tp} | Trail x{new_mult}")
+    tg_send(
+        f"{stars} <b>Alternatif — Trail Seviye {level}</b>\n"
+        f"{emoji} {direction} | <b>{symbol}</b>\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"✅ TP aşıldı: {old_tp}\n"
+        f"🎯 Yeni TP : {new_tp}\n"
+        f"📏 Trail   : ATR × {new_mult} (sıkılaştı)\n"
+        f"📊 Anlık kâr: ~+{pnl_pct:.1f}%\n"
+        f"💰 Sermaye : {capital:.2f} USDT"
+    )
+
 
 def close_position(data, pos, price, reason):
     symbol = pos["symbol"]
@@ -458,25 +491,70 @@ def run_scan(symbols):
         elapsed = round((datetime.now(timezone.utc) - scan_start).total_seconds(), 1)
         print(f"   🔍 Tarama tamamlandı: {elapsed}s")
 
-        # SL/TP / çıkış
+        # SL/TP / Dinamik Trailing Stop
         for pos in list(data["open"]):
             r = results.get(pos["symbol"])
             if not r:
                 continue
-            bh, bl = r["bar_high"], r["bar_low"]
+
+            bh  = r["bar_high"]
+            bl  = r["bar_low"]
+            entry_atr   = pos.get("entry_atr", r["atr"])
+            trail_mult  = pos.get("trail_mult", TRAIL_ATR_MULT)
+            trail_level = pos.get("trail_level", 0)
+
             if pos["direction"] == "LONG":
-                if bl <= pos["sl"]:
-                    close_position(data, pos, pos["sl"], "STOP LOSS")
-                    continue
+                # best_price güncelle
+                new_best = max(pos.get("best_price", pos["entry_price"]), bh)
+                pos["best_price"] = new_best
+
+                # Trail SL hesapla — sadece yukarı hareket eder
+                trail_sl = new_best - entry_atr * trail_mult
+                if trail_sl > pos["sl"]:
+                    pos["sl"] = round(trail_sl, 6)
+
+                # TP geçildi → kapatma, uzat ve sıkıştır
                 if bh >= pos["tp"]:
-                    close_position(data, pos, pos["tp"], "TAKE PROFIT")
+                    new_mult = max(TRAIL_MIN_MULT, trail_mult - TRAIL_TIGHTEN)
+                    pos["trail_mult"] = new_mult
+                    pos["trail_level"] = trail_level + 1
+                    new_tp = round(pos["tp"] + entry_atr * RR_RATIO, 6)
+                    old_tp = pos["tp"]
+                    pos["tp"] = new_tp
+                    _notify_tp_extension(pos, old_tp, new_tp, new_mult, data["capital"])
                     continue
-            else:
-                if bh >= pos["sl"]:
-                    close_position(data, pos, pos["sl"], "STOP LOSS")
+
+                # SL hit → kapat
+                if bl <= pos["sl"]:
+                    reason = "TRAIL STOP" if trail_level > 0 else "STOP LOSS"
+                    close_position(data, pos, pos["sl"], reason)
                     continue
+
+            else:  # SHORT
+                # best_price güncelle (SHORT için en düşük fiyat)
+                new_best = min(pos.get("best_price", pos["entry_price"]), bl)
+                pos["best_price"] = new_best
+
+                # Trail SL hesapla — sadece aşağı hareket eder
+                trail_sl = new_best + entry_atr * trail_mult
+                if trail_sl < pos["sl"]:
+                    pos["sl"] = round(trail_sl, 6)
+
+                # TP geçildi → kapatma, uzat ve sıkıştır
                 if bl <= pos["tp"]:
-                    close_position(data, pos, pos["tp"], "TAKE PROFIT")
+                    new_mult = max(TRAIL_MIN_MULT, trail_mult - TRAIL_TIGHTEN)
+                    pos["trail_mult"] = new_mult
+                    pos["trail_level"] = trail_level + 1
+                    new_tp = round(pos["tp"] - entry_atr * RR_RATIO, 6)
+                    old_tp = pos["tp"]
+                    pos["tp"] = new_tp
+                    _notify_tp_extension(pos, old_tp, new_tp, new_mult, data["capital"])
+                    continue
+
+                # SL hit → kapat
+                if bh >= pos["sl"]:
+                    reason = "TRAIL STOP" if trail_level > 0 else "STOP LOSS"
+                    close_position(data, pos, pos["sl"], reason)
                     continue
 
         # Yeni giriş

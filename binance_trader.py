@@ -568,7 +568,7 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
         lev = NEUT_LONG_LEV if direction == "LONG" else NEUT_SHORT_LEV
 
     avail, total = get_balance()
-    desired = total * POS_SIZE_PCT
+    desired = max(total * POS_SIZE_PCT, 20.0)   # minimum 20 USDT margin
     margin  = min(desired, avail)
     if desired > avail:
         _log_open(f"{symbol}: margin hedef {desired:.2f} USDT → serbeste göre {margin:.2f} (avail={avail:.2f}, total={total:.2f})")
