@@ -42,7 +42,7 @@ MIN_RR_RATIO    = 2.0
 TRAIL_ATR_MULT       = 1.5   # Trailing stop mesafesi: en iyi fiyattan ATR × 1.5 geride
 TRAIL_MIN_PROFIT_ATR = 0.8   # Trailing başlama eşiği: kâr ATR × 0.8'i geçince aktifleşir
 TRAIL_TIGHTEN        = 0.3   # TP her geçilince trail_mult bu kadar sıkışır
-TRAIL_MIN_MULT       = 0.5   # Minimum trail mesafesi (ATR × 0.5)
+TRAIL_MIN_MULT       = 0.7   # Minimum trail mesafesi (ATR × 0.7)
 
 BULL_LONG_LEV   = 12
 BULL_SHORT_LEV  = 8
