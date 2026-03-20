@@ -672,10 +672,27 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
             place_stop_market(symbol, "BUY", sl)
             place_take_profit_market(symbol, "BUY", tp)
 
+        # Gerçek fill fiyatını Binance'ten çek (market emri anlık fiyattan dolar)
+        fill_price = price
+        try:
+            import time as _time
+            _time.sleep(0.5)  # emir işlenmesi için kısa bekleme
+            trades = get_user_trades(symbol, limit=5)
+            if trades:
+                side_filter = "BUY" if direction == "LONG" else "SELL"
+                recent = [t for t in trades if t.get("side") == side_filter and not t.get("maker")]
+                if recent:
+                    total_qty = sum(float(t["qty"]) for t in recent[-3:])
+                    total_val = sum(float(t["price"]) * float(t["qty"]) for t in recent[-3:])
+                    if total_qty > 0:
+                        fill_price = round(total_val / total_qty, 8)
+        except Exception:
+            pass
+
         state["positions"][symbol] = {
             "symbol":       symbol,
             "direction":    direction,
-            "entry_price":  price,
+            "entry_price":  fill_price,
             "sl":           sl, "tp": tp,
             "open_bar":     state.get("total_bars", 0),
             "open_time":    now_str(),
@@ -690,13 +707,13 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
 
         emoji  = "📈" if direction == "LONG" else "📉"
         n_open = len(state["positions"])
-        _log_open(f"{symbol}: OK | {direction} margin={margin:.2f} R:R=1:{rr_ratio} açık={n_open}")
-        print(f"  {emoji} {direction}: {symbol} @ {price} | SL:{sl} ({sl_pct}%) | TP:{tp} ({tp_pct}%) | Başarı:%{win_prob} | {bias_label} {lev}x")
+        _log_open(f"{symbol}: OK | {direction} margin={margin:.2f} R:R=1:{rr_ratio} açık={n_open} fill={fill_price}")
+        print(f"  {emoji} {direction}: {symbol} @ {fill_price} | SL:{sl} ({sl_pct}%) | TP:{tp} ({tp_pct}%) | Başarı:%{win_prob} | {bias_label} {lev}x")
         tg_send(
             f"{emoji} <b>Yeni İşlem Açıldı #{n_open}</b>\n"
             f"<b>{direction}</b> | <b>{symbol}</b>\n"
             f"━━━━━━━━━━━━━━\n"
-            f"🎯 Giriş : {price}\n"
+            f"🎯 Giriş : {fill_price}\n"
             f"🛑 SL : {sl} (-%{sl_pct})\n"
             f"✅ TP : {tp} (+%{tp_pct})\n"
             f"📉 ATR : {atr} (%{atr_pct})\n"

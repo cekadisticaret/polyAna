@@ -354,7 +354,16 @@ def analyze(symbol, interval="15m"):
         vol_ok and
         is_not_far
     )
-    strong_sell = False  # v5: SHORT devre dışı (%26.8 WR — net zarar kaynağı)
+    strong_sell = (
+        not is_hot_vol and
+        htf_bear and
+        trend_down and price < ema21 and
+        rsi_val >= 35 and rsi_val <= 45 and rsi_falling and
+        macd_val < sig_val and
+        adx_val > ADX_MIN and
+        vol_ok and
+        is_not_far
+    )
 
     # Çıkış sinyalleri — MACD çıkış eşiği sıkıştırıldı (rsi < 52 → rsi < 48, erken çıkışı önler)
     exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 48)
