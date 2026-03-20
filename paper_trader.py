@@ -342,8 +342,8 @@ def analyze(symbol, interval="15m"):
         htf_bias = "OFF"
         htf_bull = htf_bear = True
 
-    # v3: MACD histogram şartı kaldırıldı (sadece macd > signal), hacim OR
-    vol_ok = vol_spike or vol_confirm
+    # v5: hacim AND zorunlu (OR çok gürültülü sinyal üretiyordu), SHORT devre dışı
+    vol_ok = vol_spike and vol_confirm
     strong_buy = (
         not is_hot_vol and
         htf_bull and
@@ -354,21 +354,11 @@ def analyze(symbol, interval="15m"):
         vol_ok and
         is_not_far
     )
-    strong_sell = (
-        not is_hot_vol and
-        htf_bear and
-        trend_down and price < ema21 and
-        rsi_val >= 35 and rsi_val <= 45 and rsi_falling and
-        macd_val < sig_val and
-        adx_val > ADX_MIN and
-        vol_ok and
-        is_not_far
-    )
+    strong_sell = False  # v5: SHORT devre dışı (%26.8 WR — net zarar kaynağı)
 
-    # Çıkış sinyalleri
-    # MACD + RSI eşiği: tek bar düşüş değil, RSI nötr bölgeye geri döndüğünde çık
-    exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 52)
-    exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > 48)
+    # Çıkış sinyalleri — MACD çıkış eşiği sıkıştırıldı (rsi < 52 → rsi < 48, erken çıkışı önler)
+    exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 48)
+    exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > 52)
 
     # Swing pivot (SL/TP için: swing varsa swing, yoksa ATR)
     last_sh, last_sl = get_pivots(highs, lows, STRUCT_LEN, STRUCT_LEN)
