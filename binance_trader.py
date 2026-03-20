@@ -41,6 +41,8 @@ MIN_RR_RATIO    = 2.0
 
 TRAIL_ATR_MULT       = 1.5   # Trailing stop mesafesi: en iyi fiyattan ATR × 1.5 geride
 TRAIL_MIN_PROFIT_ATR = 0.8   # Trailing başlama eşiği: kâr ATR × 0.8'i geçince aktifleşir
+TRAIL_TIGHTEN        = 0.3   # TP her geçilince trail_mult bu kadar sıkışır
+TRAIL_MIN_MULT       = 0.5   # Minimum trail mesafesi (ATR × 0.5)
 
 BULL_LONG_LEV   = 12
 BULL_SHORT_LEV  = 8
@@ -573,6 +575,67 @@ def _notify_trail(sym, old_sl, new_sl, entry, entry_atr, direction):
             f"✅ Kilitli kâr: +{round(new_locked, 1)} ATR"
         )
 
+def _extend_tp(state, sym, pos, entry_atr, hit_tp):
+    """
+    TP aşıldığında pozisyonu kapatmak yerine:
+    - trail_mult sıkılaştır (min TRAIL_MIN_MULT)
+    - TP'yi bir ATR × RR_RATIO kadar uzat
+    - Binance order'larını güncelle
+    - Telegram bildirimi gönder
+    """
+    direction   = pos["direction"]
+    entry       = pos["entry_price"]
+    trail_mult  = pos.get("trail_mult", TRAIL_ATR_MULT)
+    trail_level = pos.get("trail_level", 0)
+
+    new_mult    = max(TRAIL_MIN_MULT, trail_mult - TRAIL_TIGHTEN)
+    new_level   = trail_level + 1
+    old_tp      = pos["tp"]
+
+    if direction == "LONG":
+        new_tp = round_price(sym, old_tp + entry_atr * 2.0)
+        new_sl = round_price(sym, hit_tp - entry_atr * new_mult)
+    else:
+        new_tp = round_price(sym, old_tp - entry_atr * 2.0)
+        new_sl = round_price(sym, hit_tp + entry_atr * new_mult)
+
+    # SL sadece kâr yönünde hareket eder
+    if direction == "LONG" and new_sl <= pos["sl"]:
+        new_sl = pos["sl"]
+    if direction == "SHORT" and new_sl >= pos["sl"]:
+        new_sl = pos["sl"]
+
+    pos["tp"]          = new_tp
+    pos["sl"]          = new_sl
+    pos["trail_mult"]  = new_mult
+    pos["trail_level"] = new_level
+    pos["best_price"]  = hit_tp
+
+    # Binance order'larını güncelle
+    try:
+        cancel_all_orders(sym)
+        side = "SELL" if direction == "LONG" else "BUY"
+        place_stop_market(sym, side, new_sl)
+        place_take_profit_market(sym, side, new_tp)
+    except Exception as e:
+        _log_open(f"{sym}: _extend_tp order hatası: {e}")
+
+    best = pos.get("best_price", entry)
+    pnl_atr = ((best - entry) / entry_atr) if direction == "LONG" else ((entry - best) / entry_atr)
+    emoji   = "📈" if direction == "LONG" else "📉"
+    stars   = "🟢" * min(new_level, 5)
+    print(f"  {stars} TP EXT [{sym}] Sev.{new_level}: TP {old_tp} → {new_tp} | SL → {new_sl} | Trail x{new_mult}")
+    tg_send(
+        f"{stars} <b>TP Aşıldı — Uzatıldı #{new_level}</b> | {sym}\n"
+        f"{emoji} {direction}\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"✅ Geçilen TP : {old_tp}\n"
+        f"🎯 Yeni TP   : {new_tp}\n"
+        f"🛑 Yeni SL   : {new_sl} (trail x{new_mult})\n"
+        f"📊 Anlık kâr : ~+{round(pnl_atr, 1)} ATR"
+    )
+
+
 def _log_open(msg):
     print(f"   [binance_open] {msg}")
 
@@ -733,6 +796,9 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
             "win_prob":     win_prob,
             "entry_reason": reasons,
             "htf_bias":     htf_bias_val,
+            "best_price":   fill_price,
+            "trail_mult":   TRAIL_ATR_MULT,
+            "trail_level":  0,
         }
         state.setdefault("bar_counter", {})[symbol] = state.get("total_bars", 0)
 
@@ -945,21 +1011,20 @@ def run_scan(symbols):
                 b_high, b_low = highs[-2], lows[-2]
 
                 # ── SL / TP Kontrolü ──
-                closed = False
+                closed    = False
+                entry_atr = pos.get("entry_atr", 0)
                 if pos["direction"] == "LONG":
                     if b_low <= pos["sl"]:
                         close_position(state, pos_with_sym, pos["sl"], "STOP LOSS (5m)")
                         closed = True
-                    elif b_high >= pos["tp"]:
-                        close_position(state, pos_with_sym, pos["tp"], "TAKE PROFIT (5m)")
-                        closed = True
+                    elif b_high >= pos["tp"] and entry_atr > 0:
+                        _extend_tp(state, sym, pos, entry_atr, pos["tp"])
                 else:
                     if b_high >= pos["sl"]:
                         close_position(state, pos_with_sym, pos["sl"], "STOP LOSS (5m)")
                         closed = True
-                    elif b_low <= pos["tp"]:
-                        close_position(state, pos_with_sym, pos["tp"], "TAKE PROFIT (5m)")
-                        closed = True
+                    elif b_low <= pos["tp"] and entry_atr > 0:
+                        _extend_tp(state, sym, pos, entry_atr, pos["tp"])
 
                 if closed or sym not in state["positions"]:
                     continue
@@ -1086,11 +1151,12 @@ def run_scan(symbols):
 
             if sym not in state["positions"]:
                 continue
-            if pos["direction"] == "LONG" and b_high >= pos["tp"]:
-                close_position(state, pos, pos["tp"], "TAKE PROFIT")
+            entry_atr_15 = pos.get("entry_atr", 0)
+            if pos["direction"] == "LONG" and b_high >= pos["tp"] and entry_atr_15 > 0:
+                _extend_tp(state, sym, pos, entry_atr_15, pos["tp"])
                 continue
-            elif pos["direction"] == "SHORT" and b_low <= pos["tp"]:
-                close_position(state, pos, pos["tp"], "TAKE PROFIT")
+            elif pos["direction"] == "SHORT" and b_low <= pos["tp"] and entry_atr_15 > 0:
+                _extend_tp(state, sym, pos, entry_atr_15, pos["tp"])
                 continue
 
             if sym not in state["positions"]:
