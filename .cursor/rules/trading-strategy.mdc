@@ -12,13 +12,14 @@ alwaysApply: false
 | LEVERAGE | 10x | Kaldıraç |
 | VIRTUAL_CAPITAL | 200 USDT | Sanal sermaye |
 | POS_SIZE_PCT | %10 | Pozisyon başına margin (20 USDT / 200 USDT) |
-| MAX_OPEN | 8 | Aynı anda max açık pozisyon (BULL 5L/3S, BEAR 3L/5S, NEUT 4L/4S) |
-| STOP_ATR_MULT | 3.0 | SL = ATR × 3.0 |
-| TAKE_ATR_MULT | 4.0 | TP = ATR × 4.0 |
-| MAX_SL_PCT | %0.6 | Maksimum stop mesafesi |
-| COOLDOWN_BARS  | 4   | Kapanış sonrası bekleme (60 dk) |
-| MIN_HOLD_BARS  | 3   | Sinyal çıkışı için min tutma (45 dk) |
-| TRAIL_ATR_MULT | 1.2 | Trailing stop mesafesi (ATR × 1.2) |
+| MAX_OPEN | 8 | Aynı anda max açık pozisyon |
+| STOP_ATR_MULT | 2.0 | SL = ATR × 2.0 |
+| TAKE_ATR_MULT | 4.5 | TP = ATR × 4.5 → R:R ≈ 1:2.25 |
+| MAX_SL_PCT | %0.8 | Maksimum stop mesafesi |
+| COOLDOWN_BARS | 4 | Kapanış sonrası bekleme (60 dk) |
+| MIN_HOLD_BARS | 2 | Sinyal çıkışı için min tutma (30 dk) |
+| MAX_LOSS_BARS | 3 | **15×3=45 dk zararda ise zaman aşımıyla kapat** |
+| ADX_MIN | 25 | v4: 18→25 (trend başlangıcı zonunu ele) |
 
 ## Değişiklik Kuralları
 - Parametre değiştirildiğinde hem `paper_trader.py` hem `PROJECT.md` güncellenir
@@ -62,10 +63,12 @@ if pos["direction"] == "LONG":
         close_position(data, pos, pos["sl"], "STOP LOSS", entry_atr)
 ```
 
-## İndikatör Ayarları
+## İndikatör Ayarları (v4 — 20.03.2026)
 - EMA: 21 / 100
-- MACD: fast=8, slow=21, signal=5 — exit için RSI yön onayı zorunlu
-- RSI: period=14 — giriş: >55 (long), <45 (short)
-- ADX: period=22, min=25
-- Hacim: vol_spike (>ort×1.2) VE vol_confirm (>son12max×1.2) ikisi birden
+- MACD: fast=8, slow=21, signal=5
+- RSI: period=14 — giriş LONG: 50–65 | giriş SHORT: 35–45 (v4: üst sınır 50→45)
+- ADX: period=14, min=**25** (v4: 18→25)
+- Hacim: vol_spike (>ort×1.5) OR vol_confirm (>son12bar×1.2)
 - ATR: period=14, volatilite filtresi hot_mult=1.8
+- Çıkış LONG: RSI>75 | fiyat < EMA100 | (MACD bear AND RSI < **52**) — v4: rsi_prev yerine eşik
+- Çıkış SHORT: RSI<25 | fiyat > EMA100 | (MACD bull AND RSI > **48**) — v4: rsi_prev yerine eşik

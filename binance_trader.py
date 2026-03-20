@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from paper_trader import (
     analyze, get_klines, get_market_bias,
     STOP_ATR_MULT, TAKE_ATR_MULT, MAX_SL_PCT, MIN_RR_RATIO,
-    COOLDOWN_BARS, MIN_HOLD_BARS,
+    COOLDOWN_BARS, MIN_HOLD_BARS, MAX_LOSS_BARS,
     BULL_LONG_LEV, BULL_SHORT_LEV, BEAR_LONG_LEV, BEAR_SHORT_LEV,
     NEUT_LONG_LEV, NEUT_SHORT_LEV,
     POS_SIZE_PCT, COMMISSION_PCT, LEVERAGE, MAX_OPEN,
@@ -28,6 +28,38 @@ from binance_api import (
     place_market_order, place_stop_market, place_take_profit_market,
     cancel_all_orders, round_quantity, round_price, get_user_trades,
 )
+
+
+def _binance_close_fill_summary(symbol):
+    """
+    Pozisyon borsada kapandıktan sonra userTrades'ten gerçek realized PnL ve çıkış fiyatı.
+    Analizdeki entry_price ile değil, Binance'in realizedPnl'i ile uyumlu sonuç verir.
+    Dönüş: (exit_price_avg, net_pnl_usdt, sum_commission) veya None.
+    """
+    try:
+        trades = get_user_trades(symbol, limit=50)
+        if not trades:
+            return None
+        by_time = sorted(trades, key=lambda t: int(t.get("time", 0)), reverse=True)
+        oid = by_time[0].get("orderId")
+        close_fills = [t for t in trades if t.get("orderId") == oid]
+        if not close_fills:
+            return None
+        rpnl = sum(float(t.get("realizedPnl", 0) or 0) for t in close_fills)
+        comm_signed = sum(float(t.get("commission", 0) or 0) for t in close_fills)
+        qty_sum = sum(float(t.get("qty", 0) or 0) for t in close_fills)
+        if qty_sum <= 0:
+            exit_px = float(close_fills[0].get("price", 0))
+        else:
+            exit_px = sum(
+                float(t.get("price", 0)) * float(t.get("qty", 0)) for t in close_fills
+            ) / qty_sum
+        # Binance: commission genelde negatif USDT; cüzdan ≈ realizedPnl + commission
+        net = round(rpnl + comm_signed, 4)
+        comm_abs = abs(comm_signed)
+        return exit_px, net, comm_abs
+    except Exception:
+        return None
 
 # ========== AYARLAR (paper ile aynı) ==========
 
@@ -282,8 +314,20 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
 
 # ========== POZİSYON KAPATMA (paper ile aynı) ==========
 
-def close_position(state, pos, price, reason, already_closed=False):
-    """paper_trader.close_position ile aynı format."""
+def close_position(
+    state,
+    pos,
+    price,
+    reason,
+    already_closed=False,
+    binance_net_pnl_usdt=None,
+    binance_commission_usdt=None,
+):
+    """
+    binance_net_pnl_usdt: userTrades realizedPnl − fill komisyonu (borsa ile uyumlu net).
+    binance_commission_usdt: fill komisyonları toplamı (gösterim için).
+    Verilmezse: grafik entry_price vs çıkış (slippage'da telefonla çelişebilir).
+    """
     symbol = pos["symbol"]
     if not already_closed:
         try:
@@ -304,19 +348,29 @@ def close_position(state, pos, price, reason, already_closed=False):
     entry = pos["entry_price"]
     lev = pos.get("leverage", LEVERAGE)
     margin = pos.get("margin", 10)
-    if direction == "LONG":
-        price_chg_pct = (price - entry) / entry * 100
-    else:
-        price_chg_pct = (entry - price) / entry * 100
-    pnl_pct = round(price_chg_pct * lev, 2)
     notional = margin * lev
-    commission = round(notional * COMMISSION_PCT, 4)
-    pnl_usdt = round(margin * pnl_pct / 100 - commission, 2)
+
+    if binance_net_pnl_usdt is not None:
+        pnl_usdt = round(float(binance_net_pnl_usdt), 2)
+        pnl_pct = round((pnl_usdt / margin) * 100, 2) if margin else 0.0
+        if binance_commission_usdt is not None:
+            commission = round(float(binance_commission_usdt), 4)
+        else:
+            commission = round(notional * COMMISSION_PCT, 4)
+    else:
+        if direction == "LONG":
+            price_chg_pct = (price - entry) / entry * 100
+        else:
+            price_chg_pct = (entry - price) / entry * 100
+        pnl_pct = round(price_chg_pct * lev, 2)
+        commission = round(notional * COMMISSION_PCT, 4)
+        pnl_usdt = round(margin * pnl_pct / 100 - commission, 2)
 
     trade = {
         **pos, "exit_price": price, "exit_time": now_str(),
         "reason": reason, "pnl_pct": pnl_pct, "pnl_usdt": pnl_usdt,
         "commission": commission, "trade_no": len(state.get("closed", [])) + 1,
+        "pnl_from_binance": binance_net_pnl_usdt is not None,
         "win_prob": pos.get("win_prob"),  # Analiz için — 24h sonra tahmin vs gerçek karşılaştırma
     }
     state["closed"] = state.get("closed", []) + [trade]
@@ -333,6 +387,10 @@ def close_position(state, pos, price, reason, already_closed=False):
     duration_str = f"{held_min} dk" if held_min < 60 else (f"{held_min // 60}s {held_min % 60}dk" if held_min % 60 else f"{held_min // 60} saat")
     avail, _ = get_balance()
 
+    bn_note = ""
+    if trade.get("pnl_from_binance"):
+        bn_note = "📌 <i>Net PnL borsa realized — Giriş satırı sinyal fiyatı; gerçek ort. giriş farklı olabilir.</i>\n"
+
     print(f"  {emoji} KAPANDI [{direction}]: {symbol} @ {price} | {'+' if pnl_pct>0 else ''}{pnl_pct}% | {reason}")
     tg_send(
         f"{emoji} <b>İşlem Kapandı #{trade['trade_no']}</b>\n"
@@ -345,6 +403,7 @@ def close_position(state, pos, price, reason, already_closed=False):
         f"📊 Sonuç  : <b>{'+' if pnl_pct>0 else ''}{pnl_pct}%</b> ({'+' if pnl_usdt>0 else ''}{pnl_usdt:.3f} USDT) — {lev}x\n"
         f"💸 Komisyon: -{commission:.3f} USDT\n"
         f"{atr_line}"
+        f"{bn_note}"
         f"💡 Neden  : {reason}\n"
         f"💰 Bakiye : {avail:.2f} USDT\n"
         f"─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─"
@@ -382,20 +441,43 @@ def run_scan(symbols):
         for sym in list(state["positions"].keys()):
             if sym not in binance_positions:
                 pos = dict(state["positions"][sym], symbol=sym)
-                exit_price = pos["entry_price"]
-                reason = "BINANCE SL/TP"
-                try:
-                    trades = get_user_trades(sym, limit=5)
-                    if trades:
-                        last = trades[0]
-                        exit_price = float(last.get("price", exit_price))
+                summary = _binance_close_fill_summary(sym)
+                if summary:
+                    exit_price, net_pnl, comm_fills = summary
+                    try:
                         if abs(exit_price - pos["sl"]) < abs(exit_price - pos["tp"]):
                             reason = "STOP LOSS (Binance)"
                         else:
                             reason = "TAKE PROFIT (Binance)"
-                except Exception:
-                    pass
-                close_position(state, pos, exit_price, reason, already_closed=True)
+                    except Exception:
+                        reason = "BINANCE SL/TP"
+                    print(f"   [binance_close] {sym}: net realized ≈ {net_pnl} USDT (userTrades)")
+                    close_position(
+                        state,
+                        pos,
+                        exit_price,
+                        reason,
+                        already_closed=True,
+                        binance_net_pnl_usdt=net_pnl,
+                        binance_commission_usdt=comm_fills,
+                    )
+                else:
+                    exit_price = pos["entry_price"]
+                    reason = "BINANCE SL/TP"
+                    try:
+                        trades = get_user_trades(sym, limit=5)
+                        if trades:
+                            by_t = sorted(
+                                trades, key=lambda t: int(t.get("time", 0)), reverse=True
+                            )
+                            exit_price = float(by_t[0].get("price", exit_price))
+                            if abs(exit_price - pos["sl"]) < abs(exit_price - pos["tp"]):
+                                reason = "STOP LOSS (Binance)"
+                            else:
+                                reason = "TAKE PROFIT (Binance)"
+                    except Exception:
+                        pass
+                    close_position(state, pos, exit_price, reason, already_closed=True)
 
         # 5m bar ile SL/TP kontrolü (daha sık tepki)
         for sym, pos in list(state["positions"].items()):
@@ -511,14 +593,17 @@ def run_scan(symbols):
                 close_position(state, pos, pos["tp"], "TAKE PROFIT")
                 continue
 
-            # Çıkış sinyali (zararda + MIN_HOLD)
+            # Çıkış sinyali (zararda + MIN_HOLD veya 45dk zaman aşımı)
             if sym not in state["positions"]:
                 continue
             in_profit = (r["price"] > pos["entry_price"]) if pos["direction"] == "LONG" else (r["price"] < pos["entry_price"])
-            if not in_profit and held >= MIN_HOLD_BARS:
-                exit_triggered = (pos["direction"] == "LONG" and r["exit_long"]) or (pos["direction"] == "SHORT" and r["exit_short"])
-                if exit_triggered:
-                    close_position(state, pos, r["price"], _exit_reason(pos["direction"], r))
+            if not in_profit:
+                if held >= MAX_LOSS_BARS:
+                    close_position(state, pos, r["price"], "ZAMAN AŞIMI (45dk zararda)")
+                elif held >= MIN_HOLD_BARS:
+                    exit_triggered = (pos["direction"] == "LONG" and r["exit_long"]) or (pos["direction"] == "SHORT" and r["exit_short"])
+                    if exit_triggered:
+                        close_position(state, pos, r["price"], _exit_reason(pos["direction"], r))
 
         # Yeni giriş (paper ile aynı — NEUTRAL bias)
         # Günlük limit aşıldıysa yeni işlem açma

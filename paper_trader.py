@@ -20,7 +20,7 @@ import urllib.parse
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from telegram_config import BOT_TOKEN, CHAT_ID
+from crypto_telegram_config import BOT_TOKEN, CHAT_ID
 
 def tg_send(text):
     try:
@@ -41,9 +41,10 @@ MAX_SL_PCT      = 0.8      # Max stop %0.8 fiyat hareketi (10x ile = %8 margin)
 MAX_OPEN        = 8        # Aynı anda max 8 pozisyon
 COOLDOWN_BARS   = 4        # Kapanış sonrası 4 bar (60 dk) bekleme
 MIN_HOLD_BARS   = 2        # Sinyal çıkışı için min 2 bar tutma
+MAX_LOSS_BARS   = 3        # 15x3=45 dk zararda ise zaman aşımıyla kapat
 POS_SIZE_PCT    = 0.10     # Her işlem: sermayenin %10'u margin
 COMMISSION_PCT  = 0.001    # %0.05 giriş + %0.05 çıkış = %0.1 notional
-ADX_MIN         = 18   # v3: 22 → 18 (daha fazla sinyal)
+ADX_MIN         = 25   # v4: 18 → 25 (trend başlangıcı zonunu ele)
 USE_HTF_FILTER  = False    # False yapınca 1h EMA21 filtresi devre dışı (eski davranış)
 STRUCT_LEN      = 5        # Pivot swing uzunluğu (swing varsa SL/TP swing, yoksa ATR)
 MIN_RR_RATIO    = 2.0      # Min R:R — grafikteki gibi, 0.55 gibi kötü R:R'da işlem açma
@@ -357,16 +358,17 @@ def analyze(symbol, interval="15m"):
         not is_hot_vol and
         htf_bear and
         trend_down and price < ema21 and
-        rsi_val >= 35 and rsi_val <= 50 and rsi_falling and
+        rsi_val >= 35 and rsi_val <= 45 and rsi_falling and
         macd_val < sig_val and
         adx_val > ADX_MIN and
         vol_ok and
         is_not_far
     )
 
-    # Çıkış sinyalleri — MACD tek başına değil, RSI onayı da gerekli
-    exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < rsi_prev)
-    exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > rsi_prev)
+    # Çıkış sinyalleri
+    # MACD + RSI eşiği: tek bar düşüş değil, RSI nötr bölgeye geri döndüğünde çık
+    exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 52)
+    exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > 48)
 
     # Swing pivot (SL/TP için: swing varsa swing, yoksa ATR)
     last_sh, last_sl = get_pivots(highs, lows, STRUCT_LEN, STRUCT_LEN)
@@ -779,16 +781,19 @@ def run_scan(symbols):
 
             # ── Çıkış Sinyali ──
             # Kârdaysa → sadece SL/TP kapatır, sinyal yoksayılır (ATR'ye bırak)
-            # Zarardaysa → sinyal gelince anında kapat
+            # Zarardaysa → sinyal gelince kapat; ya da 45 dk (3 bar) zaman aşımı
             open_set = {p["symbol"] for p in data["open"]}
             if pos["symbol"] in open_set:
                 in_profit = (pd["price"] > pos["entry_price"]) if pos["direction"] == "LONG" \
                             else (pd["price"] < pos["entry_price"])
-                if not in_profit and held >= MIN_HOLD_BARS:
-                    exit_triggered = (pos["direction"] == "LONG" and pd["exit_long"]) or \
-                                     (pos["direction"] == "SHORT" and pd["exit_short"])
-                    if exit_triggered:
-                        close_position(data, pos, pd["price"], _exit_reason(pos["direction"], pd))
+                if not in_profit:
+                    if held >= MAX_LOSS_BARS:
+                        close_position(data, pos, pd["price"], f"ZAMAN AŞIMI (45dk zararda)")
+                    elif held >= MIN_HOLD_BARS:
+                        exit_triggered = (pos["direction"] == "LONG" and pd["exit_long"]) or \
+                                         (pos["direction"] == "SHORT" and pd["exit_short"])
+                        if exit_triggered:
+                            close_position(data, pos, pd["price"], _exit_reason(pos["direction"], pd))
 
         # ── Yeni Giriş Sinyali ──
         if len(data["open"]) < MAX_OPEN:

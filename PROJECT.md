@@ -10,7 +10,8 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 ### Kripto — Paper Trading (15m)
 | Dosya | Açıklama |
 |---|---|
-| `paper_trader.py` | 15m OKX/Binance verisiyle Long/Short paper trading motoru. EMA21/100, MACD 8/21/5, RSI 14, ADX 22, ATR SL/TP. 10x kaldıraç, 200 USDT sanal sermaye. Tüm işlemler 15m barla (5m kaldırıldı). |
+| `paper_trader.py` | 15m paper trading (EMA21/100, MACD, ATR). Telegram: `crypto_telegram_config.py` — BIST grubuna gitmez. |
+| `crypto_telegram_config.example.py` | Kripto paper bildirimleri şablonu; gerçek ayar `crypto_telegram_config.py` (gitignore). |
 | `paper_trader_alternatif.py` | Confluence stratejisi (Pine Scalping Confluence → Python). 6 faktör, min 3 confluence + EMA cross + R:R filtresi. Ayrı Telegram, ayrı state. |
 | `paper_trader_alt_config.py` | Alternatif Telegram bot token/chat_id (gitignore). |
 | `crypto_futures_list.py` | Binance Futures'da aktif 202 coin sembolü listesi. |
@@ -23,7 +24,7 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 ### Kripto — Binance Gerçek Trader (15m)
 | Dosya | Açıklama |
 |---|---|
-| `binance_trader.py` | paper_trader ile aynı sinyal + swing SL/TP; margin = min(%10 hedef, serbest). MAX_OPEN 8 (paper ile aynı); `[binance_open]` logları. |
+| `binance_trader.py` | paper_trader ile aynı sinyal + swing SL/TP; margin = min(%10 hedef, serbest). MAX_OPEN 8; kapanışta PnL: Binance `userTrades` realized+komisyon (sinyal giriş fiyatı ile hesap değil). |
 | `binance_api.py` | Binance USDT-M Futures API istemcisi (HMAC imzalı, urllib). |
 | `binance_config.py` | API key/secret (gitignore). |
 | `binance_state.json` | Açık pozisyonlar ve bar sayacı (runtime). |
@@ -31,8 +32,9 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 **Cron:** `*/5 * * * *` → her 5 dk (`/tmp/binance_trader.log`) — paper_trader ile aynı zamanlama
 
 **Strateji parametreleri (v3 — 18.03.2026 — HTF filtresi eklendi):**
-- LEVERAGE: 10x | POS_SIZE_PCT: %10 | MAX_OPEN: 8 (paper ve binance) | **paper:** BULL/BEAR yön limiti | **binance:** yön limiti yok; margin serbeste göre kısılır
-- STOP_ATR_MULT: 2.0 | TAKE_ATR_MULT: 4.5 | MAX_SL_PCT: %0.8 | ADX eşiği: 22 | R:R ≈ 1:2.25
+- LEVERAGE: 10x | POS_SIZE_PCT: %10 | MAX_OPEN: 8 (paper ve binance)
+- STOP_ATR_MULT: 2.0 | TAKE_ATR_MULT: 4.5 | MAX_SL_PCT: %0.8 | R:R ≈ 1:2.25
+- **v4 (20.03.2026):** ADX_MIN 18→**25** | SHORT RSI üst sınırı 50→**45** | MACD çıkışı rsi_prev→**RSI<52/48** eşiği | MAX_LOSS_BARS=**3** (45dk zararda ise kapat)
 - COOLDOWN_BARS: 4 (60 dk) | MIN_HOLD_BARS: 2 (30 dk)
 - **Per-coin HTF filtresi (1h EMA21):** her coin kendi 1h trendine göre yön doğrulaması yapar; BTC piyasa biası kaldırıldı
 - Trailing stop yok — sade SL / TP / sinyal çıkışı
@@ -74,7 +76,7 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 ### Altyapı & Konfigürasyon
 | Dosya | Açıklama |
 |---|---|
-| `telegram_config.py` | Telegram bot token ve chat ID (git’e girmez); şablon: `telegram_config.example.py`. |
+| `telegram_config.py` | Yalnızca BIST scriptleri (`bist_visual_v2`, `bist_sender`, …); git’e girmez, şablon: `telegram_config.example.py`. |
 | `crypto_list.py` | Genel kripto sembol listesi (spot). |
 | `backup.py` | Günlük 23:59'da tüm proje dosyalarını `backups/` klasörüne tar.gz olarak yedekler. Son 7 gün saklanır. |
 
