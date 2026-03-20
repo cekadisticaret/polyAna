@@ -368,10 +368,12 @@ def open_position(data, symbol, direction, price, sl, tp, atr_val, result):
     })
     data.setdefault("bar_counter", {})[symbol] = data["total_bars"]
 
-    sl_pct = round(abs(price - sl) / price * 100, 3)
-    tp_pct = round(abs(tp - price) / price * 100, 3)
-    rr = result.get("real_rr_long" if direction == "LONG" else "real_rr_short", 0)
-    score = result.get("long_score" if direction == "LONG" else "short_score", 0)
+    sl_pct  = round(abs(price - sl) / price * 100, 3)
+    tp_pct  = round(abs(tp - price) / price * 100, 3)
+    atr_pct = round((atr_val / price) * 100, 3) if price else 0
+    atr_lvl = round(price + atr_val, 6) if direction == "LONG" else round(price - atr_val, 6)
+    rr      = result.get("real_rr_long" if direction == "LONG" else "real_rr_short", 0)
+    score   = result.get("long_score" if direction == "LONG" else "short_score", 0)
 
 
     win_prob = round(score / 6 * 100) if score else 0
@@ -388,7 +390,7 @@ def open_position(data, symbol, direction, price, sl, tp, atr_val, result):
         f"🎯 Giriş : {price}\n"
         f"🛑 SL : {sl} (-%{sl_pct})\n"
         f"✅ TP : {tp} (+%{tp_pct})\n"
-        f"📉 ATR : {atr_val}\n"
+        f"📉 ATR : {atr_val} (%{atr_pct}) → {atr_lvl}\n"
         f"━━━━━━━━━━━━━━\n"
         f"{prob_emoji} <b>Başarı Tahmini : %{win_prob}</b>\n"
         f"{prob_bar} R:R = 1:{rr}\n"
@@ -456,7 +458,10 @@ def close_position(data, pos, price, reason):
     entry_atr = pos.get("entry_atr")
     atr_line  = ""
     if entry_atr and entry:
-        atr_line = f"📉 ATR     : {entry_atr}\n"
+        atr_pct  = round((entry_atr / entry) * 100, 3)
+        atr_lvl  = round(entry + entry_atr, 6) if direction == "LONG" \
+                   else round(entry - entry_atr, 6)
+        atr_line = f"📉 ATR     : {entry_atr} (%{atr_pct}) → {atr_lvl}\n"
 
     held_bars = data.get("total_bars", 0) - pos.get("open_bar", data.get("total_bars", 0))
     held_min  = held_bars * 15
