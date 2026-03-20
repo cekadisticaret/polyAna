@@ -59,11 +59,56 @@ def _notify_trail(sym, old_sl, new_sl, entry, entry_atr, direction):
             f"✅ Kilitli kâr: +{round(new_locked, 1)} ATR"
         )
 
+def _extend_tp(data, pos, entry_atr):
+    """TP aşılınca kapatma yerine uzat ve trail sıkıştır."""
+    direction   = pos["direction"]
+    entry       = pos["entry_price"]
+    trail_mult  = pos.get("trail_mult", TRAIL_ATR_MULT)
+    trail_level = pos.get("trail_level", 0)
+    old_tp      = pos["tp"]
+
+    new_mult  = max(TRAIL_MIN_MULT, trail_mult - TRAIL_TIGHTEN)
+    new_level = trail_level + 1
+
+    if direction == "LONG":
+        new_tp = round(old_tp + entry_atr * 2.0, 6)
+        new_sl = round(old_tp - entry_atr * new_mult, 6)
+        if new_sl <= pos["sl"]:
+            new_sl = pos["sl"]
+    else:
+        new_tp = round(old_tp - entry_atr * 2.0, 6)
+        new_sl = round(old_tp + entry_atr * new_mult, 6)
+        if new_sl >= pos["sl"]:
+            new_sl = pos["sl"]
+
+    pos["tp"]          = new_tp
+    pos["sl"]          = new_sl
+    pos["trail_mult"]  = new_mult
+    pos["trail_level"] = new_level
+    pos["best_price"]  = old_tp
+
+    best      = pos.get("best_price", entry)
+    pnl_atr   = ((best - entry) / entry_atr) if direction == "LONG" else ((entry - best) / entry_atr)
+    emoji     = "📈" if direction == "LONG" else "📉"
+    stars     = "🟢" * min(new_level, 5)
+    sym       = pos["symbol"]
+    print(f"  {stars} TP EXT [{sym}] Sev.{new_level}: TP {old_tp} → {new_tp} | SL → {new_sl}")
+    tg_send(
+        f"{stars} <b>TP Aşıldı — Uzatıldı #{new_level}</b> | {sym}\n"
+        f"{emoji} {direction}\n"
+        f"━━━━━━━━━━━━━━\n"
+        f"✅ Geçilen TP : {old_tp}\n"
+        f"🎯 Yeni TP   : {new_tp}\n"
+        f"🛑 Yeni SL   : {new_sl} (trail ×{new_mult})\n"
+        f"📊 Anlık kâr : ~+{round(pnl_atr, 1)} ATR"
+    )
+
+
 TRADES_FILE     = os.path.join(os.path.dirname(__file__), "paper_trades.json")
 VIRTUAL_CAPITAL = 200.0
 LEVERAGE        = 10
-STOP_ATR_MULT   = 2.0      # SL = ATR × 2.0 — 15m wick'lerine yeterli alan
-TAKE_ATR_MULT   = 4.5      # TP = ATR × 4.5  →  R:R ≈ 1:2.25
+STOP_ATR_MULT   = 2.0      # SL = ATR × 2.0
+TAKE_ATR_MULT   = 2.0      # TP = ATR × 2.0 (yakın TP → trail ile uzatılır)
 MAX_SL_PCT      = 0.8      # Max stop %0.8 fiyat hareketi (10x ile = %8 margin)
 MAX_OPEN        = 8        # Aynı anda max 8 pozisyon
 COOLDOWN_BARS   = 4        # Kapanış sonrası 4 bar (60 dk) bekleme
@@ -71,14 +116,22 @@ MIN_HOLD_BARS   = 2        # Sinyal çıkışı için min 2 bar tutma
 MAX_LOSS_BARS   = 3        # 15x3=45 dk zararda ise zaman aşımıyla kapat
 POS_SIZE_PCT    = 0.10     # Her işlem: sermayenin %10'u margin
 COMMISSION_PCT  = 0.001    # %0.05 giriş + %0.05 çıkış = %0.1 notional
-ADX_MIN         = 25   # v4: 18 → 25 (trend başlangıcı zonunu ele)
-USE_HTF_FILTER  = False    # False yapınca 1h EMA21 filtresi devre dışı (eski davranış)
-STRUCT_LEN      = 5        # Pivot swing uzunluğu (swing varsa SL/TP swing, yoksa ATR)
-MIN_RR_RATIO    = 2.0      # Min R:R — grafikteki gibi, 0.55 gibi kötü R:R'da işlem açma
-HOT_VOL_MULT    = 1.5      # Volatilite filtresi: ATR% > 100bar_ort × bu çarpan ise işlem açma
+ADX_MIN         = 25       # Trend kalitesi eşiği
+STRUCT_LEN      = 5        # Pivot swing uzunluğu
+MIN_RR_RATIO    = 1.5      # Min R:R (yakın TP ile 2.0 çok sıkı olur)
+HOT_VOL_MULT    = 1.5      # Volatilite filtresi çarpanı
 
-TRAIL_ATR_MULT       = 1.5   # Trailing stop mesafesi: en iyi fiyattan ATR × 1.5 geride
-TRAIL_MIN_PROFIT_ATR = 0.8   # Trailing başlama eşiği: kâr ATR × 0.8'i geçince aktifleşir
+# Confluence
+MIN_CONFLUENCE   = 3       # En az kaç faktör uyuşmalı (max 6)
+CROSS_LOOKBACK   = 3       # EMA cross son N barda olduysa geçerli
+EMA_FAST_LEN     = 9       # Hızlı EMA (cross tetikleyici)
+EMA_TREND_LEN    = 50      # Trend EMA
+
+# Trailing / TP extension
+TRAIL_ATR_MULT       = 1.5   # Trailing stop mesafesi
+TRAIL_MIN_PROFIT_ATR = 0.8   # Trailing başlama eşiği
+TRAIL_TIGHTEN        = 0.3   # TP geçilince trail_mult bu kadar sıkışır
+TRAIL_MIN_MULT       = 0.7   # Minimum trail mesafesi
 
 # Piyasa yönüne göre dinamik kaldıraç
 BULL_LONG_LEV   = 12       # Boğa: LONG 12x, SHORT 8x
@@ -291,29 +344,34 @@ def get_pivots(highs, lows, left, right):
         if is_pivot_low(lows, i):
             pl_list.append((i, lows[i]))
     last_sh = ph_list[-1][1] if ph_list else None
+    prev_sh = ph_list[-2][1] if len(ph_list) >= 2 else None
     last_sl = pl_list[-1][1] if pl_list else None
-    return last_sh, last_sl
+    prev_sl = pl_list[-2][1] if len(pl_list) >= 2 else None
+    return last_sh, prev_sh, last_sl, prev_sl
 
 # ========== ANALİZ ==========
 
 def get_htf_bias(symbol):
     """
-    Coin'in kendi 1h verisine göre HTF yön belirler.
-    Fiyat > EMA21(1h) → BULL
-    Fiyat < EMA21(1h) → BEAR
+    1h + 4h EMA50 filtresi (alternatif bot mantığı).
+    Her iki TF'de fiyat EMA50 üstünde → BULL
+    Her iki TF'de fiyat EMA50 altında  → BEAR
+    Aksi halde                         → NEUTRAL
     """
     try:
-        closes_1h, _, _, _ = get_klines(symbol, "1h", 60)
-        if not closes_1h or len(closes_1h) < 25:
+        c1h, _, _, _ = get_klines(symbol, "1h", 60)
+        c4h, _, _, _ = get_klines(symbol, "4h", 60)
+        if not c1h or len(c1h) < 55:
             return "NEUTRAL"
-        ema21_1h = ema(closes_1h, 21)
-        if not ema21_1h:
-            return "NEUTRAL"
-        price_1h = closes_1h[-2]
-        e21_1h   = ema21_1h[-1]
-        if price_1h > e21_1h:
+        ema50_1h = ema(c1h, 50)
+        ema50_4h = ema(c4h, 50) if c4h and len(c4h) >= 55 else None
+        p1h  = c1h[-2]
+        e1h  = ema50_1h[-1] if ema50_1h else p1h
+        p4h  = c4h[-2] if c4h and len(c4h) >= 2 else p1h
+        e4h  = ema50_4h[-1] if ema50_4h else p4h
+        if p1h > e1h and p4h > e4h:
             return "BULL"
-        elif price_1h < e21_1h:
+        elif p1h < e1h and p4h < e4h:
             return "BEAR"
     except Exception:
         pass
@@ -326,103 +384,117 @@ def analyze(symbol, interval="15m"):
         return None
 
     rsi_val           = calc_rsi(closes[-20:], 14)
-    rsi_prev          = calc_rsi(closes[-21:-1], 14)
     macd_val, sig_val = calc_macd(closes)
-    macd_prev, sig_prev = calc_macd(closes[:-1])
     adx_val           = calc_adx(highs, lows, closes)
     atr_val           = calc_atr(highs, lows, closes)
 
-    if any(v is None for v in [rsi_val, rsi_prev, macd_val, sig_val, adx_val, atr_val]):
+    if any(v is None for v in [rsi_val, macd_val, sig_val, adx_val, atr_val]):
         return None
 
+    # EMA hesapları
+    ema9_s   = ema(closes, EMA_FAST_LEN)
     ema21_s  = ema(closes, 21)
+    ema50_s  = ema(closes, EMA_TREND_LEN)
     ema100_s = ema(closes, 100)
-    if not ema21_s or not ema100_s:
+    if not ema9_s or not ema21_s or not ema50_s or not ema100_s:
         return None
 
+    ema9   = ema9_s[-1]
     ema21  = ema21_s[-1]
+    ema50  = ema50_s[-1]
     ema100 = ema100_s[-1]
     price  = closes[-2]
 
+    # EMA cross — son CROSS_LOOKBACK barda crossover olduysa geçerli
+    recent_cross_up   = any(
+        ema9_s[-(CROSS_LOOKBACK - i)] > ema21_s[-(CROSS_LOOKBACK - i)] and
+        ema9_s[-(CROSS_LOOKBACK - i + 1)] <= ema21_s[-(CROSS_LOOKBACK - i + 1)]
+        for i in range(CROSS_LOOKBACK) if (CROSS_LOOKBACK - i + 1) <= len(ema9_s)
+    )
+    recent_cross_down = any(
+        ema9_s[-(CROSS_LOOKBACK - i)] < ema21_s[-(CROSS_LOOKBACK - i)] and
+        ema9_s[-(CROSS_LOOKBACK - i + 1)] >= ema21_s[-(CROSS_LOOKBACK - i + 1)]
+        for i in range(CROSS_LOOKBACK) if (CROSS_LOOKBACK - i + 1) <= len(ema9_s)
+    )
+
+    # Hacim
     vol_avg     = sum(volumes[-20:]) / 20
     vol_spike   = volumes[-2] > vol_avg * 1.5
-    vol_confirm = volumes[-2] > max(volumes[-12:-2]) * 1.2
+    high_vol    = vol_spike
 
-    dist_pct   = abs((price - ema100) / ema100) * 100
-    is_not_far = dist_pct < 5.0   # v2: 3.5 → 5 (daha geniş mesafe)
-    is_hot_vol = calc_atr_pct_hot(highs, lows, closes, hot_mult=HOT_VOL_MULT)
+    is_hot_vol  = calc_atr_pct_hot(highs, lows, closes, hot_mult=HOT_VOL_MULT)
 
-    trend_up   = price > ema100
-    trend_down = price < ema100
+    # HTF bias (1h + 4h EMA50)
+    htf_bias = get_htf_bias(symbol)
+    htf_bull = htf_bias == "BULL"
+    htf_bear = htf_bias == "BEAR"
 
-    rsi_rising  = rsi_val > rsi_prev
-    rsi_falling = rsi_val < rsi_prev
+    # Swing yapı (HH/HL vs LH/LL)
+    last_sh, prev_sh, last_sl, prev_sl = get_pivots(highs, lows, STRUCT_LEN, STRUCT_LEN)
+    struct_bull = bool(last_sh and prev_sh and last_sl and prev_sl and
+                       last_sh > prev_sh and last_sl > prev_sl)
+    struct_bear = bool(last_sh and prev_sh and last_sl and prev_sl and
+                       last_sh < prev_sh and last_sl < prev_sl)
 
-    # MACD histogram momentum
-    hist_now  = macd_val - sig_val
-    hist_prev = (macd_prev - sig_prev) if (macd_prev is not None and sig_prev is not None) else hist_now
-    macd_hist_growing = hist_now > hist_prev
-    macd_hist_falling = hist_now < hist_prev
+    near_resist = bool(last_sh and abs(price - last_sh) / price < 0.005)
+    near_support = bool(last_sl and abs(price - last_sl) / price < 0.005)
 
-    # Per-coin HTF bias (1h) — USE_HTF_FILTER=False ise devre dışı
-    if USE_HTF_FILTER:
-        htf_bias = get_htf_bias(symbol)
-        htf_bull = htf_bias in ("BULL", "NEUTRAL")
-        htf_bear = htf_bias in ("BEAR", "NEUTRAL")
-    else:
-        htf_bias = "OFF"
-        htf_bull = htf_bear = True
+    # MACD histogram
+    hist = macd_val - sig_val
 
-    # v5: hacim AND zorunlu (OR çok gürültülü sinyal üretiyordu), SHORT devre dışı
-    vol_ok = vol_spike and vol_confirm
-    strong_buy = (
-        not is_hot_vol and
-        htf_bull and
-        trend_up and price > ema21 and
-        rsi_val >= 50 and rsi_val <= 65 and rsi_rising and
-        macd_val > sig_val and
-        adx_val > ADX_MIN and
-        vol_ok and
-        is_not_far
-    )
-    strong_sell = (
-        not is_hot_vol and
-        htf_bear and
-        trend_down and price < ema21 and
-        rsi_val >= 35 and rsi_val <= 45 and rsi_falling and
-        macd_val < sig_val and
-        adx_val > ADX_MIN and
-        vol_ok and
-        is_not_far
-    )
+    # ────────────────────────────────
+    # CONFLUENCE SKORLAMA (maks 6)
+    # ────────────────────────────────
+    c_trend_bull  = htf_bull
+    c_struct_bull = struct_bull
+    c_ema_bull    = ema9 > ema21 and price > ema50
+    c_rsi_bull    = 50 < rsi_val < 70
+    c_macd_bull   = macd_val > sig_val and hist > 0
+    c_vol_bull    = high_vol
 
-    # Çıkış sinyalleri — MACD çıkış eşiği sıkıştırıldı (rsi < 52 → rsi < 48, erken çıkışı önler)
+    c_trend_bear  = htf_bear
+    c_struct_bear = struct_bear
+    c_ema_bear    = ema9 < ema21 and price < ema50
+    c_rsi_bear    = 30 < rsi_val < 50
+    c_macd_bear   = macd_val < sig_val and hist < 0
+    c_vol_bear    = high_vol
+
+    long_score  = sum([c_trend_bull, c_struct_bull, c_ema_bull, c_rsi_bull, c_macd_bull, c_vol_bull])
+    short_score = sum([c_trend_bear, c_struct_bear, c_ema_bear, c_rsi_bear, c_macd_bear, c_vol_bear])
+
+    # Giriş: confluence yeterli + EMA cross tetikleyici + hot_vol yok + direnç/destek yok
+    strong_buy  = (not is_hot_vol and long_score  >= MIN_CONFLUENCE and
+                   recent_cross_up   and not near_resist and adx_val > ADX_MIN)
+    strong_sell = (not is_hot_vol and short_score >= MIN_CONFLUENCE and
+                   recent_cross_down and not near_support and adx_val > ADX_MIN)
+
+    # Çıkış sinyalleri
     exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 48)
     exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > 52)
 
-    # Swing pivot (SL/TP için: swing varsa swing, yoksa ATR)
-    last_sh, last_sl = get_pivots(highs, lows, STRUCT_LEN, STRUCT_LEN)
-
     return {
-        "symbol":      symbol,
-        "price":       round(price, 6),
-        "bar_high":    round(highs[-2], 6),
-        "bar_low":     round(lows[-2], 6),
-        "atr":         round(atr_val, 6),
-        "rsi":         rsi_val,
-        "adx":         adx_val,
-        "ema21":       round(ema21, 6),
-        "ema100":      round(ema100, 6),
-        "macd_bull":   macd_val > sig_val,
-        "vol_spike":   vol_spike,
-        "strong_buy":  strong_buy,
-        "strong_sell": strong_sell,
-        "exit_long":   exit_long,
-        "exit_short":  exit_short,
-        "is_hot_vol":  is_hot_vol,
-        "htf_bias":    htf_bias,
-        "last_sh":     round(last_sh, 6) if last_sh else None,
-        "last_sl":     round(last_sl, 6) if last_sl else None,
+        "symbol":       symbol,
+        "price":        round(price, 6),
+        "bar_high":     round(highs[-2], 6),
+        "bar_low":      round(lows[-2], 6),
+        "atr":          round(atr_val, 6),
+        "rsi":          rsi_val,
+        "adx":          adx_val,
+        "ema21":        round(ema21, 6),
+        "ema50":        round(ema50, 6),
+        "ema100":       round(ema100, 6),
+        "macd_bull":    macd_val > sig_val,
+        "vol_spike":    vol_spike,
+        "long_score":   long_score,
+        "short_score":  short_score,
+        "strong_buy":   strong_buy,
+        "strong_sell":  strong_sell,
+        "exit_long":    exit_long,
+        "exit_short":   exit_short,
+        "is_hot_vol":   is_hot_vol,
+        "htf_bias":     htf_bias,
+        "last_sh":      round(last_sh, 6) if last_sh else None,
+        "last_sl":      round(last_sl, 6) if last_sl else None,
     }
 
 # ========== TRADE YÖNETİMİ ==========
@@ -625,7 +697,9 @@ def open_position(data, symbol, direction, price, atr, result=None, bias="NEUTRA
 
     htf_bias_val = (result or {}).get("htf_bias", bias)
     bias_emoji = "🐂" if htf_bias_val == "BULL" else "🐻" if htf_bias_val == "BEAR" else "⚖️"
-    bias_label = "Boğa (1h)" if htf_bias_val == "BULL" else "Ayı (1h)" if htf_bias_val == "BEAR" else ("HTF kapalı" if htf_bias_val == "OFF" else "Nötr (1h)")
+    bias_label = "Boğa (1h+4h)" if htf_bias_val == "BULL" else "Ayı (1h+4h)" if htf_bias_val == "BEAR" else "Nötr"
+    score_key  = "long_score" if direction == "LONG" else "short_score"
+    conf_score = (result or {}).get(score_key, 0)
 
     data["open"].append({
         "symbol":       symbol,
@@ -641,6 +715,9 @@ def open_position(data, symbol, direction, price, atr, result=None, bias="NEUTRA
         "win_prob":     win_prob,
         "entry_reason": reasons,
         "market_bias":  bias,
+        "best_price":   price,
+        "trail_mult":   TRAIL_ATR_MULT,
+        "trail_level":  0,
     })
     emoji = "📈" if direction == "LONG" else "📉"
     print(f"  {emoji} {direction}: {symbol} @ {price} | SL:{sl} ({sl_pct}%) | TP:{tp} ({tp_pct}%) | Başarı:%{win_prob} | {bias_label} {lev}x")
@@ -656,8 +733,8 @@ def open_position(data, symbol, direction, price, atr, result=None, bias="NEUTRA
         f"{prob_emoji} <b>Başarı Tahmini : %{win_prob}</b>\n"
         f"{prob_bar} R:R = 1:{rr_ratio}\n"
         f"━━━━━━━━━━━━━━\n"
-        f"⚖️ Piyasa: {bias_label} -> {lev}x kaldıraç\n"
-        f"Margin: {size} USDT (Max: {max_long}L / {max_short}S)\n"
+        f"⚖️ Piyasa: {bias_label} → {lev}x kaldıraç\n"
+        f"🎯 Confluence: {conf_score}/6 | Margin: {size} USDT\n"
         f"━━━━━━━━━━━━━━\n"
         f"📋 <b>Neden açtım?</b>\n"
         f"{reason_str}\n"
@@ -806,14 +883,15 @@ def run_scan(symbols):
                 close_position(data, pos, pos["sl"], "STOP LOSS")
                 continue
 
-            # ── TP Kontrolü ──
+            # ── TP Kontrolü — uzat, kapatma ──
             open_set = {p["symbol"] for p in data["open"]}
             if pos["symbol"] in open_set:
-                if pos["direction"] == "LONG" and b_high >= pos["tp"]:
-                    close_position(data, pos, pos["tp"], "TAKE PROFIT")
+                ea = pos.get("entry_atr", pd["atr"])
+                if pos["direction"] == "LONG" and b_high >= pos["tp"] and ea > 0:
+                    _extend_tp(data, pos, ea)
                     continue
-                elif pos["direction"] == "SHORT" and b_low <= pos["tp"]:
-                    close_position(data, pos, pos["tp"], "TAKE PROFIT")
+                elif pos["direction"] == "SHORT" and b_low <= pos["tp"] and ea > 0:
+                    _extend_tp(data, pos, ea)
                     continue
 
             # ── Çıkış Sinyali ──
