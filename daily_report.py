@@ -13,8 +13,11 @@ import urllib.request
 import urllib.parse
 from datetime import datetime, timezone, timedelta
 
-BOT_TOKEN   = "8616178241:AAGAyz6FdPeRcnVEquV8vek0BjvNlUa2GSs"
-CHAT_ID     = "830754964"
+try:
+    from crypto_telegram_config import BOT_TOKEN, CHAT_ID
+except ImportError:
+    BOT_TOKEN = ""
+    CHAT_ID   = "830754964"
 TRADES_FILE = os.path.join(os.path.dirname(__file__), "paper_trades.json")
 INITIAL_CAPITAL = 149.78
 
