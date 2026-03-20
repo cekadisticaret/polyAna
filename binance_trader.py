@@ -58,10 +58,10 @@ TRAIL_TIGHTEN        = 0.3   # TP her geçilince trail_mult bu kadar sıkışır
 TRAIL_MIN_MULT       = 0.7   # Minimum trail mesafesi (ATR × 0.7)
 HOT_VOL_MULT         = 1.5   # Volatilite filtresi: ATR% > 100bar_ort × bu çarpan ise işlem açma
 
-BULL_LONG_LEV   = 12
-BULL_SHORT_LEV  = 8
-BEAR_LONG_LEV   = 8
-BEAR_SHORT_LEV  = 12
+BULL_LONG_LEV   = 10
+BULL_SHORT_LEV  = 10
+BEAR_LONG_LEV   = 10
+BEAR_SHORT_LEV  = 10
 NEUT_LONG_LEV   = 10
 NEUT_SHORT_LEV  = 10
 
