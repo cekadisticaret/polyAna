@@ -43,6 +43,7 @@ TRAIL_ATR_MULT       = 1.5   # Trailing stop mesafesi: en iyi fiyattan ATR × 1.
 TRAIL_MIN_PROFIT_ATR = 0.8   # Trailing başlama eşiği: kâr ATR × 0.8'i geçince aktifleşir
 TRAIL_TIGHTEN        = 0.3   # TP her geçilince trail_mult bu kadar sıkışır
 TRAIL_MIN_MULT       = 0.7   # Minimum trail mesafesi (ATR × 0.7)
+HOT_VOL_MULT         = 1.5   # Volatilite filtresi: ATR% > 100bar_ort × bu çarpan ise işlem açma
 
 BULL_LONG_LEV   = 12
 BULL_SHORT_LEV  = 8
@@ -318,7 +319,7 @@ def analyze(symbol, interval="15m"):
 
     dist_pct   = abs((price - ema100) / ema100) * 100
     is_not_far = dist_pct < 5.0
-    is_hot_vol = calc_atr_pct_hot(highs, lows, closes)
+    is_hot_vol = calc_atr_pct_hot(highs, lows, closes, hot_mult=HOT_VOL_MULT)
 
     trend_up   = price > ema100
     trend_down = price < ema100

@@ -48,6 +48,7 @@ TRAIL_ATR_MULT   = 2.0      # 5m için daha geniş trailing
 COMMISSION_PCT   = 0.001    # %0.05 giriş + %0.05 çıkış
 ADX_MIN          = 22       # Daha güçlü trend kalitesi
 MIN_ENTRY_SCORE  = 62       # Düşük kalite girişleri engelle
+HOT_VOL_MULT     = 1.5      # Volatilite filtresi: ATR% > 60bar_ort × bu çarpan ise işlem açma
 MAX_NEW_PER_SCAN = 1        # Her taramada max 1 yeni pozisyon (senkronize giriş önlenir)
 
 SCALP_SYMBOLS = [
@@ -246,7 +247,7 @@ def analyze(symbol, interval="1m"):
 
     dist_pct   = abs((price - ema55) / ema55) * 100
     is_not_far = dist_pct < 5.0
-    is_hot_vol = calc_atr_pct_hot(highs, lows, closes)
+    is_hot_vol = calc_atr_pct_hot(highs, lows, closes, hot_mult=HOT_VOL_MULT)
 
     trend_up   = price > ema55
     trend_down = price < ema55

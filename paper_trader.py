@@ -75,6 +75,7 @@ ADX_MIN         = 25   # v4: 18 → 25 (trend başlangıcı zonunu ele)
 USE_HTF_FILTER  = False    # False yapınca 1h EMA21 filtresi devre dışı (eski davranış)
 STRUCT_LEN      = 5        # Pivot swing uzunluğu (swing varsa SL/TP swing, yoksa ATR)
 MIN_RR_RATIO    = 2.0      # Min R:R — grafikteki gibi, 0.55 gibi kötü R:R'da işlem açma
+HOT_VOL_MULT    = 1.5      # Volatilite filtresi: ATR% > 100bar_ort × bu çarpan ise işlem açma
 
 TRAIL_ATR_MULT       = 1.5   # Trailing stop mesafesi: en iyi fiyattan ATR × 1.5 geride
 TRAIL_MIN_PROFIT_ATR = 0.8   # Trailing başlama eşiği: kâr ATR × 0.8'i geçince aktifleşir
@@ -349,7 +350,7 @@ def analyze(symbol, interval="15m"):
 
     dist_pct   = abs((price - ema100) / ema100) * 100
     is_not_far = dist_pct < 5.0   # v2: 3.5 → 5 (daha geniş mesafe)
-    is_hot_vol = calc_atr_pct_hot(highs, lows, closes)
+    is_hot_vol = calc_atr_pct_hot(highs, lows, closes, hot_mult=HOT_VOL_MULT)
 
     trend_up   = price > ema100
     trend_down = price < ema100
