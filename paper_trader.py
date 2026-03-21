@@ -462,15 +462,15 @@ def analyze(symbol, interval="15m"):
     long_score  = sum([c_trend_bull, c_struct_bull, c_ema_bull, c_rsi_bull, c_macd_bull, c_vol_bull])
     short_score = sum([c_trend_bear, c_struct_bear, c_ema_bear, c_rsi_bear, c_macd_bear, c_vol_bear])
 
-    # Giriş: confluence yeterli + EMA cross tetikleyici + hot_vol yok + direnç/destek yok
+    # Giriş: confluence + EMA cross + hot_vol yok + HTF bias zorunlu (coin kendi TF'inde BULL/BEAR olmalı)
     strong_buy  = (not is_hot_vol and long_score  >= MIN_CONFLUENCE and
-                   recent_cross_up   and not near_resist and adx_val > ADX_MIN)
+                   recent_cross_up   and not near_resist and adx_val > ADX_MIN and htf_bull)
     strong_sell = (not is_hot_vol and short_score >= MIN_CONFLUENCE and
-                   recent_cross_down and not near_support and adx_val > ADX_MIN)
+                   recent_cross_down and not near_support and adx_val > ADX_MIN and htf_bear)
 
-    # Çıkış sinyalleri
-    exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 48)
-    exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > 52)
+    # Çıkış sinyalleri — RSI eşiği sıkılaştırıldı (48→45 / 52→55) + EMA21 teyidi eklendi
+    exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 45 and price < ema21)
+    exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > 55 and price > ema21)
 
     return {
         "symbol":       symbol,
@@ -897,14 +897,20 @@ def run_scan(symbols):
             # ── Çıkış Sinyali ──
             # Kârdaysa → sadece SL/TP kapatır, sinyal yoksayılır (ATR'ye bırak)
             # Zarardaysa → sinyal gelince kapat; ya da 45 dk (3 bar) zaman aşımı
+            # TP'ye 1 ATR içindeyse → sinyal yoksay, TP'ye ulaşmasını bekle
             open_set = {p["symbol"] for p in data["open"]}
             if pos["symbol"] in open_set:
                 in_profit = (pd["price"] > pos["entry_price"]) if pos["direction"] == "LONG" \
                             else (pd["price"] < pos["entry_price"])
+                entry_atr = pos.get("entry_atr", pd["atr"])
+                near_tp = (
+                    (pos["direction"] == "LONG"  and (pos["tp"] - pd["price"]) < entry_atr) or
+                    (pos["direction"] == "SHORT" and (pd["price"] - pos["tp"]) < entry_atr)
+                ) if entry_atr > 0 else False
                 if not in_profit:
                     if held >= MAX_LOSS_BARS:
                         close_position(data, pos, pd["price"], "ZAMAN AŞIMI (45dk zararda)")
-                    elif held >= MIN_HOLD_BARS:
+                    elif held >= MIN_HOLD_BARS and not near_tp:
                         exit_triggered = (pos["direction"] == "LONG" and pd["exit_long"]) or \
                                          (pos["direction"] == "SHORT" and pd["exit_short"])
                         if exit_triggered:

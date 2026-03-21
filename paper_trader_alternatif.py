@@ -351,7 +351,8 @@ def open_position(data, symbol, direction, price, sl, tp, atr_val, result):
 
     # Margin her zaman toplam sermayenin %10'u (kalan değil) — 170$ → 17$, binance_trader ile uyumlu
     size = round(data["capital"] * POS_SIZE_PCT, 2)
-    win_prob = round(score / 6 * 100)
+    score = result.get("long_score" if direction == "LONG" else "short_score", 0)
+    win_prob = round(score / 6 * 100) if score else 0
     data["open"].append({
         "symbol": symbol,
         "direction": direction,
