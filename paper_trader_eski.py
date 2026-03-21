@@ -518,8 +518,20 @@ def open_position(data, symbol, direction, price, atr, result=None, bias="NEUTRA
             print(f"   ⚠️ {symbol}: min notional sağlanamıyor (notional≈{qty * price if qty else 0:.2f})")
             return False
 
-        sl = round_price(symbol, sl_raw)
-        tp = round_price(symbol, tp_raw)
+        MIN_PRICE_RATIO = 0.001
+        if direction == "LONG":
+            sl = round_price(symbol, max(sl_raw, price * MIN_PRICE_RATIO))
+            tp = round_price(symbol, max(tp_raw, price * (1 + MIN_PRICE_RATIO)))
+        else:
+            if tp_raw <= 0:
+                print(f"   ⚠️ {symbol}: SHORT TP geçersiz (tp_raw={tp_raw:.6f}, price={price})")
+                return False
+            sl = round_price(symbol, sl_raw)
+            tp = round_price(symbol, max(tp_raw, price * MIN_PRICE_RATIO))
+
+        if sl <= 0 or tp <= 0:
+            print(f"   ⚠️ {symbol}: SL/TP sıfır veya negatif (sl={sl}, tp={tp}) — atlandı")
+            return False
 
         set_leverage(symbol, lev)
         if direction == "LONG":
