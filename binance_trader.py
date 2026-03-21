@@ -403,10 +403,10 @@ def analyze(symbol, interval="15m"):
 
     strong_buy  = (not is_hot_vol and long_score  >= MIN_CONFLUENCE
                    and recent_cross_up   and not near_resist  and adx_val > ADX_MIN
-                   and rr_ok_long)
+                   and rr_ok_long and htf_bull)
     strong_sell = (not is_hot_vol and short_score >= MIN_CONFLUENCE
                    and recent_cross_down and not near_support and adx_val > ADX_MIN
-                   and rr_ok_short)
+                   and rr_ok_short and htf_bear)
 
     exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 48)
     exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > 52)

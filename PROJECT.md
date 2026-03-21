@@ -35,8 +35,9 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 | `binance_api.py` | Binance USDT-M Futures API istemcisi (HMAC imzalı, urllib). |
 | `binance_config.py` | API key/secret (gitignore). |
 | `binance_state.json` | Açık pozisyonlar ve bar sayacı (runtime). |
+| `binance_winrate_report.py` | 6 saatlik WR raporu: genel + son 24h + yön analizi + sembol bazlı WR → Telegram. |
 
-**Cron:** ~~`*/5 * * * *`~~ — **devre dışı**, yerine `paper_trader_eski.py` çalışıyor
+**Cron:** `*/5 * * * *` → her 5 dakikada bir (`/tmp/binance_trader.log`) | `0 */6 * * *` → WR raporu (`/tmp/binance_winrate_report.log`)
 
 **Strateji parametreleri (v5 — 20.03.2026 — paper_trader ile birebir hizalama):**
 - LEVERAGE: 10x | POS_SIZE_PCT: %10 | MAX_OPEN: 8
