@@ -36,7 +36,7 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 | `binance_config.py` | API key/secret (gitignore). |
 | `binance_state.json` | Açık pozisyonlar ve bar sayacı (runtime). |
 
-**Cron:** `*/5 * * * *` → her 5 dk (`/tmp/binance_trader.log`) — paper_trader ile aynı zamanlama
+**Cron:** ~~`*/5 * * * *`~~ — **devre dışı**, yerine `paper_trader_eski.py` çalışıyor
 
 **Strateji parametreleri (v5 — 20.03.2026 — paper_trader ile birebir hizalama):**
 - LEVERAGE: 10x | POS_SIZE_PCT: %10 | MAX_OPEN: 8
