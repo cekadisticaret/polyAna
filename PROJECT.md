@@ -19,12 +19,14 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 | `crypto_telegram_config.example.py` | Kripto paper bildirimleri şablonu; gerçek ayar `crypto_telegram_config.py` (gitignore). |
 | `paper_trader_alternatif.py` | Confluence stratejisi (Pine Scalping Confluence → Python). 6 faktör, min 3 confluence + EMA cross + R:R filtresi. Ayrı Telegram, ayrı state. |
 | `paper_trader_alt_config.py` | Alternatif Telegram bot token/chat_id (gitignore). |
+| `paper_trader_eski.py` | Eski strateji (EMA21/100 + MACD + ADX, trailing stop yok) ile **gerçek Binance** işlemi. `binance_api` + `binance_config` bağlantısı var; sinyal üretimi eski stratejide, emirler gerçek. State: `paper_trades_eski.json`. |
 | `crypto_futures_list.py` | Binance Futures'da aktif 202 coin sembolü listesi. |
 | `paper_trades.json` | Açık/kapalı işlemler ve sermaye durumu (runtime verisi). |
 | `paper_trades_alt.json` | Alternatif paper trader state. |
+| `paper_trades_eski.json` | Eski paper trader state (runtime verisi). |
 | `paper_report.json` | 100 işlem tamamlandığında üretilen performans raporu. |
 
-**Cron:** `*/5 * * * *` → her 5 dakikada bir (`/tmp/paper_trader.log`). Alternatif: `*/5 * * * *` → `/tmp/paper_trader_alt.log`
+**Cron:** `*/5 * * * *` → her 5 dakikada bir (`/tmp/paper_trader.log`). Alternatif: `*/5 * * * *` → `/tmp/paper_trader_alt.log`. Eski: `*/5 * * * *` → `/tmp/paper_trader_eski.log`
 
 ### Kripto — Binance Gerçek Trader (15m)
 | Dosya | Açıklama |
@@ -36,15 +38,17 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 
 **Cron:** `*/5 * * * *` → her 5 dk (`/tmp/binance_trader.log`) — paper_trader ile aynı zamanlama
 
-**Strateji parametreleri (v3 — 18.03.2026 — HTF filtresi eklendi):**
-- LEVERAGE: 10x | POS_SIZE_PCT: %10 | MAX_OPEN: 8 (paper ve binance)
+**Strateji parametreleri (v5 — 20.03.2026 — paper_trader ile birebir hizalama):**
+- LEVERAGE: 10x | POS_SIZE_PCT: %10 | MAX_OPEN: 8
 - STOP_ATR_MULT: 2.0 | TAKE_ATR_MULT: 4.5 | MAX_SL_PCT: %0.8 | R:R ≈ 1:2.25
-- **v4 (20.03.2026):** ADX_MIN 18→**25** | SHORT RSI üst sınırı 50→**45** | MACD çıkışı rsi_prev→**RSI<52/48** eşiği | MAX_LOSS_BARS=**3** (45dk zararda ise kapat)
-- COOLDOWN_BARS: 4 (60 dk) | MIN_HOLD_BARS: 2 (30 dk)
-- **Per-coin HTF filtresi (1h EMA21):** her coin kendi 1h trendine göre yön doğrulaması yapar; BTC piyasa biası kaldırıldı
-- Trailing stop yok — sade SL / TP / sinyal çıkışı
-- Hacim spike: vol > ort×1.5 | Hacim onayı: vol > max(son 12 bar)×1.2
-- Exit: SL hit | TP hit | RSI>75 | EMA100 ihlali | MACD bear + RSI düşüyor (ikisi birden)
+- ADX_MIN: 25 | COOLDOWN_BARS: 4 (60 dk) | MIN_HOLD_BARS: 2 (30 dk)
+- **Confluence skorlama (paper_trader ile aynı):** MIN_CONFLUENCE=3, 6 faktör: HTF bias, swing yapısı, EMA9>21+price>EMA50, RSI 50-70, MACD hist>0, hacim spike
+- **EMA cross tetikleyici:** EMA9/21 crossover — son 3 barda gerçekleşmişse geçerli
+- **HTF filtresi:** 1h + 4h EMA50 dual filter (her iki TF aynı yöndeyse BULL/BEAR, aksi NEUTRAL)
+- **Swing yapısı:** HH/HL → struct_bull | LH/LL → struct_bear
+- **Yön kotası:** BULL: max 5 LONG / 3 SHORT | BEAR: max 3 LONG / 5 SHORT | NEUTRAL: 4/4
+- **near_resist/near_support:** pivota %0.5 yakınsa giriş yapılmaz
+- Exit: SL hit | TP hit | RSI>75 | EMA100 ihlali | MACD bear + RSI<48
 - Her 100 işlemde rapor, sistem duraksız çalışır
 
 ---
