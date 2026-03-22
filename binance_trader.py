@@ -610,12 +610,11 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
 
     avail, total = get_balance()
     desired = total * POS_SIZE_PCT   # sermayenin %10'u — sabit
-    margin  = min(desired, avail)
-    if desired > avail:
-        _log_open(f"{symbol}: margin hedef {desired:.2f} USDT → serbeste göre {margin:.2f} (avail={avail:.2f}, total={total:.2f})")
-    if margin < 1 or avail < 1:
-        _log_open(f"{symbol}: kullanılabilir margin çok düşük (avail={avail:.2f})")
+    if avail < desired * 0.8:
+        # Kullanılabilir bakiye desired'ın %80'inden azsa pozisyon açma
+        _log_open(f"{symbol}: yetersiz bakiye — avail={avail:.2f} < hedef {desired:.2f} × 0.8 ({desired*0.8:.2f})")
         return False
+    margin = min(desired, avail)
 
     MIN_NOTIONAL = 5   # Binance min notional (~5 USDT)
     notional = margin * lev
