@@ -181,8 +181,13 @@ def round_quantity(symbol, qty):
     return round(qty, 5)
 
 
-def round_price(symbol, price):
-    """Binance PRICE_FILTER tickSize'a uygun yuvarla."""
+def round_price(symbol, price, direction="nearest"):
+    """
+    Binance PRICE_FILTER tickSize'a uygun yuvarla.
+    direction: "nearest" | "up" | "down"
+    SL için: LONG → "down" (daha geniş), SHORT → "up" (daha geniş)
+    """
+    import math
     try:
         info = get_exchange_info()
         for s in info.get("symbols", []):
@@ -190,9 +195,17 @@ def round_price(symbol, price):
                 for f in s.get("filters", []):
                     if f["filterType"] == "PRICE_FILTER":
                         tick = float(f["tickSize"])
-                        if tick >= 1:
-                            return int(price)
                         prec = len(str(tick).rstrip("0").split(".")[-1]) if "." in str(tick) else 0
+                        if tick >= 1:
+                            if direction == "up":
+                                return int(math.ceil(price / tick) * tick)
+                            elif direction == "down":
+                                return int(math.floor(price / tick) * tick)
+                            return int(price)
+                        if direction == "up":
+                            return round(math.ceil(price / tick) * tick, prec)
+                        elif direction == "down":
+                            return round(math.floor(price / tick) * tick, prec)
                         return round(round(price / tick) * tick, prec)
     except Exception:
         pass

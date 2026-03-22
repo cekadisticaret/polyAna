@@ -395,22 +395,19 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
     bull_pct = bull_pts / total_w
     bear_pct = bear_pts / total_w
 
-    # Yön
-    if bull_pts > bear_pts:
+    # Yön — eşitlik durumunda mevcut trendle aynı yön (varsayılan YUKARI)
+    if bull_pts >= bear_pts:
         direction = "YUKARI"
-        raw_prob  = bull_pct
-    elif bear_pts > bull_pts:
+        raw_prob  = bull_pct if bull_pts > bear_pts else 0.5
+    else:
         direction = "AŞAĞI"
         raw_prob  = bear_pct
-    else:
-        direction = "NÖTR"
-        raw_prob  = 0.5
 
     # Olasılık sigmoid ile yumuşat (0.5-0.85 arasında tut)
     prob = 0.5 + (raw_prob - 0.5) * 0.7
     prob = max(0.50, min(0.85, prob))
 
-    # Güven seviyesi
+    # Güven seviyesi — NÖTR kaldırıldı, yön her zaman YUKARI veya AŞAĞI
     gap = abs(bull_pts - bear_pts)
     if gap >= total_w * 0.4:
         confidence = "YÜKSEK"
@@ -418,8 +415,6 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
         confidence = "ORTA"
     else:
         confidence = "DÜŞÜK"
-        direction  = "NÖTR"
-        prob       = 0.5
 
     # Hedef saat IST
     now_utc     = datetime.now(timezone.utc)
@@ -693,17 +688,15 @@ async def check_past_predictions():
         if actual_price <= 0:
             continue   # veri gelmedi, bekle
 
-        # Gerçek yön
+        # Gerçek yön — eşik altında bile en yakın yönü kullan
         change_pct = (actual_price - entry_price) / entry_price * 100
-        if change_pct > 0.05:
+        if change_pct >= 0:
             actual_dir = "YUKARI"
-        elif change_pct < -0.05:
-            actual_dir = "AŞAĞI"
         else:
-            actual_dir = "NÖTR"
+            actual_dir = "AŞAĞI"
 
         # Tahmin doğru mu?
-        correct = (direction == actual_dir) or (direction == "NÖTR" and actual_dir == "NÖTR")
+        correct = (direction == actual_dir)
 
         # Hedef saat İST
         target_dt  = datetime.fromtimestamp(target_ts, tz=timezone.utc)
@@ -713,8 +706,8 @@ async def check_past_predictions():
 
         sym_short  = symbol.replace("USDT", "")
         result_emoji = "✅" if correct else "❌"
-        dir_emoji    = "📈" if actual_dir == "YUKARI" else "📉" if actual_dir == "AŞAĞI" else "➡️"
-        pred_emoji   = "📈" if direction  == "YUKARI" else "📉" if direction  == "AŞAĞI" else "➡️"
+        dir_emoji    = "📈" if actual_dir == "YUKARI" else "📉"
+        pred_emoji   = "📈" if direction  == "YUKARI" else "📉"
         conf_emoji   = {"YÜKSEK": "💎", "ORTA": "✅", "DÜŞÜK": "⚠️"}.get(p["confidence"], "")
 
         print(f"[SONUÇ] {sym_short} → tahmin:{direction} gerçek:{actual_dir} "
@@ -772,14 +765,13 @@ async def send_daily_report():
 
         # Yön dağılımı
         dirs = {d: sum(1 for i in items if i["direction"] == d)
-                for d in ("YUKARI", "AŞAĞI", "NÖTR")}
-        dir_str = "  ".join(f"{d[0]}{v}" for d, v in dirs.items() if v)
+                for d in ("YUKARI", "AŞAĞI")}
 
         lines.append(
             f"{icon} <b>{sym.replace('USDT','')}</b>  {medal}  "
             f"<b>{ok}/{n}</b>  ({rate:.0f}%)\n"
             f"   [{bar}]\n"
-            f"   Yükari:{dirs['YUKARI']}  Aşağı:{dirs['AŞAĞI']}  Nötr:{dirs['NÖTR']}"
+            f"   📈 Yukarı:{dirs['YUKARI']}  📉 Aşağı:{dirs['AŞAĞI']}"
         )
 
     overall = total_ok / total_all * 100 if total_all else 0

@@ -28,27 +28,19 @@ LEVERAGE        = 10
 STOP_ATR_MULT   = 2.0
 TAKE_ATR_MULT   = 4.5
 MAX_SL_PCT      = 0.8
-MAX_OPEN        = 8
+MAX_OPEN        = 7
 COOLDOWN_BARS   = 4
-MIN_HOLD_BARS   = 2
+MIN_HOLD_BARS   = 3
 MAX_LOSS_BARS   = 3
 POS_SIZE_PCT    = 0.10
 COMMISSION_PCT  = 0.001
-ADX_MIN         = 25
-STRUCT_LEN      = 5
-MIN_RR_RATIO    = 2.0
+ADX_MIN         = 22
 
-# Confluence (paper_trader ile aynı)
-MIN_CONFLUENCE  = 4
-CROSS_LOOKBACK  = 3
-EMA_FAST_LEN    = 9
-EMA_TREND_LEN   = 50
-
-# Yön kotası (paper_trader ile aynı)
-BULL_MAX_LONG   = 5
-BULL_MAX_SHORT  = 3
-BEAR_MAX_LONG   = 3
-BEAR_MAX_SHORT  = 5
+# Yön kotası
+BULL_MAX_LONG   = 4
+BULL_MAX_SHORT  = 2
+BEAR_MAX_LONG   = 2
+BEAR_MAX_SHORT  = 4
 NEUT_MAX_LONG   = 4
 NEUT_MAX_SHORT  = 4
 
@@ -56,12 +48,12 @@ TRAIL_ATR_MULT       = 1.5   # Trailing stop mesafesi: en iyi fiyattan ATR × 1.
 TRAIL_MIN_PROFIT_ATR = 0.8   # Trailing başlama eşiği: kâr ATR × 0.8'i geçince aktifleşir
 TRAIL_TIGHTEN        = 0.3   # TP her geçilince trail_mult bu kadar sıkışır
 TRAIL_MIN_MULT       = 0.7   # Minimum trail mesafesi (ATR × 0.7)
-HOT_VOL_MULT         = 1.5   # Volatilite filtresi: ATR% > 100bar_ort × bu çarpan ise işlem açma
 
-BULL_LONG_LEV   = 10
-BULL_SHORT_LEV  = 10
-BEAR_LONG_LEV   = 10
-BEAR_SHORT_LEV  = 10
+# Piyasa yönüne göre dinamik kaldıraç
+BULL_LONG_LEV   = 12
+BULL_SHORT_LEV  = 8
+BEAR_LONG_LEV   = 8
+BEAR_SHORT_LEV  = 12
 NEUT_LONG_LEV   = 10
 NEUT_SHORT_LEV  = 10
 
@@ -244,71 +236,7 @@ def calc_atr_pct_hot(highs, lows, closes, ref_len=100, hot_mult=1.8):
     ref_avg = sum(ref_atrs) / len(ref_atrs)
     return atr_pct > ref_avg * hot_mult
 
-def get_pivots(highs, lows, left, right):
-    """Son pivot high ve low döndür (swing varsa SL/TP için)."""
-    def is_pivot_high(arr, i):
-        if i < left or i + right >= len(arr):
-            return False
-        c = arr[i]
-        for j in range(1, left + 1):
-            if arr[i - j] >= c:
-                return False
-        for j in range(1, right + 1):
-            if arr[i + j] >= c:
-                return False
-        return True
-
-    def is_pivot_low(arr, i):
-        if i < left or i + right >= len(arr):
-            return False
-        c = arr[i]
-        for j in range(1, left + 1):
-            if arr[i - j] <= c:
-                return False
-        for j in range(1, right + 1):
-            if arr[i + j] <= c:
-                return False
-        return True
-
-    ph_list, pl_list = [], []
-    for i in range(left, len(highs) - right):
-        if is_pivot_high(highs, i):
-            ph_list.append((i, highs[i]))
-        if is_pivot_low(lows, i):
-            pl_list.append((i, lows[i]))
-    last_sh = ph_list[-1][1] if ph_list else None
-    prev_sh = ph_list[-2][1] if len(ph_list) >= 2 else None
-    last_sl = pl_list[-1][1] if pl_list else None
-    prev_sl = pl_list[-2][1] if len(pl_list) >= 2 else None
-    return last_sh, prev_sh, last_sl, prev_sl
-
 # ========== ANALİZ ==========
-
-def get_htf_bias(symbol):
-    """
-    1h + 4h EMA50 filtresi (paper_trader ile birebir aynı).
-    Her iki TF'de fiyat EMA50 üstünde → BULL
-    Her iki TF'de fiyat EMA50 altında  → BEAR
-    Aksi halde                         → NEUTRAL
-    """
-    try:
-        c1h, _, _, _ = get_klines(symbol, "1h", 60)
-        c4h, _, _, _ = get_klines(symbol, "4h", 60)
-        if not c1h or len(c1h) < 55:
-            return "NEUTRAL"
-        ema50_1h = ema(c1h, 50)
-        ema50_4h = ema(c4h, 50) if c4h and len(c4h) >= 55 else None
-        p1h = c1h[-2]
-        e1h = ema50_1h[-1] if ema50_1h else p1h
-        p4h = c4h[-2] if c4h and len(c4h) >= 2 else p1h
-        e4h = ema50_4h[-1] if ema50_4h else p4h
-        if p1h > e1h and p4h > e4h:
-            return "BULL"
-        elif p1h < e1h and p4h < e4h:
-            return "BEAR"
-    except Exception:
-        pass
-    return "NEUTRAL"
 
 
 def analyze(symbol, interval="15m"):
@@ -317,125 +245,76 @@ def analyze(symbol, interval="15m"):
         return None
 
     rsi_val           = calc_rsi(closes[-20:], 14)
+    rsi_prev          = calc_rsi(closes[-21:-1], 14)
     macd_val, sig_val = calc_macd(closes)
     adx_val           = calc_adx(highs, lows, closes)
     atr_val           = calc_atr(highs, lows, closes)
 
-    if any(v is None for v in [rsi_val, macd_val, sig_val, adx_val, atr_val]):
+    if any(v is None for v in [rsi_val, rsi_prev, macd_val, sig_val, adx_val, atr_val]):
         return None
 
-    ema9_s   = ema(closes, EMA_FAST_LEN)
     ema21_s  = ema(closes, 21)
-    ema50_s  = ema(closes, EMA_TREND_LEN)
     ema100_s = ema(closes, 100)
-    if not ema9_s or not ema21_s or not ema50_s or not ema100_s:
+    if not ema21_s or not ema100_s:
         return None
 
-    ema9   = ema9_s[-1]
     ema21  = ema21_s[-1]
-    ema50  = ema50_s[-1]
     ema100 = ema100_s[-1]
     price  = closes[-2]
 
-    # EMA cross — son CROSS_LOOKBACK barda crossover olduysa geçerli
-    recent_cross_up = any(
-        ema9_s[-(CROSS_LOOKBACK - i)] > ema21_s[-(CROSS_LOOKBACK - i)] and
-        ema9_s[-(CROSS_LOOKBACK - i + 1)] <= ema21_s[-(CROSS_LOOKBACK - i + 1)]
-        for i in range(CROSS_LOOKBACK) if (CROSS_LOOKBACK - i + 1) <= len(ema9_s)
+    vol_avg     = sum(volumes[-20:]) / 20
+    vol_spike   = volumes[-2] > vol_avg * 1.5
+    vol_confirm = volumes[-2] > max(volumes[-12:-2]) * 1.2
+
+    dist_pct   = abs((price - ema100) / ema100) * 100
+    is_not_far = dist_pct < 3.5
+    is_hot_vol = calc_atr_pct_hot(highs, lows, closes)
+
+    trend_up   = price > ema100
+    trend_down = price < ema100
+
+    rsi_rising  = rsi_val > rsi_prev
+    rsi_falling = rsi_val < rsi_prev
+
+    strong_buy = (
+        not is_hot_vol and
+        trend_up and price > ema21 and
+        rsi_val > 55 and rsi_rising and
+        macd_val > sig_val and
+        adx_val > ADX_MIN and
+        vol_spike and vol_confirm and
+        is_not_far
     )
-    recent_cross_down = any(
-        ema9_s[-(CROSS_LOOKBACK - i)] < ema21_s[-(CROSS_LOOKBACK - i)] and
-        ema9_s[-(CROSS_LOOKBACK - i + 1)] >= ema21_s[-(CROSS_LOOKBACK - i + 1)]
-        for i in range(CROSS_LOOKBACK) if (CROSS_LOOKBACK - i + 1) <= len(ema9_s)
+    strong_sell = (
+        not is_hot_vol and
+        trend_down and price < ema21 and
+        rsi_val < 45 and rsi_falling and
+        macd_val < sig_val and
+        adx_val > ADX_MIN and
+        vol_spike and vol_confirm and
+        is_not_far
     )
 
-    vol_avg    = sum(volumes[-20:]) / 20
-    vol_spike  = volumes[-2] > vol_avg * 1.5
-    high_vol   = vol_spike
-    is_hot_vol = calc_atr_pct_hot(highs, lows, closes, hot_mult=HOT_VOL_MULT)
-
-    # HTF bias — 1h + 4h EMA50 (paper_trader ile aynı)
-    htf_bias = get_htf_bias(symbol)
-    htf_bull = htf_bias == "BULL"
-    htf_bear = htf_bias == "BEAR"
-
-    # Swing yapısı — HH/HL ve LH/LL (paper_trader ile aynı)
-    last_sh, prev_sh, last_sl, prev_sl = get_pivots(highs, lows, STRUCT_LEN, STRUCT_LEN)
-    struct_bull = bool(last_sh and prev_sh and last_sl and prev_sl and
-                       last_sh > prev_sh and last_sl > prev_sl)
-    struct_bear = bool(last_sh and prev_sh and last_sl and prev_sl and
-                       last_sh < prev_sh and last_sl < prev_sl)
-
-    near_resist  = bool(last_sh and abs(price - last_sh) / price < 0.005)
-    near_support = bool(last_sl and abs(price - last_sl) / price < 0.005)
-
-    hist = macd_val - sig_val
-
-    # ── CONFLUENCE SKORLAMA (paper_trader ile birebir aynı) ──
-    c_trend_bull  = htf_bull
-    c_struct_bull = struct_bull
-    c_ema_bull    = ema9 > ema21 and price > ema50
-    c_rsi_bull    = 50 < rsi_val < 70
-    c_macd_bull   = macd_val > sig_val and hist > 0
-    c_vol_bull    = high_vol
-
-    c_trend_bear  = htf_bear
-    c_struct_bear = struct_bear
-    c_ema_bear    = ema9 < ema21 and price < ema50
-    c_rsi_bear    = 30 < rsi_val < 50
-    c_macd_bear   = macd_val < sig_val and hist < 0
-    c_vol_bear    = high_vol
-
-    long_score  = sum([c_trend_bull, c_struct_bull, c_ema_bull, c_rsi_bull, c_macd_bull, c_vol_bull])
-    short_score = sum([c_trend_bear, c_struct_bear, c_ema_bear, c_rsi_bear, c_macd_bear, c_vol_bear])
-
-    # ── Dinamik R:R (alternatif mantığı — swing bazlı) ──
-    long_risk    = (price - last_sl) if (last_sl and last_sl < price) else atr_val * STOP_ATR_MULT
-    long_reward  = (last_sh - price) if (last_sh and last_sh > price) else atr_val * TAKE_ATR_MULT
-    real_rr_long = round(long_reward / long_risk, 2) if long_risk > 0 else 0
-
-    short_risk    = (last_sh - price) if (last_sh and last_sh > price) else atr_val * STOP_ATR_MULT
-    short_reward  = (price - last_sl) if (last_sl and last_sl < price) else atr_val * TAKE_ATR_MULT
-    real_rr_short = round(short_reward / short_risk, 2) if short_risk > 0 else 0
-
-    rr_ok_long  = real_rr_long  >= MIN_RR_RATIO
-    rr_ok_short = real_rr_short >= MIN_RR_RATIO
-
-    strong_buy  = (not is_hot_vol and long_score  >= MIN_CONFLUENCE
-                   and recent_cross_up   and not near_resist  and adx_val > ADX_MIN
-                   and rr_ok_long and htf_bull)
-    strong_sell = (not is_hot_vol and short_score >= MIN_CONFLUENCE
-                   and recent_cross_down and not near_support and adx_val > ADX_MIN
-                   and rr_ok_short and htf_bear)
-
-    exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < 48)
-    exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > 52)
+    exit_long  = rsi_val > 75 or price < ema100 or (macd_val < sig_val and rsi_val < rsi_prev)
+    exit_short = rsi_val < 25 or price > ema100 or (macd_val > sig_val and rsi_val > rsi_prev)
 
     return {
-        "symbol":       symbol,
-        "price":        round(price, 6),
-        "bar_high":     round(highs[-2], 6),
-        "bar_low":      round(lows[-2], 6),
-        "atr":          round(atr_val, 6),
-        "rsi":          rsi_val,
-        "adx":          adx_val,
-        "ema21":        round(ema21, 6),
-        "ema50":        round(ema50, 6),
-        "ema100":       round(ema100, 6),
-        "macd_bull":    macd_val > sig_val,
-        "vol_spike":    vol_spike,
-        "long_score":   long_score,
-        "short_score":  short_score,
-        "real_rr_long":  real_rr_long,
-        "real_rr_short": real_rr_short,
-        "strong_buy":   strong_buy,
-        "strong_sell":  strong_sell,
-        "exit_long":    exit_long,
-        "exit_short":   exit_short,
-        "is_hot_vol":   is_hot_vol,
-        "htf_bias":     htf_bias,
-        "last_sh":      round(last_sh, 6) if last_sh else None,
-        "last_sl":      round(last_sl, 6) if last_sl else None,
+        "symbol":      symbol,
+        "price":       round(price, 6),
+        "bar_high":    round(highs[-2], 6),
+        "bar_low":     round(lows[-2], 6),
+        "atr":         round(atr_val, 6),
+        "rsi":         rsi_val,
+        "adx":         adx_val,
+        "ema21":       round(ema21, 6),
+        "ema100":      round(ema100, 6),
+        "macd_bull":   macd_val > sig_val,
+        "vol_spike":   vol_spike,
+        "strong_buy":  strong_buy,
+        "strong_sell": strong_sell,
+        "exit_long":   exit_long,
+        "exit_short":  exit_short,
+        "is_hot_vol":  is_hot_vol,
     }
 
 
@@ -645,11 +524,11 @@ def _extend_tp(state, sym, pos, entry_atr, hit_tp):
     old_tp      = pos["tp"]
 
     if direction == "LONG":
-        new_tp = round_price(sym, old_tp + entry_atr * 2.0)
-        new_sl = round_price(sym, hit_tp - entry_atr * new_mult)
+        new_tp = round_price(sym, old_tp + entry_atr * 2.0, "up")
+        new_sl = round_price(sym, hit_tp - entry_atr * new_mult, "down")
     else:
-        new_tp = round_price(sym, old_tp - entry_atr * 2.0)
-        new_sl = round_price(sym, hit_tp + entry_atr * new_mult)
+        new_tp = round_price(sym, old_tp - entry_atr * 2.0, "down")
+        new_sl = round_price(sym, hit_tp + entry_atr * new_mult, "up")
 
     # SL sadece kâr yönünde hareket eder
     if direction == "LONG" and new_sl <= pos["sl"]:
@@ -730,22 +609,17 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
         return False
 
     avail, total = get_balance()
-    desired = max(total * POS_SIZE_PCT, 20.0)   # minimum 20 USDT margin
+    desired = total * POS_SIZE_PCT   # sermayenin %10'u — sabit
     margin  = min(desired, avail)
     if desired > avail:
         _log_open(f"{symbol}: margin hedef {desired:.2f} USDT → serbeste göre {margin:.2f} (avail={avail:.2f}, total={total:.2f})")
-    if margin < 5 and avail < 5:
+    if margin < 1 or avail < 1:
         _log_open(f"{symbol}: kullanılabilir margin çok düşük (avail={avail:.2f})")
         return False
 
-    MIN_NOTIONAL = 100
+    MIN_NOTIONAL = 5   # Binance min notional (~5 USDT)
     notional = margin * lev
     qty      = round_quantity(symbol, notional / price)
-    if qty * price < MIN_NOTIONAL:
-        need_m   = max(margin, (MIN_NOTIONAL / lev) + 2)
-        margin   = min(need_m, avail)
-        notional = margin * lev
-        qty      = round_quantity(symbol, notional / price)
     if qty <= 0 or qty * price < MIN_NOTIONAL:
         _log_open(
             f"{symbol}: min notional sağlanamıyor (notional≈{qty * price if qty else 0:.2f}, "
@@ -753,81 +627,31 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
         )
         return False
 
-    last_sh         = (result or {}).get("last_sh")
-    last_sl         = (result or {}).get("last_sl")
-    MIN_PRICE_RATIO = 0.001
-
+    SL_BUFFER = 0.001   # %0.1 slippage buffer — fill fiyatı kaymasına karşı
     if direction == "LONG":
-        atr_sl = max(price - atr * STOP_ATR_MULT, price * (1 - MAX_SL_PCT/100))
-        atr_tp = price + atr * TAKE_ATR_MULT
-        if last_sl and last_sl < price:
-            pivot_sl = max(last_sl, price * (1 - MAX_SL_PCT/100))
-            # Pivot ATR'den daha geniş (daha güvenli) ise kullan, aksi halde ATR bazlıya dön
-            sl_pre = pivot_sl if pivot_sl <= atr_sl else atr_sl
-        else:
-            sl_pre = atr_sl
-        if last_sh and last_sh > price:
-            tp_pre = last_sh
-        else:
-            tp_pre = atr_tp
-        if sl_pre <= 0:
-            _log_open(f"{symbol}: LONG SL geçersiz (sl_pre={sl_pre}, price={price})")
-            return False
-        sl = round_price(symbol, max(sl_pre, price * MIN_PRICE_RATIO))
-        tp = round_price(symbol, max(tp_pre, price * (1 + MIN_PRICE_RATIO)))
+        sl_raw = max(price - atr * STOP_ATR_MULT, price * (1 - MAX_SL_PCT/100))
+        sl = round_price(symbol, sl_raw * (1 - SL_BUFFER))
+        tp = round_price(symbol, price + atr * TAKE_ATR_MULT, "up")
     else:
-        atr_sl = min(price + atr * STOP_ATR_MULT, price * (1 + MAX_SL_PCT/100))
-        atr_tp = price - atr * TAKE_ATR_MULT
-        if last_sh and last_sh > price:
-            pivot_sl = min(last_sh, price * (1 + MAX_SL_PCT/100))
-            # Pivot ATR'den daha geniş (daha güvenli) ise kullan, aksi halde ATR bazlıya dön
-            sl_pre = pivot_sl if pivot_sl >= atr_sl else atr_sl
-        else:
-            sl_pre = atr_sl
-        if last_sl and last_sl < price:
-            tp_pre = last_sl
-        else:
-            tp_pre = atr_tp
-        if tp_pre <= 0:
-            _log_open(f"{symbol}: SHORT TP geçersiz (tp_pre={tp_pre}, price={price}, ATR={atr})")
-            return False
-        sl = round_price(symbol, sl_pre)
-        tp = round_price(symbol, max(tp_pre, price * MIN_PRICE_RATIO))
+        sl_raw = min(price + atr * STOP_ATR_MULT, price * (1 + MAX_SL_PCT/100))
+        sl = round_price(symbol, sl_raw * (1 + SL_BUFFER))
+        tp = round_price(symbol, price - atr * TAKE_ATR_MULT, "down")
 
     if sl <= 0 or tp <= 0:
-        _log_open(f"{symbol}: SL/TP tick sonrası geçersiz (sl={sl}, tp={tp})")
+        _log_open(f"{symbol}: SL/TP geçersiz (sl={sl}, tp={tp})")
         return False
-
-    swing_note = []
-    if direction == "LONG":
-        if last_sl and last_sl < price:
-            swing_note.append("SL pivot")
-        if last_sh and last_sh > price:
-            swing_note.append("TP pivot")
-    else:
-        if last_sh and last_sh > price:
-            swing_note.append("SL pivot")
-        if last_sl and last_sl < price:
-            swing_note.append("TP pivot")
-    if swing_note:
-        _log_open(f"{symbol}: swing kullanıldı ({', '.join(swing_note)})")
 
     atr_pct            = round((atr / price) * 100, 3) if price else 0
     atr_lvl            = round(price + atr, 6) if direction == "LONG" else round(price - atr, 6)
     sl_pct             = round(abs(price - sl) / price * 100, 3)
     tp_pct             = round(abs(tp - price) / price * 100, 3)
     win_prob, rr_ratio = calc_win_prob(result or {}, direction, sl_pct, tp_pct)
-    if rr_ratio < MIN_RR_RATIO:
-        _log_open(f"{symbol}: R:R 1:{rr_ratio} < min {MIN_RR_RATIO} (sl%{sl_pct} tp%{tp_pct}) — atlandı")
-        return False
-    swing_rr = (result or {}).get("real_rr_long" if direction == "LONG" else "real_rr_short", rr_ratio)
-    reasons        = build_entry_reason(result or {}, direction)
-    reason_str     = "\n".join(f"   • {r}" for r in reasons)
-    htf_bias_val   = (result or {}).get("htf_bias", bias)
-    bias_label     = "Boğa (1h)" if htf_bias_val == "BULL" else "Ayı (1h)" if htf_bias_val == "BEAR" else ("HTF kapalı" if htf_bias_val == "OFF" else "Nötr (1h)")
-    prob_filled    = min(6, max(0, round(win_prob * 6 / 100)))
-    prob_bar       = "⬜️" * prob_filled + "⬛️" * (6 - prob_filled)
-    prob_emoji     = "🟢" if win_prob >= 60 else "🟡" if win_prob >= 45 else "🔴"
+    reasons            = build_entry_reason(result or {}, direction)
+    reason_str         = "\n".join(f"   • {r}" for r in reasons)
+    bias_emoji         = "🐂" if bias == "BULL" else "🐻" if bias == "BEAR" else "⚖️"
+    bias_label         = "Boğa" if bias == "BULL" else "Ayı" if bias == "BEAR" else "Nötr"
+    prob_bar           = "█" * (win_prob // 10) + "░" * (10 - win_prob // 10)
+    prob_emoji         = "🟢" if win_prob >= 60 else "🟡" if win_prob >= 45 else "🔴"
 
     try:
         set_leverage(symbol, lev)
@@ -867,7 +691,7 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
             "entry_atr":    round(atr, 6),
             "win_prob":     win_prob,
             "entry_reason": reasons,
-            "htf_bias":     htf_bias_val,
+            "market_bias":  bias,
             "best_price":   fill_price,
             "trail_mult":   TRAIL_ATR_MULT,
             "trail_level":  0,
@@ -880,18 +704,18 @@ def open_position(state, symbol, direction, price, atr, result, bias="NEUTRAL"):
         print(f"  {emoji} {direction}: {symbol} @ {fill_price} | SL:{sl} ({sl_pct}%) | TP:{tp} ({tp_pct}%) | Başarı:%{win_prob} | {bias_label} {lev}x")
         tg_send(
             f"{emoji} <b>Yeni İşlem Açıldı #{n_open}</b>\n"
-            f"<b>{direction}</b> | <b>{symbol}</b>\n"
+            f"{'📈' if direction == 'LONG' else '📉'} <b>{direction}</b> | <b>{symbol}</b>\n"
             f"━━━━━━━━━━━━━━\n"
-            f"🎯 Giriş : {fill_price}\n"
-            f"🛑 SL : {sl} (-%{sl_pct})\n"
-            f"✅ TP : {tp} (+%{tp_pct})\n"
-            f"📉 ATR : {atr} (%{atr_pct}) → {atr_lvl}\n"
+            f"🎯 Giriş  : {fill_price}\n"
+            f"🛑 SL     : {sl}  (-%{sl_pct})\n"
+            f"✅ TP     : {tp}  (+%{tp_pct})\n"
+            f"📉 ATR    : {atr} (%{atr_pct})\n"
             f"━━━━━━━━━━━━━━\n"
             f"{prob_emoji} <b>Başarı Tahmini : %{win_prob}</b>\n"
-            f"{prob_bar} R:R = 1:{rr_ratio} (swing: 1:{swing_rr})\n"
+            f"   {prob_bar}  R:R = 1:{rr_ratio}\n"
             f"━━━━━━━━━━━━━━\n"
-            f"⚖️ Piyasa: {bias_label} -> {lev}x kaldıraç\n"
-            f"Margin: {margin:.2f} USDT | Açık pozisyon: {n_open}\n"
+            f"{bias_emoji} <b>Piyasa: {bias_label}</b> → {lev}x kaldıraç\n"
+            f"   Margin: {margin:.2f} USDT  (Max: {max_long}L / {max_short}S)\n"
             f"━━━━━━━━━━━━━━\n"
             f"📋 <b>Neden açtım?</b>\n"
             f"{reason_str}\n"
@@ -1112,7 +936,7 @@ def run_scan(symbols):
                     pos["best_price"] = new_best
                     profit_atr = (new_best - entry) / entry_atr
                     if profit_atr >= TRAIL_MIN_PROFIT_ATR:
-                        new_sl = round_price(sym, new_best - entry_atr * TRAIL_ATR_MULT)
+                        new_sl = round_price(sym, new_best - entry_atr * TRAIL_ATR_MULT, "down")
                         if new_sl > pos["sl"] + entry_atr * 0.1:
                             old_sl = pos["sl"]
                             try:
@@ -1129,7 +953,7 @@ def run_scan(symbols):
                     pos["best_price"] = new_best
                     profit_atr = (entry - new_best) / entry_atr
                     if profit_atr >= TRAIL_MIN_PROFIT_ATR:
-                        new_sl = round_price(sym, new_best + entry_atr * TRAIL_ATR_MULT)
+                        new_sl = round_price(sym, new_best + entry_atr * TRAIL_ATR_MULT, "up")
                         if new_sl < pos["sl"] - entry_atr * 0.1:
                             old_sl = pos["sl"]
                             try:
@@ -1284,10 +1108,10 @@ def run_scan(symbols):
                 if not r:
                     continue
                 if r["strong_buy"]:
-                    if open_position(state, symbol, "LONG", r["price"], r["atr"], r, "NEUTRAL"):
+                    if open_position(state, symbol, "LONG", r["price"], r["atr"], r, bias):
                         found += 1
                 elif r["strong_sell"]:
-                    if open_position(state, symbol, "SHORT", r["price"], r["atr"], r, "NEUTRAL"):
+                    if open_position(state, symbol, "SHORT", r["price"], r["atr"], r, bias):
                         found += 1
             if found == 0:
                 print(f"   ℹ️  Bu turda sinyal bulunamadı.")

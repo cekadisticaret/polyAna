@@ -31,7 +31,7 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 ### Kripto — Binance Gerçek Trader (15m)
 | Dosya | Açıklama |
 |---|---|
-| `binance_trader.py` | paper_trader ile aynı sinyal + swing SL/TP; margin = min(%10 hedef, serbest). MAX_OPEN 8; kapanışta PnL: Binance `userTrades` realized+komisyon (sinyal giriş fiyatı ile hesap değil). |
+| `binance_trader.py` | paper_trader_sinan ile birebir aynı strateji (EMA21/100, MACD 8/21/5, RSI, ADX, hacim); saf ATR bazlı SL/TP; dinamik kaldıraç (piyasa yönüne göre); kapanışta PnL: Binance `userTrades` realized+komisyon. |
 | `binance_api.py` | Binance USDT-M Futures API istemcisi (HMAC imzalı, urllib). |
 | `binance_config.py` | API key/secret (gitignore). |
 | `binance_state.json` | Açık pozisyonlar ve bar sayacı (runtime). |
@@ -39,17 +39,16 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 
 **Cron:** `*/5 * * * *` → her 5 dakikada bir (`/tmp/binance_trader.log`) | `0 */6 * * *` → WR raporu (`/tmp/binance_winrate_report.log`)
 
-**Strateji parametreleri (v5 — 20.03.2026 — paper_trader ile birebir hizalama):**
-- LEVERAGE: 10x | POS_SIZE_PCT: %10 | MAX_OPEN: 8
+**Strateji parametreleri (v6 — 22.03.2026 — paper_trader_sinan ile birebir hizalama):**
+- LEVERAGE: dinamik | POS_SIZE_PCT: %10 | MAX_OPEN: 7
 - STOP_ATR_MULT: 2.0 | TAKE_ATR_MULT: 4.5 | MAX_SL_PCT: %0.8 | R:R ≈ 1:2.25
-- ADX_MIN: 25 | COOLDOWN_BARS: 4 (60 dk) | MIN_HOLD_BARS: 2 (30 dk)
-- **Confluence skorlama (paper_trader ile aynı):** MIN_CONFLUENCE=3, 6 faktör: HTF bias, swing yapısı, EMA9>21+price>EMA50, RSI 50-70, MACD hist>0, hacim spike
-- **EMA cross tetikleyici:** EMA9/21 crossover — son 3 barda gerçekleşmişse geçerli
-- **HTF filtresi:** 1h + 4h EMA50 dual filter (her iki TF aynı yöndeyse BULL/BEAR, aksi NEUTRAL)
-- **Swing yapısı:** HH/HL → struct_bull | LH/LL → struct_bear
-- **Yön kotası:** BULL: max 5 LONG / 3 SHORT | BEAR: max 3 LONG / 5 SHORT | NEUTRAL: 4/4
-- **near_resist/near_support:** pivota %0.5 yakınsa giriş yapılmaz
-- Exit: SL hit | TP hit | RSI>75 | EMA100 ihlali | MACD bear + RSI<48
+- ADX_MIN: 22 | COOLDOWN_BARS: 4 (60 dk) | MIN_HOLD_BARS: 3 (45 dk)
+- **Sinyal:** EMA21/100 + MACD 8/21/5 + RSI 14 + ADX + hacim spike×1.5 AND vol_confirm×1.2 + is_not_far (<3.5% EMA100)
+- **Giriş LONG:** trend↑ + price>EMA21 + RSI>55↑ + MACD bull + ADX>22 + hacim + EMA100 yakını
+- **Giriş SHORT:** trend↓ + price<EMA21 + RSI<45↓ + MACD bear + ADX>22 + hacim + EMA100 yakını
+- **Piyasa yönü (BTC 1h):** BULL → 12x LONG / 8x SHORT | BEAR → 8x LONG / 12x SHORT | NEUTRAL → 10x
+- **Yön kotası:** BULL: max 4L/2S | BEAR: max 2L/4S | NEUTRAL: 4/4
+- Exit: SL hit | TP hit | RSI>75 | EMA100 ihlali | MACD ters + RSI yön kaybı
 - Her 100 işlemde rapor, sistem duraksız çalışır
 
 ---

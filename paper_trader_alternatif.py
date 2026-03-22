@@ -44,6 +44,7 @@ TRAIL_ATR_MULT = 1.5   # Başlangıç trail mesafesi = ATR_MULT_SL ile aynı
 TRAIL_TIGHTEN  = 0.4   # TP her geçilince trail_mult bu kadar azalır
 TRAIL_MIN_MULT = 0.6   # Minimum trail mesafesi (çok sıkmaması için)
 STRUCT_LEN     = 5
+CROSS_LOOKBACK = 3   # Son kaç barda crossover aranır
 VOL_MULT       = 1.5
 EMA_FAST       = 9
 EMA_SLOW       = 21
@@ -275,9 +276,19 @@ def analyze_confluence(symbol):
     rr_ok_long = real_rr_long >= MIN_RR
     rr_ok_short = real_rr_short >= MIN_RR
 
-    # EMA crossover (tetikleyici)
-    ema_cross_up = len(ema_f) >= 2 and ema_f[-2] <= ema_s[-2] and ema_f[-1] > ema_s[-1]
-    ema_cross_down = len(ema_f) >= 2 and ema_f[-2] >= ema_s[-2] and ema_f[-1] < ema_s[-1]
+    # EMA crossover — son CROSS_LOOKBACK barda gerçekleştiyse geçerli
+    ema_cross_up = any(
+        ema_f[-(CROSS_LOOKBACK - i)] > ema_s[-(CROSS_LOOKBACK - i)] and
+        ema_f[-(CROSS_LOOKBACK - i + 1)] <= ema_s[-(CROSS_LOOKBACK - i + 1)]
+        for i in range(CROSS_LOOKBACK)
+        if (CROSS_LOOKBACK - i + 1) <= len(ema_f)
+    )
+    ema_cross_down = any(
+        ema_f[-(CROSS_LOOKBACK - i)] < ema_s[-(CROSS_LOOKBACK - i)] and
+        ema_f[-(CROSS_LOOKBACK - i + 1)] >= ema_s[-(CROSS_LOOKBACK - i + 1)]
+        for i in range(CROSS_LOOKBACK)
+        if (CROSS_LOOKBACK - i + 1) <= len(ema_f)
+    )
 
     # Sinyal (kripto: seans yok)
     long_signal = long_score >= MIN_CONF and not near_resist and rr_ok_long
