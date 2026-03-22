@@ -313,7 +313,7 @@ def load_trades():
             try:
                 with open(path) as f:
                     data = json.load(f)
-                if data.get("closed") or data.get("open"):
+                if "capital" in data:
                     return data
             except Exception:
                 continue

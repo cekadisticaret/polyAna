@@ -54,6 +54,19 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 
 ---
 
+### Kripto — Polymarket Tahmin Motoru
+| Dosya | Açıklama |
+|---|---|
+| `poly_predictor.py` | BTC/ETH için saatlik yön tahmini. WebSocket tick verisi + 1h klines, CVD, OB, likidite sinyalleri. Tahminleri kaydeder, sonraki saatte doğrular. Polymarket bahis entegrasyonu (DRY_RUN modu). |
+| `polymarkettest.py` | Polymarket CLOB API test scripti (market listeleme, bakiye, emir). |
+| `poly_predictions.json` | Tahmin geçmişi: yön, güven, fiyat, hedef, doğrulama sonucu (runtime). |
+
+**Telegram:** `8696017635:AAErmIcY033VFBbnApd1lVALz1pcJSMzy5s` — Mesaj formatı: BTC+ETH tek mesajda, geçen saat sonucu + coin detay blokları.
+
+**Cron:** `nohup python3 poly_predictor.py` → arka planda sürekli çalışır, her saat `:10`'unda tahmin gönderir | `0 23 * * *` → günlük rapor (`/tmp/poly_daily_report.log`)
+
+---
+
 ### BIST — Tarayıcı & Görsel
 | Dosya | Açıklama |
 |---|---|

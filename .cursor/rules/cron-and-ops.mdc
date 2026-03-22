@@ -18,6 +18,7 @@ alwaysApply: true
 | `0 21 * * *` | `cd /root/aiProject && python3 win_prob_report.py` | `/tmp/win_prob_report.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 bist_scalping_alerts.py` | `/tmp/bist_scalping_alerts.log` |
 | `* * * * *` | `cd /root/aiProject && python3 scalp_trader.py` | `/tmp/scalp_trader.log` |
+| `0 23 * * *` | `cd /root/aiProject && python3 poly_predictor.py --daily` | `/tmp/poly_daily_report.log` |
 
 ## Cron Yönetimi
 - Yeni cron eklemeden önce `crontab -l` ile mevcut listeyi kontrol et
