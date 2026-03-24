@@ -1341,6 +1341,9 @@ def send_win_prob_report(state):
 
 
 if __name__ == "__main__":
+    import sys
+    # PASİF — binance_trader_alternatif.py devreye alındı
+    sys.exit(0)
     from crypto_futures_list import FUTURES_SYMBOLS
     pairs = [s + "USDT" for s in FUTURES_SYMBOLS]
     run_scan(pairs)

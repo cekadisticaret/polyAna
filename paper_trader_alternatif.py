@@ -28,9 +28,9 @@ except ImportError:
 TRADES_FILE    = os.path.join(os.path.dirname(__file__), "paper_trades_alt.json")
 VIRTUAL_CAPITAL= 200.0
 LEVERAGE       = 10
-MAX_OPEN       = 8
+MAX_OPEN       = 5
 COOLDOWN_BARS  = 4
-POS_SIZE_PCT   = 0.10
+POS_SIZE_PCT   = 0.20
 COMMISSION_PCT = 0.001
 
 # Confluence (Pine'dan)
@@ -508,7 +508,7 @@ def close_position(data, pos, price, reason):
 
 # ========== ANA DÖNGÜ ==========
 
-def run_scan(symbols):
+def run_scan(symbols, precomputed_results=None):
     data = load_state()
     data.setdefault("total_bars", 0)
     now_utc = datetime.now(timezone.utc)
@@ -521,19 +521,23 @@ def run_scan(symbols):
     print(f"   İşlem: {len(data['closed'])} | Sermaye: {data['capital']:.2f} USDT | Açık: {len(data['open'])}")
 
     if is_new_15m:
-        scan_start = datetime.now(timezone.utc)
-        scan_set = list(set(symbols) | {p["symbol"] for p in data["open"]})
-        results = {}
-        with ThreadPoolExecutor(max_workers=30) as ex:
-            futures = {ex.submit(analyze_confluence, sym): sym for sym in scan_set}
-            for f in as_completed(futures):
-                sym = futures[f]
-                try:
-                    results[sym] = f.result()
-                except Exception:
-                    results[sym] = None
-        elapsed = round((datetime.now(timezone.utc) - scan_start).total_seconds(), 1)
-        print(f"   🔍 Tarama tamamlandı: {elapsed}s")
+        if precomputed_results is not None:
+            results = precomputed_results
+            print(f"   🔍 Paylaşımlı tarama kullanıldı ({len(results)} coin)")
+        else:
+            scan_start = datetime.now(timezone.utc)
+            scan_set = list(set(symbols) | {p["symbol"] for p in data["open"]})
+            results = {}
+            with ThreadPoolExecutor(max_workers=30) as ex:
+                futures = {ex.submit(analyze_confluence, sym): sym for sym in scan_set}
+                for f in as_completed(futures):
+                    sym = futures[f]
+                    try:
+                        results[sym] = f.result()
+                    except Exception:
+                        results[sym] = None
+            elapsed = round((datetime.now(timezone.utc) - scan_start).total_seconds(), 1)
+            print(f"   🔍 Tarama tamamlandı: {elapsed}s")
 
         # SL/TP / Dinamik Trailing Stop
         for pos in list(data["open"]):

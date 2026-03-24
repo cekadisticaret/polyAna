@@ -31,13 +31,15 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 ### Kripto — Binance Gerçek Trader (15m)
 | Dosya | Açıklama |
 |---|---|
-| `binance_trader.py` | paper_trader_sinan ile birebir aynı strateji (EMA21/100, MACD 8/21/5, RSI, ADX, hacim); saf ATR bazlı SL/TP; dinamik kaldıraç (piyasa yönüne göre); kapanışta PnL: Binance `userTrades` realized+komisyon. |
+| `binance_trader.py` | **PASİF** (23.03.2026). EMA21/100 + MACD + ADX stratejisi; `binance_trader_alternatif.py` devreye alındı. |
+| `binance_trader_alternatif.py` | **AKTİF**. `paper_trader_alternatif.py` ile birebir aynı Confluence sinyali (EMA 9/21/50, pivot yapısı, HTF trend, RSI, MACD, hacim); gerçek Binance emirleri. Dinamik trailing stop + TP uzatma. State: `binance_alt_state.json`. |
 | `binance_api.py` | Binance USDT-M Futures API istemcisi (HMAC imzalı, urllib). |
 | `binance_config.py` | API key/secret (gitignore). |
-| `binance_state.json` | Açık pozisyonlar ve bar sayacı (runtime). |
+| `binance_state.json` | Eski binance_trader state (artık kullanılmıyor). |
+| `binance_alt_state.json` | binance_trader_alternatif state: açık pozisyonlar ve bar sayacı (runtime). |
 | `binance_winrate_report.py` | 6 saatlik WR raporu: genel + son 24h + yön analizi + sembol bazlı WR → Telegram. |
 
-**Cron:** `*/5 * * * *` → her 5 dakikada bir (`/tmp/binance_trader.log`) | `0 */6 * * *` → WR raporu (`/tmp/binance_winrate_report.log`)
+**Cron:** `*/5 * * * *` → `binance_trader.py` (pasif, hemen çıkar) | `*/5 * * * *` → `binance_trader_alternatif.py` (`/tmp/binance_trader_alt.log`) | `0 */6 * * *` → WR raporu
 
 **Strateji parametreleri (v6 — 22.03.2026 — paper_trader_sinan ile birebir hizalama):**
 - LEVERAGE: dinamik | POS_SIZE_PCT: %10 | MAX_OPEN: 7

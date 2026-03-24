@@ -20,6 +20,13 @@
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
+import os
+# WebSocket proxy sorununu önle — Cursor/IDE sandbox proxy değişkenlerini temizle
+for _pv in ["SOCKS_PROXY","SOCKS5_PROXY","socks_proxy","socks5_proxy",
+            "HTTP_PROXY","HTTPS_PROXY","http_proxy","https_proxy",
+            "ALL_PROXY","all_proxy"]:
+    os.environ.pop(_pv, None)
+
 import asyncio
 import json
 import time
@@ -562,9 +569,13 @@ async def send_unified_prediction(preds: list, past_results: list):
 
     target_time = preds[0].target_time
 
-    # ── Geçen saat sonucu ──
+    # ── Geçen saat sonucu — sembol başına sadece en son 1 tahmin ──
     prev_block = ""
     if past_results:
+        seen = {}
+        for r in sorted(past_results, key=lambda x: x.get("target_ts", 0)):
+            seen[r["symbol"]] = r
+        past_results = list(seen.values())
         correct = [r for r in past_results if r.get("correct")]
         prev_lines = []
         for r in past_results:
@@ -592,7 +603,7 @@ async def send_unified_prediction(preds: list, past_results: list):
         coin_blocks.append(_build_coin_block(pred))
 
     msg = (
-        f"🎯 <b>POLYMARKET TAHMİN — 1 SAAT</b>\n"
+        f"🎯 <b>POLYX2 - AIPROJECT</b>\n"
         f"⏰ Hedef: <b>{target_time}</b>\n"
         f"{prev_block}"
         f"─────────────────────\n"
@@ -738,46 +749,54 @@ async def send_daily_report():
         await send_telegram("📊 <b>Günlük Tahmin Raporu</b>\nSon 24 saatte değerlendirilen tahmin yok.")
         return
 
-    # Sembole göre grupla
     from collections import defaultdict
     by_sym: dict = defaultdict(list)
     for p in preds:
         by_sym[p["symbol"]].append(p)
 
-    now_ist = (datetime.now(timezone.utc).hour + 3) % 24
-    lines   = [
-        f"📊 <b>GÜNLÜK TAHMİN RAPORU — AIProject</b>",
-        f"⏰ {now_ist:02d}:00 İST  |  Son 24 saat",
-        f"─────────────────────",
+    now_ist = datetime.now(timezone.utc)
+    ist_str = f"{(now_ist.hour+3)%24:02d}:{now_ist.strftime('%M')} İST"
+
+    lines = [
+        f"📊 <b>POLYX2 — Günlük Tahmin Raporu</b>",
+        f"🗓 {now_ist.strftime('%d.%m.%Y')}  |  Son 24 saat",
+        f"━━━━━━━━━━━━━━━━━━━━",
     ]
 
     total_ok = total_all = 0
-    for sym, items in sorted(by_sym.items()):
-        ok     = sum(1 for i in items if i.get("correct"))
-        n      = len(items)
+    for sym in ["BTCUSDT", "ETHUSDT"]:
+        items = by_sym.get(sym)
+        if not items:
+            continue
+        ok   = sum(1 for i in items if i.get("correct"))
+        fail = len(items) - ok
+        n    = len(items)
         total_ok  += ok
         total_all += n
-        rate   = ok / n * 100 if n else 0
-        icon   = "₿" if "BTC" in sym else "Ξ"
-        bar_n  = round(rate / 10)
-        bar    = "█" * bar_n + "░" * (10 - bar_n)
-        medal  = "🥇" if rate >= 70 else "✅" if rate >= 50 else "⚠️"
+        rate  = ok / n * 100 if n else 0
+        icon  = "₿" if "BTC" in sym else "Ξ"
+        medal = "🥇" if rate >= 70 else "✅" if rate >= 50 else "⚠️"
+        name  = sym.replace("USDT", "")
 
-        # Yön dağılımı
-        dirs = {d: sum(1 for i in items if i["direction"] == d)
-                for d in ("YUKARI", "AŞAĞI")}
+        dirs_ok   = {}
+        dirs_fail = {}
+        for d in ("YUKARI", "AŞAĞI"):
+            d_items = [i for i in items if i["direction"] == d]
+            dirs_ok[d]   = sum(1 for i in d_items if i.get("correct"))
+            dirs_fail[d] = len(d_items) - dirs_ok[d]
 
         lines.append(
-            f"{icon} <b>{sym.replace('USDT','')}</b>  {medal}  "
-            f"<b>{ok}/{n}</b>  ({rate:.0f}%)\n"
-            f"   [{bar}]\n"
-            f"   📈 Yukarı:{dirs['YUKARI']}  📉 Aşağı:{dirs['AŞAĞI']}"
+            f"{icon} <b>{name}</b>  {medal}\n"
+            f"   ✅ {ok} başarılı  ❌ {fail} başarısız  — %{rate:.0f}\n"
+            f"   📈 Yukarı: {dirs_ok['YUKARI']}✅ {dirs_fail['YUKARI']}❌  "
+            f"│  📉 Aşağı: {dirs_ok['AŞAĞI']}✅ {dirs_fail['AŞAĞI']}❌"
         )
 
     overall = total_ok / total_all * 100 if total_all else 0
+    medal_g  = "🥇" if overall >= 70 else "✅" if overall >= 50 else "⚠️"
     lines += [
-        f"─────────────────────",
-        f"🎯 <b>Genel: {total_ok}/{total_all}  ({overall:.0f}%)</b>",
+        f"━━━━━━━━━━━━━━━━━━━━",
+        f"{medal_g} <b>Genel: {total_ok} başarılı  {total_all-total_ok} başarısız  (%{overall:.0f})</b>",
     ]
 
     await send_telegram("\n".join(lines))
@@ -1166,7 +1185,7 @@ async def _do_prediction(label: str = ""):
     now_ts      = time.time()
     past_results = [
         p for p in all_preds
-        if p.get("checked") and p.get("target_ts", 0) > now_ts - 7200
+        if p.get("checked") and p.get("target_ts", 0) > now_ts - 3600
     ]
 
     # Tek birleşik mesaj
@@ -1179,24 +1198,38 @@ async def _do_prediction(label: str = ""):
 
 
 async def prediction_loop():
-    """Her saat :10'unda tahmin üret — saat başından 50 dk önce gönderilir."""
-    # İlk çalışmada 2 dk bekle (WS tick dolsun)
+    """Her saat :04'ünde tahmin üret — saat başından 56 dk önce gönderilir."""
     print("[TAHMİN] Bekleniyor — ilk veri dolsun (2 dk)...")
     await asyncio.sleep(120)
 
+    _daily_report_sent_date = None   # aynı gün iki kez gönderme
+
     while True:
-        now  = datetime.now()
+        now     = datetime.now(timezone.utc)
+        ist_h   = (now.hour + 3) % 24
+        ist_m   = now.minute
+        today   = now.strftime("%Y-%m-%d")
+
+        # Gece 00:00 İST (21:00 UTC) → günlük rapor
+        if ist_h == 0 and ist_m < 5 and _daily_report_sent_date != today:
+            try:
+                await send_daily_report()
+                _daily_report_sent_date = today
+                print("[RAPOR] Günlük rapor gönderildi.")
+            except Exception as e:
+                print(f"[RAPOR HATA] {e}")
+
         mins = now.minute
 
-        # Saat başından 10 dk geçmişse → sonraki :10'a kadar bekle
-        if mins < 10:
-            wait = (10 - mins) * 60 - now.second
+        # Saat başından 4 dk geçmişse → sonraki :04'e kadar bekle
+        if mins < 4:
+            wait = (4 - mins) * 60 - now.second
         else:
-            wait = (60 - mins + 10) * 60 - now.second
+            wait = (60 - mins + 4) * 60 - now.second
 
         wait = max(30, wait)
-        target_h = (now.hour + (1 if mins >= 10 else 0)) % 24
-        print(f"[TAHMİN] Sonraki gönderim: {target_h:02d}:10 ({wait//60} dk sonra)")
+        target_h = (now.hour + (1 if mins >= 4 else 0)) % 24
+        print(f"[TAHMİN] Sonraki gönderim: {target_h:02d}:04 ({wait//60} dk sonra)")
         await asyncio.sleep(wait)
 
         try:
@@ -1221,7 +1254,7 @@ async def display_loop():
             print("╔══════════════════════════════════════════════════╗")
             print(f"║  POLYMARKET TAHMİN MOTORU  │  {now}  ║")
             print("╠══════════════════════════════════════════════════╣")
-            print(f"║  Sonraki tahmin: {next_h:02d}:10  ║")
+            print(f"║  Sonraki tahmin: {next_h:02d}:04  ║")
             print("╠══════════════════════════════════════════════════╣")
 
             for sym in SYMBOLS:
@@ -1271,6 +1304,17 @@ async def main():
     )
 
 
+async def main_loop():
+    """main()'i sonsuz döngüde çalıştır — crash sonrası otomatik yeniden başlat."""
+    while True:
+        try:
+            await main()
+        except Exception as e:
+            print(f"[MAIN HATA] {e} — 60 saniye sonra yeniden başlatılıyor...")
+            import traceback; traceback.print_exc()
+            await asyncio.sleep(60)
+
+
 if __name__ == "__main__":
     import sys
     if "--now" in sys.argv:
@@ -1285,6 +1329,6 @@ if __name__ == "__main__":
         asyncio.run(send_daily_report())
     else:
         try:
-            asyncio.run(main())
+            asyncio.run(main_loop())
         except KeyboardInterrupt:
             print("\nTahmin motoru durduruldu.")
