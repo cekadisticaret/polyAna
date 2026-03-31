@@ -20,3 +20,10 @@ scalp_reports/
 /tmp/
 analiz/analiz_config.py
 analiz/state.json
+*.bak
+*.bak[0-9]*
+poly_predictions.json
+poly_paper_bets.json
+binance_alt_state.json
+paper_trades_eski.json
+paper_trades_sinan.json

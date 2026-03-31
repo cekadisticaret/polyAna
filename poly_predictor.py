@@ -54,6 +54,9 @@ POLY_API_SECRET  = os.getenv("POLY_API_SECRET", "")
 POLY_API_PASS    = os.getenv("POLY_API_PASSPHRASE", "")
 BET_SIZE_USDC      = float(os.getenv("POLY_BET_SIZE", "5"))
 PREDICTIONS_FILE   = os.path.join(os.path.dirname(__file__), "poly_predictions.json")
+PAPER_BETS_FILE    = os.path.join(os.path.dirname(__file__), "poly_paper_bets.json")
+PAPER_BET_SIZE     = float(os.getenv("POLY_BET_SIZE", "5"))
+PAPER_START_BAL    = 300.0
 BET_DRY_RUN      = os.getenv("POLY_DRY_RUN", "true").lower() != "false"
 CLOB_HOST        = "https://clob.polymarket.com"
 GAMMA_HOST       = "https://gamma-api.polymarket.com"
@@ -321,6 +324,7 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
         c  = [k["close"]  for k in kl]
         h  = [k["high"]   for k in kl]
         l  = [k["low"]    for k in kl]
+        v  = [k["volume"] for k in kl]
 
         rsi_v   = _rsi(c)
         macd_h  = _macd_hist(c)
@@ -393,6 +397,46 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
             signals["funding"] = f"🟢 Funding: %{fr*100:.3f} (negatif — short ödüyor)"
         else:
             signals["funding"] = f"⚪ Funding: %{fr*100:.3f} (normal)"
+        total_w += w
+
+        # ── 8. Hacim spike — 1h (ağırlık: 2) [Pine v6.0] ──
+        w = 2
+        vol_avg_20 = sum(v[-21:-1]) / 20 if len(v) >= 21 else 0.0
+        if vol_avg_20 > 0:
+            vol_ratio_1h = v[-1] / vol_avg_20
+            last_bull = c[-1] > kl[-1]["open"]
+            if vol_ratio_1h >= 1.2:
+                if last_bull:
+                    bull_pts += w
+                    signals["vol_spike"] = f"🟢 Hacim spike: ×{vol_ratio_1h:.1f} (yükseliş mumu)"
+                else:
+                    bear_pts += w
+                    signals["vol_spike"] = f"🔴 Hacim spike: ×{vol_ratio_1h:.1f} (düşüş mumu)"
+            else:
+                signals["vol_spike"] = f"⚪ Hacim: ×{vol_ratio_1h:.1f} (normal)"
+        else:
+            signals["vol_spike"] = f"⚪ Hacim: veri yok"
+        total_w += w
+
+        # ── 9. EMA50 uzaklık filtresi (ağırlık: 2) [Pine v6.0] ──
+        # Fiyat EMA50'ye yakınsa güvenilir; çok uzaksa olası mean reversion
+        w = 2
+        price_dist_pct = (state.price - ema50[-1]) / ema50[-1] * 100 if ema50[-1] > 0 else 0.0
+        abs_dist = abs(price_dist_pct)
+        if abs_dist > 5.0:
+            # Overextended — dönüş riski; zıt yönde puan ver
+            if price_dist_pct > 0:
+                bear_pts += w
+                signals["ema_dist"] = f"⚠️ EMA uzaklık: +%{price_dist_pct:.1f} (aşırı uzak yukarı — dönüş riski)"
+            else:
+                bull_pts += w
+                signals["ema_dist"] = f"⚠️ EMA uzaklık: %{price_dist_pct:.1f} (aşırı uzak aşağı — dönüş riski)"
+        elif price_dist_pct > 0:
+            bull_pts += w
+            signals["ema_dist"] = f"🟢 EMA uzaklık: +%{price_dist_pct:.1f} (EMA üstünde, normal mesafe)"
+        else:
+            bear_pts += w
+            signals["ema_dist"] = f"🔴 EMA uzaklık: %{price_dist_pct:.1f} (EMA altında)"
         total_w += w
 
     # ── KARAR ──
@@ -562,14 +606,14 @@ async def send_prediction(pred: Prediction):
     return bet_result
 
 
-async def send_unified_prediction(preds: list, past_results: list):
-    """BTC + ETH tahminlerini tek mesajda gönderir (screenshottaki format)."""
+async def send_unified_prediction(preds: list, past_results: list, paper_results: dict = None):
+    """BTC + ETH tahminlerini tek mesajda gönderir."""
     if not preds:
         return
 
     target_time = preds[0].target_time
 
-    # ── Geçen saat sonucu — sembol başına sadece en son 1 tahmin ──
+    # ── Geçen saat sonucu ──
     prev_block = ""
     if past_results:
         seen = {}
@@ -602,13 +646,40 @@ async def send_unified_prediction(preds: list, past_results: list):
     for pred in preds:
         coin_blocks.append(_build_coin_block(pred))
 
+    # ── Sanal cüzdan bloğu ──
+    paper_data  = _load_paper()
+    balance     = paper_data["balance"]
+    paper_lines = []
+    if paper_results:
+        for pred in preds:
+            sym    = pred.symbol.replace("USDT", "")
+            s_ic   = "₿" if sym == "BTC" else "Ξ"
+            result = paper_results.get(pred.symbol)
+            if result and result.get("placed"):
+                odds   = result["odds"]
+                payout = result["payout"]
+                paper_lines.append(
+                    f"✅ {s_ic} {sym} → ${PAPER_BET_SIZE:.0f} girildi  "
+                    f"(odds: {odds:.2f}  →  kazanırsak: ${payout:.2f})"
+                )
+            else:
+                reason = "yön belirsiz" if pred.direction == "NÖTR" else "market yok"
+                paper_lines.append(f"⏭️ {s_ic} {sym} → girilmedi ({reason})")
+
+    paper_block = (
+        f"─────────────────────\n"
+        f"💼 <b>Sanal Cüzdan: ${balance:.2f}</b>\n"
+        + "\n".join(paper_lines) + "\n"
+    ) if paper_lines else ""
+
     msg = (
         f"🎯 <b>POLYX2 - AIPROJECT</b>\n"
         f"⏰ Hedef: <b>{target_time}</b>\n"
         f"{prev_block}"
         f"─────────────────────\n"
         + "\n─────────────────────\n".join(coin_blocks)
-        + f"\n─────────────────────\n"
+        + f"\n{paper_block}"
+        f"─────────────────────\n"
         f"⚠️ <i>Bu tahmin yatırım tavsiyesi değildir.</i>"
     )
 
@@ -632,25 +703,157 @@ def _save_predictions(preds: list):
     with open(PREDICTIONS_FILE, "w") as f:
         json.dump(preds, f, indent=2, ensure_ascii=False)
 
-def record_prediction(pred: "Prediction"):
-    """Tahmini dosyaya kaydet."""
+
+# ── Paper Trading (sanal cüzdan) ──────────────────────────────
+
+def _load_paper() -> dict:
+    if os.path.exists(PAPER_BETS_FILE):
+        try:
+            with open(PAPER_BETS_FILE) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"balance": PAPER_START_BAL, "bets": []}
+
+def _save_paper(data: dict):
+    with open(PAPER_BETS_FILE, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+async def record_paper_bet(pred: "Prediction", target_ts: float) -> Optional[dict]:
+    """
+    Gerçek Polymarket odds'larıyla sanal bahis kaydeder.
+    Başarılı olursa bet dict döner, aksi hâlde None.
+    """
+    if pred.direction == "NÖTR":
+        return None
+
+    market = await find_market(pred.symbol, pred.direction, pred.current_price)
+    if not market:
+        print(f"[PAPER] Market bulunamadı — bahis kaydedilmedi")
+        return None
+
+    bet_price = market["bet_price"]
+    payout    = round(PAPER_BET_SIZE / bet_price, 2)
+    profit    = round(payout - PAPER_BET_SIZE, 2)
+
+    data    = _load_paper()
+    balance = data["balance"]
+
+    if balance < PAPER_BET_SIZE:
+        print(f"[PAPER] Yetersiz bakiye (${balance:.2f}) — bahis atlandı")
+        return None
+
+    data["balance"] = round(balance - PAPER_BET_SIZE, 2)
+
+    bet = {
+        "symbol":      pred.symbol,
+        "direction":   pred.direction,
+        "confidence":  pred.confidence,
+        "entry_price": pred.current_price,
+        "bet_amount":  PAPER_BET_SIZE,
+        "bet_price":   bet_price,
+        "payout_win":  payout,
+        "profit_win":  profit,
+        "question":    market["question"],
+        "target_ts":   target_ts,
+        "sent_ts":     time.time(),
+        "settled":     False,
+        "won":         None,
+        "pnl":         None,
+    }
+    data["bets"].append(bet)
+    _save_paper(data)
+    print(f"[PAPER] Bahis kaydedildi: {pred.symbol} {pred.direction} "
+          f"${PAPER_BET_SIZE} → kazanırsak ${payout:.2f} | odds:{bet_price:.2f} | "
+          f"Bakiye: ${data['balance']:.2f}")
+    return {"placed": True, "payout": payout, "odds": bet_price, "balance": data["balance"]}
+
+def settle_paper_bets(preds: list):
+    """check_past_predictions sonrası çözülen bahisleri kapat, bakiyeyi güncelle."""
+    data = _load_paper()
+    updated = False
+
+    for bet in data["bets"]:
+        if bet["settled"]:
+            continue
+        # Eşleşen tahmini bul
+        match = next(
+            (p for p in preds
+             if p.get("checked")
+             and p["symbol"] == bet["symbol"]
+             and abs(p["target_ts"] - bet["target_ts"]) < 60),
+            None
+        )
+        if not match:
+            continue
+
+        won = match.get("correct", False)
+        if won:
+            pnl = bet["profit_win"]
+            data["balance"] = round(data["balance"] + bet["payout_win"], 2)
+        else:
+            pnl = -bet["bet_amount"]
+
+        bet["settled"] = True
+        bet["won"]     = won
+        bet["pnl"]     = pnl
+        updated = True
+        icon = "✅" if won else "❌"
+        print(f"[PAPER] {icon} {bet['symbol']} {bet['direction']} "
+              f"{'KAZANDI' if won else 'KAYBETTİ'} | "
+              f"PnL: ${pnl:+.2f} | Bakiye: ${data['balance']:.2f}")
+
+    if updated:
+        _save_paper(data)
+
+def paper_summary() -> str:
+    """Günlük rapora eklenecek sanal cüzdan özeti."""
+    data  = _load_paper()
+    bal   = data["balance"]
+    bets  = data["bets"]
+    total_bets    = len(bets)
+    settled       = [b for b in bets if b["settled"]]
+    won_bets      = [b for b in settled if b["won"]]
+    total_pnl     = sum(b["pnl"] for b in settled)
+    open_bets     = [b for b in bets if not b["settled"]]
+    open_exposure = sum(b["bet_amount"] for b in open_bets)
+
+    lines = [
+        f"💼 <b>Sanal Cüzdan</b>",
+        f"Bakiye      : <b>${bal:.2f}</b>  (başlangıç: $300)",
+        f"Toplam PnL  : <b>${total_pnl:+.2f}</b>",
+        f"Bahisler    : {len(won_bets)}/{len(settled)} kazandı",
+        f"Açık pozisyon: {len(open_bets)} bahis (${open_exposure:.0f} risk)",
+    ]
+    if open_bets:
+        lines.append("Açık bahisler:")
+        for b in open_bets[-3:]:
+            sym = b["symbol"].replace("USDT","")
+            lines.append(f"  • {sym} {b['direction']} ${b['bet_amount']} → ${b['payout_win']:.2f}")
+    return "\n".join(lines)
+
+
+async def record_prediction(pred: "Prediction") -> Optional[dict]:
+    """Tahmini dosyaya kaydet ve sanal Polymarket bahsi aç. Paper bet sonucunu döner."""
     now      = datetime.now(timezone.utc)
-    # Hedef: bir sonraki tam saat (UTC)
     target_h = now.hour + 1
     target_ts = now.replace(minute=0, second=0, microsecond=0).timestamp() + 3600
 
     preds = _load_predictions()
     preds.append({
         "symbol":    pred.symbol,
-        "direction": pred.direction,   # YUKARI / AŞAĞI / NÖTR
+        "direction": pred.direction,
         "price":     pred.current_price,
         "confidence":pred.confidence,
-        "target_ts": target_ts,        # hedef saatin UTC timestamp'i
+        "target_ts": target_ts,
         "sent_ts":   now.timestamp(),
         "checked":   False,
     })
     _save_predictions(preds)
     print(f"[KAYIT] {pred.symbol} {pred.direction} → hedef {target_h:02d}:00 UTC kaydedildi")
+
+    # Sanal bahis — gerçek Polymarket odds'larıyla
+    return await record_paper_bet(pred, target_ts)
 
 
 async def fetch_price_at(symbol: str, target_ts: float) -> float:
@@ -733,6 +936,8 @@ async def check_past_predictions():
 
     if updated:
         _save_predictions(preds)
+        # Çözülen tahminlere göre sanal bahisleri kapat
+        settle_paper_bets(preds)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -799,115 +1004,154 @@ async def send_daily_report():
         f"{medal_g} <b>Genel: {total_ok} başarılı  {total_all-total_ok} başarısız  (%{overall:.0f})</b>",
     ]
 
+    # ── Sanal cüzdan günlük özeti ──
+    paper_data  = _load_paper()
+    cutoff_ts   = time.time() - 86400
+    day_bets    = [b for b in paper_data["bets"] if b.get("sent_ts", 0) >= cutoff_ts]
+    settled_day = [b for b in day_bets if b["settled"]]
+    won_day     = [b for b in settled_day if b["won"]]
+    open_day    = [b for b in day_bets if not b["settled"]]
+    total_pnl   = round(sum(b["pnl"] for b in settled_day), 2)
+    bal         = paper_data["balance"]
+
+    lines.append(f"━━━━━━━━━━━━━━━━━━━━")
+    lines.append(f"💼 <b>Sanal Cüzdan — Günlük Özet</b>")
+    lines.append(f"Bakiye   : <b>${bal:.2f}</b>  (başlangıç: $300)")
+    lines.append(f"Bahisler : <b>{len(won_day)}/{len(settled_day)}</b> kazandı  |  PnL: <b>${total_pnl:+.2f}</b>")
+
+    if day_bets:
+        lines.append(f"Girilen saatler:")
+        for b in day_bets:
+            sym    = b["symbol"].replace("USDT", "")
+            s_ic   = "₿" if sym == "BTC" else "Ξ"
+            # Saat IST (UTC+3)
+            h_ist  = int((b["target_ts"] + 3*3600) % 86400 // 3600)
+            if b["settled"]:
+                icon = "✅" if b["won"] else "❌"
+                pnl  = f"${b['pnl']:+.2f}"
+            else:
+                icon = "🔄"
+                pnl  = f"${b['payout_win']:.2f} bekleniyor"
+            lines.append(
+                f"  {icon} {s_ic}{sym} {h_ist:02d}:00 İST  "
+                f"${b['bet_amount']:.0f} → {pnl}"
+            )
+
+    if open_day:
+        lines.append(f"Açık: {len(open_day)} bahis")
+
     await send_telegram("\n".join(lines))
     print(f"[RAPOR] Gönderildi — {total_ok}/{total_all} doğru ({overall:.0f}%)")
 
 
+def _build_updown_slug(coin_name: str, dt_et) -> str:
+    """ET datetime'dan 'bitcoin-up-or-down-april-1-2026-2pm-et' slug üretir."""
+    full = "bitcoin" if coin_name == "BTC" else "ethereum"
+    month = dt_et.strftime("%B").lower()   # "march", "april" ...
+    day   = str(dt_et.day)                 # "1", "31"
+    year  = str(dt_et.year)
+    hr    = dt_et.hour                     # 0-23
+    hr12  = hr % 12 or 12
+    ampm  = "am" if hr < 12 else "pm"
+    return f"{full}-up-or-down-{month}-{day}-{year}-{hr12}{ampm}-et"
+
+
 async def find_market(coin: str, direction: str, price: float) -> Optional[dict]:
     """
-    Gamma API'den coin için uygun 'above/below' marketini bulur.
-    direction: "YUKARI" → 'above' market YES token
-               "AŞAĞI"  → 'above' market NO token (veya 'below' YES)
-    Döner: {token_id, question, bet_side, market_price} veya None
+    'Bitcoin/Ethereum Up or Down - Hourly' marketini slug ile bulur.
+    Gamma API'den conditionId alır, CLOB API'den token_id çeker.
+    direction: "YUKARI" → Up token | "AŞAĞI" → Down token
     """
+    from datetime import timedelta
     coin_name = "BTC" if "BTC" in coin else "ETH"
-    queries   = [f"{coin_name} above", f"{coin_name} below", f"{coin_name} price"]
+    full_name = "Bitcoin" if coin_name == "BTC" else "Ethereum"
 
-    for q in queries:
-        url = (f"{GAMMA_HOST}/markets?active=true&closed=false"
-               f"&_textSearch={q}&limit=30")
+    # ET = UTC-4 (EDT). Saatlik market için bir sonraki tam saati hesapla.
+    now_utc = datetime.now(timezone.utc)
+    et_offset = timedelta(hours=-4)
+    now_et  = now_utc + et_offset
+    # Tahmin bir sonraki saat için → next_et
+    next_et = now_et.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+
+    # Denenecek saatler: sonraki saat ve mevcut saat
+    candidates = [next_et, now_et.replace(minute=0, second=0, microsecond=0)]
+
+    for dt in candidates:
+        slug = _build_updown_slug(coin_name, dt)
+        url  = f"{GAMMA_HOST}/events?slug={slug}"
         try:
             async with aiohttp.ClientSession() as s:
                 async with s.get(url, timeout=aiohttp.ClientTimeout(total=10)) as r:
-                    markets = await r.json()
+                    events = await r.json()
         except Exception as e:
-            print(f"[POLY] Market arama hatası: {e}")
+            print(f"[POLY] Event arama hatası ({slug}): {e}")
             continue
 
-        if not isinstance(markets, list):
-            markets = markets.get("markets", [])
+        if not isinstance(events, list):
+            events = events.get("events", [])
+        if not events:
+            continue
 
-        for m in markets:
-            question = m.get("question", "").lower()
-            tokens   = m.get("tokens", [])
-            prices   = m.get("outcomePrices", [])
-            volume   = float(m.get("volumeNum", 0))
+        event  = events[0]
+        markets = event.get("markets", [])
+        if not markets:
+            continue
 
-            if not tokens or not prices or volume < 1000:
-                continue
+        m = markets[0]
+        condition_id = m.get("conditionId", "")
+        volume       = float(event.get("volume", 0))
 
-            # 'above' market mı?
-            is_above = "above" in question or "over" in question or "exceed" in question
-            is_below = "below" in question or "under" in question
+        if not condition_id:
+            continue
 
-            if not (is_above or is_below):
-                continue
+        # CLOB API'den token_id çek
+        clob_url = f"{CLOB_HOST}/markets/{condition_id}"
+        try:
+            async with aiohttp.ClientSession() as s:
+                async with s.get(clob_url, timeout=aiohttp.ClientTimeout(total=10)) as r:
+                    clob = await r.json()
+        except Exception as e:
+            print(f"[POLY] CLOB market hatası: {e}")
+            continue
 
-            # Fiyat seviyesi var mı soruда?
-            import re
-            nums = re.findall(r'[\$]?([\d,]+(?:\.\d+)?)[kK]?', question)
-            if not nums:
-                continue
+        if not clob.get("accepting_orders"):
+            continue
 
-            # Threshold fiyatı parse et
-            threshold = None
-            for n in nums:
-                try:
-                    val = float(n.replace(",", ""))
-                    if coin_name == "BTC" and 10_000 < val < 500_000:
-                        threshold = val; break
-                    elif coin_name == "ETH" and 500 < val < 50_000:
-                        threshold = val; break
-                except:
-                    continue
+        tokens = clob.get("tokens", [])
+        up_tok   = next((t for t in tokens if t.get("outcome","").upper() == "UP"),   None)
+        down_tok = next((t for t in tokens if t.get("outcome","").upper() == "DOWN"), None)
 
-            if threshold is None:
-                continue
+        if not up_tok or not down_tok:
+            continue
 
-            # Threshold mevcut fiyata yakın mı? (±%5)
-            if abs(threshold - price) / price > 0.05:
-                continue
+        up_price   = float(up_tok.get("price",   0.5))
+        down_price = float(down_tok.get("price", 0.5))
 
-            # Token yönü belirle
-            yes_token = next((t for t in tokens if t.get("outcome","").upper() == "YES"), None)
-            no_token  = next((t for t in tokens if t.get("outcome","").upper() == "NO"),  None)
+        if direction == "YUKARI":
+            token_id  = up_tok["token_id"]
+            bet_side  = "up"
+            bet_price = up_price
+        else:
+            token_id  = down_tok["token_id"]
+            bet_side  = "down"
+            bet_price = down_price
 
-            if not yes_token or not no_token:
-                continue
+        if not (0.05 <= bet_price <= 0.95):
+            continue
 
-            yes_price = float(prices[0]) if prices else 0.5
-            no_price  = float(prices[1]) if len(prices) > 1 else 1 - yes_price
+        result = {
+            "token_id":  token_id,
+            "question":  m.get("question", event.get("title", "")),
+            "bet_side":  bet_side,
+            "bet_price": round(bet_price, 3),
+            "volume":    volume,
+            "market_id": condition_id,
+        }
+        print(f"[POLY] Market bulundu: {result['question'][:60]} | "
+              f"Up:%{up_price*100:.0f} Down:%{down_price*100:.0f} | hacim:${volume:,.0f}")
+        return result
 
-            # Bahis yönünü seç
-            if is_above and direction == "YUKARI":
-                token_id   = yes_token["token_id"]
-                bet_side   = "yes"
-                bet_price  = yes_price
-            elif is_above and direction == "AŞAĞI":
-                token_id   = no_token["token_id"]
-                bet_side   = "no"
-                bet_price  = no_price
-            elif is_below and direction == "AŞAĞI":
-                token_id   = yes_token["token_id"]
-                bet_side   = "yes"
-                bet_price  = yes_price
-            else:
-                continue
-
-            # Çok ucuz veya pahalı tokenlar riskli — 0.05–0.95 arası
-            if not (0.05 <= bet_price <= 0.95):
-                continue
-
-            return {
-                "token_id":    token_id,
-                "question":    m.get("question", ""),
-                "bet_side":    bet_side,
-                "bet_price":   round(bet_price, 3),
-                "threshold":   threshold,
-                "volume":      volume,
-                "market_id":   m.get("id", ""),
-            }
-
+    print(f"[POLY] {full_name} için aktif Up/Down marketi bulunamadı")
     return None
 
 
@@ -959,8 +1203,7 @@ async def place_bet(pred: Prediction) -> Optional[dict]:
             chain_id       = 137,
             key            = POLY_PRIVATE_KEY,
             creds          = creds,
-            signature_type = 1,
-            funder         = POLY_FUNDER,
+            signature_type = 0,
         )
         order_args = OrderArgs(
             token_id = market["token_id"],
@@ -1188,13 +1431,17 @@ async def _do_prediction(label: str = ""):
         if p.get("checked") and p.get("target_ts", 0) > now_ts - 3600
     ]
 
-    # Tek birleşik mesaj
-    await send_unified_prediction(preds, past_results)
+    # Paper bet'leri önce kaydet → sonuçlarla mesajı gönder
+    paper_results = {}
+    for pred in preds:
+        paper_results[pred.symbol] = await record_prediction(pred)
 
-    # Bet + kayıt
+    # Birleşik tahmin mesajı (paper bet bilgisiyle)
+    await send_unified_prediction(preds, past_results, paper_results=paper_results)
+
+    # Gerçek bahis (dry_run'da sadece loglar)
     for pred in preds:
         await send_prediction(pred)
-        record_prediction(pred)
 
 
 async def prediction_loop():

@@ -3,6 +3,10 @@
 ## Genel Bakış
 Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya paylaşım sistemi.
 
+| Klasör | Açıklama |
+|---|---|
+| `yeni_proje/` | Yeni geliştirilecek proje için ayrılan boş klasör. |
+
 ## 🏆 Kilometre Taşları
 | Tarih | Not |
 |---|---|
@@ -62,7 +66,9 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 | `polymarkettest.py` | Polymarket CLOB API test scripti (market listeleme, bakiye, emir). |
 | `poly_predictions.json` | Tahmin geçmişi: yön, güven, fiyat, hedef, doğrulama sonucu (runtime). |
 
-**Telegram:** `8696017635:AAErmIcY033VFBbnApd1lVALz1pcJSMzy5s` — Mesaj formatı: BTC+ETH tek mesajda, geçen saat sonucu + coin detay blokları.
+**Telegram:** `.env` → `TELEGRAM_TOKEN` — Mesaj formatı: BTC+ETH tek mesajda, geçen saat sonucu + coin detay blokları.
+
+**Sinyal güncellemesi (31.03.2026):** Pine v6.0 karşılaştırmasından eksik bulunan 2 sinyal eklendi: **Hacim spike 1h** (ağırlık 2, mum yönüyle doğrulama) + **EMA50 uzaklık filtresi** (ağırlık 2, >%5 overextended → zıt puan). Toplam max ağırlık 21 → 25. Yedek: `poly_predictor.py.bak`.
 
 **Cron:** `nohup python3 poly_predictor.py` → arka planda sürekli çalışır, her saat `:10`'unda tahmin gönderir | `0 23 * * *` → günlük rapor (`/tmp/poly_daily_report.log`)
 
