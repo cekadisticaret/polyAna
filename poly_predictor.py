@@ -1435,7 +1435,9 @@ async def _do_prediction(label: str = ""):
     now_ts      = time.time()
     past_results = [
         p for p in all_preds
-        if p.get("checked") and p.get("target_ts", 0) > now_ts - 3600
+        if p.get("checked")
+        and p.get("target_ts", 0) > now_ts - 3600
+        and p.get("symbol") in SYMBOLS
     ]
 
     # Paper bet'leri önce kaydet → sonuçlarla mesajı gönder
