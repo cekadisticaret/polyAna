@@ -871,6 +871,8 @@ async def check_past_predictions():
     """
     now   = time.time()
     preds = _load_predictions()
+    # Artık aktif olmayan semboller varsa temizle (örn. BTC → SOL geçişi)
+    preds = [p for p in preds if p.get("symbol") in SYMBOLS]
     updated = False
 
     for p in preds:
