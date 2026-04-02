@@ -467,6 +467,19 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
     else:
         confidence = "DÜŞÜK"
 
+    # Ranging market override — Chop > 60 ise tahmin güvenilmez
+    kl_check = state.klines_1h
+    if len(kl_check) >= 55:
+        _h = [k["high"] for k in kl_check[-14:]]
+        _l = [k["low"]  for k in kl_check[-14:]]
+        _c = [k["close"] for k in kl_check[-14:]]
+        _atr14 = sum(max(_h[i]-_l[i], abs(_h[i]-_c[i-1]), abs(_l[i]-_c[i-1]))
+                     for i in range(1, len(_h)))
+        _hl14  = max(_h) - min(_l)
+        _chop_check = 100 * _atr14 / _hl14 if _hl14 > 0 else 100
+        if _chop_check > 60:
+            confidence = "DÜŞÜK"
+
     # Hedef saat IST
     now_utc     = datetime.now(timezone.utc)
     target_ist  = (now_utc.hour + 1 + 3) % 24
@@ -630,7 +643,7 @@ async def send_unified_prediction(preds: list, past_results: list, paper_results
                     f"(odds: {odds:.2f}  →  kazanırsak: ${payout:.2f})"
                 )
             else:
-                reason = "yön belirsiz" if pred.direction == "NÖTR" else "market yok"
+                reason = (result.get("reason") if result else None) or "market yok"
                 paper_lines.append(f"⏭️ {s_ic} {sym} → girilmedi ({reason})")
 
     paper_block = (
@@ -805,6 +818,12 @@ async def record_prediction(pred: "Prediction") -> Optional[dict]:
     now      = datetime.now(timezone.utc)
     target_h = now.hour + 1
     target_ts = now.replace(minute=0, second=0, microsecond=0).timestamp() + 3600
+
+    # Sadece YÜKSEK güven → istatistiklere kaydet ve bahis aç
+    if pred.confidence != "YÜKSEK":
+        reason = f"güven düşük ({pred.confidence})"
+        print(f"[ATLANDI] {pred.symbol} {pred.direction} → {reason}")
+        return {"placed": False, "reason": reason}
 
     preds = _load_predictions()
     preds.append({
@@ -1389,6 +1408,25 @@ async def _do_prediction(label: str = ""):
     if not preds:
         print("[TAHMİN] Yeterli veri yok.")
         return
+
+    # ── BTC 1h trend filtresi — SOL için ──
+    # BTC son 1h mumu düşüşse ve SOL YUKARI diyorsa → DÜŞÜK güven
+    # BTC son 1h mumu yükselişse ve SOL AŞAĞI diyorsa → DÜŞÜK güven
+    try:
+        btc_kl = await fetch_klines("BTCUSDT")
+        if btc_kl and len(btc_kl) >= 2:
+            btc_last = btc_kl[-2]
+            btc_dir  = "YUKARI" if btc_last["close"] >= btc_last["open"] else "AŞAĞI"
+            for pred in preds:
+                if "SOL" in pred.symbol and pred.direction != btc_dir:
+                    if pred.confidence == "YÜKSEK":
+                        pred.confidence = "ORTA"
+                        print(f"[BTC FİLTRE] {pred.symbol} {pred.direction} ↔ BTC {btc_dir} — YÜKSEK→ORTA")
+                    elif pred.confidence == "ORTA":
+                        pred.confidence = "DÜŞÜK"
+                        print(f"[BTC FİLTRE] {pred.symbol} {pred.direction} ↔ BTC {btc_dir} — ORTA→DÜŞÜK")
+    except Exception as e:
+        print(f"[BTC FİLTRE HATA] {e}")
 
     # Geçmiş kontrol — hangileri bu saat kapandı?
     all_preds   = _load_predictions()
