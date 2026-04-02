@@ -61,7 +61,7 @@ BET_DRY_RUN      = os.getenv("POLY_DRY_RUN", "true").lower() != "false"
 CLOB_HOST        = "https://clob.polymarket.com"
 GAMMA_HOST       = "https://gamma-api.polymarket.com"
 
-SYMBOLS = ["BTCUSDT", "ETHUSDT"]
+SYMBOLS = ["SOLUSDT", "ETHUSDT"]
 
 # ─────────────────────────────────────────────────────────────
 # VERİ YAPILARI
@@ -550,48 +550,15 @@ async def send_telegram(msg: str):
 def _build_coin_block(pred: Prediction) -> str:
     """Tek coin için detay bloğu üretir."""
     sym   = pred.symbol.replace("USDT", "")
-    icon  = "₿" if sym == "BTC" else "Ξ" if sym == "ETH" else sym
+    icon  = "◎" if sym == "SOL" else "Ξ" if sym == "ETH" else sym
     d_ico = "📉" if pred.direction == "AŞAĞI" else "📈" if pred.direction == "YUKARI" else "➡️"
+    conf_ico = "🔥" if pred.confidence == "YÜKSEK" else "⚡" if pred.confidence == "ORTA" else "💤"
 
-    # Trend satırı
-    rsi_v = adx_v = 0.0
-    for k, v in pred.signals.items():
-        if k == "rsi":
-            m = re.search(r'[\d.]+', v)
-            if m: rsi_v = float(m.group())
-        if k == "regime":
-            m = re.search(r'ADX:([\d.]+)', v)
-            if m: adx_v = float(m.group(1))
-
-    trend_str = "AŞAĞI" if pred.bear_pct > pred.bull_pct else "YUKARI"
-    trend_ico = "🔴" if trend_str == "AŞAĞI" else "🟢"
-
-    # Key level konumu
     p = pred.current_price
-    kl = pred.key_level
-    kl_rel = "ÜZERİNDE" if p >= kl else "ALTINDA"
-
-    # Sinyal satırları
-    sig_lines = []
-    for k, v in pred.signals.items():
-        raw = v.replace("🟢 ", "").replace("🔴 ", "").replace("⚪ ", "").replace("⚠️ ", "")
-        if "🟢" in v:   sig_lines.append(f"✅ {raw}")
-        elif "🔴" in v: sig_lines.append(f"❌ {raw}")
-        else:            sig_lines.append(f"➕ {raw}")
-
-    sigs = "\n".join(sig_lines)
-
-    h_range = ""
-    if pred.h1_high and pred.h1_low:
-        h_range = f"🔧 1h Aralık: ${pred.h1_low:,.0f} – ${pred.h1_high:,.0f}\n"
 
     return (
-        f"{icon} <b>{sym}</b>  ${p:,.2f}  {d_ico}\n"
-        f"▲ YUKARI: <b>{pred.bull_pct}%</b>  |  ▼ AŞAĞI: <b>{pred.bear_pct}%</b>\n"
-        f"{h_range}"
-        f"{trend_ico} Trend: {trend_str}  |  RSI:{rsi_v:.0f}  |  ADX:{adx_v:.0f}\n"
-        f"🎯 Yakın seviye: ${kl:,.0f} ({kl_rel})\n"
-        f"{sigs}"
+        f"{icon} <b>{sym}</b>  ${p:,.2f}  {d_ico} <b>{pred.direction}</b>\n"
+        f"▲ {pred.bull_pct}%  |  ▼ {pred.bear_pct}%  |  {conf_ico} {pred.confidence}"
     )
 
 
@@ -626,13 +593,13 @@ async def send_unified_prediction(preds: list, past_results: list, paper_results
             ok   = r.get("correct", False)
             icon = "✅" if ok else "❌"
             sym  = r["symbol"].replace("USDT", "")
-            s_ic = "₿" if sym == "BTC" else "Ξ"
+            s_ic = "◎" if sym == "SOL" else "Ξ"
             ep   = r.get("price", 0)
             ap   = r.get("actual_price", 0)
             diff = ap - ep
             prev_lines.append(
-                f"{icon} {s_ic} {sym}  ${ep:,.0f} → ${ap:,.0f}  "
-                f"({'+' if diff>=0 else ''}{diff:,.0f})  Tahmin: {r['direction']}"
+                f"{icon} {s_ic} {sym}  ${ep:,.2f} → ${ap:,.2f}  "
+                f"({'+' if diff>=0 else ''}{diff:,.2f})  Tahmin: {r['direction']}"
             )
         score = f"{len(correct)}/{len(past_results)} doğru"
         prev_block = (
@@ -653,7 +620,7 @@ async def send_unified_prediction(preds: list, past_results: list, paper_results
     if paper_results:
         for pred in preds:
             sym    = pred.symbol.replace("USDT", "")
-            s_ic   = "₿" if sym == "BTC" else "Ξ"
+            s_ic   = "◎" if sym == "SOL" else "Ξ"
             result = paper_results.get(pred.symbol)
             if result and result.get("placed"):
                 odds   = result["odds"]
@@ -673,7 +640,7 @@ async def send_unified_prediction(preds: list, past_results: list, paper_results
     ) if paper_lines else ""
 
     msg = (
-        f"🎯 <b>POLYX2 - AIPROJECT</b>\n"
+        f"🎯 <b>POLYX2 - aiproject3 - 54</b>\n"
         f"⏰ Hedef: <b>{target_time}</b>\n"
         f"{prev_block}"
         f"─────────────────────\n"
@@ -969,7 +936,7 @@ async def send_daily_report():
     ]
 
     total_ok = total_all = 0
-    for sym in ["BTCUSDT", "ETHUSDT"]:
+    for sym in ["SOLUSDT", "ETHUSDT"]:
         items = by_sym.get(sym)
         if not items:
             continue
@@ -979,7 +946,7 @@ async def send_daily_report():
         total_ok  += ok
         total_all += n
         rate  = ok / n * 100 if n else 0
-        icon  = "₿" if "BTC" in sym else "Ξ"
+        icon  = "◎" if "SOL" in sym else "Ξ"
         medal = "🥇" if rate >= 70 else "✅" if rate >= 50 else "⚠️"
         name  = sym.replace("USDT", "")
 
@@ -1023,7 +990,7 @@ async def send_daily_report():
         lines.append(f"Girilen saatler:")
         for b in day_bets:
             sym    = b["symbol"].replace("USDT", "")
-            s_ic   = "₿" if sym == "BTC" else "Ξ"
+            s_ic   = "◎" if sym == "SOL" else "Ξ"
             # Saat IST (UTC+3)
             h_ist  = int((b["target_ts"] + 3*3600) % 86400 // 3600)
             if b["settled"]:
@@ -1046,7 +1013,7 @@ async def send_daily_report():
 
 def _build_updown_slug(coin_name: str, dt_et) -> str:
     """ET datetime'dan 'bitcoin-up-or-down-april-1-2026-2pm-et' slug üretir."""
-    full = "bitcoin" if coin_name == "BTC" else "ethereum"
+    full = "solana" if coin_name == "SOL" else "ethereum"
     month = dt_et.strftime("%B").lower()   # "march", "april" ...
     day   = str(dt_et.day)                 # "1", "31"
     year  = str(dt_et.year)
@@ -1063,8 +1030,8 @@ async def find_market(coin: str, direction: str, price: float) -> Optional[dict]
     direction: "YUKARI" → Up token | "AŞAĞI" → Down token
     """
     from datetime import timedelta
-    coin_name = "BTC" if "BTC" in coin else "ETH"
-    full_name = "Bitcoin" if coin_name == "BTC" else "Ethereum"
+    coin_name = "SOL" if "SOL" in coin else "ETH"
+    full_name = "Solana" if coin_name == "SOL" else "Ethereum"
 
     # ET = UTC-4 (EDT). Saatlik market için bir sonraki tam saati hesapla.
     now_utc = datetime.now(timezone.utc)
@@ -1538,7 +1505,7 @@ async def main():
 
     await send_telegram(
         f"🔮 <b>Polymarket Tahmin Motoru Başladı</b>\n"
-        f"📊 BTC + ETH · 1 Saatlik Tahminler\n"
+        f"📊 SOL + ETH · 1 Saatlik Tahminler\n"
         f"⏰ Her saat başı Telegram'a bildirim gelecek"
     )
 
