@@ -63,10 +63,9 @@ GAMMA_HOST       = "https://gamma-api.polymarket.com"
 
 SYMBOLS = ["SOLUSDT", "ETHUSDT"]
 
-# Bahis girişi: kazanan yön puanı bu eşiğin üstünde olmalı (bull_pct / bear_pct, 0–100)
-MIN_WIN_DIRECTION_PCT = 50.0
-# Her iki yön de bu altındaysa sinyal dengeli sayılır, girilmez (örn. ▲%30 ▼%30)
-MAX_BALANCED_SIDE_PCT = 35.0
+# Bahis girişi — SOL ve ETH için aynı kurallar (bull_pct / bear_pct, 0–100)
+MIN_WIN_DIRECTION_PCT = 50.0   # kazanan yön bunun üstünde olmalı
+MAX_BALANCED_SIDE_PCT = 35.0   # ▲ ve ▼ ikisi de bunun altındaysa girilmez
 
 # ─────────────────────────────────────────────────────────────
 # VERİ YAPILARI

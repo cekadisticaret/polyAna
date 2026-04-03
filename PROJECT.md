@@ -62,7 +62,7 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 ### Kripto — Polymarket Tahmin Motoru
 | Dosya | Açıklama |
 |---|---|
-| `poly_predictor.py` | SOL/ETH saatlik yön tahmini; sanal bahis: kazanan yön payı >%50 ve ▲▼ ikisi de ≤%35 değilse girer. |
+| `poly_predictor.py` | SOL ve ETH için aynı kurallar: sanal bahis kazanan yön >%50; ▲▼ ikisi ≤%35 ise girilmez. |
 | `polymarkettest.py` | Polymarket CLOB API test scripti (market listeleme, bakiye, emir). |
 | `poly_predictions.json` | Tahmin geçmişi: yön, güven, fiyat, hedef, doğrulama sonucu (runtime). |
 
