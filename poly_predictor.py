@@ -63,6 +63,11 @@ GAMMA_HOST       = "https://gamma-api.polymarket.com"
 
 SYMBOLS = ["SOLUSDT", "ETHUSDT"]
 
+# Bahis girişi: kazanan yön puanı bu eşiğin üstünde olmalı (bull_pct / bear_pct, 0–100)
+MIN_WIN_DIRECTION_PCT = 50.0
+# Her iki yön de bu altındaysa sinyal dengeli sayılır, girilmez (örn. ▲%30 ▼%30)
+MAX_BALANCED_SIDE_PCT = 35.0
+
 # ─────────────────────────────────────────────────────────────
 # VERİ YAPILARI
 # ─────────────────────────────────────────────────────────────
@@ -822,6 +827,18 @@ async def record_prediction(pred: "Prediction") -> Optional[dict]:
     # DÜŞÜK güven → kaydetme, bahis açma
     if pred.confidence == "DÜŞÜK":
         reason = f"güven düşük (DÜŞÜK)"
+        print(f"[ATLANDI] {pred.symbol} {pred.direction} → {reason}")
+        return {"placed": False, "reason": reason}
+
+    bp = float(pred.bull_pct)
+    br = float(pred.bear_pct)
+    if bp <= MAX_BALANCED_SIDE_PCT and br <= MAX_BALANCED_SIDE_PCT:
+        reason = f"sinyal dengeli (▲%{bp:.0f} ▼%{br:.0f})"
+        print(f"[ATLANDI] {pred.symbol} {pred.direction} → {reason}")
+        return {"placed": False, "reason": reason}
+    win_pct = bp if pred.direction == "YUKARI" else br
+    if win_pct <= MIN_WIN_DIRECTION_PCT:
+        reason = f"kazanan yön %{win_pct:.0f} (min %{MIN_WIN_DIRECTION_PCT:.0f})"
         print(f"[ATLANDI] {pred.symbol} {pred.direction} → {reason}")
         return {"placed": False, "reason": reason}
 
