@@ -460,14 +460,14 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
 
     # Güven seviyesi — NÖTR kaldırıldı, yön her zaman YUKARI veya AŞAĞI
     gap = abs(bull_pts - bear_pts)
-    if gap >= total_w * 0.4:
+    if gap >= total_w * 0.20:       # ~5/25 puan fark yeterli
         confidence = "YÜKSEK"
-    elif gap >= total_w * 0.2:
+    elif gap >= total_w * 0.10:     # ~2.5/25 puan fark
         confidence = "ORTA"
     else:
         confidence = "DÜŞÜK"
 
-    # Ranging market override — Chop > 60 ise tahmin güvenilmez
+    # Ranging market — Chop > 68 ise sadece YÜKSEK → ORTA'ya indir, ORTA'ya dokunma
     kl_check = state.klines_1h
     if len(kl_check) >= 55:
         _h = [k["high"] for k in kl_check[-14:]]
@@ -477,8 +477,8 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
                      for i in range(1, len(_h)))
         _hl14  = max(_h) - min(_l)
         _chop_check = 100 * _atr14 / _hl14 if _hl14 > 0 else 100
-        if _chop_check > 60:
-            confidence = "DÜŞÜK"
+        if _chop_check > 68 and confidence == "YÜKSEK":
+            confidence = "ORTA"
 
     # Hedef saat IST
     now_utc     = datetime.now(timezone.utc)
@@ -819,9 +819,9 @@ async def record_prediction(pred: "Prediction") -> Optional[dict]:
     target_h = now.hour + 1
     target_ts = now.replace(minute=0, second=0, microsecond=0).timestamp() + 3600
 
-    # Sadece YÜKSEK güven → istatistiklere kaydet ve bahis aç
-    if pred.confidence != "YÜKSEK":
-        reason = f"güven düşük ({pred.confidence})"
+    # DÜŞÜK güven → kaydetme, bahis açma
+    if pred.confidence == "DÜŞÜK":
+        reason = f"güven düşük (DÜŞÜK)"
         print(f"[ATLANDI] {pred.symbol} {pred.direction} → {reason}")
         return {"placed": False, "reason": reason}
 
@@ -1424,9 +1424,6 @@ async def _do_prediction(label: str = ""):
                     if pred.confidence == "YÜKSEK":
                         pred.confidence = "ORTA"
                         print(f"[BTC FİLTRE] {pred.symbol} {pred.direction} ↔ BTC {btc_dir} — YÜKSEK→ORTA")
-                    elif pred.confidence == "ORTA":
-                        pred.confidence = "DÜŞÜK"
-                        print(f"[BTC FİLTRE] {pred.symbol} {pred.direction} ↔ BTC {btc_dir} — ORTA→DÜŞÜK")
     except Exception as e:
         print(f"[BTC FİLTRE HATA] {e}")
 
