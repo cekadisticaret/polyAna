@@ -26,7 +26,6 @@ from src.analyzer.poly_bridge import run_poly_hourly_predictions
 from src.analyzer.poly_predictor import Prediction
 from src.config import Config
 from src.data.hourly_trades import (
-    daily_stats_for_day,
     fetch_pending_trades,
     init_hourly_table,
     update_success,
@@ -40,10 +39,8 @@ from src.data.market_fetcher import (
     format_et_clock,
     resolved_outcome_from_event,
 )
-from src.notifications import send_telegram
 from src.trading.portfolio_snapshot import (
     portfolio_snapshot_values,
-    portfolio_summary_lines_from_values,
 )
 
 logger = logging.getLogger(__name__)
@@ -118,41 +115,6 @@ def _format_poly_block(coin: str, pred: Optional[Prediction]) -> str:
         f"   • {coin.upper()}: {pred.direction} ({d_en}) | "
         f"~%{pred.probability * 100:.0f} | güven {pred.confidence} | hedef {pred.target_time}\n"
         f"     {reason}"
-    )
-
-
-def _coin_telegram_label(coin: str) -> str:
-    return COINS.get(coin, coin.upper())
-
-
-def _forecast_direction_line(pred: Optional[Prediction]) -> str:
-    if pred is None:
-        return "—"
-    d = _poly_direction_to_up_down(pred.direction)
-    return d if d else "—"
-
-
-def _forecast_confidence_line(pred: Optional[Prediction]) -> str:
-    if pred is None:
-        return "GÜVEN SKORU —"
-    return f"GÜVEN SKORU {pred.confidence}"
-
-
-def _format_hourly_forecast_block(
-    coin: str,
-    cur_clock: str,
-    pred: Optional[Prediction],
-    trade_confirmed: bool,
-) -> str:
-    """İŞLEM AÇILDI: CLOB yanıtı başarılı ve hourly_trades kaydı yazıldı."""
-    return "\n".join(
-        [
-            _coin_telegram_label(coin),
-            cur_clock,
-            _forecast_direction_line(pred),
-            _forecast_confidence_line(pred),
-            "İŞLEM AÇILDI" if trade_confirmed else "İŞLEM AÇILMADI",
-        ]
     )
 
 
@@ -263,31 +225,7 @@ def run_hourly_cycle_resolve_summary() -> None:
             "ok" if ok else "fail",
         )
 
-    stats = daily_stats_for_day(summary_trade_date)
-    summary_lines: list[str] = []
-    for coin in COINS:
-        st = stats[coin]
-        opened = st["opened"]
-        ok_c = st["resolved_ok"]
-        fail_c = st["resolved_fail"]
-        pend_c = st["pending"]
-        summary_lines.append(
-            f"{_coin_telegram_label(coin)} - {opened}/24"
-        )
-        summary_lines.append(f"{ok_c} BAŞARILI")
-        summary_lines.append(f"{fail_c} BAŞARISIZ")
-        summary_lines.append(f"{pend_c} DEVAM EDİYOR")
-        summary_lines.append("----------------")
-    if summary_lines and summary_lines[-1] == "----------------":
-        summary_lines.pop()
-    msg_summary = "\n".join(summary_lines)
     snap = portfolio_snapshot_values()
-    extra = portfolio_summary_lines_from_values(snap)
-    if extra:
-        msg_summary = msg_summary + "\n\n" + "\n".join(extra)
-
-    send_telegram(f"📊 Gün özeti ({summary_trade_date})\n\n{msg_summary}")
-
     now_et = ctx.now_utc.astimezone(ET)
     insert_portfolio_snapshot(
         recorded_at_utc=ctx.now_utc.isoformat(),
@@ -324,7 +262,6 @@ def run_hourly_cycle_open() -> None:
         logger.exception("poly_predictor veri/tahmin hatasi")
         preds_by_symbol = {}
 
-    hourly_forecast_blocks: list[str] = []
     detail_lines: list[str] = []
 
     for coin, _sym in COINS.items():
@@ -368,13 +305,6 @@ def run_hourly_cycle_open() -> None:
             skip_reason_code=skip_code,
             skip_reason_detail=detail_s,
         )
-
-        hourly_forecast_blocks.append(
-            _format_hourly_forecast_block(coin, cur_clock, pred, False)
-        )
-
-    msg_hourly = "Saatlik Tahminler\n\n" + "\n\n".join(hourly_forecast_blocks)
-    send_telegram(msg_hourly)
 
     if detail_lines:
         logger.info("Tahmin ozeti:\n%s", "\n".join(detail_lines))

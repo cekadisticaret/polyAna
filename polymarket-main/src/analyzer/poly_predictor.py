@@ -39,6 +39,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 from dotenv import load_dotenv
 import math
+from src.trading.portfolio_snapshot import portfolio_snapshot_values
 
 load_dotenv()
 
@@ -581,57 +582,37 @@ def _build_coin_block(pred: Prediction) -> str:
     icon  = _symbol_icon(sym)
     d_ico = "📉" if pred.direction == "AŞAĞI" else "📈" if pred.direction == "YUKARI" else "➡️"
 
-    rsi_v = adx_v = 0.0
-    for k, v in pred.signals.items():
-        if k == "rsi":
-            m = re.search(r'[\d.]+', v)
-            if m: rsi_v = float(m.group())
-        if k == "regime":
-            m = re.search(r'ADX:([\d.]+)', v)
-            if m: adx_v = float(m.group(1))
-
     trend_str = "AŞAĞI" if pred.bear_pct > pred.bull_pct else "YUKARI"
     trend_ico = "🔴" if trend_str == "AŞAĞI" else "🟢"
 
-    p  = pred.current_price
-    kl = pred.key_level
-    kl_rel = "ÜZERİNDE" if p >= kl else "ALTINDA"
-
-    sig_lines = []
-    for k, v in pred.signals.items():
-        raw = v.replace("🟢 ", "").replace("🔴 ", "").replace("⚪ ", "").replace("⚠️ ", "")
-        if "🟢" in v:   sig_lines.append(f"✅ {raw}")
-        elif "🔴" in v: sig_lines.append(f"❌ {raw}")
-        else:            sig_lines.append(f"➕ {raw}")
-
-    sigs = "\n".join(sig_lines)
-
-    h_range = ""
-    if pred.h1_high and pred.h1_low:
-        h_range = f"🔧 1h Aralık: ${pred.h1_low:,.0f} – ${pred.h1_high:,.0f}\n"
+    p = pred.current_price
 
     return (
         f"{icon} <b>{sym}</b>  ${p:,.2f}  {d_ico}\n"
         f"▲ YUKARI: <b>{pred.bull_pct}%</b>  |  ▼ AŞAĞI: <b>{pred.bear_pct}%</b>\n"
-        f"{h_range}"
-        f"{trend_ico} Trend: {trend_str}  |  RSI:{rsi_v:.0f}  |  ADX:{adx_v:.0f}\n"
-        f"🎯 Yakın seviye: ${kl:,.0f} ({kl_rel})\n"
-        f"{sigs}"
+        f"{trend_ico} Trend: {trend_str}  |  Güven: <b>{pred.confidence}</b>"
     )
 
 
-async def send_prediction(pred: Prediction):
-    """Tek tahmin — yüksek güvenle bet tetikle."""
-    bet_result = None
-    if pred.confidence == "YÜKSEK" and pred.direction != "NÖTR":
-        bet_result = await place_bet(pred)
-    sym_short = pred.symbol.replace("USDT", "")
-    print(f"[TAHMİN] {sym_short} → {pred.direction} %{pred.probability*100:.0f} "
-          f"({pred.confidence}) | Bahis: {bet_result.get('status','—') if bet_result else '—'}")
-    return bet_result
+def _bet_status_line(sym: str, pred: "Prediction", bet: Optional[dict]) -> str:
+    """Coin için işlem durumu satırı."""
+    icon = _symbol_icon(sym.replace("USDT", ""))
+    name = sym.replace("USDT", "")
+    conf_label = pred.confidence.lower() if pred.confidence else "?"
+    if pred.confidence != "YÜKSEK" or pred.direction == "NÖTR":
+        return f"⏭ {icon} {name} → girilmedi (güven {conf_label})"
+    if not bet:
+        return f"⏭ {icon} {name} → girilmedi (emir açılamadı)"
+    amount = bet.get("amount") or bet.get("size") or bet.get("cost")
+    odds   = bet.get("odds") or bet.get("price")
+    payout = bet.get("payout") or bet.get("winnings")
+    if amount and odds:
+        pay_str = f" → kazanırsak: ${payout:.2f}" if payout else ""
+        return f"💰 {icon} {name} → ${float(amount):.2f} girildi  (odds: {float(odds):.2f}{pay_str})"
+    return f"💰 {icon} {name} → girildi"
 
 
-async def send_unified_prediction(preds: list, past_results: list):
+async def send_unified_prediction(preds: list, past_results: list, bet_results: Optional[dict] = None):
     """ETH + SOL tahminlerini tek mesajda gönderir."""
     if not preds:
         return
@@ -669,14 +650,43 @@ async def send_unified_prediction(preds: list, past_results: list):
     for pred in preds:
         coin_blocks.append(_build_coin_block(pred))
 
+    bet_lines = []
+    for pred in preds:
+        bet = (bet_results or {}).get(pred.symbol)
+        bet_lines.append(_bet_status_line(pred.symbol, pred, bet))
+
+    try:
+        snap = portfolio_snapshot_values()
+        col  = snap.get("collateral_usdc")
+        pos  = snap.get("positions_mark_usdc")
+        npos = snap.get("open_positions_count") or 0
+        tot  = snap.get("portfolio_total_usdc")
+        col_s = f"${col:.2f} USDC" if col is not None else "—"
+        pos_s = f"${pos:.2f} ({npos} adet)" if pos is not None else "—"
+        tot_s = f"${tot:.2f} USDC" if tot is not None else "—"
+        portfolio_block = (
+            f"─────────────────────\n"
+            f"💎 <b>Polymarket Bakiye</b>\n"
+            f"💵 Kullanılabilir: <b>{col_s}</b>\n"
+            f"📊 Açık pozisyonlar: <b>{pos_s}</b>\n"
+            f"💰 Toplam: <b>{tot_s}</b>\n"
+        )
+    except Exception as e:
+        print(f"[PORTFÖY HATA] {e}")
+        portfolio_block = ""
+
     msg = (
-        f"🎯 <b>POLYX2 - AIPROJECT</b>\n"
+        f"🎯 <b>CEMPOLYX2</b>\n"
         f"⏰ Hedef: <b>{target_time}</b>\n"
         f"{prev_block}"
         f"─────────────────────\n"
         + "\n─────────────────────\n".join(coin_blocks)
         + f"\n─────────────────────\n"
-        f"⚠️ <i>Bu tahmin yatırım tavsiyesi değildir.</i>"
+        + "\n".join(bet_lines) + "\n"
+        + f"{portfolio_block}"
+        f"─────────────────────\n"
+        f"─────────────────────\n"
+        f"─────────────────────"
     )
 
     await send_telegram(msg)
@@ -1062,11 +1072,15 @@ async def _do_prediction(label: str = ""):
         if p.get("checked") and p.get("target_ts", 0) > now_ts - 3600
     ]
 
-    await send_unified_prediction(preds, past_results)
-
+    bet_results: dict[str, Optional[dict]] = {}
     for pred in preds:
-        await send_prediction(pred)
+        if pred.confidence == "YÜKSEK" and pred.direction != "NÖTR":
+            bet_results[pred.symbol] = await place_bet(pred)
+        else:
+            bet_results[pred.symbol] = None
         record_prediction(pred)
+
+    await send_unified_prediction(preds, past_results, bet_results)
 
 
 async def prediction_loop():
