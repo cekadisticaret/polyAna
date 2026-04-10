@@ -1,0 +1,23 @@
+# Secrets - asla commit etme
+.env
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Veri ve loglar
+data/trades.db
+data/logs/
+data/cron.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
