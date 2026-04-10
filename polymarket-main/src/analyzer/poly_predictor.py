@@ -1,22 +1,14 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║  POLYMARKET TAHMİN MOTORU v1.1                                   ║
-║  ETH/SOL · 1 Saatlik Fiyat Tahmini · Telegram Bildirimi          ║
-║                                                                  ║
-║  Mantık:                                                         ║
-║  Her saat başı ETH ve SOL için şunu tahmin eder:                 ║
-║  "1 saat sonra fiyat şu anki seviyenin üzerinde mi altında mı?" ║
-║                                                                  ║
-║  Kullanılan sinyaller:                                           ║
-║  1. CVD momentum (alış/satış baskısı)                           ║
-║  2. Order book imbalance                                         ║
-║  3. Likidasyon bias                                              ║
-║  4. Piyasa rejimi (ADX + Choppiness)                            ║
-║  5. RSI + MACD momentum                                          ║
-║  6. Funding rate yönü                                            ║
-║  7. Volatilite (ATR oranı)                                       ║
-║                                                                  ║
-║  Çalıştır: python poly_predictor.py                              ║
+║  POLYMARKET TAHMİN MOTORU v1.2                                   ║
+║  v1.2 Winrate İyileştirmeleri:                                   ║
+║  [W1] Geçmiş sinyal accuracy → dinamik ağırlık geri bildirimi   ║
+║  [W2] Rejime göre dinamik sinyal ağırlıkları (trend/ranging)    ║
+║  [W3] Tahmin zamanı :10'a çekildi (kapanış kıyı filtresi)       ║
+║  [W4] Volatilite filtresi — yüksek ATR'da confidence yumuşatma  ║
+║  [W5] ETH-SOL çapraz korelasyon sinyali                         ║
+║  [W6] Makro haber saati filtresi                                 ║
+║  [W7] Likidasyon cascade tespiti                                 ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
@@ -61,11 +53,12 @@ GAMMA_HOST       = "https://gamma-api.polymarket.com"
 
 SYMBOLS = ["ETHUSDT", "SOLUSDT"]
 
-# Order book temizliği — fiyattan bu kadar uzak seviyeleri sil (% olarak)
-OB_CLEANUP_PCT = 0.05   # ±%5 dışı sil
-OB_CLEANUP_INTERVAL = 300  # 5 dakikada bir
-# Pipeline cron (`src.main open`) ile aynı dakika
-PREDICTION_MINUTE = 10
+OB_CLEANUP_PCT      = 0.05
+OB_CLEANUP_INTERVAL = 300
+SIGNAL_MIN_SAMPLES  = 8       # [W1] accuracy hesabı için min örnek
+ATR_HIGH_VOL_PCT    = 0.009   # [W4] %0.9 üstü = yüksek volatilite
+MACRO_UTC_HOURS     = {12, 13, 14}  # [W6] FOMC/CPI/NFP saatleri (UTC)
+PREDICTION_MINUTE   = 10      # [W3] :10'da tahmin — kapanış kıyısından uzak
 
 
 def _symbol_icon(sym_short: str) -> str:
@@ -97,11 +90,14 @@ class Prediction:
     confidence:    str      # "YÜKSEK" / "ORTA" / "DÜŞÜK"
     signals:       dict
     reasoning:     str
-    bull_pct:      float = 0.0   # % bull puan
-    bear_pct:      float = 0.0   # % bear puan
+    bull_pct:      float = 0.0
+    bear_pct:      float = 0.0
     h1_high:       float = 0.0
     h1_low:        float = 0.0
-    key_level:     float = 0.0   # en yakın yuvarlak seviye
+    key_level:     float = 0.0
+    regime:        str = "UNKNOWN"   # [W2] TREND / RANGING / MIXED
+    vol_level:     str = "NORMAL"    # [W4] NORMAL / HIGH
+    macro_caution: bool = False      # [W6]
 
 
 class SymbolState:
@@ -182,7 +178,7 @@ class SymbolState:
 
     # Likidasyon bias
     def liq_bias(self, seconds: int = 600) -> str:
-        self.cleanup_liq()   # ── FİX 2: her sorguda temizle ──
+        self.cleanup_liq()
         cutoff = time.time() - seconds
         long_liq = short_liq = 0.0
         for l in self.liq_data:
@@ -190,13 +186,91 @@ class SymbolState:
             if l["side"] == "BUY":  long_liq  += l["usd"]
             else:                    short_liq += l["usd"]
         if short_liq > long_liq * 1.5 and short_liq > 50_000:
-            return "BULL"   # Short'lar temizlendi → yukarı
+            return "BULL"
         if long_liq > short_liq * 1.5 and long_liq > 50_000:
-            return "BEAR"   # Long'lar temizlendi → aşağı
+            return "BEAR"
         return "NEUTRAL"
+
+    def liq_cascade(self, window: int = 300, min_count: int = 3, min_usd: float = 150_000) -> str:
+        """[W7] Hızlanan likidasyon cascade tespiti."""
+        self.cleanup_liq()
+        cut = time.time() - window
+        rec = [l for l in self.liq_data if l["ts"] >= cut]
+        if len(rec) < min_count:
+            return "NONE"
+        lu = sum(l["usd"] for l in rec if l["side"] == "BUY")
+        su = sum(l["usd"] for l in rec if l["side"] == "SELL")
+        if lu + su < min_usd:
+            return "NONE"
+        if su > lu * 1.3:  return "BULL_CASCADE"
+        if lu > su * 1.3:  return "BEAR_CASCADE"
+        return "NONE"
 
 
 states = {sym: SymbolState(sym) for sym in SYMBOLS}
+
+
+# ─────────────────────────────────────────────────────────────
+# [W1] SİNYAL ACCURACY GERİ BİLDİRİMİ
+# ─────────────────────────────────────────────────────────────
+
+_signal_accuracy: dict[str, tuple[int, int]] = {}
+
+
+def _compute_signal_accuracy():
+    global _signal_accuracy
+    cutoff  = time.time() - 48 * 3600
+    checked = [p for p in _load_predictions()
+               if p.get("checked") and p.get("target_ts", 0) >= cutoff
+               and "signal_votes" in p]
+    acc: dict[str, list] = defaultdict(list)
+    for p in checked:
+        correct = int(p.get("correct", False))
+        for sig_key, vote in p.get("signal_votes", {}).items():
+            if vote == 0:
+                continue
+            is_bull_vote = (vote == 1)
+            is_bull_pred = (p.get("direction") == "YUKARI")
+            if is_bull_vote == is_bull_pred:
+                acc[sig_key].append(correct)
+    _signal_accuracy = {k: (sum(v), len(v)) for k, v in acc.items()
+                        if len(v) >= SIGNAL_MIN_SAMPLES}
+
+
+def _wmul(sig_key: str) -> float:
+    """[W1] Sinyal accuracy çarpanı: 0.6–1.4, veri yoksa 1.0"""
+    if sig_key not in _signal_accuracy:
+        return 1.0
+    ok, total = _signal_accuracy[sig_key]
+    rate = ok / total
+    if rate < 0.50: return 0.6
+    if rate < 0.60: return 0.8
+    if rate < 0.70: return 1.0
+    return 1.4
+
+
+# ─────────────────────────────────────────────────────────────
+# [W5] ETH-SOL ÇAPRAZ KORELASYON
+# ─────────────────────────────────────────────────────────────
+
+def _cross_signal(sym: str) -> str:
+    other = "SOLUSDT" if sym == "ETHUSDT" else "ETHUSDT"
+    if other not in states:
+        return "NEUTRAL"
+    own_cvd = states[sym].cvd(300)
+    oth_cvd = states[other].cvd(300)
+    if own_cvd > 0 and oth_cvd > 0:   return "CONFIRM_BULL"
+    if own_cvd < 0 and oth_cvd < 0:   return "CONFIRM_BEAR"
+    if own_cvd * oth_cvd < 0:         return "DIVERGE"
+    return "NEUTRAL"
+
+
+# ─────────────────────────────────────────────────────────────
+# [W6] MAKRO SAAT FİLTRESİ
+# ─────────────────────────────────────────────────────────────
+
+def _is_macro_hour() -> bool:
+    return datetime.now(timezone.utc).hour in MACRO_UTC_HOURS
 
 
 # ─────────────────────────────────────────────────────────────
@@ -306,218 +380,206 @@ def _chop(highs: list[float], lows: list[float], closes: list[float],
     return round(100 * math.log10(atr_sum / (wh - wl)) / math.log10(period), 2)
 
 
+def _atr_ratio(highs: list[float], lows: list[float], closes: list[float],
+               period: int = 14) -> float:
+    """[W4] ATR/fiyat oranı — volatilite seviyesi için."""
+    if len(closes) < period + 1:
+        return 0.0
+    trs = [max(highs[i] - lows[i],
+               abs(highs[i] - closes[i - 1]),
+               abs(lows[i]  - closes[i - 1]))
+           for i in range(len(closes) - period, len(closes))]
+    atr = sum(trs) / period
+    return atr / closes[-1] if closes[-1] > 0 else 0.0
+
+
 def generate_prediction(state: SymbolState) -> Optional[Prediction]:
-    """
-    Tüm sinyalleri birleştir → 1 saatlik yön tahmini üret
-    """
+    """Tüm sinyalleri birleştir → 1 saatlik yön tahmini üret (v1.2)"""
     if state.price <= 0:
         return None
 
-    signals  = {}
-    bull_pts = 0
-    bear_pts = 0
-    total_w  = 0
+    signals: dict = {}
+    signal_votes: dict = {}
+    bull_pts = bear_pts = total_w = 0.0
 
-    # ── 1. CVD 5dk (ağırlık: 3) ──
+    # ── Rejim tespiti [W2] ──
+    kl_raw = state.klines_1h
+    regime = "UNKNOWN"; chop_val = 50.0; adx_val = 0.0; atr_r = 0.0; vol_level = "NORMAL"
+    if len(kl_raw) >= 55:
+        c_all = [k["close"] for k in kl_raw]
+        h_all = [k["high"]  for k in kl_raw]
+        l_all = [k["low"]   for k in kl_raw]
+        adx_val, _, _ = _adx(h_all, l_all, c_all)
+        chop_val      = _chop(h_all, l_all, c_all)
+        atr_r         = _atr_ratio(h_all, l_all, c_all)
+        if adx_val > 22 and chop_val < 55:   regime = "TREND"
+        elif chop_val > 58:                   regime = "RANGING"
+        else:                                 regime = "MIXED"
+        if atr_r > ATR_HIGH_VOL_PCT:          vol_level = "HIGH"
+
+    # [W2] Rejime göre taban ağırlıklar
+    if regime == "TREND":
+        W_CVD5, W_CVD30, W_OB, W_LARGE, W_LIQ, W_BR = 2.5, 1.5, 1.5, 2.5, 1.5, 0.8
+        W_RSI,  W_MACD,  W_EMA, W_REGIME, W_FUND    = 2.5, 2.5, 2.5, 1.5, 1.0
+    elif regime == "RANGING":
+        W_CVD5, W_CVD30, W_OB, W_LARGE, W_LIQ, W_BR = 3.5, 2.5, 3.0, 3.0, 2.0, 1.2
+        W_RSI,  W_MACD,  W_EMA, W_REGIME, W_FUND    = 1.5, 1.5, 1.5, 0.5, 1.0
+    else:
+        W_CVD5, W_CVD30, W_OB, W_LARGE, W_LIQ, W_BR = 3.0, 2.0, 2.0, 3.0, 2.0, 1.0
+        W_RSI,  W_MACD,  W_EMA, W_REGIME, W_FUND    = 2.0, 2.0, 2.0, 1.0, 1.0
+
+    def add(key: str, base_w: float, vote: int, label: str):
+        nonlocal bull_pts, bear_pts, total_w
+        w = base_w * _wmul(key)
+        signal_votes[key] = vote
+        if vote == 1:    bull_pts += w
+        elif vote == -1: bear_pts += w
+        total_w += w
+        signals[key] = label
+
+    # 1. CVD 5dk
     cvd5 = state.cvd(300)
-    w = 3
-    if cvd5 > 0:
-        bull_pts += w
-        signals["cvd_5m"] = f"🟢 CVD 5dk: +${cvd5/1000:.1f}K (alış baskısı)"
-    else:
-        bear_pts += w
-        signals["cvd_5m"] = f"🔴 CVD 5dk: ${cvd5/1000:.1f}K (satış baskısı)"
-    total_w += w
+    add("cvd_5m", W_CVD5, 1 if cvd5 > 0 else -1,
+        f"{'🟢' if cvd5>0 else '🔴'} CVD 5dk: {'+' if cvd5>0 else ''}${cvd5/1000:.1f}K")
 
-    # ── 2. CVD 30dk (ağırlık: 2) ──
+    # 2. CVD 30dk
     cvd30 = state.cvd(1800)
-    w = 2
-    if cvd30 > 0:
-        bull_pts += w
-        signals["cvd_30m"] = f"🟢 CVD 30dk: +${cvd30/1000:.1f}K"
-    else:
-        bear_pts += w
-        signals["cvd_30m"] = f"🔴 CVD 30dk: ${cvd30/1000:.1f}K"
-    total_w += w
+    add("cvd_30m", W_CVD30, 1 if cvd30 > 0 else -1,
+        f"{'🟢' if cvd30>0 else '🔴'} CVD 30dk: {'+' if cvd30>0 else ''}${cvd30/1000:.1f}K")
 
-    # ── 3. Order Book İmbalance (ağırlık: 2) ──
+    # 3. OB imbalance
     imb = state.ob_imbalance()
-    w = 2
     if imb >= 62:
-        bull_pts += w
-        signals["ob_imb"] = f"🟢 OB İmbalance: %{imb:.1f} (alış ağır)"
+        add("ob_imb", W_OB, 1,  f"🟢 OB İmbalance: %{imb:.1f} (alış ağır)")
     elif imb <= 38:
-        bear_pts += w
-        signals["ob_imb"] = f"🔴 OB İmbalance: %{imb:.1f} (satış ağır)"
+        add("ob_imb", W_OB, -1, f"🔴 OB İmbalance: %{imb:.1f} (satış ağır)")
     else:
-        signals["ob_imb"] = f"⚪ OB İmbalance: %{imb:.1f} (nötr)"
-    total_w += w
+        add("ob_imb", W_OB, 0,  f"⚪ OB İmbalance: %{imb:.1f} (nötr)")
 
-    # ── 4. Büyük işlem yönü (ağırlık: 3) ──
-    lt_bias = state.large_trade_bias(100_000, 300)
-    w = 3
-    if lt_bias == "BUY":
-        bull_pts += w
-        signals["large_trades"] = f"🟢 Büyük işlemler: ALIŞ yönü"
-    elif lt_bias == "SELL":
-        bear_pts += w
-        signals["large_trades"] = f"🔴 Büyük işlemler: SATIŞ yönü"
-    else:
-        signals["large_trades"] = f"⚪ Büyük işlemler: nötr"
-    total_w += w
+    # 4. Büyük işlemler
+    lt = state.large_trade_bias(100_000, 300)
+    if lt == "BUY":    add("large_trades", W_LARGE, 1,  "🟢 Büyük işlemler: ALIŞ yönü")
+    elif lt == "SELL": add("large_trades", W_LARGE, -1, "🔴 Büyük işlemler: SATIŞ yönü")
+    else:              add("large_trades", W_LARGE, 0,  "⚪ Büyük işlemler: nötr")
 
-    # ── 5. Likidasyon bias (ağırlık: 2) ──
+    # 5. Likidasyon bias
     liq = state.liq_bias(600)
-    w = 2
-    if liq == "BULL":
-        bull_pts += w
-        signals["liquidation"] = f"🟢 Likidasyon: short'lar temizlendi"
-    elif liq == "BEAR":
-        bear_pts += w
-        signals["liquidation"] = f"🔴 Likidasyon: long'lar temizlendi"
-    else:
-        signals["liquidation"] = f"⚪ Likidasyon: nötr"
-    total_w += w
+    if liq == "BULL":   add("liquidation", W_LIQ, 1,  "🟢 Likidasyon: short'lar temizlendi")
+    elif liq == "BEAR":  add("liquidation", W_LIQ, -1, "🔴 Likidasyon: long'lar temizlendi")
+    else:                add("liquidation", W_LIQ, 0,  "⚪ Likidasyon: nötr")
 
-    # ── 6. Alış oranı (ağırlık: 1) ──
+    # 6. Alış oranı
     br = state.buy_ratio(300)
-    w = 1
-    if br >= 60:
-        bull_pts += w
-        signals["buy_ratio"] = f"🟢 Alış oranı: %{br:.0f}"
-    elif br <= 40:
-        bear_pts += w
-        signals["buy_ratio"] = f"🔴 Alış oranı: %{br:.0f}"
-    else:
-        signals["buy_ratio"] = f"⚪ Alış oranı: %{br:.0f}"
-    total_w += w
+    if br >= 60:   add("buy_ratio", W_BR, 1,  f"🟢 Alış oranı: %{br:.0f}")
+    elif br <= 40:  add("buy_ratio", W_BR, -1, f"🔴 Alış oranı: %{br:.0f}")
+    else:           add("buy_ratio", W_BR, 0,  f"⚪ Alış oranı: %{br:.0f}")
 
-    # ── 7. Kline bazlı teknik (1H) ──
+    # [W7] Likidasyon cascade
+    casc = state.liq_cascade()
+    if casc == "BULL_CASCADE":
+        w = 2.5 * _wmul("liq_cascade")
+        bull_pts += w; total_w += w; signal_votes["liq_cascade"] = 1
+        signals["liq_cascade"] = "🟢 Cascade: short likidasyon hızlanıyor ↑"
+    elif casc == "BEAR_CASCADE":
+        w = 2.5 * _wmul("liq_cascade")
+        bear_pts += w; total_w += w; signal_votes["liq_cascade"] = -1
+        signals["liq_cascade"] = "🔴 Cascade: long likidasyon hızlanıyor ↓"
+
+    # [W5] Çapraz korelasyon
+    cross = _cross_signal(state.symbol)
+    if cross == "CONFIRM_BULL":
+        w = 1.5 * _wmul("cross_corr")
+        bull_pts += w; total_w += w; signal_votes["cross_corr"] = 1
+        signals["cross_corr"] = "🟢 Korelasyon: ETH+SOL aynı yönde ↑"
+    elif cross == "CONFIRM_BEAR":
+        w = 1.5 * _wmul("cross_corr")
+        bear_pts += w; total_w += w; signal_votes["cross_corr"] = -1
+        signals["cross_corr"] = "🔴 Korelasyon: ETH+SOL aynı yönde ↓"
+    elif cross == "DIVERGE":
+        signal_votes["cross_corr"] = 0
+        signals["cross_corr"] = "⚠️ Korelasyon: ETH↔SOL ayrışıyor"
+
+    # 7. Kline teknik
     kl = state.klines_1h
     if len(kl) >= 55:
-        c  = [k["close"]  for k in kl]
-        h  = [k["high"]   for k in kl]
-        l  = [k["low"]    for k in kl]
+        c = [k["close"] for k in kl]
+        h = [k["high"]  for k in kl]
+        l = [k["low"]   for k in kl]
+        rsi_v = _rsi(c); macd_h = _macd_hist(c)
+        ema9 = _ema(c, 9); ema21 = _ema(c, 21); ema50 = _ema(c, 50)
+        adx, pdi, ndi = _adx(h, l, c); chop = _chop(h, l, c)
 
-        rsi_v   = _rsi(c)
-        macd_h  = _macd_hist(c)   # FİX 4 uygulandı
-        ema9    = _ema(c, 9)
-        ema21   = _ema(c, 21)
-        ema50   = _ema(c, 50)
-        adx, pdi, ndi = _adx(h, l, c)
-        chop    = _chop(h, l, c)
+        # RSI
+        if 50 < rsi_v < 70:   add("rsi", W_RSI, 1,  f"🟢 RSI: {rsi_v:.0f} (momentum)")
+        elif 30 < rsi_v < 50: add("rsi", W_RSI, -1, f"🔴 RSI: {rsi_v:.0f} (zayıf)")
+        elif rsi_v >= 70:     add("rsi", W_RSI, 0,  f"⚠️ RSI: {rsi_v:.0f} (aşırı alım)")
+        else:                 add("rsi", W_RSI, 0,  f"⚠️ RSI: {rsi_v:.0f} (aşırı satım)")
 
-        # RSI (ağırlık: 2)
-        w = 2
-        if 50 < rsi_v < 70:
-            bull_pts += w
-            signals["rsi"] = f"🟢 RSI: {rsi_v:.0f} (momentum)"
-        elif 30 < rsi_v < 50:
-            bear_pts += w
-            signals["rsi"] = f"🔴 RSI: {rsi_v:.0f} (zayıf)"
-        elif rsi_v >= 70:
-            signals["rsi"] = f"⚠️ RSI: {rsi_v:.0f} (aşırı alım)"
-        else:
-            signals["rsi"] = f"⚠️ RSI: {rsi_v:.0f} (aşırı satım — dönüş olabilir)"
-        total_w += w
+        # MACD
+        add("macd", W_MACD, 1 if macd_h > 0 else -1,
+            f"{'🟢' if macd_h>0 else '🔴'} MACD: {'pozitif' if macd_h>0 else 'negatif'} histogram")
 
-        # MACD (ağırlık: 2)
-        w = 2
-        if macd_h > 0:
-            bull_pts += w
-            signals["macd"] = f"🟢 MACD: pozitif histogram"
-        else:
-            bear_pts += w
-            signals["macd"] = f"🔴 MACD: negatif histogram"
-        total_w += w
+        # EMA
+        if ema9[-1] > ema21[-1] > ema50[-1]:    add("ema", W_EMA, 1,  "🟢 EMA: 9↑21↑50 (yükseliş)")
+        elif ema9[-1] < ema21[-1] < ema50[-1]:   add("ema", W_EMA, -1, "🔴 EMA: 9↓21↓50 (düşüş)")
+        else:                                     add("ema", W_EMA, 0,  "⚪ EMA: karışık")
 
-        # EMA düzeni (ağırlık: 2)
-        w = 2
-        ema_bull = ema9[-1] > ema21[-1] > ema50[-1]
-        ema_bear = ema9[-1] < ema21[-1] < ema50[-1]
-        if ema_bull:
-            bull_pts += w
-            signals["ema"] = f"🟢 EMA: 9↑21↑50 (yükseliş dizisi)"
-        elif ema_bear:
-            bear_pts += w
-            signals["ema"] = f"🔴 EMA: 9↓21↓50 (düşüş dizisi)"
-        else:
-            signals["ema"] = f"⚪ EMA: karışık"
-        total_w += w
-
-        # ADX + Choppiness (ağırlık: 1)
-        w = 1
-        if adx > 25 and chop < 50 and pdi > ndi:
-            bull_pts += w
-            signals["regime"] = f"🟢 Rejim: trend yukarı (ADX:{adx:.0f} Chop:{chop:.0f})"
-        elif adx > 25 and chop < 50 and ndi > pdi:
-            bear_pts += w
-            signals["regime"] = f"🔴 Rejim: trend aşağı (ADX:{adx:.0f} Chop:{chop:.0f})"
+        # Rejim sinyali
+        if adx > 22 and chop < 55 and pdi > ndi:
+            add("regime", W_REGIME, 1,  f"🟢 Rejim: trend yukarı (ADX:{adx:.0f} Chop:{chop:.0f})")
+        elif adx > 22 and chop < 55 and ndi > pdi:
+            add("regime", W_REGIME, -1, f"🔴 Rejim: trend aşağı (ADX:{adx:.0f} Chop:{chop:.0f})")
         elif chop > 60:
-            signals["regime"] = f"⚪ Rejim: ranging (Chop:{chop:.0f}) — tahmin güvenilirliği düşük"
+            add("regime", W_REGIME, 0,  f"⚪ Rejim: ranging (Chop:{chop:.0f})")
         else:
-            signals["regime"] = f"⚪ Rejim: belirsiz (ADX:{adx:.0f})"
-        total_w += w
+            add("regime", W_REGIME, 0,  f"⚪ Rejim: belirsiz (ADX:{adx:.0f})")
 
-        # Funding rate (ağırlık: 1)
-        w = 1
+        # Funding
         fr = state.funding_rate
-        if fr > 0.0005:
-            bear_pts += w
-            signals["funding"] = f"⚠️ Funding: %{fr*100:.3f} (yüksek — long ödüyor)"
-        elif fr < -0.0003:
-            bull_pts += w
-            signals["funding"] = f"🟢 Funding: %{fr*100:.3f} (negatif — short ödüyor)"
-        else:
-            signals["funding"] = f"⚪ Funding: %{fr*100:.3f} (normal)"
-        total_w += w
+        if fr > 0.0005:    add("funding", W_FUND, -1, f"⚠️ Funding: %{fr*100:.3f} (long ödüyor)")
+        elif fr < -0.0003: add("funding", W_FUND, 1,  f"🟢 Funding: %{fr*100:.3f} (short ödüyor)")
+        else:              add("funding", W_FUND, 0,  f"⚪ Funding: %{fr*100:.3f} (normal)")
 
-    # ── KARAR ──
     if total_w == 0:
         return None
 
-    bull_pct = bull_pts / total_w
-    bear_pct = bear_pts / total_w
-
-    if bull_pts >= bear_pts:
-        direction = "YUKARI"
-        raw_prob  = bull_pct if bull_pts > bear_pts else 0.5
-    else:
-        direction = "AŞAĞI"
-        raw_prob  = bear_pct
-
-    # ── FİX 5: Olasılık yorumu düzeltildi (lineer ölçekleme, sigmoid değil) ──
-    # raw_prob [0.5, 1.0] → prob [0.50, 0.85] arasında lineer ölçekleme
-    prob = 0.5 + (raw_prob - 0.5) * 0.7
-    prob = max(0.50, min(0.85, prob))
+    direction = "YUKARI" if bull_pts >= bear_pts else "AŞAĞI"
+    raw_prob  = (bull_pts / total_w if bull_pts > bear_pts
+                 else bear_pts / total_w if bear_pts > bull_pts else 0.5)
+    prob = max(0.50, min(0.85, 0.5 + (raw_prob - 0.5) * 0.7))
 
     gap = abs(bull_pts - bear_pts)
-    if gap >= total_w * 0.4:
-        confidence = "YÜKSEK"
-    elif gap >= total_w * 0.2:
-        confidence = "ORTA"
-    else:
-        confidence = "DÜŞÜK"
+    confidence = ("YÜKSEK" if gap >= total_w * 0.4
+                  else "ORTA" if gap >= total_w * 0.2 else "DÜŞÜK")
 
-    now_utc     = datetime.now(timezone.utc)
-    target_ist  = (now_utc.hour + 1 + 3) % 24
+    # [W4] Yüksek volatilite → YÜKSEK → ORTA
+    if vol_level == "HIGH" and confidence == "YÜKSEK":
+        confidence = "ORTA"
+        signals["volatility"] = f"⚠️ Yüksek ATR: %{atr_r*100:.2f} — güven düşürüldü"
+    else:
+        signals["volatility"] = f"⚪ ATR: %{atr_r*100:.2f}"
+
+    # [W6] Makro saat → YÜKSEK → ORTA
+    macro_caution = _is_macro_hour()
+    if macro_caution and confidence == "YÜKSEK":
+        confidence = "ORTA"
+        signals["macro"] = "⚠️ Makro saat — güven düşürüldü"
+    elif macro_caution:
+        signals["macro"] = "⚠️ Makro saat"
+
+    now_utc    = datetime.now(timezone.utc)
+    target_ist = (now_utc.hour + 1 + 3) % 24
     target_time = f"{target_ist:02d}:00 İST"
 
-    kl      = state.klines_1h
-    h1_high = max(k["high"] for k in kl[-3:]) if len(kl) >= 3 else 0.0
-    h1_low  = min(k["low"]  for k in kl[-3:]) if len(kl) >= 3 else 0.0
+    kl2 = state.klines_1h
+    h1_high = max(k["high"] for k in kl2[-3:]) if len(kl2) >= 3 else 0.0
+    h1_low  = min(k["low"]  for k in kl2[-3:]) if len(kl2) >= 3 else 0.0
 
     p    = state.price
     step = 500 if p > 10_000 else 100 if p > 1_000 else 10 if p > 100 else 1
     key_level = round(round(p / step) * step, 2)
 
-    reasoning = (
-        f"Boğa puanı: {bull_pts}/{total_w} | "
-        f"Ayı puanı: {bear_pts}/{total_w} | "
-        f"Fark: {gap}"
-    )
-
-    return Prediction(
+    pred = Prediction(
         symbol        = state.symbol,
         ts            = time.time(),
         current_price = state.price,
@@ -526,13 +588,19 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
         probability   = prob,
         confidence    = confidence,
         signals       = signals,
-        reasoning     = reasoning,
+        reasoning     = (f"Rejim:{regime} | Vol:{vol_level} | "
+                         f"Boğa:{bull_pts:.1f}/{total_w:.1f} | Ayı:{bear_pts:.1f}/{total_w:.1f}"),
         bull_pct      = round(bull_pts / total_w * 100) if total_w else 50,
         bear_pct      = round(bear_pts / total_w * 100) if total_w else 50,
         h1_high       = h1_high,
         h1_low        = h1_low,
         key_level     = key_level,
+        regime        = regime,
+        vol_level     = vol_level,
+        macro_caution = macro_caution,
     )
+    pred._signal_votes = signal_votes  # type: ignore[attr-defined]
+    return pred
 
 
 # ─────────────────────────────────────────────────────────────
@@ -577,20 +645,38 @@ async def send_telegram(msg: str):
 
 
 def _build_coin_block(pred: Prediction) -> str:
-    """Tek coin için detay bloğu üretir."""
+    """Tek coin için detay bloğu üretir (v1.2: rejim/vol/macro badge)."""
     sym   = pred.symbol.replace("USDT", "")
     icon  = _symbol_icon(sym)
     d_ico = "📉" if pred.direction == "AŞAĞI" else "📈" if pred.direction == "YUKARI" else "➡️"
 
+    rsi_sig = pred.signals.get("rsi", "")
+    rsi_m   = re.search(r'[\d.]+', rsi_sig)
+    rsi_v   = float(rsi_m.group()) if rsi_m else 0.0
+
+    reg_sig = pred.signals.get("regime", "")
+    adx_m   = re.search(r'ADX:([\d.]+)', reg_sig)
+    adx_v   = float(adx_m.group(1)) if adx_m else 0.0
+
     trend_str = "AŞAĞI" if pred.bear_pct > pred.bull_pct else "YUKARI"
     trend_ico = "🔴" if trend_str == "AŞAĞI" else "🟢"
-
     p = pred.current_price
+    kl = pred.key_level
+    kl_rel = "ÜZERİNDE" if p >= kl else "ALTINDA"
+
+    h_range = f"🔧 1h: ${pred.h1_low:,.0f} – ${pred.h1_high:,.0f}\n" if pred.h1_high else ""
+    regime_badge = {"TREND": "📈TREND", "RANGING": "↔️RANGE", "MIXED": "〰️MIXED"}.get(pred.regime, "❓")
+    badges = (f"{regime_badge}"
+              f"{'  ⚡YÜK.VOL' if pred.vol_level == 'HIGH' else ''}"
+              f"{'  📰MAKRO' if pred.macro_caution else ''}")
 
     return (
         f"{icon} <b>{sym}</b>  ${p:,.2f}  {d_ico}\n"
         f"▲ YUKARI: <b>{pred.bull_pct}%</b>  |  ▼ AŞAĞI: <b>{pred.bear_pct}%</b>\n"
-        f"{trend_ico} Trend: {trend_str}  |  Güven: <b>{pred.confidence}</b>"
+        f"{h_range}"
+        f"{trend_ico} Trend: {trend_str}  |  RSI:{rsi_v:.0f}  |  ADX:{adx_v:.0f}\n"
+        f"🔍 {badges}\n"
+        f"🎯 Yakın seviye: ${kl:,.0f} ({kl_rel})"
     )
 
 
@@ -635,10 +721,20 @@ async def send_unified_prediction(preds: list, past_results: list, bet_results: 
             ep   = r.get("price", 0)
             ap   = r.get("actual_price", 0)
             diff = ap - ep
-            prev_lines.append(
-                f"{icon} {s_ic} {sym}  ${ep:,.0f} → ${ap:,.0f}  "
-                f"({'+' if diff>=0 else ''}{diff:,.0f})  Tahmin: {r['direction']}"
-            )
+            line = (f"{icon} {s_ic} {sym}  ${ep:,.2f} → ${ap:,.2f}  "
+                    f"({'+' if diff>=0 else ''}{diff:,.2f})  Tahmin: {r['direction']}")
+            amt  = r.get("bet_amount")
+            odds = r.get("bet_odds")
+            pay  = r.get("bet_payout")
+            if amt and odds:
+                if ok and pay:
+                    profit = float(pay) - float(amt)
+                    line += f"\n   💰 ${float(amt):.2f} @ {float(odds):.2f} → <b>+${profit:.2f} kazandı</b>"
+                elif ok:
+                    line += f"\n   💰 ${float(amt):.2f} @ {float(odds):.2f} → <b>kazandı</b>"
+                else:
+                    line += f"\n   💸 ${float(amt):.2f} @ {float(odds):.2f} → <b>-${float(amt):.2f} kaybetti</b>"
+            prev_lines.append(line)
         score = f"{len(correct)}/{len(past_results)} doğru"
         prev_block = (
             f"─────────────────────\n"
@@ -709,21 +805,30 @@ def _save_predictions(preds: list):
     with open(PREDICTIONS_FILE, "w") as f:
         json.dump(preds, f, indent=2, ensure_ascii=False)
 
-def record_prediction(pred: "Prediction"):
-    """Tahmini dosyaya kaydet."""
-    now      = datetime.now(timezone.utc)
+def record_prediction(pred: "Prediction", bet: Optional[dict] = None):
+    """Tahmini dosyaya kaydet (v1.2: signal_votes, regime, vol_level, bet)."""
+    now       = datetime.now(timezone.utc)
     target_ts = now.replace(minute=0, second=0, microsecond=0).timestamp() + 3600
 
+    entry: dict = {
+        "symbol":       pred.symbol,
+        "direction":    pred.direction,
+        "price":        pred.current_price,
+        "confidence":   pred.confidence,
+        "target_ts":    target_ts,
+        "sent_ts":      now.timestamp(),
+        "checked":      False,
+        "regime":       pred.regime,
+        "vol_level":    pred.vol_level,
+        "signal_votes": getattr(pred, "_signal_votes", {}),
+    }
+    if bet:
+        entry["bet_amount"] = bet.get("amount") or bet.get("size") or bet.get("cost")
+        entry["bet_odds"]   = bet.get("odds")   or bet.get("price")
+        entry["bet_payout"] = bet.get("payout") or bet.get("winnings")
+
     preds = _load_predictions()
-    preds.append({
-        "symbol":     pred.symbol,
-        "direction":  pred.direction,
-        "price":      pred.current_price,
-        "confidence": pred.confidence,
-        "target_ts":  target_ts,
-        "sent_ts":    now.timestamp(),
-        "checked":    False,
-    })
+    preds.append(entry)
     _save_predictions(preds)
     target_h = (now.hour + 1) % 24
     print(f"[KAYIT] {pred.symbol} {pred.direction} → hedef {target_h:02d}:00 UTC kaydedildi")
@@ -1047,6 +1152,7 @@ async def _do_prediction(label: str = ""):
     """Kline + funding + REST snapshot çek, tahmin üret, Telegram'a gönder."""
 
     await check_past_predictions()
+    _compute_signal_accuracy()  # [W1] her tahmin öncesi accuracy güncelle
 
     for sym in SYMBOLS:
         kl = await fetch_klines(sym)
@@ -1078,7 +1184,7 @@ async def _do_prediction(label: str = ""):
             bet_results[pred.symbol] = await place_bet(pred)
         else:
             bet_results[pred.symbol] = None
-        record_prediction(pred)
+        record_prediction(pred, bet_results[pred.symbol])
 
     await send_unified_prediction(preds, past_results, bet_results)
 
@@ -1140,30 +1246,32 @@ async def display_loop():
     while True:
         try:
             print("\033[H\033[J", end="")
-            now    = datetime.now().strftime("%H:%M:%S")
-            next_h = (datetime.now().hour + 1) % 24
-
-            print("╔══════════════════════════════════════════════════╗")
-            print(f"║  POLYMARKET TAHMİN MOTORU  │  {now}  ║")
-            print("╠══════════════════════════════════════════════════╣")
-            print(f"║  Sonraki tahmin: {next_h:02d}:{PREDICTION_MINUTE:02d}  ║")
-            print("╠══════════════════════════════════════════════════╣")
-
+            now = datetime.now().strftime("%H:%M:%S")
+            print(f"╔══════════════════════════════════════════════════╗")
+            print(f"║  POLYMARKET TAHMİN MOTORU v1.2  │  {now}  ║")
+            print(f"╠══════════════════════════════════════════════════╣")
+            print(f"║  Sonraki tahmin: her saat :{PREDICTION_MINUTE:02d}              ║")
+            print(f"╠══════════════════════════════════════════════════╣")
             for sym in SYMBOLS:
                 st   = states[sym]
                 cvd5 = st.cvd(300)
                 imb  = st.ob_imbalance()
                 br   = st.buy_ratio(300)
                 liq  = st.liq_bias(600)
+                casc = st.liq_cascade()
                 name = sym.replace("USDT", "")
-
                 print(f"║  {name:<4}  Fiyat: ${st.price:>12,.2f}  ║")
-                print(f"║       CVD5m: {cvd5/1000:>+8.1f}K  "
-                      f"OB: %{imb:.0f}  AlışR: %{br:.0f}  ║")
-                print(f"║       Liq: {liq:<8}  "
-                      f"Tick: {len(st.ticks):>5}  Funding: %{st.funding_rate*100:.3f}  ║")
-
-            print("╚══════════════════════════════════════════════════╝")
+                print(f"║       CVD5m: {cvd5/1000:>+8.1f}K  OB:%{imb:.0f}  AlışR:%{br:.0f}  ║")
+                print(f"║       Liq:{liq:<9} Cascade:{casc:<15}║")
+                print(f"║       Tick:{len(st.ticks):>5}  Funding:%{st.funding_rate*100:.3f}         ║")
+            if _signal_accuracy:
+                print(f"╠══════════════════════════════════════════════════╣")
+                print(f"║  Sinyal Accuracy (son 48h):                      ║")
+                for sig, (ok, total) in sorted(_signal_accuracy.items()):
+                    rate = ok / total * 100
+                    bar  = "█" * int(rate / 10) + "░" * (10 - int(rate / 10))
+                    print(f"║  {sig:<14} {bar} %{rate:.0f} ({ok}/{total})  ║")
+            print(f"╚══════════════════════════════════════════════════╝")
             print("  Ctrl+C ile durdur")
         except Exception as e:
             print(f"[DISPLAY HATA] {e}")
@@ -1176,15 +1284,17 @@ async def display_loop():
 
 async def main():
     print("=" * 52)
-    print("  POLYMARKET TAHMİN MOTORU başlatılıyor...")
+    print("  POLYMARKET TAHMİN MOTORU v1.2 başlatılıyor...")
     print(f"  Semboller: {', '.join(SYMBOLS)}")
+    print(f"  Tahmin dakikası: :{PREDICTION_MINUTE:02d}")
     print(f"  Telegram: {'✅' if TELEGRAM_TOKEN else '❌ .env dosyasını doldur'}")
     print("=" * 52)
 
     await send_telegram(
-        f"🔮 <b>Polymarket Tahmin Motoru Başladı</b>\n"
+        f"🔮 <b>Polymarket Tahmin Motoru v1.2 Başladı</b>\n"
         f"📊 ETH + SOL · 1 Saatlik Tahminler\n"
-        f"⏰ Her saat :{PREDICTION_MINUTE:02d}'de Telegram'a bildirim gelecek"
+        f"🧠 Dinamik ağırlıklar + Cascade + Korelasyon aktif\n"
+        f"⏰ Her saat :{PREDICTION_MINUTE:02d}'de bildirim gelecek"
     )
 
     await asyncio.gather(
@@ -1212,6 +1322,7 @@ if __name__ == "__main__":
     if "--now" in sys.argv:
         async def _run_now():
             print("🔮 Manuel tahmin başlatıldı...")
+            _compute_signal_accuracy()  # [W1]
             for sym in SYMBOLS:
                 await fetch_orderbook_rest(sym)
                 await fetch_recent_trades_rest(sym)
