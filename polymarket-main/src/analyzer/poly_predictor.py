@@ -26,12 +26,16 @@ import re
 import aiohttp
 import websockets
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from collections import deque, defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 from dotenv import load_dotenv
 import math
+from src.config import Config
 from src.trading.portfolio_snapshot import portfolio_snapshot_values
+from src.data.market_fetcher import build_slug, fetch_single_event_by_slug
+from src.trading.clob_orders import place_buy_for_up_down
 
 load_dotenv()
 
@@ -687,8 +691,10 @@ def _bet_status_line(sym: str, pred: "Prediction", bet: Optional[dict]) -> str:
     conf_label = pred.confidence.lower() if pred.confidence else "?"
     if pred.confidence != "YÜKSEK" or pred.direction == "NÖTR":
         return f"⏭ {icon} {name} → girilmedi (güven {conf_label})"
+    if not Config.POLYMARKET_BOT_ENABLED:
+        return f"⏭ {icon} {name} → girilmedi (bot kapalı)"
     if not bet:
-        return f"⏭ {icon} {name} → girilmedi (emir açılamadı)"
+        return f"⏭ {icon} {name} → girilmedi (market yok / emir hatası)"
     amount = bet.get("amount") or bet.get("size") or bet.get("cost")
     odds   = bet.get("odds") or bet.get("price")
     payout = bet.get("payout") or bet.get("winnings")
@@ -964,21 +970,90 @@ async def send_daily_report():
     print(f"[RAPOR] Gönderildi — {total_ok}/{total_all} doğru ({overall:.0f}%)")
 
 
+_COIN_MAP = {"ETHUSDT": "ethereum", "SOLUSDT": "solana"}
+_DIR_MAP  = {"YUKARI": "UP", "AŞAĞI": "DOWN"}
+
+_ET = ZoneInfo("America/New_York")
+
+
 async def find_market(coin: str, direction: str, price: float) -> Optional[dict]:
     """
-    Polymarket piyasa araması ana pipeline'da yapılır.
-    Bu dosyada işlem yok — kasıtlı stub.
+    Cari ET saati için coin'e ait Gamma market objesini döndürür.
+    clobTokenIds yoksa None döner.
     """
-    return None
+    now_et = datetime.now(timezone.utc).astimezone(_ET)
+    cur_et = now_et.replace(minute=0, second=0, microsecond=0)
+    slug   = build_slug(coin, cur_et)
+
+    loop  = asyncio.get_event_loop()
+    event = await loop.run_in_executor(None, fetch_single_event_by_slug, slug)
+
+    if not event or not isinstance(event, dict):
+        print(f"[BET] Event bulunamadı: {slug}")
+        return None
+
+    markets = event.get("markets") or []
+    if not markets or not isinstance(markets[0], dict):
+        print(f"[BET] Market listesi boş: {slug}")
+        return None
+
+    market = markets[0]
+    if not market.get("clobTokenIds"):
+        print(f"[BET] clobTokenIds eksik: {slug}")
+        return None
+
+    return market
 
 
-async def place_bet(pred: Prediction) -> Optional[dict]:
+async def place_bet(pred: "Prediction") -> Optional[dict]:
     """
-    Polymarket emri ana pipeline'da verilir.
-    Bu dosyada işlem yok — kasıtlı stub.
-    Dönen değer: None (bahis atlanır, log'a yazılır).
+    YÜKSEK güvenli tahmin için Polymarket CLOB emri açar.
+    Başarılıysa {"amount", "odds", "payout", "order_response"} döner; aksi hâlde None.
     """
-    return None
+    if not Config.POLYMARKET_BOT_ENABLED:
+        return None
+    if pred.direction not in _DIR_MAP:
+        return None
+
+    coin = _COIN_MAP.get(pred.symbol)
+    if not coin:
+        print(f"[BET] Bilinmeyen sembol: {pred.symbol}")
+        return None
+
+    up_down = _DIR_MAP[pred.direction]
+    market  = await find_market(coin, up_down, pred.current_price)
+    if not market:
+        return None
+
+    notional = Config.POLYMARKET_ORDER_USDC
+
+    # Mevcut odds (outcomePrices[0]=UP, [1]=DOWN)
+    try:
+        prices_raw = market.get("outcomePrices", "[]")
+        prices = json.loads(prices_raw) if isinstance(prices_raw, str) else list(prices_raw)
+        idx  = 0 if up_down == "UP" else 1
+        odds = float(prices[idx]) if len(prices) > idx else None
+    except (IndexError, TypeError, ValueError):
+        odds = None
+
+    loop = asyncio.get_event_loop()
+    try:
+        resp = await loop.run_in_executor(
+            None,
+            lambda: place_buy_for_up_down(market, up_or_down=up_down, notional_usdc=notional),
+        )
+        payout = round(notional / odds, 2) if odds and odds > 0.01 else None
+        oid = resp.get("orderID") or resp.get("orderId") or resp.get("id") if isinstance(resp, dict) else "?"
+        print(f"[BET] ✅ {coin} {up_down} ${notional:.2f} @ {odds} → orderID:{oid}")
+        return {
+            "amount":         notional,
+            "odds":           odds,
+            "payout":         payout,
+            "order_response": resp,
+        }
+    except Exception as e:
+        print(f"[BET HATA] {coin} {up_down}: {e}")
+        return None
 
 
 # ─────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║  POLYMARKET TAHMİN MOTORU v1.0                                   ║
-║  BTC + ETH · 1 Saatlik Fiyat Tahmini · Telegram Bildirimi       ║
+║  POLYMARKET TAHMİN MOTORU v1.0  [PASİF]                         ║
+║  Aktif: polymarket-main/src/analyzer/poly_predictor.py           ║
 ║                                                                  ║
 ║  Mantık:                                                         ║
 ║  Her saat başı BTC ve ETH için şunu tahmin eder:                 ║
@@ -19,6 +19,9 @@
 ║  Çalıştır: python poly_predictor.py                              ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
+
+import sys
+raise SystemExit("poly_predictor.py [KÖK] pasif — polymarket-main/src/analyzer/poly_predictor.py kullan.")
 
 import os
 # WebSocket proxy sorununu önle — Cursor/IDE sandbox proxy değişkenlerini temizle
