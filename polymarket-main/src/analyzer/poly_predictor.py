@@ -763,6 +763,18 @@ async def send_unified_prediction(preds: list, past_results: list, bet_results: 
         pos  = snap.get("positions_mark_usdc")
         npos = snap.get("open_positions_count") or 0
         tot  = snap.get("portfolio_total_usdc")
+
+        # CLOB API anlık güncellenemeyebilir; yerleştirilen bet tutarını
+        # collateral'dan düş (bakiye henüz yansımamışsa göster)
+        placed_total = sum(
+            b["amount"] for b in (bet_results or {}).values()
+            if isinstance(b, dict) and b.get("amount")
+        )
+        if col is not None and placed_total > 0:
+            col = col - placed_total
+            if tot is not None:
+                tot = tot - placed_total
+
         col_s = f"${col:.2f} USDC" if col is not None else "—"
         pos_s = f"${pos:.2f} ({npos} adet)" if pos is not None else "—"
         tot_s = f"${tot:.2f} USDC" if tot is not None else "—"
@@ -1260,6 +1272,10 @@ async def _do_prediction(label: str = ""):
         else:
             bet_results[pred.symbol] = None
         record_prediction(pred, bet_results[pred.symbol])
+
+    # Bet gönderilmişse CLOB/chain state güncellensin; bakiye anlık yansımayabilir
+    if any(v is not None for v in bet_results.values()):
+        await asyncio.sleep(6)
 
     await send_unified_prediction(preds, past_results, bet_results)
 
