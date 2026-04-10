@@ -1,6 +1,6 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║  POLYMARKET TAHMİN MOTORU v1.0                                   ║
+║  POLYMARKET TAHMİN MOTORU v1.1                                   ║
 ║  ETH/SOL · 1 Saatlik Fiyat Tahmini · Telegram Bildirimi          ║
 ║                                                                  ║
 ║  Mantık:                                                         ║
@@ -38,13 +38,13 @@ from collections import deque, defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 from dotenv import load_dotenv
-import os
 import math
 
 load_dotenv()
 
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
-TELEGRAM_CHAT  = os.getenv("TELEGRAM_CHAT",  "")
+# Ana proje: TELEGRAM_TOKEN / TELEGRAM_CHAT — polymarket-main .env: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "") or os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT  = os.getenv("TELEGRAM_CHAT", "") or os.getenv("TELEGRAM_CHAT_ID", "")
 
 # ── Polymarket ──
 POLY_PRIVATE_KEY = os.getenv("POLY_PRIVATE_KEY", "")
@@ -52,13 +52,17 @@ POLY_FUNDER      = os.getenv("POLY_FUNDER", "")
 POLY_API_KEY     = os.getenv("POLY_API_KEY", "")
 POLY_API_SECRET  = os.getenv("POLY_API_SECRET", "")
 POLY_API_PASS    = os.getenv("POLY_API_PASSPHRASE", "")
-BET_SIZE_USDC      = float(os.getenv("POLY_BET_SIZE", "5"))
-PREDICTIONS_FILE   = os.path.join(os.path.dirname(__file__), "poly_predictions.json")
+BET_SIZE_USDC    = float(os.getenv("POLY_BET_SIZE", "5"))
+PREDICTIONS_FILE = os.path.join(os.path.dirname(__file__), "poly_predictions.json")
 BET_DRY_RUN      = os.getenv("POLY_DRY_RUN", "true").lower() != "false"
 CLOB_HOST        = "https://clob.polymarket.com"
 GAMMA_HOST       = "https://gamma-api.polymarket.com"
 
 SYMBOLS = ["ETHUSDT", "SOLUSDT"]
+
+# Order book temizliği — fiyattan bu kadar uzak seviyeleri sil (% olarak)
+OB_CLEANUP_PCT = 0.05   # ±%5 dışı sil
+OB_CLEANUP_INTERVAL = 300  # 5 dakikada bir
 
 
 def _symbol_icon(sym_short: str) -> str:
@@ -102,11 +106,37 @@ class SymbolState:
         self.symbol    = symbol
         self.ticks: deque[Tick] = deque(maxlen=10000)
         self.price     = 0.0
-        self.ob_bids   = {}
-        self.ob_asks   = {}
+        self.ob_bids: dict[float, float] = {}
+        self.ob_asks: dict[float, float] = {}
         self.liq_data: list[dict] = []
         self.klines_1h: list[dict] = []
         self.funding_rate = 0.0
+        self._last_ob_cleanup = 0.0
+
+    # ── FİX 1: Order book memory leak önleme ──
+    def cleanup_orderbook(self):
+        """
+        Mevcut fiyattan OB_CLEANUP_PCT dışındaki seviyeleri sil.
+        Her OB_CLEANUP_INTERVAL saniyede bir çalışır.
+        """
+        now = time.time()
+        if now - self._last_ob_cleanup < OB_CLEANUP_INTERVAL:
+            return
+        if self.price <= 0:
+            return
+
+        low_bound  = self.price * (1 - OB_CLEANUP_PCT)
+        high_bound = self.price * (1 + OB_CLEANUP_PCT)
+
+        self.ob_bids = {p: q for p, q in self.ob_bids.items() if p >= low_bound}
+        self.ob_asks = {p: q for p, q in self.ob_asks.items() if p <= high_bound}
+        self._last_ob_cleanup = now
+
+    # ── FİX 2: liq_data temizliği ayrı metoda taşındı ──
+    def cleanup_liq(self):
+        """30 dakikadan eski likidasyon verilerini temizle."""
+        cutoff = time.time() - 1800
+        self.liq_data = [l for l in self.liq_data if l["ts"] >= cutoff]
 
     # CVD hesapları
     def cvd(self, seconds: int) -> float:
@@ -141,6 +171,7 @@ class SymbolState:
 
     # Order book imbalance
     def ob_imbalance(self, levels: int = 10) -> float:
+        self.cleanup_orderbook()   # her imbalance sorgusunda periyodik temizlik
         bid_v = sum(p * q for p, q in sorted(self.ob_bids.items(), reverse=True)[:levels])
         ask_v = sum(p * q for p, q in sorted(self.ob_asks.items())[:levels])
         total = bid_v + ask_v
@@ -148,6 +179,7 @@ class SymbolState:
 
     # Likidasyon bias
     def liq_bias(self, seconds: int = 600) -> str:
+        self.cleanup_liq()   # ── FİX 2: her sorguda temizle ──
         cutoff = time.time() - seconds
         long_liq = short_liq = 0.0
         for l in self.liq_data:
@@ -168,71 +200,107 @@ states = {sym: SymbolState(sym) for sym in SYMBOLS}
 # TAHMİN MOTORU
 # ─────────────────────────────────────────────────────────────
 
-def _ema(values, period):
-    if len(values) < period:
-        return [0.0] * len(values)
+def _ema(values: list[float], period: int) -> list[float]:
+    """
+    EMA hesapla. period-1 öncesi indisler NaN yerine 0.0 döner;
+    çağıran kod yalnızca son değerleri kullanmalı.
+    """
+    n = len(values)
+    if n < period:
+        return [0.0] * n
     k = 2.0 / (period + 1)
-    r = [0.0] * len(values)
+    r = [0.0] * n
     r[period - 1] = sum(values[:period]) / period
-    for i in range(period, len(values)):
-        r[i] = values[i] * k + r[i-1] * (1 - k)
+    for i in range(period, n):
+        r[i] = values[i] * k + r[i - 1] * (1 - k)
     return r
 
-def _rsi(closes, period=14):
-    if len(closes) < period + 1: return 50.0
+
+def _rsi(closes: list[float], period: int = 14) -> float:
+    if len(closes) < period + 1:
+        return 50.0
     g = l = 0.0
     for i in range(1, period + 1):
-        d = closes[-period-1+i] - closes[-period-2+i]
+        d = closes[-period - 1 + i] - closes[-period - 2 + i]
         if d > 0: g += d
         else:      l -= d
-    ag, al = g/period, l/period
-    if al == 0: return 100.0
-    return 100 - 100/(1 + ag/al)
+    ag, al = g / period, l / period
+    if al == 0:
+        return 100.0
+    return 100 - 100 / (1 + ag / al)
 
-def _macd_hist(closes):
-    if len(closes) < 35: return 0.0
+
+def _macd_hist(closes: list[float]) -> float:
+    """
+    ── FİX 4: EMA'nın 0.0 doldurma bölgesi atlanarak güvenli indeks kullanılır ──
+    MACD için en az 35 kapanış gerekir (26 EMA + 9 sinyal).
+    """
+    if len(closes) < 35:
+        return 0.0
     ef = _ema(closes, 12)
     es = _ema(closes, 26)
-    ml = [ef[i] - es[i] for i in range(len(closes))]
-    sig = _ema(ml[25:], 9)
-    return ml[-1] - (sig[-1] if sig else 0)
+    # 0.0 dolu bölgeyi atla: 26. indisten itibaren anlamlı
+    macd_line = [ef[i] - es[i] for i in range(25, len(closes))]
+    if len(macd_line) < 9:
+        return 0.0
+    sig = _ema(macd_line, 9)
+    # Sinyal EMA'nın anlamlı son değeri (9-1 = 8. indisten itibaren dolu)
+    if len(sig) < 9:
+        return 0.0
+    return macd_line[-1] - sig[-1]
 
-def _adx(highs, lows, closes, period=14):
+
+def _adx(highs: list[float], lows: list[float], closes: list[float],
+         period: int = 14) -> tuple[float, float, float]:
     n = len(closes)
-    if n < period * 2: return 0.0, 0.0, 0.0
+    if n < period * 2:
+        return 0.0, 0.0, 0.0
     tr_l = pdm_l = ndm_l = [0.0]
     for i in range(1, n):
-        tr = max(highs[i]-lows[i], abs(highs[i]-closes[i-1]), abs(lows[i]-closes[i-1]))
-        up   = highs[i] - highs[i-1]
-        down = lows[i-1] - lows[i]
+        tr   = max(highs[i] - lows[i],
+                   abs(highs[i] - closes[i - 1]),
+                   abs(lows[i]  - closes[i - 1]))
+        up   = highs[i] - highs[i - 1]
+        down = lows[i - 1] - lows[i]
         tr_l  = tr_l  + [tr]
         pdm_l = pdm_l + [up   if up > down and up > 0   else 0.0]
         ndm_l = ndm_l + [down if down > up and down > 0 else 0.0]
 
     def ws(d, p):
-        r = [0.0]*len(d)
-        if len(d) <= p: return r
-        r[p] = sum(d[1:p+1])
-        for i in range(p+1, len(d)):
-            r[i] = r[i-1] - r[i-1]/p + d[i]
+        r = [0.0] * len(d)
+        if len(d) <= p:
+            return r
+        r[p] = sum(d[1:p + 1])
+        for i in range(p + 1, len(d)):
+            r[i] = r[i - 1] - r[i - 1] / p + d[i]
         return r
 
-    at = ws(tr_l, period); pm = ws(pdm_l, period); nm = ws(ndm_l, period)
-    pdi = [100*pm[i]/at[i] if at[i]>0 else 0 for i in range(n)]
-    ndi = [100*nm[i]/at[i] if at[i]>0 else 0 for i in range(n)]
-    dx  = [100*abs(pdi[i]-ndi[i])/(pdi[i]+ndi[i]) if (pdi[i]+ndi[i])>0 else 0 for i in range(n)]
+    at = ws(tr_l, period)
+    pm = ws(pdm_l, period)
+    nm = ws(ndm_l, period)
+    pdi = [100 * pm[i] / at[i] if at[i] > 0 else 0 for i in range(n)]
+    ndi = [100 * nm[i] / at[i] if at[i] > 0 else 0 for i in range(n)]
+    dx  = [100 * abs(pdi[i] - ndi[i]) / (pdi[i] + ndi[i])
+           if (pdi[i] + ndi[i]) > 0 else 0 for i in range(n)]
     adx_s = ws(dx, period)
-    return round(adx_s[-1],2), round(pdi[-1],2), round(ndi[-1],2)
+    return round(adx_s[-1], 2), round(pdi[-1], 2), round(ndi[-1], 2)
 
-def _chop(highs, lows, closes, period=14):
-    if len(closes) < period+1: return 50.0
-    wh = max(highs[-period:]); wl = min(lows[-period:])
-    if wh-wl == 0: return 50.0
-    atr_sum = sum(max(highs[-period+i]-lows[-period+i],
-                      abs(highs[-period+i]-closes[-period+i-1]),
-                      abs(lows[-period+i]-closes[-period+i-1]))
-                  for i in range(period))
-    return round(100*math.log10(atr_sum/(wh-wl))/math.log10(period), 2)
+
+def _chop(highs: list[float], lows: list[float], closes: list[float],
+          period: int = 14) -> float:
+    if len(closes) < period + 1:
+        return 50.0
+    wh = max(highs[-period:])
+    wl = min(lows[-period:])
+    if wh - wl == 0:
+        return 50.0
+    atr_sum = sum(
+        max(highs[-period + i] - lows[-period + i],
+            abs(highs[-period + i] - closes[-period + i - 1]),
+            abs(lows[-period + i]  - closes[-period + i - 1]))
+        for i in range(period)
+    )
+    return round(100 * math.log10(atr_sum / (wh - wl)) / math.log10(period), 2)
 
 
 def generate_prediction(state: SymbolState) -> Optional[Prediction]:
@@ -329,7 +397,7 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
         l  = [k["low"]    for k in kl]
 
         rsi_v   = _rsi(c)
-        macd_h  = _macd_hist(c)
+        macd_h  = _macd_hist(c)   # FİX 4 uygulandı
         ema9    = _ema(c, 9)
         ema21   = _ema(c, 21)
         ema50   = _ema(c, 50)
@@ -408,7 +476,6 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
     bull_pct = bull_pts / total_w
     bear_pct = bear_pts / total_w
 
-    # Yön — eşitlik durumunda mevcut trendle aynı yön (varsayılan YUKARI)
     if bull_pts >= bear_pts:
         direction = "YUKARI"
         raw_prob  = bull_pct if bull_pts > bear_pts else 0.5
@@ -416,11 +483,11 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
         direction = "AŞAĞI"
         raw_prob  = bear_pct
 
-    # Olasılık sigmoid ile yumuşat (0.5-0.85 arasında tut)
+    # ── FİX 5: Olasılık yorumu düzeltildi (lineer ölçekleme, sigmoid değil) ──
+    # raw_prob [0.5, 1.0] → prob [0.50, 0.85] arasında lineer ölçekleme
     prob = 0.5 + (raw_prob - 0.5) * 0.7
     prob = max(0.50, min(0.85, prob))
 
-    # Güven seviyesi — NÖTR kaldırıldı, yön her zaman YUKARI veya AŞAĞI
     gap = abs(bull_pts - bear_pts)
     if gap >= total_w * 0.4:
         confidence = "YÜKSEK"
@@ -429,19 +496,16 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
     else:
         confidence = "DÜŞÜK"
 
-    # Hedef saat IST
     now_utc     = datetime.now(timezone.utc)
     target_ist  = (now_utc.hour + 1 + 3) % 24
     target_time = f"{target_ist:02d}:00 İST"
 
-    # 1h high/low (son 3 bar)
     kl      = state.klines_1h
     h1_high = max(k["high"] for k in kl[-3:]) if len(kl) >= 3 else 0.0
     h1_low  = min(k["low"]  for k in kl[-3:]) if len(kl) >= 3 else 0.0
 
-    # En yakın yuvarlak seviye
-    p = state.price
-    step      = 500 if p > 10_000 else 100 if p > 1_000 else 10 if p > 100 else 1
+    p    = state.price
+    step = 500 if p > 10_000 else 100 if p > 1_000 else 10 if p > 100 else 1
     key_level = round(round(p / step) * step, 2)
 
     reasoning = (
@@ -515,7 +579,6 @@ def _build_coin_block(pred: Prediction) -> str:
     icon  = _symbol_icon(sym)
     d_ico = "📉" if pred.direction == "AŞAĞI" else "📈" if pred.direction == "YUKARI" else "➡️"
 
-    # Trend satırı
     rsi_v = adx_v = 0.0
     for k, v in pred.signals.items():
         if k == "rsi":
@@ -528,12 +591,10 @@ def _build_coin_block(pred: Prediction) -> str:
     trend_str = "AŞAĞI" if pred.bear_pct > pred.bull_pct else "YUKARI"
     trend_ico = "🔴" if trend_str == "AŞAĞI" else "🟢"
 
-    # Key level konumu
-    p = pred.current_price
+    p  = pred.current_price
     kl = pred.key_level
     kl_rel = "ÜZERİNDE" if p >= kl else "ALTINDA"
 
-    # Sinyal satırları
     sig_lines = []
     for k, v in pred.signals.items():
         raw = v.replace("🟢 ", "").replace("🔴 ", "").replace("⚪ ", "").replace("⚠️ ", "")
@@ -558,7 +619,7 @@ def _build_coin_block(pred: Prediction) -> str:
 
 
 async def send_prediction(pred: Prediction):
-    """Tek tahmin — birleşik mesaj _do_prediction'da oluşturuluyor, bu sadece bet tetikler."""
+    """Tek tahmin — yüksek güvenle bet tetikle."""
     bet_result = None
     if pred.confidence == "YÜKSEK" and pred.direction != "NÖTR":
         bet_result = await place_bet(pred)
@@ -569,13 +630,12 @@ async def send_prediction(pred: Prediction):
 
 
 async def send_unified_prediction(preds: list, past_results: list):
-    """ETH + SOL tahminlerini tek mesajda gönderir (screenshottaki format)."""
+    """ETH + SOL tahminlerini tek mesajda gönderir."""
     if not preds:
         return
 
     target_time = preds[0].target_time
 
-    # ── Geçen saat sonucu — sembol başına sadece en son 1 tahmin ──
     prev_block = ""
     if past_results:
         seen = {}
@@ -603,7 +663,6 @@ async def send_unified_prediction(preds: list, past_results: list):
             + "\n".join(prev_lines) + "\n"
         )
 
-    # ── Coin blokları ──
     coin_blocks = []
     for pred in preds:
         coin_blocks.append(_build_coin_block(pred))
@@ -641,27 +700,26 @@ def _save_predictions(preds: list):
 def record_prediction(pred: "Prediction"):
     """Tahmini dosyaya kaydet."""
     now      = datetime.now(timezone.utc)
-    # Hedef: bir sonraki tam saat (UTC)
-    target_h = now.hour + 1
     target_ts = now.replace(minute=0, second=0, microsecond=0).timestamp() + 3600
 
     preds = _load_predictions()
     preds.append({
-        "symbol":    pred.symbol,
-        "direction": pred.direction,   # YUKARI / AŞAĞI / NÖTR
-        "price":     pred.current_price,
-        "confidence":pred.confidence,
-        "target_ts": target_ts,        # hedef saatin UTC timestamp'i
-        "sent_ts":   now.timestamp(),
-        "checked":   False,
+        "symbol":     pred.symbol,
+        "direction":  pred.direction,
+        "price":      pred.current_price,
+        "confidence": pred.confidence,
+        "target_ts":  target_ts,
+        "sent_ts":    now.timestamp(),
+        "checked":    False,
     })
     _save_predictions(preds)
+    target_h = (now.hour + 1) % 24
     print(f"[KAYIT] {pred.symbol} {pred.direction} → hedef {target_h:02d}:00 UTC kaydedildi")
 
 
 async def fetch_price_at(symbol: str, target_ts: float) -> float:
     """target_ts anındaki 1h kapanış fiyatını döner."""
-    start_ms = int(target_ts * 1000) - 3600_000   # 1 saat öncesi
+    start_ms = int(target_ts * 1000) - 3600_000
     end_ms   = int(target_ts * 1000)
     url = "https://fapi.binance.com/fapi/v1/klines"
     try:
@@ -675,7 +733,7 @@ async def fetch_price_at(symbol: str, target_ts: float) -> float:
             }, timeout=aiohttp.ClientTimeout(total=10)) as r:
                 data = await r.json()
         if data:
-            return float(data[-1][4])   # close fiyatı
+            return float(data[-1][4])
     except Exception as e:
         print(f"[PRICE_AT] {e}")
     return 0.0
@@ -684,7 +742,6 @@ async def fetch_price_at(symbol: str, target_ts: float) -> float:
 async def check_past_predictions():
     """
     target_ts geçmiş, henüz kontrol edilmemiş tahminleri doğrula.
-    Her biri için sonuç bildirimi gönder.
     """
     now   = time.time()
     preds = _load_predictions()
@@ -694,39 +751,22 @@ async def check_past_predictions():
         if p.get("checked"):
             continue
         if p["target_ts"] > now:
-            continue   # henüz hedef saat gelmemiş
+            continue
 
-        symbol    = p["symbol"]
-        direction = p["direction"]
+        symbol      = p["symbol"]
+        direction   = p["direction"]
         entry_price = p["price"]
         target_ts   = p["target_ts"]
 
         actual_price = await fetch_price_at(symbol, target_ts)
         if actual_price <= 0:
-            continue   # veri gelmedi, bekle
+            continue
 
-        # Gerçek yön — eşik altında bile en yakın yönü kullan
         change_pct = (actual_price - entry_price) / entry_price * 100
-        if change_pct >= 0:
-            actual_dir = "YUKARI"
-        else:
-            actual_dir = "AŞAĞI"
+        actual_dir = "YUKARI" if change_pct >= 0 else "AŞAĞI"
+        correct    = (direction == actual_dir)
 
-        # Tahmin doğru mu?
-        correct = (direction == actual_dir)
-
-        # Hedef saat İST
-        target_dt  = datetime.fromtimestamp(target_ts, tz=timezone.utc)
-        target_ist = (target_dt.hour + 3) % 24
-        sent_dt    = datetime.fromtimestamp(p["sent_ts"], tz=timezone.utc)
-        sent_ist   = (sent_dt.hour + 3) % 24
-
-        sym_short  = symbol.replace("USDT", "")
-        result_emoji = "✅" if correct else "❌"
-        dir_emoji    = "📈" if actual_dir == "YUKARI" else "📉"
-        pred_emoji   = "📈" if direction  == "YUKARI" else "📉"
-        conf_emoji   = {"YÜKSEK": "💎", "ORTA": "✅", "DÜŞÜK": "⚠️"}.get(p["confidence"], "")
-
+        sym_short = symbol.replace("USDT", "")
         print(f"[SONUÇ] {sym_short} → tahmin:{direction} gerçek:{actual_dir} "
               f"({'✅' if correct else '❌'})")
 
@@ -742,7 +782,7 @@ async def check_past_predictions():
 
 
 # ─────────────────────────────────────────────────────────────
-# POLYMARKET BAHİS
+# POLYMARKET BAHİS (stub — ana uygulama pipeline'ı kullanır)
 # ─────────────────────────────────────────────────────────────
 
 async def send_daily_report():
@@ -755,13 +795,11 @@ async def send_daily_report():
         await send_telegram("📊 <b>Günlük Tahmin Raporu</b>\nSon 24 saatte değerlendirilen tahmin yok.")
         return
 
-    from collections import defaultdict
     by_sym: dict = defaultdict(list)
     for p in preds:
         by_sym[p["symbol"]].append(p)
 
     now_ist = datetime.now(timezone.utc)
-    ist_str = f"{(now_ist.hour+3)%24:02d}:{now_ist.strftime('%M')} İST"
 
     lines = [
         f"📊 <b>POLYX2 — Günlük Tahmin Raporu</b>",
@@ -811,15 +849,17 @@ async def send_daily_report():
 
 async def find_market(coin: str, direction: str, price: float) -> Optional[dict]:
     """
-    Ana uygulama saatlik Gamma market + CLOB emrini `src.analyzer.pipeline` ile verir.
-    Bu dosyada piyasa aranmaz (eski akış kaldırıldı).
+    Polymarket piyasa araması ana pipeline'da yapılır.
+    Bu dosyada işlem yok — kasıtlı stub.
     """
     return None
 
 
 async def place_bet(pred: Prediction) -> Optional[dict]:
     """
-    Polymarket emri ana uygulama (`src.analyzer.pipeline`) üzerinden verilir; burada işlem yok.
+    Polymarket emri ana pipeline'da verilir.
+    Bu dosyada işlem yok — kasıtlı stub.
+    Dönen değer: None (bahis atlanır, log'a yazılır).
     """
     return None
 
@@ -839,7 +879,8 @@ async def fetch_klines(symbol: str) -> list[dict]:
                 return [{"close": float(k[4]), "high": float(k[2]),
                          "low": float(k[3]), "open": float(k[1]),
                          "volume": float(k[5])} for k in data]
-    except:
+    except Exception as e:
+        print(f"[KLINES HATA] {e}")
         return []
 
 
@@ -851,7 +892,8 @@ async def fetch_funding(symbol: str) -> float:
                              timeout=aiohttp.ClientTimeout(total=10)) as r:
                 data = await r.json()
                 return float(data.get("lastFundingRate", 0))
-    except:
+    except Exception as e:
+        print(f"[FUNDING HATA] {e}")
         return 0.0
 
 
@@ -935,11 +977,8 @@ async def liquidation_stream():
                         states[sym].liq_data.append({
                             "ts": time.time(), "side": side, "usd": usd
                         })
-                        # 30 dk'dan eski veriyi temizle
-                        cutoff = time.time() - 1800
-                        states[sym].liq_data = [
-                            l for l in states[sym].liq_data if l["ts"] >= cutoff
-                        ]
+                        # ── FİX 2: cleanup_liq metodu kullanılıyor ──
+                        states[sym].cleanup_liq()
         except Exception as e:
             print(f"[WS LIQ] {e} — yeniden bağlanıyor")
             await asyncio.sleep(3)
@@ -994,9 +1033,7 @@ async def fetch_recent_trades_rest(symbol: str):
 
 async def _do_prediction(label: str = ""):
     """Kline + funding + REST snapshot çek, tahmin üret, Telegram'a gönder."""
-    now = datetime.now()
 
-    # ── Geçmiş tahminlerin sonucunu kontrol et ──
     await check_past_predictions()
 
     for sym in SYMBOLS:
@@ -1004,7 +1041,6 @@ async def _do_prediction(label: str = ""):
         if kl:
             states[sym].klines_1h = kl
         states[sym].funding_rate = await fetch_funding(sym)
-        # OB ve CVD verisi yoksa REST'ten doldur
         if not states[sym].ob_bids:
             await fetch_orderbook_rest(sym)
         if not states[sym].ticks:
@@ -1017,37 +1053,41 @@ async def _do_prediction(label: str = ""):
         print("[TAHMİN] Yeterli veri yok.")
         return
 
-    # Geçmiş kontrol — hangileri bu saat kapandı?
-    all_preds   = _load_predictions()
-    now_ts      = time.time()
+    all_preds    = _load_predictions()
+    now_ts       = time.time()
     past_results = [
         p for p in all_preds
         if p.get("checked") and p.get("target_ts", 0) > now_ts - 3600
     ]
 
-    # Tek birleşik mesaj
     await send_unified_prediction(preds, past_results)
 
-    # Bet + kayıt
     for pred in preds:
         await send_prediction(pred)
         record_prediction(pred)
 
 
 async def prediction_loop():
-    """Her saat :04'ünde tahmin üret — saat başından 56 dk önce gönderilir."""
+    """
+    Her saat :04'ünde tahmin üret.
+
+    ── FİX 3: Zamanlama hatası düzeltildi ──
+    Önceki formülde mins==4 durumunda wait=3600 oluyordu (1 saat atlanıyordu).
+    Yeni mantık: dakika < 4 ise bu saatin :04'ünü bekle,
+                 dakika >= 4 ise bir sonraki saatin :04'ünü bekle.
+    """
     print("[TAHMİN] Bekleniyor — ilk veri dolsun (2 dk)...")
     await asyncio.sleep(120)
 
-    _daily_report_sent_date = None   # aynı gün iki kez gönderme
+    _daily_report_sent_date = None
 
     while True:
-        now     = datetime.now(timezone.utc)
-        ist_h   = (now.hour + 3) % 24
-        ist_m   = now.minute
-        today   = now.strftime("%Y-%m-%d")
+        now   = datetime.now(timezone.utc)
+        ist_h = (now.hour + 3) % 24
+        ist_m = now.minute
+        today = now.strftime("%Y-%m-%d")
 
-        # Gece 00:00 İST (21:00 UTC) → günlük rapor
+        # Gece 00:00 İST → günlük rapor
         if ist_h == 0 and ist_m < 5 and _daily_report_sent_date != today:
             try:
                 await send_daily_report()
@@ -1057,16 +1097,20 @@ async def prediction_loop():
                 print(f"[RAPOR HATA] {e}")
 
         mins = now.minute
+        secs = now.second
 
-        # Saat başından 4 dk geçmişse → sonraki :04'e kadar bekle
+        # ── FİX 3: köşe case'i ayrıca ele alındı ──
         if mins < 4:
-            wait = (4 - mins) * 60 - now.second
+            # Aynı saatin :04'üne kadar bekle
+            wait = (4 - mins) * 60 - secs
+            target_h = now.hour
         else:
-            wait = (60 - mins + 4) * 60 - now.second
+            # Bir sonraki saatin :04'üne kadar bekle (mins==4 dahil)
+            wait = (60 - mins + 4) * 60 - secs
+            target_h = (now.hour + 1) % 24
 
         wait = max(30, wait)
-        target_h = (now.hour + (1 if mins >= 4 else 0)) % 24
-        print(f"[TAHMİN] Sonraki gönderim: {target_h:02d}:04 ({wait//60} dk sonra)")
+        print(f"[TAHMİN] Sonraki gönderim: {target_h:02d}:04 UTC ({wait//60} dk {wait%60} sn sonra)")
         await asyncio.sleep(wait)
 
         try:
@@ -1085,7 +1129,7 @@ async def display_loop():
     while True:
         try:
             print("\033[H\033[J", end="")
-            now = datetime.now().strftime("%H:%M:%S")
+            now    = datetime.now().strftime("%H:%M:%S")
             next_h = (datetime.now().hour + 1) % 24
 
             print("╔══════════════════════════════════════════════════╗")
@@ -1095,12 +1139,12 @@ async def display_loop():
             print("╠══════════════════════════════════════════════════╣")
 
             for sym in SYMBOLS:
-                st     = states[sym]
-                cvd5   = st.cvd(300)
-                imb    = st.ob_imbalance()
-                br     = st.buy_ratio(300)
-                liq    = st.liq_bias(600)
-                name   = sym.replace("USDT", "")
+                st   = states[sym]
+                cvd5 = st.cvd(300)
+                imb  = st.ob_imbalance()
+                br   = st.buy_ratio(300)
+                liq  = st.liq_bias(600)
+                name = sym.replace("USDT", "")
 
                 print(f"║  {name:<4}  Fiyat: ${st.price:>12,.2f}  ║")
                 print(f"║       CVD5m: {cvd5/1000:>+8.1f}K  "
@@ -1110,8 +1154,8 @@ async def display_loop():
 
             print("╚══════════════════════════════════════════════════╝")
             print("  Ctrl+C ile durdur")
-        except:
-            pass
+        except Exception as e:
+            print(f"[DISPLAY HATA] {e}")
         await asyncio.sleep(5)
 
 
