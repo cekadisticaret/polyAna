@@ -18,7 +18,7 @@ Quantitative prediction market analizi. Polymarket'ten filtreli market çeker, G
 
 ## Çalışma Saatleri
 
-Saat başı `open`, 5. dakikada `resolve` — iki cron satırı; ayrıntı `cron.example`.
+Her saat `:10` geçe `open`, `:15` geçe `resolve` — iki cron satırı; ayrıntı `cron.example`.
 
 ## Kurulum
 

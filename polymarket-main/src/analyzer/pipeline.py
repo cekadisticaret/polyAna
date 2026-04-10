@@ -7,8 +7,8 @@ ve bot açıkken tahmin yine hourly_trades + pipeline_cycle_log'a yazılır (tra
 Gerçek emir: `hour_schedule.TRADING_HOUR_RESTRICTION_ENABLED` açıksa yalnızca belirli ET saatleri; kapalıysa her saat (diğer koşullar uygunsa).
 
 Cron (iki satır):
-  - X:00 — python -m src.main open  → tahmin + (bot açıksa emir) + «Saatlik Tahminler» Telegram
-  - X:05 — python -m src.main resolve → önceki saat DB çözümü + gün özeti Telegram
+  - X:10 — python -m src.main open  → tahmin + (bot açıksa emir) + «Saatlik Tahminler» Telegram
+  - X:15 — python -m src.main resolve → önceki saat DB çözümü + gün özeti Telegram
 
 Slug: {coin}-up-or-down-{month}-{day}-{year}-{hour}am/pm-et
 
@@ -240,7 +240,7 @@ def _log_pipeline_decision(
 
 
 def run_hourly_cycle_resolve_summary() -> None:
-    """Cron :05 — önceki saat Gamma çözümünü DB'ye yaz; gün özeti Telegram."""
+    """Cron :15 — önceki saat Gamma çözümünü DB'ye yaz; gün özeti Telegram."""
     init_hourly_table()
     ctx = _slot_context()
     trade_date_et = ctx.trade_date_et
@@ -313,7 +313,7 @@ def run_hourly_cycle_resolve_summary() -> None:
 
 
 def run_hourly_cycle_open() -> None:
-    """Cron :00 — tahmin + emir + «Saatlik Tahminler» Telegram (çözüm / gün özeti yok)."""
+    """Cron :10 — tahmin + emir + «Saatlik Tahminler» Telegram (çözüm / gün özeti yok)."""
     init_hourly_table()
     ctx = _slot_context()
     now_utc = ctx.now_utc

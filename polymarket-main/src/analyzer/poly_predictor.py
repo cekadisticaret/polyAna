@@ -63,6 +63,8 @@ SYMBOLS = ["ETHUSDT", "SOLUSDT"]
 # Order book temizliği — fiyattan bu kadar uzak seviyeleri sil (% olarak)
 OB_CLEANUP_PCT = 0.05   # ±%5 dışı sil
 OB_CLEANUP_INTERVAL = 300  # 5 dakikada bir
+# Pipeline cron (`src.main open`) ile aynı dakika
+PREDICTION_MINUTE = 10
 
 
 def _symbol_icon(sym_short: str) -> str:
@@ -985,7 +987,7 @@ async def liquidation_stream():
 
 
 # ─────────────────────────────────────────────────────────────
-# TAHMİN DÖNGÜSÜ — her saat başı
+# TAHMİN DÖNGÜSÜ — her saat PREDICTION_MINUTE geçe (cron open ile uyumlu)
 # ─────────────────────────────────────────────────────────────
 
 async def fetch_orderbook_rest(symbol: str):
@@ -1069,17 +1071,15 @@ async def _do_prediction(label: str = ""):
 
 async def prediction_loop():
     """
-    Her saat :04'ünde tahmin üret.
+    Her saat PREDICTION_MINUTE (:10) geçe tahmin üret (`src.main open` cron ile uyumlu).
 
-    ── FİX 3: Zamanlama hatası düzeltildi ──
-    Önceki formülde mins==4 durumunda wait=3600 oluyordu (1 saat atlanıyordu).
-    Yeni mantık: dakika < 4 ise bu saatin :04'ünü bekle,
-                 dakika >= 4 ise bir sonraki saatin :04'ünü bekle.
+    Köşe case: dakika == PREDICTION_MINUTE iken bir sonraki saatin :10'una gidilir.
     """
     print("[TAHMİN] Bekleniyor — ilk veri dolsun (2 dk)...")
     await asyncio.sleep(120)
 
     _daily_report_sent_date = None
+    PM = PREDICTION_MINUTE
 
     while True:
         now   = datetime.now(timezone.utc)
@@ -1099,18 +1099,15 @@ async def prediction_loop():
         mins = now.minute
         secs = now.second
 
-        # ── FİX 3: köşe case'i ayrıca ele alındı ──
-        if mins < 4:
-            # Aynı saatin :04'üne kadar bekle
-            wait = (4 - mins) * 60 - secs
+        if mins < PM:
+            wait = (PM - mins) * 60 - secs
             target_h = now.hour
         else:
-            # Bir sonraki saatin :04'üne kadar bekle (mins==4 dahil)
-            wait = (60 - mins + 4) * 60 - secs
+            wait = (60 - mins + PM) * 60 - secs
             target_h = (now.hour + 1) % 24
 
         wait = max(30, wait)
-        print(f"[TAHMİN] Sonraki gönderim: {target_h:02d}:04 UTC ({wait//60} dk {wait%60} sn sonra)")
+        print(f"[TAHMİN] Sonraki gönderim: {target_h:02d}:{PM:02d} UTC ({wait//60} dk {wait%60} sn sonra)")
         await asyncio.sleep(wait)
 
         try:
@@ -1135,7 +1132,7 @@ async def display_loop():
             print("╔══════════════════════════════════════════════════╗")
             print(f"║  POLYMARKET TAHMİN MOTORU  │  {now}  ║")
             print("╠══════════════════════════════════════════════════╣")
-            print(f"║  Sonraki tahmin: {next_h:02d}:04  ║")
+            print(f"║  Sonraki tahmin: {next_h:02d}:{PREDICTION_MINUTE:02d}  ║")
             print("╠══════════════════════════════════════════════════╣")
 
             for sym in SYMBOLS:
@@ -1173,7 +1170,7 @@ async def main():
     await send_telegram(
         f"🔮 <b>Polymarket Tahmin Motoru Başladı</b>\n"
         f"📊 ETH + SOL · 1 Saatlik Tahminler\n"
-        f"⏰ Her saat başı Telegram'a bildirim gelecek"
+        f"⏰ Her saat :{PREDICTION_MINUTE:02d}'de Telegram'a bildirim gelecek"
     )
 
     await asyncio.gather(

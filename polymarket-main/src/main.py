@@ -2,8 +2,8 @@
 Polymarket Analyzer - Ana giriş noktası.
 
 Cron:
-  0 * * * *  … python -m src.main open     — saat başı tahmin + (POLYMARKET_BOT_ENABLED ise emir) + Saatlik Tahminler
-  5 * * * *  … python -m src.main resolve  — DB çözümü + gün özeti
+  10 * * * * … python -m src.main open    — her saat :10 geçe tahmin + (POLYMARKET_BOT_ENABLED ise emir) + Saatlik Tahminler
+  15 * * * * … python -m src.main resolve — DB çözümü + gün özeti
 """
 import argparse
 import logging

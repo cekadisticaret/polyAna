@@ -19,6 +19,8 @@ alwaysApply: true
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 bist_scalping_alerts.py` | `/tmp/bist_scalping_alerts.log` |
 | `* * * * *` | `cd /root/aiProject && python3 scalp_trader.py` | `/tmp/scalp_trader.log` |
 | `0 23 * * *` | `cd /root/aiProject && python3 poly_predictor.py --daily` | `/tmp/poly_daily_report.log` |
+| `10 * * * *` | `cd /root/aiProject/polymarket-main && PYTHONPATH=/root/aiProject python3 -m src.main open` | `polymarket-main/data/cron.log` |
+| `15 * * * *` | `cd /root/aiProject/polymarket-main && PYTHONPATH=/root/aiProject python3 -m src.main resolve` | `polymarket-main/data/cron.log` |
 
 ## Cron Yönetimi
 - Yeni cron eklemeden önce `crontab -l` ile mevcut listeyi kontrol et
