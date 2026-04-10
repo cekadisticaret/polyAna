@@ -25,31 +25,22 @@ from zoneinfo import ZoneInfo
 from src.analyzer.poly_bridge import run_poly_hourly_predictions
 from src.analyzer.poly_predictor import Prediction
 from src.config import Config
-from src.hour_schedule import (
-    TRADING_ALLOWED_HOURS_ET,
-    TRADING_HOUR_RESTRICTION_ENABLED,
-    is_trading_hour_allowed,
-)
 from src.data.hourly_trades import (
     daily_stats_for_day,
-    fetch_by_slug,
     fetch_pending_trades,
     init_hourly_table,
-    insert_trade,
     update_success,
 )
 from src.data.portfolio_snapshots import insert_portfolio_snapshot
 from src.data.pipeline_decision_log import insert_pipeline_cycle_log
 from src.data.market_fetcher import (
     build_slug,
-    fetch_hourly_up_down_markets,
     fetch_market_by_slug,
     fetch_single_event_by_slug,
     format_et_clock,
     resolved_outcome_from_event,
 )
 from src.notifications import send_telegram
-from src.trading.clob_orders import place_buy_for_up_down
 from src.trading.portfolio_snapshot import (
     portfolio_snapshot_values,
     portfolio_summary_lines_from_values,
@@ -313,7 +304,11 @@ def run_hourly_cycle_resolve_summary() -> None:
 
 
 def run_hourly_cycle_open() -> None:
-    """Cron :10 — tahmin + emir + «Saatlik Tahminler» Telegram (çözüm / gün özeti yok)."""
+    """Cron :10 — tahmin + «Saatlik Tahminler» Telegram (çözüm / gün özeti yok).
+
+    NOT: CLOB işlem açma poly_predictor.py'ye devredildi (WebSocket verileri daha güvenilir).
+    Pipeline yalnızca pipeline_cycle_log'a kaydeder ve Telegram bildirimi gönderir.
+    """
     init_hourly_table()
     ctx = _slot_context()
     now_utc = ctx.now_utc
@@ -321,441 +316,67 @@ def run_hourly_cycle_open() -> None:
     trade_date_et = ctx.trade_date_et
     cur_clock = ctx.cur_clock
 
-    # --- Tahmin motoru (poly_predictor) + bu saat market + emir ---
-    hourly_markets = fetch_hourly_up_down_markets(cur_et)
-    by_coin: dict[str, dict] = {}
-    for m in hourly_markets:
-        c = (m.get("_coin") or "").lower()
-        if c in COINS:
-            by_coin[c] = m
-
     preds_fetch_error = False
     try:
         preds_by_symbol = run_poly_hourly_predictions()
     except Exception:
         preds_fetch_error = True
-        logger.exception("poly_predictor veri/tahmin hatası")
+        logger.exception("poly_predictor veri/tahmin hatasi")
         preds_by_symbol = {}
 
     hourly_forecast_blocks: list[str] = []
     detail_lines: list[str] = []
 
     for coin, _sym in COINS.items():
-        trade_confirmed = False
         slug_cur = build_slug(coin, cur_et)
-        market = by_coin.get(coin)
         sym = SYMBOL_FOR_COIN[coin]
         pred = preds_by_symbol.get(sym)
 
-        if not market:
-            detail_lines.append(
-                f"   • {coin.upper()}: Market bulunamadı veya filtre geçmedi ({slug_cur})."
-            )
-            _log_pipeline_decision(
-                now_utc=now_utc,
-                cur_et=cur_et,
-                trade_date_et=trade_date_et,
-                cur_clock=cur_clock,
-                coin=coin,
-                slug=slug_cur,
-                market_found=False,
-                pred=pred,
-                direction_up_down=None,
-                gate_yuksek=None,
-                gate_trading=None,
-                outcome="skipped",
-                skip_reason_code="NO_MARKET",
-                skip_reason_detail=f"Gamma’da market yok veya filtre geçmedi: {slug_cur}",
-            )
-            hourly_forecast_blocks.append(
-                _format_hourly_forecast_block(coin, cur_clock, pred, False)
-            )
-            continue
-
         detail_lines.append(_format_poly_block(coin, pred))
-
         direction = _poly_direction_to_up_down(pred.direction) if pred else None
+
         if not direction:
-            if preds_fetch_error:
-                code, detail_s = (
-                    "PREDICTOR_CRASH",
-                    "run_poly_hourly_predictions() istisna; tahmin sözlüğü güvenilir değil.",
-                )
-            elif pred is None:
-                code, detail_s = (
-                    "NO_PREDICTION",
-                    "Tahmin None (fiyat yok, kline yok veya motor None).",
-                )
-            else:
-                code, detail_s = (
-                    "NO_DIRECTION",
-                    f"Yön YUKARI/AŞAĞI değil: {pred.direction}",
-                )
-            detail_lines.append(f"   • {coin.upper()}: Yön yok — emir yok.")
-            _log_pipeline_decision(
-                now_utc=now_utc,
-                cur_et=cur_et,
-                trade_date_et=trade_date_et,
-                cur_clock=cur_clock,
-                coin=coin,
-                slug=slug_cur,
-                market_found=True,
-                pred=pred,
-                direction_up_down=None,
-                gate_yuksek=None,
-                gate_trading=None,
-                outcome="skipped",
-                skip_reason_code=code,
-                skip_reason_detail=detail_s,
+            skip_code = (
+                "PREDICTOR_CRASH" if preds_fetch_error
+                else ("NO_PREDICTION" if pred is None else "NO_DIRECTION")
             )
-            hourly_forecast_blocks.append(
-                _format_hourly_forecast_block(coin, cur_clock, pred, False)
+            detail_s = (
+                "run_poly_hourly_predictions() istisna" if preds_fetch_error
+                else ("Tahmin None" if pred is None else f"Yon: {pred.direction if pred else '?'}")
             )
-            continue
-
-        # Eski place_bet ile aynı: yalnızca YÜKSEK güvende gerçek emir
-        if pred.confidence != "YÜKSEK":
+        else:
+            skip_code = "DELEGATED_TO_PREDICTOR"
+            detail_s = "Islem acma poly_predictor.py surecine devredildi"
             detail_lines.append(
-                f"   • {coin.upper()}: Güven {pred.confidence} — Polymarket emri yok (yalnızca YÜKSEK)."
+                f"   \u2022 {coin.upper()}: {direction} ({pred.confidence if pred else '?'}) \u2014 "
+                "islem poly_predictor.py tarafindan acilir."
             )
-            _log_pipeline_decision(
-                now_utc=now_utc,
-                cur_et=cur_et,
-                trade_date_et=trade_date_et,
-                cur_clock=cur_clock,
-                coin=coin,
-                slug=slug_cur,
-                market_found=True,
-                pred=pred,
-                direction_up_down=direction,
-                gate_yuksek=False,
-                gate_trading=None,
-                outcome="skipped",
-                skip_reason_code="CONFIDENCE_NOT_HIGH",
-                skip_reason_detail=f"Güven: {pred.confidence} (yalnızca YÜKSEK ile emir)",
-            )
-            hourly_forecast_blocks.append(
-                _format_hourly_forecast_block(coin, cur_clock, pred, False)
-            )
-            continue
 
-        if not Config.POLYMARKET_BOT_ENABLED:
-            detail_lines.append(
-                f"   • {coin.upper()}: Bot kapalı (POLYMARKET_BOT_ENABLED) — emir gönderilmedi."
-            )
-            _log_pipeline_decision(
-                now_utc=now_utc,
-                cur_et=cur_et,
-                trade_date_et=trade_date_et,
-                cur_clock=cur_clock,
-                coin=coin,
-                slug=slug_cur,
-                market_found=True,
-                pred=pred,
-                direction_up_down=direction,
-                gate_yuksek=True,
-                gate_trading=False,
-                outcome="skipped",
-                skip_reason_code="BOT_DISABLED",
-                skip_reason_detail="POLYMARKET_BOT_ENABLED=false",
-            )
-            hourly_forecast_blocks.append(
-                _format_hourly_forecast_block(coin, cur_clock, pred, False)
-            )
-            continue
-
-        # İşlem penceresi dışı ET saati: CLOB yok; analiz için hourly_trades (trade_opened=0)
-        if not is_trading_hour_allowed(cur_et.hour):
-            allowed_s = ", ".join(f"{h:02d}:00" for h in sorted(TRADING_ALLOWED_HOURS_ET))
-            schedule_resp = json.dumps(
-                {
-                    "mode": "schedule",
-                    "reason": "ET hour outside TRADING_ALLOWED_HOURS_ET",
-                    "allowed_hours_et": sorted(TRADING_ALLOWED_HOURS_ET),
-                },
-                ensure_ascii=False,
-            )
-            detail_lines.append(
-                f"   • {coin.upper()}: İşlem penceresi dışı ({cur_et.hour:02d}:00 ET; izinli: {allowed_s}) "
-                f"— CLOB emri yok; tahmin hourly_trades’e yazıldı."
-            )
-            row_id = insert_trade(
-                coin=coin,
-                slug=slug_cur,
-                prediction=direction,
-                predicted_at=now_utc.isoformat(),
-                trade_date_et=trade_date_et,
-                et_clock_label=cur_clock,
-                order_id=None,
-                order_response=schedule_resp,
-                error=None,
-                trade_opened=False,
-            )
-            if row_id is not None:
-                _log_pipeline_decision(
-                    now_utc=now_utc,
-                    cur_et=cur_et,
-                    trade_date_et=trade_date_et,
-                    cur_clock=cur_clock,
-                    coin=coin,
-                    slug=slug_cur,
-                    market_found=True,
-                    pred=pred,
-                    direction_up_down=direction,
-                    gate_yuksek=True,
-                    gate_trading=bool(Config.POLYMARKET_TRADING_ENABLED),
-                    outcome="paper_trade_logged",
-                    skip_reason_code="OUTSIDE_TRADING_WINDOW",
-                    skip_reason_detail=(
-                        f"ET {cur_et.hour:02d}:00; yalnızca {allowed_s} ET saatlerinde CLOB açılır"
-                    ),
-                    order_id=None,
-                    order_response=schedule_resp,
-                )
-            else:
-                detail_lines.append(f"   • {coin.upper()}: DB kaydı atlanıldı (slug çakışması).")
-                _log_pipeline_decision(
-                    now_utc=now_utc,
-                    cur_et=cur_et,
-                    trade_date_et=trade_date_et,
-                    cur_clock=cur_clock,
-                    coin=coin,
-                    slug=slug_cur,
-                    market_found=True,
-                    pred=pred,
-                    direction_up_down=direction,
-                    gate_yuksek=True,
-                    gate_trading=bool(Config.POLYMARKET_TRADING_ENABLED),
-                    outcome="db_integrity_failed",
-                    skip_reason_code="DB_SLUG_COLLISION",
-                    skip_reason_detail="hourly_trades.slug UNIQUE ihlali",
-                    order_response=schedule_resp,
-                )
-            hourly_forecast_blocks.append(
-                _format_hourly_forecast_block(coin, cur_clock, pred, False)
-            )
-            continue
-
-        paper_resp = json.dumps(
-            {"mode": "paper", "reason": "POLYMARKET_TRADING_ENABLED=false"},
-            ensure_ascii=False,
+        _log_pipeline_decision(
+            now_utc=now_utc,
+            cur_et=cur_et,
+            trade_date_et=trade_date_et,
+            cur_clock=cur_clock,
+            coin=coin,
+            slug=slug_cur,
+            market_found=True,
+            pred=pred,
+            direction_up_down=direction,
+            gate_yuksek=None,
+            gate_trading=None,
+            outcome="pipeline_no_trade",
+            skip_reason_code=skip_code,
+            skip_reason_detail=detail_s,
         )
-        if not Config.POLYMARKET_TRADING_ENABLED:
-            detail_lines.append(
-                f"   • {coin.upper()}: Gerçek işlem kapalı — CLOB emri yok; tahmin hourly_trades’e yazıldı."
-            )
-            row_id = insert_trade(
-                coin=coin,
-                slug=slug_cur,
-                prediction=direction,
-                predicted_at=now_utc.isoformat(),
-                trade_date_et=trade_date_et,
-                et_clock_label=cur_clock,
-                order_id=None,
-                order_response=paper_resp,
-                error=None,
-                trade_opened=False,
-            )
-            if row_id is not None:
-                _log_pipeline_decision(
-                    now_utc=now_utc,
-                    cur_et=cur_et,
-                    trade_date_et=trade_date_et,
-                    cur_clock=cur_clock,
-                    coin=coin,
-                    slug=slug_cur,
-                    market_found=True,
-                    pred=pred,
-                    direction_up_down=direction,
-                    gate_yuksek=True,
-                    gate_trading=False,
-                    outcome="paper_trade_logged",
-                    skip_reason_code=None,
-                    skip_reason_detail=None,
-                    order_id=None,
-                    order_response=paper_resp,
-                )
-            else:
-                detail_lines.append(f"   • {coin.upper()}: DB kaydı atlanıldı (slug çakışması).")
-                _log_pipeline_decision(
-                    now_utc=now_utc,
-                    cur_et=cur_et,
-                    trade_date_et=trade_date_et,
-                    cur_clock=cur_clock,
-                    coin=coin,
-                    slug=slug_cur,
-                    market_found=True,
-                    pred=pred,
-                    direction_up_down=direction,
-                    gate_yuksek=True,
-                    gate_trading=False,
-                    outcome="db_integrity_failed",
-                    skip_reason_code="DB_SLUG_COLLISION",
-                    skip_reason_detail="hourly_trades.slug UNIQUE ihlali",
-                    order_response=paper_resp,
-                )
-            hourly_forecast_blocks.append(
-                _format_hourly_forecast_block(coin, cur_clock, pred, False)
-            )
-            continue
-
-        if not Config.POLYMARKET_PRIVATE_KEY.strip():
-            detail_lines.append(
-                f"   • {coin.upper()}: POLYMARKET_PRIVATE_KEY tanımlı değil — CLOB emri gönderilmedi."
-            )
-            _log_pipeline_decision(
-                now_utc=now_utc,
-                cur_et=cur_et,
-                trade_date_et=trade_date_et,
-                cur_clock=cur_clock,
-                coin=coin,
-                slug=slug_cur,
-                market_found=True,
-                pred=pred,
-                direction_up_down=direction,
-                gate_yuksek=True,
-                gate_trading=False,
-                outcome="skipped",
-                skip_reason_code="TRADING_DISABLED",
-                skip_reason_detail="POLYMARKET_PRIVATE_KEY eksik veya boş",
-            )
-            hourly_forecast_blocks.append(
-                _format_hourly_forecast_block(coin, cur_clock, pred, False)
-            )
-            continue
-
-        try:
-            resp = place_buy_for_up_down(
-                market,
-                up_or_down=direction,
-                notional_usdc=Config.POLYMARKET_ORDER_USDC,
-            )
-            resp_s = _safe_order_response_repr(resp)
-            if not isinstance(resp, dict):
-                logger.warning(
-                    "CLOB yanıt tipi dict değil (%s) coin=%s slug=%s",
-                    type(resp).__name__,
-                    coin,
-                    slug_cur,
-                )
-            if _order_success(resp):
-                oid = None
-                if isinstance(resp, dict):
-                    oid = str(resp.get("orderID") or resp.get("orderId") or "")
-                row_id = insert_trade(
-                    coin=coin,
-                    slug=slug_cur,
-                    prediction=direction,
-                    predicted_at=now_utc.isoformat(),
-                    trade_date_et=trade_date_et,
-                    et_clock_label=cur_clock,
-                    order_id=oid,
-                    order_response=resp_s,
-                    error=None,
-                )
-                if row_id is not None:
-                    trade_confirmed = True
-                    logger.info("Emir gönderildi %s %s %s", coin, slug_cur, direction)
-                    _log_pipeline_decision(
-                        now_utc=now_utc,
-                        cur_et=cur_et,
-                        trade_date_et=trade_date_et,
-                        cur_clock=cur_clock,
-                        coin=coin,
-                        slug=slug_cur,
-                        market_found=True,
-                        pred=pred,
-                        direction_up_down=direction,
-                        gate_yuksek=True,
-                        gate_trading=True,
-                        outcome="trade_opened",
-                        order_id=oid,
-                        order_response=resp_s,
-                    )
-                else:
-                    detail_lines.append(f"   • {coin.upper()}: DB kaydı atlanıldı (slug çakışması).")
-                    _log_pipeline_decision(
-                        now_utc=now_utc,
-                        cur_et=cur_et,
-                        trade_date_et=trade_date_et,
-                        cur_clock=cur_clock,
-                        coin=coin,
-                        slug=slug_cur,
-                        market_found=True,
-                        pred=pred,
-                        direction_up_down=direction,
-                        gate_yuksek=True,
-                        gate_trading=True,
-                        outcome="db_integrity_failed",
-                        skip_reason_code="DB_SLUG_COLLISION",
-                        skip_reason_detail="hourly_trades.slug UNIQUE ihlali",
-                        order_id=oid,
-                        order_response=resp_s,
-                    )
-            else:
-                logger.error(
-                    "Emir reddedildi coin=%s slug=%s yanıt=%s",
-                    coin,
-                    slug_cur,
-                    resp_s,
-                )
-                detail_lines.append(f"   • {coin.upper()}: Emir başarısız — {resp_s[:200]}")
-                _log_pipeline_decision(
-                    now_utc=now_utc,
-                    cur_et=cur_et,
-                    trade_date_et=trade_date_et,
-                    cur_clock=cur_clock,
-                    coin=coin,
-                    slug=slug_cur,
-                    market_found=True,
-                    pred=pred,
-                    direction_up_down=direction,
-                    gate_yuksek=True,
-                    gate_trading=True,
-                    outcome="order_rejected",
-                    skip_reason_code="ORDER_REJECTED",
-                    skip_reason_detail=resp_s[:800],
-                    order_response=resp_s,
-                )
-        except Exception as e:
-            logger.exception("CLOB emir hatası coin=%s slug=%s", coin, slug_cur)
-            detail_lines.append(f"   • {coin.upper()}: CLOB hatası: {e}")
-            _log_pipeline_decision(
-                now_utc=now_utc,
-                cur_et=cur_et,
-                trade_date_et=trade_date_et,
-                cur_clock=cur_clock,
-                coin=coin,
-                slug=slug_cur,
-                market_found=True,
-                pred=pred,
-                direction_up_down=direction,
-                gate_yuksek=True,
-                gate_trading=True,
-                outcome="clob_exception",
-                skip_reason_code="CLOB_EXCEPTION",
-                skip_reason_detail=str(e)[:800],
-                error_detail=str(e)[:2000],
-            )
 
         hourly_forecast_blocks.append(
-            _format_hourly_forecast_block(coin, cur_clock, pred, trade_confirmed)
+            _format_hourly_forecast_block(coin, cur_clock, pred, False)
         )
 
     msg_hourly = "Saatlik Tahminler\n\n" + "\n\n".join(hourly_forecast_blocks)
-    if not Config.POLYMARKET_BOT_ENABLED:
-        msg_hourly += "\n\nBot kapalı olduğu için işlem açılmadı."
-    elif not is_trading_hour_allowed(cur_et.hour):
-        msg_hourly += "\n\nBot kapalı olduğu için işlem açılmadı."
-    elif not Config.POLYMARKET_TRADING_ENABLED:
-        msg_hourly += (
-            "\n\nGerçek işlem kapalı (POLYMARKET_TRADING_ENABLED=false); "
-            "Polymarket'te emir gönderilmedi, tahminler veritabanına kaydedildi."
-        )
-
     send_telegram(msg_hourly)
 
     if detail_lines:
-        logger.info("Tahmin özeti:\n%s", "\n".join(detail_lines))
+        logger.info("Tahmin ozeti:\n%s", "\n".join(detail_lines))
 
-    logger.info("Açılış döngüsü tamamlandı — slot %s ET", cur_clock)
+    logger.info("Acilis dongusu tamamlandi — slot %s ET", cur_clock)

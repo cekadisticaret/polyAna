@@ -590,6 +590,35 @@ async def send_prediction(pred: Prediction):
     return bet_result
 
 
+async def _fetch_poly_portfolio() -> str:
+    """Gerçek Polymarket bakiyesini çeker; hata/veri yoksa boş string döner."""
+    try:
+        import sys as _sys
+        _pm = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polymarket-main")
+        if _pm not in _sys.path:
+            _sys.path.insert(0, _pm)
+        from src.trading.portfolio_snapshot import portfolio_snapshot_values
+        loop = asyncio.get_event_loop()
+        snap = await loop.run_in_executor(None, portfolio_snapshot_values)
+        col   = snap.get("collateral_usdc")
+        pos   = snap.get("positions_mark_usdc")
+        npos  = snap.get("open_positions_count") or 0
+        total = snap.get("portfolio_total_usdc")
+        if col is None and pos is None:
+            return ""
+        lines = ["─────────────────────", "💎 <b>Polymarket Bakiye</b>"]
+        if col is not None:
+            lines.append(f"💵 Kullanılabilir: <b>${col:.2f} USDC</b>")
+        if pos is not None:
+            lines.append(f"📊 Açık pozisyonlar: <b>${pos:.2f}</b> ({npos} adet)")
+        if total is not None:
+            lines.append(f"💰 Toplam: <b>${total:.2f} USDC</b>")
+        return "\n".join(lines) + "\n"
+    except Exception as e:
+        print(f"[BAKIYE HATA] {e}")
+        return ""
+
+
 async def send_unified_prediction(preds: list, past_results: list, paper_results: dict = None):
     """BTC + ETH tahminlerini tek mesajda gönderir."""
     if not preds:
@@ -630,41 +659,19 @@ async def send_unified_prediction(preds: list, past_results: list, paper_results
     for pred in preds:
         coin_blocks.append(_build_coin_block(pred))
 
-    # ── Sanal cüzdan bloğu ──
-    paper_data  = _load_paper()
-    balance     = paper_data["balance"]
-    paper_lines = []
-    if paper_results:
-        for pred in preds:
-            sym    = pred.symbol.replace("USDT", "")
-            s_ic   = "◎" if sym == "SOL" else "Ξ"
-            result = paper_results.get(pred.symbol)
-            if result and result.get("placed"):
-                odds   = result["odds"]
-                payout = result["payout"]
-                paper_lines.append(
-                    f"✅ {s_ic} {sym} → ${PAPER_BET_SIZE:.0f} girildi  "
-                    f"(odds: {odds:.2f}  →  kazanırsak: ${payout:.2f})"
-                )
-            else:
-                reason = (result.get("reason") if result else None) or "market yok"
-                paper_lines.append(f"⏭️ {s_ic} {sym} → girilmedi ({reason})")
-
-    paper_block = (
-        f"─────────────────────\n"
-        f"💼 <b>Sanal Cüzdan: ${balance:.2f}</b>\n"
-        + "\n".join(paper_lines) + "\n"
-    ) if paper_lines else ""
+    poly_block = await _fetch_poly_portfolio()
 
     msg = (
-        f"🎯 <b>POLYX2 - aiproject3 - 54</b>\n"
+        f"🎯 <b>POLYX2 - aiproject3</b>\n"
         f"⏰ Hedef: <b>{target_time}</b>\n"
         f"{prev_block}"
         f"─────────────────────\n"
         + "\n─────────────────────\n".join(coin_blocks)
-        + f"\n{paper_block}"
+        + "\n"
+        + (poly_block if poly_block else "")
+        + f"─────────────────────\n"
         f"─────────────────────\n"
-        f"⚠️ <i>Bu tahmin yatırım tavsiyesi değildir.</i>"
+        f"─────────────────────"
     )
 
     await send_telegram(msg)
@@ -949,100 +956,107 @@ async def check_past_predictions():
 # ─────────────────────────────────────────────────────────────
 
 async def send_daily_report():
-    """Son 24 saatin tahminlerini değerlendirir, Telegram'a gönderir."""
+    """Son 24 saatin tahminlerini saat-saat kaydeder, Telegram'a gönderir."""
     cutoff = time.time() - 86400
-    preds  = [p for p in _load_predictions()
-              if p.get("checked") and p.get("target_ts", 0) >= cutoff]
+    all_preds = _load_predictions()
+    # Checked ve unchecked — hepsini dahil et (bazıları henüz kapanmamış olabilir)
+    recent = [p for p in all_preds if p.get("target_ts", 0) >= cutoff and p.get("symbol") in SYMBOLS]
 
-    if not preds:
-        await send_telegram("📊 <b>Günlük Tahmin Raporu</b>\nSon 24 saatte değerlendirilen tahmin yok.")
+    now_utc = datetime.now(timezone.utc)
+    now_ist_h = (now_utc.hour + 3) % 24
+    date_str  = now_utc.strftime("%d.%m.%Y")
+
+    if not recent:
+        await send_telegram(
+            f"📊 <b>POLYX2 — Günlük Rapor</b>\n"
+            f"🗓 {date_str}  |  16:00 İST\n\n"
+            "Son 24 saatte tahmin yok."
+        )
         return
 
     from collections import defaultdict
-    by_sym: dict = defaultdict(list)
-    for p in preds:
-        by_sym[p["symbol"]].append(p)
+    by_sym = defaultdict(dict)  # sym -> {ist_hour: pred}
+    for p in recent:
+        # target_ts = tahmin edilen SAAT (bir sonraki tam saat)
+        # tahmin yapıldığı saat = target_ts - 3600
+        pred_ist_h = int((p["target_ts"] - 3600 + 3 * 3600) % 86400 // 3600)
+        key = (p["symbol"], pred_ist_h)
+        # Aynı saat için son tahmin geçerli
+        if key not in by_sym or p.get("target_ts", 0) > by_sym[key].get("target_ts", 0):
+            by_sym[key] = p
 
-    now_ist = datetime.now(timezone.utc)
-    ist_str = f"{(now_ist.hour+3)%24:02d}:{now_ist.strftime('%M')} İST"
+    # Saatleri sırala
+    all_hours = sorted({h for (_, h) in by_sym.keys()})
 
+    # ── Özet (per coin) ──
     lines = [
-        f"📊 <b>POLYX2 — Günlük Tahmin Raporu</b>",
-        f"🗓 {now_ist.strftime('%d.%m.%Y')}  |  Son 24 saat",
+        f"📊 <b>POLYX2 — Günlük Rapor</b>",
+        f"🗓 {date_str}  |  16:00 İST",
         f"━━━━━━━━━━━━━━━━━━━━",
     ]
 
     total_ok = total_all = 0
     for sym in ["SOLUSDT", "ETHUSDT"]:
-        items = by_sym.get(sym)
+        items = [v for (s, h), v in by_sym.items() if s == sym]
         if not items:
             continue
-        ok   = sum(1 for i in items if i.get("correct"))
-        fail = len(items) - ok
-        n    = len(items)
+        checked = [i for i in items if i.get("checked")]
+        ok   = sum(1 for i in checked if i.get("correct"))
+        fail = len(checked) - ok
+        n    = len(checked)
         total_ok  += ok
         total_all += n
         rate  = ok / n * 100 if n else 0
         icon  = "◎" if "SOL" in sym else "Ξ"
         medal = "🥇" if rate >= 70 else "✅" if rate >= 50 else "⚠️"
         name  = sym.replace("USDT", "")
-
-        dirs_ok   = {}
-        dirs_fail = {}
-        for d in ("YUKARI", "AŞAĞI"):
-            d_items = [i for i in items if i["direction"] == d]
-            dirs_ok[d]   = sum(1 for i in d_items if i.get("correct"))
-            dirs_fail[d] = len(d_items) - dirs_ok[d]
-
+        dirs_ok = {"YUKARI": 0, "ASAGI": 0}
+        dirs_fail = {"YUKARI": 0, "ASAGI": 0}
+        for i in checked:
+            d = "YUKARI" if i.get("direction") == "YUKARI" else "ASAGI"
+            if i.get("correct"):
+                dirs_ok[d] += 1
+            else:
+                dirs_fail[d] += 1
         lines.append(
-            f"{icon} <b>{name}</b>  {medal}\n"
-            f"   ✅ {ok} başarılı  ❌ {fail} başarısız  — %{rate:.0f}\n"
+            f"{icon} <b>{name}</b>  {medal}  {ok}/{n} (%{rate:.0f})\n"
             f"   📈 Yukarı: {dirs_ok['YUKARI']}✅ {dirs_fail['YUKARI']}❌  "
-            f"│  📉 Aşağı: {dirs_ok['AŞAĞI']}✅ {dirs_fail['AŞAĞI']}❌"
+            f"│  📉 Aşağı: {dirs_ok['ASAGI']}✅ {dirs_fail['ASAGI']}❌"
         )
 
     overall = total_ok / total_all * 100 if total_all else 0
-    medal_g  = "🥇" if overall >= 70 else "✅" if overall >= 50 else "⚠️"
+    medal_g = "🥇" if overall >= 70 else "✅" if overall >= 50 else "⚠️"
     lines += [
         f"━━━━━━━━━━━━━━━━━━━━",
-        f"{medal_g} <b>Genel: {total_ok} başarılı  {total_all-total_ok} başarısız  (%{overall:.0f})</b>",
+        f"{medal_g} <b>Genel: {total_ok}/{total_all} (%{overall:.0f})</b>",
     ]
 
-    # ── Sanal cüzdan günlük özeti ──
-    paper_data  = _load_paper()
-    cutoff_ts   = time.time() - 86400
-    day_bets    = [b for b in paper_data["bets"] if b.get("sent_ts", 0) >= cutoff_ts]
-    settled_day = [b for b in day_bets if b["settled"]]
-    won_day     = [b for b in settled_day if b["won"]]
-    open_day    = [b for b in day_bets if not b["settled"]]
-    total_pnl   = round(sum(b["pnl"] for b in settled_day), 2)
-    bal         = paper_data["balance"]
-
+    # ── Saat Saat Tablo ──
     lines.append(f"━━━━━━━━━━━━━━━━━━━━")
-    lines.append(f"💼 <b>Sanal Cüzdan — Günlük Özet</b>")
-    lines.append(f"Bakiye   : <b>${bal:.2f}</b>  (başlangıç: $300)")
-    lines.append(f"Bahisler : <b>{len(won_day)}/{len(settled_day)}</b> kazandı  |  PnL: <b>${total_pnl:+.2f}</b>")
+    lines.append(f"📋 <b>Saat Saat Detay (Son 24h)</b>")
+    lines.append(f"<code>IST  │ SOL           │ ETH</code>")
+    lines.append(f"<code>─────┼───────────────┼───────────────</code>")
 
-    if day_bets:
-        lines.append(f"Girilen saatler:")
-        for b in day_bets:
-            sym    = b["symbol"].replace("USDT", "")
-            s_ic   = "◎" if sym == "SOL" else "Ξ"
-            # Saat IST (UTC+3)
-            h_ist  = int((b["target_ts"] + 3*3600) % 86400 // 3600)
-            if b["settled"]:
-                icon = "✅" if b["won"] else "❌"
-                pnl  = f"${b['pnl']:+.2f}"
-            else:
-                icon = "🔄"
-                pnl  = f"${b['payout_win']:.2f} bekleniyor"
-            lines.append(
-                f"  {icon} {s_ic}{sym} {h_ist:02d}:00 İST  "
-                f"${b['bet_amount']:.0f} → {pnl}"
-            )
+    for h in all_hours:
+        sol_p = by_sym.get(("SOLUSDT", h))
+        eth_p = by_sym.get(("ETHUSDT", h))
 
-    if open_day:
-        lines.append(f"Açık: {len(open_day)} bahis")
+        def fmt(p):
+            if not p:
+                return "—             "
+            dir_short = "UP " if p.get("direction") == "YUKARI" else "DWN"
+            if not p.get("checked"):
+                return f"? {dir_short}          "
+            ok = p.get("correct", False)
+            icon2 = "✅" if ok else "❌"
+            return f"{icon2} {dir_short}          "
+
+        lines.append(f"<code>{h:02d}:00│ {fmt(sol_p)[:13]} │ {fmt(eth_p)[:13]}</code>")
+
+    # ── Polymarket Bakiye ──
+    poly_block = await _fetch_poly_portfolio()
+    if poly_block:
+        lines.append(poly_block.rstrip())
 
     await send_telegram("\n".join(lines))
     print(f"[RAPOR] Gönderildi — {total_ok}/{total_all} doğru ({overall:.0f}%)")
@@ -1144,12 +1158,16 @@ async def find_market(coin: str, direction: str, price: float) -> Optional[dict]
             continue
 
         result = {
-            "token_id":  token_id,
-            "question":  m.get("question", event.get("title", "")),
-            "bet_side":  bet_side,
-            "bet_price": round(bet_price, 3),
-            "volume":    volume,
-            "market_id": condition_id,
+            "token_id":     token_id,
+            "up_token_id":  up_tok["token_id"],
+            "down_token_id":down_tok["token_id"],
+            "question":     m.get("question", event.get("title", "")),
+            "bet_side":     bet_side,
+            "bet_price":    round(bet_price, 3),
+            "volume":       volume,
+            "market_id":    condition_id,
+            "min_size":     float(m.get("orderMinSize") or 5),
+            "slug":         slug,
         }
         print(f"[POLY] Market bulundu: {result['question'][:60]} | "
               f"Up:%{up_price*100:.0f} Down:%{down_price*100:.0f} | hacim:${volume:,.0f}")
@@ -1161,19 +1179,13 @@ async def find_market(coin: str, direction: str, price: float) -> Optional[dict]
 
 async def place_bet(pred: Prediction) -> Optional[dict]:
     """
-    Tahmine göre Polymarket'e bahis girer.
-    POLY_DRY_RUN=true iken gerçek işlem yapmaz, sadece loglar.
-    Sadece YÜKSEK güven tahminlerinde çalışır.
+    YÜKSEK güven tahminlerinde Polymarket CLOB'a FAK emir gönderir.
+    clob_orders.py (FAK + retry) kullanır; polymarket-main/.env kimlik bilgileri geçerli.
+    Sonuç hourly_trades DB'ye kaydedilir.
     """
     if pred.confidence != "YÜKSEK" or pred.direction == "NÖTR":
         return None
 
-    # Credential kontrol
-    if not all([POLY_PRIVATE_KEY, POLY_FUNDER, POLY_API_KEY, POLY_API_SECRET, POLY_API_PASS]):
-        print("[POLY] .env'de credentials eksik — bahis atlanıyor")
-        return {"status": "no_credentials"}
-
-    # Market bul
     market = await find_market(pred.symbol, pred.direction, pred.current_price)
     if not market:
         print(f"[POLY] {pred.symbol} için uygun market bulunamadı")
@@ -1191,46 +1203,66 @@ async def place_bet(pred: Prediction) -> Optional[dict]:
             "size":      BET_SIZE_USDC,
         }
 
-    # Gerçek bahis
+    direction_en = "UP" if pred.direction == "YUKARI" else "DOWN"
     try:
-        from py_clob_client.client import ClobClient
-        from py_clob_client.clob_types import ApiCreds, OrderArgs, OrderType
-        from py_clob_client.order_builder.constants import BUY, SELL
+        import sys as _sys
+        _pm_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polymarket-main")
+        if _pm_path not in _sys.path:
+            _sys.path.insert(0, _pm_path)
+        from src.trading.clob_orders import place_buy_for_up_down
+        from src.data.hourly_trades import init_hourly_table, insert_trade
 
-        creds  = ApiCreds(
-            api_key        = POLY_API_KEY,
-            api_secret     = POLY_API_SECRET,
-            api_passphrase = POLY_API_PASS,
-        )
-        client = ClobClient(
-            host           = CLOB_HOST,
-            chain_id       = 137,
-            key            = POLY_PRIVATE_KEY,
-            creds          = creds,
-            signature_type = 0,
-        )
-        order_args = OrderArgs(
-            token_id = market["token_id"],
-            price    = market["bet_price"],
-            size     = BET_SIZE_USDC,
-            side     = BUY,
-        )
-        signed   = client.create_order(order_args)
-        response = client.post_order(signed, OrderType.GTC)
-
-        print(f"[POLY] Bahis girildi: {response.get('orderID','?')} | "
-              f"{market['bet_side'].upper()} ${BET_SIZE_USDC}")
-        return {
-            "status":   "placed",
-            "order_id": response.get("orderID", "?"),
-            "question": market["question"],
-            "bet_side": market["bet_side"],
-            "bet_price":market["bet_price"],
-            "size":     BET_SIZE_USDC,
+        market_dict = {
+            "slug":         market["slug"],
+            "clobTokenIds": json.dumps([market["up_token_id"], market["down_token_id"]]),
+            "orderMinSize": market["min_size"],
         }
+
+        loop = asyncio.get_event_loop()
+        resp = await loop.run_in_executor(
+            None,
+            lambda: place_buy_for_up_down(
+                market_dict, up_or_down=direction_en, notional_usdc=BET_SIZE_USDC
+            ),
+        )
+        resp_s = json.dumps(resp, ensure_ascii=False)[:2000] if isinstance(resp, dict) else repr(resp)[:2000]
+        oid = str(resp.get("orderID") or resp.get("orderId") or "") if isinstance(resp, dict) else ""
+        print(f"[POLY] Emir gönderildi: {pred.symbol} → {direction_en} | oid={oid or '?'}")
+
+        # DB kaydı
+        try:
+            from zoneinfo import ZoneInfo
+            from datetime import timedelta
+            _ET = ZoneInfo("America/New_York")
+            _TR = ZoneInfo("Europe/Istanbul")
+            now_utc = datetime.now(timezone.utc)
+            cur_et  = now_utc.astimezone(_ET).replace(minute=0, second=0, microsecond=0)
+            tr_now  = now_utc.astimezone(_TR)
+            td = tr_now.date()
+            if tr_now.hour < 16:
+                td = td - timedelta(days=1)
+            coin = "solana" if "SOL" in pred.symbol else "ethereum"
+            init_hourly_table()
+            insert_trade(
+                coin=coin,
+                slug=market["slug"],
+                prediction=direction_en,
+                predicted_at=now_utc.isoformat(),
+                trade_date_et=td.isoformat(),
+                et_clock_label=f"{cur_et.hour:02d}:00 ET",
+                order_id=oid or None,
+                order_response=resp_s,
+                error=None,
+            )
+            print(f"[POLY DB] Kayıt eklendi: {coin} {direction_en}")
+        except Exception as db_e:
+            print(f"[POLY DB] Kayıt hatası: {db_e}")
+
+        return resp
 
     except Exception as e:
         print(f"[POLY] Bahis hatası: {e}")
+        import traceback; traceback.print_exc()
         return {"status": "error", "error": str(e)}
 
 
@@ -1467,11 +1499,12 @@ async def _do_prediction(label: str = ""):
 
 
 async def prediction_loop():
-    """Her saat :04'ünde tahmin üret — saat başından 56 dk önce gönderilir."""
+    """Her saat :12'de tahmin üret (İST: XX:15 civarı)."""
     print("[TAHMİN] Bekleniyor — ilk veri dolsun (2 dk)...")
     await asyncio.sleep(120)
 
     _daily_report_sent_date = None   # aynı gün iki kez gönderme
+    PM = 12  # her saat kaçıncı dakikada tetiklensin
 
     while True:
         now     = datetime.now(timezone.utc)
@@ -1479,8 +1512,8 @@ async def prediction_loop():
         ist_m   = now.minute
         today   = now.strftime("%Y-%m-%d")
 
-        # Gece 00:00 İST (21:00 UTC) → günlük rapor
-        if ist_h == 0 and ist_m < 5 and _daily_report_sent_date != today:
+        # Her gün 16:00 İST (13:00 UTC) → günlük rapor
+        if ist_h == 16 and ist_m < 15 and _daily_report_sent_date != today:
             try:
                 await send_daily_report()
                 _daily_report_sent_date = today
@@ -1490,15 +1523,15 @@ async def prediction_loop():
 
         mins = now.minute
 
-        # Saat başından 4 dk geçmişse → sonraki :04'e kadar bekle
-        if mins < 4:
-            wait = (4 - mins) * 60 - now.second
+        if mins < PM:
+            wait = (PM - mins) * 60 - now.second
         else:
-            wait = (60 - mins + 4) * 60 - now.second
+            wait = (60 - mins + PM) * 60 - now.second
 
         wait = max(30, wait)
-        target_h = (now.hour + (1 if mins >= 4 else 0)) % 24
-        print(f"[TAHMİN] Sonraki gönderim: {target_h:02d}:04 ({wait//60} dk sonra)")
+        target_h = (now.hour + (1 if mins >= PM else 0)) % 24
+        target_ist_h = (target_h + 3) % 24
+        print(f"[TAHMİN] Sonraki gönderim: {target_h:02d}:{PM:02d} UTC = {target_ist_h:02d}:{PM:02d} IST ({wait//60} dk {wait%60} sn sonra)")
         await asyncio.sleep(wait)
 
         try:
@@ -1523,7 +1556,7 @@ async def display_loop():
             print("╔══════════════════════════════════════════════════╗")
             print(f"║  POLYMARKET TAHMİN MOTORU  │  {now}  ║")
             print("╠══════════════════════════════════════════════════╣")
-            print(f"║  Sonraki tahmin: {next_h:02d}:04  ║")
+            print(f"║  Sonraki tahmin: {next_h:02d}:12  ║")
             print("╠══════════════════════════════════════════════════╣")
 
             for sym in SYMBOLS:
