@@ -72,6 +72,14 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 
 **Cron:** `3 * * * *` → `poly_predictor.py --now` (`/tmp/poly_predictor.log`) | `0 21 * * *` → günlük rapor (`/tmp/poly_daily_report.log`)
 
+### Kripto — Polymarket Analyzer (`polymarket-main/`)
+| Dosya | Açıklama |
+|---|---|
+| `polymarket-main/src/main.py` | `open` / `resolve` modları; ETH+SOL saatlik tahmin, SQLite `hourly_trades`, istenirse CLOB emri, Telegram. |
+| `polymarket-main/.env` | `TELEGRAM_BOT_TOKEN`, Polymarket anahtarları (gitignore). |
+
+**Cron:** `0 * * * *` → `python3 -m src.main open` | `5 * * * *` → `python3 -m src.main resolve` — log: `polymarket-main/data/cron.log` (çalışma dizini: `polymarket-main/`, `PYTHONPATH` proje kökü).
+
 ---
 
 ### BIST — Tarayıcı & Görsel
