@@ -80,6 +80,8 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 
 **Cron:** `0 * * * *` → `python3 -m src.main open` | `5 * * * *` → `python3 -m src.main resolve` — log: `polymarket-main/data/cron.log` (çalışma dizini: `polymarket-main/`, `PYTHONPATH` proje kökü).
 
+**CLOB saat penceresi:** `hour_schedule.py` içinde `TRADING_HOUR_RESTRICTION_ENABLED=false` — her ET saatinde emir denenebilir; `true` yapılınca yalnızca `{0,1,7,8,11}` ET.
+
 ---
 
 ### BIST — Tarayıcı & Görsel

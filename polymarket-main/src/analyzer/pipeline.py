@@ -4,7 +4,7 @@ Saatlik ETH/SOL tahmin + Polymarket CLOB gerçek işlem (POLYMARKET_BOT_ENABLED 
 POLYMARKET_TRADING_ENABLED=false veya izin verilmeyen ET saatinde CLOB emri gönderilmez; YÜKSEK güven
 ve bot açıkken tahmin yine hourly_trades + pipeline_cycle_log'a yazılır (trade_opened=0), resolve ile success güncellenir.
 
-Gerçek emir yalnızca ET saatleri 00, 01, 07, 08, 11 için (src.hour_schedule.TRADING_ALLOWED_HOURS_ET).
+Gerçek emir: `hour_schedule.TRADING_HOUR_RESTRICTION_ENABLED` açıksa yalnızca belirli ET saatleri; kapalıysa her saat (diğer koşullar uygunsa).
 
 Cron (iki satır):
   - X:00 — python -m src.main open  → tahmin + (bot açıksa emir) + «Saatlik Tahminler» Telegram
@@ -25,7 +25,11 @@ from zoneinfo import ZoneInfo
 from src.analyzer.poly_bridge import run_poly_hourly_predictions
 from src.analyzer.poly_predictor import Prediction
 from src.config import Config
-from src.hour_schedule import TRADING_ALLOWED_HOURS_ET, is_trading_hour_allowed
+from src.hour_schedule import (
+    TRADING_ALLOWED_HOURS_ET,
+    TRADING_HOUR_RESTRICTION_ENABLED,
+    is_trading_hour_allowed,
+)
 from src.data.hourly_trades import (
     daily_stats_for_day,
     fetch_by_slug,
