@@ -1235,8 +1235,19 @@ async def fetch_recent_trades_rest(symbol: str):
         print(f"[REST TRADES] {e}")
 
 
+def _in_quiet_hours() -> bool:
+    """Türkiye saatiyle (UTC+3) 23:00–07:00 arası → sessiz saat."""
+    ist_hour = (datetime.now(timezone.utc).hour + 3) % 24
+    return ist_hour >= 23 or ist_hour < 7
+
+
 async def _do_prediction(label: str = ""):
     """Kline + funding + REST snapshot çek, tahmin üret, Telegram'a gönder."""
+
+    if _in_quiet_hours():
+        ist_hour = (datetime.now(timezone.utc).hour + 3) % 24
+        print(f"[TAHMİN] Sessiz saatler ({ist_hour:02d}:xx İST) — 23:00–07:00 arası atlandı.")
+        return
 
     await check_past_predictions()
     _compute_signal_accuracy()  # [W1] her tahmin öncesi accuracy güncelle
