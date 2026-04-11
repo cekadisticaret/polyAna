@@ -1244,10 +1244,10 @@ def _in_quiet_hours() -> bool:
 async def _do_prediction(label: str = ""):
     """Kline + funding + REST snapshot çek, tahmin üret, Telegram'a gönder."""
 
-    if _in_quiet_hours():
+    quiet = _in_quiet_hours()
+    if quiet:
         ist_hour = (datetime.now(timezone.utc).hour + 3) % 24
-        print(f"[TAHMİN] Sessiz saatler ({ist_hour:02d}:xx İST) — 23:00–07:00 arası atlandı.")
-        return
+        print(f"[TAHMİN] Sessiz saatler ({ist_hour:02d}:xx İST) — tahmin gönderilecek, işlem açılmayacak.")
 
     await check_past_predictions()
     _compute_signal_accuracy()  # [W1] her tahmin öncesi accuracy güncelle
@@ -1278,7 +1278,7 @@ async def _do_prediction(label: str = ""):
 
     bet_results: dict[str, Optional[dict]] = {}
     for pred in preds:
-        if pred.confidence == "YÜKSEK" and pred.direction != "NÖTR":
+        if not quiet and pred.confidence == "YÜKSEK" and pred.direction != "NÖTR":
             bet_results[pred.symbol] = await place_bet(pred)
         else:
             bet_results[pred.symbol] = None
