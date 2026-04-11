@@ -1050,18 +1050,26 @@ async def place_bet(pred: "Prediction") -> Optional[dict]:
 
     loop = asyncio.get_event_loop()
     try:
-        resp = await loop.run_in_executor(
+        result = await loop.run_in_executor(
             None,
             lambda: place_buy_for_up_down(market, up_or_down=up_down, notional_usdc=notional),
         )
-        payout = round(notional / odds, 2) if odds and odds > 0.01 else None
-        oid = resp.get("orderID") or resp.get("orderId") or resp.get("id") if isinstance(resp, dict) else "?"
-        print(f"[BET] ✅ {coin} {up_down} ${notional:.2f} @ {odds} → orderID:{oid}")
+        exec_price = result.get("execution_price") if isinstance(result, dict) else None
+        shares     = result.get("shares")          if isinstance(result, dict) else None
+        order_resp = result.get("order", result)   if isinstance(result, dict) else result
+
+        # Gerçek çalıştırma fiyatını kullan; yoksa Gamma outcomePrices fallback
+        actual_price = exec_price or odds
+        payout = round(shares, 2) if shares else (round(notional / actual_price, 2) if actual_price and actual_price > 0.01 else None)
+        display_odds = round(exec_price, 4) if exec_price else odds
+
+        oid = order_resp.get("orderID") or order_resp.get("orderId") or order_resp.get("id") if isinstance(order_resp, dict) else "?"
+        print(f"[BET] ✅ {coin} {up_down} ${notional:.2f} @ {display_odds} ({shares} hisse) → orderID:{oid}")
         return {
             "amount":         notional,
-            "odds":           odds,
+            "odds":           display_odds,
             "payout":         payout,
-            "order_response": resp,
+            "order_response": order_resp,
         }
     except Exception as e:
         print(f"[BET HATA] {coin} {up_down}: {e}")

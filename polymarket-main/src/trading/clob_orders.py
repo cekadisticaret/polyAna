@@ -277,9 +277,14 @@ def place_buy_for_up_down(
                     size,
                     usdc_target,
                 )
-            return place_buy_fak(
+            order = place_buy_fak(
                 client, token_id, size, limit_price, min_shares=min_shares
             )
+            return {
+                "order":           order,
+                "execution_price": limit_price,
+                "shares":          size,
+            }
         except Exception as e:
             if (
                 _is_fak_no_match_error(e)
