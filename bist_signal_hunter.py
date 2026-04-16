@@ -18,7 +18,9 @@ BIST Güçlü AL + Boğa Onayı Tarayıcı
 Çalışma: Pazartesi–Cuma, 10:00–18:00 İST
 """
 
+import json
 import os
+import time
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -68,6 +70,12 @@ ADX_MIN_BULL    = 20       # bull onay için ADX eşiği
 SL_PCT  = 5.0
 TP1_PCT = 10.0
 TP2_PCT = 15.0
+
+# Son 2 gün içinde aynı hisse + aynı zaman dilimi için kaçıncı bildirim (Telegram başlığında N.kez)
+HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bist_signal_hunter_history.json")
+NOTIFY_WINDOW_SEC = 2 * 24 * 3600
+# ACIL: son 2 günde 15m en az bu kadar + aynı pencerede en az 1 adet 1h bildirimi (geçmiş veya bu tur)
+MIN_15M_COUNT_ACIL = 3
 
 # ========== TELEGRAM ==========
 
@@ -215,16 +223,90 @@ def scan_ticker(ticker: str) -> list[dict]:
             signals.append(r)
     return signals
 
+# ========== BİLDİRİM SAYACI (2 gün penceresi) ==========
+
+def _history_key(ticker: str, interval: str) -> str:
+    return f"{ticker}|{interval}"
+
+
+def _load_history() -> dict:
+    if not os.path.isfile(HISTORY_FILE):
+        return {}
+    try:
+        with open(HISTORY_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_history(history: dict) -> None:
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(history, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def _prune_history(history: dict) -> None:
+    cutoff = time.time() - NOTIFY_WINDOW_SEC
+    for k in list(history.keys()):
+        lst = [ts for ts in history[k] if ts >= cutoff]
+        if lst:
+            history[k] = lst
+        else:
+            del history[k]
+
+
+def next_occurrence_number(history: dict, ticker: str, interval: str) -> int:
+    """Bu gönderim, pencere içinde bu (hisse, TF) için kaçıncı bildirim olacak (1 tabanlı)."""
+    key = _history_key(ticker, interval)
+    return len(history.get(key, [])) + 1
+
+
+def record_notification_sent(history: dict, ticker: str, interval: str) -> None:
+    key = _history_key(ticker, interval)
+    history.setdefault(key, []).append(time.time())
+
+
+def has_1h_support(ticker: str, history: dict, batch: list[dict]) -> bool:
+    """Son 2 günde bu hisse için 1h bildirimi var mı veya bu turda 1h sinyali var mı?"""
+    if len(history.get(_history_key(ticker, "1h"), [])) >= 1:
+        return True
+    return any(x.get("ticker") == ticker and x.get("interval") == "1h" for x in batch)
+
+
+def style_15m_alert(history: dict, ticker: str, n_15m: int, batch: list[dict]) -> str:
+    """15m satırı: çoklu tekrar + 1h onayı → ACIL; aksi ODAKLAN BUNA formatı."""
+    if n_15m >= MIN_15M_COUNT_ACIL and has_1h_support(ticker, history, batch):
+        return "acil"
+    return "odaklan"
+
+
 # ========== BİLDİRİM ==========
 
-def build_message(r: dict) -> str:
+def build_message(r: dict, repeat_n: int = 1, style_15m: str | None = None) -> str:
     sl_pct  = round(abs(r["price"] - r["sl"])  / r["price"] * 100, 2)
     tp1_pct = round(abs(r["tp1"]  - r["price"]) / r["price"] * 100, 2)
     tp2_pct = round(abs(r["tp2"]  - r["price"]) / r["price"] * 100, 2)
-    tf_lbl  = "15 Dakika" if r["interval"] == "15m" else "1 Saat"
     vol_lbl = "✅ Spike" if r["vol_spike"] else "➖ Normal"
+
+    if r["interval"] == "15m":
+        st = style_15m or "odaklan"
+        if st == "acil":
+            header = (
+                f"🟢 <b>GÜÇLÜ AL — {r['ticker']} [15 Dakika - {repeat_n}.kez] - [1 Saat] - ACIL</b>\n"
+            )
+        else:
+            b15 = f"[15 Dakika - {repeat_n}.kez]" if repeat_n >= 2 else "[15 Dakika]"
+            header = (
+                f"🟢 <b>GÜÇLÜ AL — {r['ticker']} {b15} - [1 Saat] - ODAKLAN BUNA</b>\n"
+            )
+    else:
+        repeat_part = f" ({repeat_n}.kez)" if repeat_n >= 2 else ""
+        header = f"🟢 <b>GÜÇLÜ AL — {r['ticker']}{repeat_part}</b>  [1 Saat]\n"
+
     return (
-        f"🟢 <b>GÜÇLÜ AL — {r['ticker']}</b>  [{tf_lbl}]\n"
+        header +
         f"━━━━━━━━━━━━━━\n"
         f"💵 Fiyat   : <b>{r['price']} ₺</b>\n"
         f"🛑 SL      : {r['sl']} ₺  (-%{sl_pct})\n"
@@ -265,12 +347,24 @@ def run():
         print("   ℹ️  Bu turda sinyal bulunamadı.")
         return
 
+    history = _load_history()
+    _prune_history(history)
+
     # Her sinyal için Telegram bildirimi
     print(f"   ✅ {len(all_signals)} sinyal bulundu:")
     for r in sorted(all_signals, key=lambda x: (x["ticker"], x["interval"])):
         tf_lbl = "15m" if r["interval"] == "15m" else " 1h"
-        print(f"      [{tf_lbl}] {r['ticker']:8s} | {r['price']:>8} ₺ | RSI:{r['rsi']:>5} | ADX:{r['adx']:>5}")
-        tg_send(build_message(r))
+        n = next_occurrence_number(history, r["ticker"], r["interval"])
+        st15 = None
+        extra = ""
+        if r["interval"] == "15m":
+            st15 = style_15m_alert(history, r["ticker"], n, all_signals)
+            extra = " | ACIL" if st15 == "acil" else " | ODAKLAN"
+        print(f"      [{tf_lbl}] {r['ticker']:8s} | {r['price']:>8} ₺ | RSI:{r['rsi']:>5} | ADX:{r['adx']:>5}"
+              f" | {n}. bildirim (son 2 gün){extra}")
+        tg_send(build_message(r, repeat_n=n, style_15m=st15))
+        record_notification_sent(history, r["ticker"], r["interval"])
+        _save_history(history)
 
 
 if __name__ == "__main__":

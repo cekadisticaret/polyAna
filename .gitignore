@@ -14,6 +14,7 @@ bist_scalping_config.py
 paper_report.json
 binance_state.json
 bist_scalping_state.json
+bist_signal_hunter_history.json
 scalp_trades.json
 scalp_reports/
 *.log

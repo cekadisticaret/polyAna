@@ -547,7 +547,15 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
     if total_w == 0:
         return None
 
-    direction = "YUKARI" if bull_pts >= bear_pts else "AŞAĞI"
+    bull_pct_val = round(bull_pts / total_w * 100) if total_w else 50
+    bear_pct_val = round(bear_pts / total_w * 100) if total_w else 50
+    # Telegram’daki ▲▼ yüzdeleriyle aynı kural: büyük olan yön (eşitlikte ham puan)
+    if bull_pct_val > bear_pct_val:
+        direction = "YUKARI"
+    elif bear_pct_val > bull_pct_val:
+        direction = "AŞAĞI"
+    else:
+        direction = "YUKARI" if bull_pts >= bear_pts else "AŞAĞI"
     raw_prob  = (bull_pts / total_w if bull_pts > bear_pts
                  else bear_pts / total_w if bear_pts > bull_pts else 0.5)
     prob = max(0.50, min(0.85, 0.5 + (raw_prob - 0.5) * 0.7))
@@ -594,8 +602,8 @@ def generate_prediction(state: SymbolState) -> Optional[Prediction]:
         signals       = signals,
         reasoning     = (f"Rejim:{regime} | Vol:{vol_level} | "
                          f"Boğa:{bull_pts:.1f}/{total_w:.1f} | Ayı:{bear_pts:.1f}/{total_w:.1f}"),
-        bull_pct      = round(bull_pts / total_w * 100) if total_w else 50,
-        bear_pct      = round(bear_pts / total_w * 100) if total_w else 50,
+        bull_pct      = bull_pct_val,
+        bear_pct      = bear_pct_val,
         h1_high       = h1_high,
         h1_low        = h1_low,
         key_level     = key_level,
@@ -662,7 +670,7 @@ def _build_coin_block(pred: Prediction) -> str:
     adx_m   = re.search(r'ADX:([\d.]+)', reg_sig)
     adx_v   = float(adx_m.group(1)) if adx_m else 0.0
 
-    trend_str = "AŞAĞI" if pred.bear_pct > pred.bull_pct else "YUKARI"
+    trend_str = "AŞAĞI" if pred.direction == "AŞAĞI" else "YUKARI"
     trend_ico = "🔴" if trend_str == "AŞAĞI" else "🟢"
     p = pred.current_price
     kl = pred.key_level
@@ -688,9 +696,8 @@ def _bet_status_line(sym: str, pred: "Prediction", bet: Optional[dict]) -> str:
     """Coin için işlem durumu satırı."""
     icon = _symbol_icon(sym.replace("USDT", ""))
     name = sym.replace("USDT", "")
-    conf_label = pred.confidence.lower() if pred.confidence else "?"
-    if pred.confidence != "YÜKSEK" or pred.direction == "NÖTR":
-        return f"⏭ {icon} {name} → girilmedi (güven {conf_label})"
+    if pred.direction == "NÖTR":
+        return f"⏭ {icon} {name} → girilmedi (nötr)"
     if not Config.POLYMARKET_BOT_ENABLED:
         return f"⏭ {icon} {name} → girilmedi (bot kapalı)"
     if not bet:
@@ -1019,7 +1026,7 @@ async def find_market(coin: str, direction: str, price: float) -> Optional[dict]
 
 async def place_bet(pred: "Prediction") -> Optional[dict]:
     """
-    YÜKSEK güvenli tahmin için Polymarket CLOB emri açar.
+    Tahmin yönüne (YUKARI/AŞAĞI) Polymarket CLOB emri açar; güven seviyesi emri engellemez.
     Başarılıysa {"amount", "odds", "payout", "order_response"} döner; aksi hâlde None.
     """
     if not Config.POLYMARKET_BOT_ENABLED:
@@ -1244,9 +1251,9 @@ async def fetch_recent_trades_rest(symbol: str):
 
 
 def _in_quiet_hours() -> bool:
-    """Türkiye saatiyle (UTC+3) 23:00–07:00 arası → sessiz saat."""
+    """Türkiye saatiyle (UTC+3) 23:00–05:00 arası → sessiz saat (CLOB emri yok)."""
     ist_hour = (datetime.now(timezone.utc).hour + 3) % 24
-    return ist_hour >= 23 or ist_hour < 7
+    return ist_hour >= 23 or ist_hour < 5
 
 
 async def _do_prediction(label: str = ""):
@@ -1286,7 +1293,7 @@ async def _do_prediction(label: str = ""):
 
     bet_results: dict[str, Optional[dict]] = {}
     for pred in preds:
-        if not quiet and pred.confidence == "YÜKSEK" and pred.direction != "NÖTR":
+        if not quiet and pred.direction != "NÖTR":
             bet_results[pred.symbol] = await place_bet(pred)
         else:
             bet_results[pred.symbol] = None
