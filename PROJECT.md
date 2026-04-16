@@ -95,7 +95,7 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 | `bist_sender.py` | BIST sonuçlarını düz metin olarak Telegram'a gönderici. |
 | `bist_visual_sender.py` | BIST sonuçlarını tablo görseli olarak Telegram'a gönderici. |
 | `bist_scalping_alerts.py` | 427 hisse 15m Scalping Confluence (Pine ile uyumlu): AL + TP1. Telegram özel mesaj: `bist_scalping_config.py` — `CHAT_ID` = kullanıcı ID. `bist_scalping_get_chat_id.py` yardımcı. State: `bist_scalping_state.json`. |
-| `bist_signal_hunter.py` | Güçlü AL + MACD bull onayı (15m/1h). 15m: `[15 Dakika]…[1 Saat]…ODAKLAN BUNA`; 15m≥3 ve 1h destekli → `ACIL`. 1h: klasik `(N.kez) [1 Saat]`. Geçmiş: `bist_signal_hunter_history.json`. |
+| `bist_signal_hunter.py` | Güçlü AL + MACD bull onayı (15m/1h). Aynı turda 15m+1h birlikte → tek birleşik mesaj; tek TF → ayrı. 15m tekrar + 1h desteği → `ACIL`. Geçmiş: `bist_signal_hunter_history.json`. |
 
 **Cron:** `1 7-15 * * 1-5` → haftaiçi 10:01–18:01 İST arası her saat başı (`/tmp/bist_visual.log`)
 
