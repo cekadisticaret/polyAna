@@ -8,20 +8,16 @@ alwaysApply: true
 ## Aktif Cron Jobs
 | Zamanlama | Komut | Log |
 |---|---|---|
-| `*/5 * * * *` | `cd /root/aiProject && python3 binance_trader.py` | `/tmp/binance_trader.log` |
 | `*/5 * * * *` | `cd /root/aiProject && python3 paper_trader.py` | `/tmp/paper_trader.log` |
 | `*/5 * * * *` | `cd /root/aiProject && python3 paper_trader_alternatif.py` | `/tmp/paper_trader_alt.log` |
-| `1 7-15 * * 1-5` | `cd /root/aiProject && python3 bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
-| `31 14 * * 1-5` | `cd /root/aiProject && python3 bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
+| `1 7-15 * * 1-5` | `cd /root/aiProject && python3 BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
+| `31 14 * * 1-5` | `cd /root/aiProject && python3 BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
 | `0 8 * * *` | `cd /root/aiProject && python3 twitter_poster.py both` | `/tmp/twitter_poster.log` |
 | `59 23 * * *` | `cd /root/aiProject && python3 backup.py` | `/tmp/backup.log` |
-| `0 21 * * *` | `cd /root/aiProject && python3 win_prob_report.py` | `/tmp/win_prob_report.log` |
+| `0 21 * * *` | `cd /root/aiProject && python3 paper_daily_report.py` | `/tmp/paper_daily_report.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 bist_scalping_alerts.py` | `/tmp/bist_scalping_alerts.log` |
+| `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
 | `* * * * *` | `cd /root/aiProject && python3 scalp_trader.py` | `/tmp/scalp_trader.log` |
-| `10 * * * *` | `cd /root/aiProject/polymarket-main && PYTHONPATH=/root/aiProject/polymarket-main python3 src/analyzer/poly_predictor.py --now` | `/tmp/poly_predictor.log` |
-| `10 * * * *` | `cd /root/aiProject/polymarket-main && PYTHONPATH=/root/aiProject/polymarket-main python3 -m src.main open` | `polymarket-main/data/cron.log` |
-| `15 * * * *` | `cd /root/aiProject/polymarket-main && PYTHONPATH=/root/aiProject/polymarket-main python3 -m src.main resolve` | `polymarket-main/data/cron.log` |
-| `0 21 * * *` | `cd /root/aiProject/polymarket-main && PYTHONPATH=/root/aiProject/polymarket-main python3 src/analyzer/poly_predictor.py --daily` | `/tmp/poly_daily_report.log` |
 
 ## Cron Yönetimi
 - Yeni cron eklemeden önce `crontab -l` ile mevcut listeyi kontrol et
@@ -37,7 +33,8 @@ alwaysApply: true
 
 ## Zamanlama Notları
 - BIST seansı 10:00–18:00 İST (= 07:00–15:00 UTC) → cron `1 7-15 * * 1-5` ile haftaiçi her saat başı +1 dk çalışır
-- `bist_visual_v2.py` → `bist_scanner.py`'yi içeriden çağırır, mobil kart görseli üretir, Telegram'a gönderir
+- `BistHourSinyal/bist_visual_v2.py` → kökteki `bist_scanner.py`'yi çağırır, mobil kart görseli üretir, Telegram'a gönderir
+- `BistYapayAnaliz/bist_signal_hunter.py` → Güçlü AL + MACD bull (15m/1h), seans içi; geçmiş `BistYapayAnaliz/bist_signal_hunter_history.json`
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy` (kurulu), `matplotlib` (kurulu)
 
 ## Log Takibi

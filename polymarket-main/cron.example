@@ -1,9 +1,0 @@
-# Polymarket Analyzer — iki cron satırı (aynı log’a yazılabilir)
-# Kurulum: crontab -e ile ekleyin
-#
-# Telegram abonelik (chat_id toplama) ayrı süreç — systemd veya screen ile sürekli çalıştırın:
-#   scripts/run_telegram_listener.sh
-
-10 * * * * cd /root/polymarket && PYTHONPATH=/root/polymarket .venv/bin/python -m src.main open >> /root/polymarket/data/cron.log 2>&1
-# resolve: Gamma çözümü DB’ye + yalnızca gün özeti Telegram
-15 * * * * cd /root/polymarket && PYTHONPATH=/root/polymarket .venv/bin/python -m src.main resolve >> /root/polymarket/data/cron.log 2>&1

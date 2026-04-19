@@ -3,11 +3,15 @@
 BIST Tarayıcı - Mobil Uyumlu Görsel v2
 Dikey (portrait) format, kart tasarımı, telefonda okunması kolay.
 Trend + Momentum iki ayrı bölüm.
+
+Konum: BistHourSinyal/ — kökteki bist_scanner.py ve telegram_config.py kullanır.
 """
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(__file__))
+
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.abspath(os.path.join(_ROOT, "..")))
 
 import urllib.request
 import urllib.parse

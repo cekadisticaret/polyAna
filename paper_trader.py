@@ -155,7 +155,7 @@ NEUT_MAX_SHORT  = 4
 # ========== VERİ ==========
 
 def get_klines(symbol, interval="15m", limit=250):
-    # Binance önce — paper_trader ve binance_trader aynı veriyi kullansın (borsa farkı = farklı sinyal)
+    # Public klines (önce bu uç; gerekirse kod içinde yedek kaynak)
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -647,7 +647,7 @@ def open_position(data, symbol, direction, price, atr, result=None, bias="NEUTRA
     if direction == "SHORT" and open_shorts >= max_short:
         return False
 
-    # Margin her zaman toplam sermayenin %10'u (kalan değil) — 170$ → 17$, binance_trader ile uyumlu
+    # Margin her zaman toplam sermayenin %10'u (kalan değil) — 170$ → 17$
     size = round(data["capital"] * POS_SIZE_PCT, 2)
 
     # Swing varsa swing, yoksa ATR

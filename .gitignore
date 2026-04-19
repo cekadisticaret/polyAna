@@ -1,5 +1,4 @@
 .env
-binance_config.py
 telegram_config.py
 crypto_telegram_config.py
 __pycache__/
@@ -12,7 +11,6 @@ paper_trades_alt.json.bak
 paper_trader_alt_config.py
 bist_scalping_config.py
 paper_report.json
-binance_state.json
 bist_scalping_state.json
 bist_signal_hunter_history.json
 scalp_trades.json
@@ -23,8 +21,4 @@ analiz/analiz_config.py
 analiz/state.json
 *.bak
 *.bak[0-9]*
-poly_predictions.json
-poly_paper_bets.json
-binance_alt_state.json
-paper_trades_eski.json
 paper_trades_sinan.json

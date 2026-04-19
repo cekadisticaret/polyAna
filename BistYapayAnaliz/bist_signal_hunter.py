@@ -3,6 +3,8 @@
 BIST Güçlü AL + Boğa Onayı Tarayıcı
 İki indikatörün aynı anda sağlandığı hisseleri 15m ve 1h'de tarar, Telegram bildirimi atar.
 
+Konum: BistYapayAnaliz/ — kökteki bist_scanner.py kullanır; Telegram: bist_scalping_config veya telegram_config.
+
 İndikatör 1 — Güçlü AL (RSI+Vol+EMA v5.4):
   strongBuyCondition:
     - RSI 50 crossover VEYA RSI>55 ve yükseliyor
@@ -18,8 +20,13 @@ BIST Güçlü AL + Boğa Onayı Tarayıcı
 Çalışma: Pazartesi–Cuma, 10:00–18:00 İST
 """
 
-import json
+import sys
 import os
+
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.abspath(os.path.join(_ROOT, "..")))
+
+import json
 import time
 import urllib.parse
 import urllib.request

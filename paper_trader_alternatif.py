@@ -76,7 +76,7 @@ def now_str():
 # ========== VERİ ==========
 
 def get_klines(symbol, interval="15m", limit=250):
-    # Binance önce — paper_trader ve binance_trader ile aynı veri kaynağı
+    # Public klines (paper ile aynı uç tercihi)
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -360,7 +360,7 @@ def open_position(data, symbol, direction, price, sl, tp, atr_val, result):
     if sl <= 0 or tp <= 0:
         return False
 
-    # Margin her zaman toplam sermayenin %10'u (kalan değil) — 170$ → 17$, binance_trader ile uyumlu
+    # Margin her zaman toplam sermayenin %10'u (kalan değil) — 170$ → 17$
     size = round(data["capital"] * POS_SIZE_PCT, 2)
     score = result.get("long_score" if direction == "LONG" else "short_score", 0)
     win_prob = round(score / 6 * 100) if score else 0

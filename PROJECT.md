@@ -6,11 +6,13 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 | Klasör | Açıklama |
 |---|---|
 | `yeni_proje/` | Yeni geliştirilecek proje için ayrılan boş klasör. |
+| `BistHourSinyal/` | Saatlik BIST analiz Telegram betiği (`bist_visual_v2.py`); kökteki `bist_scanner.py` + `telegram_config.py` kullanır. |
+| `BistYapayAnaliz/` | Güçlü AL sinyal avcısı (`bist_signal_hunter.py`); kökteki `bist_scanner.py` kullanır; geçmiş: `bist_signal_hunter_history.json`. |
 
 ## 🏆 Kilometre Taşları
 | Tarih | Not |
 |---|---|
-| 20.03.2026 | 🎉 Bayram 1. gün — SSVUSDT SHORT ile ilk başarılı gerçek Binance işlemi. TP extension + dinamik trailing stop devreye alındı. |
+| 20.03.2026 | Bayram 1. gün — SSVUSDT SHORT paper/strateji notu. TP extension + dinamik trailing stop. |
 
 ---
 
@@ -23,27 +25,15 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 | `crypto_telegram_config.example.py` | Kripto paper bildirimleri şablonu; gerçek ayar `crypto_telegram_config.py` (gitignore). |
 | `paper_trader_alternatif.py` | Confluence stratejisi (Pine Scalping Confluence → Python). 6 faktör, min 3 confluence + EMA cross + R:R filtresi. Ayrı Telegram, ayrı state. |
 | `paper_trader_alt_config.py` | Alternatif Telegram bot token/chat_id (gitignore). |
-| `paper_trader_eski.py` | Eski strateji (EMA21/100 + MACD + ADX, trailing stop yok) ile **gerçek Binance** işlemi. `binance_api` + `binance_config` bağlantısı var; sinyal üretimi eski stratejide, emirler gerçek. State: `paper_trades_eski.json`. |
-| `crypto_futures_list.py` | Binance Futures'da aktif 202 coin sembolü listesi. |
-| `paper_trades.json` | Açık/kapalı işlemler ve sermaye durumu (runtime verisi). |
-| `paper_trades_alt.json` | Alternatif paper trader state. |
-| `paper_trades_eski.json` | Eski paper trader state (runtime verisi). |
+| `crypto_futures_list.py` | USDT perpetual sembol listesi (202 coin; public mum verisi için kullanılır). |
+| `paper_trades.json` | `paper_trader.py` state (çalışınca yeniden oluşur; gitignore). |
+| `paper_trades_alt.json` | `paper_trader_alternatif.py` state (çalışınca yeniden oluşur; gitignore). |
 | `paper_report.json` | 100 işlem tamamlandığında üretilen performans raporu. |
+| `paper_daily_report.py` | Günlük win prob özeti: `paper_trader` + `paper_trader_alternatif` Telegram. |
 
-**Cron:** `*/5 * * * *` → her 5 dakikada bir (`/tmp/paper_trader.log`). Alternatif: `*/5 * * * *` → `/tmp/paper_trader_alt.log`. Eski: `*/5 * * * *` → `/tmp/paper_trader_eski.log`
+**Cron:** `*/5 * * * *` → `paper_trader.py` / `paper_trader_alternatif.py` (log: `/tmp/paper_trader.log`, `/tmp/paper_trader_alt.log`) — isteğe bağlı açılır | `0 21 * * *` → `paper_daily_report.py` (`/tmp/paper_daily_report.log`)
 
-### Kripto — Binance Gerçek Trader (15m)
-| Dosya | Açıklama |
-|---|---|
-| `binance_trader.py` | **PASİF** (23.03.2026). EMA21/100 + MACD + ADX stratejisi; `binance_trader_alternatif.py` devreye alındı. |
-| `binance_trader_alternatif.py` | **AKTİF**. `paper_trader_alternatif.py` ile birebir aynı Confluence sinyali (EMA 9/21/50, pivot yapısı, HTF trend, RSI, MACD, hacim); gerçek Binance emirleri. Dinamik trailing stop + TP uzatma. State: `binance_alt_state.json`. |
-| `binance_api.py` | Binance USDT-M Futures API istemcisi (HMAC imzalı, urllib). |
-| `binance_config.py` | API key/secret (gitignore). |
-| `binance_state.json` | Eski binance_trader state (artık kullanılmıyor). |
-| `binance_alt_state.json` | binance_trader_alternatif state: açık pozisyonlar ve bar sayacı (runtime). |
-| `binance_winrate_report.py` | 6 saatlik WR raporu: genel + son 24h + yön analizi + sembol bazlı WR → Telegram. |
-
-**Cron:** `*/5 * * * *` → `binance_trader.py` (pasif, hemen çıkar) | `*/5 * * * *` → `binance_trader_alternatif.py` (`/tmp/binance_trader_alt.log`) | `0 */6 * * *` → WR raporu
+**Not:** Borsada emir açan Binance betikleri kaldırıldı; `paper_trader*` hâlâ public mum verisi için REST kullanabilir.
 
 **Strateji parametreleri (v6 — 22.03.2026 — paper_trader_sinan ile birebir hizalama):**
 - LEVERAGE: dinamik | POS_SIZE_PCT: %10 | MAX_OPEN: 7
@@ -59,54 +49,28 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 
 ---
 
-### Kripto — Polymarket Tahmin Motoru
-| Dosya | Açıklama |
-|---|---|
-| `poly_predictor.py` | SOL ve ETH için aynı kurallar: sanal bahis kazanan yön >%50; ▲▼ ikisi ≤%35 ise girilmez. |
-| `polymarkettest.py` | Polymarket CLOB API test scripti (market listeleme, bakiye, emir). |
-| `poly_predictions.json` | Tahmin geçmişi: yön, güven, fiyat, hedef, doğrulama sonucu (runtime). |
-
-**Telegram:** `.env` → `TELEGRAM_TOKEN` — Mesaj formatı: BTC+ETH tek mesajda, geçen saat sonucu + coin detay blokları.
-
-**Sinyal güncellemesi (31.03.2026):** Pine v6.0 karşılaştırmasından eksik bulunan 2 sinyal eklendi: **Hacim spike 1h** (ağırlık 2, mum yönüyle doğrulama) + **EMA50 uzaklık filtresi** (ağırlık 2, >%5 overextended → zıt puan). Toplam max ağırlık 21 → 25. Yedek: `poly_predictor.py.bak`.
-
-**Cron:** `3 * * * *` → `poly_predictor.py --now` (`/tmp/poly_predictor.log`) | `0 21 * * *` → günlük rapor (`/tmp/poly_daily_report.log`)
-
-### Kripto — Polymarket Analyzer (`polymarket-main/`)
-| Dosya | Açıklama |
-|---|---|
-| `polymarket-main/src/main.py` | `open` / `resolve` modları; ETH+SOL saatlik tahmin, SQLite `hourly_trades`, istenirse CLOB emri, Telegram. |
-| `polymarket-main/src/analyzer/poly_predictor.py` | CLOB: ▲ YUKARI ve ▼ AŞAĞI yüzdelerinden büyük olana göre UP/DOWN emri (YÜKSEK güven şartı yok; 23–05 İST sessiz saatte emir yok). |
-| `polymarket-main/.env` | `TELEGRAM_BOT_TOKEN`, Polymarket anahtarları (gitignore). |
-
-**Cron:** `10 * * * *` → `python3 -m src.main open` | `15 * * * *` → `python3 -m src.main resolve` — log: `polymarket-main/data/cron.log` (çalışma dizini: `polymarket-main/`, `PYTHONPATH` proje kökü).
-
-**CLOB saat penceresi:** `hour_schedule.py` içinde `TRADING_HOUR_RESTRICTION_ENABLED=false` — her ET saatinde emir denenebilir; `true` yapılınca yalnızca `{0,1,7,8,11}` ET.
-
----
-
 ### BIST — Tarayıcı & Görsel
 | Dosya | Açıklama |
 |---|---|
 | `bist_scanner.py` | 427 BIST hissesini tarar. `scan()`: 1h trend taraması (EMA50/200, RSI, ADX, MACD, Hacim, Likidite). `scan_momentum()`: günlük ≥%5 hareket + RSI>50 + likidite. |
-| `bist_scanner_v1_backup.py` | 16.03.2026 önceki scanner yedeği. |
-| `bist_visual_v2.py` | Ana çalıştırıcı: trend + momentum taramalarını çalıştırır, iki bölümlü kart görseli üretir, Telegram'a gönderir. |
-| `bist_tickers.py` | BIST sembol listesi. |
+| `BistHourSinyal/bist_visual_v2.py` | Ana çalıştırıcı: trend + momentum taraması, metin bildirimi (kart görseli fonksiyonları mevcut), Telegram. |
 | `bist_sender.py` | BIST sonuçlarını düz metin olarak Telegram'a gönderici. |
 | `bist_visual_sender.py` | BIST sonuçlarını tablo görseli olarak Telegram'a gönderici. |
 | `bist_scalping_alerts.py` | 427 hisse 15m Scalping Confluence (Pine ile uyumlu): AL + TP1. Telegram özel mesaj: `bist_scalping_config.py` — `CHAT_ID` = kullanıcı ID. `bist_scalping_get_chat_id.py` yardımcı. State: `bist_scalping_state.json`. |
-| `bist_signal_hunter.py` | Güçlü AL + MACD bull onayı (15m/1h). Aynı turda 15m+1h birlikte → tek birleşik mesaj; tek TF → ayrı. 15m tekrar + 1h desteği → `ACIL`. Geçmiş: `bist_signal_hunter_history.json`. |
+| `BistYapayAnaliz/bist_signal_hunter.py` | Güçlü AL + MACD bull onayı (15m/1h). Aynı turda 15m+1h birlikte → tek birleşik mesaj; tek TF → ayrı. 15m tekrar + 1h desteği → `ACIL`. Geçmiş: `BistYapayAnaliz/bist_signal_hunter_history.json`. |
 
-**Cron:** `1 7-15 * * 1-5` → haftaiçi 10:01–18:01 İST arası her saat başı (`/tmp/bist_visual.log`)
+**Cron:** `1 7-15 * * 1-5` → `python3 BistHourSinyal/bist_visual_v2.py 1h` — haftaiçi 10:01–18:01 İST (`/tmp/bist_visual.log`)
 
 **BIST Scalping AL:** `*/5 * * * 1-5` → `python3 bist_scalping_alerts.py` → `/tmp/bist_scalping_alerts.log` (script sadece **Pazartesi–Cuma 10:00–18:00 İST** çalışır; dışında hemen çıkar)
+
+**BIST Signal Hunter:** `*/5 * * * 1-5` → `python3 BistYapayAnaliz/bist_signal_hunter.py` → `/tmp/bist_signal_hunter.log` (seans içi; dışında çıkar)
 
 ---
 
 ### Kripto & BIST — Tweet Otomasyonu (@ZekaChain)
 | Dosya | Açıklama |
 |---|---|
-| `crypto_tweet_generator.py` | Binance 30m verisinden en çok düşen coinleri alır, `fetch_all_changes()` sağlar. |
+| `crypto_tweet_generator.py` | Kripto 30m mum verisinden en çok düşen coinleri alır, `fetch_all_changes()` sağlar. |
 | `twitter_poster.py` | Kripto ve BIST alınabilir listelerini görsel ile Twitter/X'e paylaşır. `mode: crypto|bist|both` |
 | `twitter_config.py` | Twitter API token'larını `.env` dosyasından okur. |
 | `.env` | Twitter API key/secret/token (plaintext tutulmaz, git'e eklenmez). |
@@ -118,8 +82,7 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 ### Altyapı & Konfigürasyon
 | Dosya | Açıklama |
 |---|---|
-| `telegram_config.py` | Yalnızca BIST scriptleri (`bist_visual_v2`, `bist_sender`, …); git’e girmez, şablon: `telegram_config.example.py`. |
-| `crypto_list.py` | Genel kripto sembol listesi (spot). |
+| `telegram_config.py` | Yalnızca BIST scriptleri (`BistHourSinyal/bist_visual_v2`, `bist_sender`, …); git’e girmez, şablon: `telegram_config.example.py`. |
 | `backup.py` | Günlük 23:59'da tüm proje dosyalarını `backups/` klasörüne tar.gz olarak yedekler. Son 7 gün saklanır. |
 
 **Cron:** `59 23 * * *` → her gün 23:59 (`/tmp/backup.log`) | Yedek: `backups/aiProject_YYYYMMDD_HHMM.tar.gz`
@@ -234,4 +197,4 @@ Kripto ve BIST piyasaları için otomatik analiz, paper trading ve sosyal medya 
 ### BIST Telegram chat ID güncellendi (16.03.2026)
 - Grup üye sayısı arttığı için Telegram otomatik olarak **supergroup'a** yükseltti
 - Eski ID: `-5179547954` → Yeni ID: `-1003821803200`
-- `telegram_config.py` güncellendi; `bist_visual_v2.py` artık görseli başarıyla gönderiyor
+- `telegram_config.py` güncellendi; BIST saatlik görsel/metin bildirimi başarıyla gönderiliyor (`BistHourSinyal/bist_visual_v2.py`)

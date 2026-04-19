@@ -1,6 +1,6 @@
 ---
-description: Trading Changes Rules — paper_trader.py ve binance_trader.py kritik bölüm değişiklik protokolü
-globs: "**/paper_trader.py,**/binance_trader.py"
+description: Trading Changes Rules — paper_trader.py kritik bölüm değişiklik protokolü
+globs: "**/paper_trader.py"
 alwaysApply: false
 ---
 
@@ -14,7 +14,7 @@ Aşağıdaki 3 bölümde herhangi bir değişiklik yapmadan önce:
 3. Onay gelmeden kod düzenlemesi yapma
 
 ### 1. Ana Döngü — `run_scan(symbols)`
-`paper_trader.py` ve `binance_trader.py` içindeki `run_scan` fonksiyonu:
+`paper_trader.py` içindeki `run_scan` fonksiyonu:
 - `is_new_15m` zamanlama mantığı
 - `total_bars` sayacı
 - ThreadPoolExecutor tarama akışı
@@ -58,8 +58,7 @@ Aşağıdakilerden herhangi birini etkileyen değişiklikler de onay gerektirir:
 - SL / TP hesaplama mantığı (`STOP_ATR_MULT`, `TAKE_ATR_MULT`, `MAX_SL_PCT`, swing pivot seçimi)
 - Kaldıraç ve pozisyon boyutu (`LEVERAGE`, `POS_SIZE_PCT`, `BULL/BEAR/NEUT_*_LEV`)
 - Risk parametreleri (`COOLDOWN_BARS`, `MIN_HOLD_BARS`, `MAX_LOSS_BARS`, `MAX_OPEN`, `MIN_RR_RATIO`)
-- `paper_trader.py` ↔ `binance_trader.py` senkronizasyonu (import edilen sabitler veya fonksiyonlar)
-- Veri kaynağı önceliği (Binance → OKX fallback mantığı)
+- Veri kaynağı önceliği (public REST uçları / fallback mantığı)
 
 ## Onay Şablonu
 

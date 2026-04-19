@@ -4,7 +4,7 @@
 
 **Average True Range (ATR)** — Fiyatın ortalama volatilitesini ölçen indikatör. Bir bar içinde fiyatın ne kadar hareket ettiğini gösterir.
 
-## Hesaplama (paper_trader / binance_trader)
+## Hesaplama (paper_trader)
 
 ### 1. True Range (TR)
 
