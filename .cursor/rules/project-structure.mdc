@@ -15,12 +15,12 @@ Aşağıdaki durumlarda `PROJECT.md` güncellenmeli:
 - Mevcut bir modülün amacı veya davranışı değişti
 - Cron job eklendi / güncellendi / silindi
 - Strateji parametreleri değişti (kaldıraç, SL, TP, vb.)
-- Yeni bir Telegram / Twitter entegrasyonu eklendi
+- Yeni bir Telegram entegrasyonu eklendi
 
 ## Güncelleme Kuralları
 
 - Tablolarda her satır `| dosya.py | kısa açıklama |` formatında olmalı
-- Strateji parametreleri her zaman **Kripto — Paper Trading** altında güncel değerleriyle yazılmalı
+- Strateji parametreleri (scalp vb.) ilgili `PROJECT.md` bölümünde güncel değerleriyle yazılmalı
 - Cron ifadesi değişirse hemen yansıt
 - Silinen dosyaları tablodan kaldır, eklenen dosyaları ekle
 - Açıklama maksimum 1 satır, sade Türkçe
