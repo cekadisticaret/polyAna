@@ -32,8 +32,8 @@ _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _DAYS_FULL_TR = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
 _DIR          = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE    = os.path.join(_DIR, "teknik_state.json")
-HISTORY_FILE  = os.path.join(_DIR, "teknik_history.json")
+STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz3_state.json")
+HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz3_history.json")
 MIN_STAT_COUNT = 5  # istatistik için min işlem sayısı
 
 SYMBOLS = {
@@ -365,6 +365,12 @@ def main():
                 "entry_hour_tr": pred["entry_hour_tr"],
                 "entry_dow":     pred["entry_dow"],
                 "exit_time_tr":  now_tr.isoformat(),
+                "ind_rsi_vote":  pred.get("ind_rsi_vote"),
+                "ind_rsi_ok":    (pred.get("ind_rsi_vote") == actual) if pred.get("ind_rsi_vote") else None,
+                "ind_macd_vote": pred.get("ind_macd_vote"),
+                "ind_macd_ok":   (pred.get("ind_macd_vote") == actual) if pred.get("ind_macd_vote") else None,
+                "ind_ema_vote":  pred.get("ind_ema_vote"),
+                "ind_ema_ok":    (pred.get("ind_ema_vote") == actual) if pred.get("ind_ema_vote") else None,
             })
             icon = "✅" if win else "❌"
             pct  = (current_price - entry) / entry * 100
@@ -409,6 +415,9 @@ def main():
                 "entry_time_tr": now_tr.isoformat(),
                 "entry_hour_tr": hour_tr,
                 "entry_dow":     dow,
+                "ind_rsi_vote":  "UP" if ozet.rsi < 50 else "DOWN",
+                "ind_macd_vote": "UP" if "Pozitif" in ozet.macd_durum else "DOWN",
+                "ind_ema_vote":  "UP" if "Yukarı" in ozet.trend else "DOWN",
             })
 
     save_state(state)
@@ -459,6 +468,27 @@ def main():
 
 
 # ── Weekly: Pazar 00:00 — ısı haritası ───────────────────────
+def _wr(wins: int, total: int) -> str:
+    if total == 0:
+        return "veri yok"
+    return f"%{wins/total*100:.0f} ({wins}/{total})"
+
+
+def _ind_stats_lines(history: list) -> list[str]:
+    checks = [("RSI", "ind_rsi_ok"), ("MACD", "ind_macd_ok"), ("EMA", "ind_ema_ok")]
+    lines = []
+    for label, key in checks:
+        vals = [t[key] for t in history if t.get(key) is not None]
+        if vals:
+            w   = sum(1 for v in vals if v)
+            n   = len(vals)
+            bar = "🟢" if w / n >= 0.6 else "🟡" if w / n >= 0.5 else "🔴"
+            lines.append(f"  {bar} {label}: {_wr(w, n)}")
+        else:
+            lines.append(f"  ⚪ {label}: veri yok")
+    return lines
+
+
 def run_weekly() -> None:
     import matplotlib
     matplotlib.use("Agg")
@@ -568,11 +598,85 @@ def run_weekly() -> None:
     except Exception as e:
         print(f"[3. ANALİZ weekly] Hata: {e}", file=sys.stderr)
 
+    state   = load_state()
+    now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    total_pnl = state.get("total_pnl", 0.0)
+    pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
+    ind_lines = _ind_stats_lines(history)
+    stats_msg = (
+        f"📊 <b>3. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
+        f"{now_tr.strftime('%d.%m.%Y')} İST\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"Toplam: {total} işlem  |  {genel} başarı\n"
+        f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
+        f"\n🔬 <b>İndikatör İsabet Oranı</b>\n"
+        + "\n".join(ind_lines)
+    )
+    tg_send(stats_msg)
+
+
+def run_stats() -> None:
+    history = load_history()
+    state   = load_state()
+    now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    total     = len(history)
+    wins      = sum(1 for t in history if t["win"])
+    total_pnl = state.get("total_pnl", 0.0)
+    pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
+    genel     = f"%{wins/total*100:.0f}" if total else "—"
+    ind_lines = _ind_stats_lines(history)
+
+    dow_data: dict[int, list] = {}
+    for t in history:
+        d = t.get("entry_dow")
+        if d is None:
+            continue
+        dow_data.setdefault(d, [0, 0])
+        dow_data[d][1] += 1
+        if t["win"]:
+            dow_data[d][0] += 1
+
+    dow_lines = []
+    _DAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
+    for d in range(7):
+        if d not in dow_data:
+            continue
+        w, n = dow_data[d]
+        bar = "🟢" if w/n >= 0.6 else "🟡" if w/n >= 0.5 else "🔴"
+        dow_lines.append(f"  {bar} {_DAYS_TR[d]}: {_wr(w, n)}")
+
+    sym_lines = []
+    for kisa, full in {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}.items():
+        s = [t for t in history if t["symbol"] == full]
+        if s:
+            sw = sum(1 for t in s if t["win"])
+            sym_lines.append(f"  {'🟢' if sw/len(s)>=0.6 else '🟡' if sw/len(s)>=0.5 else '🔴'} {kisa}: {_wr(sw, len(s))}")
+
+    parts = [
+        f"📊 <b>3. ANALİZ İSTATİSTİKLER</b>",
+        f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        f"Toplam: {total} işlem  |  {genel} başarı",
+        f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
+    ]
+    if sym_lines:
+        parts.append(f"\n📌 <b>Sembol Bazlı</b>")
+        parts.extend(sym_lines)
+    if dow_lines:
+        parts.append(f"\n📆 <b>Gün Bazlı</b>")
+        parts.extend(dow_lines)
+    parts.append(f"\n🔬 <b>İndikatör İsabet Oranı</b>")
+    parts.extend(ind_lines)
+    tg_send("\n".join(parts))
+    print("[3. ANALİZ stats] gönderildi")
+
 
 if __name__ == "__main__":
     import sys as _sys
     mode = _sys.argv[1] if len(_sys.argv) > 1 else "main"
     if mode == "weekly":
         run_weekly()
+    elif mode == "stats":
+        run_stats()
     else:
         main()

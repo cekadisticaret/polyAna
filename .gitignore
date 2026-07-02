@@ -10,9 +10,9 @@ analiz/analiz_config.py
 analiz/state.json
 *.bak
 *.bak[0-9]*
-temmuzPoly/trader_state.json
-temmuzPoly/trader_history.json
-temmuzPoly/trader_v2_state.json
-temmuzPoly/trader_v2_history.json
-temmuzPoly/teknik_state.json
-temmuzPoly/teknik_history.json
+temmuzPoly/poly_trader_analiz1_state.json
+temmuzPoly/poly_trader_analiz1_history.json
+temmuzPoly/poly_trader_analiz2_state.json
+temmuzPoly/poly_trader_analiz2_history.json
+temmuzPoly/poly_trader_analiz3_state.json
+temmuzPoly/poly_trader_analiz3_history.json

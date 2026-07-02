@@ -28,8 +28,8 @@ CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR          = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE    = os.path.join(_DIR, "trader_v2_state.json")
-HISTORY_FILE  = os.path.join(_DIR, "trader_v2_history.json")
+STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz2_state.json")
+HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz2_history.json")
 WEEKLY_IMG    = "/tmp/poly_v2_weekly_heatmap.png"
 
 INITIAL_BALANCE  = 300.0
@@ -225,6 +225,14 @@ async def run_close() -> None:
             "entry_conf":       pos.get("entry_conf", 0),
             "exit_time_tr":     now_tr.isoformat(),
             "pnl":              pnl,
+            "ind_rsi_vote":     pos.get("ind_rsi_vote"),
+            "ind_rsi_ok":       (pos.get("ind_rsi_vote") == actual) if pos.get("ind_rsi_vote") else None,
+            "ind_macd_vote":    pos.get("ind_macd_vote"),
+            "ind_macd_ok":      (pos.get("ind_macd_vote") == actual) if pos.get("ind_macd_vote") else None,
+            "ind_ema_vote":     pos.get("ind_ema_vote"),
+            "ind_ema_ok":       ((pos.get("ind_ema_vote") == actual)
+                                 if pos.get("ind_ema_vote") and pos.get("ind_ema_vote") != "NEUTRAL"
+                                 else None),
         })
 
         icon = "✅" if win else "❌"
@@ -301,6 +309,7 @@ async def run_open() -> None:
         next_h   = f"{(hour_tr + 1) % 24:02d}:00"
         low_data = hour_total < MIN_STAT_COUNT
 
+        ind_ema_raw = pred_obj.trend.upper()
         state["open_positions"].append({
             "symbol":           sym,
             "predicted_dir":    pred_obj.predicted_dir,
@@ -311,6 +320,12 @@ async def run_open() -> None:
             "entry_is_weekend": is_weekend,
             "entry_conf":       conf,
             "amount":           TRADE_AMOUNT,
+            "ind_rsi_vote":     "UP" if pred_obj.rsi < 50 else "DOWN",
+            "ind_rsi_val":      round(pred_obj.rsi, 1),
+            "ind_macd_vote":    "UP" if pred_obj.macd_bull else "DOWN",
+            "ind_ema_vote":     ("UP" if "YUKARI" in ind_ema_raw
+                                 else "DOWN" if "AŞAĞI" in ind_ema_raw
+                                 else "NEUTRAL"),
         })
 
         lines.append(
@@ -484,6 +499,22 @@ def run_weekly() -> None:
     print(f"[2. ANALİZ weekly] haftalık görsel gönderildi — {total} işlem")
 
 
+# ── İndikatör isabet yardımcısı ───────────────────────────────
+def _ind_stats_lines(history: list) -> list[str]:
+    checks = [("RSI", "ind_rsi_ok"), ("MACD", "ind_macd_ok"), ("EMA", "ind_ema_ok")]
+    lines = []
+    for label, key in checks:
+        vals = [t[key] for t in history if t.get(key) is not None]
+        if vals:
+            w   = sum(1 for v in vals if v)
+            n   = len(vals)
+            bar = "🟢" if w / n >= 0.6 else "🟡" if w / n >= 0.5 else "🔴"
+            lines.append(f"  {bar} {label}: {_wr(w, n)}")
+        else:
+            lines.append(f"  ⚪ {label}: veri yok")
+    return lines
+
+
 # ── STATS ─────────────────────────────────────────────────────
 def run_stats() -> None:
     history = load_history()
@@ -506,6 +537,8 @@ def run_stats() -> None:
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
         f"Filtre: min konf %{MIN_CONF*100:.0f}  |  ⚠️ = {MIN_STAT_COUNT} altı veri",
+        f"\n🔬 <b>İndikatör İsabet Oranı</b>",
+        *_ind_stats_lines(history),
     ]
 
     wd = [t for t in history if not t.get("entry_is_weekend")]
