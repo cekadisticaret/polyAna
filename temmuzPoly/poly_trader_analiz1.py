@@ -32,8 +32,10 @@ STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz1_state.json")
 HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz1_history.json")
 WEEKLY_IMG    = "/tmp/poly_weekly_heatmap.png"
 
-INITIAL_BALANCE = 300.0
-TRADE_AMOUNT    = 10.0
+INITIAL_BALANCE    = 300.0
+TRADE_AMOUNT       = 10.0   # genel başarı veri yok veya %50
+TRADE_AMOUNT_HIGH  = 12.0   # genel başarı > %50
+TRADE_AMOUNT_LOW   =  8.0   # genel başarı < %50
 SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -162,9 +164,10 @@ async def run_close() -> None:
 
         entry  = pos["entry_price"]
         pred   = pos["predicted_dir"]
+        amount = pos.get("amount", TRADE_AMOUNT)
         actual = "UP" if current_price >= entry else "DOWN"
         win    = (pred == actual)
-        pnl    = TRADE_AMOUNT if win else -TRADE_AMOUNT
+        pnl    = amount if win else -amount
         toplam_pnl += pnl
 
         state["balance"]   = round(state["balance"] + pnl, 2)
@@ -181,6 +184,7 @@ async def run_close() -> None:
             "entry_hour_tr":    pos["entry_hour_tr"],
             "entry_dow":        pos["entry_dow"],
             "entry_is_weekend": pos["entry_is_weekend"],
+            "amount":           amount,
             "exit_time_tr":     now_tr.isoformat(),
             "pnl":              pnl,
             "ind_rsi_vote":     pos.get("ind_rsi_vote"),
@@ -253,6 +257,11 @@ async def run_open() -> None:
         sym         = c["sym"]
         pred_obj    = c["pred_obj"]
         ind_ema_raw = pred_obj.trend.upper()
+        sw, st      = get_symbol_stats(history, sym)
+        rate        = sw / st if st else None
+        dyn_amount  = (TRADE_AMOUNT_HIGH if (rate is not None and rate > 0.5)
+                       else TRADE_AMOUNT_LOW if (rate is not None and rate < 0.5)
+                       else TRADE_AMOUNT)
         state["open_positions"].append({
             "symbol":           sym,
             "predicted_dir":    pred_obj.predicted_dir,
@@ -261,7 +270,7 @@ async def run_open() -> None:
             "entry_hour_tr":    hour_tr,
             "entry_dow":        dow,
             "entry_is_weekend": is_weekend,
-            "amount":           TRADE_AMOUNT,
+            "amount":           dyn_amount,
             "ind_rsi_vote":     "UP" if pred_obj.rsi < 50 else "DOWN",
             "ind_rsi_val":      round(pred_obj.rsi, 1),
             "ind_macd_vote":    "UP" if pred_obj.macd_bull else "DOWN",
@@ -283,8 +292,12 @@ async def run_open() -> None:
         dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins,  sym_total  = get_symbol_stats(history, sym)
+        sym_rate   = sym_wins / sym_total if sym_total else None
+        pos_amount = (TRADE_AMOUNT_HIGH if (sym_rate is not None and sym_rate > 0.5)
+                      else TRADE_AMOUNT_LOW if (sym_rate is not None and sym_rate < 0.5)
+                      else TRADE_AMOUNT)
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{pred_obj.current_price:.2f}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{pred_obj.current_price:.2f}  💵{pos_amount:.0f}$\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )
@@ -296,7 +309,7 @@ async def run_open() -> None:
             f"🆕 <b>1. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>\n"
             + "\n".join(lines) + "\n"
             f"{sep}\n"
-            f"💰 Ana: ${state['balance'] - len(state['open_positions']) * TRADE_AMOUNT:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${len(state['open_positions']) * TRADE_AMOUNT:.0f}  |  Toplam: ${state['balance']:.2f}\n"
+            f"💰 Ana: ${state['balance'] - sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.0f}  |  Toplam: ${state['balance']:.2f}\n"
             f"{sep}"
         )
     else:

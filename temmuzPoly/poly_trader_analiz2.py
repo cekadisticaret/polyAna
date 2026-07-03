@@ -32,8 +32,10 @@ STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz2_state.json")
 HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz2_history.json")
 WEEKLY_IMG    = "/tmp/poly_v2_weekly_heatmap.png"
 
-INITIAL_BALANCE  = 300.0
-TRADE_AMOUNT     = 10.0
+INITIAL_BALANCE    = 300.0
+TRADE_AMOUNT       = 10.0   # genel başarı veri yok veya %50
+TRADE_AMOUNT_HIGH  = 12.0   # genel başarı > %50
+TRADE_AMOUNT_LOW   =  8.0   # genel başarı < %50
 SYMBOLS          = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR         = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -206,9 +208,10 @@ async def run_close() -> None:
 
         entry  = pos["entry_price"]
         pred   = pos["predicted_dir"]
+        amount = pos.get("amount", TRADE_AMOUNT)
         actual = "UP" if current_price >= entry else "DOWN"
         win    = (pred == actual)
-        pnl    = TRADE_AMOUNT if win else -TRADE_AMOUNT
+        pnl    = amount if win else -amount
         toplam_pnl += pnl
 
         state["balance"]   = round(state["balance"] + pnl, 2)
@@ -304,6 +307,11 @@ async def run_open() -> None:
         pred_obj    = c["pred_obj"]
         conf        = c["conf"]
         ind_ema_raw = pred_obj.trend.upper()
+        sw2, st2    = get_symbol_stats(history, sym)
+        rate2       = sw2 / st2 if st2 else None
+        dyn_amount2 = (TRADE_AMOUNT_HIGH if (rate2 is not None and rate2 > 0.5)
+                       else TRADE_AMOUNT_LOW if (rate2 is not None and rate2 < 0.5)
+                       else TRADE_AMOUNT)
         state["open_positions"].append({
             "symbol":           sym,
             "predicted_dir":    pred_obj.predicted_dir,
@@ -313,7 +321,7 @@ async def run_open() -> None:
             "entry_dow":        dow,
             "entry_is_weekend": is_weekend,
             "entry_conf":       conf,
-            "amount":           TRADE_AMOUNT,
+            "amount":           dyn_amount2,
             "ind_rsi_vote":     "UP" if pred_obj.rsi < 50 else "DOWN",
             "ind_rsi_val":      round(pred_obj.rsi, 1),
             "ind_macd_vote":    "UP" if pred_obj.macd_bull else "DOWN",
@@ -336,9 +344,13 @@ async def run_open() -> None:
         dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins,  sym_total  = get_symbol_stats(history, sym)
-        low_data = hour_total < MIN_STAT_COUNT
+        low_data   = hour_total < MIN_STAT_COUNT
+        sym_rate2  = sym_wins / sym_total if sym_total else None
+        disp_amt2  = (TRADE_AMOUNT_HIGH if (sym_rate2 is not None and sym_rate2 > 0.5)
+                      else TRADE_AMOUNT_LOW if (sym_rate2 is not None and sym_rate2 < 0.5)
+                      else TRADE_AMOUNT)
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf*100:.0f}  giriş:{pred_obj.current_price:.2f}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf*100:.0f}  giriş:{pred_obj.current_price:.2f}  💵{disp_amt2:.0f}$\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: "
             f"{_wr(hour_wins, hour_total, warn_low=low_data)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
