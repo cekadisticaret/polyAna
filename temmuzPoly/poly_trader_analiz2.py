@@ -317,19 +317,19 @@ async def run_open() -> None:
 
     save_state(state)
 
-    # Tüm adayları göster (filtreden geçsin geçmesin)
+    # Sadece filtreden geçen sinyalleri göster
     next_h = f"{(hour_tr + 1) % 24:02d}:00"
     lines  = []
-    for c in candidates:
+    for c in passed:
         sym      = c["sym"]
         pred_obj = c["pred_obj"]
         conf     = c["conf"]
         name     = sym.replace("USDT", "")
         dir_icon = "📈" if pred_obj.predicted_dir == "UP" else "📉"
         dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
-        low_data = get_stats(history, sym, hour_tr)[1] < MIN_STAT_COUNT
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins,  sym_total  = get_symbol_stats(history, sym)
+        low_data = hour_total < MIN_STAT_COUNT
         lines.append(
             f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf*100:.0f}  giriş:{pred_obj.current_price:.2f}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: "

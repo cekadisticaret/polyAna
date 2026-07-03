@@ -340,34 +340,26 @@ async def run_open() -> None:
 
     save_state(state)
 
-    # Tüm adayları göster (filtreden geçsin geçmesin)
+    # Sadece filtreden geçen sinyalleri göster (rank + tutar ile)
     next_4h = ((hour_tr // 4) + 1) * 4
     if next_4h >= 24:
         next_4h = 0
     next_h = f"{next_4h:02d}:00"
     lines  = []
-    for c in candidates:
+    for rank, c in enumerate(passed):
         sym      = c["sym"]
         pred_obj = c["pred_obj"]
         conf     = c["conf"]
+        amount   = TRADE_AMOUNTS[rank] if rank < len(TRADE_AMOUNTS) else TRADE_AMOUNTS[-1]
         name     = sym.replace("USDT", "")
         dir_icon = "📈" if pred_obj.predicted_dir == "UP" else "📉"
         dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
-        low_data = get_stats(history, sym, hour_tr)[1] < MIN_STAT_COUNT
+        rank_icon = ["1️⃣", "2️⃣", "3️⃣"][rank] if rank < 3 else "▶️"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins,  sym_total  = get_symbol_stats(history, sym)
-        # Eğer bu sembol filtreden geçtiyse rank'ını ve tutarını göster
-        if sym in passed_syms:
-            rank      = passed_syms[sym]
-            amount    = TRADE_AMOUNTS[rank] if rank < len(TRADE_AMOUNTS) else TRADE_AMOUNTS[-1]
-            rank_icon = ["1️⃣", "2️⃣", "3️⃣"][rank] if rank < 3 else "▶️"
-            prefix    = f"{rank_icon}{dir_icon}"
-            amount_str = f"  {amount:.0f}$"
-        else:
-            prefix    = f"⛔{dir_icon}"
-            amount_str = ""
+        low_data = hour_total < MIN_STAT_COUNT
         lines.append(
-            f"{prefix} <b>{name}</b>  {dir_tr}  konf:%{conf*100:.0f}{amount_str}  giriş:{pred_obj.current_price:.2f}\n"
+            f"{rank_icon}{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf*100:.0f}  {amount:.0f}$  giriş:{pred_obj.current_price:.2f}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: "
             f"{_wr(hour_wins, hour_total, warn_low=low_data)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
