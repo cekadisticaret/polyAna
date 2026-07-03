@@ -256,14 +256,11 @@ async def run_close() -> None:
                                  else None),
         })
 
-        icon = "✅" if win else "❌"
-        name = pos["symbol"].replace("USDT", "")
-        pct  = (current_price - entry) / entry * 100
-        lines.append(
-            f"{icon} <b>{name}</b>  {pred}  "
-            f"{entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"<b>{'+'if win else ''}{pnl:.0f}$</b>"
-        )
+        icon    = "✅" if win else "❌"
+        name    = pos["symbol"].replace("USDT", "")
+        pct     = (current_price - entry) / entry * 100
+        pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
+        lines.append(f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  {pnl_str}")
 
     state["open_positions"] = []
     save_state(state)
@@ -275,17 +272,15 @@ async def run_close() -> None:
     win_all    = sum(1 for t in history if t["win"])
     genel      = f"%{win_all/closed_all*100:.0f}" if closed_all else "—"
     saat_round = f"{int(saat[:2]):02d}:00"
+    sep        = "━" * 26
 
     msg = (
-        f"🏁 <b>3. ANALİZ — {tarih} {saat_round} İST SONUÇLAR</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        + "\n".join(lines) +
-        f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"Bu tur: <b>{'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$</b>  |  "
-        f"Bakiye: <b>${state['balance']:.2f}</b>\n"
-        f"{pnl_icon} Toplam P&L: <b>{'+'if total_pnl>=0 else ''}{total_pnl:.2f}$</b>  "
-        f"|  Genel: {genel} ({closed_all} işlem)\n"
-        f"\n⏳ <i>Yeni işlemler 05'te açılacak...</i>"
+        f"{sep}\n"
+        f"🏁 <b>3. ANALİZ — {saat_round} Sonuçlar</b>\n"
+        + "\n".join(lines) + "\n"
+        f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
+        f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel} ({closed_all} işlem)\n"
+        f"{sep}"
     )
     tg_send(msg)
     print(f"[3. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
@@ -315,26 +310,20 @@ async def run_open() -> None:
 
     passed, filter_logs = apply_filters(candidates)
 
-    lines = []
+    # Sıralama: passed konfidens sıralı, candidates'ı da aynı sıraya göre düzenle
+    passed_syms  = {c["sym"]: rank for rank, c in enumerate(passed)}
+
+    # Filtreden geçenler için pozisyon aç
     for rank, c in enumerate(passed):
-        sym      = c["sym"]
-        pred_obj = c["pred_obj"]
-        amount   = TRADE_AMOUNTS[rank] if rank < len(TRADE_AMOUNTS) else TRADE_AMOUNTS[-1]
-        entry_price = pred_obj.current_price
-
-        hour_wins, hour_total = get_stats(history, sym, hour_tr)
-        sym_wins,  sym_total  = get_symbol_stats(history, sym)
-        name     = sym.replace("USDT", "")
-        conf     = c["conf"]
-        dir_icon = "📈" if pred_obj.predicted_dir == "UP" else "📉"
-        next_h   = f"{(hour_tr + 1) % 24:02d}:00"
-        low_data = hour_total < MIN_STAT_COUNT
-
+        sym         = c["sym"]
+        pred_obj    = c["pred_obj"]
+        conf        = c["conf"]
+        amount      = TRADE_AMOUNTS[rank] if rank < len(TRADE_AMOUNTS) else TRADE_AMOUNTS[-1]
         ind_ema_raw = pred_obj.trend.upper()
         state["open_positions"].append({
             "symbol":           sym,
             "predicted_dir":    pred_obj.predicted_dir,
-            "entry_price":      entry_price,
+            "entry_price":      pred_obj.current_price,
             "entry_time_tr":    now_tr.isoformat(),
             "entry_hour_tr":    hour_tr,
             "entry_dow":        dow,
@@ -349,41 +338,61 @@ async def run_open() -> None:
                                  else "NEUTRAL"),
         })
 
-        rank_icon = ["1️⃣", "2️⃣", "3️⃣"][rank] if rank < 3 else "▶️"
+    save_state(state)
+
+    # Tüm adayları göster (filtreden geçsin geçmesin)
+    next_4h = ((hour_tr // 4) + 1) * 4
+    if next_4h >= 24:
+        next_4h = 0
+    next_h = f"{next_4h:02d}:00"
+    lines  = []
+    for c in candidates:
+        sym      = c["sym"]
+        pred_obj = c["pred_obj"]
+        conf     = c["conf"]
+        name     = sym.replace("USDT", "")
+        dir_icon = "📈" if pred_obj.predicted_dir == "UP" else "📉"
+        dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
+        low_data = get_stats(history, sym, hour_tr)[1] < MIN_STAT_COUNT
+        hour_wins, hour_total = get_stats(history, sym, hour_tr)
+        sym_wins,  sym_total  = get_symbol_stats(history, sym)
+        # Eğer bu sembol filtreden geçtiyse rank'ını ve tutarını göster
+        if sym in passed_syms:
+            rank      = passed_syms[sym]
+            amount    = TRADE_AMOUNTS[rank] if rank < len(TRADE_AMOUNTS) else TRADE_AMOUNTS[-1]
+            rank_icon = ["1️⃣", "2️⃣", "3️⃣"][rank] if rank < 3 else "▶️"
+            prefix    = f"{rank_icon}{dir_icon}"
+            amount_str = f"  {amount:.0f}$"
+        else:
+            prefix    = f"⛔{dir_icon}"
+            amount_str = ""
         lines.append(
-            f"{rank_icon}{dir_icon} <b>{name}</b>  {pred_obj.predicted_dir}  "
-            f"konf:%{conf*100:.0f}  {amount:.0f}$  giriş:{entry_price:.2f}\n"
+            f"{prefix} <b>{name}</b>  {dir_tr}  konf:%{conf*100:.0f}{amount_str}  giriş:{pred_obj.current_price:.2f}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: "
             f"{_wr(hour_wins, hour_total, warn_low=low_data)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )
 
-    save_state(state)
-
-    sep = "━" * 26
-    parts = [f"🆕 <b>3. ANALİZ — {tarih} {saat} İST YENİ İŞLEMLER</b>\n{sep}"]
+    sep      = "━" * 26
+    mini_sep = "━" * 10
+    parts    = [sep, f"🆕 <b>3. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>"]
 
     if lines:
         parts.extend(lines)
-        parts.append(sep)
-        parts.append(
-            f"💰 Bakiye: <b>${state['balance']:.2f}</b>  |  "
-            f"📂 Açık: {len(state['open_positions'])} işlem"
-        )
     else:
-        parts.append(f"⏸ <i>Bu saat filtreden geçen sinyal yok.</i>")
-        parts.append(f"💰 Bakiye: <b>${state['balance']:.2f}</b>")
+        parts.append("⏸ <i>Bu saat sinyal yok.</i>")
 
     if filter_logs:
-        parts.append(f"\n<i>{chr(10).join(filter_logs)}</i>")
+        parts.append(mini_sep)
+        parts.append("🔎 Filtre Raporu")
+        parts.extend(filter_logs)
+        parts.append(mini_sep)
 
-    parts.append(
-        f"\n<i>Min konf eşiği: %{MIN_CONF*100:.0f}  |  "
-        f"Büyüklük: 1.→{TRADE_AMOUNTS[0]:.0f}$ / 2.→{TRADE_AMOUNTS[1]:.0f}$ / 3.→{TRADE_AMOUNTS[2]:.0f}$</i>"
-    )
+    parts.append(f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Açık: {len(state['open_positions'])} işlem")
+    parts.append(sep)
 
     tg_send("\n".join(parts))
-    print(f"[3. ANALİZ open] {saat} İST — {len(lines)} yeni işlem açıldı")
+    print(f"[3. ANALİZ open] {saat} İST — {len(passed)} işlem açıldı ({len(filter_logs)} elendi)")
 
 
 # ── PREVIEW: 45 geçe ──────────────────────────────────────────

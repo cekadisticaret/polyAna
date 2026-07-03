@@ -190,14 +190,11 @@ async def run_close() -> None:
                                  else None),
         })
 
-        icon = "✅" if win else "❌"
-        name = pos["symbol"].replace("USDT", "")
-        pct  = (current_price - entry) / entry * 100
-        lines.append(
-            f"{icon} <b>{name}</b>  {pred}  "
-            f"{entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"<b>{'+'if win else ''}{pnl:.0f}$</b>"
-        )
+        icon    = "✅" if win else "❌"
+        name    = pos["symbol"].replace("USDT", "")
+        pct     = (current_price - entry) / entry * 100
+        pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
+        lines.append(f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  {pnl_str}")
 
     state["open_positions"] = []
     save_state(state)
@@ -209,17 +206,15 @@ async def run_close() -> None:
     win_all    = sum(1 for t in history if t["win"])
     genel      = f"%{win_all/closed_all*100:.0f}" if closed_all else "—"
     saat_round = f"{int(saat[:2]):02d}:00"
+    sep        = "━" * 26
 
     msg = (
-        f"🏁 <b>1. ANALİZ — {tarih} {saat_round} İST SONUÇLAR</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        + "\n".join(lines) +
-        f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"Bu tur: <b>{'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$</b>  |  "
-        f"Bakiye: <b>${state['balance']:.2f}</b>\n"
-        f"{pnl_icon} Toplam P&L: <b>{'+'if total_pnl>=0 else ''}{total_pnl:.2f}$</b>  "
-        f"|  Genel: {genel} ({closed_all} işlem)\n"
-        f"\n⏳ <i>Yeni işlemler 05'te açılacak...</i>"
+        f"{sep}\n"
+        f"🏁 <b>1. ANALİZ — {saat_round} Sonuçlar</b>\n"
+        + "\n".join(lines) + "\n"
+        f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
+        f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel} ({closed_all} işlem)\n"
+        f"{sep}"
     )
     tg_send(msg)
     print(f"[1. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
@@ -238,25 +233,23 @@ async def run_open() -> None:
     state   = load_state()
     history = load_history()
 
-    lines = []
+    # Tüm sembolleri tahmin et
+    candidates = []
     for sym in SYMBOLS:
         pred_obj = await predict(sym)
         if pred_obj is None:
             continue
+        candidates.append({"sym": sym, "pred_obj": pred_obj})
 
-        entry_price = pred_obj.current_price
-        hour_wins, hour_total = get_stats(history, sym, hour_tr)
-        sym_wins,  sym_total  = get_symbol_stats(history, sym)
-        name     = sym.replace("USDT", "")
-        conf     = max(pred_obj.prob_up, pred_obj.prob_down) * 100
-        dir_icon = "📈" if pred_obj.predicted_dir == "UP" else "📉"
-        next_h   = f"{(hour_tr + 1) % 24:02d}:00"
-
+    # Tüm sinyaller için pozisyon aç
+    for c in candidates:
+        sym         = c["sym"]
+        pred_obj    = c["pred_obj"]
         ind_ema_raw = pred_obj.trend.upper()
         state["open_positions"].append({
             "symbol":           sym,
             "predicted_dir":    pred_obj.predicted_dir,
-            "entry_price":      entry_price,
+            "entry_price":      pred_obj.current_price,
             "entry_time_tr":    now_tr.isoformat(),
             "entry_hour_tr":    hour_tr,
             "entry_dow":        dow,
@@ -270,30 +263,42 @@ async def run_open() -> None:
                                  else "NEUTRAL"),
         })
 
+    save_state(state)
+
+    next_h = f"{(hour_tr + 1) % 24:02d}:00"
+    lines  = []
+    for c in candidates:
+        sym      = c["sym"]
+        pred_obj = c["pred_obj"]
+        name     = sym.replace("USDT", "")
+        conf     = max(pred_obj.prob_up, pred_obj.prob_down) * 100
+        dir_icon = "📈" if pred_obj.predicted_dir == "UP" else "📉"
+        dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
+        hour_wins, hour_total = get_stats(history, sym, hour_tr)
+        sym_wins,  sym_total  = get_symbol_stats(history, sym)
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {pred_obj.predicted_dir}  "
-            f"konf:%{conf:.0f}  giriş:{entry_price:.2f}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{pred_obj.current_price:.2f}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )
 
-    save_state(state)
-
     sep = "━" * 26
     if lines:
         msg = (
-            f"🆕 <b>1. ANALİZ — {tarih} {saat} İST YENİ İŞLEMLER</b>\n{sep}\n"
-            + "\n".join(lines) +
-            f"\n{sep}\n"
-            f"💰 Bakiye: <b>${state['balance']:.2f}</b>  |  "
-            f"📂 Açık: {len(state['open_positions'])} işlem\n"
-            f"⏰ <i>Sonuçlar {(hour_tr+1)%24:02d}:00 İST'te gelecek</i>"
+            f"{sep}\n"
+            f"🆕 <b>1. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>\n"
+            + "\n".join(lines) + "\n"
+            f"{sep}\n"
+            f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Açık: {len(state['open_positions'])} işlem\n"
+            f"{sep}"
         )
     else:
         msg = (
-            f"🤖 <b>1. ANALİZ — {tarih} {saat} İST</b>\n{sep}\n"
-            f"⏸ <i>Bu saat sinyal yok — işlem açılmadı.</i>\n"
-            f"💰 Bakiye: <b>${state['balance']:.2f}</b>"
+            f"{sep}\n"
+            f"🆕 <b>1. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>\n"
+            f"⏸ <i>Bu saat sinyal yok.</i>\n"
+            f"💰 Bakiye: ${state['balance']:.2f}\n"
+            f"{sep}"
         )
 
     tg_send(msg)
