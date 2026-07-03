@@ -315,14 +315,25 @@ async def run_close() -> None:
 
     lines      = []
     toplam_pnl = 0.0
+    failed_pos = []
+
     for pos in list(state["open_positions"]):
-        try:
-            klines        = fetch_klines(pos["symbol"], 2)
-            current_price = klines[-1]["close"]
-        except Exception as e:
-            print(f"[4. ANALİZ close] {pos['symbol']} fiyat hatası: {e}", file=sys.stderr)
+        klines = None
+        for attempt in range(2):
+            try:
+                klines = fetch_klines(pos["symbol"], 2)
+                break
+            except Exception as e:
+                if attempt == 0:
+                    import time as _time; _time.sleep(4)
+                else:
+                    print(f"[4. ANALİZ close] {pos['symbol']} fiyat hatası: {e}", file=sys.stderr)
+                    failed_pos.append(pos)
+
+        if klines is None:
             continue
 
+        current_price = klines[-1]["close"]
         entry  = pos["entry_price"]
         pred   = pos["predicted_dir"]
         amount = pos.get("amount", AMOUNT_STRONG)
@@ -365,9 +376,15 @@ async def run_close() -> None:
             f"{pnl_str}  skor:{pos.get('score', 0):+d}/4"
         )
 
-    state["open_positions"] = []
+    # Başarısız pozisyonları bir sonraki saate bırak
+    state["open_positions"] = failed_pos
     save_state(state)
     save_history(history)
+
+    # Hata olan pozisyonlar için bildirim
+    if failed_pos:
+        names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
+        tg_send(f"⚠️ <b>4. ANALİZ</b> — {names} fiyatı alınamadı (timeout), bir sonraki saate bırakıldı.")
 
     if not lines:
         return

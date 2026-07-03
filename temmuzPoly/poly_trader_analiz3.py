@@ -214,9 +214,12 @@ async def run_close() -> None:
 
     lines      = []
     toplam_pnl = 0.0
+    failed_pos = []
+
     for pos in list(state["open_positions"]):
         klines = await _fetch_klines(pos["symbol"], "1h", 2)
         if not klines:
+            failed_pos.append(pos)
             continue
         current_price = klines[-1]["close"]
 
@@ -262,7 +265,11 @@ async def run_close() -> None:
         pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
         lines.append(f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  {pnl_str}")
 
-    state["open_positions"] = []
+    state["open_positions"] = failed_pos
+
+    if failed_pos:
+        names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
+        tg_send(f"⚠️ <b>3. ANALİZ</b> — {names} fiyatı alınamadı, bir sonraki saate bırakıldı.")
     save_state(state)
     save_history(history)
 
