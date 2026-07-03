@@ -1,261 +1,52 @@
 """
-3. ANALİZ — 4 Saatlik Teknik Durum Özeti → Telegram Bildirimi
-==============================================================
+3. ANALİZ — Filtreli + Değişken Miktar Poly Sanal Trader
 
-NE OLDUĞU / NE OLMADIGI:
-Bu script bir tahmin veya sinyal motoru DEĞİLDİR. BTC, ETH ve SOL için
-RSI, MACD, EMA trend ve hacim gibi standart teknik göstergeleri hesaplayıp
-objektif, olasılıksal bir OKUMA çıkarır. Kesin yön iddiasında BULUNMAZ.
+Algoritma: poly_predictor_analysis.py (1. ve 2. Analiz ile aynı)
 
-Cron: 0 */4 * * * → her 4 saatte bir çalışır
-Binance genel (public) REST API, API anahtarı gerekmez.
+Filtreler (2. Analiz'den):
+  FİLTRE 1 — Min Güven  : conf < %68 ise işlem açılmaz
+  FİLTRE 2 — Korelasyon : 3 coin aynı yöndeyse sadece en yüksek konf'lu al
+
+Fark (3. Analiz'e özgü):
+  Filtreden geçen sinyalleri konfidens sırasına göre sırala:
+    1. sıra → $20  |  2. sıra → $12  |  3. sıra → $8
+
+Modlar: close / open / preview / weekly / stats
 """
-
+import asyncio
 import json
 import os
 import sys
-import time
-from dataclasses import dataclass
+import urllib.request
+import urllib.parse
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-import numpy as np
-import pandas as pd
-import requests
-import urllib.request
-import urllib.parse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from poly_predictor_analysis import predict, _fetch_klines
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
-_DAYS_FULL_TR = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-_DIR          = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz3_state.json")
-HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz3_history.json")
-MIN_STAT_COUNT = 5  # istatistik için min işlem sayısı
+_DIR         = os.path.dirname(os.path.abspath(__file__))
+STATE_FILE   = os.path.join(_DIR, "poly_trader_analiz3_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz3_history.json")
+WEEKLY_IMG   = "/tmp/poly_analiz3_weekly_heatmap.png"
 
-SYMBOLS = {
-    "BTC": "BTCUSDT",
-    "ETH": "ETHUSDT",
-    "SOL": "SOLUSDT",
-}
-
-INTERVAL        = "4h"
-KLINE_LIMIT     = 300
-KLINES_BASE_URL = "https://api.binance.com/api/v3/klines"
-
-RSI_LENGTH    = 14
-EMA_FAST      = 50
-EMA_SLOW      = 200
-MACD_FAST     = 12
-MACD_SLOW     = 26
-MACD_SIGNAL   = 9
-VOLUME_LOOKBACK = 20
-
-
-# ── Veri çekme ────────────────────────────────────────────────
-def fetch_klines(symbol: str, interval: str = INTERVAL, limit: int = KLINE_LIMIT) -> pd.DataFrame:
-    params = {"symbol": symbol, "interval": interval, "limit": limit}
-    resp = requests.get(KLINES_BASE_URL, params=params, timeout=15)
-    resp.raise_for_status()
-    cols = [
-        "open_time", "open", "high", "low", "close", "volume",
-        "close_time", "quote_volume", "trades",
-        "taker_base_vol", "taker_quote_vol", "ignore",
-    ]
-    df = pd.DataFrame(resp.json(), columns=cols)
-    for c in ["open", "high", "low", "close", "volume"]:
-        df[c] = df[c].astype(float)
-    df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
-    return df
-
-
-# ── Göstergeler ───────────────────────────────────────────────
-def compute_rsi(close: pd.Series, length: int = RSI_LENGTH) -> pd.Series:
-    delta    = close.diff()
-    gain     = delta.clip(lower=0)
-    loss     = -delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1 / length, min_periods=length, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1 / length, min_periods=length, adjust=False).mean()
-    rs       = avg_gain / avg_loss.replace(0, np.nan)
-    return (100 - (100 / (1 + rs))).fillna(50)
-
-
-def compute_macd(close: pd.Series):
-    ema_fast    = close.ewm(span=MACD_FAST, adjust=False).mean()
-    ema_slow    = close.ewm(span=MACD_SLOW, adjust=False).mean()
-    macd_line   = ema_fast - ema_slow
-    signal_line = macd_line.ewm(span=MACD_SIGNAL, adjust=False).mean()
-    hist        = macd_line - signal_line
-    return macd_line, signal_line, hist
-
-
-def compute_ema(close: pd.Series, span: int) -> pd.Series:
-    return close.ewm(span=span, adjust=False).mean()
-
-
-# ── Analiz ────────────────────────────────────────────────────
-@dataclass
-class TeknikOzet:
-    sembol:       str
-    fiyat:        float
-    rsi:          float
-    rsi_durum:    str
-    rsi_emoji:    str
-    macd_durum:   str
-    macd_emoji:   str
-    trend:        str
-    trend_emoji:  str
-    hacim_durum:  str
-    hacim_emoji:  str
-    genel_okuma:  str
-    genel_emoji:  str
-    skor:         int   # -3..+3, pozitif = yukarı eğilimli
-    prob_up:      float  # gösterge hizalamasına dayalı olasılık (0.0–1.0)
-
-
-def analiz_et(sembol_kisa: str, df: pd.DataFrame) -> TeknikOzet:
-    close  = df["close"]
-    volume = df["volume"]
-
-    rsi              = compute_rsi(close)
-    _, _, hist       = compute_macd(close)
-    ema_fast         = compute_ema(close, EMA_FAST)
-    ema_slow         = compute_ema(close, EMA_SLOW)
-
-    son_fiyat   = close.iloc[-1]
-    son_rsi     = rsi.iloc[-1]
-    son_hist    = hist.iloc[-1]
-    onceki_hist = hist.iloc[-2]
-    ort_hacim   = volume.iloc[-(VOLUME_LOOKBACK + 1):-1].mean()
-    son_hacim   = volume.iloc[-1]
-
-    skor = 0
-
-    # RSI
-    if son_rsi >= 70:
-        rsi_durum, rsi_emoji = f"Aşırı alım ({son_rsi:.1f})", "🔴"
-        skor -= 1
-    elif son_rsi <= 30:
-        rsi_durum, rsi_emoji = f"Aşırı satım ({son_rsi:.1f})", "🟢"
-        skor += 1
-    elif son_rsi >= 55:
-        rsi_durum, rsi_emoji = f"Güçlü bölge ({son_rsi:.1f})", "🟡"
-        skor += 1
-    elif son_rsi <= 45:
-        rsi_durum, rsi_emoji = f"Zayıf bölge ({son_rsi:.1f})", "🟡"
-        skor -= 1
-    else:
-        rsi_durum, rsi_emoji = f"Nötr ({son_rsi:.1f})", "⚪"
-
-    # MACD
-    if son_hist > 0 and son_hist > onceki_hist:
-        macd_durum, macd_emoji = "Pozitif momentum güçleniyor", "🟢"
-        skor += 1
-    elif son_hist > 0 and son_hist <= onceki_hist:
-        macd_durum, macd_emoji = "Pozitif ama momentum zayıflıyor", "🟡"
-    elif son_hist < 0 and son_hist < onceki_hist:
-        macd_durum, macd_emoji = "Negatif momentum güçleniyor", "🔴"
-        skor -= 1
-    else:
-        macd_durum, macd_emoji = "Negatif ama momentum zayıflıyor", "🟡"
-
-    # Trend
-    if ema_fast.iloc[-1] > ema_slow.iloc[-1]:
-        trend, trend_emoji = "Yukarı yönlü (EMA50 &gt; EMA200)", "🟢"
-        skor += 1
-    else:
-        trend, trend_emoji = "Aşağı yönlü (EMA50 &lt; EMA200)", "🔴"
-        skor -= 1
-
-    # Hacim
-    if son_hacim > ort_hacim * 1.3:
-        hacim_durum, hacim_emoji = "Ortalamanın belirgin üzerinde", "📊"
-    elif son_hacim < ort_hacim * 0.7:
-        hacim_durum, hacim_emoji = "Ortalamanın belirgin altında", "📉"
-    else:
-        hacim_durum, hacim_emoji = "Ortalama seviyede", "➡️"
-
-    # Gösterge hizalamasına dayalı olasılık: her puan %6.5 ağırlık
-    # skor=+3 → %70, skor=0 → %50, skor=-3 → %30
-    prob_up = round(max(0.28, min(0.72, 0.50 + skor * 0.065)), 3)
-
-    # Genel okuma
-    if skor >= 2:
-        genel_okuma = "Göstergeler genel olarak yukarı eğilimli"
-        genel_emoji = "📈"
-    elif skor <= -2:
-        genel_okuma = "Göstergeler genel olarak aşağı eğilimli"
-        genel_emoji = "📉"
-    else:
-        genel_okuma = "Göstergeler karışık / nötr"
-        genel_emoji = "↔️"
-
-    return TeknikOzet(
-        sembol=sembol_kisa, fiyat=son_fiyat,
-        rsi=son_rsi, rsi_durum=rsi_durum, rsi_emoji=rsi_emoji,
-        macd_durum=macd_durum, macd_emoji=macd_emoji,
-        trend=trend, trend_emoji=trend_emoji,
-        hacim_durum=hacim_durum, hacim_emoji=hacim_emoji,
-        genel_okuma=genel_okuma, genel_emoji=genel_emoji,
-        skor=skor, prob_up=prob_up,
-    )
-
-
-# ── Mesaj oluşturma ───────────────────────────────────────────
-def ozet_mesaji_olustur(
-    ozetler: list[TeknikOzet],
-    saat_str: str,
-    history: list,
-    hour_tr: int,
-    dow: int,
-) -> str:
-    gun = _DAYS_FULL_TR[dow]
-    lines = [f"📡 <b>3. ANALİZ — 4 Saatlik Teknik Özet</b>\n🕐 {saat_str}\n{'━'*26}"]
-
-    for o in ozetler:
-        prob_down  = 1.0 - o.prob_up
-        yuzde_up   = int(o.prob_up * 100)
-        yuzde_down = int(prob_down * 100)
-
-        if o.prob_up >= 0.55:
-            yon_emoji = "📈"
-            yon_str   = f"<b>%{yuzde_up} artar</b> / %{yuzde_down} düşer"
-        elif o.prob_up <= 0.45:
-            yon_emoji = "📉"
-            yon_str   = f"%{yuzde_up} artar / <b>%{yuzde_down} düşer</b>"
-        else:
-            yon_emoji = "↔️"
-            yon_str   = f"%{yuzde_up} artar / %{yuzde_down} düşer"
-
-        # Geçmiş başarı istatistiği
-        sym_full    = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}[o.sembol]
-        dow_w, dow_n = get_stats(history, sym_full, hour_tr, dow)
-        all_w, all_n = get_stats(history, sym_full, hour_tr)
-        if dow_n >= 3:
-            gecmis = f"{gun} {hour_tr:02d}:00: {stat_str(dow_w, dow_n)}  |  genel: {stat_str(all_w, all_n)}"
-        else:
-            gecmis = f"{hour_tr:02d}:00 genel: {stat_str(all_w, all_n)}"
-
-        lines.append(
-            f"\n<b>{o.sembol}</b>  {o.fiyat:,.2f} USDT\n"
-            f"  {yon_emoji} <b>Olasılık (4h):</b>  {yon_str}\n"
-            f"  📊 <i>Geçmiş:</i>  {gecmis}"
-        )
-
-    lines.append(
-        f"\n{'━'*26}\n"
-        f"<i>⚠️ Bu mesaj yatırım tavsiyesi değildir. "
-        f"Standart teknik göstergelerin objektif okumasıdır.</i>"
-    )
-    return "\n".join(lines)
-
-
-# ── State & History ──────────────────────────────────────────
 INITIAL_BALANCE = 300.0
+SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+_DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
+_DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
+# Konfidens sırasına göre işlem büyüklükleri: [1. sıra, 2. sıra, 3. sıra]
+TRADE_AMOUNTS  = [20.0, 12.0, 8.0]
+MIN_CONF       = 0.68   # Filtre 1: minimum güven eşiği
+MIN_STAT_COUNT = 10     # İstatistik güveni uyarı eşiği
+
+
+# ── State ─────────────────────────────────────────────────────
 def load_state() -> dict:
     if os.path.exists(STATE_FILE):
         try:
@@ -263,7 +54,7 @@ def load_state() -> dict:
                 return json.load(f)
         except Exception:
             pass
-    return {"balance": INITIAL_BALANCE, "total_pnl": 0.0, "open_predictions": []}
+    return {"balance": INITIAL_BALANCE, "open_positions": [], "total_pnl": 0.0}
 
 
 def save_state(state: dict) -> None:
@@ -286,7 +77,15 @@ def save_history(history: list) -> None:
         json.dump(history, f, indent=2, ensure_ascii=False)
 
 
-# ── İstatistik ────────────────────────────────────────────────
+# ── İstatistik yardımcıları ───────────────────────────────────
+def _wr(wins: int, total: int, warn_low: bool = False) -> str:
+    if total == 0:
+        return "veri yok"
+    pct = wins / total * 100
+    low = " ⚠️" if warn_low and total < MIN_STAT_COUNT else ""
+    return f"%{pct:.0f} ({wins}/{total}){low}"
+
+
 def get_stats(history: list, symbol: str, hour_tr: int, dow: int | None = None) -> tuple[int, int]:
     trades = [
         t for t in history
@@ -298,182 +97,87 @@ def get_stats(history: list, symbol: str, hour_tr: int, dow: int | None = None) 
     return wins, len(trades)
 
 
-def stat_str(wins: int, total: int) -> str:
-    if total == 0:
-        return "ilk veri"
-    warn = " ⚠️" if total < MIN_STAT_COUNT else ""
-    return f"%{wins/total*100:.0f} ({wins}/{total}){warn}"
+def get_symbol_stats(history: list, symbol: str) -> tuple[int, int]:
+    trades = [t for t in history if t["symbol"] == symbol]
+    wins   = sum(1 for t in trades if t["win"])
+    return wins, len(trades)
 
 
 # ── Telegram ─────────────────────────────────────────────────
 def tg_send(text: str) -> None:
-    import json as _json
     try:
         url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        body = _json.dumps({
-            "chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            url, data=body,
-            headers={"Content-Type": "application/json"}
-        )
+        data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
+        req  = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=10) as r:
             r.read()
-        print("Mesaj Telegram'a gönderildi.")
     except Exception as e:
-        print(f"[TG] Hata: {e}", file=sys.stderr)
+        print(f"[TG] Hata: {e}")
 
 
-# ── Ana akış ─────────────────────────────────────────────────
-def main():
-    now_tr   = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    hour_tr  = now_tr.hour
-    dow      = now_tr.weekday()
-    saat_str = now_tr.strftime("%d.%m.%Y %H:%M İST")
-
-    state   = load_state()
-    history = load_history()
-
-    # 1. Önceki tahminleri kapat
-    kapanan_lines = []
-    for pred in list(state["open_predictions"]):
-        sym_full = pred["symbol"]
-        kisa     = sym_full.replace("USDT", "")
-        amount   = pred.get("amount", 10.0)
-        try:
-            df            = fetch_klines(sym_full, limit=2)
-            current_price = float(df["close"].iloc[-1])
-            entry         = pred["entry_price"]
-            predicted_dir = pred["predicted_dir"]
-            actual        = "UP" if current_price >= entry else "DOWN"
-            win           = (predicted_dir == actual)
-            pnl           = amount if win else -amount
-
-            state["balance"]   = round(state.get("balance", INITIAL_BALANCE) + pnl, 2)
-            state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
-
-            history.append({
-                "symbol":        sym_full,
-                "predicted_dir": predicted_dir,
-                "actual_dir":    actual,
-                "win":           win,
-                "entry_price":   entry,
-                "exit_price":    current_price,
-                "amount":        amount,
-                "pnl":           pnl,
-                "entry_time_tr": pred["entry_time_tr"],
-                "entry_hour_tr": pred["entry_hour_tr"],
-                "entry_dow":     pred["entry_dow"],
-                "exit_time_tr":  now_tr.isoformat(),
-                "ind_rsi_vote":  pred.get("ind_rsi_vote"),
-                "ind_rsi_ok":    (pred.get("ind_rsi_vote") == actual) if pred.get("ind_rsi_vote") else None,
-                "ind_macd_vote": pred.get("ind_macd_vote"),
-                "ind_macd_ok":   (pred.get("ind_macd_vote") == actual) if pred.get("ind_macd_vote") else None,
-                "ind_ema_vote":  pred.get("ind_ema_vote"),
-                "ind_ema_ok":    (pred.get("ind_ema_vote") == actual) if pred.get("ind_ema_vote") else None,
-            })
-            icon = "✅" if win else "❌"
-            pct  = (current_price - entry) / entry * 100
-            kapanan_lines.append(
-                f"{icon} <b>{kisa}</b> {predicted_dir}  "
-                f"{entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
-                f"<b>{'+'if win else ''}{pnl:.0f}$</b>"
-            )
-            print(f"[3. ANALİZ] {kisa} kapatıldı: {icon} {predicted_dir} → {actual} | {pnl:+.0f}$")
-        except Exception as e:
-            print(f"[3. ANALİZ] {kisa} kapatma hatası: {e}", file=sys.stderr)
-        time.sleep(0.2)
-
-    state["open_predictions"] = []
-    save_history(history)
-
-    # 2. Yeni analiz yap
-    ozetler = []
-    for kisa_ad, sembol in SYMBOLS.items():
-        try:
-            df   = fetch_klines(sembol)
-            ozet = analiz_et(kisa_ad, df)
-            ozetler.append((ozet, float(df["close"].iloc[-1])))
-        except Exception as e:
-            print(f"{kisa_ad} için veri alınamadı: {e}", file=sys.stderr)
-        time.sleep(0.3)
-
-    # Olasılık uzaklığına göre sırala (50'den ne kadar uzak)
-    ozetler.sort(key=lambda x: abs(x[0].prob_up - 0.5), reverse=True)
-
-    # Para dağılımı: 1. → $20, 2. → $12, 3. → $8
-    amounts = [20.0, 12.0, 8.0]
-    for i, (ozet, entry_price) in enumerate(ozetler):
-        amount        = amounts[i] if i < len(amounts) else 0.0
-        predicted_dir = "UP" if ozet.prob_up >= 0.50 else "DOWN"
-        if amount > 0:
-            state["open_predictions"].append({
-                "symbol":        {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}[ozet.sembol],
-                "predicted_dir": predicted_dir,
-                "entry_price":   entry_price,
-                "amount":        amount,
-                "entry_time_tr": now_tr.isoformat(),
-                "entry_hour_tr": hour_tr,
-                "entry_dow":     dow,
-                "ind_rsi_vote":  "UP" if ozet.rsi < 50 else "DOWN",
-                "ind_macd_vote": "UP" if "Pozitif" in ozet.macd_durum else "DOWN",
-                "ind_ema_vote":  "UP" if "Yukarı" in ozet.trend else "DOWN",
-            })
-
-    save_state(state)
-
-    if not ozetler:
-        print("Hiçbir sembol için veri alınamadı.", file=sys.stderr)
-        return
-
-    just_ozetler = [o for o, _ in ozetler]
-
-    # 3. Kapanış özeti + yeni işlemler Telegram mesajına ekle
-    total_pnl  = state.get("total_pnl", 0.0)
-    pnl_icon   = "🟢" if total_pnl >= 0 else "🔴"
-    closed_all = len(history)
-    win_all    = sum(1 for t in history if t["win"])
-    genel      = f"%{win_all/closed_all*100:.0f}" if closed_all else "—"
-
-    ozet_suffix = ""
-    if kapanan_lines:
-        ozet_suffix = (
-            "\n\n📌 <b>Kapanan işlemler</b>\n" +
-            "\n".join(kapanan_lines) +
-            f"\n{pnl_icon} Bakiye: <b>${state['balance']:.2f}</b>  "
-            f"|  Toplam P&L: <b>{'+'if total_pnl>=0 else ''}{total_pnl:.2f}$</b>  "
-            f"|  {genel} ({closed_all} işlem)"
+def tg_send_photo(path: str, caption: str = "") -> None:
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+    try:
+        with open(path, "rb") as f:
+            img_data = f.read()
+        boundary = "----Analiz3Boundary"
+        body = (
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n{CHAT_ID}\r\n"
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"caption\"\r\n\r\n{caption}\r\n"
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"heatmap.png\"\r\nContent-Type: image/png\r\n\r\n"
+        ).encode() + img_data + f"\r\n--{boundary}--\r\n".encode()
+        req = urllib.request.Request(
+            url, data=body,
+            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"}
         )
-
-    # Yeni işlemler özeti
-    yeni_lines = []
-    for i, (ozet, _) in enumerate(ozetler):
-        amount = amounts[i] if i < len(amounts) else 0
-        if amount > 0:
-            predicted_dir = "UP" if ozet.prob_up >= 0.50 else "DOWN"
-            dir_icon = "📈" if predicted_dir == "UP" else "📉"
-            yuzde = int(max(ozet.prob_up, 1 - ozet.prob_up) * 100)
-            rank  = "1." if i == 0 else "2."
-            yeni_lines.append(f"  {rank} {dir_icon} <b>{ozet.sembol}</b> {predicted_dir}  %{yuzde}  → <b>{amount:.0f}$</b>")
-
-    if yeni_lines:
-        ozet_suffix += "\n\n🆕 <b>Yeni işlemler</b>\n" + "\n".join(yeni_lines)
-
-    mesaj = ozet_mesaji_olustur(just_ozetler, saat_str, history, hour_tr, dow)
-    if ozet_suffix:
-        mesaj += ozet_suffix
-
-    tg_send(mesaj)
-    print(f"[3. ANALİZ] {saat_str} — {len(just_ozetler)} özet, {len(state['open_predictions'])} yeni işlem, bakiye: ${state['balance']:.2f}")
+        with urllib.request.urlopen(req, timeout=20) as r:
+            r.read()
+    except Exception as e:
+        print(f"[TG photo] Hata: {e}")
 
 
-# ── Weekly: Pazar 00:00 — ısı haritası ───────────────────────
-def _wr(wins: int, total: int) -> str:
-    if total == 0:
-        return "veri yok"
-    return f"%{wins/total*100:.0f} ({wins}/{total})"
+# ── Filtreler ─────────────────────────────────────────────────
+def apply_filters(candidates: list[dict]) -> tuple[list[dict], list[str]]:
+    """
+    candidates: [{"sym": ..., "pred_obj": ..., "conf": ...}, ...]
+    Filtre 1: conf < MIN_CONF olanları elek
+    Filtre 2: tümü aynı yöndeyse sadece max-conf'u al
+    Döner: (geçenler konfidens sıralı, elenen_açıklamalar)
+    """
+    logs = []
+
+    # Filtre 1: min güven
+    passed = []
+    for c in candidates:
+        if c["conf"] >= MIN_CONF:
+            passed.append(c)
+        else:
+            logs.append(
+                f"⛔ {c['sym'].replace('USDT','')} elendi — "
+                f"konf %{c['conf']*100:.0f} &lt; %{MIN_CONF*100:.0f}"
+            )
+
+    if not passed:
+        return [], logs
+
+    # Filtre 2: korelasyon — hepsi aynı yöndeyse sadece birini al
+    dirs = set(c["pred_obj"].predicted_dir for c in passed)
+    if len(dirs) == 1 and len(passed) > 1:
+        best    = max(passed, key=lambda c: c["conf"])
+        removed = [c for c in passed if c != best]
+        for c in removed:
+            logs.append(
+                f"⛔ {c['sym'].replace('USDT','')} elendi — "
+                f"3 coin korelasyonlu, sadece en yüksek konf alındı"
+            )
+        passed = [best]
+
+    # Konfidens sırasına göre sırala (büyükten küçüğe)
+    passed.sort(key=lambda c: c["conf"], reverse=True)
+    return passed, logs
 
 
+# ── İndikatör isabet yardımcısı ───────────────────────────────
 def _ind_stats_lines(history: list) -> list[str]:
     checks = [("RSI", "ind_rsi_ok"), ("MACD", "ind_macd_ok"), ("EMA", "ind_ema_ok")]
     lines = []
@@ -489,16 +193,252 @@ def _ind_stats_lines(history: list) -> list[str]:
     return lines
 
 
+# ── CLOSE: Saat başı ──────────────────────────────────────────
+async def run_close() -> None:
+    now    = datetime.now(timezone.utc)
+    now_tr = now.astimezone(_TZ_TR)
+    saat   = now_tr.strftime("%H:%M")
+    tarih  = now_tr.strftime("%d.%m.%Y")
+
+    state   = load_state()
+    history = load_history()
+
+    if not state["open_positions"]:
+        tg_send(
+            f"🤖 <b>3. ANALİZ</b> — {tarih} {saat} İST\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"⏸ Kapatılacak açık pozisyon yok."
+        )
+        print(f"[3. ANALİZ close] {saat} İST — açık pozisyon yok")
+        return
+
+    lines      = []
+    toplam_pnl = 0.0
+    for pos in list(state["open_positions"]):
+        klines = await _fetch_klines(pos["symbol"], "1h", 2)
+        if not klines:
+            continue
+        current_price = klines[-1]["close"]
+
+        entry  = pos["entry_price"]
+        pred   = pos["predicted_dir"]
+        amount = pos.get("amount", TRADE_AMOUNTS[0])
+        actual = "UP" if current_price >= entry else "DOWN"
+        win    = (pred == actual)
+        pnl    = amount if win else -amount
+        toplam_pnl += pnl
+
+        state["balance"]   = round(state["balance"] + pnl, 2)
+        state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
+
+        history.append({
+            "symbol":           pos["symbol"],
+            "predicted_dir":    pred,
+            "actual_dir":       actual,
+            "win":              win,
+            "entry_price":      entry,
+            "exit_price":       current_price,
+            "entry_time_tr":    pos["entry_time_tr"],
+            "entry_hour_tr":    pos["entry_hour_tr"],
+            "entry_dow":        pos["entry_dow"],
+            "entry_is_weekend": pos["entry_is_weekend"],
+            "entry_conf":       pos.get("entry_conf", 0),
+            "amount":           amount,
+            "exit_time_tr":     now_tr.isoformat(),
+            "pnl":              pnl,
+            "ind_rsi_vote":     pos.get("ind_rsi_vote"),
+            "ind_rsi_ok":       (pos.get("ind_rsi_vote") == actual) if pos.get("ind_rsi_vote") else None,
+            "ind_macd_vote":    pos.get("ind_macd_vote"),
+            "ind_macd_ok":      (pos.get("ind_macd_vote") == actual) if pos.get("ind_macd_vote") else None,
+            "ind_ema_vote":     pos.get("ind_ema_vote"),
+            "ind_ema_ok":       ((pos.get("ind_ema_vote") == actual)
+                                 if pos.get("ind_ema_vote") and pos.get("ind_ema_vote") != "NEUTRAL"
+                                 else None),
+        })
+
+        icon = "✅" if win else "❌"
+        name = pos["symbol"].replace("USDT", "")
+        pct  = (current_price - entry) / entry * 100
+        lines.append(
+            f"{icon} <b>{name}</b>  {pred}  "
+            f"{entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
+            f"<b>{'+'if win else ''}{pnl:.0f}$</b>"
+        )
+
+    state["open_positions"] = []
+    save_state(state)
+    save_history(history)
+
+    total_pnl  = state.get("total_pnl", 0.0)
+    pnl_icon   = "🟢" if total_pnl >= 0 else "🔴"
+    closed_all = len(history)
+    win_all    = sum(1 for t in history if t["win"])
+    genel      = f"%{win_all/closed_all*100:.0f}" if closed_all else "—"
+    saat_round = f"{int(saat[:2]):02d}:00"
+
+    msg = (
+        f"🏁 <b>3. ANALİZ — {tarih} {saat_round} İST SONUÇLAR</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        + "\n".join(lines) +
+        f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"Bu tur: <b>{'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$</b>  |  "
+        f"Bakiye: <b>${state['balance']:.2f}</b>\n"
+        f"{pnl_icon} Toplam P&L: <b>{'+'if total_pnl>=0 else ''}{total_pnl:.2f}$</b>  "
+        f"|  Genel: {genel} ({closed_all} işlem)\n"
+        f"\n⏳ <i>Yeni işlemler 05'te açılacak...</i>"
+    )
+    tg_send(msg)
+    print(f"[3. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
+
+
+# ── OPEN: 5 geçe — yeni tahmin + pozisyon aç ─────────────────
+async def run_open() -> None:
+    now    = datetime.now(timezone.utc)
+    now_tr = now.astimezone(_TZ_TR)
+    hour_tr    = now_tr.hour
+    dow        = now_tr.weekday()
+    is_weekend = dow >= 5
+    saat       = now_tr.strftime("%H:%M")
+    tarih      = now_tr.strftime("%d.%m.%Y")
+
+    state   = load_state()
+    history = load_history()
+
+    # Tüm sembolleri tahmin et
+    candidates = []
+    for sym in SYMBOLS:
+        pred_obj = await predict(sym)
+        if pred_obj is None:
+            continue
+        conf = max(pred_obj.prob_up, pred_obj.prob_down)
+        candidates.append({"sym": sym, "pred_obj": pred_obj, "conf": conf})
+
+    passed, filter_logs = apply_filters(candidates)
+
+    lines = []
+    for rank, c in enumerate(passed):
+        sym      = c["sym"]
+        pred_obj = c["pred_obj"]
+        amount   = TRADE_AMOUNTS[rank] if rank < len(TRADE_AMOUNTS) else TRADE_AMOUNTS[-1]
+        entry_price = pred_obj.current_price
+
+        hour_wins, hour_total = get_stats(history, sym, hour_tr)
+        sym_wins,  sym_total  = get_symbol_stats(history, sym)
+        name     = sym.replace("USDT", "")
+        conf     = c["conf"]
+        dir_icon = "📈" if pred_obj.predicted_dir == "UP" else "📉"
+        next_h   = f"{(hour_tr + 1) % 24:02d}:00"
+        low_data = hour_total < MIN_STAT_COUNT
+
+        ind_ema_raw = pred_obj.trend.upper()
+        state["open_positions"].append({
+            "symbol":           sym,
+            "predicted_dir":    pred_obj.predicted_dir,
+            "entry_price":      entry_price,
+            "entry_time_tr":    now_tr.isoformat(),
+            "entry_hour_tr":    hour_tr,
+            "entry_dow":        dow,
+            "entry_is_weekend": is_weekend,
+            "entry_conf":       conf,
+            "amount":           amount,
+            "ind_rsi_vote":     "UP" if pred_obj.rsi < 50 else "DOWN",
+            "ind_rsi_val":      round(pred_obj.rsi, 1),
+            "ind_macd_vote":    "UP" if pred_obj.macd_bull else "DOWN",
+            "ind_ema_vote":     ("UP" if "YUKARI" in ind_ema_raw
+                                 else "DOWN" if "AŞAĞI" in ind_ema_raw
+                                 else "NEUTRAL"),
+        })
+
+        rank_icon = ["1️⃣", "2️⃣", "3️⃣"][rank] if rank < 3 else "▶️"
+        lines.append(
+            f"{rank_icon}{dir_icon} <b>{name}</b>  {pred_obj.predicted_dir}  "
+            f"konf:%{conf*100:.0f}  {amount:.0f}$  giriş:{entry_price:.2f}\n"
+            f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: "
+            f"{_wr(hour_wins, hour_total, warn_low=low_data)}"
+            f"  |  genel: {_wr(sym_wins, sym_total)}"
+        )
+
+    save_state(state)
+
+    sep = "━" * 26
+    parts = [f"🆕 <b>3. ANALİZ — {tarih} {saat} İST YENİ İŞLEMLER</b>\n{sep}"]
+
+    if lines:
+        parts.extend(lines)
+        parts.append(sep)
+        parts.append(
+            f"💰 Bakiye: <b>${state['balance']:.2f}</b>  |  "
+            f"📂 Açık: {len(state['open_positions'])} işlem"
+        )
+    else:
+        parts.append(f"⏸ <i>Bu saat filtreden geçen sinyal yok.</i>")
+        parts.append(f"💰 Bakiye: <b>${state['balance']:.2f}</b>")
+
+    if filter_logs:
+        parts.append(f"\n<i>{chr(10).join(filter_logs)}</i>")
+
+    parts.append(
+        f"\n<i>Min konf eşiği: %{MIN_CONF*100:.0f}  |  "
+        f"Büyüklük: 1.→{TRADE_AMOUNTS[0]:.0f}$ / 2.→{TRADE_AMOUNTS[1]:.0f}$ / 3.→{TRADE_AMOUNTS[2]:.0f}$</i>"
+    )
+
+    tg_send("\n".join(parts))
+    print(f"[3. ANALİZ open] {saat} İST — {len(lines)} yeni işlem açıldı")
+
+
+# ── PREVIEW: 45 geçe ──────────────────────────────────────────
+def run_preview() -> None:
+    now    = datetime.now(timezone.utc)
+    now_tr = now.astimezone(_TZ_TR)
+    next_hour = (now_tr.hour + 1) % 24
+    dow       = now_tr.weekday()
+    gun_tr    = _DAYS_FULL_TR[dow]
+    tarih     = now_tr.strftime("%d.%m.%Y")
+    history   = load_history()
+
+    lines = []
+    for sym in SYMBOLS:
+        name = sym.replace("USDT", "")
+        dow_wins, dow_total = get_stats(history, sym, next_hour, dow)
+        all_wins, all_total = get_stats(history, sym, next_hour)
+
+        if all_total == 0:
+            oran_str = "henüz veri yok"
+            icon = "⚪"
+        else:
+            oran = all_wins / all_total * 100
+            icon = "🟢" if oran >= 60 else "🟡" if oran >= 50 else "🔴"
+
+            if dow_total >= 3:
+                dow_oran = dow_wins / dow_total * 100
+                oran_str = f"%{dow_oran:.0f} ({gun_tr})  |  genel %{oran:.0f}"
+            else:
+                oran_str = f"genel %{oran:.0f} ({all_total} işlem)"
+
+        lines.append(f"{icon} <b>{name}</b>  {next_hour:02d}:00 İST  {oran_str}")
+
+    sep = "━" * 26
+    msg = (
+        f"🔭 <b>3. ANALİZ — {tarih} {next_hour:02d}:00 İST ÖNİZLEME</b>\n{sep}\n"
+        + "\n".join(lines) +
+        f"\n{sep}\n"
+        f"<i>Filtre: min %{MIN_CONF*100:.0f} konf — 05'te işlem açılacak</i>"
+    )
+    tg_send(msg)
+    print(f"[3. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — {next_hour:02d}:00 önizleme gönderildi")
+
+
+# ── WEEKLY: Pazar 00:00 ───────────────────────────────────────
 def run_weekly() -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolors
-    import numpy as _np
+    import numpy as np
 
     history = load_history()
+    state   = load_state()
     now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    _DAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 
     grid_w = [[0]*24 for _ in range(7)]
     grid_n = [[0]*24 for _ in range(7)]
@@ -511,7 +451,7 @@ def run_weekly() -> None:
         if t["win"]:
             grid_w[d][h] += 1
 
-    rate = _np.full((7, 24), _np.nan)
+    rate = np.full((7, 24), np.nan)
     for d in range(7):
         for h in range(24):
             if grid_n[d][h] >= 3:
@@ -525,7 +465,7 @@ def run_weekly() -> None:
         "cyan_green", ["#1a2a2a", "#006064", "#00e5ff"], N=256
     )
     cmap.set_bad(color="#141820")
-    masked = _np.ma.masked_invalid(rate)
+    masked = np.ma.masked_invalid(rate)
     im = ax.imshow(masked, cmap=cmap, vmin=0.35, vmax=0.85, aspect="auto")
 
     ax.set_xticks(range(24))
@@ -536,7 +476,7 @@ def run_weekly() -> None:
 
     for d in range(7):
         for h in range(24):
-            if not _np.isnan(rate[d][h]):
+            if not np.isnan(rate[d][h]):
                 pct  = int(rate[d][h] * 100)
                 n    = grid_n[d][h]
                 warn = "⚠" if n < MIN_STAT_COUNT else ""
@@ -552,10 +492,12 @@ def run_weekly() -> None:
     total = len(history)
     wins  = sum(1 for t in history if t["win"])
     genel = f"%{wins/total*100:.0f}" if total else "—"
+    total_pnl = state.get("total_pnl", 0.0)
+    pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
 
     ax.set_title(
-        f"3. ANALİZ — 4 Saatlik Teknik Başarı Haritası  ({now_tr.strftime('%d.%m.%Y')})\n"
-        f"Toplam: {total} tahmin  |  {genel} doğruluk  |  RSI+MACD+EMA gösterge hizalaması",
+        f"3. ANALİZ — Filtreli & Değişken Miktar Başarı Haritası  ({now_tr.strftime('%d.%m.%Y')})\n"
+        f"Toplam: {total} işlem  |  {genel} doğruluk  |  Min %{MIN_CONF*100:.0f} konf",
         color="#00e5ff", fontsize=10, fontweight="bold", pad=10
     )
     ax.set_xlabel("Saat (İST)", color="#546e7a", fontsize=8)
@@ -568,40 +510,17 @@ def run_weekly() -> None:
     cbar.set_ticklabels(["%40", "%50", "%60", "%70", "%80"])
 
     plt.tight_layout(pad=1.2)
-    img_path = "/tmp/teknik_weekly_heatmap.png"
-    plt.savefig(img_path, dpi=150, bbox_inches="tight",
+    plt.savefig(WEEKLY_IMG, dpi=150, bbox_inches="tight",
                 facecolor="#0a0e1a", pad_inches=0.1)
     plt.close()
 
     caption = (
         f"📡 3. ANALİZ Haftalık Rapor — {now_tr.strftime('%d.%m.%Y')}\n"
-        f"Toplam {total} tahmin | {genel} doğruluk | 4h RSI+MACD+EMA"
+        f"Toplam {total} işlem | {genel} doğruluk | Filtreli+Değişken"
     )
+    tg_send_photo(WEEKLY_IMG, caption)
 
-    try:
-        with open(img_path, "rb") as f:
-            img_data = f.read()
-        boundary = "----TeknikBoundary"
-        body = (
-            f"--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n{CHAT_ID}\r\n"
-            f"--{boundary}\r\nContent-Disposition: form-data; name=\"caption\"\r\n\r\n{caption}\r\n"
-            f"--{boundary}\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"teknik_heatmap.png\"\r\nContent-Type: image/png\r\n\r\n"
-        ).encode() + img_data + f"\r\n--{boundary}--\r\n".encode()
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto",
-            data=body,
-            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"}
-        )
-        with urllib.request.urlopen(req, timeout=20) as r:
-            r.read()
-        print(f"[3. ANALİZ weekly] görsel gönderildi — {total} tahmin")
-    except Exception as e:
-        print(f"[3. ANALİZ weekly] Hata: {e}", file=sys.stderr)
-
-    state   = load_state()
-    now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    total_pnl = state.get("total_pnl", 0.0)
-    pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
+    # İndikatör isabet istatistiği
     ind_lines = _ind_stats_lines(history)
     stats_msg = (
         f"📊 <b>3. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
@@ -613,19 +532,77 @@ def run_weekly() -> None:
         + "\n".join(ind_lines)
     )
     tg_send(stats_msg)
+    print(f"[3. ANALİZ weekly] görsel gönderildi — {total} işlem")
 
 
+# ── STATS: Manuel detaylı rapor ──────────────────────────────
 def run_stats() -> None:
     history = load_history()
     state   = load_state()
     now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
+
+    if not history:
+        tg_send("📊 <b>3. ANALİZ STATS</b>\nHenüz veri yok.")
+        return
+
     total     = len(history)
-    wins      = sum(1 for t in history if t["win"])
+    wins_all  = sum(1 for t in history if t["win"])
     total_pnl = state.get("total_pnl", 0.0)
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
-    genel     = f"%{wins/total*100:.0f}" if total else "—"
-    ind_lines = _ind_stats_lines(history)
 
+    parts = [
+        f"📊 <b>3. ANALİZ İSTATİSTİKLER</b>",
+        f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
+        f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
+        f"Filtre: min konf %{MIN_CONF*100:.0f}  |  ⚠️ = {MIN_STAT_COUNT} altı veri",
+        f"\n🔬 <b>İndikatör İsabet Oranı</b>",
+        *_ind_stats_lines(history),
+    ]
+
+    wd = [t for t in history if not t.get("entry_is_weekend")]
+    we = [t for t in history if t.get("entry_is_weekend")]
+    if wd or we:
+        parts.append(f"\n📅 <b>Hafta İçi vs Hafta Sonu</b>")
+        if wd:
+            parts.append(f"  Hafta içi : {_wr(sum(1 for t in wd if t['win']), len(wd))}")
+        if we:
+            parts.append(f"  Hafta sonu: {_wr(sum(1 for t in we if t['win']), len(we))}")
+
+    for sym in SYMBOLS:
+        name   = sym.replace("USDT", "")
+        s_hist = [t for t in history if t["symbol"] == sym]
+        if not s_hist:
+            continue
+        sw, st = sum(1 for t in s_hist if t["win"]), len(s_hist)
+        parts.append(f"\n📌 <b>{name}</b>  genel: {_wr(sw, st)}")
+
+        hour_data: dict[int, list] = {}
+        for t in s_hist:
+            h = t.get("entry_hour_tr")
+            if h is None:
+                continue
+            hour_data.setdefault(h, [0, 0])
+            hour_data[h][1] += 1
+            if t["win"]:
+                hour_data[h][0] += 1
+
+        rows = [(h, w, n) for h, (w, n) in hour_data.items() if n >= 3]
+        rows.sort(key=lambda x: x[1]/x[2], reverse=True)
+        for h, w, n in rows[:5]:
+            bar = "🟢" if w/n >= 0.6 else "🟡" if w/n >= 0.5 else "🔴"
+            parts.append(f"  {bar} {h:02d}:00 İST  {_wr(w, n)}")
+
+        sym_wd = [t for t in s_hist if not t.get("entry_is_weekend")]
+        sym_we = [t for t in s_hist if t.get("entry_is_weekend")]
+        if sym_wd and sym_we:
+            parts.append(
+                f"  📅 Hafta içi {_wr(sum(1 for t in sym_wd if t['win']), len(sym_wd))}"
+                f"  |  Sonu {_wr(sum(1 for t in sym_we if t['win']), len(sym_we))}"
+            )
+
+    parts.append(f"\n📆 <b>Gün Bazlı</b>")
     dow_data: dict[int, list] = {}
     for t in history:
         d = t.get("entry_dow")
@@ -636,47 +613,28 @@ def run_stats() -> None:
         if t["win"]:
             dow_data[d][0] += 1
 
-    dow_lines = []
-    _DAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
     for d in range(7):
         if d not in dow_data:
             continue
         w, n = dow_data[d]
         bar = "🟢" if w/n >= 0.6 else "🟡" if w/n >= 0.5 else "🔴"
-        dow_lines.append(f"  {bar} {_DAYS_TR[d]}: {_wr(w, n)}")
+        wk  = "📅" if d < 5 else "🏖"
+        parts.append(f"  {wk}{bar} {_DAYS_TR[d]}  {_wr(w, n)}")
 
-    sym_lines = []
-    for kisa, full in {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}.items():
-        s = [t for t in history if t["symbol"] == full]
-        if s:
-            sw = sum(1 for t in s if t["win"])
-            sym_lines.append(f"  {'🟢' if sw/len(s)>=0.6 else '🟡' if sw/len(s)>=0.5 else '🔴'} {kisa}: {_wr(sw, len(s))}")
-
-    parts = [
-        f"📊 <b>3. ANALİZ İSTATİSTİKLER</b>",
-        f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
-        f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
-        f"Toplam: {total} işlem  |  {genel} başarı",
-        f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
-    ]
-    if sym_lines:
-        parts.append(f"\n📌 <b>Sembol Bazlı</b>")
-        parts.extend(sym_lines)
-    if dow_lines:
-        parts.append(f"\n📆 <b>Gün Bazlı</b>")
-        parts.extend(dow_lines)
-    parts.append(f"\n🔬 <b>İndikatör İsabet Oranı</b>")
-    parts.extend(ind_lines)
     tg_send("\n".join(parts))
     print("[3. ANALİZ stats] gönderildi")
 
 
+# ── Giriş noktası ─────────────────────────────────────────────
 if __name__ == "__main__":
-    import sys as _sys
-    mode = _sys.argv[1] if len(_sys.argv) > 1 else "main"
-    if mode == "weekly":
+    mode = sys.argv[1] if len(sys.argv) > 1 else "open"
+    if mode == "close":
+        asyncio.run(run_close())
+    elif mode == "preview":
+        run_preview()
+    elif mode == "weekly":
         run_weekly()
     elif mode == "stats":
         run_stats()
     else:
-        main()
+        asyncio.run(run_open())
