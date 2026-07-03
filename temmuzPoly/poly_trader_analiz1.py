@@ -296,7 +296,7 @@ async def run_open() -> None:
             f"🆕 <b>1. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>\n"
             + "\n".join(lines) + "\n"
             f"{sep}\n"
-            f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Açık: {len(state['open_positions'])} işlem\n"
+            f"💰 Ana: ${state['balance'] - len(state['open_positions']) * TRADE_AMOUNT:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${len(state['open_positions']) * TRADE_AMOUNT:.0f}  |  Toplam: ${state['balance']:.2f}\n"
             f"{sep}"
         )
     else:

@@ -387,7 +387,8 @@ async def run_open() -> None:
         parts.extend(filter_logs)
         parts.append(mini_sep)
 
-    parts.append(f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Açık: {len(state['open_positions'])} işlem")
+    _at_risk3 = sum(p.get("amount", TRADE_AMOUNTS[0]) for p in state["open_positions"])
+    parts.append(f"💰 Ana: ${state['balance'] - _at_risk3:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${_at_risk3:.0f}  |  Toplam: ${state['balance']:.2f}")
     parts.append(sep)
 
     tg_send("\n".join(parts))

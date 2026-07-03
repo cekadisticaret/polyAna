@@ -492,7 +492,8 @@ async def run_open() -> None:
         parts.extend(skip_lines)
         parts.append(mini_sep)
 
-    parts.append(f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Açık: {len(state['open_positions'])} işlem")
+    _at_risk4 = sum(p.get("amount", AMOUNT_STRONG) for p in state["open_positions"])
+    parts.append(f"💰 Ana: ${state['balance'] - _at_risk4:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${_at_risk4:.0f}  |  Toplam: ${state['balance']:.2f}")
     parts.append(
         f"<i>Eşik: |skor|≥3→{AMOUNT_STRONG:.0f}$  |skor|=2→{AMOUNT_MODERATE:.0f}$  ≤1→yok</i>"
     )
