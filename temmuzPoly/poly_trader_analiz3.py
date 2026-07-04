@@ -244,7 +244,7 @@ async def run_close() -> None:
             "entry_time_tr":    pos["entry_time_tr"],
             "entry_hour_tr":    pos["entry_hour_tr"],
             "entry_dow":        pos["entry_dow"],
-            "entry_is_weekend": pos["entry_is_weekend"],
+            "entry_is_weekend": pos.get("entry_is_weekend", False),
             "entry_conf":       pos.get("entry_conf", 0),
             "amount":           amount,
             "exit_time_tr":     now_tr.isoformat(),
