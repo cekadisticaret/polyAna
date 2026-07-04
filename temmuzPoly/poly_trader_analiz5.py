@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 # ── Config ────────────────────────────────────────────────────
-BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
+BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
