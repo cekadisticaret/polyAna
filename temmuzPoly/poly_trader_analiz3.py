@@ -1,5 +1,5 @@
 """
-3. ANALİZ — Filtreli + Değişken Miktar Poly Sanal Trader
+3. ANALİZ (4.Saatlik) — Filtreli + Değişken Miktar Poly Sanal Trader
 
 Algoritma: poly_predictor_analysis.py (1. ve 2. Analiz ile aynı)
 
@@ -205,11 +205,11 @@ async def run_close() -> None:
 
     if not state["open_positions"]:
         tg_send(
-            f"🤖 <b>3. ANALİZ</b> — {tarih} {saat} İST\n"
+            f"🤖 <b>3. ANALİZ (4.Saatlik)</b> — {tarih} {saat} İST\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             f"⏸ Kapatılacak açık pozisyon yok."
         )
-        print(f"[3. ANALİZ close] {saat} İST — açık pozisyon yok")
+        print(f"[3. ANALİZ (4.Saatlik) close] {saat} İST — açık pozisyon yok")
         return
 
     lines      = []
@@ -269,7 +269,7 @@ async def run_close() -> None:
 
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        tg_send(f"⚠️ <b>3. ANALİZ</b> — {names} fiyatı alınamadı, bir sonraki saate bırakıldı.")
+        tg_send(f"⚠️ <b>3. ANALİZ (4.Saatlik)</b> — {names} fiyatı alınamadı, bir sonraki saate bırakıldı.")
     save_state(state)
     save_history(history)
 
@@ -283,14 +283,14 @@ async def run_close() -> None:
 
     msg = (
         f"{sep}\n"
-        f"🏁 <b>3. ANALİZ — {saat_round} Sonuçlar</b>\n"
+        f"🏁 <b>3. ANALİZ (4.Saatlik) — {saat_round} Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
         f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel} ({closed_all} işlem)\n"
         f"{sep}"
     )
     tg_send(msg)
-    print(f"[3. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
+    print(f"[3. ANALİZ (4.Saatlik) close] {saat} İST — {len(lines)} pozisyon kapatıldı")
 
 
 # ── OPEN: 5 geçe — yeni tahmin + pozisyon aç ─────────────────
@@ -374,7 +374,7 @@ async def run_open() -> None:
 
     sep      = "━" * 26
     mini_sep = "━" * 10
-    parts    = [sep, f"🆕 <b>3. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>"]
+    parts    = [sep, f"🆕 <b>3. ANALİZ (4.Saatlik) — {saat} - {next_h} Yeni İşlemler</b>"]
 
     if lines:
         parts.extend(lines)
@@ -392,7 +392,7 @@ async def run_open() -> None:
     parts.append(sep)
 
     tg_send("\n".join(parts))
-    print(f"[3. ANALİZ open] {saat} İST — {len(passed)} işlem açıldı ({len(filter_logs)} elendi)")
+    print(f"[3. ANALİZ (4.Saatlik) open] {saat} İST — {len(passed)} işlem açıldı ({len(filter_logs)} elendi)")
 
 
 # ── PREVIEW: 45 geçe ──────────────────────────────────────────
@@ -428,13 +428,13 @@ def run_preview() -> None:
 
     sep = "━" * 26
     msg = (
-        f"🔭 <b>3. ANALİZ — {tarih} {next_hour:02d}:00 İST ÖNİZLEME</b>\n{sep}\n"
+        f"🔭 <b>3. ANALİZ (4.Saatlik) — {tarih} {next_hour:02d}:00 İST ÖNİZLEME</b>\n{sep}\n"
         + "\n".join(lines) +
         f"\n{sep}\n"
         f"<i>Filtre: min %{MIN_CONF*100:.0f} konf — 05'te işlem açılacak</i>"
     )
     tg_send(msg)
-    print(f"[3. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — {next_hour:02d}:00 önizleme gönderildi")
+    print(f"[3. ANALİZ (4.Saatlik) preview] {now_tr.strftime('%H:%M')} İST — {next_hour:02d}:00 önizleme gönderildi")
 
 
 # ── WEEKLY: Pazar 00:00 ───────────────────────────────────────
@@ -505,7 +505,7 @@ def run_weekly() -> None:
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
 
     ax.set_title(
-        f"3. ANALİZ — Filtreli & Değişken Miktar Başarı Haritası  ({now_tr.strftime('%d.%m.%Y')})\n"
+        f"3. ANALİZ (4.Saatlik) — Filtreli & Değişken Miktar Başarı Haritası  ({now_tr.strftime('%d.%m.%Y')})\n"
         f"Toplam: {total} işlem  |  {genel} doğruluk  |  Min %{MIN_CONF*100:.0f} konf",
         color="#00e5ff", fontsize=10, fontweight="bold", pad=10
     )
@@ -524,7 +524,7 @@ def run_weekly() -> None:
     plt.close()
 
     caption = (
-        f"📡 3. ANALİZ Haftalık Rapor — {now_tr.strftime('%d.%m.%Y')}\n"
+        f"📡 3. ANALİZ (4.Saatlik) Haftalık Rapor — {now_tr.strftime('%d.%m.%Y')}\n"
         f"Toplam {total} işlem | {genel} doğruluk | Filtreli+Değişken"
     )
     tg_send_photo(WEEKLY_IMG, caption)
@@ -532,7 +532,7 @@ def run_weekly() -> None:
     # İndikatör isabet istatistiği
     ind_lines = _ind_stats_lines(history)
     stats_msg = (
-        f"📊 <b>3. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
+        f"📊 <b>3. ANALİZ (4.Saatlik) HAFTALIK İSTATİSTİKLER</b>\n"
         f"{now_tr.strftime('%d.%m.%Y')} İST\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {genel} başarı\n"
@@ -541,7 +541,7 @@ def run_weekly() -> None:
         + "\n".join(ind_lines)
     )
     tg_send(stats_msg)
-    print(f"[3. ANALİZ weekly] görsel gönderildi — {total} işlem")
+    print(f"[3. ANALİZ (4.Saatlik) weekly] görsel gönderildi — {total} işlem")
 
 
 # ── STATS: Manuel detaylı rapor ──────────────────────────────
@@ -551,7 +551,7 @@ def run_stats() -> None:
     now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
 
     if not history:
-        tg_send("📊 <b>3. ANALİZ STATS</b>\nHenüz veri yok.")
+        tg_send("📊 <b>3. ANALİZ (4.Saatlik) STATS</b>\nHenüz veri yok.")
         return
 
     total     = len(history)
@@ -560,7 +560,7 @@ def run_stats() -> None:
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
 
     parts = [
-        f"📊 <b>3. ANALİZ İSTATİSTİKLER</b>",
+        f"📊 <b>3. ANALİZ (4.Saatlik) İSTATİSTİKLER</b>",
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
@@ -631,7 +631,7 @@ def run_stats() -> None:
         parts.append(f"  {wk}{bar} {_DAYS_TR[d]}  {_wr(w, n)}")
 
     tg_send("\n".join(parts))
-    print("[3. ANALİZ stats] gönderildi")
+    print("[3. ANALİZ (4.Saatlik) stats] gönderildi")
 
 
 # ── Giriş noktası ─────────────────────────────────────────────
