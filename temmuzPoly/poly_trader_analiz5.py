@@ -63,20 +63,38 @@ _PM_DRY_RUN   = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 
 
 def _pm_get_client():
-    from py_clob_client_v2 import ClobClient, ApiCreds
-    creds = ApiCreds(
-        api_key=os.getenv("POLY_API_KEY", ""),
-        api_secret=os.getenv("POLY_API_SECRET", ""),
-        api_passphrase=os.getenv("POLY_API_PASSPHRASE", ""),
-    )
-    return ClobClient(
-        host=_PM_CLOB_HOST,
-        chain_id=137,
-        key=os.getenv("POLY_PRIVATE_KEY", ""),
-        creds=creds,
-        signature_type=0,
-        funder=os.getenv("POLY_FUNDER", ""),
-    )
+    """Her çağrıda taze cred türet — 401 retry ile güvenli."""
+    from py_clob_client_v2 import ClobClient
+    pk     = os.getenv("POLY_PRIVATE_KEY", "")
+    funder = os.getenv("POLY_FUNDER", "")
+    for attempt in range(3):
+        try:
+            temp  = ClobClient(host=_PM_CLOB_HOST, chain_id=137, key=pk)
+            creds = temp.create_or_derive_api_key()
+            if creds is None:
+                time.sleep(2)
+                continue
+            return ClobClient(
+                host=_PM_CLOB_HOST, chain_id=137, key=pk,
+                creds=creds, signature_type=1, funder=funder,
+            )
+        except Exception as e:
+            print(f"[5. ANALİZ] Client init ({attempt+1}/3): {e}", file=sys.stderr)
+            time.sleep(2)
+    raise RuntimeError("Polymarket client oluşturulamadı")
+
+
+def _pm_get_balance() -> float:
+    """Proxy wallet USDC bakiyesi (CLOB). Hata durumunda -1 döner."""
+    try:
+        from py_clob_client_v2.clob_types import BalanceAllowanceParams, AssetType
+        client = _pm_get_client()
+        bal = client.get_balance_allowance(
+            params=BalanceAllowanceParams(asset_type=AssetType.COLLATERAL)
+        )
+        return int(bal.get("balance", 0)) / 1e6
+    except Exception:
+        return -1.0
 
 
 def _pm_find_market(symbol: str, et_hour: int, date_utc) -> dict | None:
@@ -567,7 +585,7 @@ async def run_close() -> None:
         f"{sep}\n"
         f"🏁 <b>5. ANALİZ — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
-        f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
+        f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Sanal: ${state['balance']:.2f}  |  🟢 PM: ${_pm_get_balance():.2f}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel} ({closed_all} işlem)\n"
         f"{sep}"
     )
@@ -702,8 +720,11 @@ async def run_open() -> None:
         parts.extend(skip_lines)
         parts.append(mini_sep)
 
-    _at_risk4 = sum(p.get("amount", AMOUNT_STRONG) for p in state["open_positions"])
-    parts.append(f"💰 Ana: ${state['balance'] - _at_risk4:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${_at_risk4:.0f}  |  Toplam: ${state['balance']:.2f}")
+    _at_risk4  = sum(p.get("amount", AMOUNT_STRONG) for p in state["open_positions"])
+    pm_bal     = _pm_get_balance()
+    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
+    parts.append(f"💰 Sanal: ${state['balance']:.2f}  |  🟢 PM Bütçe: {pm_bal_str}")
+    parts.append(f"📂 Açık: {len(state['open_positions'])} poz  ${_at_risk4:.0f} riskte")
     parts.append(
         f"<i>Eşik: |skor|≥3→{AMOUNT_STRONG:.0f}$  |skor|=2→{AMOUNT_MODERATE:.0f}$  ≤1→yok</i>"
     )
