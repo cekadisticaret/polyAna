@@ -489,6 +489,7 @@ async def run_close() -> None:
         current_price = klines[-1]["close"]
         entry  = pos["entry_price"]
         pred   = pos["predicted_dir"]
+        amount = pos.get("amount", AMOUNT_STRONG)
         actual = "UP" if current_price >= entry else "DOWN"
         win    = (pred == actual)
 
@@ -539,7 +540,7 @@ async def run_close() -> None:
             "pm_spent":         pos.get("pm_spent"),
             "pm_order_id":      pos.get("pm_order_id"),
             "exit_time_tr":     now_tr.isoformat(),
-            "pnl":              pnl,
+            "pnl":              pos.get("pm_spent", 0) * (-1 if not win else 1),
             "ind_trend_ok":     _vote_ok(vs[0], actual) if len(vs) > 0 else None,
             "ind_mr_ok":        _vote_ok(vs[1], actual) if len(vs) > 1 else None,
             "ind_of_ok":        _vote_ok(vs[2], actual) if len(vs) > 2 else None,
