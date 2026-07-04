@@ -310,6 +310,7 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
+        tg_send(f"⏸ <b>4. ANALİZ — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[4. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
