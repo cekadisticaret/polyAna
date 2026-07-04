@@ -22,8 +22,18 @@ import sys
 import time
 import urllib.request
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
+
+# .env yükle
+_ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+if os.path.exists(_ENV_FILE):
+    with open(_ENV_FILE) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
@@ -43,6 +53,112 @@ _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cum
 AMOUNT_STRONG   = 20.0   # |skor| >= 3
 AMOUNT_MODERATE = 12.0   # |skor| == 2
 MIN_STAT_COUNT  = 10
+
+# ── Polymarket Config ──────────────────────────────────────────
+_PM_CLOB_HOST = "https://clob.polymarket.com"
+_PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
+_PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
+_PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana"}
+_PM_DRY_RUN   = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
+
+
+def _pm_get_client():
+    from py_clob_client_v2 import ClobClient, ApiCreds
+    creds = ApiCreds(
+        api_key=os.getenv("POLY_API_KEY", ""),
+        api_secret=os.getenv("POLY_API_SECRET", ""),
+        api_passphrase=os.getenv("POLY_API_PASSPHRASE", ""),
+    )
+    return ClobClient(
+        host=_PM_CLOB_HOST,
+        chain_id=137,
+        key=os.getenv("POLY_PRIVATE_KEY", ""),
+        creds=creds,
+        signature_type=0,
+        funder=os.getenv("POLY_FUNDER", ""),
+    )
+
+
+def _pm_find_market(symbol: str, et_hour: int, date_utc) -> dict | None:
+    """Polymarket saatlik marketi bul. ET saatine göre slug oluşturur."""
+    asset = _PM_ASSET_MAP.get(symbol)
+    if not asset:
+        return None
+    month = date_utc.strftime("%B").lower()
+    day   = date_utc.day
+    year  = date_utc.year
+    # Saat formatı: 9am, 10am, 12pm, 1pm...
+    if et_hour == 0:
+        h_str = "12am"
+    elif et_hour < 12:
+        h_str = f"{et_hour}am"
+    elif et_hour == 12:
+        h_str = "12pm"
+    else:
+        h_str = f"{et_hour - 12}pm"
+    slugs = [
+        f"{asset}-up-or-down-{month}-{day}-{year}-{h_str}-et",
+        f"{asset}-up-or-down-{month}-{day}-{h_str}-et",
+    ]
+    for slug in slugs:
+        try:
+            req = urllib.request.Request(f"{_PM_GAMMA_URL}?slug={slug}", headers=_PM_HEADERS)
+            with urllib.request.urlopen(req, timeout=10) as r:
+                data = json.load(r)
+            if not data:
+                continue
+            event = data[0]
+            markets = event.get("markets", [])
+            if not markets:
+                continue
+            m      = markets[0]
+            raw_tk = m.get("clobTokenIds", [])
+            tokens = json.loads(raw_tk) if isinstance(raw_tk, str) else raw_tk
+            if len(tokens) < 2:
+                continue
+            raw_op = m.get("outcomePrices")
+            op     = json.loads(raw_op) if isinstance(raw_op, str) else (raw_op or [])
+            return {
+                "slug":           event.get("slug", slug),
+                "title":          event.get("title", ""),
+                "active":         event.get("active", False),
+                "closed":         event.get("closed", False),
+                "up_token":       tokens[0],
+                "down_token":     tokens[1],
+                "tick_size":      str(m.get("orderPriceMinTickSize", "0.01")),
+                "neg_risk":       bool(m.get("negRisk", False)),
+                "outcome_prices": op,
+            }
+        except Exception as e:
+            print(f"[5. ANALİZ] Gamma hatası ({slug}): {e}", file=sys.stderr)
+    return None
+
+
+def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
+                    neg_risk: bool = False) -> dict | None:
+    """token_id'yi amount_usd kadar satın al. {order_id, size, price, spent} döndürür."""
+    try:
+        from py_clob_client_v2 import OrderArgs, Side, PartialCreateOrderOptions
+        client  = _pm_get_client()
+        # En iyi alış fiyatını çek
+        pr      = client.get_price(token_id=token_id, side="BUY")
+        price   = float(pr.get("price", 0.5))
+        price   = max(0.02, min(0.98, price))
+        tick    = float(tick_size)
+        price   = round(round(price / tick) * tick, 6)
+        size    = max(5.0, round(amount_usd / price, 2))
+        spent   = round(size * price, 4)
+        if _PM_DRY_RUN:
+            print(f"[DRY RUN] {token_id[:16]}…  {size} shares @ {price}  (~${spent:.2f})")
+            return {"order_id": "DRY_RUN", "size": size, "price": price, "spent": spent}
+        args = OrderArgs(token_id=token_id, price=price, size=size, side=Side.BUY)
+        opts = PartialCreateOrderOptions(tick_size=tick_size, neg_risk=neg_risk)
+        resp = client.create_and_post_order(args, options=opts)
+        oid  = resp.get("orderID") or resp.get("id", "")
+        return {"order_id": oid, "size": size, "price": price, "spent": spent}
+    except Exception as e:
+        print(f"[5. ANALİZ] Order hatası: {e}", file=sys.stderr)
+        return None
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -345,12 +461,41 @@ async def run_close() -> None:
         state["balance"]   = round(state["balance"] + pnl, 2)
         state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
 
+        # Polymarket gerçek sonucu kontrol et
+        pm_pnl_str  = ""
+        pm_win      = None
+        if pos.get("pm_slug") and not pos.get("pm_error"):
+            try:
+                req = urllib.request.Request(
+                    f"{_PM_GAMMA_URL}?slug={pos['pm_slug']}",
+                    headers=_PM_HEADERS,
+                )
+                with urllib.request.urlopen(req, timeout=10) as r:
+                    pm_data = json.load(r)
+                if pm_data:
+                    pm_ev = pm_data[0]
+                    pm_m  = pm_ev.get("markets", [{}])[0]
+                    raw_op = pm_m.get("outcomePrices")
+                    op     = json.loads(raw_op) if isinstance(raw_op, str) else (raw_op or [])
+                    if op and pm_ev.get("closed"):
+                        up_won  = float(op[0]) >= 0.99
+                        our_won = (pos["pm_token_dir"] == "UP" and up_won) or \
+                                  (pos["pm_token_dir"] == "DOWN" and not up_won)
+                        pm_win   = our_won
+                        pm_size  = pos.get("pm_size", 0)
+                        pm_spent = pos.get("pm_spent", 0)
+                        pm_pnl_val = round(pm_size - pm_spent, 2) if our_won else round(-pm_spent, 2)
+                        pm_pnl_str = f"  |  🎯PM: {'+'if our_won else ''}{pm_pnl_val:.2f}$"
+            except Exception as e:
+                print(f"[5. ANALİZ close] PM sonuç hatası: {e}", file=sys.stderr)
+
         vs = pos.get("votes", [])
         history.append({
             "symbol":           pos["symbol"],
             "predicted_dir":    pred,
             "actual_dir":       actual,
             "win":              win,
+            "pm_win":           pm_win,
             "entry_price":      entry,
             "exit_price":       current_price,
             "entry_time_tr":    pos["entry_time_tr"],
@@ -359,6 +504,8 @@ async def run_close() -> None:
             "entry_is_weekend": pos["entry_is_weekend"],
             "score":            pos.get("score", 0),
             "amount":           amount,
+            "pm_spent":         pos.get("pm_spent"),
+            "pm_order_id":      pos.get("pm_order_id"),
             "exit_time_tr":     now_tr.isoformat(),
             "pnl":              pnl,
             "ind_trend_ok":     _vote_ok(vs[0], actual) if len(vs) > 0 else None,
@@ -368,12 +515,13 @@ async def run_close() -> None:
         })
 
         icon    = "✅" if win else "❌"
+        pm_icon = f" {'✅' if pm_win else '❌' if pm_win is not None else '⏳'}PM" if pos.get("pm_slug") else ""
         name    = pos["symbol"].replace("USDT", "")
         pct     = (current_price - entry) / entry * 100
         pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
         lines.append(
-            f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"{pnl_str}  skor:{pos.get('score', 0):+d}/4"
+            f"{icon}{pm_icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
+            f"{pnl_str}  skor:{pos.get('score', 0):+d}/4{pm_pnl_str}"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
@@ -426,10 +574,14 @@ async def run_open() -> None:
             results.append(sig)
         time.sleep(0.4)
 
-    # Pozisyon aç
+    # Mevcut ET saati (EDT = UTC-4)
+    et_now   = now - timedelta(hours=4)
+    et_hour  = et_now.hour
+
+    # Pozisyon aç + Polymarket order
     for sig in results:
         if sig["amount"] > 0 and sig["predicted_dir"]:
-            state["open_positions"].append({
+            pos = {
                 "symbol":           sig["symbol"],
                 "predicted_dir":    sig["predicted_dir"],
                 "entry_price":      sig["price"],
@@ -440,7 +592,31 @@ async def run_open() -> None:
                 "score":            sig["score"],
                 "amount":           sig["amount"],
                 "votes":            sig["votes"],
-            })
+            }
+            # Polymarket'te gerçek işlem aç
+            pm = _pm_find_market(sig["symbol"], et_hour, now)
+            if pm and pm.get("active") and not pm.get("closed"):
+                token_id = pm["up_token"] if sig["predicted_dir"] == "UP" else pm["down_token"]
+                order    = _pm_place_order(token_id, sig["amount"], pm["tick_size"], pm["neg_risk"])
+                if order:
+                    pos["pm_slug"]        = pm["slug"]
+                    pos["pm_title"]       = pm["title"]
+                    pos["pm_token_id"]    = token_id
+                    pos["pm_token_dir"]   = sig["predicted_dir"]
+                    pos["pm_size"]        = order["size"]
+                    pos["pm_entry_price"] = order["price"]
+                    pos["pm_order_id"]    = order["order_id"]
+                    pos["pm_spent"]       = order["spent"]
+                    print(f"[5. ANALİZ] Polymarket order: {sig['symbol']} {sig['predicted_dir']} "
+                          f"{order['size']} shares @ {order['price']} (${order['spent']:.2f})")
+                else:
+                    pos["pm_slug"]  = pm.get("slug", "")
+                    pos["pm_error"] = "order_failed"
+            else:
+                pos["pm_error"] = "market_not_found" if not pm else "market_closed"
+                print(f"[5. ANALİZ] {sig['symbol']} Polymarket marketi bulunamadı/kapalı", file=sys.stderr)
+
+            state["open_positions"].append(pos)
 
     save_state(state)
 
@@ -467,12 +643,27 @@ async def run_open() -> None:
             icon = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
             vote_icons.append(f"{icon} {lbl}")
 
+        # Polymarket order durumu
+        matched_pos = next(
+            (p for p in state["open_positions"] if p["symbol"] == sym),
+            None
+        )
+        pm_str = ""
+        if matched_pos:
+            if matched_pos.get("pm_order_id") and matched_pos.get("pm_order_id") != "DRY_RUN":
+                pm_str = f"\n   🟩 PM bet: {matched_pos.get('pm_size', 0):.1f} shares @ {matched_pos.get('pm_entry_price', 0):.3f} (${matched_pos.get('pm_spent', 0):.2f})"
+            elif matched_pos.get("pm_order_id") == "DRY_RUN":
+                pm_str = f"\n   🔶 PM DRY RUN: {matched_pos.get('pm_size', 0):.1f} shares @ {matched_pos.get('pm_entry_price', 0):.3f}"
+            elif matched_pos.get("pm_error"):
+                pm_str = f"\n   ⚠️ PM: {matched_pos.get('pm_error','')}"
+
         lines.append(
             f"{dir_icon} <b>{name}</b>  {dir_tr}  skor:{score:+d}/4  {amount:.0f}$  giriş:{sig['price']:.2f}\n"
             f"   {vote_icons[0]}   {vote_icons[1]}\n"
             f"   {vote_icons[2]}   {vote_icons[3]}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hour_wins, hour_total, warn_low=low_data)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
+            f"{pm_str}"
         )
 
     skip_lines = [
