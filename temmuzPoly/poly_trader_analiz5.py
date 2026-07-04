@@ -50,8 +50,8 @@ SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 20.0   # |skor| >= 3
-AMOUNT_MODERATE = 12.0   # |skor| == 2
+AMOUNT_STRONG   = 6.0    # |skor| >= 3
+AMOUNT_MODERATE = 4.0    # |skor| == 2
 MIN_STAT_COUNT  = 10
 
 # ── Polymarket Config ──────────────────────────────────────────
@@ -134,27 +134,46 @@ def _pm_find_market(symbol: str, et_hour: int, date_utc) -> dict | None:
     return None
 
 
+def _pm_fit_buy(size: float, price: float, min_shares: float = 5.0) -> tuple[float, float]:
+    """CLOB BUY: size×price tam sent olacak şekilde size ayarla (max 2 ondalık)."""
+    from decimal import Decimal, ROUND_DOWN
+    p = Decimal(str(round(price, 2)))
+    if p <= 0:
+        return size, price
+    s = max(Decimal(str(round(size, 2))), Decimal(str(round(min_shares, 2))))
+    step = Decimal("0.01")
+    for _ in range(10000):
+        m = s * p
+        cents = m * 100
+        if cents == cents.quantize(Decimal("1"), rounding=ROUND_DOWN):
+            return float(s), float(p)
+        s += step
+    return float(s), float(p)
+
+
 def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
                     neg_risk: bool = False) -> dict | None:
-    """token_id'yi amount_usd kadar satın al. {order_id, size, price, spent} döndürür."""
+    """token_id'yi amount_usd kadar satın al (FAK). {order_id, size, price, spent} döndürür."""
     try:
-        from py_clob_client_v2 import OrderArgs, Side, PartialCreateOrderOptions
-        client  = _pm_get_client()
-        # En iyi alış fiyatını çek
-        pr      = client.get_price(token_id=token_id, side="BUY")
-        price   = float(pr.get("price", 0.5))
-        price   = max(0.02, min(0.98, price))
-        tick    = float(tick_size)
-        price   = round(round(price / tick) * tick, 6)
-        size    = max(5.0, round(amount_usd / price, 2))
-        spent   = round(size * price, 4)
+        from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
+        from py_clob_client_v2.order_builder.constants import BUY
+        from decimal import Decimal, ROUND_DOWN
+        client = _pm_get_client()
+        price  = float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
+        price  = max(0.02, min(0.98, round(price, 2)))
+        raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+        size, price = _pm_fit_buy(max(5.0, raw_sz), price)
+        spent  = round(size * price, 2)
         if _PM_DRY_RUN:
-            print(f"[DRY RUN] {token_id[:16]}…  {size} shares @ {price}  (~${spent:.2f})")
+            print(f"[DRY RUN] {token_id[:16]}… {size} shares @ {price:.2f} (~${spent:.2f})")
             return {"order_id": "DRY_RUN", "size": size, "price": price, "spent": spent}
-        args = OrderArgs(token_id=token_id, price=price, size=size, side=Side.BUY)
-        opts = PartialCreateOrderOptions(tick_size=tick_size, neg_risk=neg_risk)
-        resp = client.create_and_post_order(args, options=opts)
-        oid  = resp.get("orderID") or resp.get("id", "")
+        args = OrderArgs(token_id=token_id, price=price, size=size, side=BUY)
+        signed = client.create_order(args, PartialCreateOrderOptions())
+        resp   = client.post_order(signed, order_type=OrderType.FAK)
+        if not resp or not resp.get("success"):
+            print(f"[5. ANALİZ] Order başarısız: {resp}", file=sys.stderr)
+            return None
+        oid = resp.get("orderID") or resp.get("id", "")
         return {"order_id": oid, "size": size, "price": price, "spent": spent}
     except Exception as e:
         print(f"[5. ANALİZ] Order hatası: {e}", file=sys.stderr)
