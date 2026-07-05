@@ -1,0 +1,420 @@
+"""
+KARIŞIMl 1 — Meta Konsensus Trader
+
+Analiz 1, 2, 4 ve 6'nın bu saat açtığı pozisyonları okur.
+Birden fazla sistemin aynı yönde seçtiği kriptolara girer.
+
+Konsensus → İşlem tutarı:
+  4/4 sistem aynı yön  →  $20
+  3/4 sistem aynı yön  →  $12
+  2/4 sistem aynı yön  →   $8
+  <2                   →  işlem açılmaz
+
+Mod: close / open / weekly
+"""
+import asyncio, json, os, sys, time, urllib.request, urllib.parse
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+
+# ── Config ────────────────────────────────────────────────────
+BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
+CHAT_ID   = "830754964"
+_TZ_TR    = ZoneInfo("Europe/Istanbul")
+_DIR      = os.path.dirname(os.path.abspath(__file__))
+
+STATE_FILE   = os.path.join(_DIR, "poly_trader_karisim1_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_karisim1_history.json")
+
+INITIAL_BALANCE = 300.0
+SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+
+AMOUNT_STRONG   = 20.0   # 4/4 konsensus
+AMOUNT_MODERATE = 12.0   # 3/4 konsensus
+AMOUNT_WEAK     =  8.0   # 2/4 konsensus
+MIN_STAT_COUNT  = 10
+
+# Kaynak analiz sistem state dosyaları
+SOURCE_STATES = {
+    "A1": os.path.join(_DIR, "poly_trader_analiz1_state.json"),
+    "A2": os.path.join(_DIR, "poly_trader_analiz2_state.json"),
+    "A4": os.path.join(_DIR, "poly_trader_analiz4_state.json"),
+    "A6": os.path.join(_DIR, "poly_trader_analiz6_state.json"),
+}
+
+
+# ── State ─────────────────────────────────────────────────────
+def load_state() -> dict:
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"balance": INITIAL_BALANCE, "open_positions": [], "total_pnl": 0.0}
+
+
+def save_state(state: dict) -> None:
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f, indent=2, ensure_ascii=False)
+
+
+def load_history() -> list:
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
+
+
+def save_history(history: list) -> None:
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(history, f, indent=2, ensure_ascii=False)
+
+
+# ── Telegram ─────────────────────────────────────────────────
+def tg_send(text: str) -> None:
+    try:
+        url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
+        req  = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            r.read()
+    except Exception as e:
+        print(f"[TG] Hata: {e}")
+
+
+def tg_send_photo(path: str, caption: str = "") -> None:
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+    try:
+        with open(path, "rb") as f:
+            img_data = f.read()
+        boundary = "----Karisim1Boundary"
+        body = (
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n{CHAT_ID}\r\n"
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"caption\"\r\n\r\n{caption}\r\n"
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"heatmap.png\"\r\nContent-Type: image/png\r\n\r\n"
+        ).encode() + img_data + f"\r\n--{boundary}--\r\n".encode()
+        req = urllib.request.Request(
+            url, data=body,
+            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"}
+        )
+        with urllib.request.urlopen(req, timeout=20) as r:
+            r.read()
+    except Exception as e:
+        print(f"[TG photo] Hata: {e}")
+
+
+# ── Binance fiyat ─────────────────────────────────────────────
+def fetch_price(symbol: str) -> float:
+    url = f"https://fapi.binance.com/fapi/v1/ticker/price?symbol={symbol}"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return float(json.loads(r.read())["price"])
+
+
+def fetch_price_retry(symbol: str, retries: int = 3) -> float | None:
+    for i in range(retries):
+        try:
+            return fetch_price(symbol)
+        except Exception as e:
+            if i < retries - 1:
+                time.sleep(2)
+            else:
+                print(f"[KARIŞIMl 1] {symbol} fiyat hatası: {e}", file=sys.stderr)
+    return None
+
+
+# ── Konsensus ─────────────────────────────────────────────────
+def find_consensus(hour_tr: int) -> list[dict]:
+    """
+    Kaynak analiz sistemlerinin state'lerini okur.
+    Bu saat (hour_tr) açılan pozisyonlarda yön birliği arar.
+    """
+    per_system: dict[str, dict[str, str]] = {}   # {sistem: {symbol: dir}}
+
+    for name, path in SOURCE_STATES.items():
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path) as f:
+                st = json.load(f)
+        except Exception:
+            continue
+        positions = {}
+        for p in st.get("open_positions", []):
+            if p.get("entry_hour_tr") == hour_tr and p.get("predicted_dir"):
+                positions[p["symbol"]] = p["predicted_dir"]
+        per_system[name] = positions
+
+    if not per_system:
+        return []
+
+    consensus = []
+    for symbol in SYMBOLS:
+        up_systems   = [n for n, pos in per_system.items() if pos.get(symbol) == "UP"]
+        down_systems = [n for n, pos in per_system.items() if pos.get(symbol) == "DOWN"]
+
+        best_dir   = "UP"   if len(up_systems)   >= len(down_systems) else "DOWN"
+        best_count = max(len(up_systems), len(down_systems))
+        best_names = up_systems if best_dir == "UP" else down_systems
+
+        if best_count < 2:
+            continue
+
+        amount = AMOUNT_STRONG if best_count == 4 else \
+                 AMOUNT_MODERATE if best_count == 3 else AMOUNT_WEAK
+
+        consensus.append({
+            "symbol":    symbol,
+            "direction": best_dir,
+            "count":     best_count,
+            "systems":   best_names,
+            "amount":    amount,
+        })
+
+    return sorted(consensus, key=lambda x: x["count"], reverse=True)
+
+
+# ── İstatistik ────────────────────────────────────────────────
+def _wr(wins: int, total: int, warn_low: bool = False) -> str:
+    if total == 0:
+        return "veri yok"
+    low = " ⚠️" if warn_low and total < MIN_STAT_COUNT else ""
+    return f"%{wins/total*100:.0f} ({wins}/{total}){low}"
+
+
+def get_stats(history: list, symbol: str, hour_tr: int) -> tuple[int, int]:
+    trades = [t for t in history if t["symbol"] == symbol and t.get("entry_hour_tr") == hour_tr]
+    return sum(1 for t in trades if t["win"]), len(trades)
+
+
+def get_symbol_stats(history: list, symbol: str) -> tuple[int, int]:
+    trades = [t for t in history if t["symbol"] == symbol]
+    return sum(1 for t in trades if t["win"]), len(trades)
+
+
+# ── CLOSE ─────────────────────────────────────────────────────
+async def run_close() -> None:
+    now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    saat    = now_tr.strftime("%H:%M")
+    state   = load_state()
+    history = load_history()
+
+    if not state["open_positions"]:
+        tg_send(f"⏸ <b>KARIŞIMl 1 — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
+        print(f"[KARIŞIMl 1 close] {saat} İST — açık pozisyon yok")
+        return
+
+    lines      = []
+    toplam_pnl = 0.0
+    failed_pos = []
+
+    for pos in state["open_positions"]:
+        symbol = pos["symbol"]
+        entry  = pos["entry_price"]
+        pred   = pos["predicted_dir"]
+        amount = pos["amount"]
+
+        current_price = fetch_price_retry(symbol)
+        if current_price is None:
+            failed_pos.append(pos)
+            tg_send(f"⚠️ <b>KARIŞIMl 1</b> — {symbol} fiyat alınamadı, pozisyon sonraki saate bırakıldı.")
+            continue
+
+        if pred == "UP":
+            win = current_price >= entry
+            pnl = amount if win else -amount
+        else:
+            win = current_price <= entry
+            pnl = amount if win else -amount
+
+        toplam_pnl += pnl
+        state["balance"] += pnl
+        state["total_pnl"] += pnl
+        actual = "UP" if current_price >= entry else "DOWN"
+        pct    = (current_price - entry) / entry * 100
+
+        icon    = "✅" if win else "❌"
+        name    = symbol.replace("USDT", "")
+        pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
+        lines.append(
+            f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
+            f"{pnl_str}  konsensus:{pos.get('count',2)}/4"
+        )
+
+        history.append({
+            "symbol":        symbol,
+            "predicted_dir": pred,
+            "actual_dir":    actual,
+            "entry_price":   entry,
+            "exit_price":    current_price,
+            "entry_hour_tr": pos.get("entry_hour_tr"),
+            "entry_dow":     pos.get("entry_dow"),
+            "amount":        amount,
+            "pnl":           pnl,
+            "win":           win,
+            "count":         pos.get("count", 2),
+        })
+
+    state["open_positions"] = failed_pos
+    save_state(state)
+    save_history(history)
+
+    total_pnl    = state["total_pnl"]
+    closed_all   = len(history)
+    win_all      = sum(1 for t in history if t["win"])
+    genel        = f"%{win_all/closed_all*100:.0f}" if closed_all else "—"
+    pnl_icon     = "📈" if total_pnl >= 0 else "📉"
+    sep          = "━" * 26
+
+    tg_send(
+        f"{sep}\n"
+        f"🏁 <b>KARIŞIMl 1 — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
+        + "\n".join(lines) + "\n"
+        f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
+        f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel} ({closed_all} işlem)\n"
+        f"{sep}"
+    )
+    print(f"[KARIŞIMl 1 close] {saat} İST — {len(lines)} pozisyon kapatıldı")
+
+
+# ── OPEN ──────────────────────────────────────────────────────
+async def run_open() -> None:
+    now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    hour_tr = now_tr.hour
+    dow     = now_tr.weekday()
+    saat    = now_tr.strftime("%H:%M")
+    next_h  = f"{(hour_tr+1)%24:02d}:00"
+    sep     = "━" * 26
+    state   = load_state()
+    history = load_history()
+
+    # Konsensus bul
+    consensus = find_consensus(hour_tr)
+
+    # Zaten açık olan sembolleri atla
+    open_syms = {p["symbol"] for p in state["open_positions"]}
+    new_pos   = [c for c in consensus if c["symbol"] not in open_syms]
+
+    opened = []
+    for c in new_pos:
+        price = fetch_price_retry(c["symbol"])
+        if price is None:
+            continue
+        pos = {
+            "symbol":        c["symbol"],
+            "predicted_dir": c["direction"],
+            "entry_price":   price,
+            "entry_time_tr": now_tr.isoformat(),
+            "entry_hour_tr": hour_tr,
+            "entry_dow":     dow,
+            "amount":        c["amount"],
+            "count":         c["count"],
+            "systems":       c["systems"],
+        }
+        state["open_positions"].append(pos)
+        opened.append({**c, "price": price})
+
+    save_state(state)
+
+    # Bildirim
+    at_risk = sum(p.get("amount", AMOUNT_WEAK) for p in state["open_positions"])
+    lines   = [sep, f"🤝 <b>KARIŞIMl 1 — {saat} - {next_h} Yeni İşlemler</b>"]
+
+    if opened:
+        for o in opened:
+            name    = o["symbol"].replace("USDT", "")
+            dir_tr  = "YÜKSELİR" if o["direction"] == "UP" else "DÜŞER"
+            dir_ico = "📈" if o["direction"] == "UP" else "📉"
+            sys_str = "+".join(o["systems"])
+
+            sw, st  = get_symbol_stats(history, o["symbol"])
+            hw, ht  = get_stats(history, o["symbol"], hour_tr)
+            low     = ht < MIN_STAT_COUNT
+
+            lines.append(
+                f"{dir_ico} <b>{name}</b>  {dir_tr}  {o['amount']:.0f}$  giriş:{o['price']:.2f}\n"
+                f"   🤝 Konsensus: {o['count']}/4  [{sys_str}]\n"
+                f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hw,ht,warn_low=low)} | genel: {_wr(sw,st)}"
+            )
+    else:
+        lines.append("⏸ <i>Bu saat konsensus sağlanamadı (≥2 sistem gerekli).</i>")
+
+    lines.append(
+        f"💰 Ana: ${state['balance']-at_risk:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${at_risk:.0f}  |  Toplam: ${state['balance']:.2f}"
+    )
+    lines.append(f"<i>Eşik: 4→20$  3→12$  2→8$</i>")
+    lines.append(sep)
+
+    tg_send("\n".join(lines))
+    print(f"[KARIŞIMl 1 open] {saat} İST — {len(opened)} işlem açıldı")
+
+
+# ── WEEKLY ────────────────────────────────────────────────────
+def run_weekly() -> None:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from collections import defaultdict
+
+    history = load_history()
+    state   = load_state()
+    if not history:
+        tg_send("📊 <b>KARIŞIMl 1 HAFTALIK</b>\nHenüz veri yok.")
+        return
+
+    days   = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
+    hours  = list(range(0, 24))
+    grid   = defaultdict(lambda: defaultdict(list))
+
+    for t in history:
+        h = t.get("entry_hour_tr")
+        d = t.get("entry_dow")
+        if h is not None and d is not None:
+            grid[d][h].append(1 if t["win"] else 0)
+
+    data = np.full((7, 24), np.nan)
+    for d in range(7):
+        for h in range(24):
+            vals = grid[d][h]
+            if vals:
+                data[d][h] = sum(vals) / len(vals) * 100
+
+    fig, ax = plt.subplots(figsize=(14, 5))
+    im = ax.imshow(data, cmap="RdYlGn", vmin=0, vmax=100, aspect="auto")
+    ax.set_xticks(range(24))
+    ax.set_xticklabels([f"{h:02d}" for h in hours], fontsize=7)
+    ax.set_yticks(range(7))
+    ax.set_yticklabels(days, fontsize=9)
+    plt.colorbar(im, ax=ax, label="Başarı %")
+    ax.set_title("KARIŞIMl 1 — Haftalık Başarı Haritası")
+    plt.tight_layout()
+
+    img_path = "/tmp/karisim1_weekly.png"
+    plt.savefig(img_path, dpi=110, bbox_inches="tight")
+    plt.close()
+
+    total  = len(history)
+    wins   = sum(1 for t in history if t["win"])
+    sep    = "━" * 26
+    caption = (
+        f"KARIŞIMl 1 Haftalık\n"
+        f"Bakiye: ${state['balance']:.2f} | P&L: {state['total_pnl']:+.2f}$\n"
+        f"Toplam: {wins}/{total} (%{wins/total*100:.0f})"
+    )
+    tg_send_photo(img_path, caption)
+    print("[KARIŞIMl 1 weekly] görsel gönderildi")
+
+
+# ── Entry ─────────────────────────────────────────────────────
+if __name__ == "__main__":
+    mode = sys.argv[1] if len(sys.argv) > 1 else "open"
+    if mode == "close":
+        asyncio.run(run_close())
+    elif mode == "weekly":
+        run_weekly()
+    else:
+        asyncio.run(run_open())
