@@ -212,9 +212,9 @@ def algo_trend(klines: list[dict]) -> tuple[int, str]:
     pct    = cross / closes[-1] * 100
 
     if cross > 0 and slope > 0:
-        return +1, f"Trend ↑  EMA20>EMA50 ({pct:+.2f}%)"
+        return +1, f"Trend ↑  E20&gt;E50 ({pct:+.2f}%)"
     elif cross < 0 and slope < 0:
-        return -1, f"Trend ↓  EMA20<EMA50 ({pct:+.2f}%)"
+        return -1, f"Trend ↓  E20&lt;E50 ({pct:+.2f}%)"
     else:
         return  0, f"Trend →  karışık ({pct:+.2f}%)"
 
