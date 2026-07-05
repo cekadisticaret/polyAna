@@ -689,10 +689,13 @@ async def run_open() -> None:
             icon = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
             vote_icons.append(f"{icon} {lbl}")
 
+        vi = vote_icons
         lines.append(
             f"{dir_icon} <b>{name}</b>  {dir_tr}  skor:{score:+d}/8  {amount:.0f}$  giriş:{sig['price']:.2f}\n"
-            f"   {vote_icons[0]}   {vote_icons[1]}\n"
-            f"   {vote_icons[2]}   {vote_icons[3]}\n"
+            f"   {vi[0]}   {vi[1]}\n"
+            f"   {vi[2]}   {vi[3]}\n"
+            f"   {vi[4]}   {vi[5]}\n"
+            f"   {vi[6]}   {vi[7]}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hour_wins, hour_total, warn_low=low_data)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )
