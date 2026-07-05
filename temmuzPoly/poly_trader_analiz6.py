@@ -416,7 +416,7 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>6. ANALİZ — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
+        tg_send(f"⏸ <b>6. ANALİZ (Hurst Exponent) — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[6. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
@@ -507,7 +507,7 @@ async def run_close() -> None:
 
     tg_send(
         f"{sep}\n"
-        f"🏁 <b>6. ANALİZ — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
+        f"🏁 <b>6. ANALİZ (Hurst Exponent) — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
         f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel} ({closed_all} işlem)\n"
@@ -589,7 +589,7 @@ async def run_open() -> None:
         for s in skipped
     ]
 
-    parts = [sep, f"🆕 <b>6. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>"]
+    parts = [sep, f"🆕 <b>6. ANALİZ (Hurst Exponent) — {saat} - {next_h} Yeni İşlemler</b>"]
 
     if lines:
         parts.extend(lines)
