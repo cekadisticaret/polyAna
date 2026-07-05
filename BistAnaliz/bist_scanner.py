@@ -310,6 +310,9 @@ def save_history(history: list) -> None:
         json.dump(history, f, indent=2, ensure_ascii=False)
 
 
+IND_NAMES = ["Trend", "MR", "Hurst", "Kalman", "PEnt", "Hilbert"]
+
+
 def record_signals(signals: list, hour: int, today: str) -> None:
     """Verilen sinyalleri geçmiş dosyasına kaydet."""
     history = load_history()
@@ -319,6 +322,7 @@ def record_signals(signals: list, hour: int, today: str) -> None:
             "hour":         hour,
             "symbol":       s["symbol"],
             "score":        s["score"],
+            "votes":        s["votes"],   # [v1..v6] her indikatörün oyu
             "price_signal": s["price"],
             "price_1h":     None,
             "result":       None,
@@ -373,21 +377,44 @@ def run_eod_report() -> None:
 
     sep   = "━" * 28
     lines = [sep, f"📋 <b>BIST Günlük İsabet Raporu — {today}</b>",
-             f"🎯 Başarı: {wins}/{total}  ({rate:.0f}%)"]
+             f"🎯 Genel Başarı: {wins}/{total}  ({rate:.0f}%)"]
 
-    # Sonuçları saate göre grupla
+    # ── İndikatör bazında isabet istatistiği ──
+    # Sadece sonucu belli (✅/❌) olan girişler
+    resolved = [e for e in today_entries if e["result"] in ("✅", "❌")]
+    if resolved:
+        lines.append("\n📊 <b>İndikatör İsabeti:</b>")
+        for i, name in enumerate(IND_NAMES):
+            ind_wins = ind_total = 0
+            for e in resolved:
+                votes = e.get("votes", [])
+                if i >= len(votes) or votes[i] == 0:
+                    continue  # bu indikatör nötr oy vermiş, saymıyoruz
+                ind_total += 1
+                # İndikatörün oyu doğruysa: oy yönü ile gerçek hareket aynı
+                correct = (votes[i] > 0 and e["pct"] > 0) or (votes[i] < 0 and e["pct"] < 0)
+                if correct:
+                    ind_wins += 1
+            if ind_total > 0:
+                r = ind_wins / ind_total * 100
+                bar = "🟢" if r >= 60 else "🟡" if r >= 45 else "🔴"
+                lines.append(f"  {bar} {name:<8} {ind_wins}/{ind_total}  ({r:.0f}%)")
+
+    # ── Saatlik detay ──
     by_hour: dict = {}
     for e in sorted(today_entries, key=lambda x: (x["hour"], x["symbol"])):
-        h = e["hour"]
-        by_hour.setdefault(h, []).append(e)
+        by_hour.setdefault(e["hour"], []).append(e)
 
+    lines.append("")
     for h, entries in by_hour.items():
-        lines.append(f"\n🕐 <b>{h:02d}:05 sinyalleri</b>")
+        lines.append(f"🕐 <b>{h:02d}:05</b>")
         for e in entries:
             pct_str = f"{e['pct']:+.1f}%" if e["pct"] is not None else "?"
+            votes   = e.get("votes", [])
+            vi      = "".join("🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in votes)
             lines.append(
-                f"  {e['result']} <b>{e['symbol']}</b>  skor:{e['score']:+d}/6  "
-                f"{e['price_signal']:.2f}→{e.get('price_1h') or '?'}₺  ({pct_str})"
+                f"  {e['result']} <b>{e['symbol']}</b>  {e['price_signal']:.2f}→"
+                f"{e.get('price_1h') or '?'}₺ ({pct_str})  {vi}"
             )
 
     lines.append(sep)
