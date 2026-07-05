@@ -508,5 +508,89 @@ def run_scan() -> None:
     print(f"[BIST Tarayıcı] {saat} — {len(strong)} güçlü, {len(medium)} orta sinyal gönderildi")
 
 
+def run_weekly_report() -> None:
+    """Cuma 19:00 haftalık özet raporu."""
+    history = load_history()
+    if not history:
+        tg_send("📋 <b>BIST Haftalık Rapor</b>\nHenüz veri yok.")
+        return
+
+    # Son 5 iş günü
+    from datetime import timedelta
+    today    = date.today()
+    week_ago = (today - timedelta(days=7)).isoformat()
+    entries  = [e for e in history
+                if e["date"] >= week_ago and e["result"] in ("✅", "❌")]
+
+    if not entries:
+        tg_send("📋 <b>BIST Haftalık Rapor</b>\nBu hafta çözümlenen sinyal yok.")
+        return
+
+    wins  = sum(1 for e in entries if e["result"] == "✅")
+    total = len(entries)
+    rate  = wins / total * 100 if total else 0
+
+    sep   = "━" * 28
+    lines = [sep,
+             f"📋 <b>BIST Haftalık Rapor</b>",
+             f"📅 {week_ago} – {today.isoformat()}",
+             f"🎯 Genel Başarı: {wins}/{total}  ({rate:.0f}%)"]
+
+    # İndikatör bazında haftalık isabet
+    lines.append("\n📊 <b>İndikatör Performansı (haftalık):</b>")
+    for i, name in enumerate(IND_NAMES):
+        iw = it = 0
+        for e in entries:
+            votes = e.get("votes", [])
+            if i >= len(votes) or votes[i] == 0 or e["pct"] is None:
+                continue
+            it += 1
+            if (votes[i] > 0 and e["pct"] > 0) or (votes[i] < 0 and e["pct"] < 0):
+                iw += 1
+        if it > 0:
+            r   = iw / it * 100
+            bar = "🟢" if r >= 60 else "🟡" if r >= 45 else "🔴"
+            lines.append(f"  {bar} {name:<8} {iw}/{it}  ({r:.0f}%)")
+
+    # En başarılı hisseler
+    sym_stats: dict = {}
+    for e in entries:
+        s = e["symbol"]
+        sym_stats.setdefault(s, {"w": 0, "t": 0})
+        sym_stats[s]["t"] += 1
+        if e["result"] == "✅":
+            sym_stats[s]["w"] += 1
+
+    ranked = sorted(sym_stats.items(),
+                    key=lambda x: (x[1]["w"] / x[1]["t"], x[1]["t"]),
+                    reverse=True)
+
+    lines.append("\n🏆 <b>En Başarılı Hisseler:</b>")
+    for sym, st in ranked[:8]:
+        r = st["w"] / st["t"] * 100
+        bar = "🟢" if r >= 60 else "🟡" if r >= 45 else "🔴"
+        lines.append(f"  {bar} <b>{sym}</b>  {st['w']}/{st['t']}  ({r:.0f}%)")
+
+    # Günlük özet
+    lines.append("\n📆 <b>Günlük Özet:</b>")
+    by_date: dict = {}
+    for e in entries:
+        by_date.setdefault(e["date"], {"w": 0, "t": 0})
+        by_date[e["date"]]["t"] += 1
+        if e["result"] == "✅":
+            by_date[e["date"]]["w"] += 1
+    for d, st in sorted(by_date.items()):
+        r = st["w"] / st["t"] * 100
+        bar = "🟢" if r >= 60 else "🟡" if r >= 45 else "🔴"
+        lines.append(f"  {bar} {d}  {st['w']}/{st['t']}  ({r:.0f}%)")
+
+    lines.append(sep)
+    tg_send("\n".join(lines))
+    print("[BIST Tarayıcı] Haftalık rapor gönderildi")
+
+
 if __name__ == "__main__":
-    run_scan()
+    if len(sys.argv) > 1 and sys.argv[1] == "weekly":
+        run_weekly_report()
+    else:
+        run_scan()
