@@ -1,10 +1,15 @@
 """
 6. ANALİZ — EkonoFizik Sanal Trader
 
-6 bağımsız algoritmanın oylarını birleştirerek sinyal üretir:
-  1. Trend Following  → EMA20/EMA50 crossover + slope
-  5. Hurst Exponent   → piyasa rejimini (trend/MR) tespit eder
-  6. Kalman Filter    → gecikmesiz fiyat trendi takibi
+8 bağımsız algoritmanın oylarını birleştirerek sinyal üretir:
+  1. Trend Following    → EMA20/EMA50 crossover + slope
+  2. Mean Reversion     → RSI + Bollinger Bands
+  3. Order Flow         → CVD delta + order book imbalance
+  4. Funding Rate       → long/short bias tespiti
+  5. Hurst Exponent     → piyasa rejimi (trend vs MR)
+  6. Kalman Filter      → gecikmesiz fiyat trendi
+  7. Permutation Entropy→ tahmin edilebilirlik ölçümü
+  8. Hilbert Transform  → dominant döngü faz analizi
 
   2. Mean Reversion   → RSI(14) + Bollinger Bands(20,2)
   3. Orderflow        → CVD yaklaşımı + Order Book imbalance
@@ -43,8 +48,8 @@ SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 20.0   # |skor| >= 4  (6 indikatör)
-AMOUNT_MODERATE = 12.0   # |skor| == 3  (6 indikatör)
+AMOUNT_STRONG   = 20.0   # |skor| >= 5  (8 indikatör)
+AMOUNT_MODERATE = 12.0   # |skor| == 4  (8 indikatör)
 MIN_STAT_COUNT  = 10
 
 
@@ -356,6 +361,109 @@ def algo_kalman(klines: list[dict]) -> tuple[int, str]:
         return  0, f"Kalman →  eğim:{slope:+.3f}%"
 
 
+def algo_perm_entropy(klines: list[dict]) -> tuple[int, str]:
+    """
+    Permutation Entropy (m=3, tau=1).
+    Fiyat serisinin tahmin edilebilirliğini ölçer.
+    PE < 0.70 → düzenli/trend → trend yönünde oy
+    PE > 0.90 → kaotik/rastgele → 0
+    """
+    import math
+    closes = [k["close"] for k in klines[-50:]]
+    n = len(closes)
+    m, tau = 3, 1
+    if n < m * tau + 5:
+        return 0, "PEnt → veri yetersiz"
+
+    patterns: dict = {}
+    for i in range(n - (m - 1) * tau):
+        sub = [closes[i + j * tau] for j in range(m)]
+        perm = tuple(sorted(range(m), key=lambda x: sub[x]))
+        patterns[perm] = patterns.get(perm, 0) + 1
+
+    total = sum(patterns.values())
+    pe = -sum((c / total) * math.log(c / total) for c in patterns.values())
+    # max entropy = log(m!) = log(6) for m=3
+    pe_norm = pe / math.log(math.factorial(m))
+
+    # Trend yönü: son 10 bara EMA5 vs EMA10
+    e5  = _ema(closes, 5)
+    e10 = _ema(closes, 10)
+    trend_up = e5[-1] > e10[-1]
+
+    if pe_norm < 0.70:
+        vote = +1 if trend_up else -1
+        arr  = "↑" if trend_up else "↓"
+        return vote, f"PEnt {arr}  PE={pe_norm:.2f} düzenli"
+    elif pe_norm > 0.90:
+        return 0, f"PEnt →  PE={pe_norm:.2f} kaotik"
+    else:
+        return 0, f"PEnt →  PE={pe_norm:.2f} nötr"
+
+
+def algo_hilbert_cycle(klines: list[dict]) -> tuple[int, str]:
+    """
+    Ehlers Hilbert Transform — Dominant Cycle Phase.
+    Fiyatın döngüsel bileşenini çıkarıp faz yönünü belirler.
+    Artan faz → yükselen half-cycle → +1
+    Azalan faz → düşen half-cycle → -1
+    """
+    import math
+    closes = [k["close"] for k in klines[-50:]]
+    n = len(closes)
+    if n < 20:
+        return 0, "Hilbert → veri yetersiz"
+
+    # Ehlers 4-bar weighted smooth
+    smooth = [closes[i] if i < 3 else
+              (4*closes[i] + 3*closes[i-1] + 2*closes[i-2] + closes[i-3]) / 10
+              for i in range(n)]
+
+    # High-pass detrender (Ehlers katsayıları)
+    coef = 0.0962
+    c1   = 0.5769
+    adj  = 0.075 * 1 + 0.54
+    det  = [0.0] * n
+    for i in range(6, n):
+        det[i] = (coef*smooth[i] + c1*smooth[i-2] - c1*smooth[i-4] - coef*smooth[i-6]) * adj
+
+    # InPhase (I1) ve Quadrature (Q1)
+    I1 = [0.0] * n
+    Q1 = [0.0] * n
+    for i in range(6, n):
+        Q1[i] = (coef*det[i] + c1*det[i-2] - c1*det[i-4] - coef*det[i-6]) * adj
+        I1[i] = det[i-3]
+
+    # EMA smoothed I/Q (alpha=0.2)
+    sI, sQ = [0.0]*n, [0.0]*n
+    a = 0.2
+    for i in range(1, n):
+        sI[i] = a*I1[i] + (1-a)*sI[i-1]
+        sQ[i] = a*Q1[i] + (1-a)*sQ[i-1]
+
+    # Phase = atan2(Q, I) → son iki bar faz farkı
+    def safe_atan2(q, i_val):
+        return math.degrees(math.atan2(q, i_val)) if (q != 0 or i_val != 0) else 0.0
+
+    ph_now  = safe_atan2(sQ[-1],  sI[-1])
+    ph_prev = safe_atan2(sQ[-2],  sI[-2])
+    delta   = ph_now - ph_prev
+
+    # Wrap around ±180
+    if delta >  180: delta -= 360
+    if delta < -180: delta += 360
+
+    # Period estimate
+    period = abs(360 / delta) if delta != 0 else 20
+
+    if delta > 1.5:
+        return +1, f"Hilbert ↑  faz:+{delta:.1f}° T≈{period:.0f}bar"
+    elif delta < -1.5:
+        return -1, f"Hilbert ↓  faz:{delta:.1f}° T≈{period:.0f}bar"
+    else:
+        return  0, f"Hilbert →  faz:{delta:.1f}° T≈{period:.0f}bar"
+
+
 # ── Tam sembol analizi ────────────────────────────────────────
 def analyze(symbol: str) -> dict | None:
     try:
@@ -372,10 +480,12 @@ def analyze(symbol: str) -> dict | None:
     v4, l4 = algo_funding(funding)
     v5, l5 = algo_hurst(klines)
     v6, l6 = algo_kalman(klines)
-    score   = v1 + v2 + v3 + v4 + v5 + v6
+    v7, l7 = algo_perm_entropy(klines)
+    v8, l8 = algo_hilbert_cycle(klines)
+    score   = v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8
 
-    # 6 indikator: >=4 güçlü, ==3 orta, <=2 işlem yok
-    amount = AMOUNT_STRONG if abs(score) >= 4 else AMOUNT_MODERATE if abs(score) == 3 else 0.0
+    # 8 indikator: >=5 güçlü (~62%), ==4 orta (~50%), <=3 işlem yok
+    amount = AMOUNT_STRONG if abs(score) >= 5 else AMOUNT_MODERATE if abs(score) == 4 else 0.0
 
     return {
         "symbol":        symbol,
@@ -383,16 +493,17 @@ def analyze(symbol: str) -> dict | None:
         "score":         score,
         "predicted_dir": "UP" if score > 0 else "DOWN" if score < 0 else None,
         "amount":        amount,
-        "votes":         [v1, v2, v3, v4, v5, v6],
-        "labels":        [l1, l2, l3, l4, l5, l6],
+        "votes":         [v1, v2, v3, v4, v5, v6, v7, v8],
+        "labels":        [l1, l2, l3, l4, l5, l6, l7, l8],
     }
 
 
 # ── Algoritma isabet istatistiği ──────────────────────────────
 def _ind_stats_lines(history: list) -> list[str]:
-    checks = [("Trend",  "ind_trend_ok"), ("MR",    "ind_mr_ok"),
-              ("OF",     "ind_of_ok"),    ("Fund",  "ind_fund_ok"),
-              ("Hurst",  "ind_hurst_ok"), ("Kalman","ind_kalman_ok")]
+    checks = [("Trend",   "ind_trend_ok"),  ("MR",     "ind_mr_ok"),
+              ("OF",      "ind_of_ok"),    ("Fund",   "ind_fund_ok"),
+              ("Hurst",   "ind_hurst_ok"), ("Kalman", "ind_kalman_ok"),
+              ("PEnt",    "ind_pent_ok"),  ("Hilbert","ind_hilbert_ok")]
     lines = []
     for label, key in checks:
         vals = [t[key] for t in history if t.get(key) is not None]
@@ -474,6 +585,8 @@ async def run_close() -> None:
             "ind_fund_ok":      _vote_ok(vs[3], actual) if len(vs) > 3 else None,
             "ind_hurst_ok":     _vote_ok(vs[4], actual) if len(vs) > 4 else None,
             "ind_kalman_ok":    _vote_ok(vs[5], actual) if len(vs) > 5 else None,
+            "ind_pent_ok":      _vote_ok(vs[6], actual) if len(vs) > 6 else None,
+            "ind_hilbert_ok":   _vote_ok(vs[7], actual) if len(vs) > 7 else None,
         })
 
         icon    = "✅" if win else "❌"
@@ -482,7 +595,7 @@ async def run_close() -> None:
         pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"{pnl_str}  skor:{pos.get("score", 0):+d}/6"
+            f"{pnl_str}  skor:{pos.get("score", 0):+d}/8"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
@@ -577,7 +690,7 @@ async def run_open() -> None:
             vote_icons.append(f"{icon} {lbl}")
 
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  skor:{score:+d}/6  {amount:.0f}$  giriş:{sig['price']:.2f}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  skor:{score:+d}/8  {amount:.0f}$  giriş:{sig['price']:.2f}\n"
             f"   {vote_icons[0]}   {vote_icons[1]}\n"
             f"   {vote_icons[2]}   {vote_icons[3]}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hour_wins, hour_total, warn_low=low_data)}"
@@ -585,7 +698,7 @@ async def run_open() -> None:
         )
 
     skip_lines = [
-        f"⛔ {s['symbol'].replace('USDT','')}  skor:{s['score']:+d}/6  → işlem açılmadı"
+        f"⛔ {s['symbol'].replace('USDT','')}  skor:{s['score']:+d}/8  → işlem açılmadı"
         for s in skipped
     ]
 
@@ -594,7 +707,7 @@ async def run_open() -> None:
     if lines:
         parts.extend(lines)
     else:
-        parts.append("⏸ <i>Bu saat yeterli sinyal yok (|skor| ≤ 2).</i>")
+        parts.append("⏸ <i>Bu saat yeterli sinyal yok (|skor| ≤ 3).</i>")
 
     if skip_lines:
         parts.append(mini_sep)
@@ -604,7 +717,7 @@ async def run_open() -> None:
     _at_risk4 = sum(p.get("amount", AMOUNT_STRONG) for p in state["open_positions"])
     parts.append(f"💰 Ana: ${state['balance'] - _at_risk4:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${_at_risk4:.0f}  |  Toplam: ${state['balance']:.2f}")
     parts.append(
-        f"<i>Eşik: |skor|≥4→{AMOUNT_STRONG:.0f}$  |skor|=3→{AMOUNT_MODERATE:.0f}$  ≤2→yok</i>"
+        f"<i>Eşik: |skor|≥5→{AMOUNT_STRONG:.0f}$  |skor|=4→{AMOUNT_MODERATE:.0f}$  ≤3→yok</i>"
     )
     parts.append(sep)
 
@@ -726,7 +839,7 @@ def run_stats() -> None:
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
-        f"Eşik: |skor|≥4→{AMOUNT_STRONG:.0f}$  |skor|=3→{AMOUNT_MODERATE:.0f}$",
+        f"Eşik: |skor|≥5→{AMOUNT_STRONG:.0f}$  |skor|=4→{AMOUNT_MODERATE:.0f}$",
         f"\n🔬 <b>Algoritma İsabet Oranı</b>", *_ind_stats_lines(history),
     ]
 
