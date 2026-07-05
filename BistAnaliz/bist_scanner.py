@@ -1,314 +1,368 @@
-#!/usr/bin/env python3
 """
-BIST Tarayıcı - Gaia Scanner v2
-Cem'in iki Pine Script indikatörünü baz alarak BIST hisselerini tarar.
-
-scan()          → Trend tarama: tüm indikatörler yeşil olan hisseler
-scan_momentum() → Momentum tarama: güçlü günlük hareket + hacim patlaması
+BIST Saatlik Sinyal Tarayıcı
+BIST100 dışındaki hisseler için 6 indikatör tabanlı yükseliş sinyali.
+Çalışma: BIST seans saatlerinde her saat :05'te
 """
 
-import yfinance as yf
-import pandas as pd
-import numpy as np
-import sys
+import sys, os, math, time, json, urllib.request, urllib.error
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
-# =========================================
-# BIST Hisse Listesi
-# =========================================
-BIST_TICKERS = [
-    "A1CAP","A1YEN","ACSEL","ADEL","ADESE","ADGYO","AEFES","AFYON","AGHOL","AGROT",
-    "AHGAZ","AHSGY","AKBNK","AKCNS","AKENR","AKFGY","AKFIS","AKFYE","AKGRT","AKMGY",
-    "AKSA","AKSEN","AKSGY","AKSUE","AKYHO","ALARK","ALBRK","ALCAR","ALCTL","ALFAS",
-    "ALGYO","ALKIM","ALVES","ANELE","ANGEN","ANHYT","ANSGR","ARASE","ARCLK","ARDYZ",
-    "ARENA","ARSAN","ASELS","ASGYO","ASTOR","ATAGY","ATAKP","ATATP","ATEKS","ATLAS",
-    "ATSYH","AVGYO","AVHOL","AVOD","AVPGY","AVTUR","AYDEM","AYEN","AYES","AYGAZ",
-    "AZTEK","BAGFS","BAKAB","BALAT","BANVT","BARMA","BASCM","BAYRK","BEGYO","BERA",
-    "BEYAZ","BFREN","BIMAS","BINHO","BIOEN","BIZIM","BJKAS","BLCYT","BMSCH","BNTAS",
-    "BOSSA","BRISA","BRKO","BRKSN","BRMEN","BRSAN","BRYAT","BSOKE","BTCIM","BUCIM",
-    "BURCE","BURVA","BVSAN","CANTE","CASA","CCOLA","CELHA","CEMAS","CEMTS","CEOEM",
-    "CIMSA","CLEBI","CMBTN","CONSE","COSMO","CRDFA","CRFSA","CUSAN","CVKMD","DAGI",
-    "DAPGM","DARDL","DCTTR","DESA","DESPC","DEVA","DGATE","DGNMO","DIRIT","DITAS",
-    "DMSAS","DOAS","DOBUR","DOCO","DOFER","DOHOL","DOKTA","DURDO","DYOBY","ECILC",
-    "ECZYT","EDATA","EDIP","EGGUB","EGPRO","EGSER","EKGYO","EKIZ","EMKEL","EMNIS",
-    "ENERY","ENJSA","ENKAI","ENSRI","EPLAS","ERBOS","EREGL","ERSU","ESCAR","ESCOM",
-    "ESEN","ETILR","ETYAT","EUKYO","EUYO","FADE","FENER","FLAP","FMIZP","FONET",
-    "FORMT","FRIGO","FROTO","GARAN","GEDIK","GEDZA","GENIL","GEREL","GESAN","GLBMD",
-    "GLRMK","GLRYH","GLYHO","GMTAS","GOKNR","GOLTS","GOODY","GOZDE","GRSEL","GSDDE",
-    "GSDHO","GSRAY","GUBRF","GZNMI","HALKB","HATEK","HDFGS","HEDEF","HEKTS","HKTM",
-    "HLGYO","HOROZ","HTTBT","HUBVC","HUNER","HURGZ","ICBCT","IDGYO","IEYHO","IHEVA",
-    "IHLAS","IHLGM","IHYAY","IMASM","INDES","INFO","INTEM","INVEO","INVES","ISBIR",
-    "ISCTR","ISDMR","ISFIN","ISGSY","ISMEN","ISSEN","IZENR","IZFAS","IZINV","JANTS",
-    "KAPLM","KAREL","KARSN","KARTN","KATMR","KAYSE","KCAER","KCHOL","KENT","KERVN",
-    "KFEIN","KGYO","KIMMR","KLGYO","KLKIM","KLMSN","KLSER","KLSYN","KMPUR","KNFRT",
-    "KONKA","KONTR","KONYA","KORDS","KOZAL","KRDMA","KRDMB","KRDMD","KRGYO","KRONT",
-    "KRPLS","KRSTL","KRVGD","KSTUR","KTLEV","KTSKR","KUTPO","KUYAS","KZBGY","KZGYO",
-    "LIDER","LINK","LKMNH","LOGO","LUKSK","MAALT","MAGEN","MAKIM","MANAS","MARKA",
-    "MAVI","MEDTR","MEGAP","MEKAG","MERCN","MERIT","MERKO","METRO","MGROS","MHRGY",
-    "MIATK","MNDRS","MNDTR","MOBTL","MOGAN","MPARK","MRGYO","MRSHL","MSGYO","MTRKS",
-    "MTRYO","MZHLD","NATEN","NETAS","NIBAS","NTGAZ","NTHOL","NUGYO","NUHCM","ODAS",
-    "ONCSM","ORGE","ORMA","OSMEN","OSTIM","OTKAR","OYAKC","OYLUM","OYYAT","OZGYO",
-    "OZKGY","OZRDN","PAGYO","PAMEL","PAPIL","PARSN","PASEU","PATEK","PCILT","PENTA",
-    "PETKM","PGSUS","PINSU","PKART","PKENT","PLTUR","POLHO","POLTK","PRKAB","PRKME",
-    "PRZMA","PSDTC","QNBFK","QUAGR","RALYH","RAYSG","REEDR","RGYAS","RNPOL","RODRG",
-    "RTALB","RUBNS","RYGYO","RYSAS","SAFKR","SAHOL","SAMAT","SANEL","SANFM","SANKO",
-    "SARKY","SASA","SAYAS","SEGMN","SEKFK","SELEC","SELVA","SEYKM","SISE","SKBNK",
-    "SMART","SMRTG","SNICA","SODSN","SOKE","SOKM","SONME","SRVGY","SUMAS","SURGY",
-    "SUWEN","TABGD","TATGD","TAVHL","TCELL","TEKTU","THYAO","TKFEN","TKNSA","TLMAN",
-    "TMPOL","TMSN","TOASO","TRCAS","TRENJ","TRGYO","TRHOL","TRILC","TRMET","TSKB",
-    "TSPOR","TTRAK","TUKAS","TUPRS","TUREX","TURGG","TURSG","UFUK","ULAS","ULKER",
-    "ULUSE","ULUUN","UNLU","USAK","VAKBN","VAKFN","VAKKO","VANGD","VBTYZ","VERUS",
-    "VESBE","VESTL","VKFYO","VKGYO","YAPRK","YATAS","YAYLA","YBTAS","YEOTK","YGGYO",
-    "YGYO","YKBNK","YONGA","YUNSA","YYAPI","ZEDUR","ZOREN",
+_TZ = ZoneInfo("Europe/Istanbul")
+
+BOT_TOKEN  = "8256912678:AAFWEoRWO7Z0siK_c4Dm5XjgtBKmh-wmF8E"
+CHAT_ID    = "830754964"
+
+MIN_VOLUME  = 100_000   # minimum ortalama saatlik hacim (TL)
+MIN_BARS    = 30        # minimum mum sayısı
+TOP_N       = 10        # bildirimde gösterilecek max hisse
+SCORE_STRONG   = 5      # güçlü sinyal (5-6/6)
+SCORE_MODERATE = 3      # orta sinyal (3-4/6)
+
+# ── BIST100 DışI Hisseler (likit seçim) ──────────────────────
+SYMBOLS = [
+    "AGHOL","AGROT","AKGRT","AKSEN","AKYHO","ALARK","ALBRK",
+    "ALFAS","ALKIM","ALTNY","ANHYT","ANSGR","ARASE","ARDYZ",
+    "ARENA","ARSAN","ASTOR","ATAKP","ATATP","AYEN","AYCES",
+    "BASGZ","BERA","BFREN","BIENY","BIGCH","BIOEN","BIYOM",
+    "BVSAN","CANTE","CEMTS","CLEBI","CSNAT","CSTLO","CWENE",
+    "DAGHL","DAGI","DEAS","DEVA","DGKLB","DMSAS","DNISI",
+    "DOKTA","DURDO","DYOBY","ECILC","ECZYT","EGEEN","EGPRO",
+    "ENERY","ERBOS","ESCOM","ETILR","EUPWR","EYGYO","FENER",
+    "FLAP","FONET","FZLGY","GARFA","GENIL","GENTS","GEREL",
+    "GLYHO","GMTAS","GOLTS","GOODY","GWIND","HATEK","HEKTS",
+    "HLGYO","IMASM","INDES","ISFIN","ISYHO","ITTFH","IZFAS",
+    "IZTAR","JANTS","KENT","KERVT","KLGYO","KNFRT","KONYA",
+    "KORDS","KRDMA","KRDMB","KRVGD","KUYAS","LEYKM","LGMYO",
+    "LINK","LYDHO","MAGEN","MAKIM","MAKTK","MEGAP","MEPET",
+    "MERCN","MERIT","METRO","MIATK","MOBTL","MPARK","MZHLD",
+    "NATEN","NETAS","NTHOL","ODAS","ONBIO","ORGE","ORMA",
+    "OSMEN","OYAKC","OYLKS","OZBAL","PEKGY","PKENT","PLTUR",
+    "PNSUT","POLHO","PSGYO","RAYSG","REEDR","REYSA","RGYAS",
+    "RNPOL","RODRG","ROYAL","SAFKN","SAGYO","SAMAT","SANEL",
+    "SANFM","SARKY","SELEC","SELGD","SELVA","SENTE","SEYKM",
+    "SILVR","SMART","SUMAS","SUWEN","TABGD","TATGD","TGSAS",
+    "TKFEN","TKNSA","TLMAN","TMPOL","TRCAS","TRILC","TUCLK",
+    "TURGG","TUKAS","TZNGY","UCAK","ULUUN","USAK","VAKFN",
+    "VBTS","VERUS","VESBE","VKGYO","WNDW","YATAS","YBTAS",
+    "YEOTK","YGYO","YYLGD","ZEDUR","ZRGYO","AEDAS","AFYON",
+    "AGESA","AHGAZ","AKCNS","AKENR","AKFGY","AKSA","BRYAT",
+    "BSOKE","BUCIM","BURCE","BURVA","DOHOL","EKGYO",
 ]
 
-# =========================================
-# İNDİKATÖR FONKSİYONLARI
-# =========================================
-
-def ema(series, n):
-    return series.ewm(span=n, adjust=False).mean()
-
-def rsi(series, n=14):
-    delta = series.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
-    rs = avg_gain / avg_loss.replace(0, np.nan)
-    return 100 - (100 / (1 + rs))
-
-def adx(high, low, close, n=14):
-    tr = pd.concat([
-        high - low,
-        (high - close.shift()).abs(),
-        (low - close.shift()).abs()
-    ], axis=1).max(axis=1)
-
-    dm_plus = high.diff()
-    dm_minus = -low.diff()
-    dm_plus = dm_plus.where((dm_plus > dm_minus) & (dm_plus > 0), 0)
-    dm_minus = dm_minus.where((dm_minus > dm_plus) & (dm_minus > 0), 0)
-
-    atr_ = tr.ewm(span=n, adjust=False).mean()
-    di_plus = 100 * dm_plus.ewm(span=n, adjust=False).mean() / atr_
-    di_minus = 100 * dm_minus.ewm(span=n, adjust=False).mean() / atr_
-    dx = (abs(di_plus - di_minus) / (di_plus + di_minus).replace(0, np.nan)) * 100
-    return dx.ewm(span=n, adjust=False).mean()
-
-# =========================================
-# TREND TARAMA
-# =========================================
-
-def check_ticker(ticker, interval="1h"):
+# ── Yardımcı ─────────────────────────────────────────────────
+def tg_send(text: str) -> None:
     try:
-        symbol = ticker + ".IS"
-        period = "60d" if interval == "1h" else "90d"
-        df = yf.Ticker(symbol).history(period=period, interval=interval)
+        url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
+        req  = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            r.read()
+    except Exception as e:
+        print(f"[TG] Hata: {e}", file=sys.stderr)
 
-        if df is None or len(df) < 210:
+
+def _ema(vals: list[float], n: int) -> list[float]:
+    if not vals:
+        return []
+    k = 2 / (n + 1)
+    out = [vals[0]]
+    for v in vals[1:]:
+        out.append(v * k + out[-1] * (1 - k))
+    return out
+
+
+def _rsi(vals: list[float], n: int = 14) -> float:
+    if len(vals) < n + 1:
+        return 50.0
+    deltas = [vals[i] - vals[i - 1] for i in range(1, len(vals))]
+    gains  = [max(d, 0) for d in deltas[-n:]]
+    losses = [max(-d, 0) for d in deltas[-n:]]
+    ag, al = sum(gains) / n, sum(losses) / n
+    return 100 - 100 / (1 + ag / al) if al else 100.0
+
+
+def _bollinger(vals: list[float], n: int = 20, k: float = 2.0):
+    w = vals[-n:]
+    m = sum(w) / len(w)
+    s = (sum((x - m) ** 2 for x in w) / len(w)) ** 0.5
+    return m + k * s, m, m - k * s
+
+
+# ── Veri Çekme ───────────────────────────────────────────────
+def fetch_ohlcv(symbol: str) -> list[dict] | None:
+    """yfinance ile saatlik OHLCV verisi çek."""
+    try:
+        import yfinance as yf
+        ticker = yf.Ticker(f"{symbol}.IS")
+        df = ticker.history(period="10d", interval="1h")
+        if df is None or len(df) < MIN_BARS:
             return None
+        rows = []
+        for ts, row in df.iterrows():
+            rows.append({
+                "open":   float(row["Open"]),
+                "high":   float(row["High"]),
+                "low":    float(row["Low"]),
+                "close":  float(row["Close"]),
+                "volume": float(row["Volume"]),
+            })
+        # Hacim filtresi: son 20 barlık ortalama hacim
+        avg_vol = sum(r["volume"] for r in rows[-20:]) / min(20, len(rows))
+        if avg_vol < MIN_VOLUME:
+            return None
+        return rows
+    except Exception:
+        return None
 
-        c = df["Close"]
-        v = df["Volume"]
-        h = df["High"]
-        l = df["Low"]
 
-        ema50  = ema(c, 50)
-        ema200 = ema(c, 200)
-        rsi_v  = rsi(c, 14)
-        adx_v  = adx(h, l, c, 14)
+# ── 6 İndikatör ──────────────────────────────────────────────
+def algo_trend(klines: list[dict]) -> tuple[int, str]:
+    closes = [k["close"] for k in klines]
+    e20 = _ema(closes, 20)
+    e50 = _ema(closes, 50)
+    cross = e20[-1] - e50[-1]
+    slope = e20[-1] - e20[-4] if len(e20) >= 4 else 0
+    pct   = cross / closes[-1] * 100
+    if cross > 0 and slope > 0:
+        return +1, f"Trend↑ E20&gt;E50 ({pct:+.2f}%)"
+    elif cross < 0 and slope < 0:
+        return -1, f"Trend↓ E20&lt;E50 ({pct:+.2f}%)"
+    else:
+        return  0, f"Trend→ karışık ({pct:+.2f}%)"
 
-        fast_ma = ema(c, 12)
-        slow_ma = ema(c, 26)
-        macd_line = fast_ma - slow_ma
-        signal_line = ema(macd_line, 9)
 
-        vol_avg    = v.rolling(20).mean()
-        tl_vol_sma = (c * v).rolling(20).mean()
+def algo_mr(klines: list[dict]) -> tuple[int, str]:
+    closes = [k["close"] for k in klines]
+    rsi    = _rsi(closes, 14)
+    upper, _, lower = _bollinger(closes, 20, 2.0)
+    price  = closes[-1]
+    rsi_v  = +1 if rsi <= 35 else -1 if rsi >= 65 else 0
+    bb_v   = +1 if price <= lower else -1 if price >= upper else 0
+    vote   = max(-1, min(1, rsi_v + bb_v))
+    arr    = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    bb_lbl = "alt" if price <= lower else "üst" if price >= upper else "orta"
+    return vote, f"MR{arr} RSI:{rsi:.0f} BB:{bb_lbl}"
 
-        i = -2
-        price       = c.iloc[i]
-        e50         = ema50.iloc[i]
-        e200        = ema200.iloc[i]
-        rsi_val     = rsi_v.iloc[i]
-        rsi_prev    = rsi_v.iloc[i-1]
-        adx_val     = adx_v.iloc[i]
-        macd_val    = macd_line.iloc[i]
-        sig_val     = signal_line.iloc[i]
-        vol_last    = v.iloc[i]
-        vol_avg_val = vol_avg.iloc[i]
-        tl_sma_val  = tl_vol_sma.iloc[i]
 
-        # Günlük % değişim: 1h barda 6 bar geriye = yaklaşık 1 gün
-        daily_pct = 0.0
-        if len(c) >= 8:
-            prev = c.iloc[i - 6]
-            if prev > 0:
-                daily_pct = round((price - prev) / prev * 100, 2)
+def algo_hurst(klines: list[dict]) -> tuple[int, str]:
+    closes = [k["close"] for k in klines[-60:]]
+    if len(closes) < 20:
+        return 0, "Hurst→ yetersiz"
 
-        golden_cross = any(
-            ema50.iloc[j-1] <= ema200.iloc[j-1] and ema50.iloc[j] > ema200.iloc[j]
-            for j in range(-5, 0)
+    def rs(series):
+        n    = len(series)
+        mean = sum(series) / n
+        dev  = [x - mean for x in series]
+        cum  = []
+        s = 0
+        for d in dev:
+            s += d
+            cum.append(s)
+        R   = max(cum) - min(cum)
+        std = (sum((x - mean) ** 2 for x in series) / n) ** 0.5
+        return R / std if std > 0 else 0
+
+    points = []
+    for w in [10, 20, 40]:
+        if len(closes) >= w:
+            r = rs(closes[-w:])
+            if r > 0:
+                points.append((math.log(w), math.log(r)))
+
+    if len(points) < 2:
+        return 0, "Hurst→ hesaplanamadı"
+
+    xs, ys = [p[0] for p in points], [p[1] for p in points]
+    mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+    num = sum((xs[i] - mx) * (ys[i] - my) for i in range(len(xs)))
+    den = sum((xs[i] - mx) ** 2 for i in range(len(xs)))
+    H   = num / den if den > 0 else 0.5
+
+    e5, e10 = _ema(closes, 5), _ema(closes, 10)
+    up = e5[-1] > e10[-1]
+
+    if H > 0.55:
+        v = +1 if up else -1
+        return v, f"Hurst{'↑' if up else '↓'} H={H:.2f} trend"
+    elif H < 0.45:
+        v = -1 if up else +1
+        return v, f"Hurst{'↓' if up else '↑'} H={H:.2f} MR"
+    else:
+        return 0, f"Hurst→ H={H:.2f}"
+
+
+def algo_kalman(klines: list[dict]) -> tuple[int, str]:
+    closes = [k["close"] for k in klines[-50:]]
+    if len(closes) < 10:
+        return 0, "Kalman→ yetersiz"
+    Q, R, x, P = 1e-4, 0.1, closes[0], 1.0
+    sm = []
+    for z in closes:
+        P = P + Q
+        K = P / (P + R)
+        x = x + K * (z - x)
+        P = (1 - K) * P
+        sm.append(x)
+    slope = (sm[-1] - sm[-5]) / sm[-5] * 100 if sm[-5] != 0 else 0
+    if slope > 0.08:
+        return +1, f"Kalman↑ {slope:+.3f}%"
+    elif slope < -0.08:
+        return -1, f"Kalman↓ {slope:+.3f}%"
+    else:
+        return  0, f"Kalman→ {slope:+.3f}%"
+
+
+def algo_perm_entropy(klines: list[dict]) -> tuple[int, str]:
+    closes = [k["close"] for k in klines[-50:]]
+    m, tau = 3, 1
+    if len(closes) < m * tau + 5:
+        return 0, "PEnt→ yetersiz"
+    patterns: dict = {}
+    for i in range(len(closes) - (m - 1) * tau):
+        sub  = [closes[i + j * tau] for j in range(m)]
+        perm = tuple(sorted(range(m), key=lambda x: sub[x]))
+        patterns[perm] = patterns.get(perm, 0) + 1
+    total = sum(patterns.values())
+    pe    = -sum((c / total) * math.log(c / total) for c in patterns.values())
+    pe_n  = pe / math.log(math.factorial(m))
+    e5, e10 = _ema(closes, 5), _ema(closes, 10)
+    up = e5[-1] > e10[-1]
+    if pe_n < 0.70:
+        v = +1 if up else -1
+        return v, f"PEnt{'↑' if up else '↓'} PE={pe_n:.2f}"
+    elif pe_n > 0.90:
+        return 0, f"PEnt→ kaotik PE={pe_n:.2f}"
+    else:
+        return 0, f"PEnt→ PE={pe_n:.2f}"
+
+
+def algo_hilbert(klines: list[dict]) -> tuple[int, str]:
+    closes = [k["close"] for k in klines[-50:]]
+    n = len(closes)
+    if n < 20:
+        return 0, "Hilbert→ yetersiz"
+    smooth = [closes[i] if i < 3 else
+              (4*closes[i]+3*closes[i-1]+2*closes[i-2]+closes[i-3])/10
+              for i in range(n)]
+    coef, c1, adj = 0.0962, 0.5769, 0.075*1+0.54
+    det = [0.0]*n
+    for i in range(6, n):
+        det[i] = (coef*smooth[i]+c1*smooth[i-2]-c1*smooth[i-4]-coef*smooth[i-6])*adj
+    I1, Q1 = [0.0]*n, [0.0]*n
+    for i in range(6, n):
+        Q1[i] = (coef*det[i]+c1*det[i-2]-c1*det[i-4]-coef*det[i-6])*adj
+        I1[i] = det[i-3]
+    sI, sQ, a = [0.0]*n, [0.0]*n, 0.2
+    for i in range(1, n):
+        sI[i] = a*I1[i]+(1-a)*sI[i-1]
+        sQ[i] = a*Q1[i]+(1-a)*sQ[i-1]
+    def atan2d(q, iv):
+        return math.degrees(math.atan2(q, iv)) if (q or iv) else 0.0
+    delta = atan2d(sQ[-1], sI[-1]) - atan2d(sQ[-2], sI[-2])
+    if delta >  180: delta -= 360
+    if delta < -180: delta += 360
+    T = abs(360/delta) if delta else 20
+    if delta > 1.5:
+        return +1, f"Hilbert↑ faz:+{delta:.1f}°"
+    elif delta < -1.5:
+        return -1, f"Hilbert↓ faz:{delta:.1f}°"
+    else:
+        return  0, f"Hilbert→ faz:{delta:.1f}°"
+
+
+# ── Tek hisse analizi ─────────────────────────────────────────
+def analyze(symbol: str) -> dict | None:
+    klines = fetch_ohlcv(symbol)
+    if not klines or len(klines) < MIN_BARS:
+        return None
+    v1, l1 = algo_trend(klines)
+    v2, l2 = algo_mr(klines)
+    v3, l3 = algo_hurst(klines)
+    v4, l4 = algo_kalman(klines)
+    v5, l5 = algo_perm_entropy(klines)
+    v6, l6 = algo_hilbert(klines)
+    score  = v1 + v2 + v3 + v4 + v5 + v6
+    return {
+        "symbol": symbol,
+        "price":  klines[-1]["close"],
+        "score":  score,
+        "votes":  [v1, v2, v3, v4, v5, v6],
+        "labels": [l1, l2, l3, l4, l5, l6],
+        "volume": sum(k["volume"] for k in klines[-6:]) / 6,
+    }
+
+
+# ── Ana tarama ────────────────────────────────────────────────
+def run_scan() -> None:
+    now_tr = datetime.now(_TZ)
+    hour   = now_tr.hour
+    dow    = now_tr.weekday()  # 0=Pzt, 6=Paz
+    saat   = now_tr.strftime("%H:%M")
+
+    # Hafta sonu veya seans dışı → çık
+    if dow >= 5 or hour < 10 or hour >= 18:
+        print(f"[BIST Tarayıcı] {saat} IST — seans dışı, çıkılıyor")
+        return
+
+    print(f"[BIST Tarayıcı] {saat} IST — {len(SYMBOLS)} hisse taranıyor...")
+
+    results = []
+    for sym in SYMBOLS:
+        try:
+            sig = analyze(sym)
+            if sig and sig["score"] >= SCORE_MODERATE:
+                results.append(sig)
+        except Exception as e:
+            print(f"  {sym} hata: {e}", file=sys.stderr)
+        time.sleep(0.3)  # rate limit
+
+    # Skora göre sırala
+    results.sort(key=lambda x: x["score"], reverse=True)
+    top = results[:TOP_N]
+
+    sep      = "━" * 28
+    next_h   = f"{(hour+1)%24:02d}:00"
+
+    if not top:
+        tg_send(
+            f"{sep}\n"
+            f"📊 <b>BIST Sinyal — {saat} IST</b>\n"
+            f"⏸ Bu saat güçlü sinyal bulunamadı.\n"
+            f"{sep}"
         )
+        print(f"[BIST Tarayıcı] Sinyal yok")
+        return
 
-        dist_pct = abs((price - e200) / e200) * 100
+    lines = [f"{sep}", f"📊 <b>BIST Sinyal — {saat} - {next_h} IST</b>"]
 
-        # === KOŞULLAR (cond_not_too_far kaldırıldı) ===
-        cond_price_above_emas = price > e50 and price > e200
-        cond_rsi              = (rsi_val > 50 and rsi_val > rsi_prev) or rsi_val > 55
-        cond_adx              = adx_val > 16
-        cond_macd_bull        = macd_val > sig_val
-        cond_vol_spike        = vol_last > vol_avg_val * 1.3
-        cond_liquidity        = tl_sma_val >= 5_000_000
+    strong = [r for r in top if r["score"] >= SCORE_STRONG]
+    medium = [r for r in top if SCORE_MODERATE <= r["score"] < SCORE_STRONG]
 
-        all_green = all([
-            cond_price_above_emas,
-            cond_rsi,
-            cond_adx,
-            cond_macd_bull,
-            cond_vol_spike,
-            cond_liquidity,
-        ])
+    if strong:
+        lines.append(f"🔥 <b>Güçlü ({len(strong)})</b>")
+        for r in strong:
+            vi = ["🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in r["votes"]]
+            lines.append(
+                f"📈 <b>{r['symbol']}</b>  skor:{r['score']:+d}/6  fiyat:{r['price']:.2f}₺\n"
+                f"   {'  '.join(vi)}"
+            )
 
-        if all_green:
-            return {
-                "ticker":       ticker,
-                "price":        round(price, 2),
-                "rsi":          round(rsi_val, 1),
-                "adx":          round(adx_val, 1),
-                "dist_pct":     round(dist_pct, 2),
-                "daily_pct":    daily_pct,
-                "tl_vol_sma_m": round(tl_sma_val / 1_000_000, 1),
-                "golden_cross": "EVET" if golden_cross else "YOK",
-                "scan_type":    "trend",
-            }
-        return None
-    except Exception:
-        return None
+    if medium:
+        lines.append(f"📌 <b>Orta ({len(medium)})</b>")
+        for r in medium:
+            vi = ["🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in r["votes"]]
+            lines.append(
+                f"↗️ <b>{r['symbol']}</b>  skor:{r['score']:+d}/6  fiyat:{r['price']:.2f}₺  "
+                f"{''.join(vi)}"
+            )
 
-# =========================================
-# MOMENTUM TARAMA
-# =========================================
+    lines.append(f"<i>Tarama: {len(SYMBOLS)} hisse | Eşik: ≥{SCORE_MODERATE}/6</i>")
+    lines.append(sep)
 
-def check_ticker_momentum(ticker):
-    """
-    Günlük büyük hareketleri yakalar.
-    Koşullar:
-      - Günlük değişim >= %5
-      - Hacim > 20 günlük ortalama × 2.0
-      - RSI > 60
-      - TL hacim SMA >= 5M (likidite)
-    """
-    try:
-        symbol = ticker + ".IS"
-        df = yf.Ticker(symbol).history(period="60d", interval="1d")
-
-        if df is None or len(df) < 22:
-            return None
-
-        c = df["Close"]
-        v = df["Volume"]
-        rsi_v      = rsi(c, 14)
-        vol_avg    = v.rolling(20).mean()
-        tl_vol_sma = (c * v).rolling(20).mean()
-
-        # iloc[-1] = bugünün barı (açık veya kapanmış), iloc[-2] = dünün kapanışı
-        price       = c.iloc[-1]
-        prev_price  = c.iloc[-2]
-        rsi_val     = rsi_v.iloc[-1]
-        vol_last    = v.iloc[-1]
-        vol_avg_val = vol_avg.iloc[-2]
-        tl_sma_val  = tl_vol_sma.iloc[-2]
-
-        daily_pct = round((price - prev_price) / prev_price * 100, 2) if prev_price > 0 else 0.0
-
-        cond_momentum  = daily_pct >= 5.0
-        cond_rsi       = rsi_val > 50
-        cond_liquidity = tl_sma_val >= 5_000_000
-
-        if all([cond_momentum, cond_rsi, cond_liquidity]):
-            return {
-                "ticker":       ticker,
-                "price":        round(price, 2),
-                "rsi":          round(rsi_val, 1),
-                "adx":          0.0,
-                "dist_pct":     0.0,
-                "daily_pct":    daily_pct,
-                "tl_vol_sma_m": round(tl_sma_val / 1_000_000, 1),
-                "golden_cross": "YOK",
-                "scan_type":    "momentum",
-            }
-        return None
-    except Exception:
-        return None
-
-# =========================================
-# SCAN FONKSİYONLARI
-# =========================================
-
-def scan(interval="1h"):
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    print(f"\n🌿 BIST Trend Tarayıcı | {interval.upper()} | {now}")
-    print("=" * 65)
-    print(f"Toplam {len(BIST_TICKERS)} hisse taranıyor...\n")
-
-    results = []
-    for ticker in BIST_TICKERS:
-        r = check_ticker(ticker, interval)
-        if r:
-            results.append(r)
-            print(f"  ✅ {ticker:8s} | {r['price']:>8} | RSI:{r['rsi']:>5} | ADX:{r['adx']:>5} | "
-                  f"Günlük:{r['daily_pct']:>+6.1f}% | {r['tl_vol_sma_m']:>6}M TL")
-
-    print("\n" + "=" * 65)
-    if results:
-        print(f"\n🟢 TREND — {len(results)} Hisse\n")
-        print(f"{'HİSSE':<10} {'FİYAT':>8} {'RSI':>6} {'ADX':>6} {'GÜNLÜK':>8} {'TL HACİM':>10}")
-        print("-" * 65)
-        for r in sorted(results, key=lambda x: x['rsi'], reverse=True):
-            gc = "✨GC" if r.get('golden_cross') == 'EVET' else "   "
-            print(f"{r['ticker']:<10} {r['price']:>8} {r['rsi']:>6} {r['adx']:>6} "
-                  f"{r['daily_pct']:>+7.1f}% {r['tl_vol_sma_m']:>9}M  {gc}")
-    else:
-        print("\n🔴 Kriterlerin tamamı yeşil olan hisse bulunamadı.")
-
-    print(f"\n⏱  Tamamlandı: {datetime.now().strftime('%H:%M:%S')}")
-    return results
-
-
-def scan_momentum():
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    print(f"\n🚀 BIST Momentum Tarayıcı | {now}")
-    print("=" * 65)
-    print(f"Toplam {len(BIST_TICKERS)} hisse taranıyor...\n")
-
-    results = []
-    for ticker in BIST_TICKERS:
-        r = check_ticker_momentum(ticker)
-        if r:
-            results.append(r)
-            print(f"  🚀 {ticker:8s} | {r['price']:>8} | RSI:{r['rsi']:>5} | "
-                  f"Günlük:{r['daily_pct']:>+6.1f}% | {r['tl_vol_sma_m']:>6}M TL")
-
-    print("\n" + "=" * 65)
-    if results:
-        print(f"\n🚀 MOMENTUM — {len(results)} Hisse\n")
-        print(f"{'HİSSE':<10} {'FİYAT':>8} {'RSI':>6} {'GÜNLÜK':>8} {'TL HACİM':>10}")
-        print("-" * 65)
-        for r in sorted(results, key=lambda x: x['daily_pct'], reverse=True):
-            print(f"{r['ticker']:<10} {r['price']:>8} {r['rsi']:>6} "
-                  f"{r['daily_pct']:>+7.1f}% {r['tl_vol_sma_m']:>9}M")
-    else:
-        print("\n🔴 Momentum kriteri geçen hisse bulunamadı.")
-
-    print(f"\n⏱  Tamamlandı: {datetime.now().strftime('%H:%M:%S')}")
-    return results
+    tg_send("\n".join(lines))
+    print(f"[BIST Tarayıcı] {saat} — {len(strong)} güçlü, {len(medium)} orta sinyal gönderildi")
 
 
 if __name__ == "__main__":
-    interval = sys.argv[1] if len(sys.argv) > 1 else "1h"
-    if interval == "momentum":
-        scan_momentum()
-    else:
-        scan(interval)
+    run_scan()
