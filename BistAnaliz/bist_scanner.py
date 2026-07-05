@@ -5,13 +5,16 @@ BIST100 dışındaki hisseler için 6 indikatör tabanlı yükseliş sinyali.
 """
 
 import sys, os, math, time, json, urllib.request, urllib.error
-from datetime import datetime
+from datetime import datetime, date
 from zoneinfo import ZoneInfo
 
 _TZ = ZoneInfo("Europe/Istanbul")
 
 BOT_TOKEN  = "8256912678:AAFWEoRWO7Z0siK_c4Dm5XjgtBKmh-wmF8E"
 CHAT_ID    = "830754964"
+
+_DIR         = os.path.dirname(os.path.abspath(__file__))
+HISTORY_FILE = os.path.join(_DIR, "bist_scanner_history.json")
 
 MIN_VOLUME  = 100_000   # minimum ortalama saatlik hacim (TL)
 MIN_BARS    = 30        # minimum mum sayısı
@@ -293,6 +296,105 @@ def analyze(symbol: str) -> dict | None:
     }
 
 
+# ── İsabet Takibi ─────────────────────────────────────────────
+def load_history() -> list:
+    try:
+        with open(HISTORY_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def save_history(history: list) -> None:
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(history, f, indent=2, ensure_ascii=False)
+
+
+def record_signals(signals: list, hour: int, today: str) -> None:
+    """Verilen sinyalleri geçmiş dosyasına kaydet."""
+    history = load_history()
+    for s in signals:
+        history.append({
+            "date":         today,
+            "hour":         hour,
+            "symbol":       s["symbol"],
+            "score":        s["score"],
+            "price_signal": s["price"],
+            "price_1h":     None,
+            "result":       None,
+            "pct":          None,
+        })
+    save_history(history)
+
+
+def resolve_previous_signals(hour: int, today: str) -> None:
+    """Bir önceki saatin sinyallerini mevcut fiyatla kapat."""
+    history = load_history()
+    prev_hour = hour - 1
+    pending = [e for e in history
+               if e["date"] == today and e["hour"] == prev_hour and e["result"] is None]
+    if not pending:
+        return
+
+    # Fiyatları çek
+    for entry in pending:
+        try:
+            import yfinance as yf
+            df = yf.Ticker(f"{entry['symbol']}.IS").history(period="1d", interval="1h")
+            if df is not None and len(df) > 0:
+                current = float(df["Close"].iloc[-1])
+                pct     = (current - entry["price_signal"]) / entry["price_signal"] * 100
+                entry["price_1h"] = round(current, 2)
+                entry["pct"]      = round(pct, 2)
+                # Pozitif skor → yükselmesi bekleniyor
+                if entry["score"] > 0:
+                    entry["result"] = "✅" if pct > 0 else "❌"
+                else:
+                    entry["result"] = "✅" if pct < 0 else "❌"
+        except Exception:
+            entry["result"] = "?"
+        time.sleep(0.2)
+
+    save_history(history)
+
+
+def run_eod_report() -> None:
+    """Gün sonu isabet raporu gönder (18:05)."""
+    today   = date.today().isoformat()
+    history = load_history()
+    today_entries = [e for e in history if e["date"] == today and e["result"] is not None]
+
+    if not today_entries:
+        return
+
+    wins  = sum(1 for e in today_entries if e["result"] == "✅")
+    total = len(today_entries)
+    rate  = wins / total * 100 if total else 0
+
+    sep   = "━" * 28
+    lines = [sep, f"📋 <b>BIST Günlük İsabet Raporu — {today}</b>",
+             f"🎯 Başarı: {wins}/{total}  ({rate:.0f}%)"]
+
+    # Sonuçları saate göre grupla
+    by_hour: dict = {}
+    for e in sorted(today_entries, key=lambda x: (x["hour"], x["symbol"])):
+        h = e["hour"]
+        by_hour.setdefault(h, []).append(e)
+
+    for h, entries in by_hour.items():
+        lines.append(f"\n🕐 <b>{h:02d}:05 sinyalleri</b>")
+        for e in entries:
+            pct_str = f"{e['pct']:+.1f}%" if e["pct"] is not None else "?"
+            lines.append(
+                f"  {e['result']} <b>{e['symbol']}</b>  skor:{e['score']:+d}/6  "
+                f"{e['price_signal']:.2f}→{e.get('price_1h') or '?'}₺  ({pct_str})"
+            )
+
+    lines.append(sep)
+    tg_send("\n".join(lines))
+    print(f"[BIST Tarayıcı] Gün sonu raporu gönderildi: {wins}/{total} isabet")
+
+
 # ── Ana tarama ────────────────────────────────────────────────
 def run_scan() -> None:
     now_tr = datetime.now(_TZ)
@@ -300,10 +402,21 @@ def run_scan() -> None:
     dow    = now_tr.weekday()  # 0=Pzt, 6=Paz
     saat   = now_tr.strftime("%H:%M")
 
+    today = now_tr.strftime("%Y-%m-%d")
+
     # Hafta sonu veya seans dışı → çık
     if dow >= 5 or hour < 10 or hour >= 18:
         print(f"[BIST Tarayıcı] {saat} IST — seans dışı, çıkılıyor")
         return
+
+    # Gün sonu raporu: 18:05 çalışırsa (saat 18'de cron çalışır)
+    if hour == 18:
+        run_eod_report()
+        return
+
+    # Bir önceki saatin sinyallerini kapat (isabet takibi)
+    if hour > 10:
+        resolve_previous_signals(hour, today)
 
     print(f"[BIST Tarayıcı] {saat} IST — {len(SYMBOLS)} hisse taranıyor...")
 
@@ -361,6 +474,10 @@ def run_scan() -> None:
     lines.append(sep)
 
     tg_send("\n".join(lines))
+
+    # Sinyalleri isabet takibi için kaydet
+    record_signals(top, hour, today)
+
     print(f"[BIST Tarayıcı] {saat} — {len(strong)} güçlü, {len(medium)} orta sinyal gönderildi")
 
 
