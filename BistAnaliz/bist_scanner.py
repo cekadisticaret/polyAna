@@ -322,44 +322,72 @@ def record_signals(signals: list, hour: int, today: str) -> None:
             "hour":         hour,
             "symbol":       s["symbol"],
             "score":        s["score"],
-            "votes":        s["votes"],   # [v1..v6] her indikatörün oyu
+            "votes":        s["votes"],
             "price_signal": s["price"],
             "price_1h":     None,
+            "price_2h":     None,
+            "price_3h":     None,
+            "price_4h":     None,
+            "pct_1h":       None,
+            "pct_2h":       None,
+            "pct_3h":       None,
+            "pct_4h":       None,
             "result":       None,
             "pct":          None,
         })
     save_history(history)
 
 
+def _get_current_price(symbol: str) -> float | None:
+    """yfinance ile anlık fiyat çek."""
+    try:
+        import yfinance as yf
+        df = yf.Ticker(f"{symbol}.IS").history(period="1d", interval="1h")
+        if df is not None and len(df) > 0:
+            return round(float(df["Close"].iloc[-1]), 4)
+    except Exception:
+        pass
+    return None
+
+
 def resolve_previous_signals(hour: int, today: str) -> None:
-    """Bir önceki saatin sinyallerini mevcut fiyatla kapat."""
+    """
+    1-4 saat önceki sinyallerin fiyatlarını güncelle.
+    Her saat çalışır, offset kadar önceki sinyalin Nh alanını doldurur.
+    """
     history = load_history()
-    prev_hour = hour - 1
-    pending = [e for e in history
-               if e["date"] == today and e["hour"] == prev_hour and e["result"] is None]
-    if not pending:
-        return
+    updated = False
 
-    # Fiyatları çek
-    for entry in pending:
-        try:
-            import yfinance as yf
-            df = yf.Ticker(f"{entry['symbol']}.IS").history(period="1d", interval="1h")
-            if df is not None and len(df) > 0:
-                current = float(df["Close"].iloc[-1])
-                pct     = (current - entry["price_signal"]) / entry["price_signal"] * 100
-                entry["price_1h"] = round(current, 2)
+    for offset in range(1, 5):
+        target_hour = hour - offset
+        if target_hour < 0:
+            continue
+        field_p = f"price_{offset}h"
+        field_pct = f"pct_{offset}h"
+
+        for entry in history:
+            if (entry["date"] != today
+                    or entry["hour"] != target_hour
+                    or entry.get(field_p) is not None):
+                continue
+            price = _get_current_price(entry["symbol"])
+            if price is None:
+                continue
+            pct = (price - entry["price_signal"]) / entry["price_signal"] * 100
+            entry[field_p]   = round(price, 2)
+            entry[field_pct] = round(pct, 2)
+
+            # Win/loss 1 saatlik sonuca göre belirlenir
+            if offset == 1:
+                entry["price_1h"] = round(price, 2)
                 entry["pct"]      = round(pct, 2)
-                # Pozitif skor → yükselmesi bekleniyor
-                if entry["score"] > 0:
-                    entry["result"] = "✅" if pct > 0 else "❌"
-                else:
-                    entry["result"] = "✅" if pct < 0 else "❌"
-        except Exception:
-            entry["result"] = "?"
-        time.sleep(0.2)
+                entry["result"]   = ("✅" if pct > 0 else "❌") if entry["score"] > 0 \
+                                    else ("✅" if pct < 0 else "❌")
+            updated = True
+            time.sleep(0.15)
 
-    save_history(history)
+    if updated:
+        save_history(history)
 
 
 def run_eod_report() -> None:
@@ -409,12 +437,21 @@ def run_eod_report() -> None:
     for h, entries in by_hour.items():
         lines.append(f"🕐 <b>{h:02d}:05</b>")
         for e in entries:
-            pct_str = f"{e['pct']:+.1f}%" if e["pct"] is not None else "?"
-            votes   = e.get("votes", [])
-            vi      = "".join("🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in votes)
+            votes = e.get("votes", [])
+            vi    = "".join("🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in votes)
+            # 1-4 saatlik değişim zinciri
+            chain = []
+            for n in range(1, 5):
+                pct_n = e.get(f"pct_{n}h")
+                if pct_n is not None:
+                    arrow = "↑" if pct_n > 0 else "↓" if pct_n < 0 else "→"
+                    chain.append(f"+{n}h:{arrow}{abs(pct_n):.1f}%")
+                else:
+                    chain.append(f"+{n}h:—")
+            chain_str = "  ".join(chain)
             lines.append(
-                f"  {e['result']} <b>{e['symbol']}</b>  {e['price_signal']:.2f}→"
-                f"{e.get('price_1h') or '?'}₺ ({pct_str})  {vi}"
+                f"  {e['result']} <b>{e['symbol']}</b>  {e['price_signal']:.2f}₺\n"
+                f"    {chain_str}  {vi}"
             )
 
     lines.append(sep)
