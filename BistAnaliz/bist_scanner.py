@@ -1,10 +1,18 @@
 """
-BIST Saatlik Sinyal Tarayıcı
-BIST100 dışındaki hisseler için 6 indikatör tabanlı yükseliş sinyali.
-Çalışma: BIST seans saatlerinde her saat :05'te
+BIST Saatlik Sinyal Tarayıcı — v2 (BIST Özelleştirilmiş)
+
+6 BIST-spesifik indikatör:
+  1. EMA Crossover  (5/15 saatlik) — hızlı trend
+  2. RSI Bölgesi   (14, 35/65)    — momentum/aşırı bölge
+  3. Hacim Onayı   (10-bar avg)   — hacim olmayan sinyal geçersiz
+  4. VWAP Pozisyon (günlük)       — BIST'in en güçlü intraday filtresi
+  5. ROC Momentum  (3 saat)       — kısa vadeli ivme
+  6. Bollinger + Trend            — destek/direnç teyidi
+
+Eşik: ≥5/6 güçlü, 3-4/6 orta, ≤2/6 yok
 """
 
-import sys, os, math, time, json, urllib.request, urllib.error
+import sys, os, time, json, urllib.request, urllib.error
 from datetime import datetime, date
 from zoneinfo import ZoneInfo
 
@@ -16,11 +24,14 @@ CHAT_ID    = "830754964"
 _DIR         = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(_DIR, "bist_scanner_history.json")
 
-MIN_VOLUME  = 100_000   # minimum ortalama saatlik hacim (TL)
-MIN_BARS    = 30        # minimum mum sayısı
-TOP_N       = 10        # bildirimde gösterilecek max hisse
-SCORE_STRONG   = 5      # güçlü sinyal (5-6/6)
-SCORE_MODERATE = 3      # orta sinyal (3-4/6)
+MIN_VOLUME     = 50_000   # minimum saatlik hacim (TL) — öğle arası düşüyor
+MIN_BARS       = 20       # minimum mum sayısı
+TOP_N          = 10       # bildirimde gösterilecek max hisse
+SCORE_STRONG   = 5        # güçlü sinyal (5-6/6)
+SCORE_MODERATE = 3        # orta sinyal (3-4/6)
+VOL_SPIKE      = 1.5      # hacim spike çarpanı (1.5× ortalama = güçlü)
+ROC_THRESH     = 0.20     # %0.20 minimum anlamlı momentum (BIST saatlik)
+VWAP_BAND      = 0.001    # VWAP ±0.10% nötr bölge
 
 # ── BIST100 DışI Hisseler (likit seçim) ──────────────────────
 SYMBOLS = [
@@ -53,18 +64,7 @@ SYMBOLS = [
     "BSOKE","BUCIM","BURCE","BURVA","DOHOL","EKGYO",
 ]
 
-# ── Yardımcı ─────────────────────────────────────────────────
-def tg_send(text: str) -> None:
-    try:
-        url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
-        req  = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=15) as r:
-            r.read()
-    except Exception as e:
-        print(f"[TG] Hata: {e}", file=sys.stderr)
-
-
+# ── Teknik yardımcılar ───────────────────────────────────────
 def _ema(vals: list[float], n: int) -> list[float]:
     if not vals:
         return []
@@ -78,18 +78,187 @@ def _ema(vals: list[float], n: int) -> list[float]:
 def _rsi(vals: list[float], n: int = 14) -> float:
     if len(vals) < n + 1:
         return 50.0
-    deltas = [vals[i] - vals[i - 1] for i in range(1, len(vals))]
+    deltas = [vals[i] - vals[i-1] for i in range(1, len(vals))]
     gains  = [max(d, 0) for d in deltas[-n:]]
     losses = [max(-d, 0) for d in deltas[-n:]]
-    ag, al = sum(gains) / n, sum(losses) / n
-    return 100 - 100 / (1 + ag / al) if al else 100.0
+    ag, al = sum(gains)/n, sum(losses)/n
+    return 100 - 100/(1 + ag/al) if al else 100.0
 
 
-def _bollinger(vals: list[float], n: int = 20, k: float = 2.0):
-    w = vals[-n:]
+def _bollinger(vals: list[float], n: int = 20, k: float = 1.5):
+    w = vals[-n:] if len(vals) >= n else vals
     m = sum(w) / len(w)
-    s = (sum((x - m) ** 2 for x in w) / len(w)) ** 0.5
-    return m + k * s, m, m - k * s
+    s = (sum((x-m)**2 for x in w) / len(w)) ** 0.5
+    return m + k*s, m, m - k*s
+
+
+def _vwap(klines: list[dict]) -> float:
+    """Günlük VWAP: son 8 bar (≈ günün başından itibaren)."""
+    window = klines[-8:]
+    num = sum(((k["high"]+k["low"]+k["close"])/3) * k["volume"] for k in window)
+    den = sum(k["volume"] for k in window)
+    return num / den if den > 0 else klines[-1]["close"]
+
+
+# ── 6 BIST-Özelleştirilmiş İndikatör ─────────────────────────
+IND_NAMES = ["EMA", "RSI", "Hacim", "VWAP", "ROC", "Bollinger"]
+
+
+def algo_ema_cross(klines: list[dict]) -> tuple[int, str]:
+    """
+    EMA5/EMA15 crossover + yön doğrulaması.
+    BIST saatlik için 20/50 çok ağır → 5/15 daha duyarlı.
+    Güçlendirici: fiyat her iki EMA'nın da üzerinde mi?
+    """
+    closes = [k["close"] for k in klines]
+    e5  = _ema(closes, 5)
+    e15 = _ema(closes, 15)
+    cross = e5[-1] - e15[-1]
+    slope = e5[-1] - e5[-3] if len(e5) >= 3 else 0
+    price = closes[-1]
+    pct   = cross / price * 100
+
+    # Güçlü yükseliş: EMA5>EMA15, slope pozitif, fiyat EMA5 üzerinde
+    if cross > 0 and slope > 0 and price > e5[-1]:
+        return +1, f"EMA↑ E5&gt;E15 ({pct:+.2f}%) slope+{slope/price*100:.2f}%"
+    # Güçlü düşüş: EMA5<EMA15, slope negatif, fiyat EMA5 altında
+    elif cross < 0 and slope < 0 and price < e5[-1]:
+        return -1, f"EMA↓ E5&lt;E15 ({pct:+.2f}%)"
+    # Çelişkili ya da düz → nötr
+    else:
+        return  0, f"EMA→ karışık ({pct:+.2f}%)"
+
+
+def algo_rsi_zone(klines: list[dict]) -> tuple[int, str]:
+    """
+    RSI bölge analizi (14 periyot, 35/65 eşiği).
+    BIST'te 70/30 çok nadir tetiklenir; 65/35 daha uygun.
+    RSI'nın yönü (son 3 barda değişim) de önemli.
+    """
+    closes = [k["close"] for k in klines]
+    rsi    = _rsi(closes, 14)
+
+    # RSI trendini belirle: son 5 kapanışın RSI değişimi
+    rsi_prev = _rsi(closes[:-3], 14) if len(closes) > 17 else rsi
+    rsi_dir  = rsi - rsi_prev  # pozitif = yükseliyor
+
+    if rsi < 35:
+        return +1, f"RSI↑ aşırı satım RSI:{rsi:.0f}"
+    elif rsi > 65:
+        return -1, f"RSI↓ aşırı alım RSI:{rsi:.0f}"
+    elif 40 <= rsi <= 60 and rsi_dir > 2:
+        return +1, f"RSI↑ momentum artıyor RSI:{rsi:.0f} +{rsi_dir:.1f}"
+    elif 40 <= rsi <= 60 and rsi_dir < -2:
+        return -1, f"RSI↓ momentum azalıyor RSI:{rsi:.0f} {rsi_dir:.1f}"
+    else:
+        return  0, f"RSI→ nötr RSI:{rsi:.0f}"
+
+
+def algo_volume(klines: list[dict]) -> tuple[int, str]:
+    """
+    Hacim onayı — BIST'in en kritik filtresi.
+    Hacim yoksa sinyal yoktur. 1.5× ortalama = anlamlı ilgi.
+    Yön: son barın açılış-kapanış ile belirlenir.
+    """
+    vols     = [k["volume"] for k in klines]
+    avg_vol  = sum(vols[-10:]) / min(10, len(vols))
+    cur_vol  = vols[-1]
+    ratio    = cur_vol / avg_vol if avg_vol > 0 else 1.0
+
+    last = klines[-1]
+    bullish_bar = last["close"] >= last["open"]
+
+    if ratio >= VOL_SPIKE:
+        if bullish_bar:
+            return +1, f"Hacim↑ {ratio:.1f}× avg yükselen bar"
+        else:
+            return -1, f"Hacim↓ {ratio:.1f}× avg düşen bar"
+    elif ratio < 0.7:
+        # Çok düşük hacim → güvenilmez sinyal
+        return  0, f"Hacim→ düşük {ratio:.1f}× avg"
+    else:
+        return  0, f"Hacim→ normal {ratio:.1f}× avg"
+
+
+def algo_vwap(klines: list[dict]) -> tuple[int, str]:
+    """
+    VWAP pozisyonu — BIST intraday'in en güçlü filtresi.
+    Kurumsal alıcılar VWAP altında alır, üstünde satar.
+    Fiyat VWAP'ın belirgin üzerindeyse trend güçlü.
+    """
+    vwap  = _vwap(klines)
+    price = klines[-1]["close"]
+    diff  = (price - vwap) / vwap
+
+    if diff > VWAP_BAND:
+        return +1, f"VWAP↑ fiyat:{price:.2f} VWAP:{vwap:.2f} (+{diff*100:.2f}%)"
+    elif diff < -VWAP_BAND:
+        return -1, f"VWAP↓ fiyat:{price:.2f} VWAP:{vwap:.2f} ({diff*100:.2f}%)"
+    else:
+        return  0, f"VWAP→ VWAP yakını ({diff*100:.2f}%)"
+
+
+def algo_roc(klines: list[dict]) -> tuple[int, str]:
+    """
+    3 Saatlik ROC (Rate of Change) — kısa vadeli ivme.
+    BIST saatlik: 0.20% altı hareket gürültü sayılır.
+    Momentum: hisse gerçekten hareket ediyor mu?
+    """
+    closes = [k["close"] for k in klines]
+    if len(closes) < 4:
+        return 0, "ROC→ yetersiz veri"
+    roc = (closes[-1] - closes[-4]) / closes[-4] * 100  # 3 bar önce
+
+    if roc > ROC_THRESH:
+        return +1, f"ROC↑ +{roc:.2f}% (3h ivme)"
+    elif roc < -ROC_THRESH:
+        return -1, f"ROC↓ {roc:.2f}% (3h ivme)"
+    else:
+        return  0, f"ROC→ {roc:.2f}% (düz)"
+
+
+def algo_bollinger_trend(klines: list[dict]) -> tuple[int, str]:
+    """
+    Bollinger Band (20, 1.5σ) + Trend filtresi.
+    BIST'te saf MR işe yaramaz — trend yönünde BB kullan.
+    Destek: fiyat alt banda yakın + EMA5 yukarı → trend devam
+    Direnç: fiyat üst banda yakın + EMA5 aşağı → düşüş riski
+    """
+    closes = [k["close"] for k in klines]
+    upper, mid, lower = _bollinger(closes, 20, 1.5)
+    price  = closes[-1]
+    e5     = _ema(closes, 5)
+    slope5 = e5[-1] - e5[-3] if len(e5) >= 3 else 0
+
+    width    = (upper - lower) / mid  # BB genişliği (volatilite)
+    pos      = (price - lower) / (upper - lower) if upper != lower else 0.5
+
+    # Fiyat alt bantta + EMA yukarı → destek tuttu, devam edecek
+    if pos < 0.25 and slope5 >= 0:
+        return +1, f"BB↑ alt band desteği pos:{pos:.2f} width:{width*100:.1f}%"
+    # Fiyat orta bant üstünde + slope pozitif → trend kuvvetli
+    elif pos > 0.55 and slope5 > 0:
+        return +1, f"BB↑ mid üstü güçlü pos:{pos:.2f}"
+    # Fiyat üst banda yakın + slope negatif → direnç, geri çekilme
+    elif pos > 0.80 and slope5 <= 0:
+        return -1, f"BB↓ üst band direnci pos:{pos:.2f}"
+    # Fiyat orta bandın altı + slope negatif → zayıf
+    elif pos < 0.45 and slope5 < 0:
+        return -1, f"BB↓ mid altı zayıf pos:{pos:.2f}"
+    else:
+        return  0, f"BB→ nötr pos:{pos:.2f}"
+
+
+# ── Yardımcı ─────────────────────────────────────────────────
+def tg_send(text: str) -> None:
+    try:
+        url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
+        req  = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            r.read()
+    except Exception as e:
+        print(f"[TG] Hata: {e}", file=sys.stderr)
 
 
 # ── Veri Çekme ───────────────────────────────────────────────
@@ -119,172 +288,17 @@ def fetch_ohlcv(symbol: str) -> list[dict] | None:
         return None
 
 
-# ── 6 İndikatör ──────────────────────────────────────────────
-def algo_trend(klines: list[dict]) -> tuple[int, str]:
-    closes = [k["close"] for k in klines]
-    e20 = _ema(closes, 20)
-    e50 = _ema(closes, 50)
-    cross = e20[-1] - e50[-1]
-    slope = e20[-1] - e20[-4] if len(e20) >= 4 else 0
-    pct   = cross / closes[-1] * 100
-    if cross > 0 and slope > 0:
-        return +1, f"Trend↑ E20&gt;E50 ({pct:+.2f}%)"
-    elif cross < 0 and slope < 0:
-        return -1, f"Trend↓ E20&lt;E50 ({pct:+.2f}%)"
-    else:
-        return  0, f"Trend→ karışık ({pct:+.2f}%)"
-
-
-def algo_mr(klines: list[dict]) -> tuple[int, str]:
-    closes = [k["close"] for k in klines]
-    rsi    = _rsi(closes, 14)
-    upper, _, lower = _bollinger(closes, 20, 2.0)
-    price  = closes[-1]
-    rsi_v  = +1 if rsi <= 35 else -1 if rsi >= 65 else 0
-    bb_v   = +1 if price <= lower else -1 if price >= upper else 0
-    vote   = max(-1, min(1, rsi_v + bb_v))
-    arr    = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    bb_lbl = "alt" if price <= lower else "üst" if price >= upper else "orta"
-    return vote, f"MR{arr} RSI:{rsi:.0f} BB:{bb_lbl}"
-
-
-def algo_hurst(klines: list[dict]) -> tuple[int, str]:
-    closes = [k["close"] for k in klines[-60:]]
-    if len(closes) < 20:
-        return 0, "Hurst→ yetersiz"
-
-    def rs(series):
-        n    = len(series)
-        mean = sum(series) / n
-        dev  = [x - mean for x in series]
-        cum  = []
-        s = 0
-        for d in dev:
-            s += d
-            cum.append(s)
-        R   = max(cum) - min(cum)
-        std = (sum((x - mean) ** 2 for x in series) / n) ** 0.5
-        return R / std if std > 0 else 0
-
-    points = []
-    for w in [10, 20, 40]:
-        if len(closes) >= w:
-            r = rs(closes[-w:])
-            if r > 0:
-                points.append((math.log(w), math.log(r)))
-
-    if len(points) < 2:
-        return 0, "Hurst→ hesaplanamadı"
-
-    xs, ys = [p[0] for p in points], [p[1] for p in points]
-    mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
-    num = sum((xs[i] - mx) * (ys[i] - my) for i in range(len(xs)))
-    den = sum((xs[i] - mx) ** 2 for i in range(len(xs)))
-    H   = num / den if den > 0 else 0.5
-
-    e5, e10 = _ema(closes, 5), _ema(closes, 10)
-    up = e5[-1] > e10[-1]
-
-    if H > 0.55:
-        v = +1 if up else -1
-        return v, f"Hurst{'↑' if up else '↓'} H={H:.2f} trend"
-    elif H < 0.45:
-        v = -1 if up else +1
-        return v, f"Hurst{'↓' if up else '↑'} H={H:.2f} MR"
-    else:
-        return 0, f"Hurst→ H={H:.2f}"
-
-
-def algo_kalman(klines: list[dict]) -> tuple[int, str]:
-    closes = [k["close"] for k in klines[-50:]]
-    if len(closes) < 10:
-        return 0, "Kalman→ yetersiz"
-    Q, R, x, P = 1e-4, 0.1, closes[0], 1.0
-    sm = []
-    for z in closes:
-        P = P + Q
-        K = P / (P + R)
-        x = x + K * (z - x)
-        P = (1 - K) * P
-        sm.append(x)
-    slope = (sm[-1] - sm[-5]) / sm[-5] * 100 if sm[-5] != 0 else 0
-    if slope > 0.08:
-        return +1, f"Kalman↑ {slope:+.3f}%"
-    elif slope < -0.08:
-        return -1, f"Kalman↓ {slope:+.3f}%"
-    else:
-        return  0, f"Kalman→ {slope:+.3f}%"
-
-
-def algo_perm_entropy(klines: list[dict]) -> tuple[int, str]:
-    closes = [k["close"] for k in klines[-50:]]
-    m, tau = 3, 1
-    if len(closes) < m * tau + 5:
-        return 0, "PEnt→ yetersiz"
-    patterns: dict = {}
-    for i in range(len(closes) - (m - 1) * tau):
-        sub  = [closes[i + j * tau] for j in range(m)]
-        perm = tuple(sorted(range(m), key=lambda x: sub[x]))
-        patterns[perm] = patterns.get(perm, 0) + 1
-    total = sum(patterns.values())
-    pe    = -sum((c / total) * math.log(c / total) for c in patterns.values())
-    pe_n  = pe / math.log(math.factorial(m))
-    e5, e10 = _ema(closes, 5), _ema(closes, 10)
-    up = e5[-1] > e10[-1]
-    if pe_n < 0.70:
-        v = +1 if up else -1
-        return v, f"PEnt{'↑' if up else '↓'} PE={pe_n:.2f}"
-    elif pe_n > 0.90:
-        return 0, f"PEnt→ kaotik PE={pe_n:.2f}"
-    else:
-        return 0, f"PEnt→ PE={pe_n:.2f}"
-
-
-def algo_hilbert(klines: list[dict]) -> tuple[int, str]:
-    closes = [k["close"] for k in klines[-50:]]
-    n = len(closes)
-    if n < 20:
-        return 0, "Hilbert→ yetersiz"
-    smooth = [closes[i] if i < 3 else
-              (4*closes[i]+3*closes[i-1]+2*closes[i-2]+closes[i-3])/10
-              for i in range(n)]
-    coef, c1, adj = 0.0962, 0.5769, 0.075*1+0.54
-    det = [0.0]*n
-    for i in range(6, n):
-        det[i] = (coef*smooth[i]+c1*smooth[i-2]-c1*smooth[i-4]-coef*smooth[i-6])*adj
-    I1, Q1 = [0.0]*n, [0.0]*n
-    for i in range(6, n):
-        Q1[i] = (coef*det[i]+c1*det[i-2]-c1*det[i-4]-coef*det[i-6])*adj
-        I1[i] = det[i-3]
-    sI, sQ, a = [0.0]*n, [0.0]*n, 0.2
-    for i in range(1, n):
-        sI[i] = a*I1[i]+(1-a)*sI[i-1]
-        sQ[i] = a*Q1[i]+(1-a)*sQ[i-1]
-    def atan2d(q, iv):
-        return math.degrees(math.atan2(q, iv)) if (q or iv) else 0.0
-    delta = atan2d(sQ[-1], sI[-1]) - atan2d(sQ[-2], sI[-2])
-    if delta >  180: delta -= 360
-    if delta < -180: delta += 360
-    T = abs(360/delta) if delta else 20
-    if delta > 1.5:
-        return +1, f"Hilbert↑ faz:+{delta:.1f}°"
-    elif delta < -1.5:
-        return -1, f"Hilbert↓ faz:{delta:.1f}°"
-    else:
-        return  0, f"Hilbert→ faz:{delta:.1f}°"
-
-
 # ── Tek hisse analizi ─────────────────────────────────────────
 def analyze(symbol: str) -> dict | None:
     klines = fetch_ohlcv(symbol)
     if not klines or len(klines) < MIN_BARS:
         return None
-    v1, l1 = algo_trend(klines)
-    v2, l2 = algo_mr(klines)
-    v3, l3 = algo_hurst(klines)
-    v4, l4 = algo_kalman(klines)
-    v5, l5 = algo_perm_entropy(klines)
-    v6, l6 = algo_hilbert(klines)
+    v1, l1 = algo_ema_cross(klines)
+    v2, l2 = algo_rsi_zone(klines)
+    v3, l3 = algo_volume(klines)
+    v4, l4 = algo_vwap(klines)
+    v5, l5 = algo_roc(klines)
+    v6, l6 = algo_bollinger_trend(klines)
     score  = v1 + v2 + v3 + v4 + v5 + v6
     return {
         "symbol": symbol,
@@ -308,9 +322,6 @@ def load_history() -> list:
 def save_history(history: list) -> None:
     with open(HISTORY_FILE, "w") as f:
         json.dump(history, f, indent=2, ensure_ascii=False)
-
-
-IND_NAMES = ["Trend", "MR", "Hurst", "Kalman", "PEnt", "Hilbert"]
 
 
 def record_signals(signals: list, hour: int, today: str) -> None:
