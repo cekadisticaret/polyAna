@@ -446,10 +446,21 @@ def run_weekly() -> None:
     balance = state.get("balance", INITIAL_BALANCE)
     total_pnl = state.get("total_pnl", 0.0)
 
+    # Sembol bazlı istatistik
+    sym_stats = []
+    for sym in SYMBOLS:
+        name = sym.replace("USDT", "")
+        sym_trades = [t for t in history if t["symbol"] == sym]
+        sym_wins   = sum(1 for t in sym_trades if t["win"])
+        if sym_trades:
+            sym_stats.append(f"{name}: {len(sym_trades)} işlem / {sym_wins} başarılı (%{sym_wins/len(sym_trades)*100:.0f})")
+    sym_line = "   |   ".join(sym_stats)
+
     ax.set_title(
         f"1. ANALİZ — Haftalık Başarı Haritası  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
-        f"Toplam: {total} işlem  |  {genel}  |  Bakiye: ${balance:.2f}  |  P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$",
-        color="#4fc3f7", fontsize=10, fontweight="bold", pad=10
+        f"Toplam: {total} işlem  |  {genel}  |  Bakiye: ${balance:.2f}  |  P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$\n"
+        f"{sym_line}",
+        color="#4fc3f7", fontsize=9, fontweight="bold", pad=10
     )
     ax.set_xlabel("Saat (İST)", color="#546e7a", fontsize=8)
 

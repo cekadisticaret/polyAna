@@ -790,10 +790,21 @@ def run_weekly() -> None:
     for x in range(25): ax.axvline(x - 0.5, color="#0a0e1a", linewidth=0.5)
     for y in range(8):  ax.axhline(y - 0.5, color="#0a0e1a", linewidth=0.5)
 
+    # Sembol bazlı istatistik
+    sym_stats = []
+    for sym in SYMBOLS:
+        name = sym.replace("USDT", "")
+        sym_trades = [t for t in history if t["symbol"] == sym]
+        sym_wins   = sum(1 for t in sym_trades if t["win"])
+        if sym_trades:
+            sym_stats.append(f"{name}: {len(sym_trades)} işlem / {sym_wins} başarılı (%{sym_wins/len(sym_trades)*100:.0f})")
+    sym_line = "   |   ".join(sym_stats)
+
     ax.set_title(
         f"5. ANALİZ — Trend + MR + Orderflow + Funding  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
-        f"Toplam: {total} işlem  |  {genel} doğruluk",
-        color="#f9a825", fontsize=10, fontweight="bold", pad=10
+        f"Toplam: {total} işlem  |  {genel} doğruluk\n"
+        f"{sym_line}",
+        color="#00e676", fontsize=9, fontweight="bold", pad=10
     )
     ax.set_xlabel("Saat (İST)", color="#546e7a", fontsize=8)
     cbar = fig.colorbar(im, ax=ax, fraction=0.02, pad=0.01)
