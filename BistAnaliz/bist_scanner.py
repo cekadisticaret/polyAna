@@ -431,14 +431,19 @@ def run_scan() -> None:
 
     today = now_tr.strftime("%Y-%m-%d")
 
-    # Hafta sonu veya seans dışı → çık
-    if dow >= 5 or hour < 10 or hour >= 18:
-        print(f"[BIST Tarayıcı] {saat} IST — seans dışı, çıkılıyor")
+    # Hafta sonu → çık
+    if dow >= 5:
+        print(f"[BIST Tarayıcı] {saat} IST — hafta sonu, çıkılıyor")
         return
 
-    # Gün sonu raporu: 18:05 çalışırsa (saat 18'de cron çalışır)
+    # Gün sonu raporu: saat 18'de çalış
     if hour == 18:
         run_eod_report()
+        return
+
+    # Seans dışı (gün sonu hariç) → çık
+    if hour < 10 or hour > 18:
+        print(f"[BIST Tarayıcı] {saat} IST — seans dışı, çıkılıyor")
         return
 
     # Bir önceki saatin sinyallerini kapat (isabet takibi)
