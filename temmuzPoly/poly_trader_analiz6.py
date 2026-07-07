@@ -1,24 +1,15 @@
 """
-6. ANALİZ — EkonoFizik Sanal Trader
+6. ANALİZ — Multi-Timeframe Konsensüs Trader
 
-8 bağımsız algoritmanın oylarını birleştirerek sinyal üretir:
-  1. Trend Following    → EMA20/EMA50 crossover + slope
-  2. Mean Reversion     → RSI + Bollinger Bands
-  3. Order Flow         → CVD delta + order book imbalance
-  4. Funding Rate       → long/short bias tespiti
-  5. Hurst Exponent     → piyasa rejimi (trend vs MR)
-  6. Kalman Filter      → gecikmesiz fiyat trendi
-  7. Permutation Entropy→ tahmin edilebilirlik ölçümü
-  8. Hilbert Transform  → dominant döngü faz analizi
+3 farklı zaman diliminin aynı yönü göstermesi gerekiyor:
+  1. 15m  → EMA9/EMA21 crossover + RSI(14) momentum
+  2. 1h   → RSI(14) zonu + Bollinger Band pozisyonu
+  3. 4h   → EMA20/EMA50 uzun vadeli trend filtresi
 
-  2. Mean Reversion   → RSI(14) + Bollinger Bands(20,2)
-  3. Orderflow        → CVD yaklaşımı + Order Book imbalance
-  4. Funding Rate     → Binance futures funding rate (contrarian)
-
-Oy sistemi (her algoritma +1/−1/0):
-  |toplam| ≥ 3  →  $20 işlem
-  |toplam| = 2  →  $12 işlem
-  |toplam| ≤ 1  →  işlem açılmaz
+Oy sistemi (her zaman dilimi +1/−1/0):
+  |toplam| == 3  →  $20 işlem (tam konsensüs)
+  |toplam| == 2  →  $12 işlem (2/3 konsensüs)
+  |toplam| <= 1  →  işlem açılmaz
 
 Modlar: close / open / weekly / stats
 """
@@ -48,8 +39,8 @@ SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 20.0   # |skor| >= 5  (8 indikatör)
-AMOUNT_MODERATE = 12.0   # |skor| == 4  (8 indikatör)
+AMOUNT_STRONG   = 20.0   # |skor| == 3 (tam konsensüs)
+AMOUNT_MODERATE = 12.0   # |skor| == 2 (2/3 konsensüs)
 MIN_STAT_COUNT  = 10
 
 
@@ -157,19 +148,10 @@ def _binance_get(path: str, params: dict | None = None) -> dict | list:
         return json.loads(r.read())
 
 
-def fetch_klines(symbol: str, limit: int = 60) -> list[dict]:
-    raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "1h", "limit": limit})
+def fetch_klines(symbol: str, interval: str = "1h", limit: int = 60) -> list[dict]:
+    raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": interval, "limit": limit})
     return [{"open": float(k[1]), "high": float(k[2]), "low": float(k[3]),
              "close": float(k[4]), "volume": float(k[5])} for k in raw]
-
-
-def fetch_orderbook(symbol: str) -> dict:
-    return _binance_get("/fapi/v1/depth", {"symbol": symbol, "limit": 20})
-
-
-def fetch_funding_rate(symbol: str) -> float:
-    data = _binance_get("/fapi/v1/premiumIndex", {"symbol": symbol})
-    return float(data.get("lastFundingRate", 0))
 
 
 # ── Teknik hesaplamalar ───────────────────────────────────────
@@ -201,67 +183,59 @@ def _bollinger(closes: list[float], period: int = 20, mult: float = 2.0) -> tupl
     return mid + mult * std, mid, mid - mult * std
 
 
-# ── 4 Algoritma ───────────────────────────────────────────────
+# ── Multi-Timeframe Algoritmaları ─────────────────────────────
 
-def algo_trend(klines: list[dict]) -> tuple[int, str]:
-    closes = [k["close"] for k in klines]
-    e20    = _ema(closes, 20)
-    e50    = _ema(closes, 50)
-    cross  = e20[-1] - e50[-1]
-    slope  = e20[-1] - e20[-4] if len(e20) >= 4 else 0
-    pct    = cross / closes[-1] * 100
+def algo_15m(klines_15m: list[dict]) -> tuple[int, str]:
+    """15 dakika: EMA9/EMA21 crossover + RSI momentum."""
+    closes = [k["close"] for k in klines_15m]
+    e9     = _ema(closes, 9)
+    e21    = _ema(closes, 21)
+    rsi    = _rsi(closes, 14)
+    cross  = e9[-1] - e21[-1]
+    slope  = e9[-1] - e9[-3] if len(e9) >= 3 else 0
 
-    if cross > 0 and slope > 0:
-        return +1, f"Trend ↑  E20&gt;E50 ({pct:+.2f}%)"
-    elif cross < 0 and slope < 0:
-        return -1, f"Trend ↓  E20&lt;E50 ({pct:+.2f}%)"
-    else:
-        return  0, f"Trend →  karışık ({pct:+.2f}%)"
+    ema_v = +1 if cross > 0 and slope > 0 else -1 if cross < 0 and slope < 0 else 0
+    rsi_v = +1 if rsi < 45 else -1 if rsi > 55 else 0
+    vote  = ema_v if ema_v == rsi_v else (ema_v or rsi_v)
+    arr   = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    return vote, f"15m {arr}  EMA:{cross/closes[-1]*100:+.2f}%  RSI:{rsi:.0f}"
 
 
-def algo_mr(klines: list[dict]) -> tuple[int, str]:
-    closes     = [k["close"] for k in klines]
-    rsi        = _rsi(closes, 14)
-    upper, _, lower = _bollinger(closes, 20, 2.0)
-    price      = closes[-1]
+def algo_1h(klines_1h: list[dict]) -> tuple[int, str]:
+    """1 saat: RSI(14) zonu + Bollinger Band pozisyonu."""
+    closes = [k["close"] for k in klines_1h]
+    rsi    = _rsi(closes, 14)
+    upper, mid, lower = _bollinger(closes, 20, 2.0)
+    price  = closes[-1]
+    bb_pos = (price - mid) / (upper - mid) if upper != mid else 0
 
-    rsi_v = +1 if rsi <= 35 else -1 if rsi >= 65 else 0
-    bb_v  = +1 if price <= lower else -1 if price >= upper else 0
+    rsi_v = +1 if rsi <= 40 else -1 if rsi >= 60 else 0
+    bb_v  = +1 if price < lower else -1 if price > upper else 0
 
     vote  = max(-1, min(1, rsi_v + bb_v))
     arr   = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    bb_lbl = "alt" if price <= lower else "üst" if price >= upper else "orta"
-    return vote, f"MR {arr}  RSI:{rsi:.0f}  BB:{bb_lbl}"
+    bb_lbl = "alt" if price <= lower else "üst" if price >= upper else f"{bb_pos:+.1f}"
+    return vote, f"1h {arr}  RSI:{rsi:.0f}  BB:{bb_lbl}"
 
 
-def algo_orderflow(klines: list[dict], ob: dict) -> tuple[int, str]:
-    window    = klines[-20:]
-    cvd_delta = sum(k["volume"] if k["close"] >= k["open"] else -k["volume"] for k in window)
-    total_vol = sum(k["volume"] for k in window) or 1
-    cvd_r     = cvd_delta / total_vol
+def algo_4h(klines_4h: list[dict]) -> tuple[int, str]:
+    """4 saat: EMA20/EMA50 uzun vadeli trend filtresi."""
+    closes = [k["close"] for k in klines_4h]
+    e20    = _ema(closes, 20)
+    e50    = _ema(closes, 50)
+    cross  = e20[-1] - e50[-1]
+    slope  = e20[-1] - e20[-3] if len(e20) >= 3 else 0
+    pct    = cross / closes[-1] * 100
 
-    bids   = sum(float(b[1]) for b in ob.get("bids", [])[:10])
-    asks   = sum(float(a[1]) for a in ob.get("asks", [])[:10])
-    ob_r   = (bids - asks) / (bids + asks) if (bids + asks) else 0
-
-    cvd_v  = +1 if cvd_r > 0.08 else -1 if cvd_r < -0.08 else 0
-    ob_v   = +1 if ob_r  > 0.15 else -1 if ob_r  < -0.15 else 0
-
-    vote   = cvd_v if cvd_v == ob_v else (cvd_v or ob_v)
-    arr    = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    return vote, f"OF {arr}  CVD:{cvd_r:+.2f}  OB:{ob_r:+.2f}"
-
-
-def algo_funding(rate: float) -> tuple[int, str]:
-    pct = rate * 100
-    if rate > 0.0005:
-        return -1, f"Fund ↓  aşırı long (rate:{pct:.3f}%)"
-    elif rate < -0.0005:
-        return +1, f"Fund ↑  aşırı short (rate:{pct:.3f}%)"
+    if cross > 0 and slope > 0:
+        return +1, f"4h ↑  E20&gt;E50 ({pct:+.2f}%)"
+    elif cross < 0 and slope < 0:
+        return -1, f"4h ↓  E20&lt;E50 ({pct:+.2f}%)"
     else:
-        return  0, f"Fund →  nötr (rate:{pct:.3f}%)"
+        return  0, f"4h →  karışık ({pct:+.2f}%)"
 
 
+# ── EkonoFizik (artık kullanılmıyor — MTF ile değiştirildi) ───
 def algo_hurst(klines: list[dict]) -> tuple[int, str]:
     """
     Hurst Exponent (R/S analizi, 50 bar).
@@ -464,46 +438,37 @@ def algo_hilbert_cycle(klines: list[dict]) -> tuple[int, str]:
         return  0, f"Hilbert →  faz:{delta:.1f}° T≈{period:.0f}bar"
 
 
-# ── Tam sembol analizi ────────────────────────────────────────
+# ── Tam sembol analizi (Multi-Timeframe) ──────────────────────
 def analyze(symbol: str) -> dict | None:
     try:
-        klines  = fetch_klines(symbol, 60)
-        ob      = fetch_orderbook(symbol)
-        funding = fetch_funding_rate(symbol)
+        klines_15m = fetch_klines(symbol, "15m", 60)
+        klines_1h  = fetch_klines(symbol, "1h",  60)
+        klines_4h  = fetch_klines(symbol, "4h",  50)
     except Exception as e:
         print(f"[6. ANALİZ] {symbol} veri hatası: {e}", file=sys.stderr)
         return None
 
-    v1, l1 = algo_trend(klines)
-    v2, l2 = algo_mr(klines)
-    v3, l3 = algo_orderflow(klines, ob)
-    v4, l4 = algo_funding(funding)
-    v5, l5 = algo_hurst(klines)
-    v6, l6 = algo_kalman(klines)
-    v7, l7 = algo_perm_entropy(klines)
-    v8, l8 = algo_hilbert_cycle(klines)
-    score   = v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8
+    v1, l1 = algo_15m(klines_15m)
+    v2, l2 = algo_1h(klines_1h)
+    v3, l3 = algo_4h(klines_4h)
+    score  = v1 + v2 + v3
 
-    # 8 indikator: >=5 güçlü (~62%), ==4 orta (~50%), <=3 işlem yok
-    amount = AMOUNT_STRONG if abs(score) >= 5 else AMOUNT_MODERATE if abs(score) == 4 else 0.0
+    amount = AMOUNT_STRONG if abs(score) == 3 else AMOUNT_MODERATE if abs(score) == 2 else 0.0
 
     return {
         "symbol":        symbol,
-        "price":         klines[-1]["close"],
+        "price":         klines_1h[-1]["close"],
         "score":         score,
         "predicted_dir": "UP" if score > 0 else "DOWN" if score < 0 else None,
         "amount":        amount,
-        "votes":         [v1, v2, v3, v4, v5, v6, v7, v8],
-        "labels":        [l1, l2, l3, l4, l5, l6, l7, l8],
+        "votes":         [v1, v2, v3],
+        "labels":        [l1, l2, l3],
     }
 
 
 # ── Algoritma isabet istatistiği ──────────────────────────────
 def _ind_stats_lines(history: list) -> list[str]:
-    checks = [("Trend",   "ind_trend_ok"),  ("MR",     "ind_mr_ok"),
-              ("OF",      "ind_of_ok"),    ("Fund",   "ind_fund_ok"),
-              ("Hurst",   "ind_hurst_ok"), ("Kalman", "ind_kalman_ok"),
-              ("PEnt",    "ind_pent_ok"),  ("Hilbert","ind_hilbert_ok")]
+    checks = [("15m", "ind_15m_ok"), ("1h", "ind_1h_ok"), ("4h", "ind_4h_ok")]
     lines = []
     for label, key in checks:
         vals = [t[key] for t in history if t.get(key) is not None]
@@ -579,14 +544,9 @@ async def run_close() -> None:
             "amount":           amount,
             "exit_time_tr":     now_tr.isoformat(),
             "pnl":              pnl,
-            "ind_trend_ok":     _vote_ok(vs[0], actual) if len(vs) > 0 else None,
-            "ind_mr_ok":        _vote_ok(vs[1], actual) if len(vs) > 1 else None,
-            "ind_of_ok":        _vote_ok(vs[2], actual) if len(vs) > 2 else None,
-            "ind_fund_ok":      _vote_ok(vs[3], actual) if len(vs) > 3 else None,
-            "ind_hurst_ok":     _vote_ok(vs[4], actual) if len(vs) > 4 else None,
-            "ind_kalman_ok":    _vote_ok(vs[5], actual) if len(vs) > 5 else None,
-            "ind_pent_ok":      _vote_ok(vs[6], actual) if len(vs) > 6 else None,
-            "ind_hilbert_ok":   _vote_ok(vs[7], actual) if len(vs) > 7 else None,
+            "ind_15m_ok":       _vote_ok(vs[0], actual) if len(vs) > 0 else None,
+            "ind_1h_ok":        _vote_ok(vs[1], actual) if len(vs) > 1 else None,
+            "ind_4h_ok":        _vote_ok(vs[2], actual) if len(vs) > 2 else None,
         })
 
         icon    = "✅" if win else "❌"
@@ -595,7 +555,7 @@ async def run_close() -> None:
         pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"{pnl_str}  skor:{pos.get("score", 0):+d}/8"
+            f"{pnl_str}  skor:{pos.get("score", 0):+d}/3"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
@@ -691,26 +651,25 @@ async def run_open() -> None:
 
         vi = vote_icons
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  skor:{score:+d}/8  {amount:.0f}$  giriş:{sig['price']:.2f}\n"
-            f"   {vi[0]}   {vi[1]}\n"
-            f"   {vi[2]}   {vi[3]}\n"
-            f"   {vi[4]}   {vi[5]}\n"
-            f"   {vi[6]}   {vi[7]}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  skor:{score:+d}/3  {amount:.0f}$  giriş:{sig['price']:.2f}\n"
+            f"   {vi[0]}\n"
+            f"   {vi[1]}\n"
+            f"   {vi[2]}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hour_wins, hour_total, warn_low=low_data)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )
 
     skip_lines = [
-        f"⛔ {s['symbol'].replace('USDT','')}  skor:{s['score']:+d}/8  → işlem açılmadı"
+        f"⛔ {s['symbol'].replace('USDT','')}  skor:{s['score']:+d}/3  → işlem açılmadı"
         for s in skipped
     ]
 
-    parts = [sep, f"🆕 <b>6. ANALİZ (Hurst Exponent) — {saat} - {next_h} Yeni İşlemler</b>"]
+    parts = [sep, f"🆕 <b>6. ANALİZ (MTF: 15m+1h+4h) — {saat} - {next_h} Yeni İşlemler</b>"]
 
     if lines:
         parts.extend(lines)
     else:
-        parts.append("⏸ <i>Bu saat yeterli sinyal yok (|skor| ≤ 3).</i>")
+        parts.append("⏸ <i>Bu saat konsensüs yok (15m+1h+4h aynı yönü göstermiyor).</i>")
 
     if skip_lines:
         parts.append(mini_sep)
