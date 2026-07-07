@@ -1,5 +1,5 @@
 """
-7. ANALİZ — Momentum Confluence (Sıfırdan Tasarım)
+7. ANALİZ — Son 4.6 Analiz (Momentum Confluence)
 
 5 tamamen bağımsız algoritma — diğer analizlerde kullanılmayan indikatörler:
   1. MACD          (12/26/9)   — momentum ivmesi ve dönüş
@@ -616,7 +616,7 @@ async def run_open() -> None:
         for s in skipped
     ]
 
-    parts = [sep, f"🆕 <b>7. ANALİZ (Momentum Confluence) — {saat} - {next_h} Yeni İşlemler</b>"]
+    parts = [sep, f"🆕 <b>7. ANALİZ (Son 4.6 Analiz) — {saat} - {next_h} Yeni İşlemler</b>"]
 
     if lines:
         parts.extend(lines)
