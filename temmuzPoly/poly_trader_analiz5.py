@@ -25,6 +25,9 @@ import urllib.parse
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from poly_predictor_analysis import predict
+
 # .env yükle
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
 if os.path.exists(_ENV_FILE):
@@ -346,100 +349,43 @@ def _bollinger(closes: list[float], period: int = 20, mult: float = 2.0) -> tupl
     return mid + mult * std, mid, mid - mult * std
 
 
-# ── 4 Algoritma ───────────────────────────────────────────────
-
-def algo_trend(klines: list[dict]) -> tuple[int, str]:
-    closes = [k["close"] for k in klines]
-    e20    = _ema(closes, 20)
-    e50    = _ema(closes, 50)
-    cross  = e20[-1] - e50[-1]
-    slope  = e20[-1] - e20[-4] if len(e20) >= 4 else 0
-    pct    = cross / closes[-1] * 100
-
-    if cross > 0 and slope > 0:
-        return +1, f"Trend ↑  E20&gt;E50 ({pct:+.2f}%)"
-    elif cross < 0 and slope < 0:
-        return -1, f"Trend ↓  E20&lt;E50 ({pct:+.2f}%)"
-    else:
-        return  0, f"Trend →  karışık ({pct:+.2f}%)"
-
-
-def algo_mr(klines: list[dict]) -> tuple[int, str]:
-    closes     = [k["close"] for k in klines]
-    rsi        = _rsi(closes, 14)
-    upper, _, lower = _bollinger(closes, 20, 2.0)
-    price      = closes[-1]
-
-    rsi_v = +1 if rsi <= 35 else -1 if rsi >= 65 else 0
-    bb_v  = +1 if price <= lower else -1 if price >= upper else 0
-
-    vote  = max(-1, min(1, rsi_v + bb_v))
-    arr   = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    bb_lbl = "alt" if price <= lower else "üst" if price >= upper else "orta"
-    return vote, f"MR {arr}  RSI:{rsi:.0f}  BB:{bb_lbl}"
-
-
-def algo_orderflow(klines: list[dict], ob: dict) -> tuple[int, str]:
-    window    = klines[-20:]
-    cvd_delta = sum(k["volume"] if k["close"] >= k["open"] else -k["volume"] for k in window)
-    total_vol = sum(k["volume"] for k in window) or 1
-    cvd_r     = cvd_delta / total_vol
-
-    bids   = sum(float(b[1]) for b in ob.get("bids", [])[:10])
-    asks   = sum(float(a[1]) for a in ob.get("asks", [])[:10])
-    ob_r   = (bids - asks) / (bids + asks) if (bids + asks) else 0
-
-    cvd_v  = +1 if cvd_r > 0.08 else -1 if cvd_r < -0.08 else 0
-    ob_v   = +1 if ob_r  > 0.15 else -1 if ob_r  < -0.15 else 0
-
-    vote   = cvd_v if cvd_v == ob_v else (cvd_v or ob_v)
-    arr    = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    return vote, f"OF {arr}  CVD:{cvd_r:+.2f}  OB:{ob_r:+.2f}"
-
-
-def algo_funding(rate: float) -> tuple[int, str]:
-    pct = rate * 100
-    if rate > 0.0005:
-        return -1, f"Fund ↓  aşırı long (rate:{pct:.3f}%)"
-    elif rate < -0.0005:
-        return +1, f"Fund ↑  aşırı short (rate:{pct:.3f}%)"
-    else:
-        return  0, f"Fund →  nötr (rate:{pct:.3f}%)"
-
-
-# ── Tam sembol analizi ────────────────────────────────────────
-def analyze(symbol: str) -> dict | None:
+# ── Tam sembol analizi (poly_predictor_analysis motoru) ───────
+async def analyze(symbol: str) -> dict | None:
     try:
-        klines  = fetch_klines(symbol, 60)
-        ob      = fetch_orderbook(symbol)
-        funding = fetch_funding_rate(symbol)
+        pred_obj = await predict(symbol)
     except Exception as e:
-        print(f"[5. ANALİZ] {symbol} veri hatası: {e}", file=sys.stderr)
+        print(f"[5. ANALİZ] {symbol} predict hatası: {e}", file=sys.stderr)
         return None
 
-    v1, l1 = algo_trend(klines)
-    v2, l2 = algo_mr(klines)
-    v3, l3 = algo_orderflow(klines, ob)
-    v4, l4 = algo_funding(funding)
-    score   = v1 + v2 + v3 + v4
+    if pred_obj is None:
+        return None
 
-    amount = AMOUNT_STRONG if abs(score) >= 3 else AMOUNT_MODERATE if abs(score) == 2 else 0.0
+    conf    = max(pred_obj.prob_up, pred_obj.prob_down)
+    amount  = AMOUNT_STRONG if conf >= 0.65 else AMOUNT_MODERATE if conf >= 0.57 else 0.0
+
+    ind_ema_raw = pred_obj.trend.upper()
+    rsi_vote  = +1 if pred_obj.rsi < 50 else -1
+    macd_vote = +1 if pred_obj.macd_bull else -1
+    ema_vote  = (+1 if "YUKARI" in ind_ema_raw
+                 else -1 if "AŞAĞI" in ind_ema_raw
+                 else 0)
+    score = rsi_vote + macd_vote + ema_vote
 
     return {
         "symbol":        symbol,
-        "price":         klines[-1]["close"],
+        "price":         pred_obj.current_price,
         "score":         score,
-        "predicted_dir": "UP" if score > 0 else "DOWN" if score < 0 else None,
+        "predicted_dir": pred_obj.predicted_dir,
         "amount":        amount,
-        "votes":         [v1, v2, v3, v4],
-        "labels":        [l1, l2, l3, l4],
+        "conf":          conf,
+        "votes":         [rsi_vote, macd_vote, ema_vote],
+        "labels":        [f"RSI:{pred_obj.rsi:.0f}", f"MACD:{'bull' if pred_obj.macd_bull else 'bear'}", pred_obj.trend],
     }
 
 
 # ── Algoritma isabet istatistiği ──────────────────────────────
 def _ind_stats_lines(history: list) -> list[str]:
-    checks = [("Trend", "ind_trend_ok"), ("MR", "ind_mr_ok"),
-              ("OF",    "ind_of_ok"),    ("Funding", "ind_fund_ok")]
+    checks = [("RSI", "ind_rsi_ok"), ("MACD", "ind_macd_ok"), ("EMA", "ind_ema_ok")]
     lines = []
     for label, key in checks:
         vals = [t[key] for t in history if t.get(key) is not None]
@@ -542,10 +488,9 @@ async def run_close() -> None:
             "pm_order_id":      pos.get("pm_order_id"),
             "exit_time_tr":     now_tr.isoformat(),
             "pnl":              pos.get("pm_spent", 0) * (-1 if not win else 1),
-            "ind_trend_ok":     _vote_ok(vs[0], actual) if len(vs) > 0 else None,
-            "ind_mr_ok":        _vote_ok(vs[1], actual) if len(vs) > 1 else None,
-            "ind_of_ok":        _vote_ok(vs[2], actual) if len(vs) > 2 else None,
-            "ind_fund_ok":      _vote_ok(vs[3], actual) if len(vs) > 3 else None,
+            "ind_rsi_ok":       _vote_ok(vs[0], actual) if len(vs) > 0 else None,
+            "ind_macd_ok":      _vote_ok(vs[1], actual) if len(vs) > 1 else None,
+            "ind_ema_ok":       _vote_ok(vs[2], actual) if len(vs) > 2 else None,
         })
 
         icon    = "✅" if win else "❌"
@@ -554,7 +499,7 @@ async def run_close() -> None:
         pm_spent = pos.get("pm_spent", 0)
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"skor:{pos.get('score', 0):+d}/4  -${pm_spent:.2f} risk{pm_pnl_str}"
+            f"skor:{pos.get('score', 0):+d}/3  -${pm_spent:.2f} risk{pm_pnl_str}"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
@@ -605,10 +550,9 @@ async def run_open() -> None:
 
     results = []
     for sym in SYMBOLS:
-        sig = analyze(sym)
+        sig = await analyze(sym)
         if sig:
             results.append(sig)
-        time.sleep(0.4)
 
     # Mevcut ET saati (EDT = UTC-4)
     et_now   = now - timedelta(hours=4)
@@ -689,17 +633,17 @@ async def run_open() -> None:
         else:
             pm_str = f"\n   🟩 PM: {matched_pos.get('pm_size',0):.1f} shares @ {matched_pos.get('pm_entry_price',0):.2f} (${matched_pos.get('pm_spent',0):.2f})"
 
+        conf_pct = int(sig.get("conf", 0) * 100)
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  skor:{score:+d}/4  giriş:{sig['price']:.2f}\n"
-            f"   {vote_icons[0]}   {vote_icons[1]}\n"
-            f"   {vote_icons[2]}   {vote_icons[3]}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf_pct}  giriş:{sig['price']:.2f}\n"
+            f"   {vote_icons[0]}   {vote_icons[1]}   {vote_icons[2]}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hour_wins, hour_total, warn_low=low_data)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
             f"{pm_str}"
         )
 
     skip_lines = [
-        f"⛔ {s['symbol'].replace('USDT','')}  skor:{s['score']:+d}/4  → işlem açılmadı"
+        f"⛔ {s['symbol'].replace('USDT','')}  konf:%{int(s.get('conf',0)*100)}  → işlem açılmadı"
         for s in skipped
     ]
 
@@ -720,7 +664,7 @@ async def run_open() -> None:
     pm_at_risk = sum(p.get("pm_spent", 0) for p in state["open_positions"])
     parts.append(f"🟢 PM Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
     parts.append(
-        f"<i>Eşik: |skor|≥3→{AMOUNT_STRONG:.0f}$  |skor|=2→{AMOUNT_MODERATE:.0f}$  ≤1→yok</i>"
+        f"<i>Eşik: konf≥65%→{AMOUNT_STRONG:.0f}$  ≥57%→{AMOUNT_MODERATE:.0f}$  &lt;57%→yok</i>"
     )
     parts.append(sep)
 
