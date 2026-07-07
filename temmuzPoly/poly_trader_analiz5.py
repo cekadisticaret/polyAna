@@ -647,7 +647,7 @@ async def run_open() -> None:
         for s in skipped
     ]
 
-    parts = [sep, f"🆕 <b>5. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>"]
+    parts = [sep, f"🆕 <b>Analiz 101 ✦ PolyAktif İşlemler — {saat} - {next_h}</b>"]
 
     if lines:
         parts.extend(lines)
