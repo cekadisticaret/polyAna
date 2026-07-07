@@ -385,6 +385,9 @@ def run_weekly() -> None:
     # 7 gün x 24 saat grid: (wins, total) — tüm semboller birleşik
     grid_w = [[0]*24 for _ in range(7)]
     grid_n = [[0]*24 for _ in range(7)]
+    # Sembol bazlı grid: {sym: [[wins], [total]]}
+    sym_names = [s.replace("USDT", "") for s in SYMBOLS]
+    grid_sym  = {s: {"w": [[0]*24 for _ in range(7)], "n": [[0]*24 for _ in range(7)]} for s in sym_names}
     for t in history:
         d = t.get("entry_dow")
         h = t.get("entry_hour_tr")
@@ -393,6 +396,11 @@ def run_weekly() -> None:
         grid_n[d][h] += 1
         if t["win"]:
             grid_w[d][h] += 1
+        sn = t["symbol"].replace("USDT", "")
+        if sn in grid_sym:
+            grid_sym[sn]["n"][d][h] += 1
+            if t["win"]:
+                grid_sym[sn]["w"][d][h] += 1
 
     # Oran matrisi (NaN = veri yok)
     rate = np.full((7, 24), np.nan)
@@ -401,7 +409,7 @@ def run_weekly() -> None:
             if grid_n[d][h] >= 3:
                 rate[d][h] = grid_w[d][h] / grid_n[d][h]
 
-    fig, ax = plt.subplots(figsize=(14, 5))
+    fig, ax = plt.subplots(figsize=(16, 5))
     fig.patch.set_facecolor("#0a0e1a")
     ax.set_facecolor("#0a0e1a")
 
@@ -423,15 +431,22 @@ def run_weekly() -> None:
     ax.set_yticklabels(_DAYS_TR, fontsize=9, color="#b0bec5", fontweight="bold")
     ax.tick_params(length=0)
 
-    # Hücre içine yüzde yaz
+    # Hücre içine yüzde + sembol dağılımı yaz
     for d in range(7):
         for h in range(24):
             if not np.isnan(rate[d][h]):
                 pct  = int(rate[d][h] * 100)
-                n    = grid_n[d][h]
                 clr  = "white" if rate[d][h] >= 0.55 else "#78909c"
-                ax.text(h, d, f"%{pct}\n({n})", ha="center", va="center",
-                        fontsize=5.5, color=clr, linespacing=1.3)
+                # Sembol satırı: sadece işlem olan sembolleri göster
+                sym_parts = []
+                for sn in sym_names:
+                    sw = grid_sym[sn]["w"][d][h]
+                    sn_total = grid_sym[sn]["n"][d][h]
+                    if sn_total > 0:
+                        sym_parts.append(f"{sn}:{sw}")
+                sym_str = " ".join(sym_parts)
+                ax.text(h, d, f"%{pct}\n{sym_str}", ha="center", va="center",
+                        fontsize=5, color=clr, linespacing=1.4)
 
     # Izgara çizgileri
     for x in range(25):
