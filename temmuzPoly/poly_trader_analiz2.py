@@ -514,6 +514,18 @@ def run_weekly() -> None:
         f"Toplam {total} işlem | {genel} başarı | ${balance:.2f}"
     )
     tg_send_photo(WEEKLY_IMG, caption)
+
+    ind_lines = _ind_stats_lines(history)
+    total_pnl = state.get("total_pnl", 0.0)
+    pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
+    tg_send(
+        f"📊 <b>2. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
+        f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"Toplam: {total} işlem  |  {genel} başarı\n"
+        f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${balance:.2f}\n"
+        f"\n🔬 <b>Algoritma İsabet Oranı</b>\n" + "\n".join(ind_lines)
+    )
     print(f"[2. ANALİZ weekly] haftalık görsel gönderildi — {total} işlem")
 
 

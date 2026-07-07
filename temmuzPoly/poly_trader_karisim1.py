@@ -406,6 +406,23 @@ def run_weekly() -> None:
         f"Toplam: {wins}/{total} (%{wins/total*100:.0f})"
     )
     tg_send_photo(img_path, caption)
+
+    total_pnl = state.get("total_pnl", 0.0)
+    pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
+    sym_lines = []
+    for sym in ["BTCUSDT", "ETHUSDT", "SOLUSDT"]:
+        name = sym.replace("USDT", "")
+        st = [t for t in history if t["symbol"] == sym]
+        sw = sum(1 for t in st if t["win"])
+        if st:
+            sym_lines.append(f"  {name}: {len(st)} işlem / {sw} başarılı (%{sw/len(st)*100:.0f})")
+    tg_send(
+        f"📊 <b>KARIŞIM 1 HAFTALIK İSTATİSTİKLER</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"Toplam: {total} işlem  |  %{wins/total*100:.0f} başarı\n"
+        f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
+        f"\n📈 <b>Sembol Dağılımı</b>\n" + "\n".join(sym_lines)
+    )
     print("[KARIŞIMl 1 weekly] görsel gönderildi")
 
 
