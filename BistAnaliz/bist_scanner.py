@@ -28,7 +28,7 @@ MIN_VOLUME     = 50_000   # minimum saatlik hacim (TL) — öğle arası düşü
 MIN_BARS       = 20       # minimum mum sayısı
 TOP_N          = 10       # bildirimde gösterilecek max hisse
 SCORE_STRONG   = 5        # güçlü sinyal (5-6/6)
-SCORE_MODERATE = 3        # orta sinyal (3-4/6)
+SCORE_MODERATE = 4        # orta sinyal (4/6)
 VOL_SPIKE      = 1.5      # hacim spike çarpanı (1.5× ortalama = güçlü)
 ROC_THRESH     = 0.20     # %0.20 minimum anlamlı momentum (BIST saatlik)
 VWAP_BAND      = 0.001    # VWAP ±0.10% nötr bölge
