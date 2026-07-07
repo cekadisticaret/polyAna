@@ -725,6 +725,14 @@ async def run_open() -> None:
     parts.append(sep)
 
     tg_send("\n".join(parts))
+    # Konsensüs dosyası: Analiz 5 bu dosyayı okuyarak çelişki kontrolü yapar
+    _consensus = {s["symbol"]: s["predicted_dir"] for s in results if s.get("predicted_dir")}
+    try:
+        with open("/tmp/analiz9_consensus.json", "w") as _cf:
+            json.dump({"signals": _consensus, "ts": now_tr.isoformat()}, _cf)
+    except Exception:
+        pass
+
     print(f"[9. ANALİZ open] {saat} İST — {len(opened)} işlem açıldı, {len(skipped)} elenendi")
 
 

@@ -558,9 +558,23 @@ async def run_open() -> None:
     et_now   = now - timedelta(hours=4)
     et_hour  = et_now.hour
 
+    # Analiz 9 konsensüs sinyallerini oku (1 dakika önce yazılmış olmalı)
+    _a9_signals = {}
+    try:
+        with open("/tmp/analiz9_consensus.json") as _cf:
+            _a9_signals = json.load(_cf).get("signals", {})
+    except Exception:
+        pass  # Dosya yoksa konsensüs kontrolü atlanır
+
     # Pozisyon aç + Polymarket order
     for sig in results:
         if sig["amount"] > 0 and sig["predicted_dir"]:
+            # Konsensüs filtresi: Analiz 9 tam tersi yönü söylüyorsa işlem açma
+            a9_dir = _a9_signals.get(sig["symbol"])
+            if a9_dir and a9_dir != sig["predicted_dir"]:
+                print(f"[5. ANALİZ] {sig['symbol']} konsensüs çelişkisi: {sig['predicted_dir']} vs A9:{a9_dir} — atlandı")
+                continue
+
             pos = {
                 "symbol":           sig["symbol"],
                 "predicted_dir":    sig["predicted_dir"],
