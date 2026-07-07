@@ -50,8 +50,9 @@ SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 12.0   # |skor| >= 3
-AMOUNT_MODERATE = 8.0    # |skor| == 2
+AMOUNT_STRONG   = 15.0   # |skor| == 4
+AMOUNT_MODERATE = 10.0   # |skor| == 3
+AMOUNT_WEAK     = 6.0    # |skor| == 2
 MIN_STAT_COUNT  = 10
 
 # ── Polymarket Config ──────────────────────────────────────────
@@ -423,7 +424,7 @@ def analyze(symbol: str) -> dict | None:
     v4, l4 = algo_funding(funding)
     score   = v1 + v2 + v3 + v4
 
-    amount = AMOUNT_STRONG if abs(score) >= 3 else AMOUNT_MODERATE if abs(score) == 2 else 0.0
+    amount = AMOUNT_STRONG if abs(score) >= 4 else AMOUNT_MODERATE if abs(score) == 3 else AMOUNT_WEAK if abs(score) == 2 else 0.0
 
     return {
         "symbol":        symbol,
@@ -720,7 +721,7 @@ async def run_open() -> None:
     pm_at_risk = sum(p.get("pm_spent", 0) for p in state["open_positions"])
     parts.append(f"🟢 PM Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
     parts.append(
-        f"<i>Eşik: |skor|≥3→{AMOUNT_STRONG:.0f}$  |skor|=2→{AMOUNT_MODERATE:.0f}$  ≤1→yok</i>"
+        f"<i>Eşik: |skor|=4→{AMOUNT_STRONG:.0f}$  =3→{AMOUNT_MODERATE:.0f}$  =2→{AMOUNT_WEAK:.0f}$  ≤1→yok</i>"
     )
     parts.append(sep)
 

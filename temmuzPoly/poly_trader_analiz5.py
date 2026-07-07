@@ -53,8 +53,9 @@ SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 12.0   # |skor| >= 3
-AMOUNT_MODERATE = 8.0    # |skor| == 2
+AMOUNT_STRONG   = 15.0   # konf >= %70
+AMOUNT_MODERATE = 10.0   # konf >= %60
+AMOUNT_WEAK     = 6.0    # konf >= %57
 MIN_STAT_COUNT  = 10
 
 # ── Polymarket Config ──────────────────────────────────────────
@@ -361,7 +362,7 @@ async def analyze(symbol: str) -> dict | None:
         return None
 
     conf    = max(pred_obj.prob_up, pred_obj.prob_down)
-    amount  = AMOUNT_STRONG if conf >= 0.65 else AMOUNT_MODERATE if conf >= 0.57 else 0.0
+    amount  = AMOUNT_STRONG if conf >= 0.70 else AMOUNT_MODERATE if conf >= 0.60 else AMOUNT_WEAK if conf >= 0.57 else 0.0
 
     ind_ema_raw = pred_obj.trend.upper()
     rsi_vote  = +1 if pred_obj.rsi < 50 else -1
@@ -664,7 +665,7 @@ async def run_open() -> None:
     pm_at_risk = sum(p.get("pm_spent", 0) for p in state["open_positions"])
     parts.append(f"🟢 PM Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
     parts.append(
-        f"<i>Eşik: konf≥65%→{AMOUNT_STRONG:.0f}$  ≥57%→{AMOUNT_MODERATE:.0f}$  &lt;57%→yok</i>"
+        f"<i>Eşik: konf≥70%→{AMOUNT_STRONG:.0f}$  ≥60%→{AMOUNT_MODERATE:.0f}$  ≥57%→{AMOUNT_WEAK:.0f}$  &lt;57%→yok</i>"
     )
     parts.append(sep)
 
