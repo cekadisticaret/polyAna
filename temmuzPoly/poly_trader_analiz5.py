@@ -50,8 +50,8 @@ SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 6.0    # |skor| >= 3
-AMOUNT_MODERATE = 4.0    # |skor| == 2
+AMOUNT_STRONG   = 12.0   # |skor| >= 3
+AMOUNT_MODERATE = 8.0    # |skor| == 2
 MIN_STAT_COUNT  = 10
 
 # ── Polymarket Config ──────────────────────────────────────────
