@@ -767,7 +767,7 @@ def run_weekly() -> None:
     ax.set_facecolor("#0a0e1a")
 
     cmap = mcolors.LinearSegmentedColormap.from_list(
-        "gold", ["#1a1400", "#5d4037", "#f9a825"], N=256
+        "green", ["#001a00", "#1b5e20", "#00e676"], N=256
     )
     cmap.set_bad(color="#141820")
     im = ax.imshow(np.ma.masked_invalid(rate), cmap=cmap, vmin=0.35, vmax=0.85, aspect="auto")
