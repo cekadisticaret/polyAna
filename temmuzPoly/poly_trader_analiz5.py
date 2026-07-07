@@ -769,7 +769,7 @@ def run_weekly() -> None:
             if grid_n[d][h] >= 3:
                 rate[d][h] = grid_w[d][h] / grid_n[d][h]
 
-    fig, ax = plt.subplots(figsize=(16, 5))
+    fig, ax = plt.subplots(figsize=(16, 7))
     fig.patch.set_facecolor("#0a0e1a")
     ax.set_facecolor("#0a0e1a")
 
@@ -796,9 +796,9 @@ def run_weekly() -> None:
                     sn_total = grid_sym[sn]["n"][d][h]
                     if sn_total > 0:
                         sym_parts.append(f"{sn}:{sw}")
-                sym_str = " ".join(sym_parts)
+                sym_str = "\n".join(sym_parts)
                 ax.text(h, d, f"%{pct}\n{sym_str}", ha="center", va="center",
-                        fontsize=5, color=clr, linespacing=1.4)
+                        fontsize=5, color="black", fontweight="bold", linespacing=1.5)
 
     for x in range(25): ax.axvline(x - 0.5, color="#0a0e1a", linewidth=0.5)
     for y in range(8):  ax.axhline(y - 0.5, color="#0a0e1a", linewidth=0.5)
