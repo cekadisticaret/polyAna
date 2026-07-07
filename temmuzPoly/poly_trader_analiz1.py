@@ -443,7 +443,7 @@ def run_weekly() -> None:
                     sw = grid_sym[sn]["w"][d][h]
                     sn_total = grid_sym[sn]["n"][d][h]
                     if sn_total > 0:
-                        sym_parts.append(f"{sn}:{sw}")
+                        sym_parts.append(f"{sn}:{sw}/{sn_total}")
                 sym_str = "\n".join(sym_parts)
                 ax.text(h, d, f"%{pct}\n{sym_str}", ha="center", va="center",
                         fontsize=5, color="black", fontweight="bold", linespacing=1.5)
