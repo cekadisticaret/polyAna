@@ -463,7 +463,7 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>9. ANALİZ — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
+        tg_send(f"⏸ <b>9. ANALİZ (Eski 5) — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[9. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
@@ -565,7 +565,7 @@ async def run_close() -> None:
     # Hata olan pozisyonlar için bildirim
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        tg_send(f"⚠️ <b>9. ANALİZ</b> — {names} fiyatı alınamadı (timeout), bir sonraki saate bırakıldı.")
+        tg_send(f"⚠️ <b>9. ANALİZ (Eski 5)</b> — {names} fiyatı alınamadı (timeout), bir sonraki saate bırakıldı.")
 
     if not lines:
         return
@@ -582,7 +582,7 @@ async def run_close() -> None:
 
     tg_send(
         f"{sep}\n"
-        f"🏁 <b>9. ANALİZ — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
+        f"🏁 <b>9. ANALİZ (Eski 5) — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
         f"Bu tur PM: {'+'if pm_tur_pnl>=0 else ''}{pm_tur_pnl:.2f}$  |  🟢 Bütçe: {pm_bal_str}\n"
         f"Yön doğruluğu: {genel_dir}  |  PM kazanma: {genel_pm}\n"
@@ -703,7 +703,7 @@ async def run_open() -> None:
         for s in skipped
     ]
 
-    parts = [sep, f"🆕 <b>9. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>"]
+    parts = [sep, f"🆕 <b>9. ANALİZ (Eski 5) — {saat} - {next_h} Yeni İşlemler</b>"]
 
     if lines:
         parts.extend(lines)
@@ -835,7 +835,7 @@ def run_weekly() -> None:
 
     ind_lines = _ind_stats_lines(history)
     tg_send(
-        f"📊 <b>9. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
+        f"📊 <b>9. ANALİZ (Eski 5) HAFTALIK İSTATİSTİKLER</b>\n"
         f"{now_tr.strftime('%d.%m.%Y %H:%M İST')} İST\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {genel} başarı\n"
@@ -852,7 +852,7 @@ def run_stats() -> None:
     now_tr    = datetime.now(timezone.utc).astimezone(_TZ_TR)
 
     if not history:
-        tg_send("📊 <b>9. ANALİZ STATS</b>\nHenüz veri yok.")
+        tg_send("📊 <b>9. ANALİZ (Eski 5) STATS</b>\nHenüz veri yok.")
         return
 
     total     = len(history)
@@ -861,7 +861,7 @@ def run_stats() -> None:
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
 
     parts = [
-        f"📊 <b>9. ANALİZ İSTATİSTİKLER</b>",
+        f"📊 <b>9. ANALİZ (Eski 5) İSTATİSTİKLER</b>",
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
