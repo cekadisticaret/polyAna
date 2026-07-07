@@ -33,9 +33,9 @@ HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz1_history.json")
 WEEKLY_IMG    = "/tmp/poly_weekly_heatmap.png"
 
 INITIAL_BALANCE    = 300.0
-TRADE_AMOUNT       = 10.0   # genel başarı veri yok veya %50
-TRADE_AMOUNT_HIGH  = 12.0   # genel başarı > %50
-TRADE_AMOUNT_LOW   =  8.0   # genel başarı < %50
+TRADE_AMOUNT       = 16.0   # genel başarı veri yok veya %50
+TRADE_AMOUNT_HIGH  = 20.0   # genel başarı > %50
+TRADE_AMOUNT_LOW   = 12.0   # genel başarı < %50
 SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
