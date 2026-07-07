@@ -205,14 +205,14 @@ def algo_roc(klines: list[dict]) -> tuple[int, str]:
     Momentum: hisse gerçekten hareket ediyor mu?
     """
     closes = [k["close"] for k in klines]
-    if len(closes) < 4:
+    if len(closes) < 6:
         return 0, "ROC→ yetersiz veri"
-    roc = (closes[-1] - closes[-4]) / closes[-4] * 100  # 3 bar önce
+    roc = (closes[-1] - closes[-6]) / closes[-6] * 100  # 5 bar önce
 
     if roc > ROC_THRESH:
-        return +1, f"ROC↑ +{roc:.2f}% (3h ivme)"
+        return +1, f"ROC↑ +{roc:.2f}% (5h ivme)"
     elif roc < -ROC_THRESH:
-        return -1, f"ROC↓ {roc:.2f}% (3h ivme)"
+        return -1, f"ROC↓ {roc:.2f}% (5h ivme)"
     else:
         return  0, f"ROC→ {roc:.2f}% (düz)"
 
@@ -515,7 +515,7 @@ def run_scan() -> None:
     top = results[:TOP_N]
 
     sep      = "━" * 28
-    next_h   = f"{(hour+1)%24:02d}:00"
+    next_h   = f"{(hour+4)%24:02d}:00"
 
     if not top:
         tg_send(
@@ -527,7 +527,7 @@ def run_scan() -> None:
         print(f"[BIST Tarayıcı] Sinyal yok")
         return
 
-    lines = [f"{sep}", f"📊 <b>BIST Sinyal — {saat} - {next_h} IST</b>"]
+    lines = [f"{sep}", f"📊 <b>BIST Sinyal — {saat} IST  ⏳ 1-4 saat hedef</b>"]
 
     strong = [r for r in top if r["score"] >= SCORE_STRONG]
     medium = [r for r in top if SCORE_MODERATE <= r["score"] < SCORE_STRONG]
