@@ -1,0 +1,20 @@
+{
+  "balance": 336.0,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 63717.5,
+      "entry_time_tr": "2026-07-07T15:07:01.615614+03:00",
+      "entry_hour_tr": 15,
+      "entry_dow": 1,
+      "amount": 8.0,
+      "count": 2,
+      "systems": [
+        "A1",
+        "A2"
+      ]
+    }
+  ],
+  "total_pnl": 36.0
+}

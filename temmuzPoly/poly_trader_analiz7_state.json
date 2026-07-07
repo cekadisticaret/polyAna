@@ -1,0 +1,42 @@
+{
+  "balance": 240.0,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 63424.3,
+      "entry_time_tr": "2026-07-07T15:04:01.497693+03:00",
+      "entry_hour_tr": 15,
+      "entry_dow": 1,
+      "entry_is_weekend": false,
+      "score": 2,
+      "amount": 8.0,
+      "votes": [
+        0,
+        0,
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 81.39,
+      "entry_time_tr": "2026-07-07T15:04:01.497693+03:00",
+      "entry_hour_tr": 15,
+      "entry_dow": 1,
+      "entry_is_weekend": false,
+      "score": 2,
+      "amount": 8.0,
+      "votes": [
+        0,
+        1,
+        1,
+        0,
+        0
+      ]
+    }
+  ],
+  "total_pnl": -60.0
+}

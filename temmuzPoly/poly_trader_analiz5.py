@@ -791,7 +791,7 @@ def run_weekly() -> None:
     for y in range(8):  ax.axhline(y - 0.5, color="#0a0e1a", linewidth=0.5)
 
     ax.set_title(
-        f"5. ANALİZ — Trend + MR + Orderflow + Funding  ({now_tr.strftime('%d.%m.%Y')})\n"
+        f"5. ANALİZ — Trend + MR + Orderflow + Funding  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
         f"Toplam: {total} işlem  |  {genel} doğruluk",
         color="#f9a825", fontsize=10, fontweight="bold", pad=10
     )
@@ -806,13 +806,13 @@ def run_weekly() -> None:
     plt.savefig(WEEKLY_IMG, dpi=150, bbox_inches="tight", facecolor="#0a0e1a", pad_inches=0.1)
     plt.close()
 
-    tg_send_photo(WEEKLY_IMG, f"⚡ 5. ANALİZ Haftalık Rapor — {now_tr.strftime('%d.%m.%Y')}\n"
+    tg_send_photo(WEEKLY_IMG, f"⚡ 5. ANALİZ Haftalık Rapor — {now_tr.strftime('%d.%m.%Y %H:%M İST')}\n"
                               f"{total} işlem | {genel} | Trend+MR+OF+Funding")
 
     ind_lines = _ind_stats_lines(history)
     tg_send(
         f"📊 <b>5. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
-        f"{now_tr.strftime('%d.%m.%Y')} İST\n"
+        f"{now_tr.strftime('%d.%m.%Y %H:%M İST')} İST\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {genel} başarı\n"
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"

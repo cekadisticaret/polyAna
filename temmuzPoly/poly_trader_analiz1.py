@@ -447,7 +447,7 @@ def run_weekly() -> None:
     total_pnl = state.get("total_pnl", 0.0)
 
     ax.set_title(
-        f"1. ANALİZ — Haftalık Başarı Haritası  ({now_tr.strftime('%d.%m.%Y')})\n"
+        f"1. ANALİZ — Haftalık Başarı Haritası  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
         f"Toplam: {total} işlem  |  {genel}  |  Bakiye: ${balance:.2f}  |  P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$",
         color="#4fc3f7", fontsize=10, fontweight="bold", pad=10
     )
@@ -466,7 +466,7 @@ def run_weekly() -> None:
     plt.close()
 
     caption = (
-        f"📊 1. ANALİZ Haftalık Rapor — {now_tr.strftime('%d.%m.%Y')}\n"
+        f"📊 1. ANALİZ Haftalık Rapor — {now_tr.strftime('%d.%m.%Y %H:%M İST')}\n"
         f"Toplam {total} işlem | {genel} başarı | ${balance:.2f}"
     )
     tg_send_photo(WEEKLY_IMG, caption)

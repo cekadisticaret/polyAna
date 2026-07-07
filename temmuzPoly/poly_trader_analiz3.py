@@ -505,7 +505,7 @@ def run_weekly() -> None:
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
 
     ax.set_title(
-        f"3. ANALİZ (4.Saatlik) — Filtreli & Değişken Miktar Başarı Haritası  ({now_tr.strftime('%d.%m.%Y')})\n"
+        f"3. ANALİZ (4.Saatlik) — Filtreli & Değişken Miktar Başarı Haritası  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
         f"Toplam: {total} işlem  |  {genel} doğruluk  |  Min %{MIN_CONF*100:.0f} konf",
         color="#00e5ff", fontsize=10, fontweight="bold", pad=10
     )
@@ -524,7 +524,7 @@ def run_weekly() -> None:
     plt.close()
 
     caption = (
-        f"📡 3. ANALİZ (4.Saatlik) Haftalık Rapor — {now_tr.strftime('%d.%m.%Y')}\n"
+        f"📡 3. ANALİZ (4.Saatlik) Haftalık Rapor — {now_tr.strftime('%d.%m.%Y %H:%M İST')}\n"
         f"Toplam {total} işlem | {genel} doğruluk | Filtreli+Değişken"
     )
     tg_send_photo(WEEKLY_IMG, caption)
@@ -533,7 +533,7 @@ def run_weekly() -> None:
     ind_lines = _ind_stats_lines(history)
     stats_msg = (
         f"📊 <b>3. ANALİZ (4.Saatlik) HAFTALIK İSTATİSTİKLER</b>\n"
-        f"{now_tr.strftime('%d.%m.%Y')} İST\n"
+        f"{now_tr.strftime('%d.%m.%Y %H:%M İST')} İST\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {genel} başarı\n"
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
