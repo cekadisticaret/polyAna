@@ -559,8 +559,16 @@ def run_weekly() -> None:
             if not np.isnan(rate[d][h]):
                 pct = int(rate[d][h] * 100)
                 n   = grid_n[d][h]
-                clr = "white" if rate[d][h] >= 0.55 else "#78909c"
-                ax.text(h, d, f"%{pct}{'⚠' if n < MIN_STAT_COUNT else ''}\n({n})",
+                w   = grid_w[d][h]
+                if rate[d][h] >= 0.65:
+                    clr = "white"
+                elif rate[d][h] >= 0.50:
+                    clr = "#e8f5e9"
+                elif rate[d][h] >= 0.40:
+                    clr = "#1a0800"
+                else:
+                    clr = "#3d1000"
+                ax.text(h, d, f"%{pct}{'⚠' if n < MIN_STAT_COUNT else ''}\n+{grid_w[d][h]}-{n-grid_w[d][h]}",
                         ha="center", va="center", fontsize=5.5, color=clr, linespacing=1.3)
 
     for x in range(25): ax.axvline(x - 0.5, color="#0a0e1a", linewidth=0.5)

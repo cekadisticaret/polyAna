@@ -40,8 +40,8 @@ HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz8_history.json")
 WEEKLY_IMG    = "/tmp/poly_analiz8_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
-AMOUNT_STRONG   = 20.0   # |skor| == 3
-AMOUNT_MODERATE = 12.0   # |skor| == 2
+AMOUNT_STRONG   = 12.0   # |skor| == 3
+AMOUNT_MODERATE = 8.0    # |skor| == 2
 SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 MIN_STAT_COUNT  = 3
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -504,9 +504,18 @@ def run_weekly() -> None:
             sym_stats.append(f"{name}: {len(sym_trades)} işlem / {sym_wins} başarılı (%{sym_wins/len(sym_trades)*100:.0f})")
     sym_line = "   |   ".join(sym_stats)
 
-    cmap_colors = [(0.06, 0.09, 0.10), (0.15, 0.35, 0.25), (0.13, 0.55, 0.33),
-                   (0.20, 0.73, 0.44), (0.28, 0.90, 0.55)]
-    cmap = mcolors.LinearSegmentedColormap.from_list("analiz8_green", cmap_colors)
+    cmap = mcolors.LinearSegmentedColormap.from_list(
+        "dual_wg",
+        [
+            (0.00, "#7f2d00"),
+            (0.15, "#c65000"),
+            (0.29, "#f9a825"),
+            (0.31, "#2e7d32"),
+            (0.55, "#1b5e20"),
+            (1.00, "#00c853"),
+        ],
+        N=256
+    )
 
     fig, ax = plt.subplots(figsize=(16, 7))
     fig.patch.set_facecolor("#0a0e1a")
@@ -522,15 +531,23 @@ def run_weekly() -> None:
         for h in range(24):
             if not np.isnan(data[d][h]):
                 pct = int(data[d][h] * 100)
+                if data[d][h] >= 0.65:
+                    clr = "white"
+                elif data[d][h] >= 0.50:
+                    clr = "#e8f5e9"
+                elif data[d][h] >= 0.40:
+                    clr = "#1a0800"
+                else:
+                    clr = "#3d1000"
                 sym_parts = []
                 for sn in sym_names:
                     sw       = grid_sym[sn]["w"][d][h]
                     sn_total = grid_sym[sn]["n"][d][h]
                     if sn_total > 0:
-                        sym_parts.append(f"{sn}:{sw}/{sn_total}")
+                        sym_parts.append(f"{sn}:+{sw}-{sn_total - sw}")
                 sym_str = "\n".join(sym_parts)
                 ax.text(h, d, f"%{pct}\n{sym_str}", ha="center", va="center",
-                        fontsize=5, color="black", fontweight="bold", linespacing=1.5)
+                        fontsize=5, color=clr, fontweight="bold", linespacing=1.5)
 
     for x in range(25):
         ax.axvline(x - 0.5, color="#0a0e1a", linewidth=0.5)

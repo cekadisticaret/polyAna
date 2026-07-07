@@ -6,10 +6,14 @@ BIST Saatlik Sinyal Tarayıcı — v2 (BIST Özelleştirilmiş)
   2. RSI Bölgesi   (14, 35/65)    — momentum/aşırı bölge
   3. Hacim Onayı   (10-bar avg)   — hacim olmayan sinyal geçersiz
   4. VWAP Pozisyon (günlük)       — BIST'in en güçlü intraday filtresi
-  5. ROC Momentum  (3 saat)       — kısa vadeli ivme
-  6. Bollinger + Trend            — destek/direnç teyidi
+  Analiz 1 (poly_predictor_analysis) mantığı BIST'e uyarlandı:
+  - Momentum yerine Mean Reversion (dip yakalama)
+  - RSI5 oversold + Bollinger alt band = ana giriş sinyali
+  - MACD histogram dönüşü = momentum teyidi
+  - EMA15/50 trend filtresi + VWAP + Hacim kalitesi
 
-Eşik: ≥5/6 güçlü, 3-4/6 orta, ≤2/6 yok
+Sonuç penceresi: 4h (1h çok kısa; 4h'te başarı daha anlamlı)
+Eşik: ≥5/8 güçlü, 4/8 orta
 """
 
 import sys, os, time, json, urllib.request, urllib.error
@@ -24,14 +28,11 @@ CHAT_ID    = "830754964"
 _DIR         = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(_DIR, "bist_scanner_history.json")
 
-MIN_VOLUME     = 50_000   # minimum saatlik hacim (TL) — öğle arası düşüyor
-MIN_BARS       = 20       # minimum mum sayısı
+MIN_VOLUME     = 50_000   # minimum saatlik hacim (TL)
+MIN_BARS       = 30       # minimum mum sayısı (MACD için 26+ gerekli)
 TOP_N          = 10       # bildirimde gösterilecek max hisse
-SCORE_STRONG   = 5        # güçlü sinyal (5-6/6)
-SCORE_MODERATE = 4        # orta sinyal (4/6)
-VOL_SPIKE      = 1.5      # hacim spike çarpanı (1.5× ortalama = güçlü)
-ROC_THRESH     = 0.20     # %0.20 minimum anlamlı momentum (BIST saatlik)
-VWAP_BAND      = 0.001    # VWAP ±0.10% nötr bölge
+SCORE_STRONG   = 5        # güçlü sinyal (5+/8 max)
+SCORE_MODERATE = 4        # orta sinyal (4/8)
 
 # ── BIST100 DışI Hisseler (likit seçim) ──────────────────────
 SYMBOLS = [
@@ -100,153 +101,145 @@ def _vwap(klines: list[dict]) -> float:
     return num / den if den > 0 else klines[-1]["close"]
 
 
-# ── 6 BIST-Özelleştirilmiş İndikatör ─────────────────────────
-IND_NAMES = ["EMA", "RSI", "Hacim", "VWAP", "ROC", "Bollinger"]
+def _macd(closes: list[float]) -> tuple[float, float, float]:
+    """MACD (12,26,9). Returns: (macd_line, signal_line, histogram)."""
+    if len(closes) < 26:
+        return 0.0, 0.0, 0.0
+    e12 = _ema(closes, 12)
+    e26 = _ema(closes, 26)
+    macd_line = [e12[i] - e26[i] for i in range(len(e26))]
+    signal    = _ema(macd_line, 9)
+    hist      = macd_line[-1] - signal[-1]
+    return macd_line[-1], signal[-1], hist
 
 
-def algo_ema_cross(klines: list[dict]) -> tuple[int, str]:
+# ── Poly-Predictor İlhamlı BIST İndikatörleri (v3) ────────────
+# RSI5 MR + BB dokunuş max +2; diğerleri max +1 → toplam max 8
+IND_NAMES = ["RSI5-MR", "BB-Dip", "MACD-Dönüş", "VWAP", "EMA-Trend", "Hacim"]
+
+
+def algo_rsi5_mr(klines: list[dict]) -> tuple[int, str]:
     """
-    EMA5/EMA15 crossover + yön doğrulaması.
-    BIST saatlik için 20/50 çok ağır → 5/15 daha duyarlı.
-    Güçlendirici: fiyat her iki EMA'nın da üzerinde mi?
+    RSI5 Mean Reversion — poly_predictor'ın ana katmanı.
+    Oversold bölge = potansiyel dip = AL sinyali.
+    Overbought = riskli, sinyal yok (BIST long-only).
+    """
+    closes   = [k["close"] for k in klines]
+    rsi5     = _rsi(closes, 5)
+    rsi5_prev = _rsi(closes[:-2], 5) if len(closes) > 7 else rsi5
+    rsi5_dir  = rsi5 - rsi5_prev  # pozitif = toparlanıyor
+
+    if rsi5 < 20:
+        return +2, f"RSI5:{rsi5:.0f} aşırı satım (güçlü dip)"
+    elif rsi5 < 35 and rsi5_dir >= 0:
+        return +1, f"RSI5:{rsi5:.0f}↑ satım toparlanıyor"
+    elif rsi5 < 35:
+        return +1, f"RSI5:{rsi5:.0f} satım bölgesi"
+    elif rsi5 > 78:
+        return -1, f"RSI5:{rsi5:.0f} aşırı alım, riskli"
+    else:
+        return  0, f"RSI5:{rsi5:.0f} nötr"
+
+
+def algo_bollinger_dip(klines: list[dict]) -> tuple[int, str]:
+    """
+    Bollinger Band (20, 2σ) dip dokunuşu.
+    Alt banda yakın/altında → güçlü MR sinyali.
+    Üst banda yakın → direnç.
+    """
+    closes     = [k["close"] for k in klines]
+    upper, mid, lower = _bollinger(closes, 20, 2.0)
+    price      = closes[-1]
+    price_prev = closes[-2] if len(closes) > 1 else price
+    pos        = (price - lower) / (upper - lower) if upper != lower else 0.5
+
+    if price <= lower:
+        return +2, f"BB:alt altında pos:{pos:.2f} (güçlü dip)"
+    elif pos < 0.20:
+        recovery = price >= price_prev
+        return +1, f"BB:dip{'↑' if recovery else ''} pos:{pos:.2f}"
+    elif pos > 0.85:
+        return -1, f"BB:üst direnç pos:{pos:.2f}"
+    else:
+        return  0, f"BB:nötr pos:{pos:.2f}"
+
+
+def algo_macd_turn(klines: list[dict]) -> tuple[int, str]:
+    """
+    MACD histogram dönüşü — momentum teyidi.
+    Negatiften pozitife dönen histogram = en güçlü al sinyali.
     """
     closes = [k["close"] for k in klines]
-    e5  = _ema(closes, 5)
-    e15 = _ema(closes, 15)
-    cross = e5[-1] - e15[-1]
-    slope = e5[-1] - e5[-3] if len(e5) >= 3 else 0
-    price = closes[-1]
-    pct   = cross / price * 100
+    _, _, hist      = _macd(closes)
+    _, _, hist_prev = _macd(closes[:-1]) if len(closes) > 27 else (0, 0, hist)
+    turning_up = hist > hist_prev
 
-    # Güçlü yükseliş: EMA5>EMA15, slope pozitif, fiyat EMA5 üzerinde
-    if cross > 0 and slope > 0 and price > e5[-1]:
-        return +1, f"EMA↑ E5&gt;E15 ({pct:+.2f}%) slope+{slope/price*100:.2f}%"
-    # Güçlü düşüş: EMA5<EMA15, slope negatif, fiyat EMA5 altında
-    elif cross < 0 and slope < 0 and price < e5[-1]:
-        return -1, f"EMA↓ E5&lt;E15 ({pct:+.2f}%)"
-    # Çelişkili ya da düz → nötr
+    if hist < 0 and turning_up:
+        return +1, f"MACD↑ dip dönüşü hist:{hist:.4f}"
+    elif hist >= 0 and turning_up:
+        return +1, f"MACD↑ pozitif hist:{hist:.4f}"
+    elif hist < 0 and not turning_up:
+        return -1, f"MACD↓ düşüş hist:{hist:.4f}"
     else:
-        return  0, f"EMA→ karışık ({pct:+.2f}%)"
-
-
-def algo_rsi_zone(klines: list[dict]) -> tuple[int, str]:
-    """
-    RSI bölge analizi (14 periyot, 35/65 eşiği).
-    BIST'te 70/30 çok nadir tetiklenir; 65/35 daha uygun.
-    RSI'nın yönü (son 3 barda değişim) de önemli.
-    """
-    closes = [k["close"] for k in klines]
-    rsi    = _rsi(closes, 14)
-
-    # RSI trendini belirle: son 5 kapanışın RSI değişimi
-    rsi_prev = _rsi(closes[:-3], 14) if len(closes) > 17 else rsi
-    rsi_dir  = rsi - rsi_prev  # pozitif = yükseliyor
-
-    if rsi < 35:
-        return +1, f"RSI↑ aşırı satım RSI:{rsi:.0f}"
-    elif rsi > 65:
-        return -1, f"RSI↓ aşırı alım RSI:{rsi:.0f}"
-    elif 40 <= rsi <= 60 and rsi_dir > 2:
-        return +1, f"RSI↑ momentum artıyor RSI:{rsi:.0f} +{rsi_dir:.1f}"
-    elif 40 <= rsi <= 60 and rsi_dir < -2:
-        return -1, f"RSI↓ momentum azalıyor RSI:{rsi:.0f} {rsi_dir:.1f}"
-    else:
-        return  0, f"RSI→ nötr RSI:{rsi:.0f}"
-
-
-def algo_volume(klines: list[dict]) -> tuple[int, str]:
-    """
-    Hacim onayı — BIST'in en kritik filtresi.
-    Hacim yoksa sinyal yoktur. 1.5× ortalama = anlamlı ilgi.
-    Yön: son barın açılış-kapanış ile belirlenir.
-    """
-    vols     = [k["volume"] for k in klines]
-    avg_vol  = sum(vols[-10:]) / min(10, len(vols))
-    cur_vol  = vols[-1]
-    ratio    = cur_vol / avg_vol if avg_vol > 0 else 1.0
-
-    last = klines[-1]
-    bullish_bar = last["close"] >= last["open"]
-
-    if ratio >= VOL_SPIKE:
-        if bullish_bar:
-            return +1, f"Hacim↑ {ratio:.1f}× avg yükselen bar"
-        else:
-            return -1, f"Hacim↓ {ratio:.1f}× avg düşen bar"
-    elif ratio < 0.7:
-        # Çok düşük hacim → güvenilmez sinyal
-        return  0, f"Hacim→ düşük {ratio:.1f}× avg"
-    else:
-        return  0, f"Hacim→ normal {ratio:.1f}× avg"
+        return  0, f"MACD→ nötr hist:{hist:.4f}"
 
 
 def algo_vwap(klines: list[dict]) -> tuple[int, str]:
     """
-    VWAP pozisyonu — BIST intraday'in en güçlü filtresi.
-    Kurumsal alıcılar VWAP altında alır, üstünde satar.
-    Fiyat VWAP'ın belirgin üzerindeyse trend güçlü.
+    VWAP pozisyonu — kurumsal referans.
+    Fiyat VWAP altında = ucuz / VWAP üstü = pahalı.
     """
     vwap  = _vwap(klines)
     price = klines[-1]["close"]
     diff  = (price - vwap) / vwap
 
-    if diff > VWAP_BAND:
-        return +1, f"VWAP↑ fiyat:{price:.2f} VWAP:{vwap:.2f} (+{diff*100:.2f}%)"
-    elif diff < -VWAP_BAND:
-        return -1, f"VWAP↓ fiyat:{price:.2f} VWAP:{vwap:.2f} ({diff*100:.2f}%)"
+    if diff < -0.005:
+        return +1, f"VWAP↓ ucuz ({diff*100:+.2f}%) VWAP:{vwap:.2f}"
+    elif diff > 0.005:
+        return -1, f"VWAP↑ pahalı ({diff*100:+.2f}%) VWAP:{vwap:.2f}"
     else:
-        return  0, f"VWAP→ VWAP yakını ({diff*100:.2f}%)"
+        return  0, f"VWAP→ yakın ({diff*100:+.2f}%)"
 
 
-def algo_roc(klines: list[dict]) -> tuple[int, str]:
+def algo_ema_trend(klines: list[dict]) -> tuple[int, str]:
     """
-    3 Saatlik ROC (Rate of Change) — kısa vadeli ivme.
-    BIST saatlik: 0.20% altı hareket gürültü sayılır.
-    Momentum: hisse gerçekten hareket ediyor mu?
+    EMA15/50 orta vadeli trend filtresi.
+    Trend yukarıdaysa dip alım anlamlı; trend aşağıdaysa riskli.
     """
     closes = [k["close"] for k in klines]
-    if len(closes) < 6:
-        return 0, "ROC→ yetersiz veri"
-    roc = (closes[-1] - closes[-6]) / closes[-6] * 100  # 5 bar önce
+    e15    = _ema(closes, 15)
+    e50    = _ema(closes, 50) if len(closes) >= 50 else e15
+    slope15 = (e15[-1] - e15[-3]) / e15[-3] * 100 if len(e15) >= 3 else 0
 
-    if roc > ROC_THRESH:
-        return +1, f"ROC↑ +{roc:.2f}% (5h ivme)"
-    elif roc < -ROC_THRESH:
-        return -1, f"ROC↓ {roc:.2f}% (5h ivme)"
+    if e15[-1] > e50[-1] and slope15 > 0:
+        return +1, f"EMA↑ 15>50 slope:{slope15:+.2f}%"
+    elif e15[-1] < e50[-1] and slope15 < 0:
+        return -1, f"EMA↓ trend aşağı slope:{slope15:+.2f}%"
     else:
-        return  0, f"ROC→ {roc:.2f}% (düz)"
+        return  0, f"EMA→ karışık slope:{slope15:+.2f}%"
 
 
-def algo_bollinger_trend(klines: list[dict]) -> tuple[int, str]:
+def algo_volume_quality(klines: list[dict]) -> tuple[int, str]:
     """
-    Bollinger Band (20, 1.5σ) + Trend filtresi.
-    BIST'te saf MR işe yaramaz — trend yönünde BB kullan.
-    Destek: fiyat alt banda yakın + EMA5 yukarı → trend devam
-    Direnç: fiyat üst banda yakın + EMA5 aşağı → düşüş riski
+    Hacim kalitesi — MR için tersine çevrilmiş mantık.
+    Düşük hacimde düşüş (satış baskısı yok) → dip yakın.
+    Yüksek hacimde toparlanma → kurumsal alım.
     """
-    closes = [k["close"] for k in klines]
-    upper, mid, lower = _bollinger(closes, 20, 1.5)
-    price  = closes[-1]
-    e5     = _ema(closes, 5)
-    slope5 = e5[-1] - e5[-3] if len(e5) >= 3 else 0
+    vols     = [k["volume"] for k in klines]
+    avg_vol  = sum(vols[-10:]) / 10 if len(vols) >= 10 else sum(vols)/len(vols)
+    recent   = sum(vols[-3:]) / 3 if len(vols) >= 3 else vols[-1]
+    last_bar = klines[-1]
+    bullish  = last_bar["close"] > last_bar["open"]
+    ratio    = recent / avg_vol if avg_vol > 0 else 1.0
 
-    width    = (upper - lower) / mid  # BB genişliği (volatilite)
-    pos      = (price - lower) / (upper - lower) if upper != lower else 0.5
-
-    # Fiyat alt bantta + EMA yukarı → destek tuttu, devam edecek
-    if pos < 0.25 and slope5 >= 0:
-        return +1, f"BB↑ alt band desteği pos:{pos:.2f} width:{width*100:.1f}%"
-    # Fiyat orta bant üstünde + slope pozitif → trend kuvvetli
-    elif pos > 0.55 and slope5 > 0:
-        return +1, f"BB↑ mid üstü güçlü pos:{pos:.2f}"
-    # Fiyat üst banda yakın + slope negatif → direnç, geri çekilme
-    elif pos > 0.80 and slope5 <= 0:
-        return -1, f"BB↓ üst band direnci pos:{pos:.2f}"
-    # Fiyat orta bandın altı + slope negatif → zayıf
-    elif pos < 0.45 and slope5 < 0:
-        return -1, f"BB↓ mid altı zayıf pos:{pos:.2f}"
+    if bullish and ratio >= 1.3:
+        return +1, f"Hacim↑ toparlanma ×{ratio:.1f}"
+    elif not bullish and ratio < 0.7:
+        return +1, f"Hacim→ sessiz düşüş ×{ratio:.1f} (baskı yok)"
+    elif not bullish and ratio >= 1.5:
+        return -1, f"Hacim↓ satış baskısı ×{ratio:.1f}"
     else:
-        return  0, f"BB→ nötr pos:{pos:.2f}"
+        return  0, f"Hacim→ normal ×{ratio:.1f}"
 
 
 # ── Yardımcı ─────────────────────────────────────────────────
@@ -293,12 +286,12 @@ def analyze(symbol: str) -> dict | None:
     klines = fetch_ohlcv(symbol)
     if not klines or len(klines) < MIN_BARS:
         return None
-    v1, l1 = algo_ema_cross(klines)
-    v2, l2 = algo_rsi_zone(klines)
-    v3, l3 = algo_volume(klines)
+    v1, l1 = algo_rsi5_mr(klines)
+    v2, l2 = algo_bollinger_dip(klines)
+    v3, l3 = algo_macd_turn(klines)
     v4, l4 = algo_vwap(klines)
-    v5, l5 = algo_roc(klines)
-    v6, l6 = algo_bollinger_trend(klines)
+    v5, l5 = algo_ema_trend(klines)
+    v6, l6 = algo_volume_quality(klines)
     score  = v1 + v2 + v3 + v4 + v5 + v6
     return {
         "symbol": symbol,
@@ -388,12 +381,10 @@ def resolve_previous_signals(hour: int, today: str) -> None:
             entry[field_p]   = round(price, 2)
             entry[field_pct] = round(pct, 2)
 
-            # Win/loss 1 saatlik sonuca göre belirlenir
-            if offset == 1:
-                entry["price_1h"] = round(price, 2)
-                entry["pct"]      = round(pct, 2)
-                entry["result"]   = ("✅" if pct > 0 else "❌") if entry["score"] > 0 \
-                                    else ("✅" if pct < 0 else "❌")
+            # Win/loss 4 saatlik sonuca göre belirlenir (1h çok kısa)
+            if offset == 4:
+                entry["pct"]    = round(pct, 2)
+                entry["result"] = "✅" if pct > 0 else "❌"
             updated = True
             time.sleep(0.15)
 
@@ -466,7 +457,30 @@ def run_eod_report() -> None:
             )
 
     lines.append(sep)
-    tg_send("\n".join(lines))
+
+    # Mesajı 4000 karakter sınırına göre parçalara böl
+    full_text = "\n".join(lines)
+    MAX_LEN = 4000
+    if len(full_text) <= MAX_LEN:
+        tg_send(full_text)
+    else:
+        # Özet (ilk kısım) her zaman gönder
+        summary_end = next(
+            (i for i, l in enumerate(lines) if l.startswith("🕐")), len(lines)
+        )
+        tg_send("\n".join(lines[:summary_end]))
+        # Saat detaylarını grupla ve gönder
+        chunk, chunk_len = [], 0
+        for line in lines[summary_end:]:
+            addition = len(line) + 1
+            if chunk_len + addition > MAX_LEN and chunk:
+                tg_send("\n".join(chunk))
+                chunk, chunk_len = [], 0
+            chunk.append(line)
+            chunk_len += addition
+        if chunk:
+            tg_send("\n".join(chunk))
+
     print(f"[BIST Tarayıcı] Gün sonu raporu gönderildi: {wins}/{total} isabet")
 
 
@@ -537,7 +551,7 @@ def run_scan() -> None:
         for r in strong:
             vi = ["🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in r["votes"]]
             lines.append(
-                f"📈 <b>{r['symbol']}</b>  skor:{r['score']:+d}/6  fiyat:{r['price']:.2f}₺\n"
+                f"📈 <b>{r['symbol']}</b>  skor:{r["score"]:+d}/8  fiyat:{r['price']:.2f}₺\n"
                 f"   {'  '.join(vi)}"
             )
 
@@ -546,11 +560,11 @@ def run_scan() -> None:
         for r in medium:
             vi = ["🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in r["votes"]]
             lines.append(
-                f"↗️ <b>{r['symbol']}</b>  skor:{r['score']:+d}/6  fiyat:{r['price']:.2f}₺  "
+                f"↗️ <b>{r['symbol']}</b>  skor:{r["score"]:+d}/8  fiyat:{r['price']:.2f}₺  "
                 f"{''.join(vi)}"
             )
 
-    lines.append(f"<i>Tarama: {len(SYMBOLS)} hisse | Eşik: ≥{SCORE_MODERATE}/6</i>")
+    lines.append(f"<i>Tarama: {len(SYMBOLS)} hisse | Eşik: ≥{SCORE_MODERATE}/8</i>")
     lines.append(sep)
 
     tg_send("\n".join(lines))

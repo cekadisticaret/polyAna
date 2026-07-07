@@ -747,13 +747,20 @@ def run_weekly() -> None:
         for h in range(24):
             if not np.isnan(rate[d][h]):
                 pct = int(rate[d][h] * 100)
-                clr = "white" if rate[d][h] >= 0.55 else "#78909c"
+                if rate[d][h] >= 0.65:
+                    clr = "white"
+                elif rate[d][h] >= 0.50:
+                    clr = "#e8f5e9"
+                elif rate[d][h] >= 0.40:
+                    clr = "#1a0800"
+                else:
+                    clr = "#3d1000"
                 sym_parts = []
                 for sn in sym_names:
                     sw = grid_sym[sn]["w"][d][h]
                     sn_total = grid_sym[sn]["n"][d][h]
                     if sn_total > 0:
-                        sym_parts.append(f"{sn}:{sw}/{sn_total}")
+                        sym_parts.append(f"{sn}:+{sw}-{sn_total - sw}")
                 sym_str = "\n".join(sym_parts)
                 ax.text(h, d, f"%{pct}\n{sym_str}", ha="center", va="center",
                         fontsize=5, color="black", fontweight="bold", linespacing=1.5)

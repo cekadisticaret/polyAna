@@ -12,6 +12,7 @@ alwaysApply: true
 | `31 14 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
 | `59 23 * * *` | `cd /root/aiProject && python3 BistAnaliz/backup.py` | `/tmp/backup.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
+| `5 18 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/bist_scanner.py` | `/tmp/bist_scanner.log` |
 | `*/15 9-18 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/yuzdeBist.py` | `/tmp/yuzde_bist.log` |
 
 ## Zamanlama Notları

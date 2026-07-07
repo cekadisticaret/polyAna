@@ -680,7 +680,7 @@ def run_weekly() -> None:
     ax.set_facecolor("#0a0e1a")
 
     cmap = mcolors.LinearSegmentedColormap.from_list(
-        "cyan", ["#001a1a", "#004d4d", "#00bcd4"], N=256
+        "poly_green", ["#1a2a1a", "#1b5e20", "#00c853"], N=256
     )
     cmap.set_bad(color="#141820")
     im = ax.imshow(np.ma.masked_invalid(rate), cmap=cmap, vmin=0.35, vmax=0.85, aspect="auto")
@@ -696,8 +696,16 @@ def run_weekly() -> None:
             if not np.isnan(rate[d][h]):
                 pct = int(rate[d][h] * 100)
                 n   = grid_n[d][h]
-                clr = "white" if rate[d][h] >= 0.55 else "#78909c"
-                ax.text(h, d, f"%{pct}{'⚠' if n < MIN_STAT_COUNT else ''}\n({n})",
+                w   = grid_w[d][h]
+                if rate[d][h] >= 0.65:
+                    clr = "white"
+                elif rate[d][h] >= 0.50:
+                    clr = "#e8f5e9"
+                elif rate[d][h] >= 0.40:
+                    clr = "#1a0800"
+                else:
+                    clr = "#3d1000"
+                ax.text(h, d, f"%{pct}{'⚠' if n < MIN_STAT_COUNT else ''}\n+{grid_w[d][h]}-{n-grid_w[d][h]}",
                         ha="center", va="center", fontsize=5.5, color=clr, linespacing=1.3)
 
     for x in range(25): ax.axvline(x - 0.5, color="#0a0e1a", linewidth=0.5)

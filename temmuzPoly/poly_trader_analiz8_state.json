@@ -1,24 +1,22 @@
 {
-  "balance": 268.0,
+  "balance": 168.00000000000006,
   "open_positions": [
     {
-      "symbol": "BTCUSDT",
+      "symbol": "SOLUSDT",
       "predicted_dir": "UP",
-      "entry_price": 63732.6,
-      "entry_time_tr": "2026-07-08T00:04:01.892589+03:00",
+      "entry_price": 81.19,
+      "entry_time_tr": "2026-07-08T00:04:01.890720+03:00",
       "entry_hour_tr": 0,
       "entry_dow": 2,
       "entry_is_weekend": false,
       "score": 2,
-      "amount": 8.0,
+      "amount": 12.0,
       "votes": [
         1,
         0,
-        1,
-        0,
-        0
+        1
       ]
     }
   ],
-  "total_pnl": -32.0
+  "total_pnl": 16.0
 }
