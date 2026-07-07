@@ -62,7 +62,7 @@ _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana"}
-_PM_DRY_RUN   = True  # Analiz 9 aktif olduğu sürece Analiz 5 işlem açmaz
+_PM_DRY_RUN   = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 
 
 def _pm_get_client():
