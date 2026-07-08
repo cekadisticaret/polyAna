@@ -1,16 +1,16 @@
 {
-  "balance": 168.00000000000006,
+  "balance": 292.0,
   "open_positions": [
     {
-      "symbol": "SOLUSDT",
+      "symbol": "ETHUSDT",
       "predicted_dir": "UP",
-      "entry_price": 81.19,
-      "entry_time_tr": "2026-07-08T00:04:01.890720+03:00",
-      "entry_hour_tr": 0,
+      "entry_price": 1732.57,
+      "entry_time_tr": "2026-07-08T13:11:44.352860+03:00",
+      "entry_hour_tr": 13,
       "entry_dow": 2,
       "entry_is_weekend": false,
       "score": 2,
-      "amount": 12.0,
+      "amount": 8.0,
       "votes": [
         1,
         0,
@@ -18,5 +18,5 @@
       ]
     }
   ],
-  "total_pnl": 16.0
+  "total_pnl": 0.0
 }

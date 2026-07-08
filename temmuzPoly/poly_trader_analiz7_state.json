@@ -1,24 +1,60 @@
 {
-  "balance": 268.0,
+  "balance": 264.0,
   "open_positions": [
     {
       "symbol": "BTCUSDT",
-      "predicted_dir": "UP",
-      "entry_price": 63732.6,
-      "entry_time_tr": "2026-07-08T00:04:01.892589+03:00",
-      "entry_hour_tr": 0,
+      "predicted_dir": "DOWN",
+      "entry_price": 61958.0,
+      "entry_time_tr": "2026-07-08T13:04:02.166066+03:00",
+      "entry_hour_tr": 13,
       "entry_dow": 2,
       "entry_is_weekend": false,
-      "score": 2,
+      "score": -2,
       "amount": 8.0,
       "votes": [
+        -1,
         1,
+        -1,
         0,
+        -1
+      ]
+    },
+    {
+      "symbol": "ETHUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 1734.2,
+      "entry_time_tr": "2026-07-08T13:04:02.166066+03:00",
+      "entry_hour_tr": 13,
+      "entry_dow": 2,
+      "entry_is_weekend": false,
+      "score": -2,
+      "amount": 8.0,
+      "votes": [
+        -1,
         1,
+        -1,
         0,
-        0
+        -1
+      ]
+    },
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 77.09,
+      "entry_time_tr": "2026-07-08T13:04:02.166066+03:00",
+      "entry_hour_tr": 13,
+      "entry_dow": 2,
+      "entry_is_weekend": false,
+      "score": -2,
+      "amount": 8.0,
+      "votes": [
+        -1,
+        1,
+        -1,
+        0,
+        -1
       ]
     }
   ],
-  "total_pnl": -32.0
+  "total_pnl": -36.0
 }

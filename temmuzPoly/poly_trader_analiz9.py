@@ -610,6 +610,25 @@ async def run_open() -> None:
             results.append(sig)
         time.sleep(0.4)
 
+    # Sembol başarı sıralamasına göre lot çarpanı hesapla
+    # Sıra 1 → ×1.0, Sıra 2 → ×0.8, Sıra 3 → ×0.6
+    _sym_rank_mult: dict[str, float] = {}
+    _RANK_MULTS = [1.0, 0.8, 0.6]
+    sym_rates = []
+    for sym in SYMBOLS:
+        sym_hist = [t for t in history if t["symbol"] == sym and t.get("win") is not None]
+        wins = sum(1 for t in sym_hist if t["win"])
+        rate = wins / len(sym_hist) if sym_hist else 0.5
+        sym_rates.append((sym, rate))
+    sym_rates.sort(key=lambda x: x[1], reverse=True)
+    for rank, (sym, rate) in enumerate(sym_rates):
+        _sym_rank_mult[sym] = _RANK_MULTS[rank] if rank < len(_RANK_MULTS) else 0.6
+
+    for sig in results:
+        if sig["amount"] > 0:
+            mult = _sym_rank_mult.get(sig["symbol"], 1.0)
+            sig["amount"] = round(sig["amount"] * mult, 1)
+
     # Mevcut ET saati (EDT = UTC-4)
     et_now   = now - timedelta(hours=4)
     et_hour  = et_now.hour

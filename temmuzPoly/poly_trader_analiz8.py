@@ -151,6 +151,16 @@ def fetch_orderbook(symbol: str) -> dict:
 
 
 # ── Teknik hesaplamalar ───────────────────────────────────────
+def _ema(vals: list[float], n: int) -> list[float]:
+    if not vals:
+        return []
+    k = 2 / (n + 1)
+    out = [vals[0]]
+    for v in vals[1:]:
+        out.append(v * k + out[-1] * (1 - k))
+    return out
+
+
 def _rsi(closes: list[float], period: int = 14) -> float:
     if len(closes) < period + 1:
         return 50.0
@@ -174,46 +184,58 @@ def _bollinger(closes: list[float], period: int = 20, mult: float = 2.0) -> tupl
 # ── 3 Algoritma ───────────────────────────────────────────────
 
 def algo_rsi(klines: list[dict]) -> tuple[int, str]:
-    """RSI(14) — oversold/overbought sinyali."""
+    """RSI(14) — sadece aşırı bölgelerde sinyal (nötr bölge = nötr oy)."""
     closes = [k["close"] for k in klines]
     rsi    = _rsi(closes, 14)
-    # RSI yönünü de kontrol et (son 3 bar)
-    rsi_prev = _rsi(closes[:-1], 14) if len(closes) > 15 else rsi
+    rsi_prev = _rsi(closes[:-3], 14) if len(closes) > 17 else rsi
+    recovering = rsi > rsi_prev  # oversold'dan toparlanıyor mu?
 
-    if rsi <= 35:
+    if rsi <= 30:
         vote = +1
         arr  = "↑"
-    elif rsi >= 65:
+    elif rsi <= 40 and recovering:
+        vote = +1
+        arr  = "↑~"
+    elif rsi >= 70:
         vote = -1
         arr  = "↓"
+    elif rsi >= 60 and not recovering:
+        vote = -1
+        arr  = "↓~"
     else:
-        # Nötr bölgede yön değişimini yakala
-        if rsi < 50 and rsi > rsi_prev:
-            vote = +1
-            arr  = "↑~"
-        elif rsi > 50 and rsi < rsi_prev:
-            vote = -1
-            arr  = "↓~"
-        else:
-            vote = 0
-            arr  = "→"
+        vote = 0
+        arr  = "→"
     return vote, f"RSI {arr}  {rsi:.0f}"
 
 
 def algo_mr(klines: list[dict]) -> tuple[int, str]:
-    """Mean Reversion — RSI(14) + Bollinger Bands(20,2)."""
+    """Mean Reversion — RSI(14) + Bollinger Bands(20,2) + EMA trend filtresi."""
     closes      = [k["close"] for k in klines]
     rsi         = _rsi(closes, 14)
-    upper, _, lower = _bollinger(closes, 20, 2.0)
+    upper, mid, lower = _bollinger(closes, 20, 2.0)
     price       = closes[-1]
+    ema20       = _ema(closes, 20)
+    ema50       = _ema(closes, 50) if len(closes) >= 50 else ema20
+    trend_up    = ema20[-1] > ema50[-1]
+    trend_down  = ema20[-1] < ema50[-1]
 
-    rsi_v = +1 if rsi <= 35 else -1 if rsi >= 65 else 0
-    bb_v  = +1 if price <= lower else -1 if price >= upper else 0
+    # Sadece BB bandına dokunuş + RSI onayı ile sinyal
+    at_lower = price <= lower * 1.005  # alt banda yakın/altında
+    at_upper = price >= upper * 0.995  # üst banda yakın/üstünde
 
-    vote  = max(-1, min(1, rsi_v + bb_v))
-    arr   = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    bb_lbl = "alt" if price <= lower else "üst" if price >= upper else "orta"
-    return vote, f"MR {arr}  RSI:{rsi:.0f}  BB:{bb_lbl}"
+    if at_lower and rsi <= 45 and trend_up:
+        vote, lbl = +1, "alt-band+trend↑"
+    elif at_lower and rsi <= 40:
+        vote, lbl = +1, "alt-band aşırı"
+    elif at_upper and rsi >= 55 and trend_down:
+        vote, lbl = -1, "üst-band+trend↓"
+    elif at_upper and rsi >= 60:
+        vote, lbl = -1, "üst-band aşırı"
+    else:
+        vote, lbl = 0, "orta"
+
+    arr = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    return vote, f"MR {arr}  RSI:{rsi:.0f}  BB:{lbl}"
 
 
 def algo_orderflow(klines: list[dict], ob: dict) -> tuple[int, str]:
