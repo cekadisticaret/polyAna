@@ -53,8 +53,11 @@ SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 12.0   # konf >= %65
-AMOUNT_MODERATE = 8.0    # konf >= %57
+AMOUNT_STRONG   = 12.0   # konf >= %65 (sinyal eşiği, analiz1 uyumlu)
+AMOUNT_MODERATE = 8.0    # konf >= %57 (sinyal eşiği, analiz1 uyumlu)
+TRADE_AMOUNT_HIGH = 20.0  # genel başarı > %50
+TRADE_AMOUNT_MID  = 16.0  # genel başarı veri yok veya = %50
+TRADE_AMOUNT_LOW  = 12.0  # genel başarı < %50
 MIN_STAT_COUNT  = 10
 
 # ── Polymarket Config ──────────────────────────────────────────
@@ -572,28 +575,27 @@ async def run_open() -> None:
     for rank, (sym, rate) in enumerate(sym_rates):
         _sym_rank_mult[sym] = _RANK_MULTS[rank] if rank < len(_RANK_MULTS) else 0.6
 
-    # Lot çarpanını uygula (amount 0 ise dokunma)
+    # Geçmiş başarı oranına göre dinamik miktar (analiz1 mantığı)
+    for sig in results:
+        if sig["amount"] > 0:
+            sw, st = get_symbol_stats(history, sig["symbol"])
+            rate = sw / st if st else None
+            sig["amount"] = (TRADE_AMOUNT_HIGH if (rate is not None and rate > 0.5)
+                             else TRADE_AMOUNT_LOW if (rate is not None and rate < 0.5)
+                             else TRADE_AMOUNT_MID)
+
+    # Sembol sıralaması lot çarpanını uygula (amount 0 ise dokunma)
     for sig in results:
         if sig["amount"] > 0:
             mult = _sym_rank_mult.get(sig["symbol"], 1.0)
             sig["amount"] = round(sig["amount"] * mult, 1)
 
-    # Analiz 9 konsensüs sinyallerini oku (1 dakika önce yazılmış olmalı)
-    _a9_signals = {}
-    try:
-        with open("/tmp/analiz9_consensus.json") as _cf:
-            _a9_signals = json.load(_cf).get("signals", {})
-    except Exception:
-        pass  # Dosya yoksa konsensüs kontrolü atlanır
-
     # Pozisyon aç + Polymarket order
+    _market_skip    = []   # market bulunamadı/kapalı
+    _order_fail     = []   # PM order başarısız
+    _newly_opened   = 0
     for sig in results:
         if sig["amount"] > 0 and sig["predicted_dir"]:
-            # Konsensüs filtresi: Analiz 9 tam tersi yönü söylüyorsa işlem açma
-            a9_dir = _a9_signals.get(sig["symbol"])
-            if a9_dir and a9_dir != sig["predicted_dir"]:
-                print(f"[5. ANALİZ] {sig['symbol']} konsensüs çelişkisi: {sig['predicted_dir']} vs A9:{a9_dir} — atlandı")
-                continue
 
             pos = {
                 "symbol":           sig["symbol"],
@@ -611,11 +613,13 @@ async def run_open() -> None:
             pm = _pm_find_market(sig["symbol"], et_hour, now)
             if not pm or not pm.get("active") or pm.get("closed"):
                 print(f"[5. ANALİZ] {sig['symbol']} market bulunamadı/kapalı", file=sys.stderr)
+                _market_skip.append(sig)
                 continue
             token_id = pm["up_token"] if sig["predicted_dir"] == "UP" else pm["down_token"]
             order    = _pm_place_order(token_id, sig["amount"], pm["tick_size"], pm["neg_risk"])
             if not order:
                 print(f"[5. ANALİZ] {sig['symbol']} PM order başarısız, pozisyon açılmadı", file=sys.stderr)
+                _order_fail.append(sig)
                 continue
             pos["pm_slug"]        = pm["slug"]
             pos["pm_title"]       = pm["title"]
@@ -628,12 +632,14 @@ async def run_open() -> None:
             print(f"[5. ANALİZ] PM order: {sig['symbol']} {sig['predicted_dir']} "
                   f"{order['size']} shares @ {order['price']} (${order['spent']:.2f})")
             state["open_positions"].append(pos)
+            _newly_opened += 1
 
     save_state(state)
 
     next_h   = f"{(hour_tr + 1) % 24:02d}:00"
     sep      = "━" * 26
     mini_sep = "━" * 10
+    # Gerçekten bu turda açılan pozisyonlar (state'e eklenenler)
     opened   = [s for s in results if s["amount"] > 0 and s["predicted_dir"]]
     skipped  = [s for s in results if s["amount"] == 0]
 
@@ -685,8 +691,19 @@ async def run_open() -> None:
 
     if lines:
         parts.extend(lines)
-    else:
+    elif not any(s["amount"] > 0 for s in results):
+        # Gerçekten sinyal yok
         parts.append("⏸ <i>Bu saat yeterli sinyal yok (|skor| ≤ 1).</i>")
+    else:
+        # Sinyal vardı ama engelleyen bir sebep var
+        reasons = []
+        if _market_skip:
+            names = ", ".join(s["symbol"].replace("USDT", "") for s in _market_skip)
+            reasons.append(f"market yok: {names}")
+        if _order_fail:
+            names = ", ".join(s["symbol"].replace("USDT", "") for s in _order_fail)
+            reasons.append(f"order hatası: {names}")
+        parts.append(f"⛔ <i>Sinyal var ama işlem açılmadı — {' | '.join(reasons)}</i>")
 
     if skip_lines:
         parts.append(mini_sep)
@@ -698,12 +715,12 @@ async def run_open() -> None:
     pm_at_risk = sum(p.get("pm_spent", 0) for p in state["open_positions"])
     parts.append(f"🟢 PM Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
     parts.append(
-        f"<i>Eşik: konf≥65%→{AMOUNT_STRONG:.0f}$  ≥57%→{AMOUNT_MODERATE:.0f}$  &lt;57%→yok</i>"
+        f"<i>Eşik: konf≥57% açılır | genel&gt;%50→{TRADE_AMOUNT_HIGH:.0f}$  ~%50→{TRADE_AMOUNT_MID:.0f}$  &lt;%50→{TRADE_AMOUNT_LOW:.0f}$</i>"
     )
     parts.append(sep)
 
     tg_send("\n".join(parts))
-    print(f"[5. ANALİZ open] {saat} İST — {len(opened)} işlem açıldı, {len(skipped)} elenendi")
+    print(f"[5. ANALİZ open] {saat} İST — {_newly_opened} işlem açıldı, {len(skipped)} elenendi")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────
