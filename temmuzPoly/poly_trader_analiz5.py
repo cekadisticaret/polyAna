@@ -412,7 +412,7 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>Analiz 101 ✦ PolyAktif İşlemler (Analiz1 Kopya) — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
+        tg_send(f"⏸ <b>5. ANALİZ ✦ PolyAktif İşlemler — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[5. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
@@ -687,7 +687,7 @@ async def run_open() -> None:
         for s in skipped
     ]
 
-    parts = [sep, f"🆕 <b>Analiz 101 ✦ PolyAktif İşlemler (Analiz1 Kopya) — {saat} - {next_h}</b>"]
+    parts = [sep, f"🆕 <b>5. ANALİZ ✦ PolyAktif İşlemler — {saat} - {next_h}</b>"]
 
     if lines:
         parts.extend(lines)
