@@ -55,9 +55,9 @@ _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cum
 
 AMOUNT_STRONG   = 12.0   # konf >= %65 (sinyal eşiği, analiz1 uyumlu)
 AMOUNT_MODERATE = 8.0    # konf >= %57 (sinyal eşiği, analiz1 uyumlu)
-TRADE_AMOUNT_HIGH = 20.0  # genel başarı > %50
-TRADE_AMOUNT_MID  = 16.0  # genel başarı veri yok veya = %50
-TRADE_AMOUNT_LOW  = 12.0  # genel başarı < %50
+TRADE_AMOUNT_HIGH = 12.0  # genel başarı > %50
+TRADE_AMOUNT_MID  = 8.0   # genel başarı veri yok veya = %50
+TRADE_AMOUNT_LOW  = 6.0   # genel başarı < %50
 MIN_STAT_COUNT  = 10
 
 # ── Polymarket Config ──────────────────────────────────────────
