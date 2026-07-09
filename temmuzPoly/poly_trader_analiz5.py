@@ -104,13 +104,15 @@ def _pm_get_balance() -> float:
 
 
 def _pm_find_market(symbol: str, et_hour: int, date_utc) -> dict | None:
-    """Polymarket saatlik marketi bul. ET saatine göre slug oluşturur."""
+    """Polymarket saatlik marketi bul. ET tarih+saatine göre slug oluşturur."""
     asset = _PM_ASSET_MAP.get(symbol)
     if not asset:
         return None
-    month = date_utc.strftime("%B").lower()
-    day   = date_utc.day
-    year  = date_utc.year
+    # ET tarihi = UTC − 4 saat (UTC tarihini değil, ET tarihini kullan)
+    et_date = date_utc - timedelta(hours=4)
+    month = et_date.strftime("%B").lower()
+    day   = et_date.day
+    year  = et_date.year
     # Saat formatı: 9am, 10am, 12pm, 1pm...
     if et_hour == 0:
         h_str = "12am"
