@@ -520,6 +520,8 @@ async def run_close() -> None:
                         pm_pnl_val = round(pm_size - pm_spent, 2) if our_won else round(-pm_spent, 2)
                         pm_pnl_str  = f"  |  🎯PM: {'+'if our_won else ''}{pm_pnl_val:.2f}$"
                         pm_tur_pnl += pm_pnl_val
+                        state["balance"]   = round(state.get("balance", INITIAL_BALANCE) + pm_pnl_val + pm_spent, 2)
+                        state["total_pnl"] = round(state.get("total_pnl", 0.0) + pm_pnl_val, 2)
             except Exception as e:
                 print(f"[9. ANALİZ close] PM sonuç hatası: {e}", file=sys.stderr)
 
@@ -574,8 +576,7 @@ async def run_close() -> None:
     pm_wins    = sum(1 for t in history if t.get("pm_win") is True)
     pm_closed  = sum(1 for t in history if t.get("pm_win") is not None)
     dir_wins   = sum(1 for t in history if t["win"])
-    pm_bal     = _pm_get_balance()
-    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
+    pm_bal_str = f"${state.get('balance', INITIAL_BALANCE):.2f} (sanal)"
     genel_dir  = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"
     genel_pm   = f"%{pm_wins/pm_closed*100:.0f} ({pm_closed})" if pm_closed else "—"
     sep        = "━" * 26
@@ -669,6 +670,7 @@ async def run_open() -> None:
             print(f"[9. ANALİZ] PM order: {sig['symbol']} {sig['predicted_dir']} "
                   f"{order['size']} shares @ {order['price']} (${order['spent']:.2f})")
             state["open_positions"].append(pos)
+            state["balance"] = round(state.get("balance", INITIAL_BALANCE) - order["spent"], 2)
 
     save_state(state)
 
@@ -734,10 +736,9 @@ async def run_open() -> None:
         parts.extend(skip_lines)
         parts.append(mini_sep)
 
-    pm_bal     = _pm_get_balance()
-    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
+    pm_bal_str = f"${state.get('balance', INITIAL_BALANCE):.2f} (sanal)"
     pm_at_risk = sum(p.get("pm_spent", 0) for p in state["open_positions"])
-    parts.append(f"🟢 PM Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
+    parts.append(f"🟡 Sanal Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
     parts.append(
         f"<i>Eşik: |skor|≥3→{AMOUNT_STRONG:.0f}$  |skor|=2→{AMOUNT_MODERATE:.0f}$  ≤1→yok</i>"
     )
