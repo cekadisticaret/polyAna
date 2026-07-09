@@ -36,7 +36,7 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Config ────────────────────────────────────────────────────
-BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
+BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
