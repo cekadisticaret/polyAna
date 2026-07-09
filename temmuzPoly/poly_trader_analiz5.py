@@ -197,13 +197,37 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
         signed = client.create_order(args, PartialCreateOrderOptions())
         resp   = client.post_order(signed, order_type=OrderType.FAK)
         if not resp or not resp.get("success"):
-            print(f"[5. ANALİZ] Order başarısız: {resp}", file=sys.stderr)
+            mesaj = str(resp)
+            print(f"[5. ANALİZ] Order başarısız: {mesaj}", file=sys.stderr)
+            _log_hata(token_id[:20], "order_basarisiz", mesaj)
             return None
         oid = resp.get("orderID") or resp.get("id", "")
         return {"order_id": oid, "size": size, "price": price, "spent": spent}
     except Exception as e:
         print(f"[5. ANALİZ] Order hatası: {e}", file=sys.stderr)
+        _log_hata(token_id[:20], "order_exception", str(e))
         return None
+
+
+# ── Hata Loglama ──────────────────────────────────────────────
+_HATA_FILE = os.path.join(_DIR, "analiz1_polyhata.json")
+
+def _log_hata(symbol: str, hata_turu: str, detay: str) -> None:
+    try:
+        kayitlar = []
+        if os.path.exists(_HATA_FILE):
+            with open(_HATA_FILE) as f:
+                kayitlar = json.load(f)
+        kayitlar.append({
+            "zaman": datetime.now(timezone.utc).astimezone(_TZ_TR).isoformat(),
+            "symbol": symbol,
+            "hata_turu": hata_turu,
+            "detay": detay,
+        })
+        with open(_HATA_FILE, "w") as f:
+            json.dump(kayitlar, f, ensure_ascii=False, indent=2)
+    except Exception as ex:
+        print(f"[5. ANALİZ] Hata loglanamadı: {ex}", file=sys.stderr)
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -614,13 +638,16 @@ async def run_open() -> None:
             # Sadece gerçek Polymarket orderı varsa pozisyon aç
             pm = _pm_find_market(sig["symbol"], et_hour, now)
             if not pm or not pm.get("active") or pm.get("closed"):
-                print(f"[5. ANALİZ] {sig['symbol']} market bulunamadı/kapalı", file=sys.stderr)
+                durum = "bulunamadı" if not pm else "kapalı"
+                print(f"[5. ANALİZ] {sig['symbol']} market {durum}", file=sys.stderr)
+                _log_hata(sig["symbol"], "market_" + durum, f"et_hour={et_hour} slug aranıyor")
                 _market_skip.append(sig)
                 continue
             token_id = pm["up_token"] if sig["predicted_dir"] == "UP" else pm["down_token"]
             order    = _pm_place_order(token_id, sig["amount"], pm["tick_size"], pm["neg_risk"])
             if not order:
                 print(f"[5. ANALİZ] {sig['symbol']} PM order başarısız, pozisyon açılmadı", file=sys.stderr)
+                _log_hata(sig["symbol"], "order_basarisiz", f"dir={sig['predicted_dir']} amount={sig['amount']}")
                 _order_fail.append(sig)
                 continue
             pos["pm_slug"]        = pm["slug"]
