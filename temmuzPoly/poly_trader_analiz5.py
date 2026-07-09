@@ -710,9 +710,14 @@ async def run_open() -> None:
         parts.extend(skip_lines)
         parts.append(mini_sep)
 
+    if _newly_opened > 0:
+        time.sleep(3)  # Polymarket bakiyesinin güncellenmesi için bekle
     pm_bal     = _pm_get_balance()
-    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
     pm_at_risk = sum(p.get("pm_spent", 0) for p in state["open_positions"])
+    if pm_bal >= 0:
+        pm_bal_str = f"${pm_bal:.2f}"
+    else:
+        pm_bal_str = "?"
     parts.append(f"🟢 PM Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
     parts.append(
         f"<i>Eşik: konf≥57% açılır | genel&gt;%50→{TRADE_AMOUNT_HIGH:.0f}$  ~%50→{TRADE_AMOUNT_MID:.0f}$  &lt;%50→{TRADE_AMOUNT_LOW:.0f}$</i>"
