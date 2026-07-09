@@ -361,7 +361,7 @@ def run_close() -> None:
     sep = "━" * 26
     tg_send(
         f"{sep}\n"
-        f"🏁 <b>8. ANALİZ — {saat} Sonuçlar</b>\n"
+        f"🏁 <b>8. ANALİZ TEST SİSTEM — {saat} Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
         f"{pnl_icon} P&L bu tur: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"Genel: {_wr(wins, total)}\n"
@@ -389,13 +389,20 @@ def run_open() -> None:
             results.append(sig)
         time.sleep(0.4)
 
+    # Ters sinyal: algoritmanın dediğinin tersini al (test sistemi)
+    for r in results:
+        if r["direction"] == "UP":
+            r["direction"] = "DOWN"
+        elif r["direction"] == "DOWN":
+            r["direction"] = "UP"
+
     tradeable = [r for r in results if r["amount"] > 0 and r["direction"]]
 
     if not tradeable:
         total = len(history)
         wins  = sum(1 for t in history if t["win"])
         tg_send(
-            f"⏸ <b>8. ANALİZ — {saat} İST</b>\n"
+            f"⏸ <b>8. ANALİZ TEST SİSTEM — {saat} İST</b>\n"
             f"Güçlü sinyal yok (RSI+MR+OF konsensüs gerekli)\n"
             f"📊 Genel: {_wr(wins, total)}  |  💰 ${state['balance']:.2f}"
         )
@@ -440,7 +447,7 @@ def run_open() -> None:
 
     tg_send(
         f"{sep}\n"
-        f"🔬 <b>8. ANALİZ — {saat} İST</b>  ({day_lbl})\n"
+        f"🔬 <b>8. ANALİZ TEST SİSTEM — {saat} İST</b>  ({day_lbl})\n"
         f"<b>RSI + MR + OrderFlow</b>\n"
         + "\n".join(lines) + "\n"
         f"{sep}\n"
@@ -479,7 +486,7 @@ def run_weekly() -> None:
     now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
 
     if not history:
-        tg_send("📊 <b>8. ANALİZ HAFTALIK</b>\nHenüz veri yok.")
+        tg_send("📊 <b>8. ANALİZ TEST SİSTEM HAFTALIK</b>\nHenüz veri yok.")
         return
 
     days  = _DAYS_TR
@@ -605,7 +612,7 @@ def run_weekly() -> None:
     ind_lines = _ind_stats_lines(history)
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
     tg_send(
-        f"📊 <b>8. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
+        f"📊 <b>8. ANALİZ TEST SİSTEM HAFTALIK İSTATİSTİKLER</b>\n"
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {genel} başarı\n"
@@ -622,7 +629,7 @@ def run_stats() -> None:
     now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
 
     if not history:
-        tg_send("📊 <b>8. ANALİZ STATS</b>\nHenüz veri yok.")
+        tg_send("📊 <b>8. ANALİZ TEST SİSTEM STATS</b>\nHenüz veri yok.")
         return
 
     total     = len(history)
@@ -631,7 +638,7 @@ def run_stats() -> None:
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
 
     parts = [
-        f"📊 <b>8. ANALİZ İSTATİSTİKLER</b>",
+        f"📊 <b>8. ANALİZ TEST SİSTEM İSTATİSTİKLER</b>",
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
