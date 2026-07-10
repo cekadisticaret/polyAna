@@ -662,7 +662,9 @@ async def run_open() -> None:
             if sig.get("a9_only") and sig.get("price") is None:
                 try:
                     sig["price"] = fetch_price(sig["symbol"])
-                except Exception:
+                except Exception as _fe:
+                    print(f"[5. ANALİZ] {sig['symbol']} A9-only fiyat çekme hatası: {_fe}", file=sys.stderr)
+                    _log_hata(sig["symbol"], "a9only_fiyat_hatasi", str(_fe))
                     _order_fail.append(sig)
                     continue
 
