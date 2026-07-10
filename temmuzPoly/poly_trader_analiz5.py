@@ -442,7 +442,8 @@ async def run_close() -> None:
         print(f"[5. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
-    lines      = []
+    lines        = []
+    tur_pm_spent = 0.0   # bu tur kapatılan pozisyonların toplam girilen miktarı
     pm_tur_pnl = 0.0  # Bu turdaki PM P&L
     failed_pos = []
 
@@ -522,13 +523,23 @@ async def run_close() -> None:
             "ind_ema_ok":       _vote_ok(vs[2], actual) if len(vs) > 2 else None,
         })
 
-        icon    = "✅" if win else "❌"
-        name    = pos["symbol"].replace("USDT", "")
-        pct     = (current_price - entry) / entry * 100
+        icon     = "✅" if win else "❌"
+        name     = pos["symbol"].replace("USDT", "")
+        pct      = (current_price - entry) / entry * 100
         pm_spent = pos.get("pm_spent", 0)
+        tur_pm_spent += pm_spent
+        # A1 (kendi tahmini) ve A9 etiketleri
+        a1_icon  = "✅" if win else "❌"
+        a9_agree = pos.get("a9_agree")
+        if a9_agree is True:
+            a9_icon = "✅"
+        elif a9_agree is False:
+            a9_icon = "❌"
+        else:
+            a9_icon = "—"
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"skor:{pos.get('score', 0):+d}/3  -${pm_spent:.2f} risk{pm_pnl_str}"
+            f"skor:{pos.get('score', 0):+d}/3  -${pm_spent:.0f} risk  - A1 {a1_icon} &gt; A9 {a9_icon}"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
@@ -544,22 +555,22 @@ async def run_close() -> None:
     if not lines:
         return
 
-    closed_all = len(history)
-    pm_wins    = sum(1 for t in history if t.get("pm_win") is True)
-    pm_closed  = sum(1 for t in history if t.get("pm_win") is not None)
-    dir_wins   = sum(1 for t in history if t["win"])
-    pm_bal     = _pm_get_balance()
-    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
-    genel_dir  = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"
-    genel_pm   = f"%{pm_wins/pm_closed*100:.0f} ({pm_closed})" if pm_closed else "—"
-    sep        = "━" * 26
+    closed_all  = len(history)
+    dir_wins    = sum(1 for t in history if t["win"])
+    pm_bal      = _pm_get_balance()
+    pm_bal_str  = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
+    genel_dir   = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"
+    pnl_icon    = "🟢" if pm_tur_pnl >= 0 else "🔴"
+    # Kapanan pozisyonların giriş saatinden açılış bilgisi (entry_time_tr'deki saat:dk)
+    open_saat   = f"{int(saat[:2]):02d}:05"
+    sep         = "━" * 26
 
     tg_send(
         f"{sep}\n"
-        f"🏁 <b>5. ANALİZ (1. Analiz) — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
-        + "\n".join(lines) + "\n"
-        f"Bu tur PM: {'+'if pm_tur_pnl>=0 else ''}{pm_tur_pnl:.2f}$  |  🟢 Bütçe: {pm_bal_str}\n"
-        f"Yön doğruluğu: {genel_dir}  |  PM kazanma: {genel_pm}\n"
+        f"<b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {open_saat} - {saat}</b>\n"
+        + "\n".join(lines) + "\n\n"
+        f"{pnl_icon} Bütçe: {pm_bal_str}  ⛔ İşleme girilen miktar: ${tur_pm_spent:.0f}\n"
+        f"Yön doğruluğu: {genel_dir}\n"
         f"{sep}"
     )
     print(f"[5. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
@@ -587,14 +598,59 @@ async def run_open() -> None:
     et_now   = now - timedelta(hours=4)
     et_hour  = et_now.hour
 
-    # Geçmiş başarı oranına göre dinamik miktar (analiz1 mantığı)
+    # Analiz9 sinyallerini oku
+    _A9_SIGNALS_FILE = "/tmp/analiz9_signals.json"
+    a9_signals: dict[str, str] = {}
+    try:
+        if os.path.exists(_A9_SIGNALS_FILE):
+            with open(_A9_SIGNALS_FILE) as _f:
+                _a9 = json.load(_f)
+            # Sadece aynı saatin verisini kullan
+            if _a9.get("hour_tr") == hour_tr:
+                a9_signals = _a9.get("signals", {})
+                print(f"[5. ANALİZ] A9 sinyalleri okundu: {a9_signals}")
+            else:
+                print(f"[5. ANALİZ] A9 sinyali farklı saate ait ({_a9.get('hour_tr')} ≠ {hour_tr}), yok sayıldı")
+    except Exception as _e:
+        print(f"[5. ANALİZ] A9 sinyal okuma hatası: {_e}", file=sys.stderr)
+
+    # Geçmiş başarı oranına göre baz miktar hesapla
     for sig in results:
         if sig["amount"] > 0:
             sw, st = get_symbol_stats(history, sig["symbol"])
-            rate = sw / st if st else None
-            sig["amount"] = (TRADE_AMOUNT_HIGH if (rate is not None and rate > 0.5)
-                             else TRADE_AMOUNT_LOW if (rate is not None and rate < 0.5)
-                             else TRADE_AMOUNT_MID)
+            rate   = sw / st if st else None
+            base   = (TRADE_AMOUNT_HIGH if (rate is not None and rate > 0.5)
+                      else TRADE_AMOUNT_LOW if (rate is not None and rate < 0.5)
+                      else TRADE_AMOUNT_MID)
+            # Analiz9 ile karşılaştır
+            a9_dir = a9_signals.get(sig["symbol"])
+            if a9_dir:
+                if a9_dir == sig["predicted_dir"]:
+                    sig["amount"]   = 10.0   # İkisi aynı yön → güçlü sinyal
+                    sig["a9_agree"] = True
+                else:
+                    sig["amount"]   = 0.0    # Ters yön → işlem açma
+                    sig["a9_agree"] = False
+            else:
+                sig["amount"]   = 7.0        # A9 sessiz → sabit $7
+                sig["a9_agree"] = None
+
+    # A9'un sinyali olan ama analiz5'in signal üretemediği semboller → $6 giriş
+    a5_syms = {s["symbol"] for s in results}
+    for sym, a9_dir in a9_signals.items():
+        if sym not in a5_syms and sym in SYMBOLS:
+            results.append({
+                "symbol":        sym,
+                "predicted_dir": a9_dir,
+                "price":         None,   # run_open'da fetch edilecek
+                "amount":        7.0,
+                "score":         0,
+                "conf":          0.0,
+                "votes":         [0, 0, 0],
+                "labels":        ["A9-only", "", ""],
+                "a9_agree":      None,
+                "a9_only":       True,
+            })
 
     # Pozisyon aç + Polymarket order
     _market_skip    = []   # market bulunamadı/kapalı
@@ -602,6 +658,13 @@ async def run_open() -> None:
     _newly_opened   = 0
     for sig in results:
         if sig["amount"] > 0 and sig["predicted_dir"]:
+            # A9-only sinyaller için fiyat çek
+            if sig.get("a9_only") and sig.get("price") is None:
+                try:
+                    sig["price"] = fetch_price(sig["symbol"])
+                except Exception:
+                    _order_fail.append(sig)
+                    continue
 
             pos = {
                 "symbol":           sig["symbol"],
@@ -614,6 +677,8 @@ async def run_open() -> None:
                 "score":            sig["score"],
                 "amount":           sig["amount"],
                 "votes":            sig["votes"],
+                "a9_agree":         sig.get("a9_agree"),
+                "a9_only":          sig.get("a9_only", False),
             }
             # Sadece gerçek Polymarket orderı varsa pozisyon aç
             pm = _pm_find_market(sig["symbol"], et_hour, now)
@@ -682,29 +747,36 @@ async def run_open() -> None:
         else:
             pm_str = f"\n   🟩 PM: {matched_pos.get('pm_size',0):.1f} shares @ {matched_pos.get('pm_entry_price',0):.2f} (${matched_pos.get('pm_spent',0):.2f})"
 
-        conf_pct = int(sig.get("conf", 0) * 100)
+        # A9 ikonu
+        a9_agree = sig.get("a9_agree")
+        if a9_agree is True:
+            a9_icon = "✅"
+        elif a9_agree is False:
+            a9_icon = "❌"
+        elif sig.get("a9_only"):
+            a9_icon = "🔹"
+        else:
+            a9_icon = "—"
+
+        pm_spent_str = f"${matched_pos.get('pm_spent', 0):.0f}"
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf_pct}  giriş:{sig['price']:.2f}\n"
-            f"   {vote_icons[0]}   {vote_icons[1]}   {vote_icons[2]}\n"
-            f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hour_wins, hour_total, warn_low=low_data)}"
-            f"  |  genel: {_wr(sym_wins, sym_total)}"
-            f"{pm_str}"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  {sig['price']:.2f}  skor:{score:+d}/3  {pm_spent_str} risk"
+            f"  - A1 {dir_icon} &gt; A9 {a9_icon}"
         )
 
     skip_lines = [
-        f"⛔ {s['symbol'].replace('USDT','')}  konf:%{int(s.get('conf',0)*100)}  → işlem açılmadı"
+        f"⛔ {s['symbol'].replace('USDT','')} ({s['predicted_dir']}) → açılmadı (ters yön)"
         for s in skipped
     ]
 
-    parts = [sep, f"🆕 <b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {saat} - {next_h}</b>"]
+    parts = [sep, f"<b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {saat} - {next_h}</b>"]
 
     if lines:
         parts.extend(lines)
+        parts.append("")  # boş satır
     elif not any(s["amount"] > 0 for s in results):
-        # Gerçekten sinyal yok
-        parts.append("⏸ <i>Bu saat yeterli sinyal yok (|skor| ≤ 1).</i>")
+        parts.append("⏸ <i>Bu saat sinyal yok.</i>")
     else:
-        # Sinyal vardı ama engelleyen bir sebep var
         reasons = []
         if _market_skip:
             names = ", ".join(s["symbol"].replace("USDT", "") for s in _market_skip)
@@ -713,24 +785,29 @@ async def run_open() -> None:
             names = ", ".join(s["symbol"].replace("USDT", "") for s in _order_fail)
             reasons.append(f"order hatası: {names}")
         parts.append(f"⛔ <i>Sinyal var ama işlem açılmadı — {' | '.join(reasons)}</i>")
+        parts.append("")
 
     if skip_lines:
-        parts.append(mini_sep)
         parts.extend(skip_lines)
-        parts.append(mini_sep)
+        parts.append("")
 
     if _newly_opened > 0:
         time.sleep(3)  # Polymarket bakiyesinin güncellenmesi için bekle
-    pm_bal     = _pm_get_balance()
-    pm_at_risk = sum(p.get("pm_spent", 0) for p in state["open_positions"])
-    if pm_bal >= 0:
-        pm_bal_str = f"${pm_bal:.2f}"
-    else:
-        pm_bal_str = "?"
-    parts.append(f"🟢 PM Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
-    parts.append(
-        f"<i>konf≥65%→{AMOUNT_STRONG:.0f}$  diğer→{AMOUNT_MODERATE:.0f}$ | genel&gt;%50→{TRADE_AMOUNT_HIGH:.0f}$  ~%50→{TRADE_AMOUNT_MID:.0f}$  &lt;%50→{TRADE_AMOUNT_LOW:.0f}$</i>"
+    pm_bal        = _pm_get_balance()
+    pm_at_risk    = sum(p.get("pm_spent", 0) for p in state["open_positions"])
+    tur_spent_sum = sum(
+        p.get("pm_spent", 0) for p in state["open_positions"]
+        if p.get("entry_hour_tr") == hour_tr
     )
+    pm_bal_str    = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
+    bal_icon      = "🟢" if pm_bal > 150 else "🟡" if pm_bal > 50 else "🔴"
+
+    closed_all = len(history)
+    dir_wins   = sum(1 for t in history if t["win"])
+    genel_dir  = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"
+
+    parts.append(f"{bal_icon} Bütçe: {pm_bal_str}  ⛔ İşleme girilen miktar: ${tur_spent_sum:.0f}")
+    parts.append(f"Yön doğruluğu: {genel_dir}")
     parts.append(sep)
 
     tg_send("\n".join(parts))
