@@ -567,13 +567,14 @@ async def run_close() -> None:
     pm_bal_str  = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
     genel_dir   = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"
     pnl_icon    = "🟢" if pm_tur_pnl >= 0 else "🔴"
-    # Kapanan pozisyonların giriş saatinden açılış bilgisi (entry_time_tr'deki saat:dk)
-    open_saat   = f"{int(saat[:2]):02d}:05"
-    sep         = "━" * 26
+    # Bir önceki saatin :05'i = açılış zamanı
+    prev_hour = (int(saat[:2]) - 1) % 24
+    open_saat = f"{prev_hour:02d}:05"
+    sep       = "━" * 26
 
     tg_send(
         f"{sep}\n"
-        f"<b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {open_saat} - {saat}</b>\n"
+        f"<b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {open_saat} - {saat} Sonuçlar</b>\n"
         + "\n".join(lines) + "\n\n"
         f"{pnl_icon} Bütçe: {pm_bal_str}  ⛔ İşleme girilen miktar: ${tur_pm_spent:.0f}\n"
         f"Yön doğruluğu: {genel_dir}\n"
