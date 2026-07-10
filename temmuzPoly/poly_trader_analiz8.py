@@ -40,8 +40,9 @@ HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz8_history.json")
 WEEKLY_IMG    = "/tmp/poly_analiz8_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
-AMOUNT_STRONG   = 12.0   # |skor| == 3
-AMOUNT_MODERATE = 8.0    # |skor| == 2
+AMOUNT_HIGH     = 16.0   # |skor| == 3 (tüm algoritmalar aynı yön)
+AMOUNT_STRONG   = 12.0   # |skor| == 2
+AMOUNT_MODERATE =  8.0   # |skor| == 1
 SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 MIN_STAT_COUNT  = 3
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -271,7 +272,10 @@ def analyze(symbol: str) -> dict | None:
     v3, l3 = algo_orderflow(klines, ob)
     score  = v1 + v2 + v3
 
-    amount = AMOUNT_STRONG if abs(score) == 3 else AMOUNT_MODERATE if abs(score) == 2 else 0.0
+    amount = (AMOUNT_HIGH     if abs(score) == 3
+              else AMOUNT_STRONG   if abs(score) == 2
+              else AMOUNT_MODERATE if abs(score) == 1
+              else 0.0)
     direction = "UP" if score > 0 else "DOWN" if score < 0 else None
 
     return {
@@ -510,12 +514,15 @@ def run_weekly() -> None:
             if t.get("win"):
                 grid_sym[sn]["w"][d][h] += 1
 
-    data = np.full((7, 24), np.nan)
+    data   = np.full((7, 24), np.nan)
+    counts = np.zeros((7, 24), dtype=int)
     for d in range(7):
         for h in range(24):
             vals = rate[d][h]
-            if isinstance(vals, list) and len(vals) >= MIN_STAT_COUNT:
-                data[d][h] = sum(vals) / len(vals)
+            if isinstance(vals, list):
+                counts[d][h] = len(vals)
+                if len(vals) >= MIN_STAT_COUNT:
+                    data[d][h] = sum(vals) / len(vals)
 
     total     = len(history)
     wins_all  = sum(1 for t in history if t["win"])
@@ -534,14 +541,14 @@ def run_weekly() -> None:
     sym_line = "   |   ".join(sym_stats)
 
     cmap = mcolors.LinearSegmentedColormap.from_list(
-        "dual_wg",
+        "gy_dual",
         [
-            (0.00, "#7f2d00"),
-            (0.15, "#c65000"),
-            (0.29, "#f9a825"),
-            (0.31, "#2e7d32"),
-            (0.55, "#1b5e20"),
-            (1.00, "#00c853"),
+            (0.00, "#4a3000"),
+            (0.20, "#f9a825"),
+            (0.30, "#fff176"),
+            (0.31, "#388e3c"),
+            (0.65, "#1b5e20"),
+            (1.00, "#00e676"),
         ],
         N=256
     )
@@ -550,7 +557,7 @@ def run_weekly() -> None:
     fig.patch.set_facecolor("#0a0e1a")
     ax.set_facecolor("#0d1117")
 
-    im = ax.imshow(data, cmap=cmap, vmin=0.4, vmax=0.8, aspect="auto")
+    im = ax.imshow(data, cmap=cmap, vmin=0.35, vmax=0.85, aspect="auto")
     ax.set_xticks(range(24))
     ax.set_xticklabels([f"{h:02d}" for h in hours], fontsize=7, color="#546e7a")
     ax.set_yticks(range(7))
@@ -559,15 +566,9 @@ def run_weekly() -> None:
     for d in range(7):
         for h in range(24):
             if not np.isnan(data[d][h]):
-                pct = int(data[d][h] * 100)
-                if data[d][h] >= 0.65:
-                    clr = "white"
-                elif data[d][h] >= 0.50:
-                    clr = "#e8f5e9"
-                elif data[d][h] >= 0.40:
-                    clr = "#1a0800"
-                else:
-                    clr = "#3d1000"
+                pct  = int(data[d][h] * 100)
+                n    = counts[d][h]
+                clr  = "white" if data[d][h] >= 0.50 else "#1a1400"
                 sym_parts = []
                 for sn in sym_names:
                     sw       = grid_sym[sn]["w"][d][h]
@@ -575,7 +576,7 @@ def run_weekly() -> None:
                     if sn_total > 0:
                         sym_parts.append(f"{sn}:+{sw}-{sn_total - sw}")
                 sym_str = "\n".join(sym_parts)
-                ax.text(h, d, f"%{pct}\n{sym_str}", ha="center", va="center",
+                ax.text(h, d, f"%{pct}({n})\n{sym_str}", ha="center", va="center",
                         fontsize=5, color=clr, fontweight="bold", linespacing=1.5)
 
     for x in range(25):

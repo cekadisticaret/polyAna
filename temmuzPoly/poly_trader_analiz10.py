@@ -509,14 +509,14 @@ def run_weekly() -> None:
     ax.set_facecolor("#0a0e1a")
 
     cmap = mcolors.LinearSegmentedColormap.from_list(
-        "dual_wg",
+        "gy_dual",
         [
-            (0.00, "#7f2d00"),
-            (0.15, "#c65000"),
-            (0.29, "#f9a825"),
-            (0.31, "#2e7d32"),
-            (0.55, "#1b5e20"),
-            (1.00, "#00c853"),
+            (0.00, "#4a3000"),
+            (0.20, "#f9a825"),
+            (0.30, "#fff176"),
+            (0.31, "#388e3c"),
+            (0.65, "#1b5e20"),
+            (1.00, "#00e676"),
         ],
         N=256
     )
@@ -534,15 +534,9 @@ def run_weekly() -> None:
     for d in range(7):
         for h in range(24):
             if not np.isnan(rate[d][h]):
-                pct = int(rate[d][h] * 100)
-                if rate[d][h] >= 0.65:
-                    clr = "white"
-                elif rate[d][h] >= 0.50:
-                    clr = "#e8f5e9"
-                elif rate[d][h] >= 0.40:
-                    clr = "#1a0800"
-                else:
-                    clr = "#3d1000"
+                pct  = int(rate[d][h] * 100)
+                n    = grid_n[d][h]
+                clr  = "white" if rate[d][h] >= 0.50 else "#1a1400"
                 sym_parts = []
                 for sn in sym_names:
                     sw       = grid_sym[sn]["w"][d][h]
@@ -550,7 +544,7 @@ def run_weekly() -> None:
                     if sn_total > 0:
                         sym_parts.append(f"{sn}:+{sw}-{sn_total - sw}")
                 sym_str = "\n".join(sym_parts)
-                ax.text(h, d, f"%{pct}\n{sym_str}", ha="center", va="center",
+                ax.text(h, d, f"%{pct}({n})\n{sym_str}", ha="center", va="center",
                         fontsize=5, color=clr, fontweight="bold", linespacing=1.5)
 
     for x in range(25):

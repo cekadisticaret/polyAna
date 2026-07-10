@@ -50,8 +50,9 @@ SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 12.0   # |skor| >= 3
-AMOUNT_MODERATE = 8.0    # |skor| == 2
+AMOUNT_HIGH     = 16.0   # |skor| == 4 (tüm algoritmalar aynı yön)
+AMOUNT_STRONG   = 12.0   # |skor| == 3
+AMOUNT_MODERATE =  8.0   # |skor| == 2
 MIN_STAT_COUNT  = 10
 
 # ── Polymarket Config ──────────────────────────────────────────
@@ -425,7 +426,10 @@ def analyze(symbol: str) -> dict | None:
     v4, l4 = algo_funding(funding)
     score   = v1 + v2 + v3 + v4
 
-    amount = AMOUNT_STRONG if abs(score) >= 3 else AMOUNT_MODERATE if abs(score) == 2 else 0.0
+    amount = (AMOUNT_HIGH     if abs(score) == 4
+              else AMOUNT_STRONG   if abs(score) == 3
+              else AMOUNT_MODERATE if abs(score) == 2
+              else 0.0)
 
     return {
         "symbol":        symbol,
@@ -804,7 +808,16 @@ def run_weekly() -> None:
     ax.set_facecolor("#0a0e1a")
 
     cmap = mcolors.LinearSegmentedColormap.from_list(
-        "poly_green", ["#1a2a1a", "#1b5e20", "#00c853"], N=256
+        "gy_dual",
+        [
+            (0.00, "#4a3000"),
+            (0.20, "#f9a825"),
+            (0.30, "#fff176"),
+            (0.31, "#388e3c"),
+            (0.65, "#1b5e20"),
+            (1.00, "#00e676"),
+        ],
+        N=256
     )
     cmap.set_bad(color="#141820")
     im = ax.imshow(np.ma.masked_invalid(rate), cmap=cmap, vmin=0.35, vmax=0.85, aspect="auto")
@@ -818,15 +831,9 @@ def run_weekly() -> None:
     for d in range(7):
         for h in range(24):
             if not np.isnan(rate[d][h]):
-                pct = int(rate[d][h] * 100)
-                if rate[d][h] >= 0.65:
-                    clr = "white"
-                elif rate[d][h] >= 0.50:
-                    clr = "#e8f5e9"
-                elif rate[d][h] >= 0.40:
-                    clr = "#1a0800"
-                else:
-                    clr = "#3d1000"
+                pct  = int(rate[d][h] * 100)
+                n    = grid_n[d][h]
+                clr  = "white" if rate[d][h] >= 0.50 else "#1a1400"
                 sym_parts = []
                 for sn in sym_names:
                     sw = grid_sym[sn]["w"][d][h]
@@ -834,8 +841,8 @@ def run_weekly() -> None:
                     if sn_total > 0:
                         sym_parts.append(f"{sn}:+{sw}-{sn_total - sw}")
                 sym_str = "\n".join(sym_parts)
-                ax.text(h, d, f"%{pct}\n{sym_str}", ha="center", va="center",
-                        fontsize=5, color="black", fontweight="bold", linespacing=1.5)
+                ax.text(h, d, f"%{pct}({n})\n{sym_str}", ha="center", va="center",
+                        fontsize=5, color=clr, fontweight="bold", linespacing=1.5)
 
     for x in range(25): ax.axvline(x - 0.5, color="#0a0e1a", linewidth=0.5)
     for y in range(8):  ax.axhline(y - 0.5, color="#0a0e1a", linewidth=0.5)

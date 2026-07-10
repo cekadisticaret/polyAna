@@ -53,11 +53,11 @@ SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 12.0   # konf >= %65 (sinyal eşiği, analiz1 uyumlu)
+AMOUNT_STRONG   = 9.0    # konf >= %65 (sinyal eşiği, analiz1 uyumlu)
 AMOUNT_MODERATE = 8.0    # konf >= %57 (sinyal eşiği, analiz1 uyumlu)
-TRADE_AMOUNT_HIGH = 12.0  # genel başarı > %50
+TRADE_AMOUNT_HIGH = 9.0   # genel başarı > %50
 TRADE_AMOUNT_MID  = 8.0   # genel başarı veri yok veya = %50
-TRADE_AMOUNT_LOW  = 6.0   # genel başarı < %50
+TRADE_AMOUNT_LOW  = 7.0   # genel başarı < %50
 MIN_STAT_COUNT  = 10
 
 # ── Polymarket Config ──────────────────────────────────────────
@@ -390,7 +390,7 @@ async def analyze(symbol: str) -> dict | None:
         return None
 
     conf    = max(pred_obj.prob_up, pred_obj.prob_down)
-    amount  = AMOUNT_STRONG if conf >= 0.65 else AMOUNT_MODERATE if conf >= 0.57 else 0.0
+    amount  = AMOUNT_STRONG if conf >= 0.65 else AMOUNT_MODERATE  # eşik yok, her sinyal açılır
 
     ind_ema_raw = pred_obj.trend.upper()
     rsi_vote  = +1 if pred_obj.rsi < 50 else -1
@@ -587,20 +587,6 @@ async def run_open() -> None:
     et_now   = now - timedelta(hours=4)
     et_hour  = et_now.hour
 
-    # Sembol başarı sıralamasına göre lot çarpanı hesapla
-    # Sıra 1 → ×1.0, Sıra 2 → ×0.8, Sıra 3 → ×0.6
-    _sym_rank_mult: dict[str, float] = {}
-    _RANK_MULTS = [1.0, 0.8, 0.6]
-    sym_rates = []
-    for sym in SYMBOLS:
-        sym_hist = [t for t in history if t["symbol"] == sym and t.get("win") is not None]
-        wins = sum(1 for t in sym_hist if t["win"])
-        rate = wins / len(sym_hist) if sym_hist else 0.5
-        sym_rates.append((sym, rate))
-    sym_rates.sort(key=lambda x: x[1], reverse=True)  # yüksekten düşüğe sırala
-    for rank, (sym, rate) in enumerate(sym_rates):
-        _sym_rank_mult[sym] = _RANK_MULTS[rank] if rank < len(_RANK_MULTS) else 0.6
-
     # Geçmiş başarı oranına göre dinamik miktar (analiz1 mantığı)
     for sig in results:
         if sig["amount"] > 0:
@@ -609,12 +595,6 @@ async def run_open() -> None:
             sig["amount"] = (TRADE_AMOUNT_HIGH if (rate is not None and rate > 0.5)
                              else TRADE_AMOUNT_LOW if (rate is not None and rate < 0.5)
                              else TRADE_AMOUNT_MID)
-
-    # Sembol sıralaması lot çarpanını uygula (amount 0 ise dokunma)
-    for sig in results:
-        if sig["amount"] > 0:
-            mult = _sym_rank_mult.get(sig["symbol"], 1.0)
-            sig["amount"] = round(sig["amount"] * mult, 1)
 
     # Pozisyon aç + Polymarket order
     _market_skip    = []   # market bulunamadı/kapalı
@@ -749,7 +729,7 @@ async def run_open() -> None:
         pm_bal_str = "?"
     parts.append(f"🟢 PM Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
     parts.append(
-        f"<i>Eşik: konf≥57% açılır | genel&gt;%50→{TRADE_AMOUNT_HIGH:.0f}$  ~%50→{TRADE_AMOUNT_MID:.0f}$  &lt;%50→{TRADE_AMOUNT_LOW:.0f}$</i>"
+        f"<i>konf≥65%→{AMOUNT_STRONG:.0f}$  diğer→{AMOUNT_MODERATE:.0f}$ | genel&gt;%50→{TRADE_AMOUNT_HIGH:.0f}$  ~%50→{TRADE_AMOUNT_MID:.0f}$  &lt;%50→{TRADE_AMOUNT_LOW:.0f}$</i>"
     )
     parts.append(sep)
 
@@ -803,7 +783,16 @@ def run_weekly() -> None:
     ax.set_facecolor("#0a0e1a")
 
     cmap = mcolors.LinearSegmentedColormap.from_list(
-        "green", ["#001a00", "#1b5e20", "#00e676"], N=256
+        "gy_dual",
+        [
+            (0.00, "#4a3000"),
+            (0.20, "#f9a825"),
+            (0.30, "#fff176"),
+            (0.31, "#388e3c"),
+            (0.65, "#1b5e20"),
+            (1.00, "#00e676"),
+        ],
+        N=256
     )
     cmap.set_bad(color="#141820")
     im = ax.imshow(np.ma.masked_invalid(rate), cmap=cmap, vmin=0.35, vmax=0.85, aspect="auto")
@@ -817,15 +806,9 @@ def run_weekly() -> None:
     for d in range(7):
         for h in range(24):
             if not np.isnan(rate[d][h]):
-                pct = int(rate[d][h] * 100)
-                if rate[d][h] >= 0.65:
-                    clr = "white"
-                elif rate[d][h] >= 0.50:
-                    clr = "#e8f5e9"
-                elif rate[d][h] >= 0.40:
-                    clr = "#1a0800"
-                else:
-                    clr = "#3d1000"
+                pct  = int(rate[d][h] * 100)
+                n    = grid_n[d][h]
+                clr  = "white" if rate[d][h] >= 0.50 else "#1a1400"
                 sym_parts = []
                 for sn in sym_names:
                     sw = grid_sym[sn]["w"][d][h]
@@ -833,8 +816,8 @@ def run_weekly() -> None:
                     if sn_total > 0:
                         sym_parts.append(f"{sn}:+{sw}-{sn_total - sw}")
                 sym_str = "\n".join(sym_parts)
-                ax.text(h, d, f"%{pct}\n{sym_str}", ha="center", va="center",
-                        fontsize=5, color="black", fontweight="bold", linespacing=1.5)
+                ax.text(h, d, f"%{pct}({n})\n{sym_str}", ha="center", va="center",
+                        fontsize=5, color=clr, fontweight="bold", linespacing=1.5)
 
     for x in range(25): ax.axvline(x - 0.5, color="#0a0e1a", linewidth=0.5)
     for y in range(8):  ax.axhline(y - 0.5, color="#0a0e1a", linewidth=0.5)
