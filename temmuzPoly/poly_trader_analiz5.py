@@ -528,13 +528,15 @@ async def run_close() -> None:
         pct      = (current_price - entry) / entry * 100
         pm_spent = pos.get("pm_spent", 0)
         tur_pm_spent += pm_spent
-        # A1 (kendi tahmini) ve A9 etiketleri
+        # A1 (kendi tahmini) ve A9 etiketleri — ikisi de sonuca göre
         a1_icon  = "✅" if win else "❌"
         a9_agree = pos.get("a9_agree")
         if a9_agree is True:
-            a9_icon = "✅"
+            # A9 aynı yönü seçti → A1 ile aynı sonuç
+            a9_icon = "✅" if win else "❌"
         elif a9_agree is False:
-            a9_icon = "❌"
+            # A9 ters yönü seçti → A1'in tersi sonuç
+            a9_icon = "❌" if win else "✅"
         else:
             a9_icon = "—"
         lines.append(
