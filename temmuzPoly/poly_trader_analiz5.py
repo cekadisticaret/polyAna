@@ -528,20 +528,18 @@ async def run_close() -> None:
         pct      = (current_price - entry) / entry * 100
         pm_spent = pos.get("pm_spent", 0)
         tur_pm_spent += pm_spent
-        # A1 (kendi tahmini) ve A9 etiketleri — ikisi de sonuca göre
-        a1_icon  = "✅" if win else "❌"
+        # A1 ve A9 — girişteki yön (sonuç değil)
+        a1_dir   = "↑" if pred == "UP" else "↓"
         a9_agree = pos.get("a9_agree")
         if a9_agree is True:
-            # A9 aynı yönü seçti → A1 ile aynı sonuç
-            a9_icon = "✅" if win else "❌"
+            a9_dir = a1_dir          # A9 aynı yönü seçti
         elif a9_agree is False:
-            # A9 ters yönü seçti → A1'in tersi sonuç
-            a9_icon = "❌" if win else "✅"
+            a9_dir = "↑" if pred == "DOWN" else "↓"  # A9 ters yön
         else:
-            a9_icon = "—"
+            a9_dir = "—"             # A9 sessizdi
         lines.append(
-            f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"skor:{pos.get('score', 0):+d}/3  -${pm_spent:.0f} risk  A9 {a9_icon}"
+            f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
+            f"skor:{pos.get('score', 0):+d}/3  -${pm_spent:.0f}  A1{a1_dir} A9{a9_dir}"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
