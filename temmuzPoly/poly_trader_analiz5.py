@@ -349,6 +349,12 @@ def fetch_funding_rate(symbol: str) -> float:
     return float(data.get("lastFundingRate", 0))
 
 
+def fetch_price(symbol: str) -> float:
+    """Anlık fiyatı Binance'tan çeker (A9-only sinyaller için)."""
+    data = _binance_get("/fapi/v1/ticker/price", {"symbol": symbol})
+    return float(data["price"])
+
+
 # ── Teknik hesaplamalar ───────────────────────────────────────
 def _ema(values: list[float], period: int) -> list[float]:
     k    = 2 / (period + 1)
