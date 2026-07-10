@@ -1,0 +1,36 @@
+{
+  "balance": 300.0,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 63980.7,
+      "entry_time_tr": "2026-07-10T18:09:01.982770+03:00",
+      "entry_hour_tr": 18,
+      "entry_dow": 4,
+      "amount": 20.0,
+      "count": 2,
+      "systems": [
+        "A4",
+        "A9"
+      ],
+      "price_src": "kaynak-ort"
+    },
+    {
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 1786.545,
+      "entry_time_tr": "2026-07-10T18:09:01.982770+03:00",
+      "entry_hour_tr": 18,
+      "entry_dow": 4,
+      "amount": 20.0,
+      "count": 2,
+      "systems": [
+        "A4",
+        "A9"
+      ],
+      "price_src": "kaynak-ort"
+    }
+  ],
+  "total_pnl": -100.0
+}

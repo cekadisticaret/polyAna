@@ -617,6 +617,20 @@ async def run_open() -> None:
             results.append(sig)
         time.sleep(0.4)
 
+    # Sinyalleri analiz5 için JSON'a kaydet
+    _signals_file = "/tmp/analiz9_signals.json"
+    try:
+        signal_data = {
+            "hour_tr":   hour_tr,
+            "timestamp": now_tr.isoformat(),
+            "signals":   {s["symbol"]: s["predicted_dir"] for s in results if s.get("predicted_dir") and s.get("amount", 0) > 0},
+        }
+        with open(_signals_file, "w") as _f:
+            json.dump(signal_data, _f, ensure_ascii=False)
+        print(f"[9. ANALİZ] Sinyaller kaydedildi → {_signals_file}")
+    except Exception as _e:
+        print(f"[9. ANALİZ] Sinyal yazma hatası: {_e}", file=sys.stderr)
+
     # Sembol başarı sıralamasına göre lot çarpanı hesapla
     # Sıra 1 → ×1.0, Sıra 2 → ×0.8, Sıra 3 → ×0.6
     _sym_rank_mult: dict[str, float] = {}
