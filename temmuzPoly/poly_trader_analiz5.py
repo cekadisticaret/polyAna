@@ -574,7 +574,7 @@ async def run_close() -> None:
 
     tg_send(
         f"{sep}\n"
-        f"<b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {open_saat} - {saat} Sonuçlar</b>\n"
+        f"🏁 <b>5. ANALİZ — {saat} Sonuçlar</b>\n"
         + "\n".join(lines) + "\n\n"
         f"{pnl_icon} Bütçe: {pm_bal_str}  ⛔ İşleme girilen miktar: ${tur_pm_spent:.0f}\n"
         f"Yön doğruluğu: {genel_dir}\n"
