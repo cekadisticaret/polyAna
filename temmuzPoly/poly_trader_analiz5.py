@@ -541,7 +541,7 @@ async def run_close() -> None:
             a9_icon = "—"
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"skor:{pos.get('score', 0):+d}/3  -${pm_spent:.0f} risk  - A1 {a1_icon} &gt; A9 {a9_icon}"
+            f"skor:{pos.get('score', 0):+d}/3  -${pm_spent:.0f} risk  A9 {a9_icon}"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
@@ -763,7 +763,7 @@ async def run_open() -> None:
         pm_spent_str = f"${matched_pos.get('pm_spent', 0):.0f}"
         lines.append(
             f"{dir_icon} <b>{name}</b>  {dir_tr}  {sig['price']:.2f}  skor:{score:+d}/3  {pm_spent_str} risk"
-            f"  - A1 {dir_icon} &gt; A9 {a9_icon}"
+            f"  A9 {a9_icon}"
         )
 
     skip_lines = [
