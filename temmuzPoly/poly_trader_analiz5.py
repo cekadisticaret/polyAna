@@ -449,7 +449,8 @@ async def run_close() -> None:
         return
 
     lines        = []
-    tur_pm_spent = 0.0   # bu tur kapatılan pozisyonların toplam girilen miktarı
+    tur_pm_spent = 0.0   # bu tur toplam girilen miktar
+    tur_pnl      = 0.0   # bu tur yön bazlı P&L tahmini
     pm_tur_pnl = 0.0  # Bu turdaki PM P&L
     failed_pos = []
 
@@ -534,18 +535,19 @@ async def run_close() -> None:
         pct      = (current_price - entry) / entry * 100
         pm_spent = pos.get("pm_spent", 0)
         tur_pm_spent += pm_spent
+        tur_pnl  += pm_spent if win else -pm_spent
         # A1 ve A9 — girişteki yön (sonuç değil)
         a1_dir   = "↑" if pred == "UP" else "↓"
         a9_agree = pos.get("a9_agree")
         if a9_agree is True:
-            a9_dir = a1_dir          # A9 aynı yönü seçti
+            a9_dir = a1_dir
         elif a9_agree is False:
-            a9_dir = "↑" if pred == "DOWN" else "↓"  # A9 ters yön
+            a9_dir = "↑" if pred == "DOWN" else "↓"
         else:
-            a9_dir = "—"             # A9 sessizdi
+            a9_dir = "—"
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
-            f"skor:{pos.get('score', 0):+d}/3  -${pm_spent:.0f}  A1{a1_dir} A9{a9_dir}"
+            f"-{pm_spent:.0f}$  skor:{pos.get('score', 0):+d}/3  A1{a1_dir} A9{a9_dir}"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
@@ -561,23 +563,26 @@ async def run_close() -> None:
     if not lines:
         return
 
-    closed_all  = len(history)
-    dir_wins    = sum(1 for t in history if t["win"])
-    pm_bal      = _pm_get_balance()
-    pm_bal_str  = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
-    genel_dir   = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"
-    pnl_icon    = "🟢" if pm_tur_pnl >= 0 else "🔴"
-    # Bir önceki saatin :05'i = açılış zamanı
-    prev_hour = (int(saat[:2]) - 1) % 24
-    open_saat = f"{prev_hour:02d}:05"
-    sep       = "━" * 26
+    # total_pnl güncelle
+    state["total_pnl"] = state.get("total_pnl", 0.0) + tur_pnl
+    save_state(state)
+
+    closed_all   = len(history)
+    dir_wins     = sum(1 for t in history if t["win"])
+    pm_bal       = _pm_get_balance()
+    pm_bal_str   = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
+    genel_str    = f"%{dir_wins/closed_all*100:.0f} ({closed_all} işlem)" if closed_all else "—"
+    total_pnl    = state["total_pnl"]
+    pnl_icon     = "🟢" if total_pnl >= 0 else "🔴"
+    tur_pnl_str  = f"{'+'if tur_pnl >= 0 else ''}{tur_pnl:.0f}$"
+    sep          = "━" * 26
 
     tg_send(
         f"{sep}\n"
         f"🏁 <b>5. ANALİZ — {saat} Sonuçlar</b>\n"
-        + "\n".join(lines) + "\n\n"
-        f"{pnl_icon} Bütçe: {pm_bal_str}  ⛔ İşleme girilen miktar: ${tur_pm_spent:.0f}\n"
-        f"Yön doğruluğu: {genel_dir}\n"
+        + "\n".join(lines) + "\n"
+        f"Bu tur: {tur_pnl_str}  |  Bakiye: {pm_bal_str}\n"
+        f"{pnl_icon} Toplam P&L: {'+'if total_pnl >= 0 else ''}{total_pnl:.2f}$  |  Genel: {genel_str}\n"
         f"{sep}"
     )
     print(f"[5. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
