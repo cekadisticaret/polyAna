@@ -268,15 +268,20 @@ def run_close():
         return
 
     lines = []
-    tur_pnl = 0.0
+    tur_pnl      = 0.0
+    tur_bal_back = 0.0   # close'da balance'a geri eklenecek toplam
     for pos in state["open_positions"]:
         pred       = pos["predicted_dir"]
         entry      = pos["entry_price"]
         pm_spent   = pos["amount"]
         actual     = "UP" if current_price >= entry else "DOWN"
         win        = (actual == pred)
+        # pnl: net kazanç/kayıp (history için ±pm_spent)
+        # balance: open'da stake düşüldü, close'da stake + kazanç geri eklenir
         pnl        = pm_spent if win else -pm_spent
-        tur_pnl   += pnl
+        balance_delta = (pm_spent * 2) if win else 0.0   # stake iade + kazanç | stake zaten gitti
+        tur_pnl      += pnl
+        tur_bal_back += balance_delta
 
         icon = "✅" if win else "❌"
         pct  = (current_price - entry) / entry * 100
@@ -303,8 +308,8 @@ def run_close():
         })
 
     state["open_positions"] = []
-    state["balance"]   += tur_pnl
-    state["total_pnl"]  = state.get("total_pnl", 0.0) + tur_pnl
+    state["balance"]   = round(state["balance"] + tur_bal_back, 2)
+    state["total_pnl"]  = round(state.get("total_pnl", 0.0) + tur_pnl, 2)
     save_state(state)
     save_history(history)
 
