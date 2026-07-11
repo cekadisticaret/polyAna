@@ -638,13 +638,13 @@ async def run_open() -> None:
             a9_dir = a9_signals.get(sig["symbol"])
             if a9_dir:
                 if a9_dir == sig["predicted_dir"]:
-                    sig["amount"]   = 10.0   # İkisi aynı yön → güçlü sinyal
+                    sig["amount"]   = 15.0   # İkisi aynı yön → güçlü sinyal
                     sig["a9_agree"] = True
                 else:
                     sig["amount"]   = 0.0    # Ters yön → işlem açma
                     sig["a9_agree"] = False
             else:
-                sig["amount"]   = 7.0        # A9 sessiz → sabit $7
+                sig["amount"]   = 8.0        # A9 sessiz → sabit $8
                 sig["a9_agree"] = None
 
     # A9'un sinyali olan ama analiz5'in signal üretemediği semboller → $6 giriş
@@ -655,7 +655,7 @@ async def run_open() -> None:
                 "symbol":        sym,
                 "predicted_dir": a9_dir,
                 "price":         None,   # run_open'da fetch edilecek
-                "amount":        7.0,
+                "amount":        6.0,
                 "score":         0,
                 "conf":          0.0,
                 "votes":         [0, 0, 0],
