@@ -730,7 +730,8 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
         <span class="cb-title">Genel Konsensüs</span>
         <span class="cb-time" id="cb-updated">Yükleniyor…</span>
       </div>
-      <div id="cb-period" style="font-size:11px;color:#555;margin-bottom:8px;"></div>
+      <div id="cb-period" style="font-size:11px;color:#555;margin-bottom:4px;"></div>
+      <div id="cb-total" style="font-size:11px;color:#888;margin-bottom:8px;"></div>
       <div class="cb-rows" id="cb-rows">
         <div class="sig-loading" style="height:32px;border-radius:8px;"></div>
       </div>
@@ -1204,6 +1205,15 @@ async function loadAccuracy(){
     updateCardAccBadges(d);
     sortCardsByAccuracy(d);
     renderTopSymAlgos(d);
+    // Toplam işlem sayısı (en yüksek totalli algo baz alınır)
+    const totEl = document.getElementById("cb-total");
+    if(totEl){
+      const maxTotal = Math.max(...Object.values(d).map(x => x.total || 0));
+      if(maxTotal > 0){
+        const hours = Math.round(maxTotal / 3);
+        totEl.textContent = `📊 ${maxTotal} ölçüm · ${hours} saatlik veri`;
+      }
+    }
   }catch(e){ console.error(e); }
 }
 
