@@ -60,6 +60,24 @@ TRADE_AMOUNT_MID  = 8.0   # genel başarı veri yok veya = %50
 TRADE_AMOUNT_LOW  = 7.0   # genel başarı < %50
 MIN_STAT_COUNT  = 10
 
+_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "analiz5_settings.json")
+
+def _load_settings() -> dict:
+    """Anlık ayarları dosyadan okur. Dosya yoksa varsayılanları döner."""
+    defaults = {
+        "amount_agree":    15.0,
+        "amount_a5_only":   8.0,
+        "amount_a9_only":   6.0,
+        "eth_multiplier":   0.7,
+    }
+    try:
+        with open(_SETTINGS_FILE) as f:
+            data = json.load(f)
+        defaults.update({k: v for k, v in data.items() if k in defaults})
+    except Exception:
+        pass
+    return defaults
+
 # ── Polymarket Config ──────────────────────────────────────────
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
@@ -538,9 +556,14 @@ async def run_close() -> None:
             "score":            pos.get("score", 0),
             "amount":           amount,
             "pm_spent":         pos.get("pm_spent"),
+            "pm_size":          pos.get("pm_size"),
+            "pm_entry_price":   pos.get("pm_entry_price"),
             "pm_order_id":      pos.get("pm_order_id"),
             "exit_time_tr":     now_tr.isoformat(),
-            "pnl":              pos.get("pm_spent", 0) * (-1 if not win else 1),
+            "pnl":              round(
+                                    (pos.get("pm_size") or pos.get("pm_spent", 0)) - pos.get("pm_spent", 0)
+                                    if win else -pos.get("pm_spent", 0),
+                                    2),
             "ind_rsi_ok":       _vote_ok(vs[0], actual) if len(vs) > 0 else None,
             "ind_macd_ok":      _vote_ok(vs[1], actual) if len(vs) > 1 else None,
             "ind_ema_ok":       _vote_ok(vs[2], actual) if len(vs) > 2 else None,
@@ -642,6 +665,9 @@ async def run_open() -> None:
     except Exception as _e:
         print(f"[5. ANALİZ] A9 sinyal okuma hatası: {_e}", file=sys.stderr)
 
+    # Ayarları oku (her çalışmada güncel değeri al)
+    _cfg = _load_settings()
+
     # Geçmiş başarı oranına göre baz miktar hesapla
     for sig in results:
         if sig["amount"] > 0:
@@ -655,8 +681,8 @@ async def run_open() -> None:
             is_eth = sig["symbol"] == "ETHUSDT"
             if a9_dir:
                 if a9_dir == sig["predicted_dir"]:
-                    raw             = 15.0   # İkisi aynı yön → güçlü sinyal
-                    sig["amount"]   = round(raw * 0.7, 2) if is_eth else raw
+                    raw             = _cfg["amount_agree"]
+                    sig["amount"]   = round(raw * _cfg["eth_multiplier"], 2) if is_eth else raw
                     sig["a9_agree"] = True
                 else:
                     sig["amount"]   = 0.0    # Ters yön → işlem açma
@@ -667,10 +693,10 @@ async def run_open() -> None:
                     sig["amount"]   = 0.0
                     sig["a9_agree"] = None
                 else:
-                    sig["amount"]   = 8.0    # A9 sessiz → sabit $8
+                    sig["amount"]   = _cfg["amount_a5_only"]
                     sig["a9_agree"] = None
 
-    # A9'un sinyali olan ama analiz5'in signal üretemediği semboller → $6 giriş
+    # A9'un sinyali olan ama analiz5'in signal üretemediği semboller → A9-only giriş
     # ETH için A9-only da atlanır (ETH sadece A9+A5 hemfikirse girilir)
     a5_syms = {s["symbol"] for s in results}
     for sym, a9_dir in a9_signals.items():
@@ -681,7 +707,7 @@ async def run_open() -> None:
                 "symbol":        sym,
                 "predicted_dir": a9_dir,
                 "price":         None,   # run_open'da fetch edilecek
-                "amount":        6.0,
+                "amount":        _cfg["amount_a9_only"],
                 "score":         0,
                 "conf":          0.0,
                 "votes":         [0, 0, 0],
@@ -802,10 +828,13 @@ async def run_open() -> None:
         else:
             a9_icon = "—"
 
-        pm_spent_str = f"${matched_pos.get('pm_spent', 0):.0f}"
+        pm_spent_str = f"${matched_pos.get('pm_spent', 0):.2f}"
+        pm_size      = matched_pos.get('pm_size', 0) or 0
+        pm_spent_val = matched_pos.get('pm_spent', 0) or 0
+        to_win_str   = f"→ kazanılacak ${pm_size:.2f}" if pm_size > 0 else ""
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  {sig['price']:.2f}  skor:{score:+d}/3  {pm_spent_str} risk"
-            f"  A9 {a9_icon}"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  {sig['price']:.2f}  skor:{score:+d}/3  "
+            f"{pm_spent_str} risk  {to_win_str}  A9 {a9_icon}"
         )
 
     skip_lines = [
@@ -839,8 +868,13 @@ async def run_open() -> None:
         time.sleep(3)  # Polymarket bakiyesinin güncellenmesi için bekle
     pm_bal        = _pm_get_balance()
     pm_at_risk    = sum(p.get("pm_spent", 0) for p in state["open_positions"])
+    pm_to_win     = sum(p.get("pm_size", 0) or 0 for p in state["open_positions"])
     tur_spent_sum = sum(
         p.get("pm_spent", 0) for p in state["open_positions"]
+        if p.get("entry_hour_tr") == hour_tr
+    )
+    tur_to_win    = sum(
+        p.get("pm_size", 0) or 0 for p in state["open_positions"]
         if p.get("entry_hour_tr") == hour_tr
     )
     pm_bal_str    = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
@@ -850,7 +884,8 @@ async def run_open() -> None:
     dir_wins   = sum(1 for t in history if t["win"])
     genel_dir  = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"
 
-    parts.append(f"{bal_icon} Bütçe: {pm_bal_str}  ⛔ İşleme girilen miktar: ${tur_spent_sum:.0f}")
+    win_str = f"  →  kazanılacak: ${tur_to_win:.2f}" if tur_to_win > 0 else ""
+    parts.append(f"{bal_icon} Bütçe: {pm_bal_str}  ⛔ Risk: ${tur_spent_sum:.2f}{win_str}")
     parts.append(f"Yön doğruluğu: {genel_dir}")
     parts.append(sep)
 

@@ -1,0 +1,12 @@
+{
+  "amount_agree":      15.0,
+  "amount_a5_only":     8.0,
+  "amount_a9_only":     6.0,
+  "eth_multiplier":     0.7,
+  "notes": {
+    "amount_agree":   "A9 + A5 aynı yön (USD)",
+    "amount_a5_only": "A9 sessiz, A5 var (USD)",
+    "amount_a9_only": "A9 var, A5 sessiz (USD)",
+    "eth_multiplier": "ETH işlemlerine uygulanan çarpan"
+  }
+}
