@@ -4,11 +4,14 @@ algo_signals.py — 24 algoritma için BTC/ETH/SOL saatlik sinyal üretici
 (21 teknik + Analiz-1/9/10 sistemleri)
 Her :05'te cron ile çalışır, /tmp/algo_signals.json'a kaydeder
 """
-import json, requests, datetime, math
+import json, requests, datetime, math, os
 
-SYMBOLS   = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}
-FUTURES   = "https://fapi.binance.com"
-OUT_FILE  = "/tmp/algo_signals.json"
+SYMBOLS       = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}
+FUTURES       = "https://fapi.binance.com"
+OUT_FILE      = "/tmp/algo_signals.json"
+PREV_FILE     = "/tmp/algo_signals_prev.json"
+_DIR          = os.path.dirname(os.path.abspath(__file__))
+ACCURACY_FILE = os.path.join(_DIR, "algo_accuracy.json")
 
 # ── Binance veri çekimi ───────────────────────────────────────────────
 
@@ -563,6 +566,60 @@ def run():
         up   = sum(1 for v in active if v[sym] == "UP")
         down = sum(1 for v in active if v[sym] == "DOWN")
         consensus[sym] = {"UP": up, "DOWN": down, "NEUTRAL": len(active)-up-down, "total": len(active)}
+
+    # ── Önceki saatin doğruluk kontrolü ──────────────────────────────────
+    # klines[-2] = yeni biten saatin kapanışı (bu saatin price to beat)
+    # klines[-3] = bir önceki saatin kapanışı (geçen sinyalin entry_price)
+    try:
+        prev_data = json.load(open(PREV_FILE)) if os.path.exists(PREV_FILE) else None
+        if prev_data and prev_data.get("signals"):
+            acc = {}
+            if os.path.exists(ACCURACY_FILE):
+                with open(ACCURACY_FILE) as f:
+                    acc = json.load(f)
+
+            updated_any = False
+            for sym, pair in SYMBOLS.items():
+                kl = kl_1h.get(sym, [])
+                if len(kl) < 3:
+                    continue
+                prev_close = kl[-3]["c"]  # geçen saatten bir önceki kapanış
+                curr_close = kl[-2]["c"]  # geçen saatin kapanışı (gerçek sonuç)
+                if curr_close == prev_close:
+                    continue
+                actual = "UP" if curr_close > prev_close else "DOWN"
+
+                for algo_num, sigs in prev_data["signals"].items():
+                    algo_sig = sigs.get(sym)
+                    if algo_sig not in ("UP", "DOWN"):
+                        continue
+                    correct = 1 if algo_sig == actual else 0
+                    if algo_num not in acc:
+                        acc[algo_num] = {"name": sigs.get("name", ""), "total": 0, "correct": 0, "by_sym": {}}
+                    if not acc[algo_num].get("name") and sigs.get("name"):
+                        acc[algo_num]["name"] = sigs["name"]
+                    acc[algo_num]["total"]   += 1
+                    acc[algo_num]["correct"] += correct
+                    by_sym = acc[algo_num].setdefault("by_sym", {})
+                    if sym not in by_sym:
+                        by_sym[sym] = {"total": 0, "correct": 0}
+                    by_sym[sym]["total"]   += 1
+                    by_sym[sym]["correct"] += correct
+                    updated_any = True
+
+            if updated_any:
+                with open(ACCURACY_FILE, "w") as f:
+                    json.dump(acc, f, indent=2, ensure_ascii=False)
+                print(f"[{now.strftime('%H:%M')}] algo_accuracy.json güncellendi")
+    except Exception as e:
+        print(f"[{now.strftime('%H:%M')}] accuracy güncelleme hatası: {e}")
+
+    # Mevcut sinyalleri önce prev'e yaz, sonra out'a
+    try:
+        with open(PREV_FILE, "w") as f:
+            json.dump({"signals": signals}, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
 
     # Mevcut periyot: bu saatin :05'i → bir sonraki saatin :00'ı
     period_start = now.replace(minute=5, second=0, microsecond=0)
