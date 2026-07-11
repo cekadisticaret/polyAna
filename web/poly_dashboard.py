@@ -398,9 +398,12 @@ def api_symbol_stats():
 def api_stats():
     if _auth_required(): return redirect("/poly/login")
     analyses = {
-        "analiz1": "1. Analiz", "analiz2": "2. Analiz",
-        "analiz4": "4. Analiz", "analiz5": "5. Analiz",
+        "analiz1":  "1. Analiz",
+        "analiz2":  "2. Analiz",
+        "analiz4":  "4. Analiz",
+        "analiz5":  "5. Analiz",
         "analiz10": "10. Analiz",
+        "karisim1": "11. Analiz",
     }
     algo_stats = []
     all_history = []
