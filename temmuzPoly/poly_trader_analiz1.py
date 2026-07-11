@@ -262,10 +262,16 @@ async def run_open() -> None:
         dyn_amount  = (TRADE_AMOUNT_HIGH if (rate is not None and rate > 0.5)
                        else TRADE_AMOUNT_LOW if (rate is not None and rate < 0.5)
                        else TRADE_AMOUNT)
+        # Saatin başındaki fiyat (son kapanan 1h mumu) = Polymarket "Price to Beat"
+        try:
+            klines = await _fetch_klines(sym, "1h", 3)
+            entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else pred_obj.current_price
+        except Exception:
+            entry_price = pred_obj.current_price
         state["open_positions"].append({
             "symbol":           sym,
             "predicted_dir":    pred_obj.predicted_dir,
-            "entry_price":      klines[-2]["close"],  # son kapanan mum = Polymarket Price to Beat
+            "entry_price":      entry_price,
             "entry_time_tr":    now_tr.isoformat(),
             "entry_hour_tr":    hour_tr,
             "entry_dow":        dow,
@@ -297,7 +303,7 @@ async def run_open() -> None:
                       else TRADE_AMOUNT_LOW if (sym_rate is not None and sym_rate < 0.5)
                       else TRADE_AMOUNT)
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{klines[-2]['close']:.2f}  💵{pos_amount:.0f}$\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{entry_price:.2f}  💵{pos_amount:.0f}$\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )
