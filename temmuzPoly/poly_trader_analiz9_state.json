@@ -1,56 +1,5 @@
 {
-  "balance": 183.16,
-  "open_positions": [
-    {
-      "symbol": "BTCUSDT",
-      "predicted_dir": "UP",
-      "entry_price": 63981.6,
-      "entry_time_tr": "2026-07-10T18:04:01.366577+03:00",
-      "entry_hour_tr": 18,
-      "entry_dow": 4,
-      "entry_is_weekend": false,
-      "score": 2,
-      "amount": 4.8,
-      "votes": [
-        1,
-        0,
-        1,
-        0
-      ],
-      "pm_slug": "bitcoin-up-or-down-july-10-2026-11am-et",
-      "pm_title": "Bitcoin Up or Down - July 10, 11AM ET",
-      "pm_token_id": "68023892309556884224334962287860516809676134519329051231957702291782511280610",
-      "pm_token_dir": "UP",
-      "pm_size": 8.0,
-      "pm_entry_price": 0.61,
-      "pm_order_id": "DRY_RUN",
-      "pm_spent": 4.88
-    },
-    {
-      "symbol": "ETHUSDT",
-      "predicted_dir": "UP",
-      "entry_price": 1787.01,
-      "entry_time_tr": "2026-07-10T18:04:01.366577+03:00",
-      "entry_hour_tr": 18,
-      "entry_dow": 4,
-      "entry_is_weekend": false,
-      "score": 2,
-      "amount": 6.4,
-      "votes": [
-        1,
-        0,
-        1,
-        0
-      ],
-      "pm_slug": "ethereum-up-or-down-july-10-2026-11am-et",
-      "pm_title": "Ethereum Up or Down - July 10, 11AM ET",
-      "pm_token_id": "73949955925446719720628621685095400770965960849881692622355374369477445030143",
-      "pm_token_dir": "UP",
-      "pm_size": 10.7,
-      "pm_entry_price": 0.6,
-      "pm_order_id": "DRY_RUN",
-      "pm_spent": 6.42
-    }
-  ],
+  "balance": -16.07,
+  "open_positions": [],
   "total_pnl": 0.0
 }

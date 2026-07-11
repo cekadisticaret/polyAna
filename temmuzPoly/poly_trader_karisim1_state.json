@@ -1,21 +1,5 @@
 {
-  "balance": 436.0,
-  "open_positions": [
-    {
-      "symbol": "ETHUSDT",
-      "predicted_dir": "UP",
-      "entry_price": 1785.855,
-      "entry_time_tr": "2026-07-10T18:07:01.372086+03:00",
-      "entry_hour_tr": 18,
-      "entry_dow": 4,
-      "amount": 8.0,
-      "count": 2,
-      "systems": [
-        "A4",
-        "A6"
-      ],
-      "price_src": "kaynak-ort"
-    }
-  ],
-  "total_pnl": 136.0
+  "balance": 460.0,
+  "open_positions": [],
+  "total_pnl": 160.0
 }

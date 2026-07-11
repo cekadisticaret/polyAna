@@ -1025,5 +1025,70 @@
     "pnl": 8.0,
     "win": true,
     "count": 2
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "entry_price": 1785.855,
+    "exit_price": 1789.86,
+    "entry_hour_tr": 18,
+    "entry_dow": 4,
+    "amount": 8.0,
+    "pnl": 8.0,
+    "win": true,
+    "count": 2
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "entry_price": 1791.925,
+    "exit_price": 1796.91,
+    "entry_hour_tr": 19,
+    "entry_dow": 4,
+    "amount": 8.0,
+    "pnl": 8.0,
+    "win": true,
+    "count": 2
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "entry_price": 77.69,
+    "exit_price": 77.48,
+    "entry_hour_tr": 21,
+    "entry_dow": 4,
+    "amount": 8.0,
+    "pnl": -8.0,
+    "win": false,
+    "count": 2
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "entry_price": 1784.955,
+    "exit_price": 1791.71,
+    "entry_hour_tr": 22,
+    "entry_dow": 4,
+    "amount": 8.0,
+    "pnl": 8.0,
+    "win": true,
+    "count": 2
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "entry_price": 1795.88,
+    "exit_price": 1795.85,
+    "entry_hour_tr": 7,
+    "entry_dow": 5,
+    "amount": 8.0,
+    "pnl": 8.0,
+    "win": true,
+    "count": 2
   }
 ]

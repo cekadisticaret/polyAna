@@ -286,7 +286,8 @@ def api_heatmap_detail():
     if _auth_required(): return redirect("/poly/login")
     days_tr = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
     try:
-        dow  = int(request.args.get("dow", -1))
+        dow  = request.args.get("dow", None)
+        dow  = int(dow) if dow is not None else None
         hour = int(request.args.get("hour", -1))
         sym  = request.args.get("sym", "ALL").upper()
     except ValueError:
@@ -300,7 +301,9 @@ def api_heatmap_detail():
 
     trades = []
     for t in hist:
-        if t.get("entry_dow") != dow or t.get("entry_hour_tr") != hour:
+        if t.get("entry_hour_tr") != hour:
+            continue
+        if dow is not None and t.get("entry_dow") != dow:
             continue
         s = t.get("symbol", "").replace("USDT", "")
         if sym != "ALL" and s != sym:
@@ -353,23 +356,42 @@ def api_symbol_stats():
         sym_wr.append({"sym": sym, "wr": wr, "w": v["w"], "t": v["t"]})
     sym_wr.sort(key=lambda x: x["wr"], reverse=True)
 
-    # Gün + saat bazlı top 3 (min 3 işlem)
-    dh_stat = defaultdict(lambda: {"w": 0, "t": 0})
+    # Saat bazlı, birden fazla günde tutarlı başarı — multi-day consistency
+    days_tr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
+    hour_day: dict = {}
     for t in hist:
         dow  = t.get("entry_dow")
         hour = t.get("entry_hour_tr")
-        if dow is not None and hour is not None:
-            dh_stat[(dow, hour)]["t"] += 1
-            if t.get("win"):
-                dh_stat[(dow, hour)]["w"] += 1
-    days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
-    combos = [
-        {"day": days[dow], "hour": f"{hour:02d}:00",
-         "wr": round(v["w"] / v["t"] * 100, 1), "w": v["w"], "t": v["t"]}
-        for (dow, hour), v in dh_stat.items() if v["t"] >= 3
-    ]
-    combos.sort(key=lambda x: (x["wr"], x["t"]), reverse=True)
-    return jsonify({"sym_wr": sym_wr, "top_slots": combos[:3]})
+        if dow is None or hour is None:
+            continue
+        if hour not in hour_day:
+            hour_day[hour] = {}
+        if dow not in hour_day[hour]:
+            hour_day[hour][dow] = {"w": 0, "t": 0}
+        hour_day[hour][dow]["t"] += 1
+        if t.get("win"):
+            hour_day[hour][dow]["w"] += 1
+
+    top_slots = []
+    for h, day_data in hour_day.items():
+        good_days = [(d, v) for d, v in day_data.items() if v["t"] >= 2 and v["w"] / v["t"] > 0.5]
+        all_w = sum(v["w"] for v in day_data.values())
+        all_t = sum(v["t"] for v in day_data.values())
+        if not good_days or all_t < 3:
+            continue
+        wr = round(all_w / all_t * 100, 1)
+        day_names = [days_tr[d] for d, _ in sorted(good_days)]
+        top_slots.append({
+            "hour":      f"{h:02d}:00",
+            "hour_int":  h,
+            "good_days": len(good_days),
+            "day_names": day_names,
+            "wr":        wr,
+            "w":         all_w,
+            "t":         all_t,
+        })
+    top_slots.sort(key=lambda x: (x["good_days"], x["wr"]), reverse=True)
+    return jsonify({"sym_wr": sym_wr, "top_slots": top_slots[:3]})
 
 @app.route("/poly/api/stats")
 def api_stats():
@@ -500,6 +522,525 @@ def api_close(analiz, symbol):
         return jsonify({"ok": False, "error": str(e)}), 500
 
 # ── HTML ──────────────────────────────────────────────────────
+ALGORITMA_HTML = r"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algoritma — PolyMarket</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0d0d0d; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif; min-height:100vh; }
+  .app { display:flex; min-height:100vh; }
+  .sidebar { width:220px; background:#0a0f0a; padding:24px 16px; display:flex; flex-direction:column;
+             position:fixed; top:0; left:0; bottom:0; z-index:10; border-right:1px solid #1a2a1a; }
+  .logo { font-size:17px; font-weight:800; color:#c8f135; margin-bottom:32px; }
+  .logo span { color:#fff; font-weight:400; }
+  .nav-label { font-size:10px; color:#444; text-transform:uppercase; letter-spacing:.8px; margin:20px 0 8px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px;
+              font-size:13px; font-weight:600; color:#555; cursor:pointer; margin-bottom:2px; text-decoration:none; }
+  .nav-item.active { background:#1c1c1e; color:#fff; }
+  .nav-item:hover { background:#1c1c1e; color:#aaa; }
+  .nav-dot { width:8px; height:8px; border-radius:50%; background:#333; flex-shrink:0; }
+  .nav-item.active .nav-dot { background:#c8f135; }
+  .sidebar-footer { margin-top:auto; font-size:12px; color:#333; padding:8px 12px; }
+  .live-dot { width:6px; height:6px; background:#4ade80; border-radius:50%; display:inline-block;
+              margin-right:5px; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .main { margin-left:220px; padding:28px 36px; display:flex; gap:28px; align-items:flex-start; }
+  .main-left  { flex:1; min-width:0; }
+  .main-right { width:270px; flex-shrink:0; position:sticky; top:28px; }
+
+  /* ── Üst başlık + consensus ── */
+  .top-bar { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; gap:20px; }
+  .page-title { font-size:22px; font-weight:800; }
+  .page-sub   { font-size:13px; color:#666; margin-top:4px; }
+
+  .consensus-box {
+    background:#111; border:1px solid #1e1e1e; border-radius:16px;
+    padding:14px 20px; min-width:280px; flex-shrink:0;
+  }
+  .cb-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .cb-title  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#666; }
+  .cb-time   { font-size:11px; color:#444; }
+  .cb-rows   { display:flex; flex-direction:column; gap:8px; }
+  .cb-row    { display:flex; align-items:center; gap:10px; }
+  .cb-sym    { font-size:12px; font-weight:700; color:#fff; width:32px; }
+  .cb-bar-wrap { flex:1; background:#1a1a1a; border-radius:6px; height:8px; overflow:hidden; }
+  .cb-bar-up   { height:100%; background:#4ade80; border-radius:6px; transition:width .5s; }
+  .cb-bar-dn   { height:100%; background:#f87171; border-radius:6px; border-radius:0 6px 6px 0; }
+  .cb-label  { font-size:11px; font-weight:700; min-width:80px; text-align:right; }
+  .lbl-up    { color:#4ade80; }
+  .lbl-dn    { color:#f87171; }
+  .lbl-neu   { color:#666; }
+  .cb-detail { font-size:10px; color:#555; margin-top:2px; }
+  .cb-next   { font-size:10px; color:#444; margin-top:10px; text-align:right; }
+
+  /* ── Kartlar ── */
+  .section-title {
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+    color:#c8f135; margin:28px 0 12px; padding-left:2px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-title::after { content:""; flex:1; height:1px; background:#1e1e1e; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+
+  .card { background:#111; border:1px solid #1e1e1e; border-radius:14px;
+          padding:16px 18px; transition:border-color .2s; }
+  .card:hover { border-color:#2a3a2a; }
+  .card-header { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
+  .card-num { width:26px; height:26px; border-radius:7px; background:#1c1c1e; flex-shrink:0;
+              display:flex; align-items:center; justify-content:center;
+              font-size:11px; font-weight:800; color:#c8f135; }
+  .card-meta { flex:1; }
+  .card-name  { font-size:13px; font-weight:700; color:#fff; line-height:1.3; }
+  .card-badge { display:inline-block; font-size:10px; font-weight:700; padding:2px 7px;
+                border-radius:20px; margin-top:3px; letter-spacing:.3px; }
+  .badge-trend { background:#1a2e1a; color:#4ade80; }
+  .badge-mom   { background:#1a1a2e; color:#818cf8; }
+  .badge-vol   { background:#2e1a1a; color:#f87171; }
+  .badge-quant { background:#2e2a1a; color:#fbbf24; }
+  .badge-ml    { background:#1e1a2e; color:#c084fc; }
+  .card-desc { font-size:11.5px; color:#666; line-height:1.6; }
+  .card-tags  { margin-top:8px; display:flex; flex-wrap:wrap; gap:5px; }
+  .tag { font-size:10px; background:#1c1c1e; color:#555; padding:2px 7px; border-radius:5px; }
+
+  /* ── Sinyal satırı ── */
+  .card-signals {
+    display:flex; gap:6px; margin-top:10px; padding-top:10px;
+    border-top:1px solid #1a1a1a;
+  }
+  .sig-pill {
+    flex:1; text-align:center; padding:5px 2px; border-radius:8px;
+    font-size:11px; font-weight:700; letter-spacing:.2px;
+  }
+  .sig-up      { background:#0e2a12; color:#4ade80; }
+  .sig-down    { background:#2a0e0e; color:#f87171; }
+  .sig-neutral { background:#1c1c1e; color:#555; }
+  .sig-na      { background:#1c1c1e; color:#333; }
+  .sig-loading { background:#1c1c1e; color:#444; animation:shimmer 1.5s infinite; }
+  @keyframes shimmer { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+  /* ── Sağ kolon: Performans sıralaması ── */
+  .rank-box { background:#111; border:1px solid #1e1e1e; border-radius:16px; padding:16px 18px; }
+  .rank-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px;
+                color:#c8f135; margin-bottom:14px; }
+  .rank-item { display:flex; align-items:center; gap:10px; padding:8px 0;
+               border-bottom:1px solid #1a1a1a; }
+  .rank-item:last-child { border-bottom:none; }
+  .rank-pos { width:20px; font-size:11px; font-weight:800; color:#444; text-align:center; flex-shrink:0; }
+  .rank-pos.top1 { color:#fbbf24; }
+  .rank-pos.top2 { color:#888; }
+  .rank-pos.top3 { color:#b45309; }
+  .rank-info { flex:1; min-width:0; }
+  .rank-name { font-size:12px; font-weight:600; color:#ddd; white-space:nowrap;
+               overflow:hidden; text-overflow:ellipsis; }
+  .rank-sub  { font-size:10px; color:#555; margin-top:1px; }
+  .rank-wr   { font-size:13px; font-weight:800; min-width:38px; text-align:right; flex-shrink:0; }
+  .wr-good  { color:#4ade80; }
+  .wr-ok    { color:#fbbf24; }
+  .wr-bad   { color:#f87171; }
+  .rank-bar-wrap { height:3px; background:#1a1a1a; border-radius:2px; margin-top:4px; }
+  .rank-bar-fill { height:100%; border-radius:2px; background:#c8f135; transition:width .5s; }
+  .rank-empty { font-size:12px; color:#444; text-align:center; padding:20px 0; }
+
+  @media(max-width:1100px){ .main-right { display:none; } }
+  @media(max-width:900px){
+    .top-bar { flex-direction:column; }
+    .consensus-box { min-width:0; width:100%; }
+  }
+  @media(max-width:768px){
+    .main { margin-left:0; padding:20px 16px; }
+    .sidebar { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+<div class="sidebar">
+  <div class="logo">Poly<span>Market</span></div>
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item active" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
+  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
+  <div class="nav-label">Hesap</div>
+  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
+  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
+  <div class="sidebar-footer"><span class="live-dot"></span>Canlı</div>
+</div>
+
+<div class="main">
+<div class="main-left">
+
+  <!-- Üst bar -->
+  <div class="top-bar">
+    <div>
+      <div class="page-title">Algoritma Analizi</div>
+      <div class="page-sub">15 algoritma — BTC / ETH / SOL — 1 saatlik</div>
+    </div>
+    <!-- Consensus kutusu -->
+    <div class="consensus-box">
+      <div class="cb-header">
+        <span class="cb-title">Genel Konsensüs</span>
+        <span class="cb-time" id="cb-updated">Yükleniyor…</span>
+      </div>
+      <div id="cb-period" style="font-size:11px;color:#555;margin-bottom:8px;"></div>
+      <div class="cb-rows" id="cb-rows">
+        <div class="sig-loading" style="height:32px;border-radius:8px;"></div>
+      </div>
+      <div class="cb-next" id="cb-next"></div>
+    </div>
+  </div>
+
+  <!-- TREND -->
+  <div class="section-title">📈 Trend Takip</div>
+  <div class="grid">
+    <div class="card" data-algo="1">
+      <div class="card-header">
+        <div class="card-num">1</div>
+        <div class="card-meta">
+          <div class="card-name">EMA Crossover</div>
+          <span class="card-badge badge-trend">Trend</span>
+        </div>
+      </div>
+      <div class="card-desc">9/21/50/200 EMA kesişimleri — kısa ve uzun trend yönü tespiti.</div>
+      <div class="card-tags"><span class="tag">EMA-9</span><span class="tag">EMA-21</span><span class="tag">EMA-50</span><span class="tag">EMA-200</span></div>
+      <div class="card-signals" id="sigs-1"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+    <div class="card" data-algo="2">
+      <div class="card-header">
+        <div class="card-num">2</div>
+        <div class="card-meta">
+          <div class="card-name">MACD Histogram + Divergence</div>
+          <span class="card-badge badge-trend">Trend</span>
+        </div>
+      </div>
+      <div class="card-desc">Histogram dip/tepe tespiti ve fiyat-indikatör uyumsuzluğu (divergence) ile erken sinyal.</div>
+      <div class="card-tags"><span class="tag">MACD</span><span class="tag">Divergence</span><span class="tag">Histogram</span></div>
+      <div class="card-signals" id="sigs-2"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+    <div class="card" data-algo="3">
+      <div class="card-header">
+        <div class="card-num">3</div>
+        <div class="card-meta">
+          <div class="card-name">Supertrend</div>
+          <span class="card-badge badge-trend">Trend</span>
+        </div>
+      </div>
+      <div class="card-desc">ATR bazlı trend takip ve stop-loss belirleme indikatörü.</div>
+      <div class="card-tags"><span class="tag">ATR</span><span class="tag">Stop-Loss</span><span class="tag">Trend</span></div>
+      <div class="card-signals" id="sigs-3"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+    <div class="card" data-algo="4">
+      <div class="card-header">
+        <div class="card-num">4</div>
+        <div class="card-meta">
+          <div class="card-name">Ichimoku Cloud</div>
+          <span class="card-badge badge-trend">Trend</span>
+        </div>
+      </div>
+      <div class="card-desc">Japon orijinli çok katmanlı trend/momentum sistemi. Kumo bulutu kırılımları güçlü giriş sinyalleri verir.</div>
+      <div class="card-tags"><span class="tag">Kumo</span><span class="tag">Kijun</span><span class="tag">Tenkan</span></div>
+      <div class="card-signals" id="sigs-4"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+  </div>
+
+  <!-- MOMENTUM -->
+  <div class="section-title">⚡ Momentum / Osilatör</div>
+  <div class="grid">
+    <div class="card" data-algo="5">
+      <div class="card-header">
+        <div class="card-num">5</div>
+        <div class="card-meta">
+          <div class="card-name">RSI + Divergence</div>
+          <span class="card-badge badge-mom">Momentum</span>
+        </div>
+      </div>
+      <div class="card-desc">Aşırı alım/satım bölgeleri + fiyat-RSI uyumsuzluğu. Analiz-5 ve Analiz-1'de aktif.</div>
+      <div class="card-tags"><span class="tag">RSI-14</span><span class="tag">Divergence</span><span class="tag">OB/OS</span></div>
+      <div class="card-signals" id="sigs-5"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+    <div class="card" data-algo="6">
+      <div class="card-header">
+        <div class="card-num">6</div>
+        <div class="card-meta">
+          <div class="card-name">Stochastic RSI</div>
+          <span class="card-badge badge-mom">Momentum</span>
+        </div>
+      </div>
+      <div class="card-desc">RSI'dan daha hassas, kısa vadeli dönüş noktalarını erken yakalar. Scalping için tercih edilir.</div>
+      <div class="card-tags"><span class="tag">StochRSI</span><span class="tag">Scalp</span><span class="tag">Kısa Vade</span></div>
+      <div class="card-signals" id="sigs-6"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+    <div class="card" data-algo="7">
+      <div class="card-header">
+        <div class="card-num">7</div>
+        <div class="card-meta">
+          <div class="card-name">Bollinger Bands + Squeeze</div>
+          <span class="card-badge badge-mom">Momentum</span>
+        </div>
+      </div>
+      <div class="card-desc">Volatilite daralması (squeeze) sonrası patlama hareketlerini öngörmek için. Kripto'da volatilite döngüseldir.</div>
+      <div class="card-tags"><span class="tag">BB</span><span class="tag">Squeeze</span><span class="tag">Volatilite</span></div>
+      <div class="card-signals" id="sigs-7"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+  </div>
+
+  <!-- HACİM -->
+  <div class="section-title">📊 Hacim Bazlı</div>
+  <div class="grid">
+    <div class="card" data-algo="8">
+      <div class="card-header">
+        <div class="card-num">8</div>
+        <div class="card-meta">
+          <div class="card-name">VWAP</div>
+          <span class="card-badge badge-vol">Hacim</span>
+        </div>
+      </div>
+      <div class="card-desc">Volume Weighted Average Price — günlük hacim ağırlıklı ortalama fiyat. Destek/direnç görevi görür.</div>
+      <div class="card-tags"><span class="tag">VWAP</span><span class="tag">Kurumsal</span><span class="tag">Destek/Direnç</span></div>
+      <div class="card-signals" id="sigs-8"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+    <div class="card" data-algo="9">
+      <div class="card-header">
+        <div class="card-num">9</div>
+        <div class="card-meta">
+          <div class="card-name">OBV (On-Balance Volume)</div>
+          <span class="card-badge badge-vol">Hacim</span>
+        </div>
+      </div>
+      <div class="card-desc">Hacim akışını fiyattan bağımsız ölçer. Akıllı para girişini erken tespit eder.</div>
+      <div class="card-tags"><span class="tag">OBV</span><span class="tag">Akıllı Para</span><span class="tag">Öncü Sinyal</span></div>
+      <div class="card-signals" id="sigs-9"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+    <div class="card" data-algo="10">
+      <div class="card-header">
+        <div class="card-num">10</div>
+        <div class="card-meta">
+          <div class="card-name">Volume Profile (POC)</div>
+          <span class="card-badge badge-vol">Hacim</span>
+        </div>
+      </div>
+      <div class="card-desc">En çok işlem gören fiyat seviyesi (Point of Control). Güçlü destek/direnç bölgeleri oluşturur.</div>
+      <div class="card-tags"><span class="tag">POC</span><span class="tag">Value Area</span><span class="tag">Direnç</span></div>
+      <div class="card-signals" id="sigs-10"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+  </div>
+
+  <!-- QUANT -->
+  <div class="section-title">📐 Quant / İstatistiksel</div>
+  <div class="grid">
+    <div class="card" data-algo="11">
+      <div class="card-header">
+        <div class="card-num">11</div>
+        <div class="card-meta">
+          <div class="card-name">Mean Reversion (Z-Score)</div>
+          <span class="card-badge badge-quant">Quant</span>
+        </div>
+      </div>
+      <div class="card-desc">Fiyatın ortalamadan sapmasına göre pozisyon alma. Range piyasalarda trend takibinden daha iyi çalışır.</div>
+      <div class="card-tags"><span class="tag">Z-Score</span><span class="tag">Mean Rev</span><span class="tag">Range</span></div>
+      <div class="card-signals" id="sigs-11"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+    <div class="card" data-algo="12">
+      <div class="card-header">
+        <div class="card-num">12</div>
+        <div class="card-meta">
+          <div class="card-name">Pairs Trading</div>
+          <span class="card-badge badge-quant">Quant</span>
+        </div>
+      </div>
+      <div class="card-desc">ETH/BTC oranının z-score'una göre pozisyon alma. İki korele coin arasındaki spread'den yararlanır.</div>
+      <div class="card-tags"><span class="tag">Cointegration</span><span class="tag">Spread</span><span class="tag">ETH/BTC</span></div>
+      <div class="card-signals" id="sigs-12"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+    <div class="card" data-algo="13">
+      <div class="card-header">
+        <div class="card-num">13</div>
+        <div class="card-meta">
+          <div class="card-name">Grid Trading Bot</div>
+          <span class="card-badge badge-quant">Quant</span>
+        </div>
+      </div>
+      <div class="card-desc">Belirli fiyat aralığında otomatik alım-satım ızgarası. Range piyasalarda pasif gelir için popüler.</div>
+      <div class="card-tags"><span class="tag">Grid</span><span class="tag">Range</span><span class="tag">Pasif Gelir</span></div>
+      <div class="card-signals" id="sigs-13"><div class="sig-na sig-pill">BTC — Nötr</div><div class="sig-na sig-pill">ETH — Nötr</div><div class="sig-na sig-pill">SOL — Nötr</div></div>
+    </div>
+  </div>
+
+  <!-- ML -->
+  <div class="section-title">🤖 Machine Learning / Hibrit</div>
+  <div class="grid">
+    <div class="card" data-algo="14">
+      <div class="card-header">
+        <div class="card-num">14</div>
+        <div class="card-meta">
+          <div class="card-name">LSTM / Zaman Serisi</div>
+          <span class="card-badge badge-ml">ML</span>
+        </div>
+      </div>
+      <div class="card-desc">Geçmiş fiyat verisiyle eğitilen derin öğrenme modeli. Diğer indikatörlerle kombinlendiğinde filtre görevi görür.</div>
+      <div class="card-tags"><span class="tag">LSTM</span><span class="tag">Deep Learning</span><span class="tag">Filtre</span></div>
+      <div class="card-signals" id="sigs-14"><div class="sig-na sig-pill">— Gerçek zamanlı model yok —</div></div>
+    </div>
+    <div class="card" data-algo="15">
+      <div class="card-header">
+        <div class="card-num">15</div>
+        <div class="card-meta">
+          <div class="card-name">Multi-Timeframe Confluence</div>
+          <span class="card-badge badge-ml">Hibrit</span>
+        </div>
+      </div>
+      <div class="card-desc">1H + 4H EMA sinyallerinin örtüşmesine dayalı filtre. Yanlış pozitifleri ezer — en yüksek başarı oranına sahip yaklaşımlardan biri.</div>
+      <div class="card-tags"><span class="tag">1H</span><span class="tag">4H</span><span class="tag">Confluence</span></div>
+      <div class="card-signals" id="sigs-15"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    </div>
+  </div>
+
+</div><!-- /main-left -->
+
+<!-- Sağ kolon: Algoritma performansı -->
+<div class="main-right">
+  <div class="rank-box">
+    <div class="rank-title">🏆 Algoritma Başarısı</div>
+    <div id="rank-list"><div class="rank-empty">İlk işlemler kapandıktan sonra burada görünecek</div></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+const SYMS = ["BTC","ETH","SOL"];
+
+function pillClass(sig){
+  if(sig==="UP")      return "sig-up";
+  if(sig==="DOWN")    return "sig-down";
+  if(sig==="NEUTRAL") return "sig-neutral";
+  return "sig-na";
+}
+function pillLabel(sym, sig){
+  if(sig==="UP")      return sym+" ▲ Artar";
+  if(sig==="DOWN")    return sym+" ▼ Düşer";
+  if(sig==="NEUTRAL") return sym+" → Nötr";
+  return sym+" —";
+}
+
+function renderSignals(data){
+  const sigs = data.signals || {};
+  // 1-12, 15 güncelle (13,14 sabit)
+  const dynamic = [1,2,3,4,5,6,7,8,9,10,11,12,15];
+  for(const n of dynamic){
+    const el = document.getElementById("sigs-"+n);
+    if(!el) continue;
+    const entry = sigs[String(n)];
+    if(!entry){ el.innerHTML = '<div class="sig-na sig-pill">Veri yok</div>'; continue; }
+    el.innerHTML = SYMS.map(s=>`<div class="sig-pill ${pillClass(entry[s])}">${pillLabel(s,entry[s])}</div>`).join("");
+  }
+}
+
+function renderConsensus(data){
+  const con = data.consensus || {};
+  const rows = document.getElementById("cb-rows");
+  const upd  = document.getElementById("cb-updated");
+  const nxt  = document.getElementById("cb-next");
+  const per  = document.getElementById("cb-period");
+  upd.textContent = data.updated ? data.updated+" güncellendi" : "";
+  nxt.textContent = "";
+  if(per && data.period_start && data.period_end)
+    per.textContent = "📅 "+data.period_start+" → "+data.period_end+" analizi";
+
+  rows.innerHTML = SYMS.map(sym=>{
+    const c = con[sym] || {UP:0,DOWN:0,NEUTRAL:0,total:13};
+    const tot = c.total || 13;
+    const upPct  = Math.round(c.UP/tot*100);
+    const dnPct  = Math.round(c.DOWN/tot*100);
+    const dom    = c.UP > c.DOWN ? "UP" : c.DOWN > c.UP ? "DOWN" : "NEUTRAL";
+    const lbl    = dom==="UP" ? `<span class="cb-label lbl-up">${c.UP}/${tot} ▲ Artar</span>`
+                 : dom==="DOWN" ? `<span class="cb-label lbl-dn">${c.DOWN}/${tot} ▼ Düşer</span>`
+                 : `<span class="cb-label lbl-neu">= Nötr</span>`;
+    return `<div class="cb-row">
+      <span class="cb-sym">${sym}</span>
+      <div class="cb-bar-wrap">
+        <div style="display:flex;height:100%;">
+          <div class="cb-bar-up" style="width:${upPct}%"></div>
+          <div class="cb-bar-dn" style="width:${dnPct}%"></div>
+        </div>
+      </div>
+      ${lbl}
+    </div>
+    <div class="cb-detail">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▲${c.UP} ▼${c.DOWN} =${c.NEUTRAL}</div>`;
+  }).join("");
+}
+
+const ALGO_NAMES = {
+  "1":"EMA Crossover","2":"MACD + Divergence","3":"Supertrend","4":"Ichimoku Cloud",
+  "5":"RSI + Divergence","6":"Stochastic RSI","7":"BB + Squeeze","8":"VWAP",
+  "9":"OBV","10":"Volume Profile","11":"Mean Reversion","12":"Pairs Trading",
+  "15":"Multi-TF Confluence"
+};
+
+function renderRanking(acc){
+  const el = document.getElementById("rank-list");
+  const entries = Object.entries(acc)
+    .filter(([k,v]) => v.total > 0)
+    .map(([k,v]) => ({
+      num: k,
+      name: ALGO_NAMES[k] || "Algo "+k,
+      total: v.total,
+      correct: v.correct,
+      wr: Math.round(v.correct / v.total * 100)
+    }))
+    .sort((a,b) => b.wr - a.wr || b.total - a.total);
+
+  if(!entries.length){
+    el.innerHTML = '<div class="rank-empty">İlk işlemler kapandıktan sonra burada görünecek</div>';
+    return;
+  }
+
+  el.innerHTML = entries.map((e,i) => {
+    const posClass = i===0?"top1":i===1?"top2":i===2?"top3":"";
+    const wrClass  = e.wr>=60?"wr-good":e.wr>=50?"wr-ok":"wr-bad";
+    const medal    = i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1;
+    return `<div class="rank-item">
+      <span class="rank-pos ${posClass}">${medal}</span>
+      <div class="rank-info">
+        <div class="rank-name">${e.name}</div>
+        <div class="rank-sub">${e.correct}/${e.total} işlem</div>
+        <div class="rank-bar-wrap"><div class="rank-bar-fill" style="width:${e.wr}%"></div></div>
+      </div>
+      <span class="rank-wr ${wrClass}">%${e.wr}</span>
+    </div>`;
+  }).join("");
+}
+
+async function loadAccuracy(){
+  try{
+    const r = await fetch("/poly/api/algo_accuracy");
+    const d = await r.json();
+    renderRanking(d);
+  }catch(e){ console.error(e); }
+}
+
+async function load(){
+  try{
+    const r = await fetch("/poly/api/algo_signals");
+    const d = await r.json();
+    renderConsensus(d);
+    renderSignals(d);
+  }catch(e){ console.error(e); }
+}
+load();
+loadAccuracy();
+// Her 5 dakikada yenile
+setInterval(load, 5*60*1000);
+setInterval(loadAccuracy, 10*60*1000);
+</script>
+</body>
+</html>"""
+
 AYARLAR_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -566,6 +1107,7 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
   <div class="logo">Poly<span>Market</span></div>
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
@@ -728,6 +1270,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
   <div class="logo">Poly<span>Market</span></div>
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item active" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
@@ -1124,6 +1667,7 @@ HTML = r"""<!DOCTYPE html>
   <div class="logo">Poly<span>Market</span></div>
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item active" id="nav-overview" onclick="showView('overview')" href="#"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" id="nav-heatmap" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
@@ -1183,7 +1727,10 @@ HTML = r"""<!DOCTYPE html>
       <!-- Mobil pozisyonlar (desktop'ta gizli) -->
       <div class="mobile-positions">
         <div class="risk-banner" style="margin-top:16px">
-          <span class="risk-label">Toplam Riskteki</span>
+          <div>
+            <span class="risk-label">Toplam Riskteki</span>
+            <div style="font-size:14px;font-weight:700;color:#3d4d00;margin-top:3px">Kazanılacak: <span id="total-towin-mob">$—</span></div>
+          </div>
           <span class="risk-val" id="total-risk-mob">$—</span>
         </div>
         <div class="section-title" style="margin:16px 0 12px">Açık Pozisyonlar</div>
@@ -1198,7 +1745,7 @@ HTML = r"""<!DOCTYPE html>
       <div class="risk-banner">
         <div>
           <span class="risk-label">Toplam Riskteki</span>
-          <div style="font-size:11px;color:#5a6e00;margin-top:2px">Kazanılacak: <span id="total-towin">$—</span></div>
+          <div style="font-size:14px;font-weight:700;color:#3d4d00;margin-top:3px">Kazanılacak: <span id="total-towin">$—</span></div>
         </div>
         <span class="risk-val" id="total-risk">$—</span>
       </div>
@@ -1407,8 +1954,11 @@ async function refresh() {
     const trMob = document.getElementById('total-risk-mob');
     if (trMob) trMob.textContent = '$' + totalRisk.toFixed(2);
     const totalToWin = d.positions.reduce((acc, p) => acc + (p.pm_size || 0), 0);
+    const twVal = totalToWin > 0 ? '$' + totalToWin.toFixed(2) : '—';
     const twEl = document.getElementById('total-towin');
-    if (twEl) twEl.textContent = totalToWin > 0 ? '$' + totalToWin.toFixed(2) : '—';
+    if (twEl) twEl.textContent = twVal;
+    const twMob = document.getElementById('total-towin-mob');
+    if (twMob) twMob.textContent = twVal;
 
     // Grafik tabları
     const syms = [...new Set(d.positions.map(p => p.name))];
@@ -1461,26 +2011,31 @@ async function refresh() {
 
     // En etkili gün+saat top 3
     const slotEl = document.getElementById('top-slots');
-    const days_dow = {'Pzt':0,'Sal':1,'Çar':2,'Per':3,'Cum':4,'Cmt':5,'Paz':6};
     slotEl.innerHTML = (ss.top_slots || []).map((sl, i) => {
-      const medals = ['🥇','🥈','🥉'];
-      const barW   = Math.round(sl.wr);
-      const dow    = days_dow[sl.day] ?? 0;
-      const hour   = parseInt(sl.hour);
-      const wrColor = sl.wr >= 70 ? '#4ade80' : sl.wr >= 55 ? '#a3e635' : '#c8f135';
-      return `<div onclick="openSlotPopup(${dow},${hour})"
+      const medals  = ['🥇','🥈','🥉'];
+      const barW    = Math.round(sl.wr);
+      const hour    = sl.hour_int;
+      const wrColor = sl.wr >= 80 ? '#4ade80' : sl.wr >= 60 ? '#a3e635' : '#c8f135';
+      const dayTags = (sl.day_names || []).map(d =>
+        `<span style="background:#1c1c1e;color:#aaa;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600">${d}</span>`
+      ).join(' ');
+      const dayCountStr = sl.good_days > 1
+        ? `<span style="color:#c8f135;font-weight:700">${sl.good_days} farklı gün</span>`
+        : `<span style="color:#666">1 gün</span>`;
+      return `<div onclick="openSlotPopup(-1,${hour})"
         style="padding:12px;margin-bottom:8px;background:#111;border-radius:14px;
                cursor:pointer;transition:.15s;border:1px solid #1f1f1f"
         onmouseover="this.style.borderColor='#c8f135'" onmouseout="this.style.borderColor='#1f1f1f'">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span style="font-size:13px;font-weight:800">${medals[i]} ${sl.day} ${sl.hour}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:14px;font-weight:800">${medals[i]} ${sl.hour}</span>
           <span style="font-size:16px;font-weight:800;color:${wrColor}">${sl.wr}%</span>
         </div>
-        <div style="height:4px;background:#1c1c1e;border-radius:4px;margin-bottom:8px">
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">${dayTags}</div>
+        <div style="height:3px;background:#1c1c1e;border-radius:4px;margin-bottom:7px">
           <div style="height:100%;width:${barW}%;background:${wrColor};border-radius:4px"></div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:11px;color:#666">${sl.w} kazanç / ${sl.t} işlem</span>
+          <span style="font-size:11px;color:#666">${sl.w}K / ${sl.t} işlem · ${dayCountStr}</span>
           <span style="font-size:10px;color:#444;background:#1c1c1e;padding:2px 8px;border-radius:6px">detay →</span>
         </div>
       </div>`;
@@ -1527,10 +2082,16 @@ async function openSlotPopup(dow, hour) {
   const popup   = document.getElementById('slot-popup');
   overlay.style.display = 'block';
   popup.style.display   = 'block';
-  document.getElementById('slot-title').textContent = `${_dayNames[dow]} ${String(hour).padStart(2,'0')}:00`;
+  const title = dow >= 0
+    ? `${_dayNames[dow]} ${String(hour).padStart(2,'0')}:00`
+    : `${String(hour).padStart(2,'0')}:00 — Tüm Günler`;
+  document.getElementById('slot-title').textContent = title;
   document.getElementById('slot-body').innerHTML = '<div style="color:#555;text-align:center;padding:24px">Yükleniyor...</div>';
 
-  const r = await fetch(`/poly/api/heatmap/detail?dow=${dow}&hour=${hour}&sym=ALL`);
+  const url = dow >= 0
+    ? `/poly/api/heatmap/detail?dow=${dow}&hour=${hour}&sym=ALL`
+    : `/poly/api/heatmap/detail?hour=${hour}&sym=ALL`;
+  const r = await fetch(url);
   const d = await r.json();
 
   const pc = d.pnl >= 0 ? '#4ade80' : '#f87171';
@@ -1741,6 +2302,24 @@ def _read_settings() -> dict:
         defaults.update({k: data[k] for k in defaults if k in data})
     return defaults
 
+@app.route("/poly/api/algo_signals")
+def api_algo_signals():
+    if _auth_required(): return jsonify({"error": "unauthorized"}), 401
+    path = "/tmp/algo_signals.json"
+    if not os.path.exists(path):
+        return jsonify({"error": "no data", "signals": {}, "consensus": {}})
+    with open(path) as f:
+        return jsonify(json.load(f))
+
+@app.route("/poly/api/algo_accuracy")
+def api_algo_accuracy():
+    if _auth_required(): return jsonify({"error": "unauthorized"}), 401
+    path = os.path.join(_DIR_POLY, "algo_accuracy.json")
+    if not os.path.exists(path):
+        return jsonify({})
+    with open(path) as f:
+        return jsonify(json.load(f))
+
 @app.route("/poly/api/settings", methods=["GET"])
 def api_settings_get():
     if _auth_required(): return jsonify({"ok": False}), 401
@@ -1775,6 +2354,12 @@ def api_settings_post():
 def ayarlar():
     if _auth_required(): return redirect("/poly/login")
     return render_template_string(AYARLAR_HTML)
+
+@app.route("/algoritma")
+@app.route("/algoritma/")
+def algoritma():
+    if _auth_required(): return redirect("/poly/login")
+    return render_template_string(ALGORITMA_HTML)
 
 @app.route("/poly")
 @app.route("/poly/")

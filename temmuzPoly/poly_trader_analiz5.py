@@ -43,9 +43,11 @@ BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
-_DIR         = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE   = os.path.join(_DIR, "poly_trader_analiz5_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz5_history.json")
+_DIR              = os.path.dirname(os.path.abspath(__file__))
+STATE_FILE        = os.path.join(_DIR, "poly_trader_analiz5_state.json")
+HISTORY_FILE      = os.path.join(_DIR, "poly_trader_analiz5_history.json")
+ALGO_ACCURACY_FILE = os.path.join(_DIR, "algo_accuracy.json")
+_ALGO_SIGNALS_FILE = "/tmp/algo_signals.json"
 WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
@@ -77,6 +79,46 @@ def _load_settings() -> dict:
     except Exception:
         pass
     return defaults
+
+def _load_algo_snapshot() -> dict:
+    """Mevcut algo_signals.json'dan per-sembol sinyal snapshot'ı döner."""
+    try:
+        if os.path.exists(_ALGO_SIGNALS_FILE):
+            with open(_ALGO_SIGNALS_FILE) as f:
+                data = json.load(f)
+            # {algo_num: {"BTC": "UP", "ETH": "DOWN", ...}, ...}
+            return data.get("signals", {})
+    except Exception:
+        pass
+    return {}
+
+def _update_algo_accuracy(pos: dict, win: bool) -> None:
+    """Kapanan pozisyona göre her algoritmanın doğruluğunu günceller."""
+    snapshot = pos.get("algo_snapshot", {})
+    if not snapshot:
+        return
+    sym     = pos["symbol"].replace("USDT", "")
+    pred    = pos["predicted_dir"]   # işlemin açıldığı yön
+    # Gerçek hareket: win=True ise pred yönünde gitti
+    actual  = pred if win else ("DOWN" if pred == "UP" else "UP")
+    try:
+        acc = {}
+        if os.path.exists(ALGO_ACCURACY_FILE):
+            with open(ALGO_ACCURACY_FILE) as f:
+                acc = json.load(f)
+        for algo_num, sigs in snapshot.items():
+            algo_sig = sigs.get(sym) if isinstance(sigs, dict) else sigs
+            if algo_sig not in ("UP", "DOWN"):
+                continue  # NEUTRAL → sayma
+            if algo_num not in acc:
+                acc[algo_num] = {"name": "", "total": 0, "correct": 0}
+            acc[algo_num]["total"] += 1
+            if algo_sig == actual:
+                acc[algo_num]["correct"] += 1
+        with open(ALGO_ACCURACY_FILE, "w") as f:
+            json.dump(acc, f, indent=2)
+    except Exception as e:
+        print(f"[5. ANALİZ] algo accuracy güncelleme hatası: {e}", file=sys.stderr)
 
 # ── Polymarket Config ──────────────────────────────────────────
 _PM_CLOB_HOST = "https://clob.polymarket.com"
@@ -569,6 +611,9 @@ async def run_close() -> None:
             "ind_ema_ok":       _vote_ok(vs[2], actual) if len(vs) > 2 else None,
         })
 
+        # Algoritma doğruluk güncelle
+        _update_algo_accuracy(pos, win)
+
         icon     = "✅" if win else "❌"
         name     = pos["symbol"].replace("USDT", "")
         pct      = (current_price - entry) / entry * 100
@@ -716,6 +761,9 @@ async def run_open() -> None:
                 "a9_only":       True,
             })
 
+    # Algo sinyalleri snapshot — her pozisyona eklenecek
+    _algo_snapshot = _load_algo_snapshot()
+
     # Pozisyon aç + Polymarket order
     _market_skip    = []   # market bulunamadı/kapalı
     _order_fail     = []   # PM order başarısız
@@ -773,6 +821,7 @@ async def run_open() -> None:
             pos["pm_entry_price"] = order["price"]
             pos["pm_order_id"]    = order["order_id"]
             pos["pm_spent"]       = order["spent"]
+            pos["algo_snapshot"]  = _algo_snapshot
             print(f"[5. ANALİZ] PM order: {sig['symbol']} {sig['predicted_dir']} "
                   f"{order['size']} shares @ {order['price']} (${order['spent']:.2f})")
             state["open_positions"].append(pos)
