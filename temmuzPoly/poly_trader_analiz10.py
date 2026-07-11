@@ -134,6 +134,28 @@ def fetch_funding_rate(symbol: str) -> float:
     return float(data.get("lastFundingRate", 0))
 
 
+def oi_divergence_eth(klines: list[dict]) -> str:
+    """ETH için OI Divergence kontrolü — TERS yön → 'OPPOSITE', aynı/nötr → 'OK'"""
+    try:
+        raw = _binance_get("/futures/data/openInterestHist",
+                           {"symbol": "ETHUSDT", "period": "1h", "limit": 10})
+        if not isinstance(raw, list) or len(raw) < 5:
+            return "NEUTRAL"
+        oi  = [float(x["sumOpenInterestValue"]) for x in raw]
+        c   = [k["close"] for k in klines[-10:]]
+        if len(c) < 5:
+            return "NEUTRAL"
+        pc  = (c[-1] - c[-5]) / c[-5] if c[-5] else 0
+        oc  = (oi[-1] - oi[-5]) / oi[-5] if oi[-5] else 0
+        if pc >  0.005 and oc >  0.005: return "UP"
+        if pc < -0.005 and oc >  0.005: return "DOWN"
+        if pc >  0.005 and oc < -0.005: return "DOWN"
+        if pc < -0.005 and oc < -0.005: return "UP"
+        return "NEUTRAL"
+    except Exception:
+        return "NEUTRAL"
+
+
 # ── Sistem B algoritmaları (Analiz 4/9 ile birebir aynı) ──────
 def algo_trend(klines: list[dict]) -> tuple[int, str]:
     closes = [k["close"] for k in klines]
@@ -420,6 +442,16 @@ async def run_open() -> None:
         mult = [1.0, 0.8, 0.6][rank] if rank < 3 else 0.6
         sig["amount"] = round(sig["amount"] * mult, 1)
 
+        # ETH için OI Divergence kontrolü
+        if sym == "ETHUSDT":
+            eth_kl = fetch_klines("ETHUSDT", 20)
+            oi_sig = oi_divergence_eth(eth_kl)
+            if oi_sig != "NEUTRAL" and oi_sig != sig["direction"]:
+                print(f"[10. ANALİZ] ETH OI Divergence ters yön ({oi_sig}), işlem atlandı")
+                skipped.append(f"ETH-OI:{oi_sig}")
+                continue
+            sig["oi_sig"] = oi_sig
+
         state["open_positions"].append({
             "symbol":           sym,
             "predicted_dir":    sig["direction"],
@@ -458,9 +490,10 @@ async def run_open() -> None:
             f"{sep}"
         )
     else:
+        oi_note = "  ⛔ ETH OI ters yön → atlandı" if any("ETH-OI" in s for s in skipped) else ""
         tg_send(
             f"⏸ <b>10. ANALİZ ✦ Çift Konsensüs — {saat} İST</b>\n"
-            f"İki sistem konsensüs sağlayamadı — {', '.join(s.replace('USDT','') for s in skipped)} elenendi.\n"
+            f"İki sistem konsensüs sağlayamadı — {', '.join(s.replace('USDT','') for s in skipped)} elenendi.{oi_note}\n"
             f"💰 Bakiye: ${state['balance']:.2f}"
         )
 

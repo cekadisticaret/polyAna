@@ -126,6 +126,36 @@ def fetch_price_retry(symbol: str, retries: int = 3) -> float | None:
     return None
 
 
+def oi_divergence_eth() -> str:
+    """ETH OI Divergence kontrolü — UP/DOWN/NEUTRAL"""
+    try:
+        # Klines
+        kl_url = "https://fapi.binance.com/fapi/v1/klines?symbol=ETHUSDT&interval=1h&limit=12"
+        req = urllib.request.Request(kl_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            raw = json.loads(r.read())
+        c = [float(x[4]) for x in raw]
+        # OI
+        oi_url = "https://fapi.binance.com/futures/data/openInterestHist?symbol=ETHUSDT&period=1h&limit=10"
+        req2 = urllib.request.Request(oi_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req2, timeout=10) as r2:
+            oi_raw = json.loads(r2.read())
+        if not isinstance(oi_raw, list) or len(oi_raw) < 5:
+            return "NEUTRAL"
+        oi = [float(x["sumOpenInterestValue"]) for x in oi_raw]
+        if len(c) < 5:
+            return "NEUTRAL"
+        pc = (c[-1] - c[-5]) / c[-5] if c[-5] else 0
+        oc = (oi[-1] - oi[-5]) / oi[-5] if oi[-5] else 0
+        if pc >  0.005 and oc >  0.005: return "UP"
+        if pc < -0.005 and oc >  0.005: return "DOWN"
+        if pc >  0.005 and oc < -0.005: return "DOWN"
+        if pc < -0.005 and oc < -0.005: return "UP"
+        return "NEUTRAL"
+    except Exception:
+        return "NEUTRAL"
+
+
 # ── Konsensus ─────────────────────────────────────────────────
 def find_consensus(hour_tr: int) -> list[dict]:
     """
@@ -308,8 +338,17 @@ async def run_open() -> None:
     open_syms = {p["symbol"] for p in state["open_positions"]}
     new_pos   = [c for c in consensus if c["symbol"] not in open_syms]
 
-    opened = []
+    opened   = []
+    oi_skipped = []
     for c in new_pos:
+        # ETH için OI Divergence kontrolü
+        if c["symbol"] == "ETHUSDT":
+            oi_sig = oi_divergence_eth()
+            if oi_sig != "NEUTRAL" and oi_sig != c["direction"]:
+                print(f"[11. ANALİZ (A1+A2+A4)] ETH OI Divergence ters yön ({oi_sig}), atlandı")
+                oi_skipped.append(f"ETH OI:{oi_sig}")
+                continue
+
         # Kaynak sistemlerin ortalama giriş fiyatını kullan, yoksa anlık fiyat çek
         price = c.get("avg_price") or fetch_price_retry(c["symbol"])
         if price is None:
@@ -355,6 +394,9 @@ async def run_open() -> None:
             )
     else:
         lines.append("⏸ <i>Bu saat konsensus sağlanamadı (≥2 sistem gerekli).</i>")
+
+    if oi_skipped:
+        lines.append(f"⛔ <i>ETH OI Divergence ters yön → işlem açılmadı</i>")
 
     lines.append(
         f"💰 Ana: ${state['balance']-at_risk:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${at_risk:.0f}  |  Toplam: ${state['balance']:.2f}"
