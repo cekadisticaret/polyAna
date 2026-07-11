@@ -838,99 +838,82 @@ async def run_open() -> None:
 
     next_h   = f"{(hour_tr + 1) % 24:02d}:00"
     sep      = "━" * 26
-    mini_sep = "━" * 10
-    # Gerçekten bu turda açılan pozisyonlar (state'e eklenenler)
-    opened   = [s for s in results if s["amount"] > 0 and s["predicted_dir"]]
-    skipped  = [s for s in results if s["amount"] == 0]
+    _SYMS    = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+    _DIR_TR  = {"UP": "UP ▲", "DOWN": "DOWN ▼", None: "—"}
 
-    lines = []
-    for sig in opened:
-        sym      = sig["symbol"]
-        name     = sym.replace("USDT", "")
-        score    = sig["score"]
-        amount   = sig["amount"]
-        dir_icon = "📈" if sig["predicted_dir"] == "UP" else "📉"
-        dir_tr   = "YÜKSELİR" if sig["predicted_dir"] == "UP" else "DÜŞER"
-        hour_wins, hour_total = get_stats(history, sym, hour_tr)
-        sym_wins,  sym_total  = get_symbol_stats(history, sym)
-        low_data = hour_total < MIN_STAT_COUNT
+    # A5 kendi sinyalleri (a9_only olmayanlar)
+    a5_map = {r["symbol"]: r for r in results if not r.get("a9_only")}
 
-        vote_icons = []
-        for v, lbl in zip(sig["votes"], sig["labels"]):
-            icon = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
-            vote_icons.append(f"{icon} {lbl}")
-
-        # PM order bilgisi (sadece başarılı olanlar state'e eklendi)
-        matched_pos = next(
-            (p for p in state["open_positions"] if p["symbol"] == sym),
-            None
-        )
-        if not matched_pos:
-            continue  # PM order açılamamış, gösterme
-        pm_str = ""
-        if matched_pos.get("pm_order_id") == "DRY_RUN":
-            pm_str = f"\n   🔶 DRY RUN: {matched_pos.get('pm_size',0):.1f} shares @ {matched_pos.get('pm_entry_price',0):.2f}"
+    # Bölüm 1 — A5 sinyalleri
+    a5_parts = []
+    for sym in _SYMS:
+        name = sym.replace("USDT", "")
+        r    = a5_map.get(sym)
+        if r:
+            d = "▲" if r["predicted_dir"] == "UP" else "▼"
+            a5_parts.append(f"{name} {d}")
         else:
-            pm_str = f"\n   🟩 PM: {matched_pos.get('pm_size',0):.1f} shares @ {matched_pos.get('pm_entry_price',0):.2f} (${matched_pos.get('pm_spent',0):.2f})"
+            a5_parts.append(f"{name} —")
 
-        # A9 ikonu
-        a9_agree = sig.get("a9_agree")
-        if a9_agree is True:
-            a9_icon = "✅"
-        elif a9_agree is False:
-            a9_icon = "❌"
-        elif sig.get("a9_only"):
-            a9_icon = "🔹"
+    # Bölüm 2 — A9 sinyalleri
+    a9_parts = []
+    for sym in _SYMS:
+        name   = sym.replace("USDT", "")
+        a9_dir = a9_signals.get(sym)
+        if a9_dir:
+            d = "▲" if a9_dir == "UP" else "▼"
+            a9_parts.append(f"{name} {d}")
         else:
-            a9_icon = "—"
+            a9_parts.append(f"{name} —")
 
-        pm_spent_str = f"${matched_pos.get('pm_spent', 0):.2f}"
-        pm_size      = matched_pos.get('pm_size', 0) or 0
-        pm_spent_val = matched_pos.get('pm_spent', 0) or 0
-        to_win_str   = f"→ kazanılacak ${pm_size:.2f}" if pm_size > 0 else ""
-        lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  {sig['price']:.2f}  skor:{score:+d}/3  "
-            f"{pm_spent_str} risk  {to_win_str}  A9 {a9_icon}"
-        )
+    # Bölüm 3 — İşleme girilenler
+    trade_lines = []
+    for sym in _SYMS:
+        name   = sym.replace("USDT", "")
+        opened_pos = next((p for p in state["open_positions"] if p["symbol"] == sym), None)
+        result_sig = next((r for r in results if r["symbol"] == sym), None)
 
-    skip_lines = []
-    for s in skipped:
-        sname = s["symbol"].replace("USDT", "")
-        if s.get("a9_agree") is False:
-            reason = "ters yön"
-        elif s["symbol"] == "ETHUSDT":
-            reason = "A9 sessiz (ETH sadece A9+A5 ile girer)"
+        if opened_pos:
+            d_icon = "📈" if opened_pos["predicted_dir"] == "UP" else "📉"
+            d_tr   = "UP" if opened_pos["predicted_dir"] == "UP" else "DOWN"
+            entry  = opened_pos.get("entry_price", 0)
+            pm_spent = opened_pos.get("pm_spent", 0) or 0
+            pm_size  = opened_pos.get("pm_size", 0)  or 0
+            tag = ""
+            if result_sig:
+                if result_sig.get("a9_only"):
+                    tag = "  <i>A9-only</i>"
+                elif result_sig.get("a9_agree") is True:
+                    tag = "  <i>A9+A5</i>"
+            to_win = f" → ${pm_size:.2f} kazanılacak" if pm_size > 0 else ""
+            trade_lines.append(
+                f"  {d_icon} <b>{name}</b> {d_tr}  giriş:{entry:.2f}  ${pm_spent:.2f} risk{to_win}{tag}"
+            )
+        elif result_sig and result_sig["amount"] == 0:
+            if result_sig.get("a9_agree") is False:
+                reason = "ters yön ↔"
+            elif sym == "ETHUSDT":
+                reason = "A9 sessiz"
+            else:
+                reason = "atlandı"
+            d_tr = "UP" if result_sig["predicted_dir"] == "UP" else "DOWN"
+            trade_lines.append(f"  ⛔ <b>{name}</b> {d_tr}  → girilmedi ({reason})")
         else:
-            reason = "atlandı"
-        skip_lines.append(f"⛔ {sname} ({s['predicted_dir']}) → açılmadı ({reason})")
+            # Ne A5 ne A9 sinyal
+            trade_lines.append(f"  ➖ <b>{name}</b>  sinyal yok")
 
-    parts = [sep, f"<b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {saat} - {next_h}</b>"]
-
-    if lines:
-        parts.extend(lines)
-        parts.append("")  # boş satır
-    elif not any(s["amount"] > 0 for s in results):
-        parts.append("⏸ <i>Bu saat sinyal yok.</i>")
-    else:
-        reasons = []
-        if _market_skip:
-            names = ", ".join(s["symbol"].replace("USDT", "") for s in _market_skip)
-            reasons.append(f"market yok: {names}")
-        if _order_fail:
-            names = ", ".join(s["symbol"].replace("USDT", "") for s in _order_fail)
-            reasons.append(f"order hatası: {names}")
-        parts.append(f"⛔ <i>Sinyal var ama işlem açılmadı — {' | '.join(reasons)}</i>")
-        parts.append("")
-
-    if skip_lines:
-        parts.extend(skip_lines)
-        parts.append("")
+    # PM order hataları
+    error_lines = []
+    if _market_skip:
+        names = ", ".join(s["symbol"].replace("USDT", "") for s in _market_skip)
+        error_lines.append(f"⚠️ PM market yok: {names}")
+    if _order_fail:
+        names = ", ".join(s["symbol"].replace("USDT", "") for s in _order_fail)
+        error_lines.append(f"⚠️ PM order hatası: {names}")
 
     if _newly_opened > 0:
-        time.sleep(3)  # Polymarket bakiyesinin güncellenmesi için bekle
+        time.sleep(3)
     pm_bal        = _pm_get_balance()
-    pm_at_risk    = sum(p.get("pm_spent", 0) for p in state["open_positions"])
-    pm_to_win     = sum(p.get("pm_size", 0) or 0 for p in state["open_positions"])
     tur_spent_sum = sum(
         p.get("pm_spent", 0) for p in state["open_positions"]
         if p.get("entry_hour_tr") == hour_tr
@@ -939,20 +922,37 @@ async def run_open() -> None:
         p.get("pm_size", 0) or 0 for p in state["open_positions"]
         if p.get("entry_hour_tr") == hour_tr
     )
-    pm_bal_str    = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
-    bal_icon      = "🟢" if pm_bal > 150 else "🟡" if pm_bal > 50 else "🔴"
-
+    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
+    bal_icon   = "🟢" if pm_bal > 150 else "🟡" if pm_bal > 50 else "🔴"
     closed_all = len(history)
     dir_wins   = sum(1 for t in history if t["win"])
     genel_dir  = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"
+    win_str    = f" → kazanılacak: ${tur_to_win:.2f}" if tur_to_win > 0 else ""
 
-    win_str = f"  →  kazanılacak: ${tur_to_win:.2f}" if tur_to_win > 0 else ""
-    parts.append(f"{bal_icon} Bütçe: {pm_bal_str}  ⛔ Risk: ${tur_spent_sum:.2f}{win_str}")
-    parts.append(f"Yön doğruluğu: {genel_dir}")
-    parts.append(sep)
+    parts = [
+        sep,
+        f"<b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {saat} - {next_h}</b>",
+        "",
+        f"📊 A5:  {'  '.join(a5_parts)}",
+        f"🔷 A9:  {'  '.join(a9_parts)}",
+        "",
+        "📂 <b>İşleme Girilenler:</b>",
+    ]
+    parts.extend(trade_lines)
+
+    if error_lines:
+        parts.append("")
+        parts.extend(error_lines)
+
+    parts += [
+        "",
+        f"{bal_icon} Bütçe: {pm_bal_str}  ⛔ Risk: ${tur_spent_sum:.2f}{win_str}",
+        f"Yön doğruluğu: {genel_dir}",
+        sep,
+    ]
 
     tg_send("\n".join(parts))
-    print(f"[5. ANALİZ open] {saat} İST — {_newly_opened} işlem açıldı, {len(skipped)} elenendi")
+    print(f"[5. ANALİZ open] {saat} İST — {_newly_opened} işlem açıldı, {len([r for r in results if r['amount']==0])} elenendi")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────
