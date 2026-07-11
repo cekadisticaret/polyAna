@@ -178,8 +178,8 @@ def _pm_fit_buy(size: float, price: float, min_shares: float = 5.0) -> tuple[flo
 
 
 def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
-                    neg_risk: bool = False) -> dict | None:
-    """token_id'yi amount_usd kadar satın al (FAK). {order_id, size, price, spent} döndürür."""
+                    neg_risk: bool = False, _retry: bool = True) -> dict | None:
+    """token_id'yi amount_usd kadar satın al (FAK). Hata alırsa 10sn sonra 1 kez tekrar dener."""
     try:
         from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
         from py_clob_client_v2.order_builder.constants import BUY
@@ -199,12 +199,20 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
         if not resp or not resp.get("success"):
             mesaj = str(resp)
             print(f"[5. ANALİZ] Order başarısız: {mesaj}", file=sys.stderr)
+            if _retry:
+                print(f"[5. ANALİZ] 10sn sonra tekrar deneniyor...", file=sys.stderr)
+                time.sleep(10)
+                return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
             _log_hata(token_id[:20], "order_basarisiz", mesaj)
             return None
         oid = resp.get("orderID") or resp.get("id", "")
         return {"order_id": oid, "size": size, "price": price, "spent": spent}
     except Exception as e:
         print(f"[5. ANALİZ] Order hatası: {e}", file=sys.stderr)
+        if _retry:
+            print(f"[5. ANALİZ] 10sn sonra tekrar deneniyor...", file=sys.stderr)
+            time.sleep(10)
+            return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
         _log_hata(token_id[:20], "order_exception", str(e))
         return None
 
@@ -705,8 +713,11 @@ async def run_open() -> None:
             token_id = pm["up_token"] if sig["predicted_dir"] == "UP" else pm["down_token"]
             order    = _pm_place_order(token_id, sig["amount"], pm["tick_size"], pm["neg_risk"])
             if not order:
+                name_f = sig["symbol"].replace("USDT", "")
+                dir_f  = sig["predicted_dir"]
                 print(f"[5. ANALİZ] {sig['symbol']} PM order başarısız, pozisyon açılmadı", file=sys.stderr)
-                _log_hata(sig["symbol"], "order_basarisiz", f"dir={sig['predicted_dir']} amount={sig['amount']}")
+                _log_hata(sig["symbol"], "order_basarisiz", f"dir={dir_f} amount={sig['amount']}")
+                tg_send(f"⚠️ <b>5. ANALİZ</b> — <b>{name_f}</b> ({dir_f}) Polymarket eşleşmesi bulunamadı, işlem açılmadı.")
                 _order_fail.append(sig)
                 continue
             pos["pm_slug"]        = pm["slug"]
