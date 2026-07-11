@@ -893,10 +893,16 @@ async def run_open() -> None:
             f"{pm_spent_str} risk  {to_win_str}  A9 {a9_icon}"
         )
 
-    skip_lines = [
-        f"⛔ {s['symbol'].replace('USDT','')} ({s['predicted_dir']}) → açılmadı (ters yön)"
-        for s in skipped
-    ]
+    skip_lines = []
+    for s in skipped:
+        sname = s["symbol"].replace("USDT", "")
+        if s.get("a9_agree") is False:
+            reason = "ters yön"
+        elif s["symbol"] == "ETHUSDT":
+            reason = "A9 sessiz (ETH sadece A9+A5 ile girer)"
+        else:
+            reason = "atlandı"
+        skip_lines.append(f"⛔ {sname} ({s['predicted_dir']}) → açılmadı ({reason})")
 
     parts = [sep, f"<b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {saat} - {next_h}</b>"]
 
