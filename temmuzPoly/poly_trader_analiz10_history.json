@@ -403,5 +403,59 @@
     "ind_trend_ok": true,
     "ind_mr_ok": false,
     "ind_of_ok": false
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 64239.6,
+    "exit_price": 64143.0,
+    "entry_time_tr": "2026-07-11T12:06:02.121810+03:00",
+    "entry_hour_tr": 12,
+    "entry_dow": 5,
+    "entry_is_weekend": true,
+    "amount": 16.0,
+    "pnl": 16.0,
+    "exit_time_tr": "2026-07-11T13:00:03.318914+03:00",
+    "score_b": -1,
+    "conf_a": 0.845,
+    "votes": [
+      -1,
+      1,
+      -1,
+      -1
+    ],
+    "ind_poly_ok": true,
+    "ind_trend_ok": false,
+    "ind_mr_ok": true,
+    "ind_of_ok": true
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 78.13,
+    "exit_price": 77.79,
+    "entry_time_tr": "2026-07-11T12:06:02.121810+03:00",
+    "entry_hour_tr": 12,
+    "entry_dow": 5,
+    "entry_is_weekend": true,
+    "amount": 20.0,
+    "pnl": 20.0,
+    "exit_time_tr": "2026-07-11T13:00:03.318914+03:00",
+    "score_b": -1,
+    "conf_a": 0.885,
+    "votes": [
+      -1,
+      0,
+      0,
+      -1
+    ],
+    "ind_poly_ok": true,
+    "ind_trend_ok": null,
+    "ind_mr_ok": null,
+    "ind_of_ok": true
   }
 ]

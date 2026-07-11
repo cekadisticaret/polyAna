@@ -1,5 +1,31 @@
 {
-  "balance": -16.07,
-  "open_positions": [],
+  "balance": -22.77,
+  "open_positions": [
+    {
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 1794.75,
+      "entry_time_tr": "2026-07-11T13:04:01.143417+03:00",
+      "entry_hour_tr": 13,
+      "entry_dow": 5,
+      "entry_is_weekend": true,
+      "score": 2,
+      "amount": 6.4,
+      "votes": [
+        1,
+        0,
+        1,
+        0
+      ],
+      "pm_slug": "ethereum-up-or-down-july-11-2026-6am-et",
+      "pm_title": "Ethereum Up or Down - July 11, 6AM ET",
+      "pm_token_id": "35259738527294860252371273184030665934333707722458300652354718364942332764225",
+      "pm_token_dir": "UP",
+      "pm_size": 10.0,
+      "pm_entry_price": 0.67,
+      "pm_order_id": "DRY_RUN",
+      "pm_spent": 6.7
+    }
+  ],
   "total_pnl": 0.0
 }

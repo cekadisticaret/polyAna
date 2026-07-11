@@ -34,6 +34,7 @@ LOGIN_HTML = """<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8f135'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='900' fill='%230d0d0d'>P</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Giriş — PolyMarket</title>
 <style>
@@ -526,6 +527,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8f135'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='900' fill='%230d0d0d'>P</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Algoritma — PolyMarket</title>
 <style>
@@ -1045,6 +1047,7 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8f135'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='900' fill='%230d0d0d'>P</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ayarlar — PolyMarket</title>
 <style>
@@ -1220,6 +1223,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8f135'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='900' fill='%230d0d0d'>P</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sıcaklık Haritası — PolyMarket</title>
 <style>
@@ -1497,6 +1501,7 @@ HTML = r"""<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8f135'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='900' fill='%230d0d0d'>P</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PolyMarket Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -1824,15 +1829,15 @@ HTML = r"""<!DOCTYPE html>
   </div>
 
   <!-- Son işlemler -->
-  <div class="rp-section">
-    <div class="rp-title">Son İşlemler</div>
-    <div id="recent-trades"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
-  </div>
-
   <!-- Algoritma performansı -->
   <div class="rp-section">
     <div class="rp-title">Algoritma Performansı</div>
     <div id="algo-stats"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
+  </div>
+
+  <div class="rp-section">
+    <div class="rp-title">Son İşlemler</div>
+    <div id="recent-trades"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
   </div>
 
 </div>
@@ -2023,20 +2028,20 @@ async function refresh() {
         ? `<span style="color:#c8f135;font-weight:700">${sl.good_days} farklı gün</span>`
         : `<span style="color:#666">1 gün</span>`;
       return `<div onclick="openSlotPopup(-1,${hour})"
-        style="padding:12px;margin-bottom:8px;background:#111;border-radius:14px;
+        style="padding:8px 10px;margin-bottom:6px;background:#111;border-radius:10px;
                cursor:pointer;transition:.15s;border:1px solid #1f1f1f"
         onmouseover="this.style.borderColor='#c8f135'" onmouseout="this.style.borderColor='#1f1f1f'">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:14px;font-weight:800">${medals[i]} ${sl.hour}</span>
-          <span style="font-size:16px;font-weight:800;color:${wrColor}">${sl.wr}%</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:800">${medals[i]} ${sl.hour}</span>
+          <span style="font-size:13px;font-weight:800;color:${wrColor}">${sl.wr}%</span>
         </div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">${dayTags}</div>
-        <div style="height:3px;background:#1c1c1e;border-radius:4px;margin-bottom:7px">
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:5px">${dayTags}</div>
+        <div style="height:2px;background:#1c1c1e;border-radius:4px;margin-bottom:5px">
           <div style="height:100%;width:${barW}%;background:${wrColor};border-radius:4px"></div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:11px;color:#666">${sl.w}K / ${sl.t} işlem · ${dayCountStr}</span>
-          <span style="font-size:10px;color:#444;background:#1c1c1e;padding:2px 8px;border-radius:6px">detay →</span>
+          <span style="font-size:10px;color:#666">${sl.w}K / ${sl.t} işlem · ${dayCountStr}</span>
+          <span style="font-size:10px;color:#444;background:#1c1c1e;padding:1px 6px;border-radius:5px">detay →</span>
         </div>
       </div>`;
     }).join('') || '<div style="color:#666;font-size:13px">Veri yok</div>';
