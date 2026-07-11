@@ -414,9 +414,17 @@ async def analyze(symbol: str) -> dict | None:
                  else 0)
     score = rsi_vote + macd_vote + ema_vote
 
+    # Saatin başındaki fiyat (son kapanan 1h mumu) = Polymarket "Price to Beat"
+    try:
+        klines = fetch_klines(symbol, limit=3)
+        price_to_beat = klines[-2]["close"]  # son kapanan mum = saatin başı
+    except Exception:
+        price_to_beat = pred_obj.current_price
+
     return {
         "symbol":        symbol,
-        "price":         pred_obj.current_price,
+        "price":         price_to_beat,        # Polymarket referans fiyatı (:00 fiyatı)
+        "current_price": pred_obj.current_price,  # anlık fiyat (bilgi amaçlı)
         "score":         score,
         "predicted_dir": pred_obj.predicted_dir,
         "amount":        amount,
@@ -681,7 +689,8 @@ async def run_open() -> None:
             # A9-only sinyaller için fiyat çek
             if sig.get("a9_only") and sig.get("price") is None:
                 try:
-                    sig["price"] = fetch_price(sig["symbol"])
+                    klines_a9 = fetch_klines(sig["symbol"], limit=3)
+                    sig["price"] = klines_a9[-2]["close"]  # saatin başı fiyatı
                 except Exception as _fe:
                     print(f"[5. ANALİZ] {sig['symbol']} A9-only fiyat çekme hatası: {_fe}", file=sys.stderr)
                     _log_hata(sig["symbol"], "a9only_fiyat_hatasi", str(_fe))
