@@ -375,7 +375,7 @@ def api_symbol_stats():
 
     top_slots = []
     for h, day_data in hour_day.items():
-        good_days = [(d, v) for d, v in day_data.items() if v["t"] >= 2 and v["w"] / v["t"] > 0.5]
+        good_days = [(d, v) for d, v in day_data.items() if v["t"] >= 1 and v["w"] / v["t"] > 0.5]
         all_w = sum(v["w"] for v in day_data.values())
         all_t = sum(v["t"] for v in day_data.values())
         if not good_days or all_t < 3:
