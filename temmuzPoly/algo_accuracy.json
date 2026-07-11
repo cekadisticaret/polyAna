@@ -2,56 +2,67 @@
   "1": {
     "name": "",
     "total": 2,
-    "correct": 1
+    "correct": 1,
+    "by_sym": {}
   },
   "2": {
     "name": "",
     "total": 2,
-    "correct": 1
+    "correct": 1,
+    "by_sym": {}
   },
   "3": {
     "name": "",
     "total": 2,
-    "correct": 2
+    "correct": 2,
+    "by_sym": {}
   },
   "4": {
     "name": "",
     "total": 2,
-    "correct": 1
+    "correct": 1,
+    "by_sym": {}
   },
   "5": {
     "name": "",
     "total": 1,
-    "correct": 0
+    "correct": 0,
+    "by_sym": {}
   },
   "6": {
     "name": "",
     "total": 2,
-    "correct": 2
+    "correct": 2,
+    "by_sym": {}
   },
   "7": {
     "name": "",
     "total": 2,
-    "correct": 1
+    "correct": 1,
+    "by_sym": {}
   },
   "8": {
     "name": "",
     "total": 2,
-    "correct": 1
+    "correct": 1,
+    "by_sym": {}
   },
   "9": {
     "name": "",
     "total": 2,
-    "correct": 1
+    "correct": 1,
+    "by_sym": {}
   },
   "11": {
     "name": "",
     "total": 2,
-    "correct": 2
+    "correct": 2,
+    "by_sym": {}
   },
   "15": {
     "name": "",
     "total": 2,
-    "correct": 1
+    "correct": 1,
+    "by_sym": {}
   }
 }

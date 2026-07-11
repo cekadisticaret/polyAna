@@ -2436,5 +2436,28 @@
     "ind_mr_ok": null,
     "ind_of_ok": false,
     "ind_fund_ok": null
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "pm_win": null,
+    "entry_price": 1794.75,
+    "exit_price": 1797.62,
+    "entry_time_tr": "2026-07-11T13:04:01.143417+03:00",
+    "entry_hour_tr": 13,
+    "entry_dow": 5,
+    "entry_is_weekend": true,
+    "score": 2,
+    "amount": 6.4,
+    "pm_spent": 6.7,
+    "pm_order_id": "DRY_RUN",
+    "exit_time_tr": "2026-07-11T14:00:02.844186+03:00",
+    "pnl": 6.7,
+    "ind_trend_ok": true,
+    "ind_mr_ok": null,
+    "ind_of_ok": true,
+    "ind_fund_ok": null
   }
 ]

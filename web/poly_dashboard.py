@@ -550,12 +550,15 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
               margin-right:5px; animation:pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  .main { margin-left:220px; padding:28px 36px; display:flex; gap:28px; align-items:flex-start; }
-  .main-left  { flex:1; min-width:0; }
-  .main-right { width:270px; flex-shrink:0; position:sticky; top:28px; }
+  .main       { flex:1; min-width:0; margin-left:220px; margin-right:286px; padding:24px 20px 24px 24px; }
+  .main-inner { display:block; }
+  .main-left  { width:100%; }
+  .main-right { position:fixed; right:0; top:0; bottom:0; width:270px;
+                background:#0a0a0a; border-left:1px solid #1a1a1a;
+                padding:24px 16px; overflow-y:auto; z-index:5; }
 
   /* ── Üst başlık + consensus ── */
-  .top-bar { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; gap:20px; }
+  .top-bar { display:flex; align-items:flex-start; justify-content:flex-start; margin-bottom:24px; gap:24px; }
   .page-title { font-size:22px; font-weight:800; }
   .page-sub   { font-size:13px; color:#666; margin-top:4px; }
 
@@ -586,17 +589,20 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
     display:flex; align-items:center; gap:8px;
   }
   .section-title::after { content:""; flex:1; height:1px; background:#1e1e1e; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  @media(max-width:700px){ .grid { grid-template-columns:1fr; } }
 
   .card { background:#111; border:1px solid #1e1e1e; border-radius:14px;
-          padding:16px 18px; transition:border-color .2s; }
+          padding:16px 16px; transition:border-color .2s; }
   .card:hover { border-color:#2a3a2a; }
-  .card-header { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
-  .card-num { width:26px; height:26px; border-radius:7px; background:#1c1c1e; flex-shrink:0;
+  .card-header { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; }
+  .card-num { width:24px; height:24px; border-radius:6px; background:#1c1c1e; flex-shrink:0;
               display:flex; align-items:center; justify-content:center;
-              font-size:11px; font-weight:800; color:#c8f135; }
-  .card-meta { flex:1; }
-  .card-name  { font-size:13px; font-weight:700; color:#fff; line-height:1.3; }
+              font-size:10px; font-weight:800; color:#c8f135; }
+  .card-meta { flex:1; min-width:0; }
+  .card-name  { font-size:12px; font-weight:700; color:#fff; line-height:1.4;
+                display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+                overflow:hidden; }
   .card-badge { display:inline-block; font-size:10px; font-weight:700; padding:2px 7px;
                 border-radius:20px; margin-top:3px; letter-spacing:.3px; }
   .badge-trend { background:#1a2e1a; color:#4ade80; }
@@ -604,9 +610,11 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   .badge-vol   { background:#2e1a1a; color:#f87171; }
   .badge-quant { background:#2e2a1a; color:#fbbf24; }
   .badge-ml    { background:#1e1a2e; color:#c084fc; }
-  .card-desc { font-size:11.5px; color:#666; line-height:1.6; }
-  .card-tags  { margin-top:8px; display:flex; flex-wrap:wrap; gap:5px; }
-  .tag { font-size:10px; background:#1c1c1e; color:#555; padding:2px 7px; border-radius:5px; }
+  .card-desc { font-size:11px; color:#666; line-height:1.5;
+               display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+               overflow:hidden; }
+  .card-tags  { margin-top:6px; display:flex; flex-wrap:wrap; gap:4px; }
+  .tag { font-size:9px; background:#1c1c1e; color:#555; padding:2px 6px; border-radius:4px; }
 
   /* ── Sinyal satırı ── */
   .card-signals {
@@ -636,8 +644,9 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   .rank-pos.top2 { color:#888; }
   .rank-pos.top3 { color:#b45309; }
   .rank-info { flex:1; min-width:0; }
-  .rank-name { font-size:12px; font-weight:600; color:#ddd; white-space:nowrap;
-               overflow:hidden; text-overflow:ellipsis; }
+  .rank-name { font-size:12px; font-weight:600; color:#ddd; line-height:1.3;
+               display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+               overflow:hidden; }
   .rank-sub  { font-size:10px; color:#555; margin-top:1px; }
   .rank-wr   { font-size:13px; font-weight:800; min-width:38px; text-align:right; flex-shrink:0; }
   .wr-good  { color:#4ade80; }
@@ -647,13 +656,32 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   .rank-bar-fill { height:100%; border-radius:2px; background:#c8f135; transition:width .5s; }
   .rank-empty { font-size:12px; color:#444; text-align:center; padding:20px 0; }
 
-  @media(max-width:1100px){ .main-right { display:none; } }
+  /* Sembol en iyi algo şeridi */
+  .sym-best { display:flex; flex-direction:column; align-items:flex-start;
+              background:#111; border:1px solid #1e1e1e; border-radius:12px;
+              padding:6px 12px; min-width:0; }
+  .sym-best-sym  { font-size:11px; font-weight:800; color:#c8f135; line-height:1.2; }
+  .sym-best-algo { font-size:11px; color:#aaa; white-space:nowrap; }
+  .sym-best-stat { font-size:11px; color:#4ade80; font-weight:700; margin-left:4px; }
+
+  /* Kart başarı rozeti — tag'lerin altında, sinyal pillerin üstünde */
+  .card-acc  { display:flex; align-items:center; justify-content:space-between;
+               margin:8px 0 6px; min-height:18px; }
+  .acc-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
+  .acc-good  { background:#1a3a1a; color:#4ade80; }
+  .acc-mid   { background:#2e2a1a; color:#fbbf24; }
+  .acc-bad   { background:#3a1a1a; color:#f87171; }
+  .acc-none  { display:none; }
+  .acc-rank  { font-size:11px; color:#555; }
+
+  @media(max-width:860px){ .main-right { display:none; } }
   @media(max-width:900px){
     .top-bar { flex-direction:column; }
     .consensus-box { min-width:0; width:100%; }
   }
   @media(max-width:768px){
-    .main { margin-left:0; padding:20px 16px; }
+    .main { margin-left:0; padding:20px 12px; }
+    .main-inner { flex-direction:column; }
     .sidebar { display:none; }
   }
 </style>
@@ -674,13 +702,15 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
 </div>
 
 <div class="main">
+<div class="main-inner">
 <div class="main-left">
 
   <!-- Üst bar -->
   <div class="top-bar">
     <div>
       <div class="page-title">Algoritma Analizi</div>
-      <div class="page-sub">15 algoritma — BTC / ETH / SOL — 1 saatlik</div>
+      <div class="page-sub">21 algoritma — BTC / ETH / SOL — 1 saatlik</div>
+      <div id="top-sym-algos" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
     <!-- Consensus kutusu -->
     <div class="consensus-box">
@@ -704,49 +734,53 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
         <div class="card-num">1</div>
         <div class="card-meta">
           <div class="card-name">EMA Crossover</div>
+      
           <span class="card-badge badge-trend">Trend</span>
-        </div>
       </div>
       <div class="card-desc">9/21/50/200 EMA kesişimleri — kısa ve uzun trend yönü tespiti.</div>
-      <div class="card-tags"><span class="tag">EMA-9</span><span class="tag">EMA-21</span><span class="tag">EMA-50</span><span class="tag">EMA-200</span></div>
-      <div class="card-signals" id="sigs-1"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">EMA-9</span><span class="tag">EMA-21</span><span class="tag">EMA-50</span><span class="tag">EMA-200</span></div>      <div class="card-signals" id="sigs-1"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-1"></div>
+      </div>
     <div class="card" data-algo="2">
       <div class="card-header">
         <div class="card-num">2</div>
         <div class="card-meta">
           <div class="card-name">MACD Histogram + Divergence</div>
+      
           <span class="card-badge badge-trend">Trend</span>
-        </div>
       </div>
       <div class="card-desc">Histogram dip/tepe tespiti ve fiyat-indikatör uyumsuzluğu (divergence) ile erken sinyal.</div>
-      <div class="card-tags"><span class="tag">MACD</span><span class="tag">Divergence</span><span class="tag">Histogram</span></div>
-      <div class="card-signals" id="sigs-2"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">MACD</span><span class="tag">Divergence</span><span class="tag">Histogram</span></div>      <div class="card-signals" id="sigs-2"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-2"></div>
+      </div>
     <div class="card" data-algo="3">
       <div class="card-header">
         <div class="card-num">3</div>
         <div class="card-meta">
           <div class="card-name">Supertrend</div>
+      
           <span class="card-badge badge-trend">Trend</span>
-        </div>
       </div>
       <div class="card-desc">ATR bazlı trend takip ve stop-loss belirleme indikatörü.</div>
-      <div class="card-tags"><span class="tag">ATR</span><span class="tag">Stop-Loss</span><span class="tag">Trend</span></div>
-      <div class="card-signals" id="sigs-3"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">ATR</span><span class="tag">Stop-Loss</span><span class="tag">Trend</span></div>      <div class="card-signals" id="sigs-3"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-3"></div>
+      </div>
     <div class="card" data-algo="4">
       <div class="card-header">
         <div class="card-num">4</div>
         <div class="card-meta">
           <div class="card-name">Ichimoku Cloud</div>
+      
           <span class="card-badge badge-trend">Trend</span>
-        </div>
       </div>
       <div class="card-desc">Japon orijinli çok katmanlı trend/momentum sistemi. Kumo bulutu kırılımları güçlü giriş sinyalleri verir.</div>
-      <div class="card-tags"><span class="tag">Kumo</span><span class="tag">Kijun</span><span class="tag">Tenkan</span></div>
-      <div class="card-signals" id="sigs-4"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">Kumo</span><span class="tag">Kijun</span><span class="tag">Tenkan</span></div>      <div class="card-signals" id="sigs-4"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-4"></div>
+      </div>
   </div>
 
   <!-- MOMENTUM -->
@@ -757,37 +791,40 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
         <div class="card-num">5</div>
         <div class="card-meta">
           <div class="card-name">RSI + Divergence</div>
+      
           <span class="card-badge badge-mom">Momentum</span>
-        </div>
       </div>
       <div class="card-desc">Aşırı alım/satım bölgeleri + fiyat-RSI uyumsuzluğu. Analiz-5 ve Analiz-1'de aktif.</div>
-      <div class="card-tags"><span class="tag">RSI-14</span><span class="tag">Divergence</span><span class="tag">OB/OS</span></div>
-      <div class="card-signals" id="sigs-5"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">RSI-14</span><span class="tag">Divergence</span><span class="tag">OB/OS</span></div>      <div class="card-signals" id="sigs-5"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-5"></div>
+      </div>
     <div class="card" data-algo="6">
       <div class="card-header">
         <div class="card-num">6</div>
         <div class="card-meta">
           <div class="card-name">Stochastic RSI</div>
+      
           <span class="card-badge badge-mom">Momentum</span>
-        </div>
       </div>
       <div class="card-desc">RSI'dan daha hassas, kısa vadeli dönüş noktalarını erken yakalar. Scalping için tercih edilir.</div>
-      <div class="card-tags"><span class="tag">StochRSI</span><span class="tag">Scalp</span><span class="tag">Kısa Vade</span></div>
-      <div class="card-signals" id="sigs-6"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">StochRSI</span><span class="tag">Scalp</span><span class="tag">Kısa Vade</span></div>      <div class="card-signals" id="sigs-6"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-6"></div>
+      </div>
     <div class="card" data-algo="7">
       <div class="card-header">
         <div class="card-num">7</div>
         <div class="card-meta">
           <div class="card-name">Bollinger Bands + Squeeze</div>
+      
           <span class="card-badge badge-mom">Momentum</span>
-        </div>
       </div>
       <div class="card-desc">Volatilite daralması (squeeze) sonrası patlama hareketlerini öngörmek için. Kripto'da volatilite döngüseldir.</div>
-      <div class="card-tags"><span class="tag">BB</span><span class="tag">Squeeze</span><span class="tag">Volatilite</span></div>
-      <div class="card-signals" id="sigs-7"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">BB</span><span class="tag">Squeeze</span><span class="tag">Volatilite</span></div>      <div class="card-signals" id="sigs-7"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-7"></div>
+      </div>
   </div>
 
   <!-- HACİM -->
@@ -798,37 +835,40 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
         <div class="card-num">8</div>
         <div class="card-meta">
           <div class="card-name">VWAP</div>
+      
           <span class="card-badge badge-vol">Hacim</span>
-        </div>
       </div>
       <div class="card-desc">Volume Weighted Average Price — günlük hacim ağırlıklı ortalama fiyat. Destek/direnç görevi görür.</div>
-      <div class="card-tags"><span class="tag">VWAP</span><span class="tag">Kurumsal</span><span class="tag">Destek/Direnç</span></div>
-      <div class="card-signals" id="sigs-8"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">VWAP</span><span class="tag">Kurumsal</span><span class="tag">Destek/Direnç</span></div>      <div class="card-signals" id="sigs-8"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-8"></div>
+      </div>
     <div class="card" data-algo="9">
       <div class="card-header">
         <div class="card-num">9</div>
         <div class="card-meta">
           <div class="card-name">OBV (On-Balance Volume)</div>
+      
           <span class="card-badge badge-vol">Hacim</span>
-        </div>
       </div>
       <div class="card-desc">Hacim akışını fiyattan bağımsız ölçer. Akıllı para girişini erken tespit eder.</div>
-      <div class="card-tags"><span class="tag">OBV</span><span class="tag">Akıllı Para</span><span class="tag">Öncü Sinyal</span></div>
-      <div class="card-signals" id="sigs-9"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">OBV</span><span class="tag">Akıllı Para</span><span class="tag">Öncü Sinyal</span></div>      <div class="card-signals" id="sigs-9"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-9"></div>
+      </div>
     <div class="card" data-algo="10">
       <div class="card-header">
         <div class="card-num">10</div>
         <div class="card-meta">
           <div class="card-name">Volume Profile (POC)</div>
+      
           <span class="card-badge badge-vol">Hacim</span>
-        </div>
       </div>
       <div class="card-desc">En çok işlem gören fiyat seviyesi (Point of Control). Güçlü destek/direnç bölgeleri oluşturur.</div>
-      <div class="card-tags"><span class="tag">POC</span><span class="tag">Value Area</span><span class="tag">Direnç</span></div>
-      <div class="card-signals" id="sigs-10"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">POC</span><span class="tag">Value Area</span><span class="tag">Direnç</span></div>      <div class="card-signals" id="sigs-10"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-10"></div>
+      </div>
   </div>
 
   <!-- QUANT -->
@@ -839,37 +879,40 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
         <div class="card-num">11</div>
         <div class="card-meta">
           <div class="card-name">Mean Reversion (Z-Score)</div>
+      
           <span class="card-badge badge-quant">Quant</span>
-        </div>
       </div>
       <div class="card-desc">Fiyatın ortalamadan sapmasına göre pozisyon alma. Range piyasalarda trend takibinden daha iyi çalışır.</div>
-      <div class="card-tags"><span class="tag">Z-Score</span><span class="tag">Mean Rev</span><span class="tag">Range</span></div>
-      <div class="card-signals" id="sigs-11"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">Z-Score</span><span class="tag">Mean Rev</span><span class="tag">Range</span></div>      <div class="card-signals" id="sigs-11"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-11"></div>
+      </div>
     <div class="card" data-algo="12">
       <div class="card-header">
         <div class="card-num">12</div>
         <div class="card-meta">
           <div class="card-name">Pairs Trading</div>
+      
           <span class="card-badge badge-quant">Quant</span>
-        </div>
       </div>
       <div class="card-desc">ETH/BTC oranının z-score'una göre pozisyon alma. İki korele coin arasındaki spread'den yararlanır.</div>
-      <div class="card-tags"><span class="tag">Cointegration</span><span class="tag">Spread</span><span class="tag">ETH/BTC</span></div>
-      <div class="card-signals" id="sigs-12"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">Cointegration</span><span class="tag">Spread</span><span class="tag">ETH/BTC</span></div>      <div class="card-signals" id="sigs-12"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-12"></div>
+      </div>
     <div class="card" data-algo="13">
       <div class="card-header">
         <div class="card-num">13</div>
         <div class="card-meta">
           <div class="card-name">Grid Trading Bot</div>
+      
           <span class="card-badge badge-quant">Quant</span>
-        </div>
       </div>
       <div class="card-desc">Belirli fiyat aralığında otomatik alım-satım ızgarası. Range piyasalarda pasif gelir için popüler.</div>
-      <div class="card-tags"><span class="tag">Grid</span><span class="tag">Range</span><span class="tag">Pasif Gelir</span></div>
-      <div class="card-signals" id="sigs-13"><div class="sig-na sig-pill">BTC — Nötr</div><div class="sig-na sig-pill">ETH — Nötr</div><div class="sig-na sig-pill">SOL — Nötr</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">Grid</span><span class="tag">Range</span><span class="tag">Pasif Gelir</span></div>      <div class="card-signals" id="sigs-13"><div class="sig-na sig-pill">BTC — Nötr</div><div class="sig-na sig-pill">ETH — Nötr</div><div class="sig-na sig-pill">SOL — Nötr</div></div>
+    
+        <div class="card-acc" id="acc-13"></div>
+      </div>
   </div>
 
   <!-- ML -->
@@ -880,37 +923,146 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
         <div class="card-num">14</div>
         <div class="card-meta">
           <div class="card-name">LSTM / Zaman Serisi</div>
+      
           <span class="card-badge badge-ml">ML</span>
-        </div>
       </div>
       <div class="card-desc">Geçmiş fiyat verisiyle eğitilen derin öğrenme modeli. Diğer indikatörlerle kombinlendiğinde filtre görevi görür.</div>
-      <div class="card-tags"><span class="tag">LSTM</span><span class="tag">Deep Learning</span><span class="tag">Filtre</span></div>
-      <div class="card-signals" id="sigs-14"><div class="sig-na sig-pill">— Gerçek zamanlı model yok —</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">LSTM</span><span class="tag">Deep Learning</span><span class="tag">Filtre</span></div>      <div class="card-signals" id="sigs-14"><div class="sig-na sig-pill">— Gerçek zamanlı model yok —</div></div>
+    
+        <div class="card-acc" id="acc-14"></div>
+      </div>
     <div class="card" data-algo="15">
       <div class="card-header">
         <div class="card-num">15</div>
         <div class="card-meta">
           <div class="card-name">Multi-Timeframe Confluence</div>
+      
           <span class="card-badge badge-ml">Hibrit</span>
-        </div>
       </div>
       <div class="card-desc">1H + 4H EMA sinyallerinin örtüşmesine dayalı filtre. Yanlış pozitifleri ezer — en yüksek başarı oranına sahip yaklaşımlardan biri.</div>
-      <div class="card-tags"><span class="tag">1H</span><span class="tag">4H</span><span class="tag">Confluence</span></div>
-      <div class="card-signals" id="sigs-15"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-    </div>
+      <div class="card-tags"><span class="tag">1H</span><span class="tag">4H</span><span class="tag">Confluence</span></div>      <div class="card-signals" id="sigs-15"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-15"></div>
+      </div>
+  </div>
+
+  <!-- YENİ: Volatilite / Breakout -->
+  <div class="section-title">💥 Volatilite / Breakout</div>
+  <div class="grid">
+    <div class="card" data-algo="16">
+      <div class="card-header">
+        <div class="card-num">16</div>
+        <div class="card-meta">
+          <div class="card-name">ATR Momentum Breakout</div>
+      
+          <span class="card-badge badge-vol">Volatilite</span>
+      </div>
+      <div class="card-desc">ATR bandını kıran fiyat hareketlerini takip eder. Sideways'de NEUTRAL, breakout anında güçlü yön sinyali verir.</div>
+      <div class="card-tags"><span class="tag">ATR-14</span><span class="tag">Breakout</span><span class="tag">EMA-20</span></div>      <div class="card-signals" id="sigs-16"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-16"></div>
+      </div>
+    <div class="card" data-algo="17">
+      <div class="card-header">
+        <div class="card-num">17</div>
+        <div class="card-meta">
+          <div class="card-name">Heikin Ashi Trend Filter</div>
+      
+          <span class="card-badge badge-trend">Trend</span>
+      </div>
+      <div class="card-desc">HA mumları ile gürültü azaltılmış trend tespiti. 3 ardışık aynı renkli mum = güçlü yön onayı. EMA'ya göre daha az false signal.</div>
+      <div class="card-tags"><span class="tag">Heikin Ashi</span><span class="tag">Noise Reduction</span><span class="tag">Trend</span></div>      <div class="card-signals" id="sigs-17"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-17"></div>
+      </div>
+    <div class="card" data-algo="18">
+      <div class="card-header">
+        <div class="card-num">18</div>
+        <div class="card-meta">
+          <div class="card-name">TEMA Crossover (9/21)</div>
+      
+          <span class="card-badge badge-trend">Trend</span>
+      </div>
+      <div class="card-desc">Triple EMA — lag'i 3 kat azaltılmış crossover. Standart EMA'ya kıyasla yön değişimlerine çok daha erken tepki verir.</div>
+      <div class="card-tags"><span class="tag">TEMA-9</span><span class="tag">TEMA-21</span><span class="tag">Low Lag</span></div>      <div class="card-signals" id="sigs-18"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-18"></div>
+      </div>
+  </div>
+
+  <!-- YENİ: Piyasa Yapısı -->
+  <div class="section-title">🏗 Piyasa Yapısı</div>
+  <div class="grid">
+    <div class="card" data-algo="19">
+      <div class="card-header">
+        <div class="card-num">19</div>
+        <div class="card-meta">
+          <div class="card-name">ADX Market Regime</div>
+      
+          <span class="card-badge badge-quant">Quant</span>
+      </div>
+      <div class="card-desc">ADX &gt; 25 = trend piyasası (+DI/-DI yön verir). ADX &lt; 20 = yatay piyasa = NEUTRAL. En iyi trend filtrelerinden biri.</div>
+      <div class="card-tags"><span class="tag">ADX-14</span><span class="tag">+DI</span><span class="tag">-DI</span><span class="tag">Regime</span></div>      <div class="card-signals" id="sigs-19"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-19"></div>
+      </div>
+    <div class="card" data-algo="20">
+      <div class="card-header">
+        <div class="card-num">20</div>
+        <div class="card-meta">
+          <div class="card-name">Open Interest Divergence</div>
+      
+          <span class="card-badge badge-vol">Kripto</span>
+      </div>
+      <div class="card-desc">Fiyat + OI yönü karşılaştırması. Fiyat↑+OI↑=güçlü trend, Fiyat↑+OI↓=zayıf ralli. Binance Futures verisinden anlık hesaplanır.</div>
+      <div class="card-tags"><span class="tag">OI</span><span class="tag">Futures</span><span class="tag">Divergence</span></div>      <div class="card-signals" id="sigs-20"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-20"></div>
+      </div>
+    <div class="card" data-algo="21">
+      <div class="card-header">
+        <div class="card-num">21</div>
+        <div class="card-meta">
+          <div class="card-name">Fear &amp; Greed Momentum</div>
+      
+          <span class="card-badge badge-ml">Sentiment</span>
+      </div>
+      <div class="card-desc">Crypto Fear &amp; Greed Index (alternative.me). Aşırı Korku (≤20) = al, Aşırı Açgözlülük (≥80) = sat. Kontrarian yaklaşım.</div>
+      <div class="card-tags"><span class="tag">Sentiment</span><span class="tag">Fear&amp;Greed</span><span class="tag">Contrarian</span></div>      <div class="card-signals" id="sigs-21"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+    
+        <div class="card-acc" id="acc-21"></div>
+      </div>
   </div>
 
 </div><!-- /main-left -->
 
-<!-- Sağ kolon: Algoritma performansı -->
+<!-- Sağ kolon -->
 <div class="main-right">
   <div class="rank-box">
     <div class="rank-title">🏆 Algoritma Başarısı</div>
     <div id="rank-list"><div class="rank-empty">İlk işlemler kapandıktan sonra burada görünecek</div></div>
   </div>
-</div>
 
+  <!-- Sembol bazlı breakdown -->
+  <div class="rank-box" style="margin-top:14px">
+    <div class="rank-title" style="margin-bottom:10px">📊 Sembol Bazlı</div>
+    <!-- Filtre tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button id="sym-tab-BTC" onclick="setSym('BTC')"
+        style="flex:1;padding:5px 0;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:700;
+               background:#c8f135;color:#0d0d0d">BTC</button>
+      <button id="sym-tab-ETH" onclick="setSym('ETH')"
+        style="flex:1;padding:5px 0;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:700;
+               background:#1c1c1e;color:#555">ETH</button>
+      <button id="sym-tab-SOL" onclick="setSym('SOL')"
+        style="flex:1;padding:5px 0;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:700;
+               background:#1c1c1e;color:#555">SOL</button>
+    </div>
+    <div id="sym-rank-list"><div class="rank-empty">Veri bekleniyor…</div></div>
+  </div>
+</div><!-- /main-right -->
+
+</div><!-- /main-inner -->
 </div><!-- /main -->
 </div><!-- /app -->
 
@@ -932,8 +1084,8 @@ function pillLabel(sym, sig){
 
 function renderSignals(data){
   const sigs = data.signals || {};
-  // 1-12, 15 güncelle (13,14 sabit)
-  const dynamic = [1,2,3,4,5,6,7,8,9,10,11,12,15];
+  // 13,14 sabit (yön yok); diğerleri güncellenir
+  const dynamic = [1,2,3,4,5,6,7,8,9,10,11,12,15,16,17,18,19,20,21];
   for(const n of dynamic){
     const el = document.getElementById("sigs-"+n);
     if(!el) continue;
@@ -977,13 +1129,6 @@ function renderConsensus(data){
   }).join("");
 }
 
-const ALGO_NAMES = {
-  "1":"EMA Crossover","2":"MACD + Divergence","3":"Supertrend","4":"Ichimoku Cloud",
-  "5":"RSI + Divergence","6":"Stochastic RSI","7":"BB + Squeeze","8":"VWAP",
-  "9":"OBV","10":"Volume Profile","11":"Mean Reversion","12":"Pairs Trading",
-  "15":"Multi-TF Confluence"
-};
-
 function renderRanking(acc){
   const el = document.getElementById("rank-list");
   const entries = Object.entries(acc)
@@ -1018,11 +1163,161 @@ function renderRanking(acc){
   }).join("");
 }
 
+let _accData = {};
+let _activeSym = "BTC";
+
+function setSym(sym){
+  _activeSym = sym;
+  ["BTC","ETH","SOL"].forEach(s => {
+    const btn = document.getElementById("sym-tab-"+s);
+    if(!btn) return;
+    btn.style.background = s===sym ? "#c8f135" : "#1c1c1e";
+    btn.style.color       = s===sym ? "#0d0d0d" : "#555";
+  });
+  renderSymRanking(_accData, sym);
+}
+
+function renderSymRanking(acc, sym){
+  const el = document.getElementById("sym-rank-list");
+  if(!el) return;
+  const entries = Object.entries(acc)
+    .filter(([k,v]) => v.by_sym && v.by_sym[sym] && v.by_sym[sym].total > 0)
+    .map(([k,v]) => ({
+      name: ALGO_NAMES[k] || "Algo "+k,
+      total: v.by_sym[sym].total,
+      correct: v.by_sym[sym].correct,
+      wr: Math.round(v.by_sym[sym].correct / v.by_sym[sym].total * 100)
+    }))
+    .sort((a,b) => b.wr - a.wr || b.total - a.total);
+
+  if(!entries.length){
+    el.innerHTML = '<div class="rank-empty">Henüz '+sym+' verisi yok</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e,i) => {
+    const wrClass = e.wr>=60?"wr-good":e.wr>=50?"wr-ok":"wr-bad";
+    return `<div class="rank-item">
+      <span class="rank-pos" style="color:#555">${i+1}</span>
+      <div class="rank-info">
+        <div class="rank-name">${e.name}</div>
+        <div class="rank-sub">${e.correct}/${e.total} doğru</div>
+        <div class="rank-bar-wrap"><div class="rank-bar-fill" style="width:${e.wr}%"></div></div>
+      </div>
+      <span class="rank-wr ${wrClass}">%${e.wr}</span>
+    </div>`;
+  }).join("");
+}
+
+const ALGO_NAMES = {
+  "1":"EMA Crossover","2":"MACD Divergence","3":"Supertrend","4":"Ichimoku","5":"RSI Divergence",
+  "6":"Stochastic RSI","7":"Bollinger Bands","8":"VWAP","9":"OBV","10":"Volume Profile",
+  "11":"Mean Reversion","12":"Pairs Trading","13":"Grid Bot","14":"LSTM","15":"Multi-TF",
+  "16":"ATR Breakout","17":"Heikin Ashi","18":"TEMA Crossover","19":"ADX Regime",
+  "20":"OI Divergence","21":"Fear & Greed"
+};
+
+function renderTopSymAlgos(acc){
+  const el = document.getElementById("top-sym-algos");
+  if(!el) return;
+  const SYMS = ["BTC","ETH","SOL"];
+  const MIN_TRADES = 1;
+  const items = [];
+
+  for(const sym of SYMS){
+    let best = null, bestWr = -1, bestStat = "", bestSym = false;
+
+    for(const [num, data] of Object.entries(acc)){
+      // Önce sembol-bazlı bak
+      const sd = data.by_sym && data.by_sym[sym];
+      if(sd && sd.total >= MIN_TRADES){
+        const wr = sd.correct / sd.total;
+        if(wr > bestWr || (wr === bestWr && !bestSym)){
+          bestWr = wr; best = num;
+          bestStat = `${sd.correct}/${sd.total}`; bestSym = true;
+        }
+        continue;
+      }
+      // Sembol verisi yoksa genel veriye bak (daha düşük öncelik)
+      if(!bestSym && data.total >= MIN_TRADES){
+        const wr = data.correct / data.total;
+        if(wr > bestWr){ bestWr = wr; best = num; bestStat = `${data.correct}/${data.total}`; }
+      }
+    }
+    if(best !== null && bestWr >= 0){
+      const pct = Math.round(bestWr * 100);
+      items.push(`<div class="sym-best">
+        <span class="sym-best-sym">${sym}</span>
+        <span><span class="sym-best-algo">${ALGO_NAMES[best] || "Algo "+best}</span><span class="sym-best-stat">%${pct} · ${bestStat}</span></span>
+      </div>`);
+    }
+  }
+  el.innerHTML = items.length ? items.join("") : '<span style="font-size:12px;color:#444">Veri birikmesi bekleniyor…</span>';
+}
+
+function updateCardAccBadges(acc){
+  for(let n=1; n<=21; n++){
+    const el = document.getElementById("acc-"+n);
+    if(!el) continue;
+    const data = acc[String(n)];
+    if(!data || !data.total){
+      el.innerHTML = '';
+      continue;
+    }
+    const wr = data.correct / data.total;
+    const pct = Math.round(wr * 100);
+    const cls = wr >= 0.6 ? "acc-good" : wr >= 0.45 ? "acc-mid" : "acc-bad";
+    el.innerHTML = `<span class="acc-badge ${cls}">${pct}% başarı</span><span class="acc-rank">${data.correct}/${data.total} işlem</span>`;
+  }
+}
+
+function sortCardsByAccuracy(acc){
+  // Tüm kartları topla
+  const allCards = Array.from(document.querySelectorAll('.main-left .card'));
+  if(!allCards.length) return;
+
+  // Başarı oranını hesapla
+  const wr = n => {
+    const d = acc[String(n)];
+    if(!d || !d.total) return -1;
+    return d.correct / d.total;
+  };
+
+  // Sırala: başarısı olanlar önce (desc), sonra veri olmayanlar
+  allCards.sort((a, b) => {
+    const na = parseInt(a.dataset.algo), nb = parseInt(b.dataset.algo);
+    const wa = wr(na), wb = wr(nb);
+    if(wa < 0 && wb < 0) return na - nb; // her ikisi de veri yok → numara sırasıyla
+    if(wa < 0) return 1;
+    if(wb < 0) return -1;
+    return wb - wa;
+  });
+
+  // Mevcut section-title ve grid'leri kaldır, tek grid oluştur
+  const mainLeft = document.querySelector('.main-left');
+  mainLeft.querySelectorAll('.section-title').forEach(el => el.remove());
+  mainLeft.querySelectorAll('.grid').forEach(el => el.remove());
+
+  const secEl = document.createElement('div');
+  secEl.className = 'section-title';
+  secEl.innerHTML = '🏆 Başarı Sıralaması';
+  mainLeft.appendChild(secEl);
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  allCards.forEach(c => grid.appendChild(c));
+  mainLeft.appendChild(grid);
+}
+
 async function loadAccuracy(){
   try{
     const r = await fetch("/poly/api/algo_accuracy");
     const d = await r.json();
+    _accData = d;
     renderRanking(d);
+    renderSymRanking(d, _activeSym);
+    updateCardAccBadges(d);
+    sortCardsByAccuracy(d);
+    renderTopSymAlgos(d);
   }catch(e){ console.error(e); }
 }
 

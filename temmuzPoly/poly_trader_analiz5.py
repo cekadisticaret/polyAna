@@ -93,14 +93,13 @@ def _load_algo_snapshot() -> dict:
     return {}
 
 def _update_algo_accuracy(pos: dict, win: bool) -> None:
-    """Kapanan pozisyona göre her algoritmanın doğruluğunu günceller."""
+    """Kapanan pozisyona göre her algoritmanın doğruluğunu günceller (genel + sembol bazlı)."""
     snapshot = pos.get("algo_snapshot", {})
     if not snapshot:
         return
-    sym     = pos["symbol"].replace("USDT", "")
-    pred    = pos["predicted_dir"]   # işlemin açıldığı yön
-    # Gerçek hareket: win=True ise pred yönünde gitti
-    actual  = pred if win else ("DOWN" if pred == "UP" else "UP")
+    sym    = pos["symbol"].replace("USDT", "")
+    pred   = pos["predicted_dir"]
+    actual = pred if win else ("DOWN" if pred == "UP" else "UP")
     try:
         acc = {}
         if os.path.exists(ALGO_ACCURACY_FILE):
@@ -109,12 +108,19 @@ def _update_algo_accuracy(pos: dict, win: bool) -> None:
         for algo_num, sigs in snapshot.items():
             algo_sig = sigs.get(sym) if isinstance(sigs, dict) else sigs
             if algo_sig not in ("UP", "DOWN"):
-                continue  # NEUTRAL → sayma
+                continue
+            correct = 1 if algo_sig == actual else 0
+            # Genel toplam
             if algo_num not in acc:
-                acc[algo_num] = {"name": "", "total": 0, "correct": 0}
-            acc[algo_num]["total"] += 1
-            if algo_sig == actual:
-                acc[algo_num]["correct"] += 1
+                acc[algo_num] = {"name": "", "total": 0, "correct": 0, "by_sym": {}}
+            acc[algo_num]["total"]   += 1
+            acc[algo_num]["correct"] += correct
+            # Sembol bazlı
+            by_sym = acc[algo_num].setdefault("by_sym", {})
+            if sym not in by_sym:
+                by_sym[sym] = {"total": 0, "correct": 0}
+            by_sym[sym]["total"]   += 1
+            by_sym[sym]["correct"] += correct
         with open(ALGO_ACCURACY_FILE, "w") as f:
             json.dump(acc, f, indent=2)
     except Exception as e:
@@ -601,6 +607,7 @@ async def run_close() -> None:
             "pm_size":          pos.get("pm_size"),
             "pm_entry_price":   pos.get("pm_entry_price"),
             "pm_order_id":      pos.get("pm_order_id"),
+            "a9_agree":         pos.get("a9_agree"),
             "exit_time_tr":     now_tr.isoformat(),
             "pnl":              round(
                                     (pos.get("pm_size") or pos.get("pm_spent", 0)) - pos.get("pm_spent", 0)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-algo_signals.py — 15 algoritma için BTC/ETH/SOL saatlik sinyal üretici
+algo_signals.py — 21 algoritma için BTC/ETH/SOL saatlik sinyal üretici
 Her :05'te cron ile çalışır, /tmp/algo_signals.json'a kaydeder
 """
 import json, requests, datetime, math
@@ -217,6 +217,143 @@ def multi_tf(kl_1h, kl_4h):
     if s1 == s4 and s1 != "NEUTRAL": return s1
     return s4 if s4 != "NEUTRAL" else s1
 
+# ── Yeni algoritmalar (16-21) ─────────────────────────────────────────
+
+def atr_breakout(kl, p=14):
+    """ATR Momentum Breakout — fiyat ATR bandını kırınca yön tespiti"""
+    if len(kl) < p + 10: return "NEUTRAL"
+    c   = [k["c"] for k in kl]
+    av  = _atr(kl, p)
+    atr = next((x for x in reversed(av) if x), None)
+    if atr is None: return "NEUTRAL"
+    hi  = max(k["h"] for k in kl[-11:-1])
+    lo  = min(k["l"] for k in kl[-11:-1])
+    px  = c[-1]
+    if px > hi + atr * 0.5: return "UP"
+    if px < lo - atr * 0.5: return "DOWN"
+    e20 = _ema(c, 20)
+    if e20[-1] is None: return "NEUTRAL"
+    diff = px - e20[-1]
+    if diff >  atr * 0.3: return "UP"
+    if diff < -atr * 0.3: return "DOWN"
+    return "NEUTRAL"
+
+def heikin_ashi(kl):
+    """Heikin Ashi Trend — gürültü azaltılmış trend yönü"""
+    if len(kl) < 5: return "NEUTRAL"
+    ha = []
+    for k in kl:
+        ha_c = (k["o"] + k["h"] + k["l"] + k["c"]) / 4
+        ha_o = (ha[-1]["o"] + ha[-1]["c"]) / 2 if ha else (k["o"] + k["c"]) / 2
+        ha_h = max(k["h"], ha_o, ha_c)
+        ha_l = min(k["l"], ha_o, ha_c)
+        ha.append({"o": ha_o, "h": ha_h, "l": ha_l, "c": ha_c})
+    last3 = ha[-3:]
+    bull = sum(1 for x in last3 if x["c"] > x["o"] and x["l"] >= min(x["o"], x["c"]) * 0.9999)
+    bear = sum(1 for x in last3 if x["c"] < x["o"] and x["h"] <= max(x["o"], x["c"]) * 1.0001)
+    if bull >= 2: return "UP"
+    if bear >= 2: return "DOWN"
+    return "UP" if ha[-1]["c"] > ha[-1]["o"] else "DOWN"
+
+def tema_crossover(kl):
+    """TEMA Crossover (9/21) — lag azaltılmış EMA kesişimi"""
+    c = [k["c"] for k in kl]
+    if len(c) < 70: return "NEUTRAL"
+    def _tema_val(vals, p):
+        e1 = _ema(vals, p)
+        v1 = [x for x in e1 if x is not None]
+        if len(v1) < p: return None, None
+        e2 = _ema(v1, p)
+        v2 = [x for x in e2 if x is not None]
+        if len(v2) < p: return None, None
+        e3 = _ema(v2, p)
+        if e3[-1] is None or e3[-2] is None: return None, None
+        return 3*v1[-1] - 3*v2[-1] + e3[-1], 3*v1[-2] - 3*v2[-2] + e3[-2]
+    fc, fp = _tema_val(c, 9)
+    sc, sp = _tema_val(c, 21)
+    if fc is None or sc is None: return "NEUTRAL"
+    if fp < sp and fc > sc: return "UP"
+    if fp > sp and fc < sc: return "DOWN"
+    return "UP" if fc > sc else "DOWN" if fc < sc else "NEUTRAL"
+
+def adx_regime(kl, p=14):
+    """ADX Market Regime — trend gücü + yön (ADX>25 trend, <20 nötr)"""
+    if len(kl) < p * 2 + 5: return "NEUTRAL"
+    pdm, mdm, trs = [], [], []
+    for i in range(1, len(kl)):
+        up  = kl[i]["h"] - kl[i-1]["h"]
+        dn  = kl[i-1]["l"] - kl[i]["l"]
+        pdm.append(up if up > dn and up > 0 else 0)
+        mdm.append(dn if dn > up and dn > 0 else 0)
+        tr  = max(kl[i]["h"] - kl[i]["l"],
+                  abs(kl[i]["h"] - kl[i-1]["c"]),
+                  abs(kl[i]["l"] - kl[i-1]["c"]))
+        trs.append(tr)
+    if len(trs) < p: return "NEUTRAL"
+    atr_s = sum(trs[:p]); ps = sum(pdm[:p]); ms = sum(mdm[:p])
+    dx_list = []
+    for i in range(p, len(trs)):
+        atr_s = atr_s - atr_s/p + trs[i]
+        ps    = ps    - ps/p    + pdm[i]
+        ms    = ms    - ms/p    + mdm[i]
+        pdi   = 100 * ps / atr_s if atr_s else 0
+        mdi   = 100 * ms / atr_s if atr_s else 0
+        sm    = pdi + mdi
+        dx_list.append(100 * abs(pdi - mdi) / sm if sm else 0)
+    if len(dx_list) < p: return "NEUTRAL"
+    adx = sum(dx_list[:p]) / p
+    for v in dx_list[p:]: adx = (adx * (p-1) + v) / p
+    # Final DI values
+    atr_s = sum(trs[:p]); ps = sum(pdm[:p]); ms = sum(mdm[:p])
+    for i in range(p, len(trs)):
+        atr_s = atr_s - atr_s/p + trs[i]
+        ps    = ps    - ps/p    + pdm[i]
+        ms    = ms    - ms/p    + mdm[i]
+    pdi = 100 * ps / atr_s if atr_s else 0
+    mdi = 100 * ms / atr_s if atr_s else 0
+    if adx < 20: return "NEUTRAL"
+    return "UP" if pdi > mdi else "DOWN"
+
+def fetch_oi_hist(pair, limit=10):
+    """Binance Futures OI geçmişi"""
+    r = requests.get(f"{FUTURES}/futures/data/openInterestHist",
+                     params={"symbol": pair, "period": "1h", "limit": limit},
+                     timeout=8)
+    data = r.json()
+    if isinstance(data, list) and data:
+        return [float(x["sumOpenInterestValue"]) for x in data]
+    return []
+
+def oi_divergence(kl, pair):
+    """OI Divergence — fiyat+OI yönü uyumu (Binance Futures)"""
+    try:
+        oi = fetch_oi_hist(pair, 10)
+        if len(oi) < 5: return "NEUTRAL"
+        c = [k["c"] for k in kl[-10:]]
+        if len(c) < 5: return "NEUTRAL"
+        pc = (c[-1] - c[-5]) / c[-5] if c[-5] else 0
+        oc = (oi[-1] - oi[-5]) / oi[-5] if oi[-5] else 0
+        if pc >  0.005 and oc >  0.005: return "UP"    # Her iki yükseliyor: güçlü trend
+        if pc < -0.005 and oc >  0.005: return "DOWN"  # Short ekliyor
+        if pc >  0.005 and oc < -0.005: return "DOWN"  # Zayıf ralli, dönüş riski
+        if pc < -0.005 and oc < -0.005: return "UP"    # Short kapatma potansiyeli
+        return "NEUTRAL"
+    except Exception:
+        return "NEUTRAL"
+
+def fetch_fear_greed():
+    """Alternative.me Fear & Greed Index (0=aşırı korku, 100=aşırı açgözlülük)"""
+    try:
+        r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=6)
+        val = int(r.json()["data"][0]["value"])
+        if val <= 20: return "UP"    # Extreme Fear → kontrarian al
+        if val >= 80: return "DOWN"  # Extreme Greed → kontrarian sat
+        if val <= 35: return "UP"
+        if val >= 65: return "DOWN"
+        return "NEUTRAL"
+    except Exception:
+        return "NEUTRAL"
+
 # ── Ana fonksiyon ─────────────────────────────────────────────────────
 
 ALGO_META = [
@@ -235,6 +372,12 @@ ALGO_META = [
     (13, "Grid Trading Bot"),
     (14, "LSTM"),
     (15, "Multi-Timeframe Confluence"),
+    (16, "ATR Momentum Breakout"),
+    (17, "Heikin Ashi Trend Filter"),
+    (18, "TEMA Crossover (9/21)"),
+    (19, "ADX Market Regime"),
+    (20, "Open Interest Divergence"),
+    (21, "Fear & Greed Momentum"),
 ]
 
 SKIP = {13, 14}   # Yön tahmini yok
@@ -251,7 +394,40 @@ def run():
             print(f"Fetch error {sym}: {e}")
             kl_1h[sym] = []; kl_4h[sym] = []
 
-    pairs_sig = pairs_trading(kl_1h)
+    pairs_sig  = pairs_trading(kl_1h)
+    fg_signal  = fetch_fear_greed()  # Tüm semboller için aynı
+
+    # OI geçmişini bir kez çek
+    oi_cache = {}
+    for sym, pair in SYMBOLS.items():
+        try:
+            oi_cache[sym] = fetch_oi_hist(pair, 10)
+        except Exception:
+            oi_cache[sym] = []
+
+    # Sembol başına OI divergence hesapla
+    def _oi_for(sym):
+        kl  = kl_1h.get(sym, [])
+        oi  = oi_cache.get(sym, [])
+        if len(oi) < 5 or len(kl) < 5: return "NEUTRAL"
+        try:
+            c  = [k["c"] for k in kl[-10:]]
+            pc = (c[-1] - c[-5]) / c[-5] if c[-5] else 0
+            oc = (oi[-1] - oi[-5]) / oi[-5] if oi[-5] else 0
+            if pc >  0.005 and oc >  0.005: return "UP"
+            if pc < -0.005 and oc >  0.005: return "DOWN"
+            if pc >  0.005 and oc < -0.005: return "DOWN"
+            if pc < -0.005 and oc < -0.005: return "UP"
+        except Exception:
+            pass
+        return "NEUTRAL"
+
+    SIMPLE_FN = {
+        1: ema_crossover, 2: macd_div, 3: supertrend, 4: ichimoku,
+        5: rsi_div, 6: stoch_rsi, 7: bb_squeeze, 8: vwap,
+        9: obv, 10: volume_profile, 11: mean_reversion,
+        16: atr_breakout, 17: heikin_ashi, 18: tema_crossover, 19: adx_regime,
+    }
 
     signals = {}
     for num, name in ALGO_META:
@@ -264,10 +440,14 @@ def run():
             for sym in SYMBOLS:
                 if kl_1h.get(sym) and kl_4h.get(sym):
                     entry[sym] = multi_tf(kl_1h[sym], kl_4h[sym])
-        else:
-            fn = {1: ema_crossover, 2: macd_div, 3: supertrend, 4: ichimoku,
-                  5: rsi_div, 6: stoch_rsi, 7: bb_squeeze, 8: vwap,
-                  9: obv, 10: volume_profile, 11: mean_reversion}[num]
+        elif num == 20:
+            for sym in SYMBOLS:
+                entry[sym] = _oi_for(sym)
+        elif num == 21:
+            for sym in SYMBOLS:
+                entry[sym] = fg_signal
+        elif num in SIMPLE_FN:
+            fn = SIMPLE_FN[num]
             for sym in SYMBOLS:
                 kl = kl_1h.get(sym, [])
                 if kl:
