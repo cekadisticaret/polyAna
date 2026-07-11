@@ -1,5 +1,5 @@
 """
-KARIŞIM 1 (A1+A2+A4) — Meta Konsensus Trader
+11. ANALİZ (A1+A2+A4) — Meta Konsensus Trader
 
 Analiz 1, 2 ve 4'ün bu saat açtığı pozisyonları okur.
 Birden fazla sistemin aynı yönde seçtiği kriptolara girer.
@@ -122,7 +122,7 @@ def fetch_price_retry(symbol: str, retries: int = 3) -> float | None:
             if i < retries - 1:
                 time.sleep(2)
             else:
-                print(f"[KARIŞIM 1] {symbol} fiyat hatası: {e}", file=sys.stderr)
+                print(f"[11. ANALİZ (A1+A2+A4)] {symbol} fiyat hatası: {e}", file=sys.stderr)
     return None
 
 
@@ -213,8 +213,8 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>KARIŞIM 1 (A1+A2+A4) — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
-        print(f"[KARIŞIM 1 close] {saat} İST — açık pozisyon yok")
+        tg_send(f"⏸ <b>11. ANALİZ (A1+A2+A4) — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
+        print(f"[11. ANALİZ (A1+A2+A4) close] {saat} İST — açık pozisyon yok")
         return
 
     lines      = []
@@ -230,7 +230,7 @@ async def run_close() -> None:
         current_price = fetch_price_retry(symbol)
         if current_price is None:
             failed_pos.append(pos)
-            tg_send(f"⚠️ <b>KARIŞIM 1</b> — {symbol} fiyat alınamadı, pozisyon sonraki saate bırakıldı.")
+            tg_send(f"⚠️ <b>11. ANALİZ (A1+A2+A4)</b> — {symbol} fiyat alınamadı, pozisyon sonraki saate bırakıldı.")
             continue
 
         if pred == "UP":
@@ -281,13 +281,13 @@ async def run_close() -> None:
 
     tg_send(
         f"{sep}\n"
-        f"🏁 <b>KARIŞIM 1 (A1+A2+A4) — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
+        f"🏁 <b>11. ANALİZ (A1+A2+A4) — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
         f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel} ({closed_all} işlem)\n"
         f"{sep}"
     )
-    print(f"[KARIŞIM 1 close] {saat} İST — {len(lines)} pozisyon kapatıldı")
+    print(f"[11. ANALİZ (A1+A2+A4) close] {saat} İST — {len(lines)} pozisyon kapatıldı")
 
 
 # ── OPEN ──────────────────────────────────────────────────────
@@ -334,7 +334,7 @@ async def run_open() -> None:
 
     # Bildirim
     at_risk = sum(p.get("amount", AMOUNT_WEAK) for p in state["open_positions"])
-    lines   = [sep, f"🤝 <b>KARIŞIM 1 (A1+A2+A4) — {saat} - {next_h} Yeni İşlemler</b>"]
+    lines   = [sep, f"🤝 <b>11. ANALİZ (A1+A2+A4) — {saat} - {next_h} Yeni İşlemler</b>"]
 
     if opened:
         for o in opened:
@@ -363,7 +363,7 @@ async def run_open() -> None:
     lines.append(sep)
 
     tg_send("\n".join(lines))
-    print(f"[KARIŞIM 1 open] {saat} İST — {len(opened)} işlem açıldı")
+    print(f"[11. ANALİZ (A1+A2+A4) open] {saat} İST — {len(opened)} işlem açıldı")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────
@@ -377,7 +377,7 @@ def run_weekly() -> None:
     history = load_history()
     state   = load_state()
     if not history:
-        tg_send("📊 <b>KARIŞIM 1 HAFTALIK</b>\nHenüz veri yok.")
+        tg_send("📊 <b>11. ANALİZ (A1+A2+A4) HAFTALIK</b>\nHenüz veri yok.")
         return
 
     days   = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -404,7 +404,7 @@ def run_weekly() -> None:
     ax.set_yticks(range(7))
     ax.set_yticklabels(days, fontsize=9)
     plt.colorbar(im, ax=ax, label="Başarı %")
-    ax.set_title("KARIŞIM 1 (A1+A2+A4) — Haftalık Başarı Haritası")
+    ax.set_title("11. ANALİZ (A1+A2+A4) — Haftalık Başarı Haritası")
     plt.tight_layout()
 
     img_path = "/tmp/karisim1_weekly.png"
@@ -415,7 +415,7 @@ def run_weekly() -> None:
     wins   = sum(1 for t in history if t["win"])
     sep    = "━" * 26
     caption = (
-        f"KARIŞIM 1 (A1+A2+A4) Haftalık\n"
+        f"11. ANALİZ (A1+A2+A4) Haftalık\n"
         f"Bakiye: ${state['balance']:.2f} | P&L: {state['total_pnl']:+.2f}$\n"
         f"Toplam: {wins}/{total} (%{wins/total*100:.0f})"
     )
@@ -431,13 +431,13 @@ def run_weekly() -> None:
         if st:
             sym_lines.append(f"  {name}: {len(st)} işlem / {sw} başarılı (%{sw/len(st)*100:.0f})")
     tg_send(
-        f"📊 <b>KARIŞIM 1 (A1+A2+A4) HAFTALIK İSTATİSTİKLER</b>\n"
+        f"📊 <b>11. ANALİZ (A1+A2+A4) HAFTALIK İSTATİSTİKLER</b>\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  %{wins/total*100:.0f} başarı\n"
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"\n📈 <b>Sembol Dağılımı</b>\n" + "\n".join(sym_lines)
     )
-    print("[KARIŞIM 1 weekly] görsel gönderildi")
+    print("[11. ANALİZ (A1+A2+A4) weekly] görsel gönderildi")
 
 
 # ── Entry ─────────────────────────────────────────────────────
