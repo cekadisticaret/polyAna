@@ -1,45 +1,104 @@
 {
   "1": {
     "name": "",
-    "total": 2,
-    "correct": 1,
-    "by_sym": {}
+    "total": 4,
+    "correct": 3,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 1
+      }
+    }
   },
   "2": {
     "name": "",
-    "total": 2,
+    "total": 4,
     "correct": 1,
-    "by_sym": {}
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 0
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 0
+      }
+    }
   },
   "3": {
     "name": "",
-    "total": 2,
-    "correct": 2,
-    "by_sym": {}
+    "total": 4,
+    "correct": 3,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 0
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 1
+      }
+    }
   },
   "4": {
     "name": "",
-    "total": 2,
-    "correct": 1,
-    "by_sym": {}
+    "total": 4,
+    "correct": 3,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 1
+      }
+    }
   },
   "5": {
     "name": "",
-    "total": 1,
-    "correct": 0,
-    "by_sym": {}
+    "total": 2,
+    "correct": 1,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      }
+    }
   },
   "6": {
     "name": "",
-    "total": 2,
-    "correct": 2,
-    "by_sym": {}
+    "total": 4,
+    "correct": 4,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 1
+      }
+    }
   },
   "7": {
     "name": "",
-    "total": 2,
-    "correct": 1,
-    "by_sym": {}
+    "total": 4,
+    "correct": 2,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 0
+      }
+    }
   },
   "8": {
     "name": "",
@@ -49,20 +108,107 @@
   },
   "9": {
     "name": "",
-    "total": 2,
-    "correct": 1,
-    "by_sym": {}
+    "total": 4,
+    "correct": 3,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 1
+      }
+    }
   },
   "11": {
     "name": "",
-    "total": 2,
-    "correct": 2,
-    "by_sym": {}
+    "total": 4,
+    "correct": 3,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 0
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 1
+      }
+    }
   },
   "15": {
     "name": "",
+    "total": 4,
+    "correct": 3,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 1
+      }
+    }
+  },
+  "17": {
+    "name": "",
+    "total": 2,
+    "correct": 0,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 0
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 0
+      }
+    }
+  },
+  "18": {
+    "name": "",
     "total": 2,
     "correct": 1,
-    "by_sym": {}
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 0
+      }
+    }
+  },
+  "19": {
+    "name": "",
+    "total": 2,
+    "correct": 2,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 1
+      }
+    }
+  },
+  "21": {
+    "name": "",
+    "total": 2,
+    "correct": 1,
+    "by_sym": {
+      "BTC": {
+        "total": 1,
+        "correct": 1
+      },
+      "SOL": {
+        "total": 1,
+        "correct": 0
+      }
+    }
   }
 }

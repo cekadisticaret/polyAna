@@ -457,5 +457,32 @@
     "ind_trend_ok": null,
     "ind_mr_ok": null,
     "ind_of_ok": true
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 78.07,
+    "exit_price": 78.05,
+    "entry_time_tr": "2026-07-11T15:06:02.233964+03:00",
+    "entry_hour_tr": 15,
+    "entry_dow": 5,
+    "entry_is_weekend": true,
+    "amount": 20.0,
+    "pnl": 20.0,
+    "exit_time_tr": "2026-07-11T16:00:03.256131+03:00",
+    "score_b": -1,
+    "conf_a": 0.775,
+    "votes": [
+      -1,
+      0,
+      0,
+      -1
+    ],
+    "ind_poly_ok": true,
+    "ind_trend_ok": null,
+    "ind_mr_ok": null,
+    "ind_of_ok": true
   }
 ]
