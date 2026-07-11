@@ -652,21 +652,31 @@ async def run_open() -> None:
                       else TRADE_AMOUNT_MID)
             # Analiz9 ile karşılaştır
             a9_dir = a9_signals.get(sig["symbol"])
+            is_eth = sig["symbol"] == "ETHUSDT"
             if a9_dir:
                 if a9_dir == sig["predicted_dir"]:
-                    sig["amount"]   = 15.0   # İkisi aynı yön → güçlü sinyal
+                    raw             = 15.0   # İkisi aynı yön → güçlü sinyal
+                    sig["amount"]   = round(raw * 0.7, 2) if is_eth else raw
                     sig["a9_agree"] = True
                 else:
                     sig["amount"]   = 0.0    # Ters yön → işlem açma
                     sig["a9_agree"] = False
             else:
-                sig["amount"]   = 8.0        # A9 sessiz → sabit $8
-                sig["a9_agree"] = None
+                # ETH için A9 yoksa veya A9 sessizse işlem açma
+                if is_eth:
+                    sig["amount"]   = 0.0
+                    sig["a9_agree"] = None
+                else:
+                    sig["amount"]   = 8.0    # A9 sessiz → sabit $8
+                    sig["a9_agree"] = None
 
     # A9'un sinyali olan ama analiz5'in signal üretemediği semboller → $6 giriş
+    # ETH için A9-only da atlanır (ETH sadece A9+A5 hemfikirse girilir)
     a5_syms = {s["symbol"] for s in results}
     for sym, a9_dir in a9_signals.items():
         if sym not in a5_syms and sym in SYMBOLS:
+            if sym == "ETHUSDT":
+                continue  # ETH A9-only → atla
             results.append({
                 "symbol":        sym,
                 "predicted_dir": a9_dir,

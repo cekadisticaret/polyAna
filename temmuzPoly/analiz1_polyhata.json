@@ -1,0 +1,14 @@
+[
+  {
+    "zaman": "2026-07-11T08:05:07.089930+03:00",
+    "symbol": "26116624298073975950",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.', 'orderID': '0x37afc4402126d7ed27fe412a7370800f0607f9b791d122eb673de23abca3ab4e'}]"
+  },
+  {
+    "zaman": "2026-07-11T08:05:07.090219+03:00",
+    "symbol": "ETHUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=6.0"
+  }
+]
