@@ -8,15 +8,60 @@ import urllib.request
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-from flask import Flask, jsonify, render_template_string, request
+from flask import Flask, jsonify, render_template_string, request, session, redirect, url_for
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _BINANCE  = "https://fapi.binance.com"
+_PM_GAMMA = "https://gamma-api.polymarket.com"
 
 app = Flask(__name__)
+app.secret_key = "pk_bursaapp_x9f2k7m3"
+
+_USERNAME = "cem"
+_PASSWORD = "cem332020"
+
+LOGIN_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giriş — PolyMarket</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0d0d0d; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+         min-height:100vh; display:flex; align-items:center; justify-content:center; }
+  .card { background:#141414; border-radius:24px; padding:40px 32px; width:100%; max-width:360px; }
+  .logo { font-size:22px; font-weight:800; color:#c8f135; margin-bottom:8px; }
+  .sub  { font-size:13px; color:#555; margin-bottom:32px; }
+  label { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:6px; }
+  input { width:100%; background:#1c1c1e; border:none; border-radius:12px; padding:14px 16px;
+          color:#fff; font-size:15px; margin-bottom:16px; outline:none; }
+  input:focus { box-shadow:0 0 0 2px #c8f135; }
+  button { width:100%; background:#c8f135; border:none; border-radius:14px; padding:14px;
+           color:#111; font-size:15px; font-weight:800; cursor:pointer; margin-top:4px; }
+  button:active { transform:scale(.98); }
+  .err { background:#450a0a; color:#f87171; border-radius:12px; padding:12px 16px;
+         font-size:13px; margin-bottom:16px; display:{% if error %}block{% else %}none{% endif %}; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">PolyMarket</div>
+  <div class="sub">Dashboard'a erişmek için giriş yap</div>
+  <div class="err">Kullanıcı adı veya şifre hatalı</div>
+  <form method="POST">
+    <label>Kullanıcı Adı</label>
+    <input type="text" name="username" autocomplete="username" autofocus>
+    <label>Şifre</label>
+    <input type="password" name="password" autocomplete="current-password">
+    <button type="submit">Giriş Yap</button>
+  </form>
+</div>
+</body>
+</html>"""
 
 # ── Yardımcı fonksiyonlar ──────────────────────────────────────
 def _binance(path, params=None):
@@ -28,7 +73,7 @@ def _binance(path, params=None):
 def get_price(symbol: str) -> float:
     return float(_binance("/fapi/v1/ticker/price", {"symbol": symbol})["price"])
 
-def get_klines(symbol: str, interval="1h", limit=50):
+def get_klines(symbol: str, interval="15m", limit=80):
     raw = _binance("/fapi/v1/klines", {"symbol": symbol, "interval": interval, "limit": limit})
     return [{"t": int(k[0]), "o": float(k[1]), "h": float(k[2]),
              "l": float(k[3]), "c": float(k[4]), "v": float(k[5])} for k in raw]
@@ -53,25 +98,59 @@ def get_pm_balance() -> float:
     except Exception:
         return -1.0
 
+def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
+    """Polymarket'tan anlık token fiyatını çeker (0-1 arası)."""
+    try:
+        url = f"{_PM_GAMMA}/events?slug={pm_slug}"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=6) as r:
+            data = json.load(r)
+        if not data:
+            return None
+        m = data[0].get("markets", [{}])[0]
+        raw = m.get("outcomePrices")
+        op  = json.loads(raw) if isinstance(raw, str) else (raw or [])
+        if len(op) >= 2:
+            return float(op[0]) if token_dir == "UP" else float(op[1])
+    except Exception:
+        pass
+    return None
+
 def collect_positions() -> list:
-    """Tüm aktif analizlerin açık pozisyonlarını toplar."""
-    analyses = ["analiz1", "analiz2", "analiz4", "analiz5", "analiz10"]
-    seen = set()
+    """Analiz5'in gerçek Polymarket pozisyonlarını döndürür."""
+    state = load_state("analiz5")
     positions = []
-    for name in analyses:
-        state = load_state(name)
-        for pos in state.get("open_positions", []):
-            sym = pos.get("symbol", "")
-            key = f"{name}_{sym}"
-            if key in seen:
-                continue
-            seen.add(key)
-            positions.append({**pos, "_analiz": name})
+    for pos in state.get("open_positions", []):
+        # Sadece gerçek Polymarket orderı olanlar
+        if not pos.get("pm_slug") or not pos.get("pm_spent"):
+            continue
+        positions.append({**pos, "_analiz": "analiz5"})
     return positions
+
+def _auth_required():
+    return session.get("logged_in") is not True
+
+# ── Login ─────────────────────────────────────────────────────
+@app.route("/poly/login", methods=["GET", "POST"])
+def login():
+    error = False
+    if request.method == "POST":
+        if (request.form.get("username") == _USERNAME and
+                request.form.get("password") == _PASSWORD):
+            session["logged_in"] = True
+            return redirect("/poly")
+        error = True
+    return render_template_string(LOGIN_HTML, error=error)
+
+@app.route("/poly/logout")
+def logout():
+    session.clear()
+    return redirect("/poly/login")
 
 # ── API ───────────────────────────────────────────────────────
 @app.route("/poly/api/data")
 def api_data():
+    if _auth_required(): return redirect("/poly/login")
     positions = collect_positions()
     symbols   = list({p["symbol"] for p in positions})
 
@@ -83,21 +162,28 @@ def api_data():
             prices[sym] = None
 
     enriched = []
+    total_pos_value = 0.0
     for pos in positions:
-        sym          = pos["symbol"]
-        current_p    = prices.get(sym)
-        entry_p      = pos.get("entry_price", 0)
-        pred         = pos.get("predicted_dir", "")
-        pm_spent     = pos.get("pm_spent", 0)
-        pm_size      = pos.get("pm_size", 0)
+        sym      = pos["symbol"]
+        current_p = prices.get(sym)
+        entry_p  = pos.get("entry_price", 0)
+        pred     = pos.get("predicted_dir", "")
+        pm_spent = pos.get("pm_spent", 0)
+        pm_size  = pos.get("pm_size", 0)
+        token_dir = pos.get("pm_token_dir", pred)
 
-        # Anlık yön ve kazanç tahmini
+        # Anlık yön
         if current_p and entry_p:
             actual  = "UP" if current_p >= entry_p else "DOWN"
             winning = (actual == pred)
             pct     = (current_p - entry_p) / entry_p * 100
         else:
             winning, pct = None, 0.0
+
+        # Polymarket'tan anlık token fiyatı → kapama değeri
+        token_price   = get_pm_token_price(pos.get("pm_slug", ""), token_dir)
+        close_val     = round(pm_size * token_price, 2) if token_price and pm_size else None
+        total_pos_value += close_val if close_val else pm_spent
 
         enriched.append({
             "analiz":       pos["_analiz"],
@@ -111,38 +197,90 @@ def api_data():
             "winning":      winning,
             "pm_spent":     round(pm_spent, 2),
             "pm_size":      pm_size,
+            "close_val":    close_val,
             "entry_time":   pos.get("entry_time_tr", ""),
             "pm_slug":      pos.get("pm_slug", ""),
         })
 
-    balance = get_pm_balance()
+    cash      = get_pm_balance()
+    portfolio = round(cash + total_pos_value, 2) if cash >= 0 else -1
 
     return jsonify({
-        "balance":   round(balance, 2),
+        "cash":      round(cash, 2),
+        "portfolio": portfolio,
         "positions": enriched,
         "updated":   datetime.now(_TZ_TR).strftime("%H:%M:%S"),
     })
 
 @app.route("/poly/api/klines/<symbol>")
 def api_klines(symbol):
+    if _auth_required(): return redirect("/poly/login")
     try:
-        data = get_klines(symbol.upper() + "USDT" if not symbol.endswith("USDT") else symbol.upper())
+        data = get_klines(symbol.upper() + "USDT" if not symbol.endswith("USDT") else symbol.upper(),
+                          interval="15m", limit=80)
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+def _pm_sell_position(token_id: str, size: float) -> dict | None:
+    """Polymarket'ta token sat (pozisyonu kapat)."""
+    try:
+        import sys as _sys
+        _sys.path.insert(0, _DIR_POLY)
+        from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
+        from py_clob_client_v2.order_builder.constants import SELL
+        from decimal import Decimal, ROUND_DOWN
+        client = get_pm_balance.__func__ if hasattr(get_pm_balance, '__func__') else None
+
+        # client'ı analiz5'ten al
+        import importlib.util, types
+        spec = importlib.util.spec_from_file_location(
+            "a5", os.path.join(_DIR_POLY, "poly_trader_analiz5.py"))
+        mod  = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        client = mod._pm_get_client()
+
+        price = float(client.calculate_market_price(token_id, "SELL", size, OrderType.FAK))
+        price = max(0.02, min(0.98, round(price, 2)))
+        size  = float(Decimal(str(size)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+        args  = OrderArgs(token_id=token_id, price=price, size=size, side=SELL)
+        signed = client.create_order(args, PartialCreateOrderOptions())
+        resp   = client.post_order(signed, order_type=OrderType.FAK)
+        if resp and resp.get("success"):
+            return {"ok": True, "price": price, "size": size,
+                    "received": round(size * price, 2)}
+        return {"ok": False, "error": str(resp)}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
 @app.route("/poly/api/close/<analiz>/<symbol>", methods=["POST"])
 def api_close(analiz, symbol):
+    if _auth_required(): return jsonify({"ok": False, "error": "unauthorized"}), 401
     try:
-        state = load_state(analiz)
-        before = len(state.get("open_positions", []))
+        state  = load_state(analiz)
+        symbol = symbol.upper()
+        pos    = next((p for p in state.get("open_positions", [])
+                       if p.get("symbol") == symbol), None)
+        if not pos:
+            return jsonify({"ok": False, "error": "pozisyon bulunamadı"}), 404
+
+        token_id = pos.get("pm_token_id")
+        pm_size  = pos.get("pm_size", 0)
+
+        # Gerçek PM satış emri
+        sell_result = _pm_sell_position(token_id, pm_size) if token_id and pm_size else None
+
+        # State'ten kaldır
         state["open_positions"] = [
-            p for p in state.get("open_positions", [])
-            if p.get("symbol") != symbol.upper()
+            p for p in state["open_positions"] if p.get("symbol") != symbol
         ]
-        after = len(state["open_positions"])
         save_state(analiz, state)
-        return jsonify({"ok": True, "removed": before - after})
+
+        return jsonify({
+            "ok":         True,
+            "sell":       sell_result,
+            "symbol":     symbol,
+        })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -159,16 +297,19 @@ HTML = r"""<!DOCTYPE html>
   body { background:#0d0d0d; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif; min-height:100vh; }
 
   .header { padding:24px 20px 12px; }
-  .header-label { font-size:13px; color:#666; letter-spacing:.5px; text-transform:uppercase; }
-  .balance { font-size:48px; font-weight:700; letter-spacing:-1px; margin:4px 0; }
-  .balance-sub { font-size:14px; color:#666; }
+  .header-row { display:flex; gap:32px; }
+  .header-col { flex:1; }
+  .header-label { font-size:13px; color:#666; letter-spacing:.5px; text-transform:uppercase; margin-bottom:4px; }
+  .balance { font-size:36px; font-weight:700; letter-spacing:-1px; color:#4ade80; }
+  .balance.portfolio { color:#a3e635; }
+  .balance-sub { font-size:13px; color:#444; margin-top:8px; }
   .balance-sub span { color:#4ade80; }
 
   .chart-wrap { margin:20px 16px; background:#141414; border-radius:20px; overflow:hidden; }
-  .chart-tabs { display:flex; gap:0; padding:16px 16px 0; }
-  .chart-tab { padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600;
+  .chart-tabs { display:flex; gap:8px; padding:16px 16px 0; }
+  .chart-tab { padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700;
                cursor:pointer; color:#555; transition:.2s; border:none; background:transparent; }
-  .chart-tab.active { background:#1c1c1e; color:#fff; }
+  .chart-tab.active { background:#c8f135; color:#111; }
   #chart { height:220px; margin:12px 0 0; }
 
   .section-title { font-size:13px; color:#555; text-transform:uppercase; letter-spacing:.5px;
@@ -197,10 +338,11 @@ HTML = r"""<!DOCTYPE html>
   .pos-info { font-size:12px; color:#555; }
   .pos-analiz { font-size:11px; color:#333; background:#1c1c1e; padding:3px 8px; border-radius:8px; }
 
-  .close-btn { background:#1c1c1e; border:none; color:#f87171; font-size:13px; font-weight:600;
-               padding:10px 20px; border-radius:14px; cursor:pointer; margin-top:14px;
-               width:100%; transition:.2s; letter-spacing:.3px; }
-  .close-btn:hover { background:#2c1c1c; }
+  .close-btn-wrap { display:flex; justify-content:flex-end; margin-top:14px; }
+  .close-btn { background:#c8f135; border:none; color:#111; font-size:13px; font-weight:800;
+               padding:10px 20px; border-radius:14px; cursor:pointer;
+               width:50%; transition:.2s; letter-spacing:.3px; white-space:nowrap; }
+  .close-btn:hover { background:#d4ff3a; }
   .close-btn:active { transform:scale(.97); }
   .close-btn.loading { opacity:.5; pointer-events:none; }
 
@@ -211,17 +353,25 @@ HTML = r"""<!DOCTYPE html>
          margin-right:6px; animation:pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  .total-risk { background:#141414; border-radius:20px; margin:0 16px 20px; padding:16px 18px;
+  .total-risk { background:#c8f135; border-radius:20px; margin:0 16px 20px; padding:16px 18px;
                 display:flex; justify-content:space-between; align-items:center; }
-  .risk-label { font-size:13px; color:#555; }
-  .risk-val { font-size:18px; font-weight:700; color:#f97316; }
+  .risk-label { font-size:13px; color:#111; font-weight:700; }
+  .risk-val { font-size:20px; font-weight:800; color:#111; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="header-label">PolyMarket Bakiye</div>
-  <div class="balance" id="balance">$—</div>
+  <div class="header-row">
+    <div class="header-col">
+      <div class="header-label">Portfolio</div>
+      <div class="balance portfolio" id="portfolio">$—</div>
+    </div>
+    <div class="header-col">
+      <div class="header-label">Cash</div>
+      <div class="balance" id="cash">$—</div>
+    </div>
+  </div>
   <div class="balance-sub">Son güncelleme: <span id="updated">—</span></div>
 </div>
 
@@ -298,10 +448,26 @@ async function closePosition(analiz, symbol, btn) {
   btn.classList.add('loading');
   btn.textContent = 'Kapatılıyor...';
   try {
-    const res = await fetch(`/poly/api/close/${analiz}/${symbol}`, { method: 'POST' });
+    const res  = await fetch(`/poly/api/close/${analiz}/${symbol}`, { method: 'POST' });
     const data = await res.json();
-    if (data.ok) { await refresh(); }
-    else { btn.textContent = 'Hata!'; btn.classList.remove('loading'); }
+    if (data.ok) {
+      const s = data.sell;
+      if (s && s.ok) {
+        btn.style.background = '#4ade80';
+        btn.textContent = `✅ Kapatıldı · $${s.received}`;
+      } else if (s && !s.ok) {
+        btn.style.background = '#f87171';
+        btn.textContent = `⚠️ ${s.error || 'PM hatası'}`;
+        btn.classList.remove('loading');
+      } else {
+        btn.textContent = '✅ Kapatıldı';
+      }
+      setTimeout(() => refresh(), 2000);
+    } else {
+      btn.textContent = 'Hata!';
+      btn.style.background = '#f87171';
+      btn.classList.remove('loading');
+    }
   } catch(e) { btn.textContent = 'Hata!'; btn.classList.remove('loading'); }
 }
 
@@ -310,9 +476,9 @@ async function refresh() {
     const res = await fetch('/poly/api/data');
     const d   = await res.json();
 
-    document.getElementById('balance').textContent =
-      d.balance >= 0 ? '$' + d.balance.toFixed(2) : '?';
-    document.getElementById('updated').textContent = d.updated;
+    document.getElementById('portfolio').textContent = d.portfolio >= 0 ? '$' + d.portfolio.toFixed(2) : '?';
+    document.getElementById('cash').textContent      = d.cash >= 0 ? '$' + d.cash.toFixed(2) : '?';
+    document.getElementById('updated').textContent   = d.updated;
 
     const totalRisk = d.positions.reduce((s, p) => s + (p.pm_spent || 0), 0);
     document.getElementById('total-risk').textContent = '$' + totalRisk.toFixed(2);
@@ -347,12 +513,20 @@ async function refresh() {
             </div>
           </div>
           <div class="pos-meta">
-            <div class="pos-info">Riskteki: $${p.pm_spent}  ·  ${timeStr}</div>
+            <div class="pos-info">
+              Riskteki: $${p.pm_spent}
+              ${p.close_val !== null
+                ? ` <span style="color:${parseFloat(p.close_val) >= parseFloat(p.pm_spent) ? '#4ade80' : '#f87171'};font-weight:700;">→ $${p.close_val}</span>`
+                : ''}
+              · ${timeStr}
+            </div>
             <div class="pos-analiz">${p.analiz}</div>
           </div>
-          <button class="close-btn" onclick="closePosition('${p.analiz}','${p.symbol}',this)">
-            Pozisyonu Kapat
-          </button>
+          <div class="close-btn-wrap">
+            <button class="close-btn" onclick="closePosition('${p.analiz}','${p.symbol}',this)">
+              Pozisyonu Kapat
+            </button>
+          </div>
         </div>`;
     }).join('');
   } catch(e) { console.error(e); }
@@ -373,6 +547,7 @@ window.addEventListener('resize', () => {
 @app.route("/poly")
 @app.route("/poly/")
 def dashboard():
+    if _auth_required(): return redirect("/poly/login")
     return render_template_string(HTML)
 
 if __name__ == "__main__":
