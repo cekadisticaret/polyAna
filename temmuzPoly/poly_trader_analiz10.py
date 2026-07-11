@@ -242,7 +242,7 @@ async def analyze(symbol: str) -> dict | None:
         amount = AMOUNT_MODERATE
         tier   = "📊 İkisi orta"
 
-    price = pred_obj.current_price if pred_obj.current_price else klines[-1]["close"]
+    price = klines[-2]["close"]  # son kapanan mum = Polymarket Price to Beat
 
     return {
         "symbol":        symbol,

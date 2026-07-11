@@ -274,7 +274,7 @@ def analyze(symbol: str) -> dict | None:
 
     return {
         "symbol":        symbol,
-        "price":         klines[-1]["close"],
+        "price":         klines[-2]["close"],  # son kapanan mum = Polymarket Price to Beat
         "score":         score,
         "predicted_dir": "UP" if score > 0 else "DOWN" if score < 0 else None,
         "amount":        amount,
