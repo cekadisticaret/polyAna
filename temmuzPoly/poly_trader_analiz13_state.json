@@ -1,0 +1,36 @@
+{
+  "balance": 380.0,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 63728.7,
+      "amount": 16.0,
+      "votes": 3,
+      "algo_signals": {
+        "stoch_rsi": "UP",
+        "bb_squeeze": "UP",
+        "mean_reversion": "UP"
+      },
+      "entry_time_tr": "2026-07-12T10:05:02.091138+03:00",
+      "entry_hour_tr": 10,
+      "entry_dow": 6
+    },
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 76.3,
+      "amount": 12.0,
+      "votes": 2,
+      "algo_signals": {
+        "adx_regime": "DOWN",
+        "stoch_rsi": "UP",
+        "ema_crossover": "DOWN"
+      },
+      "entry_time_tr": "2026-07-12T10:05:02.091138+03:00",
+      "entry_hour_tr": 10,
+      "entry_dow": 6
+    }
+  ],
+  "total_pnl": 8.0
+}

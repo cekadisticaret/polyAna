@@ -484,5 +484,59 @@
     "ind_trend_ok": null,
     "ind_mr_ok": null,
     "ind_of_ok": true
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 1786.7,
+    "exit_price": 1787.95,
+    "entry_time_tr": "2026-07-12T03:06:01.835917+03:00",
+    "entry_hour_tr": 3,
+    "entry_dow": 6,
+    "entry_is_weekend": true,
+    "amount": 12.0,
+    "pnl": 12.0,
+    "exit_time_tr": "2026-07-12T04:00:03.844009+03:00",
+    "score_b": 1,
+    "conf_a": 0.865,
+    "votes": [
+      1,
+      0,
+      0,
+      1
+    ],
+    "ind_poly_ok": true,
+    "ind_trend_ok": null,
+    "ind_mr_ok": null,
+    "ind_of_ok": true
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 1802.29,
+    "exit_price": 1794.27,
+    "entry_time_tr": "2026-07-12T09:06:02.029339+03:00",
+    "entry_hour_tr": 9,
+    "entry_dow": 6,
+    "entry_is_weekend": true,
+    "amount": 12.0,
+    "pnl": -12.0,
+    "exit_time_tr": "2026-07-12T10:00:04.228514+03:00",
+    "score_b": 2,
+    "conf_a": 0.78,
+    "votes": [
+      1,
+      0,
+      1,
+      1
+    ],
+    "ind_poly_ok": false,
+    "ind_trend_ok": null,
+    "ind_mr_ok": false,
+    "ind_of_ok": false
   }
 ]

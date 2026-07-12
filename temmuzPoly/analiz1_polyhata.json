@@ -10,5 +10,17 @@
     "symbol": "ETHUSDT",
     "hata_turu": "order_basarisiz",
     "detay": "dir=UP amount=6.0"
+  },
+  {
+    "zaman": "2026-07-12T09:05:16.231879+03:00",
+    "symbol": "46191133159203775666",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=425, error_message={'error': 'order manager not ready, please retry'}]"
+  },
+  {
+    "zaman": "2026-07-12T09:05:16.232227+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=8.0"
   }
 ]

@@ -1,0 +1,342 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 63783.0,
+    "exit_price": 63796.8,
+    "entry_time_tr": "2026-07-12T03:05:01.756677+03:00",
+    "entry_hour_tr": 3,
+    "entry_dow": 6,
+    "amount": 16.0,
+    "votes": 3,
+    "algo_signals": {
+      "stoch_rsi": "UP",
+      "bb_squeeze": "UP",
+      "mean_reversion": "UP"
+    },
+    "exit_time_tr": "2026-07-12T04:00:02.187288+03:00",
+    "pnl": 16.0
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 1786.7,
+    "exit_price": 1787.92,
+    "entry_time_tr": "2026-07-12T03:05:01.756677+03:00",
+    "entry_hour_tr": 3,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "oi_div": "UP",
+      "heikin_ashi": "DOWN",
+      "ema_crossover": "UP"
+    },
+    "exit_time_tr": "2026-07-12T04:00:02.187288+03:00",
+    "pnl": 12.0
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 63802.9,
+    "exit_price": 64106.0,
+    "entry_time_tr": "2026-07-12T04:05:02.524921+03:00",
+    "entry_hour_tr": 4,
+    "entry_dow": 6,
+    "amount": 16.0,
+    "votes": 3,
+    "algo_signals": {
+      "stoch_rsi": "UP",
+      "bb_squeeze": "UP",
+      "mean_reversion": "UP"
+    },
+    "exit_time_tr": "2026-07-12T05:00:01.939143+03:00",
+    "pnl": 16.0
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 76.06,
+    "exit_price": 76.78,
+    "entry_time_tr": "2026-07-12T04:05:02.524921+03:00",
+    "entry_hour_tr": 4,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "adx_regime": "DOWN",
+      "stoch_rsi": "UP",
+      "ema_crossover": "DOWN"
+    },
+    "exit_time_tr": "2026-07-12T05:00:01.939143+03:00",
+    "pnl": -12.0
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 64106.0,
+    "exit_price": 64049.2,
+    "entry_time_tr": "2026-07-12T05:05:01.909713+03:00",
+    "entry_hour_tr": 5,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "stoch_rsi": "UP",
+      "bb_squeeze": "DOWN",
+      "mean_reversion": "UP"
+    },
+    "exit_time_tr": "2026-07-12T06:00:02.243003+03:00",
+    "pnl": -12.0
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 1805.85,
+    "exit_price": 1804.18,
+    "entry_time_tr": "2026-07-12T05:05:01.909713+03:00",
+    "entry_hour_tr": 5,
+    "entry_dow": 6,
+    "amount": 16.0,
+    "votes": 3,
+    "algo_signals": {
+      "oi_div": "UP",
+      "heikin_ashi": "UP",
+      "ema_crossover": "UP"
+    },
+    "exit_time_tr": "2026-07-12T06:00:02.243003+03:00",
+    "pnl": -16.0
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 76.78,
+    "exit_price": 76.81,
+    "entry_time_tr": "2026-07-12T05:05:01.909713+03:00",
+    "entry_hour_tr": 5,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "adx_regime": "DOWN",
+      "stoch_rsi": "UP",
+      "ema_crossover": "DOWN"
+    },
+    "exit_time_tr": "2026-07-12T06:00:02.243003+03:00",
+    "pnl": -12.0
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 64049.2,
+    "exit_price": 64201.8,
+    "entry_time_tr": "2026-07-12T06:05:01.579575+03:00",
+    "entry_hour_tr": 6,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "stoch_rsi": "UP",
+      "bb_squeeze": "DOWN",
+      "mean_reversion": "UP"
+    },
+    "exit_time_tr": "2026-07-12T07:00:02.795728+03:00",
+    "pnl": 12.0
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 1804.19,
+    "exit_price": 1810.84,
+    "entry_time_tr": "2026-07-12T06:05:01.579575+03:00",
+    "entry_hour_tr": 6,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "oi_div": "DOWN",
+      "heikin_ashi": "UP",
+      "ema_crossover": "UP"
+    },
+    "exit_time_tr": "2026-07-12T07:00:02.795728+03:00",
+    "pnl": 12.0
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 76.8,
+    "exit_price": 77.0,
+    "entry_time_tr": "2026-07-12T06:05:01.579575+03:00",
+    "entry_hour_tr": 6,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "adx_regime": "DOWN",
+      "stoch_rsi": "UP",
+      "ema_crossover": "DOWN"
+    },
+    "exit_time_tr": "2026-07-12T07:00:02.795728+03:00",
+    "pnl": -12.0
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 1810.83,
+    "exit_price": 1805.06,
+    "entry_time_tr": "2026-07-12T07:05:02.152321+03:00",
+    "entry_hour_tr": 7,
+    "entry_dow": 6,
+    "amount": 16.0,
+    "votes": 3,
+    "algo_signals": {
+      "oi_div": "UP",
+      "heikin_ashi": "UP",
+      "ema_crossover": "UP"
+    },
+    "exit_time_tr": "2026-07-12T08:00:02.105678+03:00",
+    "pnl": -16.0
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 77.0,
+    "exit_price": 76.67,
+    "entry_time_tr": "2026-07-12T07:05:02.152321+03:00",
+    "entry_hour_tr": 7,
+    "entry_dow": 6,
+    "amount": 16.0,
+    "votes": 3,
+    "algo_signals": {
+      "adx_regime": "DOWN",
+      "stoch_rsi": "DOWN",
+      "ema_crossover": "DOWN"
+    },
+    "exit_time_tr": "2026-07-12T08:00:02.105678+03:00",
+    "pnl": 16.0
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 63974.3,
+    "exit_price": 63938.0,
+    "entry_time_tr": "2026-07-12T08:05:02.356313+03:00",
+    "entry_hour_tr": 8,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "stoch_rsi": "UP",
+      "bb_squeeze": "DOWN",
+      "mean_reversion": "UP"
+    },
+    "exit_time_tr": "2026-07-12T09:00:01.972908+03:00",
+    "pnl": -12.0
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 76.66,
+    "exit_price": 76.38,
+    "entry_time_tr": "2026-07-12T08:05:02.356313+03:00",
+    "entry_hour_tr": 8,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "adx_regime": "DOWN",
+      "stoch_rsi": "UP",
+      "ema_crossover": "DOWN"
+    },
+    "exit_time_tr": "2026-07-12T09:00:01.972908+03:00",
+    "pnl": 12.0
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 63938.0,
+    "exit_price": 63728.6,
+    "entry_time_tr": "2026-07-12T09:05:02.187668+03:00",
+    "entry_hour_tr": 9,
+    "entry_dow": 6,
+    "amount": 16.0,
+    "votes": 3,
+    "algo_signals": {
+      "stoch_rsi": "UP",
+      "bb_squeeze": "UP",
+      "mean_reversion": "UP"
+    },
+    "exit_time_tr": "2026-07-12T10:00:02.480930+03:00",
+    "pnl": -16.0
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 1802.29,
+    "exit_price": 1794.24,
+    "entry_time_tr": "2026-07-12T09:05:02.187668+03:00",
+    "entry_hour_tr": 9,
+    "entry_dow": 6,
+    "amount": 8.0,
+    "votes": 1,
+    "algo_signals": {
+      "oi_div": "NEUTRAL",
+      "heikin_ashi": "DOWN",
+      "ema_crossover": "NEUTRAL"
+    },
+    "exit_time_tr": "2026-07-12T10:00:02.480930+03:00",
+    "pnl": 8.0
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 76.38,
+    "exit_price": 76.31,
+    "entry_time_tr": "2026-07-12T09:05:02.187668+03:00",
+    "entry_hour_tr": 9,
+    "entry_dow": 6,
+    "amount": 12.0,
+    "votes": 2,
+    "algo_signals": {
+      "adx_regime": "DOWN",
+      "stoch_rsi": "UP",
+      "ema_crossover": "DOWN"
+    },
+    "exit_time_tr": "2026-07-12T10:00:02.480930+03:00",
+    "pnl": 12.0
+  }
+]

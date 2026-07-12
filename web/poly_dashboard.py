@@ -426,7 +426,6 @@ def api_analizler():
         ("karisim1",   "11. Analiz",            300,  "A1+A2+A4 Meta"),
         ("analiz12",   "12. Analiz",            400,  "A1+A4+A5+A9 Meta"),
         ("analiz13",   "13. Analiz",            400,  "3-Algo Sembol Bazlı"),
-        ("eth_analiz", "ETH Analiz",            300,  "A1+A2+A4 / ETH"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:
