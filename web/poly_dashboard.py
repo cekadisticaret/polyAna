@@ -1977,6 +1977,25 @@ HTML = r"""<!DOCTYPE html>
   .stat-sub.pos { color:#4ade80; }
   .stat-sub.neg { color:#f87171; }
 
+  /* Top3 analiz kartları */
+  .top3-card { background:#111; border:1px solid #1e1e1e; border-radius:14px; padding:14px 14px 12px; display:flex; gap:12px; align-items:center; }
+  .top3-donut { position:relative; width:64px; height:64px; flex-shrink:0; }
+  .top3-donut svg { transform:rotate(-90deg); }
+  .top3-donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .top3-wr { font-size:13px; font-weight:800; line-height:1; }
+  .top3-wrlbl { font-size:8px; color:#555; margin-top:1px; }
+  .top3-info { flex:1; min-width:0; }
+  .top3-label { font-size:13px; font-weight:700; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .top3-row { display:flex; justify-content:space-between; margin-bottom:2px; }
+  .top3-key { font-size:11px; color:#666; }
+  .top3-val { font-size:11px; font-weight:600; }
+  .top3-pills { display:flex; gap:3px; margin-top:6px; flex-wrap:wrap; }
+  .top3-pill { font-size:9px; padding:1px 5px; border-radius:12px; background:#1a1a1a; color:#888; }
+  .top3-pill.good { background:#14291e; color:#4ade80; }
+  .top3-pill.ok   { background:#1e1e14; color:#a3e635; }
+  .top3-pill.bad  { background:#291414; color:#f87171; }
+  @media(max-width:700px){ #top3-analizler { grid-template-columns:1fr; } }
+
   /* Grafik */
   .chart-wrap { background:#141414; border-radius:20px; overflow:hidden; margin-bottom:24px; }
   .chart-head { display:flex; align-items:center; justify-content:space-between; padding:16px 18px 0; }
@@ -2153,6 +2172,12 @@ HTML = r"""<!DOCTYPE html>
       </div>
 
       <div class="updated-bar"><span class="dot"></span>Her 30 saniyede güncellenir — <span id="updated">—</span></div>
+
+      <!-- En İyi 3 Analiz -->
+      <div class="section-title" style="margin:20px 0 12px">🏆 En Başarılı Analizler</div>
+      <div id="top3-analizler" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+        <div style="color:#555;font-size:13px;padding:16px">Yükleniyor…</div>
+      </div>
 
       <!-- Mobil pozisyonlar (desktop'ta gizli) -->
       <div class="mobile-positions">
@@ -2497,6 +2522,62 @@ async function refresh() {
 
   } catch(e) { console.error(e); }
 }
+
+// ── Top 3 Analizler ──────────────────────────────────────
+function top3DonutSVG(pct, color){
+  const r=22,cx=32,cy=32,circ=2*Math.PI*r;
+  const fill=circ*(pct/100), bg=circ-fill;
+  return `<svg width="64" height="64" viewBox="0 0 64 64">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1e1e1e" stroke-width="8"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="8"
+      stroke-dasharray="${fill} ${bg}" stroke-linecap="round"/>
+  </svg>`;
+}
+function top3PillClass(wr){ return wr>=60?'good':wr>=50?'ok':'bad'; }
+function top3Color(wr){ return wr>=60?'#4ade80':wr>=55?'#a3e635':wr>=50?'#c8f135':wr>=45?'#fb923c':'#f87171'; }
+
+async function loadTop3(){
+  try{
+    const r = await fetch('/poly/api/analizler');
+    if(!r.ok) return;
+    const data = await r.json();
+    if(!Array.isArray(data)) return;
+    const top3 = data.slice(0,3);
+    document.getElementById('top3-analizler').innerHTML = top3.map((a,i) => {
+      const color  = top3Color(a.wr);
+      const pnlCls = a.pnl>0?'color:#4ade80':a.pnl<0?'color:#f87171':'color:#888';
+      const pnlStr = (a.pnl>=0?'+':'')+'$'+Math.abs(a.pnl).toFixed(2);
+      const medals = ['🥇','🥈','🥉'];
+      const pills  = a.sym_stats.map(s=>
+        `<span class="top3-pill ${top3PillClass(s.wr)}">${s.sym} %${s.wr}</span>`
+      ).join('');
+      return `<div class="top3-card">
+        <div class="top3-donut">
+          ${top3DonutSVG(a.wr, color)}
+          <div class="top3-donut-center">
+            <div class="top3-wr" style="color:${color}">${a.total?a.wr+'%':'—'}</div>
+            <div class="top3-wrlbl">WR</div>
+          </div>
+        </div>
+        <div class="top3-info">
+          <div class="top3-label">${medals[i]} ${a.label}</div>
+          <div class="top3-row">
+            <span class="top3-key">P&amp;L</span>
+            <span class="top3-val" style="${pnlCls}">${pnlStr}</span>
+          </div>
+          <div class="top3-row">
+            <span class="top3-key">İşlem</span>
+            <span class="top3-val">${a.wins}W / ${a.total-a.wins}L</span>
+          </div>
+          <div class="top3-pills">${pills}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){ console.error('top3',e); }
+}
+
+loadTop3();
+setInterval(loadTop3, 60000);
 
 refresh();
 setInterval(refresh, 30000);
