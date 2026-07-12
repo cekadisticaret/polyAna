@@ -969,7 +969,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="top-bar">
     <div>
       <div class="page-title">Algoritma Analizi</div>
-      <div class="page-sub">21 algoritma — BTC / ETH / SOL — 1 saatlik</div>
+      <div class="page-sub">39 algoritma — BTC / ETH / SOL — 1 saatlik</div>
       <div id="top-sym-algos" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
     <!-- Consensus kutusu -->
@@ -1145,6 +1145,81 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
       <div class="card-signals" id="sigs-24"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-24"></div><div class="card-acc" id="acc-24"><span class="acc-none pct-none">—</span></div></div>
     </div>
+    <div class="card" data-algo="25">
+      <div class="card-top"><div class="card-num">25</div><div class="card-name">Parabolic SAR + ADX</div></div>
+      <div class="card-signals" id="sigs-25"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-25"></div><div class="card-acc" id="acc-25"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="26">
+      <div class="card-top"><div class="card-num">26</div><div class="card-name">MACD Histogram Diverjansı</div></div>
+      <div class="card-signals" id="sigs-26"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-26"></div><div class="card-acc" id="acc-26"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="27">
+      <div class="card-top"><div class="card-num">27</div><div class="card-name">Stochastic RSI (14) K/D</div></div>
+      <div class="card-signals" id="sigs-27"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-27"></div><div class="card-acc" id="acc-27"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="28">
+      <div class="card-top"><div class="card-num">28</div><div class="card-name">Triple EMA (8-21-55)</div></div>
+      <div class="card-signals" id="sigs-28"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-28"></div><div class="card-acc" id="acc-28"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="29">
+      <div class="card-top"><div class="card-num">29</div><div class="card-name">Hull Moving Average (HMA)</div></div>
+      <div class="card-signals" id="sigs-29"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-29"></div><div class="card-acc" id="acc-29"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="30">
+      <div class="card-top"><div class="card-num">30</div><div class="card-name">Keltner Kanalı (20,2)</div></div>
+      <div class="card-signals" id="sigs-30"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-30"></div><div class="card-acc" id="acc-30"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="31">
+      <div class="card-top"><div class="card-num">31</div><div class="card-name">Donchian Kanalı (20)</div></div>
+      <div class="card-signals" id="sigs-31"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-31"></div><div class="card-acc" id="acc-31"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="32">
+      <div class="card-top"><div class="card-num">32</div><div class="card-name">VWAP + Hacim Profili</div></div>
+      <div class="card-signals" id="sigs-32"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-32"></div><div class="card-acc" id="acc-32"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="33">
+      <div class="card-top"><div class="card-num">33</div><div class="card-name">Money Flow Index (MFI)</div></div>
+      <div class="card-signals" id="sigs-33"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-33"></div><div class="card-acc" id="acc-33"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="34">
+      <div class="card-top"><div class="card-num">34</div><div class="card-name">Random Forest Classifier</div></div>
+      <div class="card-signals" id="sigs-34"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-34"></div><div class="card-acc" id="acc-34"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="35">
+      <div class="card-top"><div class="card-num">35</div><div class="card-name">Markov Zinciri Modeli</div></div>
+      <div class="card-signals" id="sigs-35"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-35"></div><div class="card-acc" id="acc-35"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="36">
+      <div class="card-top"><div class="card-num">36</div><div class="card-name">SuperTrend v2 (7,2.0)</div></div>
+      <div class="card-signals" id="sigs-36"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-36"></div><div class="card-acc" id="acc-36"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="37">
+      <div class="card-top"><div class="card-num">37</div><div class="card-name">Ichimoku Cloud v2 (TK+Bulut)</div></div>
+      <div class="card-signals" id="sigs-37"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-37"></div><div class="card-acc" id="acc-37"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="38">
+      <div class="card-top"><div class="card-num">38</div><div class="card-name">RSI Diverjansı (14) Katı</div></div>
+      <div class="card-signals" id="sigs-38"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-38"></div><div class="card-acc" id="acc-38"><span class="acc-none pct-none">—</span></div></div>
+    </div>
+    <div class="card" data-algo="39">
+      <div class="card-top"><div class="card-num">39</div><div class="card-name">H1 Profesyonel Kombinasyon</div></div>
+      <div class="card-signals" id="sigs-39"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-39"></div><div class="card-acc" id="acc-39"><span class="acc-none pct-none">—</span></div></div>
+    </div>
   </div>
 
 </div><!-- /main-left -->
@@ -1198,7 +1273,7 @@ function pillLabel(sym, sig){
 function renderSignals(data){
   const sigs = data.signals || {};
   // 13,14 sabit (yön yok); diğerleri güncellenir
-  const dynamic = [1,2,3,4,5,6,7,8,9,10,11,12,15,16,17,18,19,20,21,22,23,24];
+  const dynamic = [1,2,3,4,5,6,7,8,9,10,11,12,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39];
   for(const n of dynamic){
     const el = document.getElementById("sigs-"+n);
     if(!el) continue;
@@ -1326,7 +1401,11 @@ const ALGO_NAMES = {
   "6":"Stochastic RSI","7":"Bollinger Bands","8":"VWAP","9":"OBV","10":"Volume Profile",
   "11":"Mean Reversion","12":"Pairs Trading","13":"Grid Bot","14":"LSTM","15":"Multi-TF",
   "16":"ATR Breakout","17":"Heikin Ashi","18":"TEMA Crossover","19":"ADX Regime",
-  "20":"OI Divergence","21":"Fear & Greed"
+  "20":"OI Divergence","21":"Fear & Greed","22":"Analiz-1","23":"Analiz-9","24":"Analiz-10",
+  "25":"Parabolic SAR+ADX","26":"MACD Hist. Div","27":"Stoch RSI K/D","28":"Triple EMA",
+  "29":"Hull MA","30":"Keltner Kanal","31":"Donchian Kanal","32":"VWAP+Vol Profile",
+  "33":"Money Flow (MFI)","34":"Random Forest","35":"Markov Zinciri","36":"SuperTrend v2",
+  "37":"Ichimoku v2","38":"RSI Div (Katı)","39":"H1 Kombinasyon"
 };
 
 function renderTopSymAlgos(acc){

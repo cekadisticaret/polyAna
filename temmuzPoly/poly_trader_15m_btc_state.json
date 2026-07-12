@@ -1,0 +1,26 @@
+{
+  "balance": 501.57,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 64012.3,
+      "amount": 8.0,
+      "to_win": 15.84,
+      "token_price": 0.505,
+      "consensus": 2,
+      "votes": [
+        0,
+        1,
+        -1,
+        1
+      ],
+      "entry_time_tr": "2026-07-12T15:30:01.688018+03:00",
+      "entry_period_min": 930,
+      "entry_dow": 6,
+      "pm_slug": "btc-updown-5m-1783859400",
+      "ts_5m": 1783859400
+    }
+  ],
+  "total_pnl": 9.57
+}
