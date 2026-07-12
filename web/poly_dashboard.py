@@ -394,6 +394,224 @@ def api_symbol_stats():
     top_slots.sort(key=lambda x: (x["good_days"], x["wr"]), reverse=True)
     return jsonify({"sym_wr": sym_wr, "top_slots": top_slots[:3]})
 
+@app.route("/poly/api/analizler")
+def api_analizler():
+    if _auth_required(): return redirect("/poly/login")
+    _SYSTEMS = [
+        ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
+        ("analiz2",    "2. Analiz",             300,  "RSI+MR+CVD"),
+        ("analiz3",    "3. Analiz (Stoch ETH)", 300,  "Stochastic RSI / ETH"),
+        ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
+        ("analiz5",    "5. Analiz",             None, "A1+A9 Konsensüs"),
+        ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
+        ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs"),
+        ("karisim1",   "11. Analiz",            300,  "A1+A2+A4 Meta"),
+        ("analiz12",   "12. Analiz",            400,  "A1+A4+A5+A9 Meta"),
+        ("analiz13",   "13. Analiz",            400,  "3-Algo Sembol Bazlı"),
+        ("eth_analiz", "ETH Analiz",            300,  "A1+A2+A4 / ETH"),
+    ]
+    results = []
+    for key, label, init_bal, desc in _SYSTEMS:
+        hpath = os.path.join(_DIR_POLY, f"poly_trader_{key}_history.json")
+        spath = os.path.join(_DIR_POLY, f"poly_trader_{key}_state.json")
+        if not os.path.exists(hpath):
+            continue
+        try:
+            hist  = json.load(open(hpath))
+            state = json.load(open(spath)) if os.path.exists(spath) else {}
+        except Exception:
+            continue
+        total = len(hist)
+        wins  = sum(1 for t in hist if t.get("win"))
+        pnl   = round(sum(t.get("pnl", 0) for t in hist), 2)
+        wr    = round(wins / total * 100, 1) if total else 0
+        bal   = state.get("balance", 0)
+        open_cnt = len(state.get("open_positions", []))
+        # Sembol bazlı
+        sym_stats = {}
+        for t in hist:
+            sym = t.get("symbol", "").replace("USDT", "")
+            if sym not in sym_stats:
+                sym_stats[sym] = {"w": 0, "t": 0}
+            sym_stats[sym]["t"] += 1
+            if t.get("win"):
+                sym_stats[sym]["w"] += 1
+        sym_list = []
+        for sym in ["BTC", "ETH", "SOL"]:
+            v = sym_stats.get(sym)
+            if v and v["t"]:
+                sym_list.append({"sym": sym, "w": v["w"], "t": v["t"],
+                                  "wr": round(v["w"]/v["t"]*100, 1)})
+        results.append({
+            "key": key, "label": label, "desc": desc,
+            "init_bal": init_bal, "balance": round(bal, 2),
+            "total": total, "wins": wins, "wr": wr, "pnl": pnl,
+            "open": open_cnt, "sym_stats": sym_list,
+        })
+    results.sort(key=lambda x: (x["wr"], x["total"]), reverse=True)
+    return jsonify(results)
+
+
+@app.route("/analizler")
+def page_analizler():
+    if _auth_required(): return redirect("/poly/login")
+    return render_template_string(ANALIZLER_HTML)
+
+
+ANALIZLER_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Analizler — PolyMarket</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex}
+.sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:20px;letter-spacing:-0.5px}
+.logo span{color:#c8f135}
+.nav-label{font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:14px;transition:.15s}
+.nav-item:hover{background:#1a1a1a;color:#fff}
+.nav-item.active{background:#1a2e1a;color:#c8f135;font-weight:600}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0}
+.nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:#c8f135}
+.sidebar-footer{margin-top:auto;font-size:12px;color:#333;padding:8px 12px;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{flex:1;padding:28px;max-width:1200px}
+h1{font-size:22px;font-weight:800;margin-bottom:6px}
+.subtitle{font-size:13px;color:#555;margin-bottom:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{background:#111;border:1px solid #1e1e1e;border-radius:16px;padding:20px;display:flex;gap:16px;align-items:center;transition:.2s}
+.card:hover{border-color:#2a2a2a;background:#151515}
+.donut-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+.donut-wrap svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-pct{font-size:16px;font-weight:800;line-height:1}
+.donut-lbl{font-size:9px;color:#555;margin-top:2px}
+.card-info{flex:1;min-width:0}
+.card-label{font-size:15px;font-weight:700;margin-bottom:2px}
+.card-desc{font-size:11px;color:#555;margin-bottom:10px}
+.card-row{display:flex;justify-content:space-between;margin-bottom:4px}
+.card-key{font-size:12px;color:#666}
+.card-val{font-size:12px;font-weight:600}
+.pnl-pos{color:#4ade80}
+.pnl-neg{color:#f87171}
+.pnl-neu{color:#888}
+.sym-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.sym-pill{font-size:10px;padding:2px 7px;border-radius:20px;background:#1a1a1a;color:#888}
+.sym-pill.good{background:#14291e;color:#4ade80}
+.sym-pill.ok{background:#1e1e14;color:#a3e635}
+.sym-pill.bad{background:#291414;color:#f87171}
+.rank-badge{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#c8f135;color:#000;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.card-wrap{position:relative}
+#loading{text-align:center;color:#555;padding:60px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo">Poly<span>Market</span></div>
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
+  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item active" href="/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
+  <div class="nav-label">Hesap</div>
+  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
+  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
+  <div class="sidebar-footer"><span class="live-dot"></span>Canlı</div>
+</div>
+<div class="main">
+  <h1>📊 Analizler</h1>
+  <div class="subtitle" id="subtitle">Yükleniyor…</div>
+  <div id="grid" class="grid"><div id="loading">Veriler yükleniyor…</div></div>
+</div>
+<script>
+function donutSVG(pct, color){
+  const r=28, cx=40, cy=40, circ=2*Math.PI*r;
+  const fill = circ*(pct/100);
+  const bg   = circ - fill;
+  return `<svg width="80" height="80" viewBox="0 0 80 80">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1e1e1e" stroke-width="9"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="9"
+      stroke-dasharray="${fill} ${bg}" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function pctColor(wr){
+  if(wr>=60) return '#4ade80';
+  if(wr>=55) return '#a3e635';
+  if(wr>=50) return '#c8f135';
+  if(wr>=45) return '#fb923c';
+  return '#f87171';
+}
+
+function symClass(wr){
+  if(wr>=60) return 'good';
+  if(wr>=50) return 'ok';
+  return 'bad';
+}
+
+async function load(){
+  const r = await fetch('/poly/api/analizler');
+  const data = await r.json();
+  document.getElementById('subtitle').textContent =
+    data.length + ' sistem · WR\'ye göre sıralı · Otomatik güncellenir';
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = data.map((a, i) => {
+    const color  = pctColor(a.wr);
+    const pnlCls = a.pnl > 0 ? 'pnl-pos' : a.pnl < 0 ? 'pnl-neg' : 'pnl-neu';
+    const pnlStr = (a.pnl >= 0 ? '+' : '') + '$' + Math.abs(a.pnl).toFixed(2);
+    const balStr = '$' + a.balance.toFixed(2);
+    const rank   = i < 3 ? ['🥇','🥈','🥉'][i] : '';
+    const symHtml = a.sym_stats.map(s =>
+      `<span class="sym-pill ${symClass(s.wr)}">${s.sym} %${s.wr}</span>`
+    ).join('');
+
+    return `<div class="card-wrap">
+      ${rank ? `<div class="rank-badge">${rank}</div>` : ''}
+      <div class="card">
+        <div class="donut-wrap">
+          ${donutSVG(a.wr, color)}
+          <div class="donut-center">
+            <div class="donut-pct" style="color:${color}">${a.total ? a.wr+'%' : '—'}</div>
+            <div class="donut-lbl">WR</div>
+          </div>
+        </div>
+        <div class="card-info">
+          <div class="card-label">${a.label}</div>
+          <div class="card-desc">${a.desc}</div>
+          <div class="card-row">
+            <span class="card-key">Bakiye</span>
+            <span class="card-val">${balStr}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-key">P&L</span>
+            <span class="card-val ${pnlCls}">${pnlStr}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-key">İşlem</span>
+            <span class="card-val">${a.wins}/${a.total}</span>
+          </div>
+          ${a.open ? `<div class="card-row"><span class="card-key">Açık</span><span class="card-val" style="color:#c8f135">${a.open} poz</span></div>` : ''}
+          <div class="sym-pills">${symHtml}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>"""
+
+
 @app.route("/poly/api/stats")
 def api_stats():
     if _auth_required(): return redirect("/poly/login")
@@ -709,6 +927,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item active" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
@@ -1306,6 +1525,7 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item active" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
@@ -1470,6 +1690,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item active" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
@@ -1868,6 +2089,7 @@ HTML = r"""<!DOCTYPE html>
   <a class="nav-item active" id="nav-overview" onclick="showView('overview')" href="#"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" id="nav-heatmap" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
