@@ -733,26 +733,33 @@ async def run_open() -> None:
             is_eth = sig["symbol"] == "ETHUSDT"
             if a9_dir:
                 if a9_dir == sig["predicted_dir"]:
-                    raw             = _cfg["amount_agree"]
-                    sig["amount"]   = round(raw * _cfg["eth_multiplier"], 2) if is_eth else raw
+                    # Hemfikir: ETH için sabit $8, diğerleri amount_agree
+                    sig["amount"]   = 8.0 if is_eth else _cfg["amount_agree"]
                     sig["a9_agree"] = True
                 else:
                     sig["amount"]   = 0.0    # Ters yön → işlem açma
                     sig["a9_agree"] = False
             else:
-                # A9 sessiz → A5 kendi başarısına göre girer (ETH dahil)
-                sig["amount"]   = _cfg["amount_a5_only"]
-                sig["a9_agree"] = None
+                if is_eth:
+                    # ETH: A9 sessiz → açma
+                    sig["amount"]   = 0.0
+                    sig["a9_agree"] = None
+                else:
+                    # Diğerleri: A9 sessiz → A5 tek başına girer
+                    sig["amount"]   = _cfg["amount_a5_only"]
+                    sig["a9_agree"] = None
 
     # A9'un sinyali olan ama analiz5'in signal üretemediği semboller → A9-only giriş
     a5_syms = {s["symbol"] for s in results}
     for sym, a9_dir in a9_signals.items():
         if sym not in a5_syms and sym in SYMBOLS:
+            # ETH A9-only → $8, diğerleri amount_a9_only
+            _a9only_amt = 8.0 if sym == "ETHUSDT" else _cfg["amount_a9_only"]
             results.append({
                 "symbol":        sym,
                 "predicted_dir": a9_dir,
                 "price":         None,   # run_open'da fetch edilecek
-                "amount":        _cfg["amount_a9_only"],
+                "amount":        _a9only_amt,
                 "score":         0,
                 "conf":          0.0,
                 "votes":         [0, 0, 0],
@@ -885,6 +892,8 @@ async def run_open() -> None:
         elif result_sig and result_sig["amount"] == 0:
             if result_sig.get("a9_agree") is False:
                 reason = "ters yön ↔"
+            elif sym == "ETHUSDT":
+                reason = "A9 sessiz (ETH A9 gerekli)"
             else:
                 reason = "atlandı"
             d_tr = "UP" if result_sig["predicted_dir"] == "UP" else "DOWN"
