@@ -733,8 +733,8 @@ async def run_open() -> None:
             is_eth = sig["symbol"] == "ETHUSDT"
             if a9_dir:
                 if a9_dir == sig["predicted_dir"]:
-                    # Hemfikir: ETH için sabit $8, diğerleri amount_agree
-                    sig["amount"]   = 8.0 if is_eth else _cfg["amount_agree"]
+                    # Hemfikir: ETH için sabit $12, diğerleri amount_agree
+                    sig["amount"]   = 12.0 if is_eth else _cfg["amount_agree"]
                     sig["a9_agree"] = True
                 else:
                     sig["amount"]   = 0.0    # Ters yön → işlem açma
