@@ -1198,7 +1198,7 @@ function pillLabel(sym, sig){
 function renderSignals(data){
   const sigs = data.signals || {};
   // 13,14 sabit (yön yok); diğerleri güncellenir
-  const dynamic = [1,2,3,4,5,6,7,8,9,10,11,12,15,16,17,18,19,20,21];
+  const dynamic = [1,2,3,4,5,6,7,8,9,10,11,12,15,16,17,18,19,20,21,22,23,24];
   for(const n of dynamic){
     const el = document.getElementById("sigs-"+n);
     if(!el) continue;
@@ -1214,7 +1214,7 @@ function renderConsensus(data){
   const upd  = document.getElementById("cb-updated");
   const nxt  = document.getElementById("cb-next");
   const per  = document.getElementById("cb-period");
-  upd.textContent = data.updated ? data.updated+" güncellendi" : "";
+  upd.textContent = data.updated ? "🕐 "+data.updated+" güncellendi" : "";
   nxt.textContent = "";
   if(per && data.period_start && data.period_end)
     per.textContent = "📅 "+data.period_start+" → "+data.period_end+" analizi";
