@@ -1978,7 +1978,8 @@ HTML = r"""<!DOCTYPE html>
   .stat-sub.neg { color:#f87171; }
 
   /* Top3 analiz kartları */
-  .top3-card { background:#111; border:1px solid #1e1e1e; border-radius:14px; padding:14px 14px 12px; display:flex; gap:12px; align-items:center; }
+  .top3-card { background:#111; border:1px solid #1e1e1e; border-radius:14px; padding:16px; display:flex; gap:12px; align-items:flex-start; }
+  .top3-divider { height:1px; background:#1e1e1e; margin:6px 0 7px; }
   .top3-donut { position:relative; width:64px; height:64px; flex-shrink:0; }
   .top3-donut svg { transform:rotate(-90deg); }
   .top3-donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
@@ -2548,6 +2549,9 @@ async function loadTop3(){
       const pnlCls = a.pnl>0?'color:#4ade80':a.pnl<0?'color:#f87171':'color:#888';
       const pnlStr = (a.pnl>=0?'+':'')+'$'+Math.abs(a.pnl).toFixed(2);
       const medals = ['🥇','🥈','🥉'];
+      const balStr = '$'+a.balance.toFixed(2);
+      const loss   = a.total - a.wins;
+      const openTxt = a.open ? `<div class="top3-row"><span class="top3-key">Açık Poz</span><span class="top3-val" style="color:#c8f135">${a.open}</span></div>` : '';
       const pills  = a.sym_stats.map(s=>
         `<span class="top3-pill ${top3PillClass(s.wr)}">${s.sym} %${s.wr}</span>`
       ).join('');
@@ -2561,14 +2565,24 @@ async function loadTop3(){
         </div>
         <div class="top3-info">
           <div class="top3-label">${medals[i]} ${a.label}</div>
+          <div class="top3-divider"></div>
+          <div class="top3-row">
+            <span class="top3-key">Toplam İşlem</span>
+            <span class="top3-val">${a.total}</span>
+          </div>
+          <div class="top3-row">
+            <span class="top3-key">Kazanan / Kaybeden</span>
+            <span class="top3-val"><span style="color:#4ade80">${a.wins}W</span> / <span style="color:#f87171">${loss}L</span></span>
+          </div>
           <div class="top3-row">
             <span class="top3-key">P&amp;L</span>
             <span class="top3-val" style="${pnlCls}">${pnlStr}</span>
           </div>
           <div class="top3-row">
-            <span class="top3-key">İşlem</span>
-            <span class="top3-val">${a.wins}W / ${a.total-a.wins}L</span>
+            <span class="top3-key">Bakiye</span>
+            <span class="top3-val">${balStr}</span>
           </div>
+          ${openTxt}
           <div class="top3-pills">${pills}</div>
         </div>
       </div>`;
