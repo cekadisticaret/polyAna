@@ -19,9 +19,10 @@ _PM_GAMMA = "https://gamma-api.polymarket.com"
 
 app = Flask(__name__)
 app.secret_key = "pk_bursaapp_x9f2k7m3"
-app.config["SESSION_COOKIE_SECURE"]   = False  # nginx HTTP proxy üzerinden geldiği için
+app.config["SESSION_COOKIE_SECURE"]   = False
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_PATH"]     = "/"
 
 # nginx reverse proxy arkasında çalışırken URL scheme ve host'u düzelt
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -396,7 +397,7 @@ def api_symbol_stats():
 
 @app.route("/poly/api/analizler")
 def api_analizler():
-    if _auth_required(): return redirect("/poly/login")
+    if _auth_required(): return jsonify({"error": "unauthorized"}), 401
     _SYSTEMS = [
         ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
         ("analiz2",    "2. Analiz",             300,  "RSI+MR+CVD"),
@@ -455,7 +456,7 @@ def api_analizler():
 @app.route("/analizler")
 def page_analizler():
     if _auth_required(): return redirect("/poly/login")
-    return render_template_string(ANALIZLER_HTML)
+    return ANALIZLER_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
 ANALIZLER_HTML = """<!DOCTYPE html>
@@ -556,8 +557,11 @@ function symClass(wr){
 }
 
 async function load(){
+  try{
   const r = await fetch('/poly/api/analizler');
+  if(!r.ok){ document.getElementById('loading').textContent = 'API hatası: ' + r.status; return; }
   const data = await r.json();
+  if(data.error){ document.getElementById('loading').textContent = 'Oturum hatası: ' + data.error; return; }
   document.getElementById('subtitle').textContent =
     data.length + ' sistem · WR\'ye göre sıralı · Otomatik güncellenir';
 
@@ -603,6 +607,10 @@ async function load(){
       </div>
     </div>`;
   }).join('');
+  }catch(e){
+    document.getElementById('loading').textContent = 'JS hatası: ' + e.message;
+    console.error(e);
+  }
 }
 
 load();
@@ -620,6 +628,7 @@ def api_stats():
         "analiz2":  "2. Analiz",
         "analiz4":  "4. Analiz",
         "analiz5":  "5. Analiz",
+        "analiz9":  "9. Analiz",
         "analiz10": "10. Analiz",
         "karisim1": "11. Analiz",
     }

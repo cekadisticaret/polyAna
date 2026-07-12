@@ -526,8 +526,6 @@ async def run_close() -> None:
                         pm_pnl_val = round(pm_size - pm_spent, 2) if our_won else round(-pm_spent, 2)
                         pm_pnl_str  = f"  |  🎯PM: {'+'if our_won else ''}{pm_pnl_val:.2f}$"
                         pm_tur_pnl += pm_pnl_val
-                        state["balance"]   = round(state.get("balance", INITIAL_BALANCE) + pm_pnl_val + pm_spent, 2)
-                        state["total_pnl"] = round(state.get("total_pnl", 0.0) + pm_pnl_val, 2)
             except Exception as e:
                 print(f"[9. ANALİZ close] PM sonuç hatası: {e}", file=sys.stderr)
 
@@ -567,6 +565,9 @@ async def run_close() -> None:
 
     # Başarısız pozisyonları bir sonraki saate bırak
     state["open_positions"] = failed_pos
+    # Bakiyeyi history'den yeniden hesapla (drift'i önler)
+    state["balance"]   = round(INITIAL_BALANCE + sum(t.get("pnl", 0) or 0 for t in history), 2)
+    state["total_pnl"] = round(sum(t.get("pnl", 0) or 0 for t in history), 2)
     save_state(state)
     save_history(history)
 
