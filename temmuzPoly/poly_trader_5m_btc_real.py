@@ -43,7 +43,7 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Config ────────────────────────────────────────────────────
-BOT_TOKEN = "8256912678:AAFWEoRWO7Z0siK_c4Dm5XjgtBKmh-wmF8E"
+BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
@@ -67,7 +67,7 @@ _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_DRY_RUN   = False  # GERÇEK: Polymarket işlem açar
 
-LABEL = "5M BTC REAL"
+LABEL = "5M 201 BTC"
 
 
 # ── State & History ───────────────────────────────────────────

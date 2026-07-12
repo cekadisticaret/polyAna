@@ -244,7 +244,7 @@ _HEATMAP_ANALYSES = {
     "15m_btc":    "5M 101 BTC",
     "5m_btc_102": "5M 102 BTC",
     "5m_btc_103": "5M 103 BTC",
-    "5m_btc_real": "5M BTC REAL",
+    "5m_btc_real": "5M 201 BTC",
 }
 
 @app.route("/poly/api/heatmap")
@@ -435,7 +435,7 @@ def api_analizler():
         ("15m_btc",    "5M 101 BTC",            500,  "4-Algo 5dk BTC"),
         ("5m_btc_102", "5M 102 BTC",            500,  "A1+A9 5dk BTC"),
         ("5m_btc_103", "5M 103 BTC",            500,  "HMA+MACD+ST+StochRSI+ATR"),
-        ("5m_btc_real","5M BTC REAL",           None, "Gerçek PM / 4-Algo"),
+        ("5m_btc_real","5M 201 BTC",             None, "Gerçek PM / 4-Algo"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:
