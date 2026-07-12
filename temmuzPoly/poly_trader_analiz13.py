@@ -328,8 +328,7 @@ def run_algos(sym: str, kl: list) -> dict:
 
     if votes == 3:    amount = AMOUNT_HIGH
     elif votes == 2:  amount = AMOUNT_MID
-    elif votes == 1:  amount = AMOUNT_LOW
-    else:             amount = 0.0
+    else:             amount = 0.0  # 1/3 veya 0/3 → işlem yok
 
     results["_direction"] = direction
     results["_votes"]     = votes
