@@ -408,8 +408,25 @@ def _pm_get_client():
     raise RuntimeError("Polymarket client oluşturulamadı")
 
 
+def _pm_fit_buy(size: float, price: float, min_shares: float = 5.0) -> tuple[float, float]:
+    """CLOB BUY: size×price tam sent olacak şekilde size ayarla (max 2 ondalık)."""
+    from decimal import Decimal, ROUND_DOWN
+    p = Decimal(str(round(price, 2)))
+    if p <= 0:
+        return size, price
+    s = max(Decimal(str(round(size, 2))), Decimal(str(round(min_shares, 2))))
+    step = Decimal("0.01")
+    for _ in range(10000):
+        m = s * p
+        cents = m * 100
+        if cents == cents.quantize(Decimal("1"), rounding=ROUND_DOWN):
+            return float(s), float(p)
+        s += step
+    return float(s), float(p)
+
+
 def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
-                    neg_risk: bool = False) -> dict | None:
+                    neg_risk: bool = False, _retry: bool = True) -> dict | None:
     try:
         from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
         from py_clob_client_v2.order_builder.constants import BUY
@@ -418,16 +435,20 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
         price  = float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
         price  = max(0.02, min(0.98, round(price, 2)))
         raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
-        size   = max(5.0, raw_sz)
+        size, price = _pm_fit_buy(max(5.0, raw_sz), price)
         spent  = round(size * price, 2)
         if _PM_DRY_RUN:
-            print(f"[DRY RUN] token {token_id[:16]}… {size:.1f} shares @ {price:.2f} (~${spent:.2f})")
+            print(f"[DRY RUN] {token_id[:16]}… {size} shares @ {price:.2f} (~${spent:.2f})")
             return {"order_id": "DRY_RUN", "size": size, "price": price, "spent": spent}
         args   = OrderArgs(token_id=token_id, price=price, size=size, side=BUY)
         signed = client.create_order(args, PartialCreateOrderOptions())
         resp   = client.post_order(signed, order_type=OrderType.FAK)
         if not resp or not resp.get("success"):
             print(f"[{LABEL}] Order başarısız: {resp}", file=sys.stderr)
+            if _retry:
+                print(f"[{LABEL}] 10sn sonra tekrar deneniyor...", file=sys.stderr)
+                time.sleep(10)
+                return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
             return None
         oid = resp.get("orderID") or resp.get("id", "")
         return {"order_id": oid, "size": size, "price": price, "spent": spent}
