@@ -587,8 +587,7 @@ def run() -> None:
         if pm_info:
             pm_slug = pm_info["slug"]
 
-    # Pozisyonu state'e kaydet
-    state["balance"] = round(state["balance"] - amount, 2)
+    # Pozisyonu state'e kaydet (bakiye açılışta değil, kapanışta güncellenir)
     state["open_positions"].append({
         "symbol":           SYMBOL,
         "predicted_dir":    direction,
@@ -622,7 +621,7 @@ def run() -> None:
         f"Giriş: {entry_p:,.2f} USDT\n"
         f"{vote_str}\n"
         f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}{pm_str}\n"
-        f"💰 Bakiye: ${state['balance']:.2f}  |  Açık: ${amount:.0f} riskte\n"
+        f"💰 Bakiye: ${state['balance']:.2f}  |  🔴 ${amount:.0f} riskte\n"
         f"{sep}"
     )
     tg_send(msg)
