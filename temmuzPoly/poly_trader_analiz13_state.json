@@ -1,36 +1,51 @@
 {
-  "balance": 380.0,
+  "balance": 352.0,
   "open_positions": [
     {
       "symbol": "BTCUSDT",
-      "predicted_dir": "UP",
-      "entry_price": 63728.7,
-      "amount": 16.0,
-      "votes": 3,
+      "predicted_dir": "DOWN",
+      "entry_price": 63838.9,
+      "amount": 12.0,
+      "votes": 2,
       "algo_signals": {
-        "stoch_rsi": "UP",
-        "bb_squeeze": "UP",
+        "stoch_rsi": "DOWN",
+        "bb_squeeze": "DOWN",
         "mean_reversion": "UP"
       },
-      "entry_time_tr": "2026-07-12T10:05:02.091138+03:00",
-      "entry_hour_tr": 10,
+      "entry_time_tr": "2026-07-12T14:05:01.779688+03:00",
+      "entry_hour_tr": 14,
+      "entry_dow": 6
+    },
+    {
+      "symbol": "ETHUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 1798.66,
+      "amount": 0.0,
+      "votes": 1,
+      "algo_signals": {
+        "oi_div": "NEUTRAL",
+        "heikin_ashi": "DOWN",
+        "ema_crossover": "NEUTRAL"
+      },
+      "entry_time_tr": "2026-07-12T14:05:01.779688+03:00",
+      "entry_hour_tr": 14,
       "entry_dow": 6
     },
     {
       "symbol": "SOLUSDT",
       "predicted_dir": "DOWN",
-      "entry_price": 76.3,
-      "amount": 12.0,
-      "votes": 2,
+      "entry_price": 76.66,
+      "amount": 16.0,
+      "votes": 3,
       "algo_signals": {
         "adx_regime": "DOWN",
-        "stoch_rsi": "UP",
+        "stoch_rsi": "DOWN",
         "ema_crossover": "DOWN"
       },
-      "entry_time_tr": "2026-07-12T10:05:02.091138+03:00",
-      "entry_hour_tr": 10,
+      "entry_time_tr": "2026-07-12T14:05:01.779688+03:00",
+      "entry_hour_tr": 14,
       "entry_dow": 6
     }
   ],
-  "total_pnl": 8.0
+  "total_pnl": -20.0
 }
