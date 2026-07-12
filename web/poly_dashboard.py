@@ -563,7 +563,7 @@ async function load(){
   const data = await r.json();
   if(data.error){ document.getElementById('loading').textContent = 'Oturum hatası: ' + data.error; return; }
   document.getElementById('subtitle').textContent =
-    data.length + ' sistem · WR\'ye göre sıralı · Otomatik güncellenir';
+    `${data.length} sistem \u00b7 WR\u2019ye g\u00f6re s\u0131ral\u0131 \u00b7 Otomatik g\u00fcncellenir`;
 
   const grid = document.getElementById('grid');
   grid.innerHTML = data.map((a, i) => {
