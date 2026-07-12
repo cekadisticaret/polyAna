@@ -1996,7 +1996,7 @@ HTML = r"""<!DOCTYPE html>
   .top3-pill.good { background:#14291e; color:#4ade80; }
   .top3-pill.ok   { background:#1e1e14; color:#a3e635; }
   .top3-pill.bad  { background:#291414; color:#f87171; }
-  @media(max-width:700px){ #top3-analizler { grid-template-columns:1fr; } }
+  @media(max-width:700px){ .top3-desktop-only { display:none !important; } }
 
   /* Grafik */
   .chart-wrap { background:#141414; border-radius:20px; overflow:hidden; margin-bottom:24px; }
@@ -2175,9 +2175,9 @@ HTML = r"""<!DOCTYPE html>
 
       <div class="updated-bar"><span class="dot"></span>Her 30 saniyede güncellenir — <span id="updated">—</span></div>
 
-      <!-- En İyi 3 Analiz -->
-      <div class="section-title" style="margin:20px 0 12px">🏆 En Başarılı Analizler</div>
-      <div id="top3-analizler" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+      <!-- En İyi 3 Analiz (sadece desktop) -->
+      <div class="section-title top3-desktop-only" style="margin:20px 0 12px">🏆 En Başarılı Analizler</div>
+      <div id="top3-analizler" class="top3-desktop-only" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
         <div style="color:#555;font-size:13px;padding:16px">Yükleniyor…</div>
       </div>
 
