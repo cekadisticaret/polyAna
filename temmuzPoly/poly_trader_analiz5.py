@@ -740,21 +740,14 @@ async def run_open() -> None:
                     sig["amount"]   = 0.0    # Ters yön → işlem açma
                     sig["a9_agree"] = False
             else:
-                # ETH için A9 yoksa veya A9 sessizse işlem açma
-                if is_eth:
-                    sig["amount"]   = 0.0
-                    sig["a9_agree"] = None
-                else:
-                    sig["amount"]   = _cfg["amount_a5_only"]
-                    sig["a9_agree"] = None
+                # A9 sessiz → A5 kendi başarısına göre girer (ETH dahil)
+                sig["amount"]   = _cfg["amount_a5_only"]
+                sig["a9_agree"] = None
 
     # A9'un sinyali olan ama analiz5'in signal üretemediği semboller → A9-only giriş
-    # ETH için A9-only da atlanır (ETH sadece A9+A5 hemfikirse girilir)
     a5_syms = {s["symbol"] for s in results}
     for sym, a9_dir in a9_signals.items():
         if sym not in a5_syms and sym in SYMBOLS:
-            if sym == "ETHUSDT":
-                continue  # ETH A9-only → atla
             results.append({
                 "symbol":        sym,
                 "predicted_dir": a9_dir,
@@ -892,8 +885,6 @@ async def run_open() -> None:
         elif result_sig and result_sig["amount"] == 0:
             if result_sig.get("a9_agree") is False:
                 reason = "ters yön ↔"
-            elif sym == "ETHUSDT":
-                reason = "A9 sessiz"
             else:
                 reason = "atlandı"
             d_tr = "UP" if result_sig["predicted_dir"] == "UP" else "DOWN"

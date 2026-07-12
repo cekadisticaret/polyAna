@@ -632,6 +632,16 @@ async def run_open() -> None:
     except Exception as _e:
         print(f"[9. ANALİZ] Sinyal yazma hatası: {_e}", file=sys.stderr)
 
+    # ETH için kötü saatler — historye göre düşük WR (00, 04, 20, 23)
+    _ETH_BAD_HOURS = {0, 4, 20, 23}
+    _eth_hour_skip = False
+    if hour_tr in _ETH_BAD_HOURS:
+        before = len(results)
+        results = [s for s in results if s["symbol"] != "ETHUSDT"]
+        if len(results) < before:
+            _eth_hour_skip = True
+            print(f"[9. ANALİZ] ETH {hour_tr:02d}:00 kötü saat — atlandı")
+
     # Sembol başarı sıralamasına göre lot çarpanı hesapla
     # Sıra 1 → ×1.0, Sıra 2 → ×0.8, Sıra 3 → ×0.6
     _sym_rank_mult: dict[str, float] = {}
@@ -744,6 +754,8 @@ async def run_open() -> None:
         f"⛔ {s['symbol'].replace('USDT','')}  skor:{s['score']:+d}/4  → işlem açılmadı"
         for s in skipped
     ]
+    if _eth_hour_skip:
+        skip_lines.append(f"⛔ ETH  → kötü saat ({hour_tr:02d}:00) atlandı")
 
     parts = [sep, f"🆕 <b>9. ANALİZ (Eski 5) — {saat} - {next_h} Yeni İşlemler</b>"]
 
