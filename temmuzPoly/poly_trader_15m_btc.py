@@ -475,40 +475,50 @@ def run() -> None:
             entry  = pos["entry_price"]
             pred   = pos["predicted_dir"]
             amount = pos.get("amount", AMOUNT_2)
+            to_win = pos.get("to_win", amount * 2)
 
-            # Polymarket ile aynı mantık: mum kapanışı giriş fiyatının üstünde mi?
+            # Polymarket ile aynı mantık: kapanış fiyatı giriş fiyatının üstünde mi?
             actual = "UP" if prev_close >= entry else "DOWN"
             win    = (pred == actual)
-            pnl    = amount if win else -amount
-            tur_pnl += pnl
 
-            state["balance"]   = round(state["balance"] + pnl, 2)
+            # Açılışta amount düşülmüştü → kazanınca to_win eklenir, kaybedince sıfır
+            if win:
+                state["balance"] = round(state["balance"] + to_win, 2)
+                pnl = round(to_win - amount, 2)      # net kar
+            else:
+                pnl = -amount                         # zaten düşülmüştü
+
+            tur_pnl += pnl
             state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
 
             history.append({
-                "symbol":          SYMBOL,
-                "predicted_dir":   pred,
-                "actual_dir":      actual,
-                "win":             win,
-                "entry_price":     entry,
-                "exit_price":      prev_close,
-                "amount":          amount,
-                "pnl":             pnl,
-                "entry_time_tr":   pos["entry_time_tr"],
+                "symbol":           SYMBOL,
+                "predicted_dir":    pred,
+                "actual_dir":       actual,
+                "win":              win,
+                "entry_price":      entry,
+                "exit_price":       prev_close,
+                "amount":           amount,
+                "to_win":           to_win,
+                "pnl":              pnl,
+                "entry_time_tr":    pos["entry_time_tr"],
                 "entry_period_min": pos.get("entry_period_min"),
-                "entry_dow":       pos.get("entry_dow"),
-                "exit_time_tr":    now_tr.isoformat(),
-                "consensus":       pos.get("consensus"),
-                "votes":           pos.get("votes"),
-                "pm_slug":         pos.get("pm_slug"),
-                "pm_dry_run":      _PM_DRY_RUN,
+                "entry_dow":        pos.get("entry_dow"),
+                "exit_time_tr":     now_tr.isoformat(),
+                "consensus":        pos.get("consensus"),
+                "votes":            pos.get("votes"),
+                "pm_slug":          pos.get("pm_slug"),
+                "pm_dry_run":       _PM_DRY_RUN,
             })
 
             icon    = "✅" if win else "❌"
             pct     = (prev_close - entry) / entry * 100
-            pnl_str = f"+${pnl:.0f}" if win else f"-${abs(pnl):.0f}"
+            pnl_str = f"+${pnl:.2f}" if win else f"-${amount:.0f}"
             dir_tr  = "YÜKSELİR" if pred == "UP" else "DÜŞER"
-            closed_lines.append(f"{icon} BTC {dir_tr}  {entry:,.0f} → {prev_close:,.0f} ({pct:+.1f}%)  {pnl_str}")
+            closed_lines.append(
+                f"{icon} BTC {dir_tr}  {entry:,.0f}→{prev_close:,.0f} ({pct:+.1f}%)"
+                f"  {'kazandı +$'+f'{to_win:.2f}' if win else 'kaybetti -$'+f'{amount:.0f}'}"
+            )
 
         state["open_positions"] = []
         save_state(state)
@@ -571,28 +581,36 @@ def run() -> None:
         print(f"[{LABEL}] {saat} — konsensüs yok ({consensus}/4)")
         return
 
-    # Market bul (Polymarket)
-    pm_slug = None
-    pm_info = None
-    if not _PM_DRY_RUN:
-        pm_info = _pm_find_5m_market(ts_5m)
-        if pm_info and not pm_info.get("closed"):
-            token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
-            order    = _pm_place_order(token_id, amount, pm_info["tick_size"], pm_info["neg_risk"])
-            if order:
-                pm_slug = pm_info["slug"]
-    else:
-        # DRY RUN: market var mı kontrol et
-        pm_info = _pm_find_5m_market(ts_5m)
-        if pm_info:
-            pm_slug = pm_info["slug"]
+    # Market bul + TO WIN hesapla
+    pm_slug    = None
+    pm_info    = _pm_find_5m_market(ts_5m)
+    token_price = None
+    if pm_info and not pm_info.get("closed"):
+        token_price = pm_info["up_price"] if direction == "UP" else pm_info["down_price"]
+        pm_slug = pm_info["slug"]
 
-    # Pozisyonu state'e kaydet (bakiye açılışta değil, kapanışta güncellenir)
+    # to_win: kazanırsak alacağımız miktar (Polymarket pay-out)
+    # Formül: $amount / token_price → kaç share aldık, her share $1 → to_win
+    if token_price and token_price > 0:
+        to_win = round(amount / token_price, 2)
+    else:
+        to_win = round(amount * 2, 2)   # fiyat alınamazsa %50 varsay
+
+    if not _PM_DRY_RUN and pm_info and not pm_info.get("closed"):
+        token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
+        _pm_place_order(token_id, amount, pm_info["tick_size"], pm_info["neg_risk"])
+
+    # Bakiyeden giriş miktarını düş
+    state["balance"] = round(state["balance"] - amount, 2)
+
+    # Pozisyonu state'e kaydet
     state["open_positions"].append({
         "symbol":           SYMBOL,
         "predicted_dir":    direction,
         "entry_price":      entry_p,
         "amount":           amount,
+        "to_win":           to_win,
+        "token_price":      token_price,
         "consensus":        consensus,
         "votes":            votes,
         "entry_time_tr":    now_tr.isoformat(),
@@ -611,21 +629,21 @@ def run() -> None:
         f"{'🟢' if v > 0 else '🔴' if v < 0 else '⚪'} {names[i]}"
         for i, v in enumerate(votes)
     )
-    pm_str = f"\n🔹 Market: <code>{pm_slug}</code>" if pm_slug else ""
-    dry_str = "  🔶 SANAL" if _PM_DRY_RUN else ""
+    price_str = f"@{token_price:.2f}" if token_price else ""
+    dry_str   = "  🔶 SANAL" if _PM_DRY_RUN else ""
 
     msg = (
         f"{sep}\n"
         f"🆕 <b>{LABEL} — {saat} → {next_saat}</b>{dry_str}\n"
-        f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/4 konsensüs)  💵 ${amount:.0f}\n"
+        f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/4)  💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
         f"Giriş: {entry_p:,.2f} USDT\n"
         f"{vote_str}\n"
-        f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}{pm_str}\n"
+        f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
         f"💰 Bakiye: ${state['balance']:.2f}  |  🔴 ${amount:.0f} riskte\n"
         f"{sep}"
     )
     tg_send(msg)
-    print(f"[{LABEL}] {saat} — {dir_tr} {consensus}/4  ${amount:.0f}  entry:{entry_p:,.2f}")
+    print(f"[{LABEL}] {saat} — {dir_tr} {consensus}/4  ${amount:.0f}→${to_win:.2f}  entry:{entry_p:,.2f}")
 
 
 # ── WEEKLY ─────────────────────────────────────────────────────
