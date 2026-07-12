@@ -231,12 +231,24 @@ def api_klines(symbol):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+_HEATMAP_ANALYSES = {
+    "analiz5":  "5. Analiz",
+    "analiz1":  "1. Analiz",
+    "analiz4":  "4. Analiz",
+    "analiz2":  "2. Analiz",
+    "analiz9":  "9. Analiz",
+    "karisim1": "11. Analiz",
+}
+
 @app.route("/poly/api/heatmap")
 def api_heatmap():
     if _auth_required(): return redirect("/poly/login")
     from collections import defaultdict
-    sym_filter = request.args.get("sym", "ALL").upper()
-    path = os.path.join(_DIR_POLY, "poly_trader_analiz5_history.json")
+    sym_filter  = request.args.get("sym", "ALL").upper()
+    analiz_key  = request.args.get("analiz", "analiz5")
+    if analiz_key not in _HEATMAP_ANALYSES:
+        analiz_key = "analiz5"
+    path = os.path.join(_DIR_POLY, f"poly_trader_{analiz_key}_history.json")
     if not os.path.exists(path):
         return jsonify({"cells": []})
     with open(path) as f:
@@ -295,7 +307,10 @@ def api_heatmap_detail():
     except ValueError:
         return jsonify({"error": "bad params"}), 400
 
-    path = os.path.join(_DIR_POLY, "poly_trader_analiz5_history.json")
+    analiz_key = request.args.get("analiz", "analiz5")
+    if analiz_key not in _HEATMAP_ANALYSES:
+        analiz_key = "analiz5"
+    path = os.path.join(_DIR_POLY, f"poly_trader_{analiz_key}_history.json")
     if not os.path.exists(path):
         return jsonify({"trades": []})
     with open(path) as f:
@@ -1678,6 +1693,10 @@ HARITA_HTML = r"""<!DOCTYPE html>
   .hm-filter { background:#1a1a1a; border:none; color:#666; font-size:12px; font-weight:700;
                padding:6px 14px; border-radius:12px; cursor:pointer; transition:.2s; }
   .hm-filter.active { background:#c8f135; color:#111; }
+  .hm-analiz-tab { background:#111; border:1px solid #2a2a2a; color:#555; font-size:12px; font-weight:600;
+                   padding:5px 13px; border-radius:20px; cursor:pointer; transition:.2s; }
+  .hm-analiz-tab:hover { border-color:#444; color:#ccc; }
+  .hm-analiz-tab.active { background:#1a2e1a; border-color:#4ade80; color:#4ade80; }
 
   .section-wrap { background:#1f1f1f; border-radius:20px; padding:20px; margin-bottom:16px; }
   .stat-label { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
@@ -1718,7 +1737,16 @@ HARITA_HTML = r"""<!DOCTYPE html>
       <button class="hm-filter" onclick="setFilter(this,'SOL')">SOL</button>
     </div>
   </div>
-  <div class="page-sub">5. Analiz — gün × saat kazanma oranı</div>
+  <!-- Analiz sekmeleri -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="hm-analiz-tab active" onclick="setAnaliz(this,'analiz5')">5. Analiz</button>
+    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz1')">1. Analiz</button>
+    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz4')">4. Analiz</button>
+    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz2')">2. Analiz</button>
+    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz9')">9. Analiz</button>
+    <button class="hm-analiz-tab" onclick="setAnaliz(this,'karisim1')">11. Analiz</button>
+  </div>
+  <div class="page-sub" id="hm-subtitle">5. Analiz — gün × saat kazanma oranı</div>
 
   <div id="hm-top" style="display:grid;grid-template-columns:200px 1fr;gap:14px;margin-bottom:16px;align-items:start">
     <div id="hm-summary" style="display:flex;flex-direction:column;gap:12px"></div>
@@ -1755,17 +1783,30 @@ HARITA_HTML = r"""<!DOCTYPE html>
 </div>
 
 <script>
-let _data = null, _sym = 'ALL';
+const _ANALIZ_LABELS = {
+  'analiz5':'5. Analiz','analiz1':'1. Analiz','analiz4':'4. Analiz',
+  'analiz2':'2. Analiz','analiz9':'9. Analiz','karisim1':'11. Analiz'
+};
+let _data = null, _sym = 'ALL', _analiz = 'analiz5';
 
 function hmColor(wr,t){ if(!t)return'#1a1a1a'; if(wr>=70)return'#166534'; if(wr>=55)return'#14532d'; if(wr>=50)return'#365314'; if(wr>=40)return'#78350f'; return'#450a0a'; }
 function hmTxt(wr,t){ if(!t)return'#333'; if(wr>=55)return'#4ade80'; if(wr>=50)return'#c8f135'; if(wr>=40)return'#fbbf24'; return'#f87171'; }
 
 async function load() {
-  const r = await fetch('/poly/api/heatmap?sym=' + _sym);
+  const r = await fetch(`/poly/api/heatmap?sym=${_sym}&analiz=${_analiz}`);
   const d = await r.json();
   _data   = d.cells;
   renderSummary(d.summary, d.sym_breakdown || []);
   renderGrid(_data);
+  const lbl = _ANALIZ_LABELS[_analiz] || _analiz;
+  document.getElementById('hm-subtitle').textContent = `${lbl} — gün × saat kazanma oranı`;
+}
+
+function setAnaliz(btn, key) {
+  document.querySelectorAll('.hm-analiz-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _analiz = key; _data = null;
+  load();
 }
 
 function setFilter(btn, sym) {
@@ -1855,7 +1896,7 @@ async function openPopup(dow, hour) {
   document.getElementById('popup-overlay').style.display = 'block';
   document.getElementById('popup').style.display = 'block';
 
-  const r = await fetch(`/poly/api/heatmap/detail?dow=${dow}&hour=${hour}&sym=${_sym}`);
+  const r = await fetch(`/poly/api/heatmap/detail?dow=${dow}&hour=${hour}&sym=${_sym}&analiz=${_analiz}`);
   const d = await r.json();
 
   const pc = d.pnl >= 0 ? '#4ade80' : '#f87171';
