@@ -6,7 +6,8 @@ Her :05'te cron ile çalışır, /tmp/algo_signals.json'a kaydeder
 """
 import json, requests, datetime, math, os
 
-SYMBOLS       = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}
+SYMBOLS       = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT",
+                 "XRP": "XRPUSDT", "DOGE": "DOGEUSDT", "BNB": "BNBUSDT", "HYPE": "HYPEUSDT"}
 FUTURES       = "https://fapi.binance.com"
 OUT_FILE      = "/tmp/algo_signals.json"
 PREV_FILE     = "/tmp/algo_signals_prev.json"
@@ -206,14 +207,16 @@ def pairs_trading(klines_dict):
     eth = klines_dict.get("ETH", [])
     btc = klines_dict.get("BTC", [])
     n   = min(len(eth), len(btc))
-    if n < 20: return {"BTC": "NEUTRAL", "ETH": "NEUTRAL", "SOL": "NEUTRAL"}
+    neutral = {sym: "NEUTRAL" for sym in SYMBOLS}
+    if n < 20: return neutral
     ratios = [eth[i]["c"] / btc[i]["c"] for i in range(n) if btc[i]["c"]]
     std, mean = _std(ratios[-20:])
-    if not std: return {"BTC": "NEUTRAL", "ETH": "NEUTRAL", "SOL": "NEUTRAL"}
+    if not std: return neutral
     z = (ratios[-1] - mean) / std
-    eth_sig = "UP" if z < -1 else "DOWN" if z > 1 else "NEUTRAL"
-    btc_sig = "DOWN" if z < -1 else "UP" if z > 1 else "NEUTRAL"
-    return {"BTC": btc_sig, "ETH": eth_sig, "SOL": "NEUTRAL"}
+    result = dict(neutral)
+    result["ETH"] = "UP" if z < -1 else "DOWN" if z > 1 else "NEUTRAL"
+    result["BTC"] = "DOWN" if z < -1 else "UP" if z > 1 else "NEUTRAL"
+    return result
 
 def multi_tf(kl_1h, kl_4h):
     s1 = ema_crossover(kl_1h)
@@ -857,7 +860,8 @@ def run():
 
     signals = {}
     for num, name in ALGO_META:
-        entry = {"name": name, "BTC": "NEUTRAL", "ETH": "NEUTRAL", "SOL": "NEUTRAL"}
+        entry = {sym: "NEUTRAL" for sym in SYMBOLS}
+        entry["name"] = name
         if num in SKIP:
             pass
         elif num == 12:
