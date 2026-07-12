@@ -55,9 +55,9 @@ WEEKLY_IMG   = "/tmp/poly_5m_btc_weekly.png"
 
 SYMBOL           = "BTCUSDT"
 INITIAL_BALANCE  = 500.0
-AMOUNT_4         = 15.0   # 4/4 oylama
-AMOUNT_3         = 10.0   # 3/4 oylama
-AMOUNT_2         =  7.0   # 2/4 oylama
+AMOUNT_4         = 16.0   # 4/4 oylama
+AMOUNT_3         = 12.0   # 3/4 oylama
+AMOUNT_2         =  8.0   # 2/4 oylama
 _PERIOD_SECS     = 300    # 5 dakika = 300 saniye
 _DAYS_TR         = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
