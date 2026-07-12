@@ -1,5 +1,5 @@
 """
-5. ANALİZ — Çoklu Algoritma Sanal Trader
+6. ANALİZ — Tüm Coinler Sanal Trader
 
 4 bağımsız algoritmanın oylarını birleştirerek sinyal üretir:
   1. Trend Following  → EMA20/EMA50 crossover + slope
@@ -44,14 +44,14 @@ CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR              = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE        = os.path.join(_DIR, "poly_trader_analiz5_state.json")
-HISTORY_FILE      = os.path.join(_DIR, "poly_trader_analiz5_history.json")
+STATE_FILE        = os.path.join(_DIR, "poly_trader_analiz6_state.json")
+HISTORY_FILE      = os.path.join(_DIR, "poly_trader_analiz6_history.json")
 ALGO_ACCURACY_FILE = os.path.join(_DIR, "algo_accuracy.json")
 _ALGO_SIGNALS_FILE = "/tmp/algo_signals.json"
-WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
+WEEKLY_IMG   = "/tmp/poly_analiz6_weekly_heatmap.png"
 
-INITIAL_BALANCE = 300.0
-SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # Gerçek işlem: BTC + SOL
+INITIAL_BALANCE = 500.0
+SYMBOLS         = ["BTCUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]  # Tüm coinler sanal
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -62,7 +62,7 @@ TRADE_AMOUNT_MID  = 8.0   # genel başarı veri yok veya = %50
 TRADE_AMOUNT_LOW  = 7.0   # genel başarı < %50
 MIN_STAT_COUNT  = 10
 
-_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "analiz5_settings.json")
+_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "analiz6_settings.json")
 
 def _load_settings() -> dict:
     """Anlık ayarları dosyadan okur. Dosya yoksa varsayılanları döner."""
@@ -124,7 +124,7 @@ def _update_algo_accuracy(pos: dict, win: bool) -> None:
         with open(ALGO_ACCURACY_FILE, "w") as f:
             json.dump(acc, f, indent=2)
     except Exception as e:
-        print(f"[5. ANALİZ] algo accuracy güncelleme hatası: {e}", file=sys.stderr)
+        print(f"[6. ANALİZ] algo accuracy güncelleme hatası: {e}", file=sys.stderr)
 
 # ── Polymarket Config ──────────────────────────────────────────
 _PM_CLOB_HOST = "https://clob.polymarket.com"
@@ -132,7 +132,7 @@ _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana",
                  "XRPUSDT": "xrp", "DOGEUSDT": "dogecoin", "BNBUSDT": "bnb", "HYPEUSDT": "hype"}
-_PM_DRY_RUN   = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
+_PM_DRY_RUN   = True  # Analiz 6 tamamen sanal — hiçbir zaman gerçek emir açmaz
 
 
 def _pm_get_client():
@@ -152,7 +152,7 @@ def _pm_get_client():
                 creds=creds, signature_type=1, funder=funder,
             )
         except Exception as e:
-            print(f"[5. ANALİZ] Client init ({attempt+1}/3): {e}", file=sys.stderr)
+            print(f"[6. ANALİZ] Client init ({attempt+1}/3): {e}", file=sys.stderr)
             time.sleep(2)
     raise RuntimeError("Polymarket client oluşturulamadı")
 
@@ -223,7 +223,7 @@ def _pm_find_market(symbol: str, et_hour: int, date_utc) -> dict | None:
                 "outcome_prices": op,
             }
         except Exception as e:
-            print(f"[5. ANALİZ] Gamma hatası ({slug}): {e}", file=sys.stderr)
+            print(f"[6. ANALİZ] Gamma hatası ({slug}): {e}", file=sys.stderr)
     return None
 
 
@@ -265,9 +265,9 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
         resp   = client.post_order(signed, order_type=OrderType.FAK)
         if not resp or not resp.get("success"):
             mesaj = str(resp)
-            print(f"[5. ANALİZ] Order başarısız: {mesaj}", file=sys.stderr)
+            print(f"[6. ANALİZ] Order başarısız: {mesaj}", file=sys.stderr)
             if _retry:
-                print(f"[5. ANALİZ] 10sn sonra tekrar deneniyor...", file=sys.stderr)
+                print(f"[6. ANALİZ] 10sn sonra tekrar deneniyor...", file=sys.stderr)
                 time.sleep(10)
                 return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
             _log_hata(token_id[:20], "order_basarisiz", mesaj)
@@ -275,9 +275,9 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
         oid = resp.get("orderID") or resp.get("id", "")
         return {"order_id": oid, "size": size, "price": price, "spent": spent}
     except Exception as e:
-        print(f"[5. ANALİZ] Order hatası: {e}", file=sys.stderr)
+        print(f"[6. ANALİZ] Order hatası: {e}", file=sys.stderr)
         if _retry:
-            print(f"[5. ANALİZ] 10sn sonra tekrar deneniyor...", file=sys.stderr)
+            print(f"[6. ANALİZ] 10sn sonra tekrar deneniyor...", file=sys.stderr)
             time.sleep(10)
             return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
         _log_hata(token_id[:20], "order_exception", str(e))
@@ -302,7 +302,7 @@ def _log_hata(symbol: str, hata_turu: str, detay: str) -> None:
         with open(_HATA_FILE, "w") as f:
             json.dump(kayitlar, f, ensure_ascii=False, indent=2)
     except Exception as ex:
-        print(f"[5. ANALİZ] Hata loglanamadı: {ex}", file=sys.stderr)
+        print(f"[6. ANALİZ] Hata loglanamadı: {ex}", file=sys.stderr)
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -464,7 +464,7 @@ async def analyze(symbol: str) -> dict | None:
     try:
         pred_obj = await predict(symbol)
     except Exception as e:
-        print(f"[5. ANALİZ] {symbol} predict hatası: {e}", file=sys.stderr)
+        print(f"[6. ANALİZ] {symbol} predict hatası: {e}", file=sys.stderr)
         return None
 
     if pred_obj is None:
@@ -527,8 +527,8 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
-        print(f"[5. ANALİZ close] {saat} İST — açık pozisyon yok")
+        tg_send(f"⏸ <b>6. ANALİZ ✦ Sanal İşlemler — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
+        print(f"[6. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
     lines        = []
@@ -547,7 +547,7 @@ async def run_close() -> None:
                 if attempt == 0:
                     import time as _time; _time.sleep(4)
                 else:
-                    print(f"[5. ANALİZ close] {pos['symbol']} fiyat hatası: {e}", file=sys.stderr)
+                    print(f"[6. ANALİZ close] {pos['symbol']} fiyat hatası: {e}", file=sys.stderr)
                     failed_pos.append(pos)
 
         if klines is None:
@@ -587,7 +587,7 @@ async def run_close() -> None:
                         pm_pnl_str  = f"  |  🎯PM: {'+'if our_won else ''}{pm_pnl_val:.2f}$"
                         pm_tur_pnl += pm_pnl_val
             except Exception as e:
-                print(f"[5. ANALİZ close] PM sonuç hatası: {e}", file=sys.stderr)
+                print(f"[6. ANALİZ close] PM sonuç hatası: {e}", file=sys.stderr)
 
         vs = pos.get("votes", [])
         history.append({
@@ -650,7 +650,7 @@ async def run_close() -> None:
     # Hata olan pozisyonlar için bildirim
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        tg_send(f"⚠️ <b>5. ANALİZ</b> — {names} fiyatı alınamadı (timeout), bir sonraki saate bırakıldı.")
+        tg_send(f"⚠️ <b>6. ANALİZ</b> — {names} fiyatı alınamadı (timeout), bir sonraki saate bırakıldı.")
 
     if not lines:
         return
@@ -671,13 +671,13 @@ async def run_close() -> None:
 
     tg_send(
         f"{sep}\n"
-        f"🏁 <b>5. ANALİZ — {saat} Sonuçlar</b>\n"
+        f"🏁 <b>6. ANALİZ — {saat} Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
         f"Bu tur: {tur_pnl_str}  |  Bakiye: {pm_bal_str}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl >= 0 else ''}{total_pnl:.2f}$  |  Genel: {genel_str}\n"
         f"{sep}"
     )
-    print(f"[5. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
+    print(f"[6. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
 
 
 # ── OPEN ──────────────────────────────────────────────────────
@@ -716,13 +716,13 @@ async def run_open() -> None:
                     _a9 = json.load(_f)
                 if _a9.get("hour_tr") == hour_tr:
                     a9_signals = _a9.get("signals", {})
-                    print(f"[5. ANALİZ] A9 sinyalleri okundu: {a9_signals}")
+                    print(f"[6. ANALİZ] A9 sinyalleri okundu: {a9_signals}")
                 else:
-                    print(f"[5. ANALİZ] A9 sinyali farklı saate ait ({_a9.get('hour_tr')} ≠ {hour_tr}), yok sayıldı")
+                    print(f"[6. ANALİZ] A9 sinyali farklı saate ait ({_a9.get('hour_tr')} ≠ {hour_tr}), yok sayıldı")
         except Exception as _e:
-            print(f"[5. ANALİZ] A9 sinyal okuma hatası: {_e}", file=sys.stderr)
+            print(f"[6. ANALİZ] A9 sinyal okuma hatası: {_e}", file=sys.stderr)
     else:
-        print(f"[5. ANALİZ] {saat} İST — A9 pencere dışı (08-20), bağımsız çalışıyor")
+        print(f"[6. ANALİZ] {saat} İST — A9 pencere dışı (08-20), bağımsız çalışıyor")
 
     # Ayarları oku (her çalışmada güncel değeri al)
     _cfg = _load_settings()
@@ -790,7 +790,7 @@ async def run_open() -> None:
                     klines_a9 = fetch_klines(sig["symbol"], limit=3)
                     sig["price"] = klines_a9[-2]["close"]  # saatin başı fiyatı
                 except Exception as _fe:
-                    print(f"[5. ANALİZ] {sig['symbol']} A9-only fiyat çekme hatası: {_fe}", file=sys.stderr)
+                    print(f"[6. ANALİZ] {sig['symbol']} A9-only fiyat çekme hatası: {_fe}", file=sys.stderr)
                     _log_hata(sig["symbol"], "a9only_fiyat_hatasi", str(_fe))
                     _order_fail.append(sig)
                     continue
@@ -813,7 +813,7 @@ async def run_open() -> None:
             pm = _pm_find_market(sig["symbol"], et_hour, now)
             if not pm or not pm.get("active") or pm.get("closed"):
                 durum = "bulunamadı" if not pm else "kapalı"
-                print(f"[5. ANALİZ] {sig['symbol']} market {durum}", file=sys.stderr)
+                print(f"[6. ANALİZ] {sig['symbol']} market {durum}", file=sys.stderr)
                 _log_hata(sig["symbol"], "market_" + durum, f"et_hour={et_hour} slug aranıyor")
                 _market_skip.append(sig)
                 continue
@@ -822,9 +822,9 @@ async def run_open() -> None:
             if not order:
                 name_f = sig["symbol"].replace("USDT", "")
                 dir_f  = sig["predicted_dir"]
-                print(f"[5. ANALİZ] {sig['symbol']} PM order başarısız, pozisyon açılmadı", file=sys.stderr)
+                print(f"[6. ANALİZ] {sig['symbol']} PM order başarısız, pozisyon açılmadı", file=sys.stderr)
                 _log_hata(sig["symbol"], "order_basarisiz", f"dir={dir_f} amount={sig['amount']}")
-                tg_send(f"⚠️ <b>5. ANALİZ</b> — <b>{name_f}</b> ({dir_f}) Polymarket eşleşmesi bulunamadı, işlem açılmadı.")
+                tg_send(f"⚠️ <b>6. ANALİZ</b> — <b>{name_f}</b> ({dir_f}) Polymarket eşleşmesi bulunamadı, işlem açılmadı.")
                 _order_fail.append(sig)
                 continue
             pos["pm_slug"]        = pm["slug"]
@@ -836,7 +836,7 @@ async def run_open() -> None:
             pos["pm_order_id"]    = order["order_id"]
             pos["pm_spent"]       = order["spent"]
             pos["algo_snapshot"]  = _algo_snapshot
-            print(f"[5. ANALİZ] PM order: {sig['symbol']} {sig['predicted_dir']} "
+            print(f"[6. ANALİZ] PM order: {sig['symbol']} {sig['predicted_dir']} "
                   f"{order['size']} shares @ {order['price']} (${order['spent']:.2f})")
             state["open_positions"].append(pos)
             _newly_opened += 1
@@ -845,7 +845,7 @@ async def run_open() -> None:
 
     next_h   = f"{(hour_tr + 1) % 24:02d}:00"
     sep      = "━" * 26
-    _SYMS    = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+    _SYMS    = ["BTCUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]
     _DIR_TR  = {"UP": "UP ▲", "DOWN": "DOWN ▼", None: "—"}
 
     # A5 kendi sinyalleri (a9_only olmayanlar)
@@ -938,7 +938,7 @@ async def run_open() -> None:
 
     parts = [
         sep,
-        f"<b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {saat} - {next_h}</b>",
+        f"<b>6. ANALİZ ✦ Sanal İşlemler — {saat} - {next_h}</b>",
         "",
         f"📊 A5:  {'  '.join(a5_parts)}",
         f"🔷 A9:  {'  '.join(a9_parts)}",
@@ -959,7 +959,7 @@ async def run_open() -> None:
     ]
 
     tg_send("\n".join(parts))
-    print(f"[5. ANALİZ open] {saat} İST — {_newly_opened} işlem açıldı, {len([r for r in results if r['amount']==0])} elenendi")
+    print(f"[6. ANALİZ open] {saat} İST — {_newly_opened} işlem açıldı, {len([r for r in results if r['amount']==0])} elenendi")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────
@@ -1058,7 +1058,7 @@ def run_weekly() -> None:
     sym_line = "   |   ".join(sym_stats)
 
     ax.set_title(
-        f"5. ANALİZ — Trend + MR + Orderflow + Funding  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
+        f"6. ANALİZ — Trend + MR + Orderflow + Funding  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
         f"Toplam: {total} işlem  |  {genel} doğruluk\n"
         f"{sym_line}",
         color="#00e676", fontsize=9, fontweight="bold", pad=10
@@ -1074,19 +1074,19 @@ def run_weekly() -> None:
     plt.savefig(WEEKLY_IMG, dpi=150, bbox_inches="tight", facecolor="#0a0e1a", pad_inches=0.1)
     plt.close()
 
-    tg_send_photo(WEEKLY_IMG, f"⚡ 5. ANALİZ Haftalık Rapor — {now_tr.strftime('%d.%m.%Y %H:%M İST')}\n"
+    tg_send_photo(WEEKLY_IMG, f"⚡ 6. ANALİZ Haftalık Rapor — {now_tr.strftime('%d.%m.%Y %H:%M İST')}\n"
                               f"{total} işlem | {genel} | Trend+MR+OF+Funding")
 
     ind_lines = _ind_stats_lines(history)
     tg_send(
-        f"📊 <b>5. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
+        f"📊 <b>6. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
         f"{now_tr.strftime('%d.%m.%Y %H:%M İST')} İST\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {genel} başarı\n"
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"\n🔬 <b>Algoritma İsabet Oranı</b>\n" + "\n".join(ind_lines)
     )
-    print(f"[5. ANALİZ weekly] gönderildi — {total} işlem")
+    print(f"[6. ANALİZ weekly] gönderildi — {total} işlem")
 
 
 # ── STATS ─────────────────────────────────────────────────────
@@ -1096,7 +1096,7 @@ def run_stats() -> None:
     now_tr    = datetime.now(timezone.utc).astimezone(_TZ_TR)
 
     if not history:
-        tg_send("📊 <b>5. ANALİZ STATS</b>\nHenüz veri yok.")
+        tg_send("📊 <b>6. ANALİZ STATS</b>\nHenüz veri yok.")
         return
 
     total     = len(history)
@@ -1105,7 +1105,7 @@ def run_stats() -> None:
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
 
     parts = [
-        f"📊 <b>5. ANALİZ İSTATİSTİKLER</b>",
+        f"📊 <b>6. ANALİZ İSTATİSTİKLER</b>",
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
@@ -1155,7 +1155,7 @@ def run_stats() -> None:
         parts.append(f"  {'📅' if d < 5 else '🏖'}{bar} {_DAYS_TR[d]}  {_wr(w, n)}")
 
     tg_send("\n".join(parts))
-    print("[5. ANALİZ stats] gönderildi")
+    print("[6. ANALİZ stats] gönderildi")
 
 
 # ── Giriş noktası ─────────────────────────────────────────────

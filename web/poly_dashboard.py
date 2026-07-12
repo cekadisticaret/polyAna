@@ -233,6 +233,7 @@ def api_klines(symbol):
 
 _HEATMAP_ANALYSES = {
     "analiz5":  "5. Analiz",
+    "analiz6":  "6. Analiz (Sanal)",
     "analiz1":  "1. Analiz",
     "analiz4":  "4. Analiz",
     "analiz2":  "2. Analiz",
@@ -421,6 +422,7 @@ def api_analizler():
         ("analiz3",    "3. Analiz (Stoch ETH)", 300,  "Stochastic RSI / ETH"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1+A9 Konsensüs"),
+        ("analiz6",    "6. Analiz (Sanal)",     500,  "Tüm Coinler Sanal"),
         ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs"),
         ("karisim1",   "11. Analiz",            300,  "A1+A2+A4 Meta"),
@@ -645,6 +647,7 @@ def api_stats():
         "analiz2":  "2. Analiz",
         "analiz4":  "4. Analiz",
         "analiz5":  "5. Analiz",
+        "analiz6":  "6. Analiz (Sanal)",
         "analiz9":  "9. Analiz",
         "analiz10": "10. Analiz",
         "karisim1": "11. Analiz",
@@ -1836,6 +1839,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
   <!-- Analiz sekmeleri -->
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
     <button class="hm-analiz-tab active" onclick="setAnaliz(this,'analiz5')">5. Analiz</button>
+    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz6')">6. Analiz (Sanal)</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz1')">1. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz4')">4. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz2')">2. Analiz</button>

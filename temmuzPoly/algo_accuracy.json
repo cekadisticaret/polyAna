@@ -1,84 +1,144 @@
 {
   "1": {
     "name": "EMA Crossover (9/21/50/200)",
-    "total": 58,
-    "correct": 26,
+    "total": 63,
+    "correct": 27,
     "by_sym": {
       "BTC": {
         "total": 18,
         "correct": 8
       },
       "SOL": {
-        "total": 21,
+        "total": 23,
         "correct": 9
       },
       "ETH": {
         "total": 17,
         "correct": 8
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "2": {
     "name": "MACD Histogram + Divergence",
-    "total": 97,
-    "correct": 48,
+    "total": 106,
+    "correct": 51,
     "by_sym": {
       "BTC": {
-        "total": 34,
+        "total": 36,
         "correct": 15
       },
       "SOL": {
-        "total": 34,
-        "correct": 17
+        "total": 36,
+        "correct": 18
       },
       "ETH": {
-        "total": 27,
+        "total": 28,
         "correct": 15
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "3": {
     "name": "Supertrend",
-    "total": 97,
-    "correct": 46,
+    "total": 106,
+    "correct": 47,
     "by_sym": {
       "BTC": {
-        "total": 34,
+        "total": 36,
         "correct": 17
       },
       "SOL": {
-        "total": 34,
+        "total": 36,
         "correct": 15
       },
       "ETH": {
-        "total": 27,
+        "total": 28,
         "correct": 12
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 0
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "4": {
     "name": "Ichimoku Cloud",
-    "total": 97,
-    "correct": 47,
+    "total": 106,
+    "correct": 50,
     "by_sym": {
       "BTC": {
-        "total": 34,
+        "total": 36,
         "correct": 15
       },
       "SOL": {
-        "total": 34,
+        "total": 36,
         "correct": 16
       },
       "ETH": {
-        "total": 27,
-        "correct": 15
+        "total": 28,
+        "correct": 16
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "5": {
     "name": "RSI + Divergence",
-    "total": 52,
-    "correct": 22,
+    "total": 55,
+    "correct": 24,
     "by_sym": {
       "BTC": {
         "total": 18,
@@ -89,56 +149,96 @@
         "correct": 6
       },
       "SOL": {
-        "total": 20,
+        "total": 21,
         "correct": 6
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "6": {
     "name": "Stochastic RSI",
-    "total": 97,
+    "total": 106,
     "correct": 49,
     "by_sym": {
       "BTC": {
-        "total": 34,
+        "total": 36,
         "correct": 20
       },
       "SOL": {
-        "total": 34,
+        "total": 36,
         "correct": 18
       },
       "ETH": {
-        "total": 27,
+        "total": 28,
         "correct": 9
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 0
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 0
       }
     }
   },
   "7": {
     "name": "Bollinger Bands + Squeeze",
-    "total": 97,
-    "correct": 47,
+    "total": 106,
+    "correct": 49,
     "by_sym": {
       "BTC": {
-        "total": 34,
+        "total": 36,
         "correct": 20
       },
       "SOL": {
-        "total": 34,
-        "correct": 17
+        "total": 36,
+        "correct": 18
       },
       "ETH": {
-        "total": 27,
+        "total": 28,
         "correct": 9
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 0
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "8": {
     "name": "VWAP",
-    "total": 83,
-    "correct": 35,
+    "total": 89,
+    "correct": 37,
     "by_sym": {
       "BTC": {
-        "total": 25,
+        "total": 26,
         "correct": 9
       },
       "ETH": {
@@ -146,141 +246,253 @@
         "correct": 12
       },
       "SOL": {
-        "total": 30,
+        "total": 31,
         "correct": 13
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "9": {
     "name": "OBV",
-    "total": 97,
-    "correct": 41,
+    "total": 106,
+    "correct": 45,
     "by_sym": {
       "BTC": {
-        "total": 34,
+        "total": 36,
         "correct": 11
       },
       "SOL": {
-        "total": 34,
-        "correct": 14
+        "total": 36,
+        "correct": 15
       },
       "ETH": {
-        "total": 27,
-        "correct": 15
+        "total": 28,
+        "correct": 16
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "11": {
     "name": "Mean Reversion (Z-Score)",
-    "total": 75,
-    "correct": 42,
+    "total": 79,
+    "correct": 44,
     "by_sym": {
       "BTC": {
-        "total": 27,
-        "correct": 16
+        "total": 28,
+        "correct": 17
       },
       "SOL": {
-        "total": 29,
-        "correct": 16
+        "total": 30,
+        "correct": 17
       },
       "ETH": {
         "total": 17,
         "correct": 8
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 0
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 0
       }
     }
   },
   "15": {
     "name": "Multi-Timeframe Confluence",
-    "total": 58,
-    "correct": 26,
+    "total": 63,
+    "correct": 27,
     "by_sym": {
       "BTC": {
         "total": 18,
         "correct": 8
       },
       "SOL": {
-        "total": 21,
+        "total": 23,
         "correct": 9
       },
       "ETH": {
         "total": 17,
         "correct": 8
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "17": {
     "name": "Heikin Ashi Trend Filter",
-    "total": 95,
-    "correct": 46,
+    "total": 104,
+    "correct": 54,
     "by_sym": {
       "BTC": {
-        "total": 34,
-        "correct": 11
+        "total": 36,
+        "correct": 12
       },
       "SOL": {
-        "total": 34,
-        "correct": 20
+        "total": 36,
+        "correct": 22
       },
       "ETH": {
-        "total": 27,
-        "correct": 15
+        "total": 28,
+        "correct": 16
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 1
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 1
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "18": {
     "name": "TEMA Crossover (9/21)",
-    "total": 95,
-    "correct": 51,
+    "total": 104,
+    "correct": 60,
     "by_sym": {
       "BTC": {
-        "total": 34,
-        "correct": 14
+        "total": 36,
+        "correct": 16
       },
       "SOL": {
-        "total": 34,
-        "correct": 19
+        "total": 36,
+        "correct": 21
       },
       "ETH": {
-        "total": 27,
-        "correct": 18
+        "total": 28,
+        "correct": 19
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 1
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 1
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "19": {
     "name": "ADX Market Regime",
-    "total": 51,
-    "correct": 19,
+    "total": 56,
+    "correct": 20,
     "by_sym": {
       "BTC": {
         "total": 12,
         "correct": 4
       },
       "SOL": {
-        "total": 16,
+        "total": 18,
         "correct": 5
       },
       "ETH": {
         "total": 23,
         "correct": 10
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "21": {
     "name": "Fear & Greed Momentum",
-    "total": 95,
-    "correct": 51,
+    "total": 104,
+    "correct": 59,
     "by_sym": {
       "BTC": {
-        "total": 34,
-        "correct": 17
-      },
-      "SOL": {
-        "total": 34,
+        "total": 36,
         "correct": 19
       },
+      "SOL": {
+        "total": 36,
+        "correct": 21
+      },
       "ETH": {
-        "total": 27,
-        "correct": 15
+        "total": 28,
+        "correct": 16
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 1
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 1
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 0
       }
     }
   },
@@ -301,42 +513,58 @@
   },
   "16": {
     "name": "ATR Momentum Breakout",
-    "total": 65,
-    "correct": 27,
+    "total": 70,
+    "correct": 30,
     "by_sym": {
       "BTC": {
-        "total": 23,
+        "total": 24,
         "correct": 8
       },
       "ETH": {
-        "total": 17,
-        "correct": 8
+        "total": 18,
+        "correct": 9
       },
       "SOL": {
-        "total": 25,
+        "total": 26,
         "correct": 11
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "10": {
     "name": "Volume Profile (POC)",
-    "total": 25,
-    "correct": 10,
+    "total": 28,
+    "correct": 11,
     "by_sym": {
       "ETH": {
         "total": 9,
         "correct": 5
       },
       "SOL": {
-        "total": 16,
+        "total": 17,
         "correct": 5
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "20": {
     "name": "Open Interest Divergence",
-    "total": 26,
-    "correct": 15,
+    "total": 29,
+    "correct": 18,
     "by_sym": {
       "ETH": {
         "total": 15,
@@ -349,31 +577,55 @@
       "BTC": {
         "total": 4,
         "correct": 3
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 1
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 1
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "23": {
     "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
-    "total": 28,
-    "correct": 10,
+    "total": 33,
+    "correct": 11,
     "by_sym": {
       "BTC": {
         "total": 2,
         "correct": 1
       },
       "SOL": {
-        "total": 25,
+        "total": 27,
         "correct": 9
       },
       "ETH": {
         "total": 1,
         "correct": 0
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "22": {
     "name": "Analiz-1 Sistemi (RSI+MACD+EMA)",
-    "total": 7,
+    "total": 9,
     "correct": 3,
     "by_sym": {
       "SOL": {
@@ -381,29 +633,45 @@
         "correct": 2
       },
       "BTC": {
-        "total": 2,
+        "total": 3,
         "correct": 1
       },
       "ETH": {
-        "total": 2,
+        "total": 3,
         "correct": 0
       }
     }
   },
   "27": {
     "name": "Stochastic RSI (14) K/D",
-    "total": 3,
-    "correct": 2,
+    "total": 10,
+    "correct": 6,
     "by_sym": {
       "BTC": {
-        "total": 1,
-        "correct": 1
+        "total": 2,
+        "correct": 2
       },
       "ETH": {
+        "total": 2,
+        "correct": 2
+      },
+      "SOL": {
+        "total": 2,
+        "correct": 0
+      },
+      "XRP": {
         "total": 1,
         "correct": 1
       },
-      "SOL": {
+      "DOGE": {
+        "total": 1,
+        "correct": 1
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 0
+      },
+      "HYPE": {
         "total": 1,
         "correct": 0
       }
@@ -411,37 +679,69 @@
   },
   "28": {
     "name": "Triple EMA (8-21-55)",
-    "total": 3,
-    "correct": 0,
+    "total": 10,
+    "correct": 2,
     "by_sym": {
       "BTC": {
-        "total": 1,
+        "total": 2,
         "correct": 0
       },
       "ETH": {
-        "total": 1,
+        "total": 2,
         "correct": 0
       },
       "SOL": {
+        "total": 2,
+        "correct": 0
+      },
+      "XRP": {
         "total": 1,
         "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "29": {
     "name": "Hull Moving Average (HMA)",
-    "total": 3,
-    "correct": 3,
+    "total": 10,
+    "correct": 10,
     "by_sym": {
       "BTC": {
-        "total": 1,
-        "correct": 1
+        "total": 2,
+        "correct": 2
       },
       "ETH": {
+        "total": 2,
+        "correct": 2
+      },
+      "SOL": {
+        "total": 2,
+        "correct": 2
+      },
+      "XRP": {
         "total": 1,
         "correct": 1
       },
-      "SOL": {
+      "DOGE": {
+        "total": 1,
+        "correct": 1
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
         "total": 1,
         "correct": 1
       }
@@ -449,18 +749,34 @@
   },
   "30": {
     "name": "Keltner Kanalı (20,2)",
-    "total": 3,
-    "correct": 3,
+    "total": 10,
+    "correct": 9,
     "by_sym": {
       "BTC": {
-        "total": 1,
-        "correct": 1
+        "total": 2,
+        "correct": 2
       },
       "ETH": {
+        "total": 2,
+        "correct": 2
+      },
+      "SOL": {
+        "total": 2,
+        "correct": 2
+      },
+      "XRP": {
         "total": 1,
         "correct": 1
       },
-      "SOL": {
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
         "total": 1,
         "correct": 1
       }
@@ -468,97 +784,177 @@
   },
   "33": {
     "name": "Money Flow Index (MFI)",
-    "total": 3,
-    "correct": 0,
+    "total": 10,
+    "correct": 2,
     "by_sym": {
       "BTC": {
-        "total": 1,
+        "total": 2,
         "correct": 0
       },
       "ETH": {
-        "total": 1,
+        "total": 2,
         "correct": 0
       },
       "SOL": {
+        "total": 2,
+        "correct": 0
+      },
+      "XRP": {
         "total": 1,
         "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "35": {
     "name": "Markov Zinciri Modeli",
-    "total": 3,
-    "correct": 1,
+    "total": 9,
+    "correct": 4,
     "by_sym": {
       "BTC": {
-        "total": 1,
+        "total": 2,
         "correct": 0
       },
       "ETH": {
-        "total": 1,
+        "total": 2,
         "correct": 0
       },
       "SOL": {
+        "total": 2,
+        "correct": 2
+      },
+      "XRP": {
         "total": 1,
         "correct": 1
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 0
       }
     }
   },
   "36": {
     "name": "SuperTrend v2 (7,2.0)",
-    "total": 3,
-    "correct": 0,
+    "total": 10,
+    "correct": 1,
     "by_sym": {
       "BTC": {
-        "total": 1,
+        "total": 2,
         "correct": 0
       },
       "ETH": {
-        "total": 1,
+        "total": 2,
         "correct": 0
       },
       "SOL": {
+        "total": 2,
+        "correct": 0
+      },
+      "XRP": {
         "total": 1,
         "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 0
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "37": {
     "name": "Ichimoku Cloud v2 (TK+Bulut)",
-    "total": 3,
-    "correct": 1,
+    "total": 10,
+    "correct": 4,
     "by_sym": {
       "BTC": {
-        "total": 1,
+        "total": 2,
         "correct": 0
       },
       "ETH": {
+        "total": 2,
+        "correct": 2
+      },
+      "SOL": {
+        "total": 2,
+        "correct": 0
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
         "total": 1,
         "correct": 1
       },
-      "SOL": {
+      "HYPE": {
         "total": 1,
-        "correct": 0
+        "correct": 1
       }
     }
   },
   "25": {
     "name": "Parabolic SAR + ADX",
-    "total": 1,
-    "correct": 0,
+    "total": 5,
+    "correct": 1,
     "by_sym": {
       "SOL": {
+        "total": 2,
+        "correct": 0
+      },
+      "XRP": {
         "total": 1,
         "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "26": {
     "name": "MACD Histogram Diverjansı",
-    "total": 1,
-    "correct": 1,
+    "total": 4,
+    "correct": 4,
     "by_sym": {
       "SOL": {
+        "total": 2,
+        "correct": 2
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
         "total": 1,
         "correct": 1
       }
@@ -566,21 +962,94 @@
   },
   "32": {
     "name": "VWAP + Hacim Profili",
-    "total": 1,
-    "correct": 0,
+    "total": 5,
+    "correct": 2,
     "by_sym": {
       "SOL": {
         "total": 1,
         "correct": 0
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
       }
     }
   },
   "39": {
     "name": "H1 Profesyonel Kombinasyon",
-    "total": 1,
+    "total": 4,
     "correct": 0,
     "by_sym": {
       "SOL": {
+        "total": 2,
+        "correct": 0
+      },
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      }
+    }
+  },
+  "31": {
+    "name": "Donchian Kanalı (20)",
+    "total": 4,
+    "correct": 2,
+    "by_sym": {
+      "XRP": {
+        "total": 1,
+        "correct": 0
+      },
+      "DOGE": {
+        "total": 1,
+        "correct": 0
+      },
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
+      }
+    }
+  },
+  "34": {
+    "name": "Random Forest Classifier",
+    "total": 2,
+    "correct": 2,
+    "by_sym": {
+      "BNB": {
+        "total": 1,
+        "correct": 1
+      },
+      "HYPE": {
+        "total": 1,
+        "correct": 1
+      }
+    }
+  },
+  "38": {
+    "name": "RSI Diverjansı (14) Katı",
+    "total": 1,
+    "correct": 0,
+    "by_sym": {
+      "HYPE": {
         "total": 1,
         "correct": 0
       }

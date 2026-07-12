@@ -1,5 +1,21 @@
 {
   "balance": 408.0,
-  "open_positions": [],
+  "open_positions": [
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 77.15,
+      "entry_time_tr": "2026-07-12T16:07:01.930478+03:00",
+      "entry_hour_tr": 16,
+      "entry_dow": 6,
+      "amount": 8.0,
+      "count": 2,
+      "systems": [
+        "A1",
+        "A2"
+      ],
+      "price_src": "kaynak-ort"
+    }
+  ],
   "total_pnl": 108.0
 }
