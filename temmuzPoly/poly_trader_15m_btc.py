@@ -1,11 +1,11 @@
 """
-15M BTC TRADER — 4 Algoritma Konsensüs (Sanal)
-================================================
-A1, A4, A9, A10 analizlerinin 15 dakikalık BTC versiyonu.
+5M BTC TRADER — 4 Algoritma Konsensüs (Sanal)
+==============================================
+A1, A4, A9, A10 analizlerinin 5 dakikalık BTC versiyonu.
 1h analizleriyle tamamen ayrı çalışır, onlara dokunmaz.
 
 4 algoritma oyu:
-  1. RSI + MACD + EMA  (A1 motoru — 15m klines)
+  1. RSI + MACD + EMA  (A1 motoru — 5m klines)
   2. Trend Following   (A4/A9 — EMA20/50 crossover)
   3. Mean Reversion    (A4/A9 — RSI + Bollinger Bands)
   4. Orderflow         (A4/A9 — CVD + Order Book imbalance)
@@ -13,9 +13,9 @@ A1, A4, A9, A10 analizlerinin 15 dakikalık BTC versiyonu.
 Konsensüs:
   4/4 → $15    3/4 → $10    2/4 → $7    ≤1/4 → işlem yok
 
-Market: btc-updown-15m-{unix_timestamp}
+Market: btc-updown-5m-{unix_timestamp}
 Bütçe:  $500 sanal
-Cron:   */15 * * * *
+Cron:   */5 * * * *
 
 Modlar:
   open    → pozisyon kapat (önceki) + yeni pozisyon aç
@@ -51,13 +51,14 @@ _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _DIR         = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE   = os.path.join(_DIR, "poly_trader_15m_btc_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_15m_btc_history.json")
-WEEKLY_IMG   = "/tmp/poly_15m_btc_weekly.png"
+WEEKLY_IMG   = "/tmp/poly_5m_btc_weekly.png"
 
 SYMBOL           = "BTCUSDT"
 INITIAL_BALANCE  = 500.0
 AMOUNT_4         = 15.0   # 4/4 oylama
 AMOUNT_3         = 10.0   # 3/4 oylama
 AMOUNT_2         =  7.0   # 2/4 oylama
+_PERIOD_SECS     = 300    # 5 dakika = 300 saniye
 _DAYS_TR         = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -67,7 +68,7 @@ _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_DRY_RUN   = True   # Sanal: gerçek işlem açmaz
 
-LABEL = "15M BTC"
+LABEL = "5M BTC"
 
 
 # ── State & History ───────────────────────────────────────────
@@ -109,7 +110,7 @@ def _wr(wins: int, total: int) -> str:
 
 
 def get_stats(history: list, period_min: int, dow: int | None = None) -> tuple[int, int]:
-    """15 dakikalık periyot (0-95) bazlı istatistik."""
+    """5 dakikalık periyot bazlı istatistik."""
     trades = [
         t for t in history
         if t.get("entry_period_min") == period_min
@@ -166,9 +167,9 @@ def _binance_get(path: str, params: dict | None = None) -> dict | list:
         return json.loads(r.read())
 
 
-def fetch_klines_15m(symbol: str, limit: int = 100) -> list[dict]:
-    """15 dakikalık Binance futures klines."""
-    raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "15m", "limit": limit})
+def fetch_klines_5m(symbol: str, limit: int = 150) -> list[dict]:
+    """5 dakikalık Binance futures klines."""
+    raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "5m", "limit": limit})
     return [{"open":   float(k[1]), "high":  float(k[2]),
              "low":    float(k[3]), "close": float(k[4]),
              "volume": float(k[5])} for k in raw]
@@ -297,7 +298,7 @@ def algo_orderflow(klines: list[dict], ob: dict) -> tuple[int, str]:
 # ── Tam Analiz ────────────────────────────────────────────────
 def analyze() -> dict | None:
     try:
-        klines  = fetch_klines_15m(SYMBOL, 100)
+        klines  = fetch_klines_5m(SYMBOL, 150)
         ob      = fetch_orderbook(SYMBOL)
     except Exception as e:
         print(f"[{LABEL}] Veri hatası: {e}", file=sys.stderr)
@@ -344,15 +345,15 @@ def analyze() -> dict | None:
 
 
 # ── Polymarket 15m Market ─────────────────────────────────────
-def _current_15m_ts() -> int:
-    """Şu an geçerli 15 dakikalık periyodun Unix timestamp'i."""
+def _current_5m_ts() -> int:
+    """Şu an geçerli 5 dakikalık periyodun Unix timestamp'i."""
     now = int(time.time())
-    return now - (now % 900)  # 900 = 15 * 60
+    return now - (now % _PERIOD_SECS)  # 300 = 5 * 60
 
 
-def _pm_find_15m_market(ts_15m: int) -> dict | None:
-    """btc-updown-15m-{ts_15m} marketini Polymarket'ta ara."""
-    slug = f"btc-updown-15m-{ts_15m}"
+def _pm_find_5m_market(ts_5m: int) -> dict | None:
+    """btc-updown-5m-{ts_5m} marketini Polymarket'ta ara."""
+    slug = f"btc-updown-5m-{ts_5m}"
     try:
         req = urllib.request.Request(f"{_PM_GAMMA_URL}?slug={slug}", headers=_PM_HEADERS)
         with urllib.request.urlopen(req, timeout=10) as r:
@@ -443,10 +444,10 @@ def run() -> None:
     dow    = now_tr.weekday()
     saat   = now_tr.strftime("%H:%M")
 
-    # 15 dakikalık periyot bilgileri
+    # 5 dakikalık periyot bilgileri
     cur_min = now_tr.hour * 60 + now_tr.minute
-    period_min = (cur_min // 15) * 15  # 15dk'ya yuvarla (0=00:00, 15=00:15, ..., 1425=23:45)
-    ts_15m     = _current_15m_ts()
+    period_min = (cur_min // 5) * 5   # 5dk'ya yuvarla (0=00:00, 5=00:05, ..., 1435=23:55)
+    ts_5m      = _current_5m_ts()
 
     state   = load_state()
     history = load_history()
@@ -459,8 +460,8 @@ def run() -> None:
         # Biraz bekle — mumun kapanmasını garantile
         time.sleep(3)
         try:
-            klines = fetch_klines_15m(SYMBOL, 10)
-            # klines[-2] = az önce kapanan 15m mumu
+            klines = fetch_klines_5m(SYMBOL, 10)
+            # klines[-2] = az önce kapanan 5m mumu
             prev_close = klines[-2]["close"]
             prev_open  = klines[-2]["open"]
         except Exception as e:
@@ -542,7 +543,7 @@ def run() -> None:
     labels    = result["labels"]
     votes     = result["votes"]
     entry_p   = result["entry_price"]
-    next_time = now_tr + timedelta(minutes=15)
+    next_time = now_tr + timedelta(minutes=5)
     next_saat = next_time.strftime("%H:%M")
 
     # Geçmiş istatistik
@@ -574,7 +575,7 @@ def run() -> None:
     pm_slug = None
     pm_info = None
     if not _PM_DRY_RUN:
-        pm_info = _pm_find_15m_market(ts_15m)
+        pm_info = _pm_find_5m_market(ts_5m)
         if pm_info and not pm_info.get("closed"):
             token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
             order    = _pm_place_order(token_id, amount, pm_info["tick_size"], pm_info["neg_risk"])
@@ -582,7 +583,7 @@ def run() -> None:
                 pm_slug = pm_info["slug"]
     else:
         # DRY RUN: market var mı kontrol et
-        pm_info = _pm_find_15m_market(ts_15m)
+        pm_info = _pm_find_5m_market(ts_5m)
         if pm_info:
             pm_slug = pm_info["slug"]
 
@@ -599,7 +600,7 @@ def run() -> None:
         "entry_period_min": period_min,
         "entry_dow":        dow,
         "pm_slug":          pm_slug,
-        "ts_15m":           ts_15m,
+        "ts_5m":            ts_5m,
     })
     save_state(state)
 
@@ -644,26 +645,35 @@ def run_weekly() -> None:
         tg_send(f"📊 <b>{LABEL} WEEKLY</b>\nHenüz veri yok.")
         return
 
-    # 7 gün × 96 periyot (15dk × 96 = 24 saat) grid
-    grid_w = [[0] * 96 for _ in range(7)]
-    grid_n = [[0] * 96 for _ in range(7)]
+    # 7 gün × 288 periyot (5dk × 288 = 24 saat) grid
+    grid_w = [[0] * 288 for _ in range(7)]
+    grid_n = [[0] * 288 for _ in range(7)]
     for t in history:
         d = t.get("entry_dow")
         p = t.get("entry_period_min")
         if d is None or p is None:
             continue
-        idx = p // 15
+        idx = p // 5
         grid_n[d][idx] += 1
         if t["win"]:
             grid_w[d][idx] += 1
 
-    rate = np.full((7, 96), np.nan)
+    # Saatlik gruba topla (12 periyot = 1 saat) — görsel okunabilirlik
+    grid_w_h = [[0] * 24 for _ in range(7)]
+    grid_n_h = [[0] * 24 for _ in range(7)]
     for d in range(7):
-        for h in range(96):
-            if grid_n[d][h] >= 3:
-                rate[d][h] = grid_w[d][h] / grid_n[d][h]
+        for idx in range(288):
+            h = idx // 12
+            grid_w_h[d][h] += grid_w[d][idx]
+            grid_n_h[d][h] += grid_n[d][idx]
 
-    fig, ax = plt.subplots(figsize=(24, 5))
+    rate = np.full((7, 24), np.nan)
+    for d in range(7):
+        for h in range(24):
+            if grid_n_h[d][h] >= 3:
+                rate[d][h] = grid_w_h[d][h] / grid_n_h[d][h]
+
+    fig, ax = plt.subplots(figsize=(16, 5))
     fig.patch.set_facecolor("#0a0e1a")
     ax.set_facecolor("#0a0e1a")
 
@@ -674,7 +684,7 @@ def run_weekly() -> None:
 
     masked = np.ma.masked_invalid(rate)
     im = ax.imshow(masked, cmap=cmap, vmin=0.35, vmax=0.85, aspect="auto")
-    ax.set_xticks(range(0, 96, 4))
+    ax.set_xticks(range(24))
     ax.set_xticklabels([f"{h:02d}:00" for h in range(24)], fontsize=6, color="#78909c", rotation=45)
     ax.set_yticks(range(7))
     ax.set_yticklabels(_DAYS_TR, fontsize=8, color="#b0bec5", fontweight="bold")
