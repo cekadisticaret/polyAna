@@ -237,7 +237,9 @@ _HEATMAP_ANALYSES = {
     "analiz4":  "4. Analiz",
     "analiz2":  "2. Analiz",
     "analiz9":  "9. Analiz",
+    "analiz10": "10. Analiz",
     "karisim1": "11. Analiz",
+    "analiz13": "13. Analiz",
 }
 
 @app.route("/poly/api/heatmap")
@@ -1744,7 +1746,9 @@ HARITA_HTML = r"""<!DOCTYPE html>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz4')">4. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz2')">2. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz9')">9. Analiz</button>
+    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz10')">10. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'karisim1')">11. Analiz</button>
+    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz13')">13. Analiz</button>
   </div>
   <div class="page-sub" id="hm-subtitle">5. Analiz — gün × saat kazanma oranı</div>
 
@@ -1785,7 +1789,8 @@ HARITA_HTML = r"""<!DOCTYPE html>
 <script>
 const _ANALIZ_LABELS = {
   'analiz5':'5. Analiz','analiz1':'1. Analiz','analiz4':'4. Analiz',
-  'analiz2':'2. Analiz','analiz9':'9. Analiz','karisim1':'11. Analiz'
+  'analiz2':'2. Analiz','analiz9':'9. Analiz','analiz10':'10. Analiz',
+  'karisim1':'11. Analiz','analiz13':'13. Analiz'
 };
 let _data = null, _sym = 'ALL', _analiz = 'analiz5';
 
