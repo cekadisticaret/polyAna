@@ -241,6 +241,9 @@ _HEATMAP_ANALYSES = {
     "analiz10": "10. Analiz",
     "karisim1": "11. Analiz",
     "analiz13": "13. Analiz",
+    "15m_btc":    "5M 101 BTC",
+    "5m_btc_102": "5M 102 BTC",
+    "5m_btc_103": "5M 103 BTC",
 }
 
 @app.route("/poly/api/heatmap")
@@ -428,6 +431,9 @@ def api_analizler():
         ("karisim1",   "11. Analiz",            300,  "A1+A2+A4 Meta"),
         ("analiz12",   "12. Analiz",            400,  "A1+A4+A5+A9 Meta"),
         ("analiz13",   "13. Analiz",            400,  "3-Algo Sembol Bazlı"),
+        ("15m_btc",    "5M 101 BTC",            500,  "4-Algo 5dk BTC"),
+        ("5m_btc_102", "5M 102 BTC",            500,  "A1+A9 5dk BTC"),
+        ("5m_btc_103", "5M 103 BTC",            500,  "HMA+MACD+ST+StochRSI+ATR"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:

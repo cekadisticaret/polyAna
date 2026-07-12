@@ -1,17 +1,17 @@
 """
-5M BTC TRADER — 4 Algoritma Konsensüs (Sanal)
-==============================================
-A1, A4, A9, A10 analizlerinin 5 dakikalık BTC versiyonu.
-1h analizleriyle tamamen ayrı çalışır, onlara dokunmaz.
+5M 103 BTC TRADER — 5 Algoritma Konsensüs (Sanal)
+==================================================
+5 dakikalık BTC için optimize edilmiş 5 algoritma.
 
-4 algoritma oyu:
-  1. RSI + MACD + EMA  (A1 motoru — 5m klines)
-  2. Trend Following   (A4/A9 — EMA20/50 crossover)
-  3. Mean Reversion    (A4/A9 — RSI + Bollinger Bands)
-  4. Orderflow         (A4/A9 — CVD + Order Book imbalance)
+5 algoritma oyu:
+  1. HMA (Hull Moving Average, 20)       — en az gecikme
+  2. MACD Histogram Divergence (12/26/9) — erken momentum
+  3. SuperTrend v2 (ATR 7, 2.0)          — yönlü trend filtresi
+  4. Stochastic RSI K/D (14, 3, 3)       — aşırı alım/satım
+  5. ATR Momentum Breakout (14, 20, 1.5) — ani kırılım
 
 Konsensüs:
-  4/4 → $15    3/4 → $10    2/4 → $7    ≤1/4 → işlem yok
+  5/5 → $16    4/5 → $12    3/5 → $8    ≤2/5 → işlem yok
 
 Market: btc-updown-5m-{unix_timestamp}
 Bütçe:  $500 sanal
@@ -49,15 +49,16 @@ CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE   = os.path.join(_DIR, "poly_trader_15m_btc_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_15m_btc_history.json")
-WEEKLY_IMG   = "/tmp/poly_5m_btc_weekly.png"
+STATE_FILE   = os.path.join(_DIR, "poly_trader_5m_btc_103_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_btc_103_history.json")
+WEEKLY_IMG   = "/tmp/poly_5m_btc_103_weekly.png"
 
 SYMBOL           = "BTCUSDT"
 INITIAL_BALANCE  = 500.0
-AMOUNT_4         = 16.0   # 4/4 oylama
-AMOUNT_3         = 12.0   # 3/4 oylama
-AMOUNT_2         =  8.0   # 2/4 oylama
+AMOUNT_5         = 16.0   # 5/5 oylama
+AMOUNT_4         = 12.0   # 4/5 oylama
+AMOUNT_3         =  8.0   # 3/5 oylama
+AMOUNT_2         =  0.0   # ≤2/5 → işlem yok
 _PERIOD_SECS     = 300    # 5 dakika = 300 saniye
 _DAYS_TR         = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -68,7 +69,7 @@ _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_DRY_RUN   = True   # Sanal: gerçek işlem açmaz
 
-LABEL = "5M 101 BTC"
+LABEL = "5M 103 BTC"
 
 
 # ── State & History ───────────────────────────────────────────
@@ -223,94 +224,239 @@ def _macd(closes: list[float]) -> tuple[float, float]:
     return macd_line[-1], signal[-1]
 
 
-# ── 4 Algoritma (A1 + A4/A9 mirası) ─────────────────────────
+# ── Yardımcı Hesaplamalar (103 özel) ─────────────────────────
 
-def algo_a1_rsi_macd_ema(klines: list[dict]) -> tuple[int, str]:
-    """A1 mirası: RSI + MACD + EMA trend."""
+def _wma(values: list[float], period: int) -> list[float]:
+    """Weighted Moving Average."""
+    out = []
+    for i in range(len(values)):
+        w = values[max(0, i - period + 1): i + 1]
+        n = len(w)
+        wsum = sum((j + 1) * v for j, v in enumerate(w))
+        denom = n * (n + 1) / 2
+        out.append(wsum / denom)
+    return out
+
+
+def _hma(closes: list[float], period: int = 20) -> list[float]:
+    """Hull Moving Average: WMA(2×WMA(n/2) − WMA(n), sqrt(n))."""
+    half = max(2, period // 2)
+    sqrt_p = max(2, round(math.sqrt(period)))
+    wma_full = _wma(closes, period)
+    wma_half = _wma(closes, half)
+    combined = [2 * wma_half[i] - wma_full[i] for i in range(len(closes))]
+    return _wma(combined, sqrt_p)
+
+
+def _atr(klines: list[dict], period: int = 14) -> float:
+    """Average True Range."""
+    trs = []
+    for i in range(1, len(klines)):
+        h = klines[i]["high"]; l = klines[i]["low"]; pc = klines[i - 1]["close"]
+        trs.append(max(h - l, abs(h - pc), abs(l - pc)))
+    if not trs:
+        return 0.0
+    window = trs[-period:]
+    return sum(window) / len(window)
+
+
+def _stoch_rsi(closes: list[float], period: int = 14, k_period: int = 3, d_period: int = 3):
+    """Stochastic RSI — K ve D çizgilerini döndür."""
+    if len(closes) < period * 2:
+        return 50.0, 50.0
+    rsi_vals = []
+    for i in range(period, len(closes)):
+        rsi_vals.append(_rsi(closes[:i + 1], period))
+    if not rsi_vals:
+        return 50.0, 50.0
+    # K raw: stoch(RSI, period)
+    k_raw = []
+    for i in range(period - 1, len(rsi_vals)):
+        window = rsi_vals[i - period + 1: i + 1]
+        lo = min(window); hi = max(window)
+        k_raw.append((rsi_vals[i] - lo) / (hi - lo) * 100 if hi != lo else 50.0)
+    if not k_raw:
+        return 50.0, 50.0
+    k_smooth = _ema(k_raw, k_period)
+    d_smooth = _ema(k_smooth, d_period)
+    return k_smooth[-1], d_smooth[-1]
+
+
+# ── 5 Algoritma (103 için optimize) ─────────────────────────
+
+def algo_hma(klines: list[dict]) -> tuple[int, str]:
+    """Hull Moving Average (20): en az gecikmeyle trend yönü."""
     closes = [k["close"] for k in klines]
-    rsi    = _rsi(closes, 14)
-    macd_v, signal_v = _macd(closes)
-    e20 = _ema(closes, 20)
-    e50 = _ema(closes, 50) if len(closes) >= 50 else e20
+    hma    = _hma(closes, 20)
+    price  = closes[-1]
 
-    rsi_v  = +1 if rsi < 40 else -1 if rsi > 60 else 0
-    macd_v2 = +1 if macd_v > signal_v else -1 if macd_v < signal_v else 0
-    ema_v  = +1 if e20[-1] > e50[-1] else -1
+    if len(hma) < 3:
+        return 0, "HMA →  yetersiz veri"
 
-    score = rsi_v + macd_v2 + ema_v
-    vote  = +1 if score >= 2 else -1 if score <= -2 else 0
-    arr   = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    return vote, f"A1 {arr}  RSI:{rsi:.0f}  MACD:{'↑' if macd_v2>0 else '↓' if macd_v2<0 else '→'}  EMA:{'↑' if ema_v>0 else '↓'}"
-
-
-def algo_trend(klines: list[dict]) -> tuple[int, str]:
-    """A4/A9 mirası: EMA20/50 crossover + slope."""
-    closes = [k["close"] for k in klines]
-    e20    = _ema(closes, 20)
-    e50    = _ema(closes, 50) if len(closes) >= 50 else _ema(closes, 20)
-    cross  = e20[-1] - e50[-1]
-    slope  = e20[-1] - e20[-4] if len(e20) >= 4 else 0
-    pct    = cross / closes[-1] * 100
-
-    if cross > 0 and slope > 0:
-        return +1, f"Trend ↑  E20>E50 ({pct:+.2f}%)"
-    elif cross < 0 and slope < 0:
-        return -1, f"Trend ↓  E20<E50 ({pct:+.2f}%)"
+    slope = hma[-1] - hma[-3]
+    if price > hma[-1] and slope > 0:
+        vote = +1
+    elif price < hma[-1] and slope < 0:
+        vote = -1
     else:
-        return  0, f"Trend →  karışık ({pct:+.2f}%)"
+        vote = 0
+
+    arr = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    return vote, f"HMA {arr}  fiyat:{price:,.0f}  HMA:{hma[-1]:,.0f}  eğim:{slope:+.0f}"
 
 
-def algo_mr(klines: list[dict]) -> tuple[int, str]:
-    """A4/A9 mirası: RSI + Bollinger Bands (Mean Reversion)."""
-    closes       = [k["close"] for k in klines]
-    rsi          = _rsi(closes, 14)
-    upper, _, lower = _bollinger(closes, 20)
-    price        = closes[-1]
+def algo_macd_histogram_div(klines: list[dict]) -> tuple[int, str]:
+    """MACD Histogram Divergence + sıfır hattı geçişi."""
+    closes = [k["close"] for k in klines]
+    if len(closes) < 30:
+        return 0, "MACD-H →  yetersiz veri"
 
-    rsi_v = +1 if rsi <= 35 else -1 if rsi >= 65 else 0
-    bb_v  = +1 if price <= lower else -1 if price >= upper else 0
+    ema12 = _ema(closes, 12)
+    ema26 = _ema(closes, 26)
+    macd_line = [a - b for a, b in zip(ema12, ema26)]
+    signal    = _ema(macd_line, 9)
+    hist      = [m - s for m, s in zip(macd_line, signal)]
 
-    vote   = max(-1, min(1, rsi_v + bb_v))
-    arr    = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    bb_lbl = "alt" if price <= lower else "üst" if price >= upper else "orta"
-    return vote, f"MR {arr}  RSI:{rsi:.0f}  BB:{bb_lbl}"
+    # Sıfır hattı geçişi (momentum)
+    zero_cross = 0
+    if len(hist) >= 2:
+        zero_cross = +1 if hist[-2] < 0 <= hist[-1] else -1 if hist[-2] > 0 >= hist[-1] else 0
 
+    # Son 5 mum içinde gizli uyumsuzluk
+    div_vote = 0
+    if len(hist) >= 6 and len(closes) >= 6:
+        price_lower_low = closes[-1] < min(closes[-6:-1])
+        hist_higher_low = hist[-1] > min(hist[-6:-1])
+        if price_lower_low and hist_higher_low:
+            div_vote = +1   # bullish divergence
+        price_higher_high = closes[-1] > max(closes[-6:-1])
+        hist_lower_high   = hist[-1] < max(hist[-6:-1])
+        if price_higher_high and hist_lower_high:
+            div_vote = -1   # bearish divergence
 
-def algo_orderflow(klines: list[dict], ob: dict) -> tuple[int, str]:
-    """A4/A9 mirası: CVD + Order Book imbalance."""
-    window    = klines[-20:]
-    cvd_delta = sum(k["volume"] if k["close"] >= k["open"] else -k["volume"] for k in window)
-    total_vol = sum(k["volume"] for k in window) or 1
-    cvd_r     = cvd_delta / total_vol
-
-    bids  = sum(float(b[1]) for b in ob.get("bids", [])[:10])
-    asks  = sum(float(a[1]) for a in ob.get("asks", [])[:10])
-    ob_r  = (bids - asks) / (bids + asks) if (bids + asks) else 0
-
-    cvd_v = +1 if cvd_r > 0.05 else -1 if cvd_r < -0.05 else 0
-    ob_v  = +1 if ob_r  > 0.10 else -1 if ob_r  < -0.10 else 0
-
-    vote  = cvd_v if cvd_v == ob_v else (cvd_v or ob_v)
+    score = zero_cross + div_vote
+    vote  = +1 if score >= 1 else -1 if score <= -1 else 0
     arr   = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    return vote, f"OF {arr}  CVD:{cvd_r:+.2f}  OB:{ob_r:+.2f}"
+    hist_v = hist[-1]
+    return vote, f"MACD-H {arr}  hist:{hist_v:+.2f}  zc:{'↑'if zero_cross>0 else '↓'if zero_cross<0 else '→'}  div:{'↑'if div_vote>0 else '↓'if div_vote<0 else '→'}"
+
+
+def algo_supertrend_v2(klines: list[dict]) -> tuple[int, str]:
+    """SuperTrend v2 — ATR(7) × 2.0 (agresif 5m parametresi)."""
+    if len(klines) < 10:
+        return 0, "ST →  yetersiz veri"
+
+    period = 7; multiplier = 2.0
+    trs = []
+    for i in range(1, len(klines)):
+        h = klines[i]["high"]; l = klines[i]["low"]; pc = klines[i - 1]["close"]
+        trs.append(max(h - l, abs(h - pc), abs(l - pc)))
+
+    atr_vals = []
+    atr_val  = sum(trs[:period]) / period
+    atr_vals.append(atr_val)
+    for tr in trs[period:]:
+        atr_val = (atr_val * (period - 1) + tr) / period
+        atr_vals.append(atr_val)
+
+    # Supertrend hesapla (atr_vals uzunluğu = len(klines)-1)
+    direction = 1   # 1=UP, -1=DOWN
+    st_line   = None
+    for i in range(len(atr_vals)):
+        ki = i + 1   # klines index
+        hl2   = (klines[ki]["high"] + klines[ki]["low"]) / 2
+        upper = hl2 + multiplier * atr_vals[i]
+        lower = hl2 - multiplier * atr_vals[i]
+        close = klines[ki]["close"]
+
+        if st_line is None:
+            st_line = lower if direction == 1 else upper
+        if direction == 1:
+            st_line = max(lower, st_line)
+            if close < st_line:
+                direction = -1
+                st_line   = upper
+        else:
+            st_line = min(upper, st_line)
+            if close > st_line:
+                direction = 1
+                st_line   = lower
+
+    vote = +1 if direction == 1 else -1
+    arr  = "↑" if vote > 0 else "↓"
+    price = klines[-1]["close"]
+    return vote, f"ST-v2 {arr}  fiyat:{price:,.0f}  ST:{st_line:,.0f}  atr:{atr_vals[-1]:.0f}"
+
+
+def algo_stoch_rsi_kd(klines: list[dict]) -> tuple[int, str]:
+    """Stochastic RSI K/D (14,3,3) — aşırı alım/satım + çapraz."""
+    closes = [k["close"] for k in klines]
+    k_val, d_val = _stoch_rsi(closes, 14, 3, 3)
+
+    # Sinyal: aşırı alım/satımda çapraz
+    oversold  = k_val < 25 and d_val < 25
+    overbought = k_val > 75 and d_val > 75
+    k_above_d = k_val > d_val
+
+    if oversold and k_above_d:
+        vote = +1   # bullish cross in oversold
+    elif overbought and not k_above_d:
+        vote = -1   # bearish cross in overbought
+    else:
+        vote = 0
+
+    arr = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    return vote, f"StochRSI {arr}  K:{k_val:.0f}  D:{d_val:.0f}"
+
+
+def algo_atr_momentum_breakout(klines: list[dict]) -> tuple[int, str]:
+    """ATR Momentum Breakout — son N mum kanalını ATR ile kır."""
+    lookback = 20; atr_mult = 1.5
+    if len(klines) < lookback + 2:
+        return 0, "ATR-BO →  yetersiz veri"
+
+    atr_v      = _atr(klines, 14)
+    window     = klines[-(lookback + 1):-1]   # son 20 mum (son hariç)
+    high_max   = max(k["high"]  for k in window)
+    low_min    = min(k["low"]   for k in window)
+    close_prev = klines[-2]["close"]
+    close_now  = klines[-1]["close"]
+
+    breakout_up   = close_now > high_max + atr_mult * atr_v
+    breakout_down = close_now < low_min  - atr_mult * atr_v
+    # Momentum onayı: son 3 mum yönlü hareket
+    momentum_up   = close_now > close_prev and klines[-2]["close"] > klines[-3]["close"]
+    momentum_down = close_now < close_prev and klines[-2]["close"] < klines[-3]["close"]
+
+    if breakout_up and momentum_up:
+        vote = +1
+    elif breakout_down and momentum_down:
+        vote = -1
+    else:
+        vote = 0
+
+    arr = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    pct = (close_now - high_max) / high_max * 100 if vote > 0 else (close_now - low_min) / low_min * 100
+    return vote, f"ATR-BO {arr}  {pct:+.2f}%  ATR:{atr_v:.0f}"
 
 
 # ── Tam Analiz ────────────────────────────────────────────────
 def analyze() -> dict | None:
     try:
-        klines  = fetch_klines_5m(SYMBOL, 150)
-        ob      = fetch_orderbook(SYMBOL)
+        klines = fetch_klines_5m(SYMBOL, 150)
     except Exception as e:
         print(f"[{LABEL}] Veri hatası: {e}", file=sys.stderr)
         return None
 
-    v1, l1 = algo_a1_rsi_macd_ema(klines)
-    v2, l2 = algo_trend(klines)
-    v3, l3 = algo_mr(klines)
-    v4, l4 = algo_orderflow(klines, ob)
+    v1, l1 = algo_hma(klines)
+    v2, l2 = algo_macd_histogram_div(klines)
+    v3, l3 = algo_supertrend_v2(klines)
+    v4, l4 = algo_stoch_rsi_kd(klines)
+    v5, l5 = algo_atr_momentum_breakout(klines)
 
-    up_votes   = sum(1 for v in [v1, v2, v3, v4] if v > 0)
-    down_votes = sum(1 for v in [v1, v2, v3, v4] if v < 0)
+    all_votes  = [v1, v2, v3, v4, v5]
+    up_votes   = sum(1 for v in all_votes if v > 0)
+    down_votes = sum(1 for v in all_votes if v < 0)
 
     if up_votes > down_votes:
         direction = "UP"
@@ -322,24 +468,26 @@ def analyze() -> dict | None:
         direction = None
         consensus = 0
 
-    if consensus < 2:
+    entry_price = klines[-2]["close"]
+
+    if consensus < 3:
         return {
             "direction": None, "consensus": consensus,
-            "votes": [v1, v2, v3, v4], "labels": [l1, l2, l3, l4],
-            "entry_price": klines[-2]["close"],
+            "votes": all_votes, "labels": [l1, l2, l3, l4, l5],
+            "entry_price": entry_price,
             "amount": 0.0,
         }
 
-    amount = (AMOUNT_4 if consensus == 4
-              else AMOUNT_3 if consensus == 3
-              else AMOUNT_2)
+    amount = (AMOUNT_5 if consensus == 5
+              else AMOUNT_4 if consensus == 4
+              else AMOUNT_3)
 
     return {
         "direction":   direction,
         "consensus":   consensus,
-        "votes":       [v1, v2, v3, v4],
-        "labels":      [l1, l2, l3, l4],
-        "entry_price": klines[-2]["close"],
+        "votes":       all_votes,
+        "labels":      [l1, l2, l3, l4, l5],
+        "entry_price": entry_price,
         "amount":      amount,
     }
 
@@ -566,19 +714,19 @@ def run() -> None:
         # Sinyal yok
         lines_out = []
         for i, (v, l) in enumerate(zip(votes, labels)):
-            names = ["A1", "Trend", "MR", "OF"]
+            names = ["HMA", "MACD-H", "ST-v2", "StochRSI", "ATR-BO"]
             icon  = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
             lines_out.append(f"  {icon} {names[i]}: {l}")
         msg = (
             f"{sep}\n"
             f"⏸ <b>{LABEL} — {saat} İST</b>\n"
-            f"Konsensüs yok ({consensus}/4) → işlem açılmadı\n"
+            f"Konsensüs yok ({consensus}/5) → işlem açılmadı\n"
             + "\n".join(lines_out) + "\n"
             f"💰 Bakiye: ${state['balance']:.2f}\n"
             f"{sep}"
         )
         tg_send(msg)
-        print(f"[{LABEL}] {saat} — konsensüs yok ({consensus}/4)")
+        print(f"[{LABEL}] {saat} — konsensüs yok ({consensus}/5)")
         return
 
     # Market bul + TO WIN hesapla
@@ -635,7 +783,7 @@ def run() -> None:
     msg = (
         f"{sep}\n"
         f"🆕 <b>{LABEL} — {saat} → {next_saat}</b>{dry_str}\n"
-        f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/4)  💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
+        f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/5)  💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
         f"Giriş: {entry_p:,.2f} USDT\n"
         f"{vote_str}\n"
         f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
@@ -643,7 +791,7 @@ def run() -> None:
         f"{sep}"
     )
     tg_send(msg)
-    print(f"[{LABEL}] {saat} — {dir_tr} {consensus}/4  ${amount:.0f}→${to_win:.2f}  entry:{entry_p:,.2f}")
+    print(f"[{LABEL}] {saat} — {dir_tr} {consensus}/5  ${amount:.0f}→${to_win:.2f}  entry:{entry_p:,.2f}")
 
 
 # ── WEEKLY ─────────────────────────────────────────────────────
@@ -769,12 +917,12 @@ def run_stats() -> None:
 
         # Konsensüs başarısı
         parts.append(f"\n🎯 <b>Konsensüs Bazlı</b>")
-        for c in [2, 3, 4]:
+        for c in [3, 4, 5]:
             c_hist = [t for t in history if t.get("consensus") == c]
             if c_hist:
                 cw = sum(1 for t in c_hist if t["win"])
                 bar = "🟢" if cw/len(c_hist) >= 0.6 else "🟡" if cw/len(c_hist) >= 0.5 else "🔴"
-                parts.append(f"  {bar} {c}/4 konsensüs: {_wr(cw, len(c_hist))}")
+                parts.append(f"  {bar} {c}/5 konsensüs: {_wr(cw, len(c_hist))}")
 
     tg_send("\n".join(parts))
     print(f"[{LABEL}] stats gönderildi")

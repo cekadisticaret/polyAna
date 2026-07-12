@@ -1,5 +1,5 @@
 """
-5M BTC TRADER — 4 Algoritma Konsensüs (Sanal)
+5M 102 BTC TRADER — A1+A9 Konsensüs (Sanal)
 ==============================================
 A1, A4, A9, A10 analizlerinin 5 dakikalık BTC versiyonu.
 1h analizleriyle tamamen ayrı çalışır, onlara dokunmaz.
@@ -49,15 +49,16 @@ CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE   = os.path.join(_DIR, "poly_trader_15m_btc_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_15m_btc_history.json")
-WEEKLY_IMG   = "/tmp/poly_5m_btc_weekly.png"
+STATE_FILE   = os.path.join(_DIR, "poly_trader_5m_btc_102_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_btc_102_history.json")
+WEEKLY_IMG   = "/tmp/poly_5m_btc_102_weekly.png"
 
 SYMBOL           = "BTCUSDT"
 INITIAL_BALANCE  = 500.0
-AMOUNT_4         = 16.0   # 4/4 oylama
-AMOUNT_3         = 12.0   # 3/4 oylama
-AMOUNT_2         =  8.0   # 2/4 oylama
+AMOUNT_AGREE     = 15.0   # A1 + A9 hem aynı yönü söylüyor
+AMOUNT_4         = 15.0   # compat alias
+AMOUNT_3         = 15.0
+AMOUNT_2         =  0.0   # kullanılmaz
 _PERIOD_SECS     = 300    # 5 dakika = 300 saniye
 _DAYS_TR         = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -68,7 +69,7 @@ _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_DRY_RUN   = True   # Sanal: gerçek işlem açmaz
 
-LABEL = "5M 101 BTC"
+LABEL = "5M 102 BTC"
 
 
 # ── State & History ───────────────────────────────────────────
@@ -295,8 +296,19 @@ def algo_orderflow(klines: list[dict], ob: dict) -> tuple[int, str]:
     return vote, f"OF {arr}  CVD:{cvd_r:+.2f}  OB:{ob_r:+.2f}"
 
 
-# ── Tam Analiz ────────────────────────────────────────────────
+# ── Funding Rate ──────────────────────────────────────────────
+def fetch_funding_rate() -> float:
+    try:
+        raw = _binance_get("/fapi/v1/premiumIndex", {"symbol": SYMBOL})
+        return float(raw.get("lastFundingRate", 0))
+    except Exception:
+        return 0.0
+
+
+# ── 10. Analiz Mantığı: A1 VE A9 konsensüsü ──────────────────
 def analyze() -> dict | None:
+    """5M 102: A1 (RSI+MACD+EMA) VE A9 (Trend+MR+OF+Fund) ikisi de
+    aynı yönü söylüyorsa işlem aç — analiz10'un 5dk versiyonu."""
     try:
         klines  = fetch_klines_5m(SYMBOL, 150)
         ob      = fetch_orderbook(SYMBOL)
@@ -304,43 +316,50 @@ def analyze() -> dict | None:
         print(f"[{LABEL}] Veri hatası: {e}", file=sys.stderr)
         return None
 
-    v1, l1 = algo_a1_rsi_macd_ema(klines)
+    entry_price = klines[-2]["close"]
+
+    # ── A1: RSI + MACD + EMA (3 oy) ──────────────────────────
+    va1, la1 = algo_a1_rsi_macd_ema(klines)
+    s1 = "UP" if va1 > 0 else "DOWN" if va1 < 0 else None
+
+    # ── A9: Trend + MR + OF + Funding (4 oy) ─────────────────
     v2, l2 = algo_trend(klines)
     v3, l3 = algo_mr(klines)
     v4, l4 = algo_orderflow(klines, ob)
+    funding = fetch_funding_rate()
+    vf = -1 if funding > 0.0001 else +1 if funding < -0.0001 else 0
+    lf = f"Fund {'↑' if vf>0 else '↓' if vf<0 else '→'}  rate:{funding*100:.3f}%"
 
-    up_votes   = sum(1 for v in [v1, v2, v3, v4] if v > 0)
-    down_votes = sum(1 for v in [v1, v2, v3, v4] if v < 0)
+    a9_score = v2 + v3 + v4 + vf
+    s2 = "UP" if a9_score >= 2 else "DOWN" if a9_score <= -2 else None
 
-    if up_votes > down_votes:
-        direction = "UP"
-        consensus = up_votes
-    elif down_votes > up_votes:
-        direction = "DOWN"
-        consensus = down_votes
-    else:
-        direction = None
-        consensus = 0
+    labels = [la1, l2, l3, l4, lf]
+    votes  = [va1, v2, v3, v4, vf]
 
-    if consensus < 2:
+    # İkisi de aynı → işlem aç
+    if s1 and s2 and s1 == s2:
         return {
-            "direction": None, "consensus": consensus,
-            "votes": [v1, v2, v3, v4], "labels": [l1, l2, l3, l4],
-            "entry_price": klines[-2]["close"],
-            "amount": 0.0,
+            "direction":   s1,
+            "consensus":   2,   # A1+A9 = 2/2
+            "a1_dir":      s1,
+            "a9_dir":      s2,
+            "a9_score":    a9_score,
+            "votes":       votes,
+            "labels":      labels,
+            "entry_price": entry_price,
+            "amount":      AMOUNT_AGREE,
         }
 
-    amount = (AMOUNT_4 if consensus == 4
-              else AMOUNT_3 if consensus == 3
-              else AMOUNT_2)
-
     return {
-        "direction":   direction,
-        "consensus":   consensus,
-        "votes":       [v1, v2, v3, v4],
-        "labels":      [l1, l2, l3, l4],
-        "entry_price": klines[-2]["close"],
-        "amount":      amount,
+        "direction":   None,
+        "consensus":   0,
+        "a1_dir":      s1,
+        "a9_dir":      s2,
+        "a9_score":    a9_score,
+        "votes":       votes,
+        "labels":      labels,
+        "entry_price": entry_price,
+        "amount":      0.0,
     }
 
 
@@ -563,22 +582,27 @@ def run() -> None:
     sep = "━" * 26
 
     if direction is None:
-        # Sinyal yok
+        # Sinyal yok — A1 ve A9 ayrı düşünüyor
+        a1_dir = result.get("a1_dir"); a9_dir = result.get("a9_dir")
+        a9_score = result.get("a9_score", 0)
+        names = ["A1", "Trend", "MR", "OF", "Fund"]
         lines_out = []
         for i, (v, l) in enumerate(zip(votes, labels)):
-            names = ["A1", "Trend", "MR", "OF"]
-            icon  = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
+            icon = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
             lines_out.append(f"  {icon} {names[i]}: {l}")
+        a1_str = f"A1={'↑' if a1_dir=='UP' else '↓' if a1_dir=='DOWN' else '→'}"
+        a9_str = f"A9={'↑' if a9_dir=='UP' else '↓' if a9_dir=='DOWN' else '→'}({a9_score:+d}/4)"
+        reason = "Ters yön" if (a1_dir and a9_dir and a1_dir != a9_dir) else "Yetersiz güç"
         msg = (
             f"{sep}\n"
             f"⏸ <b>{LABEL} — {saat} İST</b>\n"
-            f"Konsensüs yok ({consensus}/4) → işlem açılmadı\n"
+            f"{reason}: {a1_str}  {a9_str} → işlem açılmadı\n"
             + "\n".join(lines_out) + "\n"
             f"💰 Bakiye: ${state['balance']:.2f}\n"
             f"{sep}"
         )
         tg_send(msg)
-        print(f"[{LABEL}] {saat} — konsensüs yok ({consensus}/4)")
+        print(f"[{LABEL}] {saat} — konsensüs yok (A1:{a1_dir} A9:{a9_dir})")
         return
 
     # Market bul + TO WIN hesapla
@@ -622,20 +646,21 @@ def run() -> None:
     save_state(state)
 
     # Bildirim
-    dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
-    dir_icon = "📈" if direction == "UP" else "📉"
-    names    = ["A1", "Trend", "MR", "OF"]
-    vote_str = "  ".join(
+    dir_tr    = "YÜKSELİR" if direction == "UP" else "DÜŞER"
+    dir_icon  = "📈" if direction == "UP" else "📉"
+    names     = ["A1", "Trend", "MR", "OF", "Fund"]
+    vote_str  = "  ".join(
         f"{'🟢' if v > 0 else '🔴' if v < 0 else '⚪'} {names[i]}"
         for i, v in enumerate(votes)
     )
     price_str = f"@{token_price:.2f}" if token_price else ""
     dry_str   = "  🔶 SANAL" if _PM_DRY_RUN else ""
+    a9_score  = result.get("a9_score", 0)
 
     msg = (
         f"{sep}\n"
         f"🆕 <b>{LABEL} — {saat} → {next_saat}</b>{dry_str}\n"
-        f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/4)  💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
+        f"{dir_icon} <b>BTC {dir_tr}</b>  A1✅+A9({a9_score:+d}/4)✅  💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
         f"Giriş: {entry_p:,.2f} USDT\n"
         f"{vote_str}\n"
         f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
@@ -643,7 +668,7 @@ def run() -> None:
         f"{sep}"
     )
     tg_send(msg)
-    print(f"[{LABEL}] {saat} — {dir_tr} {consensus}/4  ${amount:.0f}→${to_win:.2f}  entry:{entry_p:,.2f}")
+    print(f"[{LABEL}] {saat} — {dir_tr} A1+A9  ${amount:.0f}→${to_win:.2f}  entry:{entry_p:,.2f}")
 
 
 # ── WEEKLY ─────────────────────────────────────────────────────
@@ -767,14 +792,12 @@ def run_stats() -> None:
             bar = "🟢" if w/n >= 0.6 else "🟡" if w/n >= 0.5 else "🔴"
             parts.append(f"  {bar} {_DAYS_TR[d]}  {_wr(w, n)}")
 
-        # Konsensüs başarısı
-        parts.append(f"\n🎯 <b>Konsensüs Bazlı</b>")
-        for c in [2, 3, 4]:
-            c_hist = [t for t in history if t.get("consensus") == c]
-            if c_hist:
-                cw = sum(1 for t in c_hist if t["win"])
-                bar = "🟢" if cw/len(c_hist) >= 0.6 else "🟡" if cw/len(c_hist) >= 0.5 else "🔴"
-                parts.append(f"  {bar} {c}/4 konsensüs: {_wr(cw, len(c_hist))}")
+        # A1+A9 konsensüs
+        agree_hist = [t for t in history if t.get("consensus") == 2]
+        if agree_hist:
+            aw = sum(1 for t in agree_hist if t["win"])
+            bar = "🟢" if aw/len(agree_hist) >= 0.6 else "🟡" if aw/len(agree_hist) >= 0.5 else "🔴"
+            parts.append(f"\n🎯 <b>A1+A9 Anlaşma</b>: {bar} {_wr(aw, len(agree_hist))}")
 
     tg_send("\n".join(parts))
     print(f"[{LABEL}] stats gönderildi")
