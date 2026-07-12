@@ -608,6 +608,13 @@ async def run_open() -> None:
     is_weekend = dow >= 5
     saat       = now_tr.strftime("%H:%M")
 
+    # 08:00-20:00 İST dışında işlem açma
+    _ACTIVE_START, _ACTIVE_END = 8, 20
+    _in_active_window = _ACTIVE_START <= hour_tr < _ACTIVE_END
+    if not _in_active_window:
+        print(f"[9. ANALİZ] {saat} İST — aktif pencere dışı (08-20), işlem açılmıyor")
+        return
+
     state   = load_state()
     history = load_history()
 

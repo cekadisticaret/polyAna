@@ -701,21 +701,27 @@ async def run_open() -> None:
     et_now   = now - timedelta(hours=4)
     et_hour  = et_now.hour
 
-    # Analiz9 sinyallerini oku
+    # 08:00-20:00 İST: A9 sinyalleri aktif, dışında A5 bağımsız çalışır
+    _A9_ACTIVE_START, _A9_ACTIVE_END = 8, 20
+    _a9_window = _A9_ACTIVE_START <= hour_tr < _A9_ACTIVE_END
+
+    # Analiz9 sinyallerini oku (sadece aktif pencerede)
     _A9_SIGNALS_FILE = "/tmp/analiz9_signals.json"
     a9_signals: dict[str, str] = {}
-    try:
-        if os.path.exists(_A9_SIGNALS_FILE):
-            with open(_A9_SIGNALS_FILE) as _f:
-                _a9 = json.load(_f)
-            # Sadece aynı saatin verisini kullan
-            if _a9.get("hour_tr") == hour_tr:
-                a9_signals = _a9.get("signals", {})
-                print(f"[5. ANALİZ] A9 sinyalleri okundu: {a9_signals}")
-            else:
-                print(f"[5. ANALİZ] A9 sinyali farklı saate ait ({_a9.get('hour_tr')} ≠ {hour_tr}), yok sayıldı")
-    except Exception as _e:
-        print(f"[5. ANALİZ] A9 sinyal okuma hatası: {_e}", file=sys.stderr)
+    if _a9_window:
+        try:
+            if os.path.exists(_A9_SIGNALS_FILE):
+                with open(_A9_SIGNALS_FILE) as _f:
+                    _a9 = json.load(_f)
+                if _a9.get("hour_tr") == hour_tr:
+                    a9_signals = _a9.get("signals", {})
+                    print(f"[5. ANALİZ] A9 sinyalleri okundu: {a9_signals}")
+                else:
+                    print(f"[5. ANALİZ] A9 sinyali farklı saate ait ({_a9.get('hour_tr')} ≠ {hour_tr}), yok sayıldı")
+        except Exception as _e:
+            print(f"[5. ANALİZ] A9 sinyal okuma hatası: {_e}", file=sys.stderr)
+    else:
+        print(f"[5. ANALİZ] {saat} İST — A9 pencere dışı (08-20), bağımsız çalışıyor")
 
     # Ayarları oku (her çalışmada güncel değeri al)
     _cfg = _load_settings()
