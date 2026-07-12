@@ -134,6 +134,8 @@ _PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana
                  "XRPUSDT": "xrp", "DOGEUSDT": "dogecoin", "BNBUSDT": "bnb", "HYPEUSDT": "hype"}
 _PM_DRY_RUN   = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 
+from pm_balance_guard import PM_MIN_BALANCE, can_open_trade
+_PM_MIN_BALANCE = PM_MIN_BALANCE
 
 def _pm_get_client():
     """Her çağrıda taze cred türet — 401 retry ile güvenli."""
@@ -691,6 +693,10 @@ async def run_open() -> None:
 
     state   = load_state()
     history = load_history()
+
+    # PM bakiye kontrolü
+    if not _PM_DRY_RUN and not can_open_trade("5. ANALİZ", tg_send):
+        return
 
     results = []
     for sym in SYMBOLS:

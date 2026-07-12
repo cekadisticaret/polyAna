@@ -602,7 +602,11 @@ def run() -> None:
         tg_send(close_msg)
         print(f"[{LABEL}] {saat} — {len(closed_lines)} pozisyon kapatıldı")
 
-    # ── 2. AÇ: Yeni 15m pozisyonu ──────────────────────────────
+    # ── 2. AÇ: Yeni 5m pozisyonu ──────────────────────────────
+    from pm_balance_guard import can_open_trade
+    if not can_open_trade(LABEL, tg_send):
+        return
+
     result = analyze()
     if result is None:
         tg_send(f"⚠️ <b>{LABEL}</b> — {saat} veri alınamadı")
@@ -813,51 +817,8 @@ def run_weekly() -> None:
 
 # ── STATS ─────────────────────────────────────────────────────
 def run_stats() -> None:
-    history = load_history()
-    state   = load_state()
-    now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
-
-    total    = len(history)
-    wins_all = sum(1 for t in history if t["win"])
-    total_pnl = state.get("total_pnl", 0.0)
-    pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
-
-    parts = [
-        f"📊 <b>{LABEL} İSTATİSTİKLER</b>",
-        f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
-        f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
-        f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
-        f"{pnl_icon} P&amp;L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
-        f"Başlangıç: ${INITIAL_BALANCE:.2f}",
-    ]
-
-    if history:
-        parts.append(f"\n📅 <b>Gün Bazlı</b>")
-        dow_data: dict[int, list] = {}
-        for t in history:
-            d = t.get("entry_dow")
-            if d is None:
-                continue
-            dow_data.setdefault(d, [0, 0])
-            dow_data[d][1] += 1
-            if t["win"]:
-                dow_data[d][0] += 1
-        for d in range(7):
-            if d not in dow_data:
-                continue
-            w, n = dow_data[d]
-            bar = "🟢" if w/n >= 0.6 else "🟡" if w/n >= 0.5 else "🔴"
-            parts.append(f"  {bar} {_DAYS_TR[d]}  {_wr(w, n)}")
-
-        # A1+A9 konsensüs
-        agree_hist = [t for t in history if t.get("consensus") == 2]
-        if agree_hist:
-            aw = sum(1 for t in agree_hist if t["win"])
-            bar = "🟢" if aw/len(agree_hist) >= 0.6 else "🟡" if aw/len(agree_hist) >= 0.5 else "🔴"
-            parts.append(f"\n🎯 <b>A1+A9 Anlaşma</b>: {bar} {_wr(aw, len(agree_hist))}")
-
-    tg_send("\n".join(parts))
-    print(f"[{LABEL}] stats gönderildi")
+    from poly_trader_5m_real_stats import run as run_combined_stats
+    run_combined_stats()
 
 
 # ── Giriş Noktası ─────────────────────────────────────────────

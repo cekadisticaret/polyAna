@@ -1,0 +1,77 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 64149.9,
+    "exit_price": 64154.1,
+    "amount": 3.24,
+    "pm_spent": 3.24,
+    "to_win": 6.0,
+    "pnl": 2.76,
+    "entry_time_tr": "2026-07-12T19:05:02.604859+03:00",
+    "entry_period_min": 1145,
+    "entry_dow": 6,
+    "exit_time_tr": "2026-07-12T19:10:01.418820+03:00",
+    "consensus": 2,
+    "votes": [
+      0,
+      1,
+      0,
+      1
+    ],
+    "pm_slug": "btc-updown-5m-1783872300",
+    "pm_dry_run": false
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 64154.1,
+    "exit_price": 64038.2,
+    "amount": 3.2,
+    "pm_spent": 3.2,
+    "to_win": 5.0,
+    "pnl": -3.2,
+    "entry_time_tr": "2026-07-12T19:10:01.418820+03:00",
+    "entry_period_min": 1150,
+    "entry_dow": 6,
+    "exit_time_tr": "2026-07-12T19:15:01.972232+03:00",
+    "consensus": 2,
+    "votes": [
+      0,
+      1,
+      0,
+      1
+    ],
+    "pm_slug": "btc-updown-5m-1783872600",
+    "pm_dry_run": false
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 64038.2,
+    "exit_price": 64038.2,
+    "amount": 3.18,
+    "pm_spent": 3.18,
+    "to_win": 6.0,
+    "pnl": 2.82,
+    "entry_time_tr": "2026-07-12T19:15:01.972232+03:00",
+    "entry_period_min": 1155,
+    "entry_dow": 6,
+    "exit_time_tr": "2026-07-12T19:20:01.438356+03:00",
+    "consensus": 2,
+    "votes": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "pm_slug": "btc-updown-5m-1783872900",
+    "pm_dry_run": false
+  }
+]
