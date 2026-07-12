@@ -424,9 +424,10 @@ def api_analizler():
             continue
         total = len(hist)
         wins  = sum(1 for t in hist if t.get("win"))
-        pnl   = round(sum(t.get("pnl", 0) for t in hist), 2)
         wr    = round(wins / total * 100, 1) if total else 0
         bal   = state.get("balance", 0)
+        # P&L = bakiye - başlangıç (reset sonrası kayıtları da doğru yansıtır)
+        pnl   = round(bal - init_bal, 2) if init_bal else round(sum(t.get("pnl", 0) for t in hist), 2)
         open_cnt = len(state.get("open_positions", []))
         # Sembol bazlı
         sym_stats = {}
