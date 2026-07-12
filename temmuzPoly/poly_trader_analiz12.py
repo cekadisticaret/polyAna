@@ -31,7 +31,7 @@ HISTORY_FILE    = os.path.join(_DIR, "poly_trader_analiz12_history.json")
 
 INITIAL_BALANCE = 400.0
 TRADE_AMOUNT    = 20.0
-SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]
 MIN_STAT_COUNT  = 10
 
 # Kaynak sistemlerin state dosyaları

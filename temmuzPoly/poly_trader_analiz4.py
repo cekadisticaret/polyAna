@@ -36,7 +36,7 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz4_history.json")
 WEEKLY_IMG   = "/tmp/poly_analiz4_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
-SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 

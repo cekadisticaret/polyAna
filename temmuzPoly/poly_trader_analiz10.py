@@ -44,7 +44,7 @@ INITIAL_BALANCE = 300.0
 AMOUNT_STRONG   = 30.0   # her ikisi de güçlü sinyal
 AMOUNT_MODERATE = 20.0   # biri güçlü diğeri orta veya ikisi orta
 
-SYMBOLS   = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+SYMBOLS   = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]
 _DAYS_TR  = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 IND_NAMES = ["PolyPred", "Trend", "MR", "OF"]
 

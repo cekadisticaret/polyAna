@@ -43,13 +43,18 @@ AMOUNT_MID      = 12.0   # 2/3 oy
 AMOUNT_LOW      =  8.0   # 1/3 oy
 
 _BINANCE = "https://fapi.binance.com"
-_PAIRS   = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}
+_PAIRS   = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT",
+            "XRP": "XRPUSDT", "DOGE": "DOGEUSDT", "BNB": "BNBUSDT", "HYPE": "HYPEUSDT"}
 
 # Her sembolün özel algoritma seti
 _SYM_ALGOS = {
-    "BTC": ["stoch_rsi", "bb_squeeze",    "mean_reversion"],
-    "ETH": ["oi_div",    "heikin_ashi",   "ema_crossover"],
-    "SOL": ["adx_regime","stoch_rsi",     "ema_crossover"],
+    "BTC":  ["stoch_rsi", "bb_squeeze",    "mean_reversion"],
+    "ETH":  ["oi_div",    "heikin_ashi",   "ema_crossover"],
+    "SOL":  ["adx_regime","stoch_rsi",     "ema_crossover"],
+    "XRP":  ["stoch_rsi", "ema_crossover", "mean_reversion"],
+    "DOGE": ["stoch_rsi", "bb_squeeze",    "ema_crossover"],
+    "BNB":  ["adx_regime","ema_crossover", "mean_reversion"],
+    "HYPE": ["stoch_rsi", "heikin_ashi",   "ema_crossover"],
 }
 
 # ── State / History ───────────────────────────────────────────

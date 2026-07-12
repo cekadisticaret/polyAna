@@ -36,7 +36,7 @@ INITIAL_BALANCE    = 300.0
 TRADE_AMOUNT       = 15.0   # sabit işlem miktarı
 TRADE_AMOUNT_HIGH  = 15.0
 TRADE_AMOUNT_LOW   = 15.0
-SYMBOLS          = ["BTCUSDT", "SOLUSDT"]  # ETH geçici kapalı
+SYMBOLS          = ["BTCUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]  # ETH geçici kapalı
 _DAYS_TR         = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 

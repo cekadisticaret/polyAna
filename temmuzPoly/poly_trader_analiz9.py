@@ -46,7 +46,7 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz9_history.json")
 WEEKLY_IMG   = "/tmp/poly_analiz9_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
-SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # ETH geçici kapalı
+SYMBOLS         = ["BTCUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]  # ETH geçici kapalı
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -59,7 +59,8 @@ MIN_STAT_COUNT  = 10
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
-_PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana"}
+_PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana",
+                 "XRPUSDT": "xrp", "DOGEUSDT": "dogecoin", "BNBUSDT": "bnb", "HYPEUSDT": "hype"}
 _PM_DRY_RUN   = True  # Analiz 9 şimdilik işlem açmıyor
 
 

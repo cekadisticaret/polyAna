@@ -51,7 +51,9 @@ _ALGO_SIGNALS_FILE = "/tmp/algo_signals.json"
 WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
-SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # ETH geçici kapalı
+SYMBOLS         = ["BTCUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]  # ETH geçici kapalı
+# Yeni coinler test modunda: sinyal takibi yapılır ama Polymarket'ta gerçek emir açılmaz
+_PM_TEST_SYMBOLS = {"XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"}
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -130,7 +132,8 @@ def _update_algo_accuracy(pos: dict, win: bool) -> None:
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
-_PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana"}
+_PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana",
+                 "XRPUSDT": "xrp", "DOGEUSDT": "dogecoin", "BNBUSDT": "bnb", "HYPEUSDT": "hype"}
 _PM_DRY_RUN   = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 
 
@@ -559,10 +562,18 @@ async def run_close() -> None:
         actual = "UP" if current_price >= entry else "DOWN"
         win    = (pred == actual)
 
-        # Polymarket gerçek sonucu kontrol et
+        # Polymarket gerçek sonucu kontrol et (TEST pozisyonlar için atla)
         pm_pnl_str  = ""
         pm_win      = None
-        if pos.get("pm_slug") and not pos.get("pm_error"):
+        if pos.get("pm_test") or pos.get("pm_order_id") == "TEST":
+            # Sanal test pozisyonu — yön doğruysa kazandı say
+            pm_win = win
+            pm_size  = pos.get("pm_size", 0)
+            pm_spent = pos.get("pm_spent", 0)
+            pm_pnl_val = round(pm_size - pm_spent, 2) if win else round(-pm_spent, 2)
+            pm_pnl_str = f"  |  🧪TEST: {'+'if win else ''}{pm_pnl_val:.2f}$"
+            pm_tur_pnl += pm_pnl_val
+        elif pos.get("pm_slug") and not pos.get("pm_error"):
             try:
                 req = urllib.request.Request(
                     f"{_PM_GAMMA_URL}?slug={pos['pm_slug']}",
@@ -808,7 +819,32 @@ async def run_open() -> None:
                 "a9_agree":         sig.get("a9_agree"),
                 "a9_only":          sig.get("a9_only", False),
             }
-            # Sadece gerçek Polymarket orderı varsa pozisyon aç
+            # Test modundaki yeni coinler — Polymarket'ta gerçek emir açma, sanal takip et
+            if sig["symbol"] in _PM_TEST_SYMBOLS:
+                pm_test = _pm_find_market(sig["symbol"], et_hour, now)
+                if pm_test and pm_test.get("active") and not pm_test.get("closed"):
+                    op = pm_test.get("outcome_prices") or []
+                    est_price = float(op[0] if sig["predicted_dir"] == "UP" else op[1]) if len(op) >= 2 else 0.5
+                    est_size  = round(sig["amount"] / est_price, 2) if est_price > 0 else 0
+                    pos["pm_slug"]        = pm_test["slug"]
+                    pos["pm_title"]       = pm_test["title"]
+                    pos["pm_token_dir"]   = sig["predicted_dir"]
+                    pos["pm_size"]        = est_size
+                    pos["pm_entry_price"] = est_price
+                    pos["pm_order_id"]    = "TEST"
+                    pos["pm_spent"]       = sig["amount"]
+                    pos["algo_snapshot"]  = _algo_snapshot
+                    pos["pm_test"]        = True
+                    print(f"[5. ANALİZ] TEST (sanal): {sig['symbol']} {sig['predicted_dir']} "
+                          f"~{est_size} shares @ {est_price:.3f} (${sig['amount']:.2f})")
+                else:
+                    print(f"[5. ANALİZ] TEST {sig['symbol']} market bulunamadı, atlandı", file=sys.stderr)
+                    continue
+                state["open_positions"].append(pos)
+                _newly_opened += 1
+                continue
+
+            # Gerçek Polymarket orderı
             pm = _pm_find_market(sig["symbol"], et_hour, now)
             if not pm or not pm.get("active") or pm.get("closed"):
                 durum = "bulunamadı" if not pm else "kapalı"
@@ -844,7 +880,7 @@ async def run_open() -> None:
 
     next_h   = f"{(hour_tr + 1) % 24:02d}:00"
     sep      = "━" * 26
-    _SYMS    = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+    _SYMS    = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]
     _DIR_TR  = {"UP": "UP ▲", "DOWN": "DOWN ▼", None: "—"}
 
     # A5 kendi sinyalleri (a9_only olmayanlar)
