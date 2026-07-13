@@ -5,9 +5,8 @@ Analiz 1, 2 ve 4'ün bu saat açtığı pozisyonları okur.
 Birden fazla sistemin aynı yönde seçtiği kriptolara girer.
 
 Konsensus → İşlem tutarı:
-  4/4 sistem aynı yön  →  $20
-  3/4 sistem aynı yön  →  $12
-  2/4 sistem aynı yön  →   $8
+  3/3 sistem aynı yön  →  $20
+  2/3 sistem aynı yön  →  $12
   <2                   →  işlem açılmaz
 
 Mod: close / open / weekly
@@ -28,9 +27,8 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_karisim1_history.json")
 INITIAL_BALANCE = 300.0
 SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 
-AMOUNT_STRONG   = 20.0   # 4/4 konsensus
-AMOUNT_MODERATE = 12.0   # 3/4 konsensus
-AMOUNT_WEAK     =  8.0   # 2/4 konsensus
+AMOUNT_STRONG   = 20.0   # 3/3 konsensus
+AMOUNT_MODERATE = 12.0   # 2/3 konsensus
 MIN_STAT_COUNT  = 10
 
 # Kaynak analiz sistem state dosyaları
@@ -38,7 +36,6 @@ SOURCE_STATES = {
     "A1": os.path.join(_DIR, "poly_trader_analiz1_state.json"),
     "A2": os.path.join(_DIR, "poly_trader_analiz2_state.json"),
     "A4": os.path.join(_DIR, "poly_trader_analiz4_state.json"),
-    "A6": os.path.join(_DIR, "poly_trader_analiz6_state.json"),
 }
 
 
@@ -202,8 +199,7 @@ def find_consensus(hour_tr: int) -> list[dict]:
         prices    = [d["price"] for _, d in best_data if d.get("price")]
         avg_price = sum(prices) / len(prices) if prices else None
 
-        amount = AMOUNT_STRONG if best_count == 4 else \
-                 AMOUNT_MODERATE if best_count == 3 else AMOUNT_WEAK
+        amount = AMOUNT_STRONG if best_count == 3 else AMOUNT_MODERATE
 
         consensus.append({
             "symbol":    symbol,
@@ -372,7 +368,7 @@ async def run_open() -> None:
     save_state(state)
 
     # Bildirim
-    at_risk = sum(p.get("amount", AMOUNT_WEAK) for p in state["open_positions"])
+    at_risk = sum(p.get("amount", AMOUNT_MODERATE) for p in state["open_positions"])
     lines   = [sep, f"🤝 <b>11. ANALİZ (A1+A2+A4) — {saat} - {next_h} Yeni İşlemler</b>"]
 
     if opened:

@@ -13,6 +13,8 @@ from flask import Flask, jsonify, render_template_string, request, session, redi
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
+_ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
+_DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _BINANCE  = "https://fapi.binance.com"
 _PM_GAMMA = "https://gamma-api.polymarket.com"
@@ -233,17 +235,16 @@ def api_klines(symbol):
 
 _HEATMAP_ANALYSES = {
     "analiz5":  "5. Analiz",
-    "analiz6":  "6. Analiz (Sanal)",
     "analiz1":  "1. Analiz",
     "analiz4":  "4. Analiz",
     "analiz2":  "2. Analiz",
     "analiz9":  "9. Analiz",
     "analiz10": "10. Analiz",
     "karisim1": "11. Analiz",
-    "analiz13": "13. Analiz",
     "15m_btc":    "5M 101 BTC",
     "5m_btc_102": "5M 102 BTC",
     "5m_btc_103": "5M 103 BTC",
+    "5m_btc_104": "5M 104 BTC",
     "5m_btc_real": "5M 201 BTC",
     "5m_btc_202":  "5M 202 BTC",
 }
@@ -288,7 +289,7 @@ def api_heatmap():
     # Sembol kırılımı (ALL modunda)
     sym_breakdown = []
     if sym_filter == "ALL":
-        for s in ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "HYPE"]:
+        for s in _ACTIVE_SYMS:
             sub  = [t for t in hist if t.get("symbol","").replace("USDT","") == s]
             sw   = sum(1 for t in sub if t.get("win"))
             spnl = round(sum(t.get("pnl",0) for t in sub), 2)
@@ -375,7 +376,7 @@ def api_symbol_stats():
         if t.get("win"):
             sym_stat[sym]["w"] += 1
     sym_wr = []
-    for sym in ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "HYPE"]:
+    for sym in _ACTIVE_SYMS:
         v = sym_stat.get(sym, {"w": 0, "t": 0})
         wr = round(v["w"] / v["t"] * 100, 1) if v["t"] else 0
         sym_wr.append({"sym": sym, "wr": wr, "w": v["w"], "t": v["t"]})
@@ -426,16 +427,14 @@ def api_analizler():
         ("analiz2",    "2. Analiz",             300,  "RSI+MR+CVD"),
         ("analiz3",    "3. Analiz (Stoch ETH)", 300,  "Stochastic RSI / ETH"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
-        ("analiz5",    "5. Analiz",             None, "A1+A9 Konsensüs"),
-        ("analiz6",    "6. Analiz (Sanal)",     500,  "Tüm Coinler Sanal"),
+        ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM"),
         ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs"),
         ("karisim1",   "11. Analiz",            300,  "A1+A2+A4 Meta"),
-        ("analiz12",   "12. Analiz",            400,  "A1+A4+A5+A9 Meta"),
-        ("analiz13",   "13. Analiz",            400,  "3-Algo Sembol Bazlı"),
         ("15m_btc",    "5M 101 BTC",            500,  "4-Algo 5dk BTC"),
         ("5m_btc_102", "5M 102 BTC",            500,  "A1+A9 5dk BTC"),
         ("5m_btc_103", "5M 103 BTC",            500,  "HMA+MACD+ST+StochRSI+ATR"),
+        ("5m_btc_104", "5M 104 BTC",            500,  "Stoch RSI K/D"),
         ("5m_btc_real","5M 201 BTC",             None, "Gerçek PM / 4-Algo"),
         ("5m_btc_202", "5M 202 BTC",            None, "Gerçek PM / A1+A9"),
     ]
@@ -467,7 +466,7 @@ def api_analizler():
             if t.get("win"):
                 sym_stats[sym]["w"] += 1
         sym_list = []
-        for sym in ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "HYPE"]:
+        for sym in _ACTIVE_SYMS:
             v = sym_stats.get(sym)
             if v and v["t"]:
                 sym_list.append({"sym": sym, "w": v["w"], "t": v["t"],
@@ -657,7 +656,6 @@ def api_stats():
         "analiz2":  "2. Analiz",
         "analiz4":  "4. Analiz",
         "analiz5":  "5. Analiz",
-        "analiz6":  "6. Analiz (Sanal)",
         "analiz9":  "9. Analiz",
         "analiz10": "10. Analiz",
         "karisim1": "11. Analiz",
@@ -982,7 +980,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="top-bar">
     <div>
       <div class="page-title">Algoritma Analizi</div>
-      <div class="page-sub">39 algoritma — BTC / ETH / SOL / XRP / DOGE / BNB / HYPE — 1 saatlik</div>
+      <div class="page-sub">39 algoritma — BTC / ETH / SOL — 1 saatlik</div>
       <div id="top-sym-algos" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
     <!-- Consensus kutusu -->
@@ -1005,22 +1003,22 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="grid">
     <div class="card" data-algo="1">
       <div class="card-top"><div class="card-num">1</div><div class="card-name">EMA Crossover</div></div>
-      <div class="card-signals" id="sigs-1"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-1"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-1"></div><div class="card-acc" id="acc-1"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="2">
       <div class="card-top"><div class="card-num">2</div><div class="card-name">MACD + Divergence</div></div>
-      <div class="card-signals" id="sigs-2"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-2"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-2"></div><div class="card-acc" id="acc-2"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="3">
       <div class="card-top"><div class="card-num">3</div><div class="card-name">Supertrend</div></div>
-      <div class="card-signals" id="sigs-3"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-3"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-3"></div><div class="card-acc" id="acc-3"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="4">
       <div class="card-top"><div class="card-num">4</div><div class="card-name">Ichimoku Cloud</div></div>
-      <div class="card-signals" id="sigs-4"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-4"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-4"></div><div class="card-acc" id="acc-4"><span class="acc-none pct-none">—</span></div></div>
     </div>
   </div>
@@ -1030,17 +1028,17 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="grid">
     <div class="card" data-algo="5">
       <div class="card-top"><div class="card-num">5</div><div class="card-name">RSI + Divergence</div></div>
-      <div class="card-signals" id="sigs-5"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-5"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-5"></div><div class="card-acc" id="acc-5"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="6">
       <div class="card-top"><div class="card-num">6</div><div class="card-name">Stochastic RSI</div></div>
-      <div class="card-signals" id="sigs-6"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-6"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-6"></div><div class="card-acc" id="acc-6"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="7">
       <div class="card-top"><div class="card-num">7</div><div class="card-name">Bollinger Bands</div></div>
-      <div class="card-signals" id="sigs-7"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-7"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-7"></div><div class="card-acc" id="acc-7"><span class="acc-none pct-none">—</span></div></div>
     </div>
   </div>
@@ -1050,17 +1048,17 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="grid">
     <div class="card" data-algo="8">
       <div class="card-top"><div class="card-num">8</div><div class="card-name">VWAP</div></div>
-      <div class="card-signals" id="sigs-8"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-8"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-8"></div><div class="card-acc" id="acc-8"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="9">
       <div class="card-top"><div class="card-num">9</div><div class="card-name">OBV</div></div>
-      <div class="card-signals" id="sigs-9"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-9"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-9"></div><div class="card-acc" id="acc-9"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="10">
       <div class="card-top"><div class="card-num">10</div><div class="card-name">Volume Profile (POC)</div></div>
-      <div class="card-signals" id="sigs-10"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-10"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-10"></div><div class="card-acc" id="acc-10"><span class="acc-none pct-none">—</span></div></div>
     </div>
   </div>
@@ -1070,17 +1068,17 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="grid">
     <div class="card" data-algo="11">
       <div class="card-top"><div class="card-num">11</div><div class="card-name">Mean Reversion</div></div>
-      <div class="card-signals" id="sigs-11"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-11"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-11"></div><div class="card-acc" id="acc-11"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="12">
       <div class="card-top"><div class="card-num">12</div><div class="card-name">Pairs Trading</div></div>
-      <div class="card-signals" id="sigs-12"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-12"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-12"></div><div class="card-acc" id="acc-12"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="13">
       <div class="card-top"><div class="card-num">13</div><div class="card-name">Grid Trading Bot</div></div>
-      <div class="card-signals" id="sigs-13"><div class="sig-na sig-pill">BTC —</div><div class="sig-na sig-pill">ETH —</div><div class="sig-na sig-pill">SOL —</div><div class="sig-na sig-pill">XRP —</div><div class="sig-na sig-pill">DOGE —</div><div class="sig-na sig-pill">BNB —</div><div class="sig-na sig-pill">HYPE —</div></div>
+      <div class="card-signals" id="sigs-13"><div class="sig-na sig-pill">BTC —</div><div class="sig-na sig-pill">ETH —</div><div class="sig-na sig-pill">SOL —</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-13"></div><div class="card-acc" id="acc-13"><span class="acc-none pct-none">Nötr</span></div></div>
     </div>
   </div>
@@ -1095,7 +1093,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
     </div>
     <div class="card" data-algo="15">
       <div class="card-top"><div class="card-num">15</div><div class="card-name">Multi-TF Confluence</div></div>
-      <div class="card-signals" id="sigs-15"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-15"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-15"></div><div class="card-acc" id="acc-15"><span class="acc-none pct-none">—</span></div></div>
     </div>
   </div>
@@ -1105,17 +1103,17 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="grid">
     <div class="card" data-algo="16">
       <div class="card-top"><div class="card-num">16</div><div class="card-name">ATR Breakout</div></div>
-      <div class="card-signals" id="sigs-16"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-16"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-16"></div><div class="card-acc" id="acc-16"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="17">
       <div class="card-top"><div class="card-num">17</div><div class="card-name">Heikin Ashi Trend</div></div>
-      <div class="card-signals" id="sigs-17"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-17"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-17"></div><div class="card-acc" id="acc-17"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="18">
       <div class="card-top"><div class="card-num">18</div><div class="card-name">TEMA Crossover</div></div>
-      <div class="card-signals" id="sigs-18"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-18"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-18"></div><div class="card-acc" id="acc-18"><span class="acc-none pct-none">—</span></div></div>
     </div>
   </div>
@@ -1125,17 +1123,17 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="grid">
     <div class="card" data-algo="19">
       <div class="card-top"><div class="card-num">19</div><div class="card-name">ADX Market Regime</div></div>
-      <div class="card-signals" id="sigs-19"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-19"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-19"></div><div class="card-acc" id="acc-19"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="20">
       <div class="card-top"><div class="card-num">20</div><div class="card-name">Open Interest Div.</div></div>
-      <div class="card-signals" id="sigs-20"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-20"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-20"></div><div class="card-acc" id="acc-20"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="21">
       <div class="card-top"><div class="card-num">21</div><div class="card-name">Fear &amp; Greed</div></div>
-      <div class="card-signals" id="sigs-21"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-21"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-21"></div><div class="card-acc" id="acc-21"><span class="acc-none pct-none">—</span></div></div>
     </div>
   </div>
@@ -1145,92 +1143,92 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="grid">
     <div class="card" data-algo="22">
       <div class="card-top"><div class="card-num">22</div><div class="card-name">Analiz-1 (RSI+MACD+EMA)</div></div>
-      <div class="card-signals" id="sigs-22"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-22"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-22"></div><div class="card-acc" id="acc-22"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="23">
       <div class="card-top"><div class="card-num">23</div><div class="card-name">Analiz-9 (Trend+MR+OF+Fund)</div></div>
-      <div class="card-signals" id="sigs-23"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-23"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-23"></div><div class="card-acc" id="acc-23"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="24">
       <div class="card-top"><div class="card-num">24</div><div class="card-name">Analiz-10 (A1+A9 Konsensüs)</div></div>
-      <div class="card-signals" id="sigs-24"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-24"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-24"></div><div class="card-acc" id="acc-24"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="25">
       <div class="card-top"><div class="card-num">25</div><div class="card-name">Parabolic SAR + ADX</div></div>
-      <div class="card-signals" id="sigs-25"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-25"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-25"></div><div class="card-acc" id="acc-25"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="26">
       <div class="card-top"><div class="card-num">26</div><div class="card-name">MACD Histogram Diverjansı</div></div>
-      <div class="card-signals" id="sigs-26"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-26"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-26"></div><div class="card-acc" id="acc-26"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="27">
       <div class="card-top"><div class="card-num">27</div><div class="card-name">Stochastic RSI (14) K/D</div></div>
-      <div class="card-signals" id="sigs-27"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-27"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-27"></div><div class="card-acc" id="acc-27"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="28">
       <div class="card-top"><div class="card-num">28</div><div class="card-name">Triple EMA (8-21-55)</div></div>
-      <div class="card-signals" id="sigs-28"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-28"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-28"></div><div class="card-acc" id="acc-28"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="29">
       <div class="card-top"><div class="card-num">29</div><div class="card-name">Hull Moving Average (HMA)</div></div>
-      <div class="card-signals" id="sigs-29"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-29"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-29"></div><div class="card-acc" id="acc-29"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="30">
       <div class="card-top"><div class="card-num">30</div><div class="card-name">Keltner Kanalı (20,2)</div></div>
-      <div class="card-signals" id="sigs-30"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-30"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-30"></div><div class="card-acc" id="acc-30"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="31">
       <div class="card-top"><div class="card-num">31</div><div class="card-name">Donchian Kanalı (20)</div></div>
-      <div class="card-signals" id="sigs-31"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-31"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-31"></div><div class="card-acc" id="acc-31"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="32">
       <div class="card-top"><div class="card-num">32</div><div class="card-name">VWAP + Hacim Profili</div></div>
-      <div class="card-signals" id="sigs-32"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-32"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-32"></div><div class="card-acc" id="acc-32"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="33">
       <div class="card-top"><div class="card-num">33</div><div class="card-name">Money Flow Index (MFI)</div></div>
-      <div class="card-signals" id="sigs-33"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-33"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-33"></div><div class="card-acc" id="acc-33"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="34">
       <div class="card-top"><div class="card-num">34</div><div class="card-name">Random Forest Classifier</div></div>
-      <div class="card-signals" id="sigs-34"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-34"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-34"></div><div class="card-acc" id="acc-34"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="35">
       <div class="card-top"><div class="card-num">35</div><div class="card-name">Markov Zinciri Modeli</div></div>
-      <div class="card-signals" id="sigs-35"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-35"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-35"></div><div class="card-acc" id="acc-35"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="36">
       <div class="card-top"><div class="card-num">36</div><div class="card-name">SuperTrend v2 (7,2.0)</div></div>
-      <div class="card-signals" id="sigs-36"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-36"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-36"></div><div class="card-acc" id="acc-36"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="37">
       <div class="card-top"><div class="card-num">37</div><div class="card-name">Ichimoku Cloud v2 (TK+Bulut)</div></div>
-      <div class="card-signals" id="sigs-37"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-37"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-37"></div><div class="card-acc" id="acc-37"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="38">
       <div class="card-top"><div class="card-num">38</div><div class="card-name">RSI Diverjansı (14) Katı</div></div>
-      <div class="card-signals" id="sigs-38"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-38"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-38"></div><div class="card-acc" id="acc-38"><span class="acc-none pct-none">—</span></div></div>
     </div>
     <div class="card" data-algo="39">
       <div class="card-top"><div class="card-num">39</div><div class="card-name">H1 Profesyonel Kombinasyon</div></div>
-      <div class="card-signals" id="sigs-39"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div><div class="sig-loading sig-pill">XRP</div><div class="sig-loading sig-pill">DOGE</div><div class="sig-loading sig-pill">BNB</div><div class="sig-loading sig-pill">HYPE</div></div>
+      <div class="card-signals" id="sigs-39"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-39"></div><div class="card-acc" id="acc-39"><span class="acc-none pct-none">—</span></div></div>
     </div>
   </div>
@@ -1258,18 +1256,6 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
       <button id="sym-tab-SOL" onclick="setSym('SOL')"
         style="flex:1;min-width:36px;padding:4px 0;border-radius:8px;border:none;cursor:pointer;font-size:10px;font-weight:700;
                background:#1c1c1e;color:#555">SOL</button>
-      <button id="sym-tab-XRP" onclick="setSym('XRP')"
-        style="flex:1;min-width:36px;padding:4px 0;border-radius:8px;border:none;cursor:pointer;font-size:10px;font-weight:700;
-               background:#1c1c1e;color:#555">XRP</button>
-      <button id="sym-tab-DOGE" onclick="setSym('DOGE')"
-        style="flex:1;min-width:36px;padding:4px 0;border-radius:8px;border:none;cursor:pointer;font-size:10px;font-weight:700;
-               background:#1c1c1e;color:#555">DOGE</button>
-      <button id="sym-tab-BNB" onclick="setSym('BNB')"
-        style="flex:1;min-width:36px;padding:4px 0;border-radius:8px;border:none;cursor:pointer;font-size:10px;font-weight:700;
-               background:#1c1c1e;color:#555">BNB</button>
-      <button id="sym-tab-HYPE" onclick="setSym('HYPE')"
-        style="flex:1;min-width:36px;padding:4px 0;border-radius:8px;border:none;cursor:pointer;font-size:10px;font-weight:700;
-               background:#1c1c1e;color:#555">HYPE</button>
     </div>
     <div id="sym-rank-list"><div class="rank-empty">Veri bekleniyor…</div></div>
   </div>
@@ -1280,7 +1266,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
 </div><!-- /app -->
 
 <script>
-const SYMS = ["BTC","ETH","SOL","XRP","DOGE","BNB","HYPE"];
+const SYMS = ["BTC","ETH","SOL"];
 
 function pillClass(sig){
   if(sig==="UP")      return "sig-up";
@@ -1381,7 +1367,7 @@ let _activeSym = "BTC";
 
 function setSym(sym){
   _activeSym = sym;
-  ["BTC","ETH","SOL","XRP","DOGE","BNB","HYPE"].forEach(s => {
+  ["BTC","ETH","SOL"].forEach(s => {
     const btn = document.getElementById("sym-tab-"+s);
     if(!btn) return;
     btn.style.background = s===sym ? "#c8f135" : "#1c1c1e";
@@ -1436,7 +1422,7 @@ const ALGO_NAMES = {
 function renderTopSymAlgos(acc){
   const el = document.getElementById("top-sym-algos");
   if(!el) return;
-  const SYMS = ["BTC","ETH","SOL","XRP","DOGE","BNB","HYPE"];
+  const SYMS = ["BTC","ETH","SOL"];
   const MIN_TRADES = 1;
   const items = [];
 
@@ -1645,6 +1631,17 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
            border-radius:14px; font-size:13px; font-weight:600; opacity:0;
            transition:opacity .3s; pointer-events:none; }
   .toast.show { opacity:1; }
+
+  .dual-toggle-card { border:1.5px solid #2a2a2a; }
+  .dual-toggle-card.active { border-color:#c8f135; background:#151a10; }
+  .dual-toggle-btn { width:100%; border:none; border-radius:14px; padding:16px 20px; font-size:15px;
+                     font-weight:800; cursor:pointer; transition:.2s; margin-top:12px; }
+  .dual-toggle-btn.off { background:#2a2a2a; color:#888; }
+  .dual-toggle-btn.on  { background:#c8f135; color:#111; }
+  .dual-toggle-btn:hover { filter:brightness(1.05); }
+  .dual-status { font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px; }
+  .dual-status.off { background:#291414; color:#f87171; }
+  .dual-status.on  { background:#14291e; color:#4ade80; }
 </style>
 </head>
 <body>
@@ -1666,6 +1663,23 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
 <div class="main">
   <div class="page-title">Ayarlar</div>
   <div class="page-sub">5. Analiz — işlem miktarları anlık güncellenir, bir sonraki saatte devreye girer</div>
+
+  <div class="settings-card dual-toggle-card" id="dual-card">
+    <h3>Çift Mod — A5 + A10</h3>
+    <div class="setting-row" style="border:none;padding-top:0">
+      <div class="setting-left">
+        <div class="setting-label">A5 (:04) + A10 (:05) Onaylı İşlem</div>
+        <div class="setting-desc">
+          Kapalıyken normal mod: A5 tek başına :05'te $6 açar.<br>
+          Açıkken: :04 A5 hazırlık → :05 A10 onayı → ikisi hemfikirse <b>$10</b> PM işlem.
+        </div>
+      </div>
+      <span class="dual-status off" id="dual-status">KAPALI</span>
+    </div>
+    <button type="button" class="dual-toggle-btn off" id="dual-toggle-btn" onclick="toggleDualMode()">
+      Çift Modu Aktif Et
+    </button>
+  </div>
 
   <div class="settings-card">
     <h3>İşlem Miktarları</h3>
@@ -1732,6 +1746,40 @@ async function load() {
   document.getElementById('amount_a5_only').value = d.amount_a5_only;
   document.getElementById('amount_a9_only').value = d.amount_a9_only;
   document.getElementById('eth_multiplier').value = d.eth_multiplier;
+  updateDualUI(!!d.dual_mode_enabled);
+}
+
+function updateDualUI(on) {
+  const card = document.getElementById('dual-card');
+  const btn  = document.getElementById('dual-toggle-btn');
+  const st   = document.getElementById('dual-status');
+  card.classList.toggle('active', on);
+  btn.classList.toggle('on', on);
+  btn.classList.toggle('off', !on);
+  st.classList.toggle('on', on);
+  st.classList.toggle('off', !on);
+  st.textContent = on ? 'AKTİF' : 'KAPALI';
+  btn.textContent = on ? 'Çift Modu Kapat' : 'Çift Modu Aktif Et';
+}
+
+async function toggleDualMode() {
+  const r0 = await fetch('/poly/api/settings');
+  const cur = await r0.json();
+  const next = !cur.dual_mode_enabled;
+  const btn = document.getElementById('dual-toggle-btn');
+  btn.disabled = true;
+  const r = await fetch('/poly/api/settings', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ dual_mode_enabled: next }),
+  });
+  const d = await r.json();
+  btn.disabled = false;
+  if (d.ok) {
+    updateDualUI(!!d.settings.dual_mode_enabled);
+    showToast(next ? '✅ Çift mod AKTİF — A5+A10 onaylı $10' : '⏸ Çift mod kapatıldı — normal $6 mod');
+  } else {
+    showToast('⚠️ Hata oluştu');
+  }
 }
 
 async function save() {
@@ -1840,23 +1888,17 @@ HARITA_HTML = r"""<!DOCTYPE html>
       <button class="hm-filter" onclick="setFilter(this,'BTC')">BTC</button>
       <button class="hm-filter" onclick="setFilter(this,'ETH')">ETH</button>
       <button class="hm-filter" onclick="setFilter(this,'SOL')">SOL</button>
-      <button class="hm-filter" onclick="setFilter(this,'XRP')">XRP</button>
-      <button class="hm-filter" onclick="setFilter(this,'DOGE')">DOGE</button>
-      <button class="hm-filter" onclick="setFilter(this,'BNB')">BNB</button>
-      <button class="hm-filter" onclick="setFilter(this,'HYPE')">HYPE</button>
     </div>
   </div>
   <!-- Analiz sekmeleri -->
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
     <button class="hm-analiz-tab active" onclick="setAnaliz(this,'analiz5')">5. Analiz</button>
-    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz6')">6. Analiz (Sanal)</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz1')">1. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz4')">4. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz2')">2. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz9')">9. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz10')">10. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'karisim1')">11. Analiz</button>
-    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz13')">13. Analiz</button>
   </div>
   <div class="page-sub" id="hm-subtitle">5. Analiz — gün × saat kazanma oranı</div>
 
@@ -1898,7 +1940,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
 const _ANALIZ_LABELS = {
   'analiz5':'5. Analiz','analiz1':'1. Analiz','analiz4':'4. Analiz',
   'analiz2':'2. Analiz','analiz9':'9. Analiz','analiz10':'10. Analiz',
-  'karisim1':'11. Analiz','analiz13':'13. Analiz'
+  'karisim1':'11. Analiz'
 };
 let _data = null, _sym = 'ALL', _analiz = 'analiz5';
 
@@ -2255,11 +2297,32 @@ HTML = r"""<!DOCTYPE html>
 
     /* Mobilde pozisyonlar ana içerik altına gelsin */
     .mobile-positions { display:block; margin-top:16px; }
+
+    /* Çift mod butonu — mobil overview en alt */
+    .mobile-dual-bar {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      position:fixed; bottom:0; left:0; right:0; z-index:100;
+      padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+      background:#111; border-top:1px solid #2a2a2a;
+      box-shadow:0 -8px 24px rgba(0,0,0,.45);
+    }
+    .mobile-dual-bar.active { border-top-color:#3d4d00; background:#12160e; }
+    .mobile-dual-info { flex:1; min-width:0; }
+    .mobile-dual-title { display:block; font-size:13px; font-weight:800; color:#eee; }
+    .mobile-dual-sub { display:block; font-size:11px; color:#666; margin-top:2px; }
+    .mobile-dual-btn {
+      flex-shrink:0; border:none; border-radius:12px; padding:12px 18px;
+      font-size:13px; font-weight:800; cursor:pointer; transition:.2s;
+    }
+    .mobile-dual-btn.off { background:#2a2a2a; color:#aaa; }
+    .mobile-dual-btn.on  { background:#c8f135; color:#111; }
+    .main { padding-bottom:88px; }
   }
   @media (min-width: 769px) {
     .mobile-header { display:none; }
     .main { margin-right:300px; }
     .mobile-positions { display:none; }
+    .mobile-dual-bar { display:none !important; }
   }
 </style>
 </head>
@@ -2348,6 +2411,15 @@ HTML = r"""<!DOCTYPE html>
         <div class="positions" id="positions-mob">
           <div class="empty">Yükleniyor...</div>
         </div>
+      </div>
+
+      <!-- Mobil: çift mod butonu (sabit alt bar) -->
+      <div class="mobile-dual-bar" id="mobile-dual-bar">
+        <div class="mobile-dual-info">
+          <span class="mobile-dual-title">Çift Mod — A5 + A10</span>
+          <span class="mobile-dual-sub" id="mob-dual-sub">Kapalı · normal $6 mod</span>
+        </div>
+        <button type="button" class="mobile-dual-btn off" id="mob-dual-btn" onclick="toggleDualModeMob()">Aktif Et</button>
       </div>
     </div>
 
@@ -2748,6 +2820,52 @@ async function loadTop3(){
 loadTop3();
 setInterval(loadTop3, 60000);
 
+async function loadDualModeMob(){
+  try{
+    const r = await fetch('/poly/api/settings');
+    const d = await r.json();
+    updateDualMobUI(!!d.dual_mode_enabled);
+  }catch(e){ console.error(e); }
+}
+
+function updateDualMobUI(on){
+  const btn = document.getElementById('mob-dual-btn');
+  const sub = document.getElementById('mob-dual-sub');
+  const bar = document.getElementById('mobile-dual-bar');
+  if(!btn) return;
+  btn.classList.toggle('on', on);
+  btn.classList.toggle('off', !on);
+  if(bar) bar.classList.toggle('active', on);
+  btn.textContent = on ? 'Kapat' : 'Aktif Et';
+  sub.textContent = on
+    ? 'Aktif · :04 A5 + :05 A10 onay · $10'
+    : 'Kapalı · normal $6 mod';
+}
+
+async function toggleDualModeMob(){
+  const btn = document.getElementById('mob-dual-btn');
+  const sub = document.getElementById('mob-dual-sub');
+  btn.disabled = true;
+  try{
+    const r0 = await fetch('/poly/api/settings');
+    const cur = await r0.json();
+    const next = !cur.dual_mode_enabled;
+    const r = await fetch('/poly/api/settings', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ dual_mode_enabled: next }),
+    });
+    const d = await r.json();
+    if(d.ok){
+      updateDualMobUI(!!d.settings.dual_mode_enabled);
+      sub.textContent = next ? '✅ Çift mod açıldı' : '⏸ Normal moda dönüldü';
+      setTimeout(loadDualModeMob, 2000);
+    }
+  }catch(e){ console.error(e); }
+  btn.disabled = false;
+}
+
+loadDualModeMob();
+
 refresh();
 setInterval(refresh, 30000);
 window.addEventListener('resize', () => {
@@ -2975,11 +3093,16 @@ _SETTINGS_LABELS = {
 }
 
 def _read_settings() -> dict:
-    defaults = {"amount_agree": 15.0, "amount_a5_only": 8.0, "amount_a9_only": 6.0, "eth_multiplier": 0.7}
+    defaults = {
+        "amount_agree": 15.0, "amount_a5_only": 8.0, "amount_a9_only": 6.0,
+        "eth_multiplier": 0.7, "dual_mode_enabled": False, "dual_mode_amount": 10.0,
+    }
     if os.path.exists(_SETTINGS_FILE):
         with open(_SETTINGS_FILE) as f:
             data = json.load(f)
-        defaults.update({k: data[k] for k in defaults if k in data})
+        for k in defaults:
+            if k in data:
+                defaults[k] = bool(data[k]) if k == "dual_mode_enabled" else data[k]
     return defaults
 
 @app.route("/poly/api/algo_signals")
@@ -2989,7 +3112,19 @@ def api_algo_signals():
     if not os.path.exists(path):
         return jsonify({"error": "no data", "signals": {}, "consensus": {}})
     with open(path) as f:
-        return jsonify(json.load(f))
+        data = json.load(f)
+    # Pasif coinler — eski cache'ten gelen veriyi temizle
+    for sym in _DISABLED_SYMS:
+        if isinstance(data.get("consensus"), dict):
+            data["consensus"].pop(sym, None)
+    for entry in (data.get("signals") or {}).values():
+        if isinstance(entry, dict):
+            for sym in _DISABLED_SYMS:
+                entry.pop(sym, None)
+            entry.pop("HYPE", None)
+    if isinstance(data.get("consensus"), dict):
+        data["consensus"].pop("HYPE", None)
+    return jsonify(data)
 
 @app.route("/poly/api/algo_accuracy")
 def api_algo_accuracy():
@@ -3010,6 +3145,8 @@ def api_settings_post():
     if _auth_required(): return jsonify({"ok": False}), 401
     body = request.get_json(force=True)
     current = _read_settings()
+    if "dual_mode_enabled" in body:
+        current["dual_mode_enabled"] = bool(body["dual_mode_enabled"])
     for k in _SETTINGS_LABELS:
         if k in body:
             try:

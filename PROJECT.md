@@ -10,7 +10,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BistAnaliz/BistYapayAnaliz/` | `bist_signal_hunter.py` — 15m/1h güçlü AL; geçmiş: `bist_signal_hunter_history.json`. |
 | `BistAnaliz/yuzdeBist.py` | BIST 5dk güven tarayıcı — RSI/EMA/MACD/Momentum/Hacim skorlaması (maks 100), sinyal ≥ %50 tetikler; Telegram entegrasyonu hazır (TODO). |
 | `polyManuel/` | `sol_bot.py` — SOL/USDT 1m Binance verisiyle 5dk tahmin botu; RSI/EMA/MACD/Momentum analizi, Telegram bildirimi. |
-| `temmuzPoly/` | Polymarket trader sistemleri. `analiz5` (1h gerçek), `5M 101/102/103` (sanal), `5M 201/202` (5dk gerçek), `poly_trader_5m_real_stats.py` (201+202 birleşik özet), `pm_balance_guard.py` (PM bakiye <$150 ise işlem açmaz). |
+| `temmuzPoly/` | Polymarket trader sistemleri. Aktif coinler: BTC, ETH, SOL (XRP/DOGE/BNB/HYPE pasif). `analiz5` (1h gerçek, BTC+SOL), `analiz10` (sanal, BTC+SOL), `analiz9` pasif, `analiz12`/`analiz13` silindi, `5M 101-104` sanal, `5M 201/202` pasif. PM min bakiye: $120. |
 
 **Test:** `python3 BistAnaliz/BistHourSinyal/bist_visual_v2.py --test` — örnek BIST Analiz metni.  
 `python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py --test` — örnek GÜÇLÜ AL metni (tarama/seans yok).

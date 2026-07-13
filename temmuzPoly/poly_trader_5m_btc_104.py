@@ -1,18 +1,14 @@
 """
-5M BTC TRADER — 4 Algoritma Konsensüs (Sanal)
+5M 104 BTC TRADER — Stochastic RSI K/D (Sanal)
 ==============================================
-A1, A4, A9, A10 analizlerinin 5 dakikalık BTC versiyonu.
-1h analizleriyle tamamen ayrı çalışır, onlara dokunmaz.
+Stochastic RSI (14, 3, 3) K/D crossover — tek algoritma.
 
-4 algoritma oyu:
-  1. RSI + MACD + EMA  (A1 motoru — 5m klines)
-  2. Trend Following   (A4/A9 — EMA20/50 crossover)
-  3. Mean Reversion    (A4/A9 — RSI + Bollinger Bands)
-  4. Orderflow         (A4/A9 — CVD + Order Book imbalance)
+Sinyal:
+  Oversold + K>D cross  → UP
+  Overbought + K<D cross → DOWN
+  Aksi halde → işlem yok
 
-Konsensüs:
-  4/4 → $15    3/4 → $10    2/4 → $7    ≤1/4 → işlem yok
-
+Miktar: $10 sabit (sinyal varsa)
 Market: btc-updown-5m-{unix_timestamp}
 Bütçe:  $500 sanal
 Cron:   */5 * * * *
@@ -49,15 +45,13 @@ CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE   = os.path.join(_DIR, "poly_trader_15m_btc_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_15m_btc_history.json")
-WEEKLY_IMG   = "/tmp/poly_5m_btc_weekly.png"
+STATE_FILE   = os.path.join(_DIR, "poly_trader_5m_btc_104_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_btc_104_history.json")
+WEEKLY_IMG   = "/tmp/poly_5m_btc_104_weekly.png"
 
 SYMBOL           = "BTCUSDT"
 INITIAL_BALANCE  = 500.0
-AMOUNT_4         = 16.0   # 4/4 oylama
-AMOUNT_3         = 12.0   # 3/4 oylama
-AMOUNT_2         =  8.0   # 2/4 oylama
+AMOUNT_SIGNAL    = 10.0   # Stoch RSI sinyali varsa sabit
 _PERIOD_SECS     = 300    # 5 dakika = 300 saniye
 _DAYS_TR         = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -68,7 +62,7 @@ _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_DRY_RUN   = True   # Sanal: gerçek işlem açmaz
 
-LABEL = "5M 101 BTC"
+LABEL = "5M 104 BTC"
 
 
 # ── State & History ───────────────────────────────────────────
@@ -206,141 +200,91 @@ def _rsi(closes: list[float], period: int = 14) -> float:
     return 100 - 100 / (1 + ag / al)
 
 
-def _bollinger(closes: list[float], period: int = 20) -> tuple[float, float, float]:
-    w   = closes[-period:] if len(closes) >= period else closes
-    mid = sum(w) / len(w)
-    std = math.sqrt(sum((x - mid) ** 2 for x in w) / len(w))
-    return mid + 2 * std, mid, mid - 2 * std
+def _stoch_rsi(closes: list[float], period: int = 14, k_period: int = 3, d_period: int = 3):
+    """Stochastic RSI — K ve D çizgilerini döndür."""
+    if len(closes) < period * 2:
+        return 50.0, 50.0
+    rsi_vals = []
+    for i in range(period, len(closes)):
+        rsi_vals.append(_rsi(closes[:i + 1], period))
+    if not rsi_vals:
+        return 50.0, 50.0
+    k_raw = []
+    for i in range(period - 1, len(rsi_vals)):
+        window = rsi_vals[i - period + 1: i + 1]
+        lo = min(window); hi = max(window)
+        k_raw.append((rsi_vals[i] - lo) / (hi - lo) * 100 if hi != lo else 50.0)
+    if not k_raw:
+        return 50.0, 50.0
+    k_smooth = _ema(k_raw, k_period)
+    d_smooth = _ema(k_smooth, d_period)
+    return k_smooth[-1], d_smooth[-1]
 
 
-def _macd(closes: list[float]) -> tuple[float, float]:
-    if len(closes) < 26:
-        return 0.0, 0.0
-    ema12 = _ema(closes, 12)
-    ema26 = _ema(closes, 26)
-    macd_line = [a - b for a, b in zip(ema12, ema26)]
-    signal    = _ema(macd_line[-9:], 9) if len(macd_line) >= 9 else [macd_line[-1]]
-    return macd_line[-1], signal[-1]
+# ── Stochastic RSI K/D (14, 3, 3) ───────────────────────────
 
-
-# ── 4 Algoritma (A1 + A4/A9 mirası) ─────────────────────────
-
-def algo_a1_rsi_macd_ema(klines: list[dict]) -> tuple[int, str]:
-    """A1 mirası: RSI + MACD + EMA trend."""
+def algo_stoch_rsi_kd(klines: list[dict]) -> tuple[int, str, float, float]:
+    """Stochastic RSI K/D crossover — aşırı alım/satım bölgesinde sinyal."""
     closes = [k["close"] for k in klines]
-    rsi    = _rsi(closes, 14)
-    macd_v, signal_v = _macd(closes)
-    e20 = _ema(closes, 20)
-    e50 = _ema(closes, 50) if len(closes) >= 50 else e20
+    k_val, d_val = _stoch_rsi(closes, 14, 3, 3)
 
-    rsi_v  = +1 if rsi < 40 else -1 if rsi > 60 else 0
-    macd_v2 = +1 if macd_v > signal_v else -1 if macd_v < signal_v else 0
-    ema_v  = +1 if e20[-1] > e50[-1] else -1
+    oversold   = k_val < 25 and d_val < 25
+    overbought = k_val > 75 and d_val > 75
+    k_above_d  = k_val > d_val
 
-    score = rsi_v + macd_v2 + ema_v
-    vote  = +1 if score >= 2 else -1 if score <= -2 else 0
-    arr   = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    return vote, f"A1 {arr}  RSI:{rsi:.0f}  MACD:{'↑' if macd_v2>0 else '↓' if macd_v2<0 else '→'}  EMA:{'↑' if ema_v>0 else '↓'}"
-
-
-def algo_trend(klines: list[dict]) -> tuple[int, str]:
-    """A4/A9 mirası: EMA20/50 crossover + slope."""
-    closes = [k["close"] for k in klines]
-    e20    = _ema(closes, 20)
-    e50    = _ema(closes, 50) if len(closes) >= 50 else _ema(closes, 20)
-    cross  = e20[-1] - e50[-1]
-    slope  = e20[-1] - e20[-4] if len(e20) >= 4 else 0
-    pct    = cross / closes[-1] * 100
-
-    if cross > 0 and slope > 0:
-        return +1, f"Trend ↑  E20>E50 ({pct:+.2f}%)"
-    elif cross < 0 and slope < 0:
-        return -1, f"Trend ↓  E20<E50 ({pct:+.2f}%)"
+    if oversold and k_above_d:
+        vote = +1
+    elif overbought and not k_above_d:
+        vote = -1
     else:
-        return  0, f"Trend →  karışık ({pct:+.2f}%)"
+        vote = 0
+
+    arr = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    zone = "oversold" if oversold else "overbought" if overbought else "nötr"
+    lbl = f"StochRSI {arr}  K:{k_val:.0f}  D:{d_val:.0f}  ({zone})"
+    return vote, lbl, k_val, d_val
 
 
-def algo_mr(klines: list[dict]) -> tuple[int, str]:
-    """A4/A9 mirası: RSI + Bollinger Bands (Mean Reversion)."""
-    closes       = [k["close"] for k in klines]
-    rsi          = _rsi(closes, 14)
-    upper, _, lower = _bollinger(closes, 20)
-    price        = closes[-1]
-
-    rsi_v = +1 if rsi <= 35 else -1 if rsi >= 65 else 0
-    bb_v  = +1 if price <= lower else -1 if price >= upper else 0
-
-    vote   = max(-1, min(1, rsi_v + bb_v))
-    arr    = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    bb_lbl = "alt" if price <= lower else "üst" if price >= upper else "orta"
-    return vote, f"MR {arr}  RSI:{rsi:.0f}  BB:{bb_lbl}"
-
-
-def algo_orderflow(klines: list[dict], ob: dict) -> tuple[int, str]:
-    """A4/A9 mirası: CVD + Order Book imbalance."""
-    window    = klines[-20:]
-    cvd_delta = sum(k["volume"] if k["close"] >= k["open"] else -k["volume"] for k in window)
-    total_vol = sum(k["volume"] for k in window) or 1
-    cvd_r     = cvd_delta / total_vol
-
-    bids  = sum(float(b[1]) for b in ob.get("bids", [])[:10])
-    asks  = sum(float(a[1]) for a in ob.get("asks", [])[:10])
-    ob_r  = (bids - asks) / (bids + asks) if (bids + asks) else 0
-
-    cvd_v = +1 if cvd_r > 0.05 else -1 if cvd_r < -0.05 else 0
-    ob_v  = +1 if ob_r  > 0.10 else -1 if ob_r  < -0.10 else 0
-
-    vote  = cvd_v if cvd_v == ob_v else (cvd_v or ob_v)
-    arr   = "↑" if vote > 0 else "↓" if vote < 0 else "→"
-    return vote, f"OF {arr}  CVD:{cvd_r:+.2f}  OB:{ob_r:+.2f}"
-
-
-# ── Tam Analiz ────────────────────────────────────────────────
+# ── Analiz ────────────────────────────────────────────────────
 def analyze() -> dict | None:
+    """5M 104: Stoch RSI K/D sinyali varsa işlem aç."""
     try:
-        klines  = fetch_klines_5m(SYMBOL, 150)
-        ob      = fetch_orderbook(SYMBOL)
+        klines = fetch_klines_5m(SYMBOL, 150)
     except Exception as e:
         print(f"[{LABEL}] Veri hatası: {e}", file=sys.stderr)
         return None
 
-    v1, l1 = algo_a1_rsi_macd_ema(klines)
-    v2, l2 = algo_trend(klines)
-    v3, l3 = algo_mr(klines)
-    v4, l4 = algo_orderflow(klines, ob)
+    entry_price = klines[-1]["open"]   # PM price-to-beat
+    vote, label, k_val, d_val = algo_stoch_rsi_kd(klines)
 
-    up_votes   = sum(1 for v in [v1, v2, v3, v4] if v > 0)
-    down_votes = sum(1 for v in [v1, v2, v3, v4] if v < 0)
-
-    if up_votes > down_votes:
+    if vote > 0:
         direction = "UP"
-        consensus = up_votes
-    elif down_votes > up_votes:
+    elif vote < 0:
         direction = "DOWN"
-        consensus = down_votes
     else:
         direction = None
-        consensus = 0
 
-    if consensus < 2:
+    if direction:
         return {
-            "direction": None, "consensus": consensus,
-            "votes": [v1, v2, v3, v4], "labels": [l1, l2, l3, l4],
-            "entry_price": klines[-1]["open"],   # PM price-to-beat: periyot açılışı
-            "amount": 0.0,
+            "direction":   direction,
+            "consensus":   1,
+            "vote":        vote,
+            "label":       label,
+            "k_val":       k_val,
+            "d_val":       d_val,
+            "entry_price": entry_price,
+            "amount":      AMOUNT_SIGNAL,
         }
 
-    amount = (AMOUNT_4 if consensus == 4
-              else AMOUNT_3 if consensus == 3
-              else AMOUNT_2)
-
     return {
-        "direction":   direction,
-        "consensus":   consensus,
-        "votes":       [v1, v2, v3, v4],
-        "labels":      [l1, l2, l3, l4],
-        "entry_price": klines[-1]["open"],   # PM price-to-beat
-        "amount":      amount,
+        "direction":   None,
+        "consensus":   0,
+        "vote":        vote,
+        "label":       label,
+        "k_val":       k_val,
+        "d_val":       d_val,
+        "entry_price": entry_price,
+        "amount":      0.0,
     }
 
 
@@ -474,11 +418,10 @@ def run() -> None:
                 continue
             entry  = pos["entry_price"]
             pred   = pos["predicted_dir"]
-            amount = pos.get("amount", AMOUNT_2)
+            amount = pos.get("amount", AMOUNT_SIGNAL)
             to_win = pos.get("to_win", amount * 2)
 
-            # PM ile aynı: periyot kapanışı vs periyot açılışı (price to beat)
-            ref_open = klines[-2]["open"]
+            ref_open = prev_open if prev_open is not None else entry
             actual = "UP" if prev_close >= ref_open else "DOWN"
             win    = (pred == actual)
 
@@ -507,7 +450,8 @@ def run() -> None:
                 "entry_dow":        pos.get("entry_dow"),
                 "exit_time_tr":     now_tr.isoformat(),
                 "consensus":        pos.get("consensus"),
-                "votes":            pos.get("votes"),
+                "vote":             pos.get("vote"),
+                "label":            pos.get("label"),
                 "pm_slug":          pos.get("pm_slug"),
                 "pm_dry_run":       _PM_DRY_RUN,
             })
@@ -544,8 +488,6 @@ def run() -> None:
 
     # ── 2. AÇ: Yeni 15m pozisyonu ──────────────────────────────
     result = analyze()
-    from pm_signal_sync import save_signal
-    save_signal("101", ts_5m, result)
     if result is None:
         tg_send(f"⚠️ <b>{LABEL}</b> — {saat} veri alınamadı")
         return
@@ -553,8 +495,10 @@ def run() -> None:
     direction = result["direction"]
     consensus = result["consensus"]
     amount    = result["amount"]
-    labels    = result["labels"]
-    votes     = result["votes"]
+    label     = result.get("label", "")
+    k_val     = result.get("k_val", 0)
+    d_val     = result.get("d_val", 0)
+    vote      = result.get("vote", 0)
     entry_p   = result["entry_price"]
     next_time = now_tr + timedelta(minutes=5)
     next_saat = next_time.strftime("%H:%M")
@@ -569,12 +513,12 @@ def run() -> None:
         msg = (
             f"{sep}\n"
             f"⏸ <b>{LABEL} — {saat} İST</b>\n"
-            f"Konsensüs yok ({consensus}/4) → işlem açılmadı\n"
+            f"Sinyal yok → işlem açılmadı\n"
             f"💰 Bakiye: ${state['balance']:.2f}\n"
             f"{sep}"
         )
         tg_send(msg)
-        print(f"[{LABEL}] {saat} — konsensüs yok ({consensus}/4)")
+        print(f"[{LABEL}] {saat} — sinyal yok (K:{k_val:.0f} D:{d_val:.0f})")
         return
 
     # Market bul + TO WIN hesapla
@@ -608,7 +552,10 @@ def run() -> None:
         "to_win":           to_win,
         "token_price":      token_price,
         "consensus":        consensus,
-        "votes":            votes,
+        "vote":             vote,
+        "label":            label,
+        "k_val":            k_val,
+        "d_val":            d_val,
         "entry_time_tr":    now_tr.isoformat(),
         "entry_period_min": period_min,
         "entry_dow":        dow,
@@ -618,28 +565,24 @@ def run() -> None:
     save_state(state)
 
     # Bildirim
-    dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
-    dir_icon = "📈" if direction == "UP" else "📉"
-    names    = ["A1", "Trend", "MR", "OF"]
-    vote_str = "  ".join(
-        f"{'🟢' if v > 0 else '🔴' if v < 0 else '⚪'} {names[i]}"
-        for i, v in enumerate(votes)
-    )
+    dir_tr    = "YÜKSELİR" if direction == "UP" else "DÜŞER"
+    dir_icon  = "📈" if direction == "UP" else "📉"
+    sig_icon  = "🟢" if vote > 0 else "🔴"
     price_str = f"@{token_price:.2f}" if token_price else ""
     dry_str   = "  🔶 SANAL" if _PM_DRY_RUN else ""
 
     msg = (
         f"{sep}\n"
         f"🆕 <b>{LABEL} — {saat} → {next_saat}</b>{dry_str}\n"
-        f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/4)  💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
+        f"{dir_icon} <b>BTC {dir_tr}</b>  StochRSI K/D  💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
         f"Giriş: {entry_p:,.2f} USDT\n"
-        f"{vote_str}\n"
+        f"  {sig_icon} {label}\n"
         f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
         f"💰 Bakiye: ${state['balance']:.2f}  |  🔴 ${amount:.0f} riskte\n"
         f"{sep}"
     )
     tg_send(msg)
-    print(f"[{LABEL}] {saat} — {dir_tr} {consensus}/4  ${amount:.0f}→${to_win:.2f}  entry:{entry_p:,.2f}")
+    print(f"[{LABEL}] {saat} — {dir_tr} StochRSI  ${amount:.0f}→${to_win:.2f}  entry:{entry_p:,.2f}")
 
 
 # ── WEEKLY ─────────────────────────────────────────────────────
@@ -763,14 +706,12 @@ def run_stats() -> None:
             bar = "🟢" if w/n >= 0.6 else "🟡" if w/n >= 0.5 else "🔴"
             parts.append(f"  {bar} {_DAYS_TR[d]}  {_wr(w, n)}")
 
-        # Konsensüs başarısı
-        parts.append(f"\n🎯 <b>Konsensüs Bazlı</b>")
-        for c in [2, 3, 4]:
-            c_hist = [t for t in history if t.get("consensus") == c]
-            if c_hist:
-                cw = sum(1 for t in c_hist if t["win"])
-                bar = "🟢" if cw/len(c_hist) >= 0.6 else "🟡" if cw/len(c_hist) >= 0.5 else "🔴"
-                parts.append(f"  {bar} {c}/4 konsensüs: {_wr(cw, len(c_hist))}")
+        # Stoch RSI sinyal başarısı
+        sig_hist = [t for t in history if t.get("consensus") == 1]
+        if sig_hist:
+            sw = sum(1 for t in sig_hist if t["win"])
+            bar = "🟢" if sw/len(sig_hist) >= 0.6 else "🟡" if sw/len(sig_hist) >= 0.5 else "🔴"
+            parts.append(f"\n🎯 <b>Stoch RSI K/D</b>: {bar} {_wr(sw, len(sig_hist))}")
 
     tg_send("\n".join(parts))
     print(f"[{LABEL}] stats gönderildi")

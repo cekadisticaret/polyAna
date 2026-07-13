@@ -6,8 +6,7 @@ Her :05'te cron ile çalışır, /tmp/algo_signals.json'a kaydeder
 """
 import json, requests, datetime, math, os
 
-SYMBOLS       = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT",
-                 "XRP": "XRPUSDT", "DOGE": "DOGEUSDT", "BNB": "BNBUSDT", "HYPE": "HYPEUSDT"}
+SYMBOLS       = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}
 FUTURES       = "https://fapi.binance.com"
 OUT_FILE      = "/tmp/algo_signals.json"
 PREV_FILE     = "/tmp/algo_signals_prev.json"

@@ -44,7 +44,7 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Config ────────────────────────────────────────────────────
-BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
+BOT_TOKEN = "8799859033:AAHjOkEDP7W5sk97lFknakMokgoKBf62Ssg"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
@@ -68,6 +68,7 @@ _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_DRY_RUN   = False  # GERÇEK: Polymarket işlem açar
+_PM_TRADING_ENABLED = os.getenv("PM_5M_REAL_ENABLED", "true").lower() in ("1", "true", "yes")
 
 LABEL = "5M 202 BTC"
 
@@ -316,7 +317,7 @@ def analyze() -> dict | None:
         print(f"[{LABEL}] Veri hatası: {e}", file=sys.stderr)
         return None
 
-    entry_price = klines[-2]["close"]
+    entry_price = klines[-1]["open"]   # PM price-to-beat
 
     # ── A1: RSI + MACD + EMA (3 oy) ──────────────────────────
     va1, la1 = algo_a1_rsi_macd_ema(klines)
@@ -428,39 +429,23 @@ def _pm_get_client():
     raise RuntimeError("Polymarket client oluşturulamadı")
 
 
-def _pm_fit_buy(size: float, price: float, min_shares: float = 5.0) -> tuple[float, float]:
-    """CLOB BUY: size×price tam sent olacak şekilde size ayarla."""
-    from decimal import Decimal, ROUND_DOWN
-    p = Decimal(str(round(price, 2)))
-    if p <= 0:
-        return size, price
-    s = max(Decimal(str(round(size, 2))), Decimal(str(round(min_shares, 2))))
-    step = Decimal("0.01")
-    for _ in range(10000):
-        cents = s * p * 100
-        if cents == cents.quantize(Decimal("1"), rounding=ROUND_DOWN):
-            return float(s), float(p)
-        s += step
-    return float(s), float(p)
-
-
 def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
                     neg_risk: bool = False, _retry: bool = True) -> dict | None:
+    """FAK market buy — USD tutarı doğrudan gönderilir (decimal hatası önlenir)."""
     try:
-        from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
+        from py_clob_client_v2 import MarketOrderArgs, OrderType, PartialCreateOrderOptions
         from py_clob_client_v2.order_builder.constants import BUY
         from decimal import Decimal, ROUND_DOWN
         client = _pm_get_client()
-        price  = float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
-        price  = max(0.02, min(0.98, round(price, 2)))
-        raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
-        size, price = _pm_fit_buy(max(5.0, raw_sz), price)
-        spent  = round(size * price, 2)
+        amount_usd = float(Decimal(str(amount_usd)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
         if _PM_DRY_RUN:
-            print(f"[DRY RUN] {token_id[:16]}… {size} shares @ {price:.2f} (~${spent:.2f})")
-            return {"order_id": "DRY_RUN", "size": size, "price": price, "spent": spent}
-        args   = OrderArgs(token_id=token_id, price=price, size=size, side=BUY)
-        signed = client.create_order(args, PartialCreateOrderOptions())
+            price = float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
+            price = max(0.02, min(0.98, round(price, 2)))
+            est = round(amount_usd / price, 2) if price else amount_usd
+            print(f"[DRY RUN] {token_id[:16]}… ${amount_usd:.2f} @ ~{price:.2f} (~{est} shares)")
+            return {"order_id": "DRY_RUN", "size": est, "price": price, "spent": amount_usd}
+        args   = MarketOrderArgs(token_id=token_id, amount=amount_usd, side=BUY, order_type=OrderType.FAK)
+        signed = client.create_market_order(args, PartialCreateOrderOptions(neg_risk=neg_risk))
         resp   = client.post_order(signed, order_type=OrderType.FAK)
         if not resp or not resp.get("success"):
             print(f"[{LABEL}] Order başarısız: {resp}", file=sys.stderr)
@@ -468,10 +453,16 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
                 time.sleep(10)
                 return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
             return None
-        oid = resp.get("orderID") or resp.get("id", "")
+        oid   = resp.get("orderID") or resp.get("id", "")
+        spent = float(resp.get("makingAmount") or int(signed.makerAmount) / 1e6)
+        size  = float(resp.get("takingAmount") or int(signed.takerAmount) / 1e6)
+        price = round(spent / size, 4) if size else 0.0
         return {"order_id": oid, "size": size, "price": price, "spent": spent}
     except Exception as e:
         print(f"[{LABEL}] Order hatası: {e}", file=sys.stderr)
+        if _retry:
+            time.sleep(10)
+            return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
         return None
 
 
@@ -543,7 +534,8 @@ def run() -> None:
             if win is None:
                 if prev_close is None:
                     continue
-                actual = "UP" if prev_close >= entry else "DOWN"
+                ref_open = prev_open if prev_open is not None else entry
+                actual = "UP" if prev_close >= ref_open else "DOWN"
                 win    = (pred == actual)
                 pm_pnl = round(to_win - amount, 2) if win else -amount
 
@@ -573,10 +565,11 @@ def run() -> None:
             })
 
             icon   = "✅" if win else "❌"
-            pct    = (prev_close - entry) / entry * 100 if prev_close else 0
             dir_tr = "YÜKSELİR" if pred == "UP" else "DÜŞER"
+            ref_open = prev_open if prev_open is not None else entry
+            pct    = (prev_close - ref_open) / ref_open * 100 if prev_close else 0
             closed_lines.append(
-                f"{icon} BTC {dir_tr}  {entry:,.0f}→{prev_close:,.0f} ({pct:+.1f}%)"
+                f"{icon} BTC {dir_tr}  {ref_open:,.0f}→{prev_close:,.0f} ({pct:+.1f}%)"
                 f"  {'kazandı +$'+f'{to_win:.2f}' if win else 'kaybetti -$'+f'{amount:.0f}'}"
                 f"{pm_note}"
             )
@@ -603,14 +596,23 @@ def run() -> None:
         print(f"[{LABEL}] {saat} — {len(closed_lines)} pozisyon kapatıldı")
 
     # ── 2. AÇ: Yeni 5m pozisyonu ──────────────────────────────
+    if not _PM_TRADING_ENABLED:
+        print(f"[{LABEL}] PM işlem açma pasif (PM_5M_REAL_ENABLED=false)")
+        return
+
     from pm_balance_guard import can_open_trade
     if not can_open_trade(LABEL, tg_send):
         return
 
-    result = analyze()
+    from pm_signal_sync import load_signal
+    result = load_signal("102", ts_5m)
     if result is None:
-        tg_send(f"⚠️ <b>{LABEL}</b> — {saat} veri alınamadı")
+        tg_send(f"⚠️ <b>{LABEL}</b> — 102 sinyali bulunamadı, {saat}")
+        print(f"[{LABEL}] {saat} — 102 sync sinyali yok", file=sys.stderr)
         return
+    if result.get("direction"):
+        result = dict(result)
+        result["amount"] = AMOUNT_AGREE
 
     direction = result["direction"]
     consensus = result["consensus"]
@@ -628,27 +630,14 @@ def run() -> None:
     sep = "━" * 26
 
     if direction is None:
-        # Sinyal yok — A1 ve A9 ayrı düşünüyor
-        a1_dir = result.get("a1_dir"); a9_dir = result.get("a9_dir")
-        a9_score = result.get("a9_score", 0)
-        names = ["A1", "Trend", "MR", "OF", "Fund"]
-        lines_out = []
-        for i, (v, l) in enumerate(zip(votes, labels)):
-            icon = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
-            lines_out.append(f"  {icon} {names[i]}: {l}")
-        a1_str = f"A1={'↑' if a1_dir=='UP' else '↓' if a1_dir=='DOWN' else '→'}"
-        a9_str = f"A9={'↑' if a9_dir=='UP' else '↓' if a9_dir=='DOWN' else '→'}({a9_score:+d}/4)"
-        reason = "Ters yön" if (a1_dir and a9_dir and a1_dir != a9_dir) else "Yetersiz güç"
         msg = (
             f"{sep}\n"
             f"⏸ <b>{LABEL} — {saat} İST</b>\n"
-            f"{reason}: {a1_str}  {a9_str} → işlem açılmadı\n"
-            + "\n".join(lines_out) + "\n"
-            f"💰 Bakiye: ${state['balance']:.2f}\n"
+            f"Konsensüs yok → işlem açılmadı\n"
             f"{sep}"
         )
         tg_send(msg)
-        print(f"[{LABEL}] {saat} — konsensüs yok (A1:{a1_dir} A9:{a9_dir})")
+        print(f"[{LABEL}] {saat} — konsensüs yok")
         return
 
     # Market bul + TO WIN hesapla

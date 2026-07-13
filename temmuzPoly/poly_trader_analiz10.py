@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
 
 # ── Config ────────────────────────────────────────────────────
-BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
+BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
@@ -44,7 +44,7 @@ INITIAL_BALANCE = 300.0
 AMOUNT_STRONG   = 30.0   # her ikisi de güçlü sinyal
 AMOUNT_MODERATE = 20.0   # biri güçlü diğeri orta veya ikisi orta
 
-SYMBOLS   = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]
+SYMBOLS   = ["BTCUSDT", "SOLUSDT"]  # ETH/XRP/DOGE/BNB pasif
 _DAYS_TR  = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 IND_NAMES = ["PolyPred", "Trend", "MR", "OF"]
 

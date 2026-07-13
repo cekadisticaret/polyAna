@@ -468,7 +468,7 @@ def analyze() -> dict | None:
         direction = None
         consensus = 0
 
-    entry_price = klines[-2]["close"]
+    entry_price = klines[-1]["open"]   # PM price-to-beat
 
     if consensus < 3:
         return {
@@ -625,8 +625,9 @@ def run() -> None:
             amount = pos.get("amount", AMOUNT_2)
             to_win = pos.get("to_win", amount * 2)
 
-            # Polymarket ile aynı mantık: kapanış fiyatı giriş fiyatının üstünde mi?
-            actual = "UP" if prev_close >= entry else "DOWN"
+            # PM ile aynı: periyot kapanışı vs periyot açılışı
+            ref_open = prev_open if prev_open is not None else entry
+            actual = "UP" if prev_close >= ref_open else "DOWN"
             win    = (pred == actual)
 
             # Açılışta amount düşülmüştü → kazanınca to_win eklenir, kaybedince sıfır
@@ -660,11 +661,11 @@ def run() -> None:
             })
 
             icon    = "✅" if win else "❌"
-            pct     = (prev_close - entry) / entry * 100
+            pct     = (prev_close - ref_open) / ref_open * 100
             pnl_str = f"+${pnl:.2f}" if win else f"-${amount:.0f}"
             dir_tr  = "YÜKSELİR" if pred == "UP" else "DÜŞER"
             closed_lines.append(
-                f"{icon} BTC {dir_tr}  {entry:,.0f}→{prev_close:,.0f} ({pct:+.1f}%)"
+                f"{icon} BTC {dir_tr}  {ref_open:,.0f}→{prev_close:,.0f} ({pct:+.1f}%)"
                 f"  {'kazandı +$'+f'{to_win:.2f}' if win else 'kaybetti -$'+f'{amount:.0f}'}"
             )
 
@@ -711,17 +712,10 @@ def run() -> None:
     sep = "━" * 26
 
     if direction is None:
-        # Sinyal yok
-        lines_out = []
-        for i, (v, l) in enumerate(zip(votes, labels)):
-            names = ["HMA", "MACD-H", "ST-v2", "StochRSI", "ATR-BO"]
-            icon  = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
-            lines_out.append(f"  {icon} {names[i]}: {l}")
         msg = (
             f"{sep}\n"
             f"⏸ <b>{LABEL} — {saat} İST</b>\n"
             f"Konsensüs yok ({consensus}/5) → işlem açılmadı\n"
-            + "\n".join(lines_out) + "\n"
             f"💰 Bakiye: ${state['balance']:.2f}\n"
             f"{sep}"
         )

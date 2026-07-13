@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 
-BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
+BOT_TOKEN = "8799859033:AAHjOkEDP7W5sk97lFknakMokgoKBf62Ssg"
 CHAT_ID   = "830754964"
 
 SYSTEMS = [

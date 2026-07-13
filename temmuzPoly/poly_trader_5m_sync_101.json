@@ -1,0 +1,22 @@
+{
+  "ts_5m": 1783921200,
+  "saved_at_tr": "2026-07-13T08:40:03.317152+03:00",
+  "result": {
+    "direction": null,
+    "consensus": 0,
+    "votes": [
+      0,
+      -1,
+      0,
+      1
+    ],
+    "labels": [
+      "A1 →  RSI:43  MACD:↑  EMA:↓",
+      "Trend ↓  E20<E50 (-0.39%)",
+      "MR →  RSI:43  BB:orta",
+      "OF ↑  CVD:+0.25  OB:-0.74"
+    ],
+    "entry_price": 62730.0,
+    "amount": 0.0
+  }
+}

@@ -316,7 +316,7 @@ def analyze() -> dict | None:
         print(f"[{LABEL}] Veri hatası: {e}", file=sys.stderr)
         return None
 
-    entry_price = klines[-2]["close"]
+    entry_price = klines[-1]["open"]   # PM price-to-beat
 
     # ── A1: RSI + MACD + EMA (3 oy) ──────────────────────────
     va1, la1 = algo_a1_rsi_macd_ema(klines)
@@ -496,8 +496,8 @@ def run() -> None:
             amount = pos.get("amount", AMOUNT_2)
             to_win = pos.get("to_win", amount * 2)
 
-            # Polymarket ile aynı mantık: kapanış fiyatı giriş fiyatının üstünde mi?
-            actual = "UP" if prev_close >= entry else "DOWN"
+            ref_open = klines[-2]["open"]
+            actual = "UP" if prev_close >= ref_open else "DOWN"
             win    = (pred == actual)
 
             # Açılışta amount düşülmüştü → kazanınca to_win eklenir, kaybedince sıfır
@@ -531,11 +531,11 @@ def run() -> None:
             })
 
             icon    = "✅" if win else "❌"
-            pct     = (prev_close - entry) / entry * 100
+            pct     = (prev_close - ref_open) / ref_open * 100
             pnl_str = f"+${pnl:.2f}" if win else f"-${amount:.0f}"
             dir_tr  = "YÜKSELİR" if pred == "UP" else "DÜŞER"
             closed_lines.append(
-                f"{icon} BTC {dir_tr}  {entry:,.0f}→{prev_close:,.0f} ({pct:+.1f}%)"
+                f"{icon} BTC {dir_tr}  {ref_open:,.0f}→{prev_close:,.0f} ({pct:+.1f}%)"
                 f"  {'kazandı +$'+f'{to_win:.2f}' if win else 'kaybetti -$'+f'{amount:.0f}'}"
             )
 
@@ -562,6 +562,8 @@ def run() -> None:
 
     # ── 2. AÇ: Yeni 15m pozisyonu ──────────────────────────────
     result = analyze()
+    from pm_signal_sync import save_signal
+    save_signal("102", ts_5m, result)
     if result is None:
         tg_send(f"⚠️ <b>{LABEL}</b> — {saat} veri alınamadı")
         return
@@ -582,27 +584,15 @@ def run() -> None:
     sep = "━" * 26
 
     if direction is None:
-        # Sinyal yok — A1 ve A9 ayrı düşünüyor
-        a1_dir = result.get("a1_dir"); a9_dir = result.get("a9_dir")
-        a9_score = result.get("a9_score", 0)
-        names = ["A1", "Trend", "MR", "OF", "Fund"]
-        lines_out = []
-        for i, (v, l) in enumerate(zip(votes, labels)):
-            icon = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
-            lines_out.append(f"  {icon} {names[i]}: {l}")
-        a1_str = f"A1={'↑' if a1_dir=='UP' else '↓' if a1_dir=='DOWN' else '→'}"
-        a9_str = f"A9={'↑' if a9_dir=='UP' else '↓' if a9_dir=='DOWN' else '→'}({a9_score:+d}/4)"
-        reason = "Ters yön" if (a1_dir and a9_dir and a1_dir != a9_dir) else "Yetersiz güç"
         msg = (
             f"{sep}\n"
             f"⏸ <b>{LABEL} — {saat} İST</b>\n"
-            f"{reason}: {a1_str}  {a9_str} → işlem açılmadı\n"
-            + "\n".join(lines_out) + "\n"
+            f"Konsensüs yok → işlem açılmadı\n"
             f"💰 Bakiye: ${state['balance']:.2f}\n"
             f"{sep}"
         )
         tg_send(msg)
-        print(f"[{LABEL}] {saat} — konsensüs yok (A1:{a1_dir} A9:{a9_dir})")
+        print(f"[{LABEL}] {saat} — konsensüs yok")
         return
 
     # Market bul + TO WIN hesapla

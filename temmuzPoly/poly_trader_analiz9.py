@@ -36,8 +36,8 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Config ────────────────────────────────────────────────────
-BOT_TOKEN = "8630483764:AAFmAmG4nHAGb238wpavlWgMjJZDvIy4DzE"
-CHAT_ID   = "830754964"
+BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ9_BOT_TOKEN", "8654967936:AAFp0hDESfXi0iZDRVc5I1JwyTS9N9_rAXE")
+CHAT_ID   = os.getenv("TELEGRAM_ANALIZ9_CHAT_ID", os.getenv("TELEGRAM_CHAT", "830754964"))
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
@@ -46,7 +46,7 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz9_history.json")
 WEEKLY_IMG   = "/tmp/poly_analiz9_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
-SYMBOLS         = ["BTCUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "HYPEUSDT"]  # ETH geçici kapalı
+SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # XRP/DOGE/BNB pasif
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -60,8 +60,9 @@ _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana",
-                 "XRPUSDT": "xrp", "DOGEUSDT": "dogecoin", "BNBUSDT": "bnb", "HYPEUSDT": "hype"}
+                 "XRPUSDT": "xrp", "DOGEUSDT": "dogecoin", "BNBUSDT": "bnb"}
 _PM_DRY_RUN   = True  # Analiz 9 şimdilik işlem açmıyor
+_ENABLED      = os.getenv("ANALIZ9_ENABLED", "true").lower() in ("1", "true", "yes")
 
 
 def _pm_get_client():
@@ -462,6 +463,10 @@ def _ind_stats_lines(history: list) -> list[str]:
 
 # ── CLOSE ─────────────────────────────────────────────────────
 async def run_close() -> None:
+    if not _ENABLED:
+        print("[9. ANALİZ] pasif (ANALIZ9_ENABLED=false)")
+        return
+
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
@@ -602,6 +607,10 @@ async def run_close() -> None:
 
 # ── OPEN ──────────────────────────────────────────────────────
 async def run_open() -> None:
+    if not _ENABLED:
+        print("[9. ANALİZ] pasif (ANALIZ9_ENABLED=false)")
+        return
+
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     hour_tr    = now_tr.hour
