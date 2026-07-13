@@ -12,8 +12,6 @@ analiz/state.json
 *.bak[0-9]*
 temmuzPoly/poly_trader_analiz1_state.json
 temmuzPoly/poly_trader_analiz1_history.json
-temmuzPoly/poly_trader_analiz2_state.json
-temmuzPoly/poly_trader_analiz2_history.json
 temmuzPoly/poly_trader_analiz3_state.json
 temmuzPoly/poly_trader_analiz3_history.json
 temmuzPoly/poly_trader_analiz4_state.json

@@ -1,5 +1,5 @@
 """
-9. ANALİZ — Çoklu Algoritma Sanal Trader
+9. ANALİZ — Çoklu Algoritma Sanal Trader (PM bağlantısı yok, $300 sanal)
 
 4 bağımsız algoritmanın oylarını birleştirerek sinyal üretir:
   1. Trend Following  → EMA20/EMA50 crossover + slope
@@ -46,7 +46,7 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz9_history.json")
 WEEKLY_IMG   = "/tmp/poly_analiz9_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
-SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # XRP/DOGE/BNB pasif
+SYMBOLS         = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]  # XRP/DOGE/BNB/HYPE pasif
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -61,7 +61,8 @@ _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana",
                  "XRPUSDT": "xrp", "DOGEUSDT": "dogecoin", "BNBUSDT": "bnb"}
-_PM_DRY_RUN   = True  # Analiz 9 şimdilik işlem açmıyor
+_PM_DRY_RUN   = True   # geriye uyumluluk
+_VIRTUAL_ONLY = True   # Polymarket API yok — sadece sanal $300
 _ENABLED      = os.getenv("ANALIZ9_ENABLED", "true").lower() in ("1", "true", "yes")
 
 
@@ -506,10 +507,15 @@ async def run_close() -> None:
         actual = "UP" if current_price >= entry else "DOWN"
         win    = (pred == actual)
 
-        # Polymarket gerçek sonucu kontrol et
-        pm_pnl_str  = ""
-        pm_win      = None
-        if pos.get("pm_slug") and not pos.get("pm_error"):
+        pm_win     = None
+        pm_pnl_str = ""
+        if _VIRTUAL_ONLY:
+            pnl = round(amount if win else -amount, 2)
+            pm_win = win
+            pm_pnl_str = f"  |  💵{'+'if win else ''}{pnl:.2f}$"
+            pm_tur_pnl += pnl
+        elif pos.get("pm_slug") and not pos.get("pm_error"):
+            pnl = round(-(pos.get("pm_spent") or amount) if not win else (pos.get("pm_spent") or amount), 2)
             try:
                 req = urllib.request.Request(
                     f"{_PM_GAMMA_URL}?slug={pos['pm_slug']}",
@@ -532,8 +538,12 @@ async def run_close() -> None:
                         pm_pnl_val = round(pm_size - pm_spent, 2) if our_won else round(-pm_spent, 2)
                         pm_pnl_str  = f"  |  🎯PM: {'+'if our_won else ''}{pm_pnl_val:.2f}$"
                         pm_tur_pnl += pm_pnl_val
+                        pnl = pm_pnl_val
             except Exception as e:
                 print(f"[9. ANALİZ close] PM sonuç hatası: {e}", file=sys.stderr)
+                pnl = round(amount if win else -amount, 2)
+        else:
+            pnl = round(amount if win else -amount, 2)
 
         vs = pos.get("votes", [])
         history.append({
@@ -553,7 +563,7 @@ async def run_close() -> None:
             "pm_spent":         pos.get("pm_spent"),
             "pm_order_id":      pos.get("pm_order_id"),
             "exit_time_tr":     now_tr.isoformat(),
-            "pnl":              pos.get("pm_spent", 0) * (-1 if not win else 1),
+            "pnl":              pnl,
             "ind_trend_ok":     _vote_ok(vs[0], actual) if len(vs) > 0 else None,
             "ind_mr_ok":        _vote_ok(vs[1], actual) if len(vs) > 1 else None,
             "ind_of_ok":        _vote_ok(vs[2], actual) if len(vs) > 2 else None,
@@ -563,10 +573,10 @@ async def run_close() -> None:
         icon    = "✅" if win else "❌"
         name    = pos["symbol"].replace("USDT", "")
         pct     = (current_price - entry) / entry * 100
-        pm_spent = pos.get("pm_spent", 0)
+        risk_amt = pos.get("amount", amount)
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
-            f"skor:{pos.get('score', 0):+d}/4  -${pm_spent:.2f} risk{pm_pnl_str}"
+            f"skor:{pos.get('score', 0):+d}/4  -${risk_amt:.2f} risk{pm_pnl_str}"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
@@ -598,8 +608,8 @@ async def run_close() -> None:
         f"{sep}\n"
         f"🏁 <b>9. ANALİZ (Eski 5) — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
-        f"Bu tur PM: {'+'if pm_tur_pnl>=0 else ''}{pm_tur_pnl:.2f}$  |  🟢 Bütçe: {pm_bal_str}\n"
-        f"Yön doğruluğu: {genel_dir}  |  PM kazanma: {genel_pm}\n"
+        f"Bu tur: {'+'if pm_tur_pnl>=0 else ''}{pm_tur_pnl:.2f}$  |  🟢 Bütçe: {pm_bal_str}\n"
+        f"Yön doğruluğu: {genel_dir}\n"
         f"{sep}"
     )
     print(f"[9. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
@@ -682,7 +692,7 @@ async def run_open() -> None:
     et_now   = now - timedelta(hours=4)
     et_hour  = et_now.hour
 
-    # Pozisyon aç + Polymarket order
+    # Pozisyon aç (sanal — PM yok)
     for sig in results:
         if sig["amount"] > 0 and sig["predicted_dir"]:
             pos = {
@@ -697,7 +707,12 @@ async def run_open() -> None:
                 "amount":           sig["amount"],
                 "votes":            sig["votes"],
             }
-            # Sadece gerçek Polymarket orderı varsa pozisyon aç
+            if _VIRTUAL_ONLY:
+                state["open_positions"].append(pos)
+                state["balance"] = round(state.get("balance", INITIAL_BALANCE) - sig["amount"], 2)
+                print(f"[9. ANALİZ] Sanal: {sig['symbol']} {sig['predicted_dir']} ${sig['amount']:.2f}")
+                continue
+            # PM yolu (devre dışı — _VIRTUAL_ONLY=True)
             pm = _pm_find_market(sig["symbol"], et_hour, now)
             if not pm or not pm.get("active") or pm.get("closed"):
                 print(f"[9. ANALİZ] {sig['symbol']} market bulunamadı/kapalı", file=sys.stderr)
@@ -745,18 +760,14 @@ async def run_open() -> None:
             icon = "🟢" if v > 0 else "🔴" if v < 0 else "⚪"
             vote_icons.append(f"{icon} {lbl}")
 
-        # PM order bilgisi (sadece başarılı olanlar state'e eklendi)
+        # Sanal pozisyon gösterimi
         matched_pos = next(
             (p for p in state["open_positions"] if p["symbol"] == sym),
             None
         )
         if not matched_pos:
-            continue  # PM order açılamamış, gösterme
-        pm_str = ""
-        if matched_pos.get("pm_order_id") == "DRY_RUN":
-            pm_str = f"\n   🔶 DRY RUN: {matched_pos.get('pm_size',0):.1f} shares @ {matched_pos.get('pm_entry_price',0):.2f}"
-        else:
-            pm_str = f"\n   🟩 PM: {matched_pos.get('pm_size',0):.1f} shares @ {matched_pos.get('pm_entry_price',0):.2f} (${matched_pos.get('pm_spent',0):.2f})"
+            continue
+        pm_str = f"\n   💵 Sanal: ${matched_pos.get('amount', amount):.2f} risk"
 
         lines.append(
             f"{dir_icon} <b>{name}</b>  {dir_tr}  skor:{score:+d}/4  giriş:{sig['price']:.2f}\n"
@@ -787,7 +798,7 @@ async def run_open() -> None:
         parts.append(mini_sep)
 
     pm_bal_str = f"${state.get('balance', INITIAL_BALANCE):.2f} (sanal)"
-    pm_at_risk = sum(p.get("pm_spent", 0) for p in state["open_positions"])
+    pm_at_risk = sum(p.get("amount", 0) for p in state["open_positions"])
     parts.append(f"🟡 Sanal Bütçe: {pm_bal_str}  |  📂 Açık: {len(state['open_positions'])} poz  ${pm_at_risk:.2f} riskte")
     parts.append(
         f"<i>Eşik: |skor|≥3→{AMOUNT_STRONG:.0f}$  |skor|=2→{AMOUNT_MODERATE:.0f}$  ≤1→yok</i>"

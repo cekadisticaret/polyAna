@@ -14,6 +14,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
+
+# Sıcaklık haritası: analiz bazlı aktif semboller (ETH analiz10'da yok)
+_HEATMAP_SYMS = {
+    "analiz10": ["BTC", "SOL"],
+}
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _BINANCE  = "https://fapi.binance.com"
@@ -237,7 +242,6 @@ _HEATMAP_ANALYSES = {
     "analiz5":  "5. Analiz",
     "analiz1":  "1. Analiz",
     "analiz4":  "4. Analiz",
-    "analiz2":  "2. Analiz",
     "analiz9":  "9. Analiz",
     "analiz10": "10. Analiz",
     "karisim1": "11. Analiz",
@@ -257,11 +261,16 @@ def api_heatmap():
     analiz_key  = request.args.get("analiz", "analiz5")
     if analiz_key not in _HEATMAP_ANALYSES:
         analiz_key = "analiz5"
+    allowed_syms = _HEATMAP_SYMS.get(analiz_key, _ACTIVE_SYMS)
+    if sym_filter != "ALL" and sym_filter not in allowed_syms:
+        sym_filter = "ALL"
     path = os.path.join(_DIR_POLY, f"poly_trader_{analiz_key}_history.json")
     if not os.path.exists(path):
         return jsonify({"cells": []})
     with open(path) as f:
         hist = json.load(f)
+    if analiz_key == "analiz10":
+        hist = [t for t in hist if t.get("symbol", "").replace("USDT", "") != "ETH"]
     days_tr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
     grid = defaultdict(lambda: {"w": 0, "t": 0})
     for t in hist:
@@ -289,7 +298,7 @@ def api_heatmap():
     # Sembol kırılımı (ALL modunda)
     sym_breakdown = []
     if sym_filter == "ALL":
-        for s in _ACTIVE_SYMS:
+        for s in allowed_syms:
             sub  = [t for t in hist if t.get("symbol","").replace("USDT","") == s]
             sw   = sum(1 for t in sub if t.get("win"))
             spnl = round(sum(t.get("pnl",0) for t in sub), 2)
@@ -302,6 +311,7 @@ def api_heatmap():
         "summary": {"total": total, "wins": wins, "losses": total-wins,
                     "wr": wr_all, "pnl": pnl, "spent": spent},
         "sym_breakdown": sym_breakdown,
+        "allowed_syms": allowed_syms,
     })
 
 @app.route("/poly/api/heatmap/detail")
@@ -319,11 +329,16 @@ def api_heatmap_detail():
     analiz_key = request.args.get("analiz", "analiz5")
     if analiz_key not in _HEATMAP_ANALYSES:
         analiz_key = "analiz5"
+    allowed_syms = _HEATMAP_SYMS.get(analiz_key, _ACTIVE_SYMS)
+    if sym != "ALL" and sym not in allowed_syms:
+        sym = "ALL"
     path = os.path.join(_DIR_POLY, f"poly_trader_{analiz_key}_history.json")
     if not os.path.exists(path):
         return jsonify({"trades": []})
     with open(path) as f:
         hist = json.load(f)
+    if analiz_key == "analiz10":
+        hist = [t for t in hist if t.get("symbol", "").replace("USDT", "") != "ETH"]
 
     trades = []
     for t in hist:
@@ -424,13 +439,12 @@ def api_analizler():
     if _auth_required(): return jsonify({"error": "unauthorized"}), 401
     _SYSTEMS = [
         ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
-        ("analiz2",    "2. Analiz",             300,  "RSI+MR+CVD"),
         ("analiz3",    "3. Analiz (Stoch ETH)", 300,  "Stochastic RSI / ETH"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM"),
         ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
-        ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs"),
-        ("karisim1",   "11. Analiz",            300,  "A1+A2+A4 Meta"),
+        ("analiz10",   "10. Analiz",            None, "Çift Konsensüs Gerçek PM"),
+        ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
         ("15m_btc",    "5M 101 BTC",            500,  "4-Algo 5dk BTC"),
         ("5m_btc_102", "5M 102 BTC",            500,  "A1+A9 5dk BTC"),
         ("5m_btc_103", "5M 103 BTC",            500,  "HMA+MACD+ST+StochRSI+ATR"),
@@ -466,7 +480,8 @@ def api_analizler():
             if t.get("win"):
                 sym_stats[sym]["w"] += 1
         sym_list = []
-        for sym in _ACTIVE_SYMS:
+        syms_for = _HEATMAP_SYMS.get(key, _ACTIVE_SYMS)
+        for sym in syms_for:
             v = sym_stats.get(sym)
             if v and v["t"]:
                 sym_list.append({"sym": sym, "w": v["w"], "t": v["t"],
@@ -653,7 +668,6 @@ def api_stats():
     if _auth_required(): return redirect("/poly/login")
     analyses = {
         "analiz1":  "1. Analiz",
-        "analiz2":  "2. Analiz",
         "analiz4":  "4. Analiz",
         "analiz5":  "5. Analiz",
         "analiz9":  "9. Analiz",
@@ -1886,7 +1900,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="hm-filter active" onclick="setFilter(this,'ALL')">Tümü</button>
       <button class="hm-filter" onclick="setFilter(this,'BTC')">BTC</button>
-      <button class="hm-filter" onclick="setFilter(this,'ETH')">ETH</button>
+      <button class="hm-filter" id="hm-eth-btn" onclick="setFilter(this,'ETH')">ETH</button>
       <button class="hm-filter" onclick="setFilter(this,'SOL')">SOL</button>
     </div>
   </div>
@@ -1895,7 +1909,6 @@ HARITA_HTML = r"""<!DOCTYPE html>
     <button class="hm-analiz-tab active" onclick="setAnaliz(this,'analiz5')">5. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz1')">1. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz4')">4. Analiz</button>
-    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz2')">2. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz9')">9. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz10')">10. Analiz</button>
     <button class="hm-analiz-tab" onclick="setAnaliz(this,'karisim1')">11. Analiz</button>
@@ -1939,7 +1952,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
 <script>
 const _ANALIZ_LABELS = {
   'analiz5':'5. Analiz','analiz1':'1. Analiz','analiz4':'4. Analiz',
-  'analiz2':'2. Analiz','analiz9':'9. Analiz','analiz10':'10. Analiz',
+  'analiz9':'9. Analiz','analiz10':'10. Analiz',
   'karisim1':'11. Analiz'
 };
 let _data = null, _sym = 'ALL', _analiz = 'analiz5';
@@ -1961,7 +1974,20 @@ function setAnaliz(btn, key) {
   document.querySelectorAll('.hm-analiz-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   _analiz = key; _data = null;
+  updateHmSymFilters();
   load();
+}
+
+function updateHmSymFilters() {
+  const ethBtn = document.getElementById('hm-eth-btn');
+  const hideEth = _analiz === 'analiz10';
+  if (ethBtn) ethBtn.style.display = hideEth ? 'none' : '';
+  if (hideEth && _sym === 'ETH') {
+    _sym = 'ALL';
+    document.querySelectorAll('.hm-filter').forEach(b => {
+      b.classList.toggle('active', b.textContent.trim() === 'Tümü');
+    });
+  }
 }
 
 function setFilter(btn, sym) {

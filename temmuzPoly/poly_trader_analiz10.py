@@ -1,14 +1,11 @@
 """
-10. ANALİZ — Çift Konsensüs Sanal Trader
+10. ANALİZ — Çift Konsensüs Gerçek Polymarket
+
 İki bağımsız sistem aynı yönü göstermeden işlem açılmaz:
   Sistem A: poly_predictor_analysis.py (Analiz 1/5 motoru)
   Sistem B: Trend + MR + OrderFlow + Funding (Analiz 4/9 motoru)
 
-Lot sistemi:
-  Her iki sistem güçlü sinyal → $30
-  En az biri güçlü, diğeri orta → $20
-  İkisi orta     → $20
-  Çelişki veya skor eşiği altı → işlem yok
+PM: Analiz 5'ten bağımsız; konsensus sinyali → sabit $10 işlem.
 
 Modlar: close / open / weekly / stats
 Cron:
@@ -29,11 +26,25 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
+from pm_trader_helpers import PM_DRY_RUN, pm_get_balance, pm_try_open, pm_resolve_pnl
+from pm_balance_guard import PM_MIN_BALANCE, can_open_trade
+
+# .env yükle
+_ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+if os.path.exists(_ENV_FILE):
+    with open(_ENV_FILE) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
+_PM_LABEL = "10. ANALİZ"
+_HATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analiz10_polyhata.json")
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE   = os.path.join(_DIR, "poly_trader_analiz10_state.json")
@@ -41,8 +52,7 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz10_history.json")
 WEEKLY_IMG   = "/tmp/poly_weekly_heatmap_a10.png"
 
 INITIAL_BALANCE = 300.0
-AMOUNT_STRONG   = 30.0   # her ikisi de güçlü sinyal
-AMOUNT_MODERATE = 20.0   # biri güçlü diğeri orta veya ikisi orta
+TRADE_AMOUNT    = 10.0   # sabit PM işlem tutarı
 
 SYMBOLS   = ["BTCUSDT", "SOLUSDT"]  # ETH/XRP/DOGE/BNB pasif
 _DAYS_TR  = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -132,28 +142,6 @@ def fetch_orderbook(symbol: str) -> dict:
 def fetch_funding_rate(symbol: str) -> float:
     data = _binance_get("/fapi/v1/premiumIndex", {"symbol": symbol})
     return float(data.get("lastFundingRate", 0))
-
-
-def oi_divergence_eth(klines: list[dict]) -> str:
-    """ETH için OI Divergence kontrolü — TERS yön → 'OPPOSITE', aynı/nötr → 'OK'"""
-    try:
-        raw = _binance_get("/futures/data/openInterestHist",
-                           {"symbol": "ETHUSDT", "period": "1h", "limit": 10})
-        if not isinstance(raw, list) or len(raw) < 5:
-            return "NEUTRAL"
-        oi  = [float(x["sumOpenInterestValue"]) for x in raw]
-        c   = [k["close"] for k in klines[-10:]]
-        if len(c) < 5:
-            return "NEUTRAL"
-        pc  = (c[-1] - c[-5]) / c[-5] if c[-5] else 0
-        oc  = (oi[-1] - oi[-5]) / oi[-5] if oi[-5] else 0
-        if pc >  0.005 and oc >  0.005: return "UP"
-        if pc < -0.005 and oc >  0.005: return "DOWN"
-        if pc >  0.005 and oc < -0.005: return "DOWN"
-        if pc < -0.005 and oc < -0.005: return "UP"
-        return "NEUTRAL"
-    except Exception:
-        return "NEUTRAL"
 
 
 # ── Sistem B algoritmaları (Analiz 4/9 ile birebir aynı) ──────
@@ -253,16 +241,13 @@ async def analyze(symbol: str) -> dict | None:
     if dir_a is None or dir_b is None or dir_a != dir_b:
         return None
 
-    # İkisi aynı yönde → lot belirle
+    # İkisi aynı yönde → tier etiketi (tutar run_open'da sabit $10)
     if strong_a and strong_b:
-        amount = AMOUNT_STRONG
-        tier   = "💪 Her iki sistem güçlü"
+        tier = "💪 Her iki sistem güçlü"
     elif strong_a or strong_b:
-        amount = AMOUNT_MODERATE
-        tier   = "⚡ Bir güçlü bir orta"
+        tier = "⚡ Bir güçlü bir orta"
     else:
-        amount = AMOUNT_MODERATE
-        tier   = "📊 İkisi orta"
+        tier = "📊 İkisi orta"
 
     price = klines[-2]["close"]  # son kapanan mum = Polymarket Price to Beat
 
@@ -270,7 +255,7 @@ async def analyze(symbol: str) -> dict | None:
         "symbol":        symbol,
         "price":         price,
         "direction":     dir_a,
-        "amount":        amount,
+        "amount":        TRADE_AMOUNT,
         "tier":          tier,
         "conf_a":        conf_a,
         "score_b":       score_b,
@@ -326,13 +311,13 @@ async def run_close() -> None:
     sep     = "━" * 26
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>10. ANALİZ — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
+        tg_send(f"⏸ <b>10. ANALİZ ✦ PolyAktif — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[10. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
-    lines      = []
-    toplam_pnl = 0.0
-    failed_pos = []
+    lines        = []
+    tur_pnl      = 0.0
+    failed_pos   = []
 
     for pos in list(state["open_positions"]):
         klines = await _fetch_klines(pos["symbol"], "1h", 2)
@@ -342,14 +327,16 @@ async def run_close() -> None:
         current_price = klines[-1]["close"]
         entry  = pos["entry_price"]
         pred   = pos["predicted_dir"]
-        amount = pos.get("amount", AMOUNT_MODERATE)
+        amount = pos.get("amount", TRADE_AMOUNT)
         actual = "UP" if current_price >= entry else "DOWN"
         win    = (pred == actual)
-        pnl    = amount if win else -amount
-        toplam_pnl += pnl
 
-        state["balance"]   = round(state["balance"] + pnl, 2)
-        state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
+        pm_win, pm_pnl_val, pm_pnl_str = pm_resolve_pnl(pos)
+        if pm_win is not None:
+            win = pm_win
+
+        pm_spent = pos.get("pm_spent", 0) or amount
+        tur_pnl += (pos.get("pm_size") or pm_spent) - pm_spent if win else -pm_spent
 
         votes = pos.get("votes", [None, None, None, None])
         history.append({
@@ -357,6 +344,7 @@ async def run_close() -> None:
             "predicted_dir":    pred,
             "actual_dir":       actual,
             "win":              win,
+            "pm_win":           pm_win,
             "entry_price":      entry,
             "exit_price":       current_price,
             "entry_time_tr":    pos["entry_time_tr"],
@@ -364,12 +352,17 @@ async def run_close() -> None:
             "entry_dow":        pos["entry_dow"],
             "entry_is_weekend": pos["entry_is_weekend"],
             "amount":           amount,
-            "pnl":              pnl,
+            "pm_spent":         pos.get("pm_spent"),
+            "pm_size":          pos.get("pm_size"),
+            "pm_entry_price":   pos.get("pm_entry_price"),
+            "pm_order_id":      pos.get("pm_order_id"),
+            "pnl":              round(
+                (pos.get("pm_size") or pm_spent) - pm_spent if win else -pm_spent, 2),
             "exit_time_tr":     now_tr.isoformat(),
             "score_b":          pos.get("score_b", 0),
             "conf_a":           pos.get("conf_a", 0),
             "votes":            votes,
-            "ind_poly_ok":      win,  # A sistemi yönü doğruysa ok
+            "ind_poly_ok":      win,
             "ind_trend_ok":     (votes[1] == (+1 if actual=="UP" else -1)) if votes[1] else None,
             "ind_mr_ok":        (votes[2] == (+1 if actual=="UP" else -1)) if votes[2] else None,
             "ind_of_ok":        (votes[3] == (+1 if actual=="UP" else -1)) if votes[3] else None,
@@ -378,8 +371,10 @@ async def run_close() -> None:
         icon    = "✅" if win else "❌"
         name    = pos["symbol"].replace("USDT", "")
         pct     = (current_price - entry) / entry * 100
-        pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
-        lines.append(f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  {pnl_str}")
+        lines.append(
+            f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
+            f"-{pm_spent:.0f}${pm_pnl_str}"
+        )
 
     state["open_positions"] = failed_pos
     if failed_pos:
@@ -389,18 +384,27 @@ async def run_close() -> None:
     save_state(state)
     save_history(history)
 
+    if not lines:
+        return
+
+    state["total_pnl"] = state.get("total_pnl", 0.0) + tur_pnl
+    save_state(state)
+
     closed_all = len(history)
     win_all    = sum(1 for t in history if t["win"])
     genel      = _wr(win_all, closed_all)
     total_pnl  = state.get("total_pnl", 0.0)
     pnl_icon   = "🟢" if total_pnl >= 0 else "🔴"
+    pm_bal     = pm_get_balance()
+    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
     saat_round = f"{int(saat[:2]):02d}:00"
+    tur_pnl_str = f"{'+'if tur_pnl >= 0 else ''}{tur_pnl:.0f}$"
 
     tg_send(
         f"{sep}\n"
         f"🏁 <b>10. ANALİZ — {saat_round} Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
-        f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
+        f"Bu tur: {tur_pnl_str}  |  PM Bakiye: {pm_bal_str}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel}\n"
         f"{sep}"
     )
@@ -421,83 +425,116 @@ async def run_open() -> None:
     state   = load_state()
     history = load_history()
 
+    if not PM_DRY_RUN and not can_open_trade("10. ANALİZ", tg_send):
+        return
+
     # Her sembol için çift konsensüs analizi
-    opened  = []
-    skipped = []
+    candidates = []
+    skipped    = []
     for sym in SYMBOLS:
         sig = await analyze(sym)
         if sig is None:
             skipped.append(sym)
             continue
+        candidates.append(sig)
+        time.sleep(0.2)
 
-        # Sembol başarı sıralaması çarpanı
-        sym_hist = [t for t in history if t["symbol"] == sym and t.get("win") is not None]
-        sym_wins = sum(1 for t in sym_hist if t["win"])
-        sym_rate = sym_wins / len(sym_hist) if sym_hist else 0.5
-        sym_all  = [(s, sum(1 for t in history if t["symbol"]==s and t.get("win")),
-                     len([t for t in history if t["symbol"]==s and t.get("win") is not None]))
-                    for s in SYMBOLS]
-        sym_all.sort(key=lambda x: x[1]/x[2] if x[2] else 0.5, reverse=True)
-        rank = next((i for i, (s,_,_) in enumerate(sym_all) if s==sym), 0)
-        mult = [1.0, 0.8, 0.6][rank] if rank < 3 else 0.6
-        sig["amount"] = round(sig["amount"] * mult, 1)
-
-        # ETH için OI Divergence kontrolü
-        if sym == "ETHUSDT":
-            eth_kl = fetch_klines("ETHUSDT", 20)
-            oi_sig = oi_divergence_eth(eth_kl)
-            if oi_sig != "NEUTRAL" and oi_sig != sig["direction"]:
-                print(f"[10. ANALİZ] ETH OI Divergence ters yön ({oi_sig}), işlem atlandı")
-                skipped.append(f"ETH-OI:{oi_sig}")
-                continue
-            sig["oi_sig"] = oi_sig
-
-        state["open_positions"].append({
-            "symbol":           sym,
-            "predicted_dir":    sig["direction"],
-            "entry_price":      sig["price"],
-            "entry_time_tr":    now_tr.isoformat(),
-            "entry_hour_tr":    hour_tr,
-            "entry_dow":        dow,
-            "entry_is_weekend": is_weekend,
-            "amount":           sig["amount"],
-            "conf_a":           sig["conf_a"],
-            "score_b":          sig["score_b"],
-            "votes":            sig["votes"],
-        })
-        opened.append(sig)
-        time.sleep(0.3)
+    _market_skip  = []
+    _order_fail   = []
+    _newly_opened = 0
+    for sig in candidates:
+        pos, err = pm_try_open(
+            state,
+            symbol=sig["symbol"],
+            predicted_dir=sig["direction"],
+            entry_price=sig["price"],
+            amount=TRADE_AMOUNT,
+            hour_tr=hour_tr, dow=dow, is_weekend=is_weekend,
+            now_tr=now_tr, now=now,
+            label=_PM_LABEL, hata_file=_HATA_FILE,
+            extra_fields={
+                "conf_a":  sig["conf_a"],
+                "score_b": sig["score_b"],
+                "votes":   sig["votes"],
+                "tier":    sig["tier"],
+            },
+        )
+        if pos:
+            _newly_opened += 1
+        elif err == "market":
+            _market_skip.append(sig)
+        elif err == "order":
+            name_f = sig["symbol"].replace("USDT", "")
+            tg_send(
+                f"⚠️ <b>10. ANALİZ</b> — <b>{name_f}</b> ({sig['direction']}) "
+                f"Polymarket order başarısız."
+            )
+            _order_fail.append(sig)
 
     save_state(state)
 
-    if opened:
-        lines = []
-        for sig in opened:
-            name     = sig["symbol"].replace("USDT", "")
-            arr      = "📈" if sig["direction"] == "UP" else "📉"
-            dir_tr   = "YÜKSELİR" if sig["direction"] == "UP" else "DÜŞER"
-            lines.append(
-                f"{arr} <b>{name}</b>  {dir_tr}  {sig['price']:.2f}  💵{sig['amount']:.0f}$\n"
+    if _newly_opened > 0:
+        time.sleep(3)
+    pm_bal = pm_get_balance()
+    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
+    bal_icon = "🟢" if pm_bal > PM_MIN_BALANCE else "🟡" if pm_bal > 50 else "🔴"
+
+    trade_lines = []
+    for sig in candidates:
+        name = sig["symbol"].replace("USDT", "")
+        opened_pos = next(
+            (p for p in state["open_positions"]
+             if p["symbol"] == sig["symbol"] and p.get("entry_hour_tr") == hour_tr),
+            None,
+        )
+        if opened_pos:
+            d_icon = "📈" if opened_pos["predicted_dir"] == "UP" else "📉"
+            d_tr   = "YÜKSELİR" if opened_pos["predicted_dir"] == "UP" else "DÜŞER"
+            pm_spent = opened_pos.get("pm_spent", 0) or 0
+            pm_size  = opened_pos.get("pm_size", 0) or 0
+            to_win   = f" → ${pm_size:.2f} kazanılacak" if pm_size > 0 else ""
+            trade_lines.append(
+                f"{d_icon} <b>{name}</b>  {d_tr}  {sig['price']:.2f}  💵${pm_spent:.2f} risk{to_win}\n"
                 f"   {sig['tier']}  |  A:konf%{sig['conf_a']*100:.0f}  B:skor{sig['score_b']:+d}/4\n"
                 f"   {' | '.join(sig['labels'][1:])}"
             )
+        else:
+            trade_lines.append(
+                f"⛔ <b>{name}</b>  {sig['direction']}  → PM'e girilmedi"
+            )
+
+    error_lines = []
+    if _market_skip:
+        names = ", ".join(s["symbol"].replace("USDT", "") for s in _market_skip)
+        error_lines.append(f"⚠️ PM market yok: {names}")
+    if _order_fail:
+        names = ", ".join(s["symbol"].replace("USDT", "") for s in _order_fail)
+        error_lines.append(f"⚠️ PM order hatası: {names}")
+
+    if trade_lines and any(p.get("pm_spent") for p in state["open_positions"] if p.get("entry_hour_tr") == hour_tr):
         tg_send(
             f"{sep}\n"
-            f"🆕 <b>10. ANALİZ ✦ Çift Konsensüs — {saat} - {next_h}</b>\n"
-            + "\n".join(lines) + "\n"
-            f"{sep}\n"
-            f"💰 Bakiye: ${state['balance']:.2f}  |  <i>Eşik: güçlü→{AMOUNT_STRONG:.0f}$  orta→{AMOUNT_MODERATE:.0f}$</i>\n"
+            f"🆕 <b>10. ANALİZ ✦ Çift Konsensüs PM — {saat} - {next_h}</b>\n"
+            f"💵 Sabit işlem: ${TRADE_AMOUNT:.0f}\n\n"
+            + "\n".join(trade_lines) + "\n"
+            + ("\n".join(error_lines) + "\n" if error_lines else "")
+            + f"{sep}\n"
+            f"🏦 PM Bakiye: {bal_icon} {pm_bal_str}  |  Açılan: {_newly_opened}\n"
             f"{sep}"
         )
-    else:
-        oi_note = "  ⛔ ETH OI ters yön → atlandı" if any("ETH-OI" in s for s in skipped) else ""
+    elif skipped and not candidates:
         tg_send(
             f"⏸ <b>10. ANALİZ ✦ Çift Konsensüs — {saat} İST</b>\n"
-            f"İki sistem konsensüs sağlayamadı — {', '.join(s.replace('USDT','') for s in skipped)} elenendi.{oi_note}\n"
-            f"💰 Bakiye: ${state['balance']:.2f}"
+            f"İki sistem konsensüs sağlayamadı — {', '.join(s.replace('USDT','') for s in skipped)} elenendi.\n"
+            f"🏦 PM Bakiye: {pm_bal_str}"
+        )
+    elif error_lines:
+        tg_send(
+            f"⏸ <b>10. ANALİZ — {saat} İST</b>\n"
+            + "\n".join(error_lines) + f"\n🏦 PM Bakiye: {pm_bal_str}"
         )
 
-    print(f"[10. ANALİZ open] {saat} İST — {len(opened)} işlem açıldı, {len(skipped)} elenendi")
+    print(f"[10. ANALİZ open] {saat} İST — {_newly_opened} PM işlem, {len(skipped)} elendi")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────
@@ -665,7 +702,7 @@ def run_stats() -> None:
     tg_send(
         f"📊 <b>10. ANALİZ ✦ Çift Konsensüs İSTATİSTİKLER</b>\n"
         f"Toplam: {total} işlem  |  {_wr(wins, total)} başarı\n"
-        f"Bakiye: ${state['balance']:.2f}  |  P&L: {state.get('total_pnl',0):+.2f}$"
+        f"PM işlem: sabit ${TRADE_AMOUNT:.0f}  |  P&L: {state.get('total_pnl',0):+.2f}$"
     )
 
 

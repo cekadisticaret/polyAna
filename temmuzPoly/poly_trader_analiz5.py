@@ -44,8 +44,10 @@ _DUAL_PENDING_FILE = "/tmp/analiz5_dual_pending.json"
 WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
-SYMBOLS         = ["BTCUSDT", "SOLUSDT"]
-TRADE_AMOUNT    = 6.0    # sabit işlem tutarı
+SYMBOLS            = ["BTCUSDT", "SOLUSDT"]
+TRADE_AMOUNT       = 8.0   # genel başarı veri yok veya %50
+TRADE_AMOUNT_HIGH  = 10.0  # genel başarı > %50
+TRADE_AMOUNT_LOW   = 6.0   # genel başarı < %50
 MIN_STAT_COUNT  = 10
 
 _SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "analiz5_settings.json")
@@ -354,6 +356,17 @@ def get_stats(history: list, symbol: str, hour_tr: int, dow: int | None = None) 
 def get_symbol_stats(history: list, symbol: str) -> tuple[int, int]:
     trades = [t for t in history if t["symbol"] == symbol]
     return sum(1 for t in trades if t["win"]), len(trades)
+
+
+def _trade_amount_for_symbol(history: list, symbol: str) -> float:
+    """Analiz 1 ile aynı mantık; PM ölçeği $6 / $8 / $10."""
+    sw, st = get_symbol_stats(history, symbol)
+    rate = sw / st if st else None
+    if rate is not None and rate > 0.5:
+        return TRADE_AMOUNT_HIGH
+    if rate is not None and rate < 0.5:
+        return TRADE_AMOUNT_LOW
+    return TRADE_AMOUNT
 
 
 def _vote_ok(vote: int, actual: str) -> bool | None:
@@ -897,7 +910,7 @@ async def run_open() -> None:
     # Mevcut ET saati (EDT = UTC-4) — _try_pm_open içinde hesaplanır
 
     for sig in results:
-        sig["amount"] = TRADE_AMOUNT
+        sig["amount"] = _trade_amount_for_symbol(history, sig["symbol"])
 
     _algo_snapshot = _load_algo_snapshot()
 
@@ -1144,7 +1157,7 @@ def run_stats() -> None:
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
-        f"İşlem: BTC+SOL  sabit ${TRADE_AMOUNT:.0f}",
+        f"İşlem: BTC+SOL  dinamik ${TRADE_AMOUNT_LOW:.0f}/${TRADE_AMOUNT:.0f}/${TRADE_AMOUNT_HIGH:.0f}",
         f"\n🔬 <b>Algoritma İsabet Oranı</b>", *_ind_stats_lines(history),
     ]
 
