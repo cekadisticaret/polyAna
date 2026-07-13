@@ -24,12 +24,7 @@ import urllib.parse
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from poly_predictor_analysis import predict, _fetch_klines
-from pm_trader_helpers import PM_DRY_RUN, pm_get_balance, pm_try_open, pm_resolve_pnl
-from pm_balance_guard import PM_MIN_BALANCE, can_open_trade
-
-# .env yükle
+# .env önce — pm_trader_helpers PM_DRY_RUN'ı import anında okur
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
 if os.path.exists(_ENV_FILE):
     with open(_ENV_FILE) as _f:
@@ -38,6 +33,11 @@ if os.path.exists(_ENV_FILE):
             if _line and not _line.startswith("#") and "=" in _line:
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from poly_predictor_analysis import predict, _fetch_klines
+from pm_trader_helpers import PM_DRY_RUN, pm_get_balance, pm_try_open, pm_resolve_pnl
+from pm_balance_guard import PM_MIN_BALANCE, can_open_trade
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
@@ -153,9 +153,9 @@ def algo_trend(klines: list[dict]) -> tuple[int, str]:
     slope  = e20[-1] - e20[-4] if len(e20) >= 4 else 0
     pct    = cross / closes[-1] * 100
     if cross > 0 and slope > 0:
-        return +1, f"Trend↑ E20>E50 ({pct:+.2f}%)"
+        return +1, f"Trend↑ E20&gt;E50 ({pct:+.2f}%)"
     elif cross < 0 and slope < 0:
-        return -1, f"Trend↓ E20<E50 ({pct:+.2f}%)"
+        return -1, f"Trend↓ E20&lt;E50 ({pct:+.2f}%)"
     else:
         return  0, f"Trend→ karışık ({pct:+.2f}%)"
 

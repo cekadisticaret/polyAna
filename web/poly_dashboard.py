@@ -69,6 +69,7 @@ LOGIN_HTML = """<!DOCTYPE html>
   <div class="sub">Dashboard'a erişmek için giriş yap</div>
   <div class="err">Kullanıcı adı veya şifre hatalı</div>
   <form method="POST">
+    <input type="hidden" name="next" value="{{ next_url }}">
     <label>Kullanıcı Adı</label>
     <input type="text" name="username" autocomplete="username" autofocus>
     <label>Şifre</label>
@@ -132,31 +133,51 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
         pass
     return None
 
+_PM_POSITION_SOURCES = [
+    ("analiz5",    "5. Analiz"),
+    ("analiz10",   "10. Analiz"),
+    ("15m_btc",    "5M 101 BTC"),
+    ("5m_btc_real","5M 201 BTC"),
+    ("5m_btc_202", "5M 202 BTC"),
+]
+
 def collect_positions() -> list:
-    """Analiz5'in gerçek Polymarket pozisyonlarını döndürür."""
-    state = load_state("analiz5")
+    """Gerçek Polymarket açık pozisyonları (tüm aktif PM trader'lar)."""
     positions = []
-    for pos in state.get("open_positions", []):
-        # Sadece gerçek Polymarket orderı olanlar
-        if not pos.get("pm_slug") or not pos.get("pm_spent"):
-            continue
-        positions.append({**pos, "_analiz": "analiz5"})
+    for key, label in _PM_POSITION_SOURCES:
+        state = load_state(key)
+        for pos in state.get("open_positions", []):
+            if not pos.get("pm_slug") or not (pos.get("pm_spent") or pos.get("amount")):
+                continue
+            positions.append({**pos, "_analiz": key, "_analiz_label": label})
     return positions
 
 def _auth_required():
     return session.get("logged_in") is not True
 
+
+def _safe_next_url(path: str | None) -> str:
+    if not path or not path.startswith("/") or path.startswith("//"):
+        return "/poly"
+    return path
+
+
+def _login_redirect():
+    return redirect(f"/poly/login?next={request.path}")
+
+
 # ── Login ─────────────────────────────────────────────────────
 @app.route("/poly/login", methods=["GET", "POST"])
 def login():
     error = False
+    next_url = _safe_next_url(request.args.get("next") or request.form.get("next"))
     if request.method == "POST":
         if (request.form.get("username") == _USERNAME and
                 request.form.get("password") == _PASSWORD):
             session["logged_in"] = True
-            return redirect("/poly")
+            return redirect(next_url)
         error = True
-    return render_template_string(LOGIN_HTML, error=error)
+    return render_template_string(LOGIN_HTML, error=error, next_url=next_url)
 
 @app.route("/poly/logout")
 def logout():
@@ -202,7 +223,8 @@ def api_data():
         total_pos_value += close_val if close_val else pm_spent
 
         enriched.append({
-            "analiz":       pos["_analiz"],
+            "analiz":       pos.get("_analiz_label", pos["_analiz"]),
+            "analiz_key":   pos["_analiz"],
             "symbol":       sym,
             "name":         sym.replace("USDT", ""),
             "dir":          pred,
@@ -245,13 +267,122 @@ _HEATMAP_ANALYSES = {
     "analiz9":  "9. Analiz",
     "analiz10": "10. Analiz",
     "karisim1": "11. Analiz",
-    "15m_btc":    "5M 101 BTC",
-    "5m_btc_102": "5M 102 BTC",
-    "5m_btc_103": "5M 103 BTC",
-    "5m_btc_104": "5M 104 BTC",
+    "15m_btc":     "5M 101 BTC",
+    "5m_btc_106":  "5M 106 BTC",
+    "5m_btc_107":  "5M 107 BTC",
     "5m_btc_real": "5M 201 BTC",
     "5m_btc_202":  "5M 202 BTC",
 }
+
+# /harita sayfası sekmeleri — tek kaynak (API ile senkron)
+_HARITA_TAB_ANALYSES = [
+    ("analiz5",  "5. Analiz"),
+    ("analiz1",  "1. Analiz"),
+    ("analiz4",  "4. Analiz"),
+    ("analiz9",  "9. Analiz"),
+    ("analiz10", "10. Analiz"),
+    ("karisim1", "11. Analiz"),
+]
+
+
+def _harita_tabs_html() -> str:
+    parts = []
+    for i, (key, label) in enumerate(_HARITA_TAB_ANALYSES):
+        active = " active" if i == 0 else ""
+        parts.append(
+            f'<button class="hm-analiz-tab{active}" '
+            f'onclick="setAnaliz(this,\'{key}\')">{label}</button>'
+        )
+    return "\n    ".join(parts)
+
+
+# Geçmiş ekranı — tüm aktif sistemler
+_HISTORY_SYSTEMS = [
+    ("analiz1",    "1. Analiz"),
+    ("analiz3",    "3. Analiz"),
+    ("301",        "301. Analiz"),
+    ("analiz4",    "4. Analiz"),
+    ("analiz5",    "5. Analiz"),
+    ("analiz9",    "9. Analiz"),
+    ("analiz10",   "10. Analiz"),
+    ("karisim1",   "11. Analiz"),
+    ("15m_btc",     "5M 101 BTC"),
+    ("5m_btc_106",  "5M 106 BTC"),
+    ("5m_btc_107",  "5M 107 BTC"),
+    ("5m_btc_real","5M 201 BTC"),
+    ("5m_btc_202", "5M 202 BTC"),
+]
+
+
+def _trade_sort_ts(t: dict) -> str:
+    return t.get("exit_time_tr") or t.get("entry_time_tr") or ""
+
+
+def _format_history_trade(t: dict, key: str, label: str) -> dict:
+    sym   = t.get("symbol", "").replace("USDT", "")
+    spent = t.get("pm_spent") or t.get("amount") or 0
+    pnl   = t.get("pnl", 0)
+    ts    = _trade_sort_ts(t)
+    entry = t.get("entry_price")
+    exit_p = t.get("exit_price")
+    return {
+        "key":    key,
+        "analiz": label,
+        "sym":    sym,
+        "dir":    t.get("predicted_dir", ""),
+        "win":    t.get("win"),
+        "entry":  round(entry, 4) if entry is not None else None,
+        "exit":   round(exit_p, 4) if exit_p is not None else None,
+        "spent":  round(spent, 2),
+        "pnl":    round(pnl, 2),
+        "time":   ts[:16].replace("T", " ") if ts else "—",
+        "sort_ts": ts,
+    }
+
+
+@app.route("/poly/api/history")
+def api_history():
+    if _auth_required(): return jsonify({"error": "unauthorized"}), 401
+    try:
+        limit = min(max(int(request.args.get("limit", 15)), 1), 50)
+    except ValueError:
+        limit = 15
+    analiz_filter = request.args.get("analiz", "ALL")
+
+    groups   = []
+    all_flat = []
+
+    for key, label in _HISTORY_SYSTEMS:
+        if analiz_filter != "ALL" and key != analiz_filter:
+            continue
+        path = os.path.join(_DIR_POLY, f"poly_trader_{key}_history.json")
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path) as f:
+                hist = json.load(f)
+        except Exception:
+            continue
+        resolved = [t for t in hist if t.get("win") is not None]
+        if not resolved:
+            continue
+        recent = list(reversed(resolved[-limit:]))
+        trades = [_format_history_trade(t, key, label) for t in recent]
+        groups.append({
+            "key": key, "label": label,
+            "total": len(hist), "resolved": len(resolved),
+            "trades": trades,
+        })
+        all_flat.extend(trades)
+
+    all_flat.sort(key=lambda x: x["sort_ts"], reverse=True)
+
+    return jsonify({
+        "groups": groups,
+        "all":    all_flat,
+        "limit":  limit,
+        "systems": [{"key": k, "label": l} for k, l in _HISTORY_SYSTEMS],
+    })
 
 @app.route("/poly/api/heatmap")
 def api_heatmap():
@@ -440,15 +571,15 @@ def api_analizler():
     _SYSTEMS = [
         ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
         ("analiz3",    "3. Analiz (Stoch ETH)", 300,  "Stochastic RSI / ETH"),
+        ("301",        "301. Analiz",           300,  "MACD Hist Div"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM"),
         ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
         ("analiz10",   "10. Analiz",            None, "Çift Konsensüs Gerçek PM"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
-        ("15m_btc",    "5M 101 BTC",            500,  "4-Algo 5dk BTC"),
-        ("5m_btc_102", "5M 102 BTC",            500,  "A1+A9 5dk BTC"),
-        ("5m_btc_103", "5M 103 BTC",            500,  "HMA+MACD+ST+StochRSI+ATR"),
-        ("5m_btc_104", "5M 104 BTC",            500,  "Stoch RSI K/D"),
+        ("15m_btc",     "5M 101 BTC",            None, "Gerçek PM / 4-Algo $3"),
+        ("5m_btc_106",  "5M 106 BTC",            500,  "RSI Div + Markov"),
+        ("5m_btc_107",  "5M 107 BTC",            500,  "RSI Div (#5)"),
         ("5m_btc_real","5M 201 BTC",             None, "Gerçek PM / 4-Algo"),
         ("5m_btc_202", "5M 202 BTC",            None, "Gerçek PM / A1+A9"),
     ]
@@ -562,7 +693,7 @@ h1{font-size:22px;font-weight:800;margin-bottom:6px}
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item active" href="/analizler"><span class="nav-dot"></span>Analizler</a>
-  <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
+  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
   <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
@@ -663,17 +794,185 @@ setInterval(load, 60000);
 </html>"""
 
 
+GECMIS_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geçmiş — PolyMarket</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex}
+.sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:20px;letter-spacing:-0.5px}
+.logo span{color:#c8f135}
+.nav-label{font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:14px;transition:.15s}
+.nav-item:hover{background:#1a1a1a;color:#fff}
+.nav-item.active{background:#1a2e1a;color:#c8f135;font-weight:600}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0}
+.nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:#c8f135}
+.sidebar-footer{margin-top:auto;font-size:12px;color:#333;padding:8px 12px;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{flex:1;padding:28px;max-width:1400px}
+h1{font-size:22px;font-weight:800;margin-bottom:6px}
+.subtitle{font-size:13px;color:#555;margin-bottom:20px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.fbtn{background:#111;border:1px solid #2a2a2a;color:#888;font-size:12px;font-weight:600;padding:8px 14px;border-radius:20px;cursor:pointer;transition:.15s}
+.fbtn:hover{border-color:#444;color:#ccc}
+.fbtn.active{background:#1a2e1a;border-color:#4ade80;color:#4ade80}
+.group{margin-bottom:28px}
+.group-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.group-title{font-size:16px;font-weight:800}
+.group-meta{font-size:12px;color:#555}
+.tbl-wrap{background:#111;border:1px solid #1e1e1e;border-radius:14px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+th{text-align:left;padding:12px 14px;font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #1e1e1e;background:#0d0d0d}
+td{padding:12px 14px;border-top:1px solid #161616}
+tr:hover td{background:#141414}
+.sym{font-weight:800;font-size:14px}
+.win-yes{color:#4ade80;font-weight:700}
+.win-no{color:#f87171;font-weight:700}
+.pnl-pos{color:#4ade80;font-weight:700}
+.pnl-neg{color:#f87171;font-weight:700}
+.empty{color:#555;padding:40px;text-align:center;font-size:14px}
+#loading{color:#555;padding:60px;text-align:center}
+@media(max-width:800px){.sidebar{display:none}.main{padding:16px}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo">Poly<span>Market</span></div>
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
+  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item active" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
+  <div class="nav-label">Hesap</div>
+  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
+  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
+  <div class="sidebar-footer"><span class="live-dot"></span>Canlı</div>
+</div>
+<div class="main">
+  <h1>📜 Geçmiş İşlemler</h1>
+  <div class="subtitle" id="subtitle">Tüm analizlerin son kapanan işlemleri</div>
+  <div class="filters" id="filters"></div>
+  <div id="content"><div id="loading">Yükleniyor…</div></div>
+</div>
+<script>
+let _filter = 'ALL';
+let _data = null;
+
+function tradeRows(trades){
+  if(!trades.length) return '<div class="empty">Bu analizde henüz kapanmış işlem yok</div>';
+  return `<div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>Sembol</th><th>Yön</th><th>Sonuç</th><th>Giriş</th><th>Çıkış</th>
+      <th>Risk</th><th>P&amp;L</th><th>Tarih</th>
+    </tr></thead><tbody>
+    ${trades.map(t=>{
+      const w = t.win===true?'win-yes':t.win===false?'win-no':'';
+      const wTxt = t.win===true?'✅':t.win===false?'❌':'⏳';
+      const pnlC = t.pnl>=0?'pnl-pos':'pnl-neg';
+      const dir = t.dir==='UP'?'📈 UP':'📉 DOWN';
+      const ent = t.entry!=null?t.entry:'—';
+      const ext = t.exit!=null?t.exit:'—';
+      return `<tr>
+        <td class="sym">${t.sym}</td>
+        <td>${dir}</td>
+        <td class="${w}">${wTxt}</td>
+        <td>${ent}</td>
+        <td>${ext}</td>
+        <td>$${t.spent.toFixed(2)}</td>
+        <td class="${pnlC}">${t.pnl>=0?'+':''}$${t.pnl.toFixed(2)}</td>
+        <td style="color:#666;font-size:12px">${t.time}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+}
+
+function render(){
+  const el = document.getElementById('content');
+  if(!_data || !_data.groups.length){
+    el.innerHTML = '<div class="empty">Henüz geçmiş işlem verisi yok</div>';
+    return;
+  }
+  if(_filter === 'ALL'){
+    const merged = [..._data.all];
+    el.innerHTML = `<div class="group">
+      <div class="group-head">
+        <div class="group-title">Tüm Analizler</div>
+        <div class="group-meta">${merged.length} son işlem (yeniden eskiye)</div>
+      </div>
+      ${tradeRows(merged)}
+    </div>`;
+    return;
+  }
+  const g = _data.groups.find(x=>x.key===_filter);
+  if(!g){ el.innerHTML='<div class="empty">Veri yok</div>'; return; }
+  el.innerHTML = `<div class="group">
+    <div class="group-head">
+      <div class="group-title">${g.label}</div>
+      <div class="group-meta">${g.trades.length} son işlem · toplam ${g.total} kayıt</div>
+    </div>
+    ${tradeRows(g.trades)}
+  </div>`;
+}
+
+function setFilter(key, btn){
+  _filter = key;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+async function load(){
+  try{
+    const r = await fetch('/poly/api/history?limit=15');
+    if(!r.ok) throw new Error('API '+r.status);
+    _data = await r.json();
+    const filters = document.getElementById('filters');
+    const active = [{key:'ALL',label:'Tümü'}].concat(
+      _data.groups.map(g=>({key:g.key,label:g.label}))
+    );
+    filters.innerHTML = active.map((a,i)=>
+      `<button class="fbtn${i===0?' active':''}" onclick="setFilter('${a.key}',this)">${a.label}</button>`
+    ).join('');
+    document.getElementById('subtitle').textContent =
+      `${_data.groups.length} analiz · analiz başına son ${_data.limit} işlem`;
+    render();
+  }catch(e){
+    document.getElementById('content').innerHTML =
+      '<div class="empty">Yüklenemedi: '+e.message+'</div>';
+  }
+}
+
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>"""
+
+
+@app.route("/poly/gecmis")
+@app.route("/poly/gecmis/")
+@app.route("/gecmis")
+@app.route("/gecmis/")
+def page_gecmis():
+    if request.path.rstrip("/") == "/gecmis":
+        return redirect("/poly/gecmis")
+    if _auth_required():
+        return _login_redirect()
+    return GECMIS_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
 @app.route("/poly/api/stats")
 def api_stats():
     if _auth_required(): return redirect("/poly/login")
-    analyses = {
-        "analiz1":  "1. Analiz",
-        "analiz4":  "4. Analiz",
-        "analiz5":  "5. Analiz",
-        "analiz9":  "9. Analiz",
-        "analiz10": "10. Analiz",
-        "karisim1": "11. Analiz",
-    }
+    analyses = dict(_HISTORY_SYSTEMS)
     algo_stats = []
     all_history = []
 
@@ -979,7 +1278,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <a class="nav-item active" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
-  <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
+  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
   <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
@@ -1667,7 +1966,7 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
-  <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
+  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item active" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
   <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
@@ -1887,7 +2186,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item active" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
-  <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
+  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
   <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
@@ -1906,12 +2205,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
   </div>
   <!-- Analiz sekmeleri -->
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-    <button class="hm-analiz-tab active" onclick="setAnaliz(this,'analiz5')">5. Analiz</button>
-    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz1')">1. Analiz</button>
-    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz4')">4. Analiz</button>
-    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz9')">9. Analiz</button>
-    <button class="hm-analiz-tab" onclick="setAnaliz(this,'analiz10')">10. Analiz</button>
-    <button class="hm-analiz-tab" onclick="setAnaliz(this,'karisim1')">11. Analiz</button>
+    {{ harita_tabs|safe }}
   </div>
   <div class="page-sub" id="hm-subtitle">5. Analiz — gün × saat kazanma oranı</div>
 
@@ -1950,11 +2244,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
 </div>
 
 <script>
-const _ANALIZ_LABELS = {
-  'analiz5':'5. Analiz','analiz1':'1. Analiz','analiz4':'4. Analiz',
-  'analiz9':'9. Analiz','analiz10':'10. Analiz',
-  'karisim1':'11. Analiz'
-};
+const _ANALIZ_LABELS = {{ harita_labels|safe }};
 let _data = null, _sym = 'ALL', _analiz = 'analiz5';
 
 function hmColor(wr,t){ if(!t)return'#1a1a1a'; if(wr>=70)return'#166534'; if(wr>=55)return'#14532d'; if(wr>=50)return'#365314'; if(wr>=40)return'#78350f'; return'#450a0a'; }
@@ -2363,7 +2653,7 @@ HTML = r"""<!DOCTYPE html>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" id="nav-heatmap" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
-  <a class="nav-item" href="#"><span class="nav-dot"></span>Geçmiş</a>
+  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
   <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
@@ -2437,6 +2727,8 @@ HTML = r"""<!DOCTYPE html>
         <div class="positions" id="positions-mob">
           <div class="empty">Yükleniyor...</div>
         </div>
+        <div class="section-title" style="margin:20px 0 12px">Son İşlemler</div>
+        <div id="recent-trades-mob"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
       </div>
 
       <!-- Mobil: çift mod butonu (sabit alt bar) -->
@@ -2700,7 +2992,7 @@ async function refresh() {
             <span class="pos-analiz-tag">${p.analiz}</span>
           </div>
           <div class="close-btn-wrap">
-            <button class="close-btn" onclick="closePosition('${p.analiz}','${p.symbol}',this)">Pozisyonu Kapat</button>
+            <button class="close-btn" onclick="closePosition('${p.analiz_key}','${p.symbol}',this)">Pozisyonu Kapat</button>
           </div>
         </div>`;
       }).join('');
@@ -2750,9 +3042,9 @@ async function refresh() {
       </div>`;
     }).join('') || '<div style="color:#666;font-size:13px">Veri yok</div>';
 
-    // Son işlemler (sağ panel)
+    // Son işlemler (sağ panel + mobil)
     const rt = document.getElementById('recent-trades');
-    rt.innerHTML = s.recent.map(t => {
+    const recentHTML = s.recent.map(t => {
       const pnlC = t.pnl >= 0 ? 'pos' : 'neg';
       const pnlStr = (t.pnl>=0?'+':'')+'$'+Math.abs(t.pnl).toFixed(2);
       const dirIcon = t.dir==='UP' ? '📈' : '📉';
@@ -2764,6 +3056,9 @@ async function refresh() {
         <div class="trade-pnl ${pnlC}">${pnlStr}</div>
       </div>`;
     }).join('') || '<div style="color:#666;font-size:13px">Henüz işlem yok</div>';
+    if (rt) rt.innerHTML = recentHTML;
+    const rtMob = document.getElementById('recent-trades-mob');
+    if (rtMob) rtMob.innerHTML = recentHTML;
 
     // Algoritma performansı
     const as = document.getElementById('algo-stats');
@@ -3214,7 +3509,12 @@ def dashboard():
 @app.route("/harita/")
 def harita():
     if _auth_required(): return redirect("/poly/login")
-    return render_template_string(HARITA_HTML)
+    labels = {k: v for k, v in _HARITA_TAB_ANALYSES}
+    return render_template_string(
+        HARITA_HTML,
+        harita_tabs=_harita_tabs_html(),
+        harita_labels=json.dumps(labels, ensure_ascii=False),
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=False)

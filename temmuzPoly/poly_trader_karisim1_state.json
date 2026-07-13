@@ -1,22 +1,5 @@
 {
-  "balance": 352.0,
-  "open_positions": [
-    {
-      "symbol": "BTCUSDT",
-      "predicted_dir": "UP",
-      "entry_price": 62649.8,
-      "entry_time_tr": "2026-07-13T08:07:01.486735+03:00",
-      "entry_hour_tr": 8,
-      "entry_dow": 0,
-      "amount": 12.0,
-      "count": 3,
-      "systems": [
-        "A1",
-        "A2",
-        "A6"
-      ],
-      "price_src": "kaynak-ort"
-    }
-  ],
-  "total_pnl": 52.0
+  "balance": 364.0,
+  "open_positions": [],
+  "total_pnl": 64.0
 }

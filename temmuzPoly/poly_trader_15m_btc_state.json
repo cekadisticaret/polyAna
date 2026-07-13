@@ -1,5 +1,31 @@
 {
-  "balance": 535.92,
-  "open_positions": [],
-  "total_pnl": 35.92
+  "balance": 635.94,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 62301.1,
+      "amount": 1.999999,
+      "pm_spent": 1.999999,
+      "to_win": 3.921567,
+      "token_price": 0.495,
+      "consensus": 2,
+      "votes": [
+        0,
+        -1,
+        1,
+        -1
+      ],
+      "entry_time_tr": "2026-07-13T16:50:02.240657+03:00",
+      "entry_period_min": 1010,
+      "entry_dow": 0,
+      "pm_slug": "btc-updown-5m-1783950600",
+      "pm_token_dir": "DOWN",
+      "pm_token_id": "59094934914755685530739870063644898922949041612616334205564958616018018638777",
+      "ts_5m": 1783950600,
+      "pm_size": 3.921567,
+      "pm_order_id": "0x7d7cdf17d595490c9c616cac8f087a44c53fd696aaa3e45902fa72c4251f8aef"
+    }
+  ],
+  "total_pnl": 137.94
 }

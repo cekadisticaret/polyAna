@@ -430,5 +430,37 @@
     "ind_trend_ok": null,
     "ind_mr_ok": null,
     "ind_of_ok": false
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "pm_win": null,
+    "entry_price": 76.4,
+    "exit_price": 76.68,
+    "entry_time_tr": "2026-07-13T11:06:01.660684+03:00",
+    "entry_hour_tr": 11,
+    "entry_dow": 0,
+    "entry_is_weekend": false,
+    "amount": 10.0,
+    "pm_spent": 10.08,
+    "pm_size": 21.0,
+    "pm_entry_price": 0.48,
+    "pm_order_id": "DRY_RUN",
+    "pnl": -10.08,
+    "exit_time_tr": "2026-07-13T12:00:04.648316+03:00",
+    "score_b": -1,
+    "conf_a": 0.775,
+    "votes": [
+      -1,
+      -1,
+      0,
+      0
+    ],
+    "ind_poly_ok": false,
+    "ind_trend_ok": false,
+    "ind_mr_ok": null,
+    "ind_of_ok": null
   }
 ]

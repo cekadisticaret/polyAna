@@ -2,7 +2,7 @@
 import os
 import sys
 
-PM_MIN_BALANCE = 120.0
+PM_MIN_BALANCE = 80.0
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 
 

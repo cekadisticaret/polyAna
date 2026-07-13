@@ -3011,5 +3011,28 @@
     "ind_mr_ok": false,
     "ind_of_ok": false,
     "ind_fund_ok": null
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "pm_win": false,
+    "entry_price": 1778.75,
+    "exit_price": 1779.9,
+    "entry_time_tr": "2026-07-13T14:04:01.251519+03:00",
+    "entry_hour_tr": 14,
+    "entry_dow": 0,
+    "entry_is_weekend": false,
+    "score": -2,
+    "amount": 8.0,
+    "pm_spent": null,
+    "pm_order_id": null,
+    "exit_time_tr": "2026-07-13T15:00:03.177649+03:00",
+    "pnl": -8.0,
+    "ind_trend_ok": false,
+    "ind_mr_ok": null,
+    "ind_of_ok": false,
+    "ind_fund_ok": null
   }
 ]

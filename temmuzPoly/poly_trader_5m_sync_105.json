@@ -1,0 +1,13 @@
+{
+  "ts_5m": 1783948800,
+  "saved_at_tr": "2026-07-13T16:20:02.778075+03:00",
+  "result": {
+    "direction": null,
+    "consensus": 0,
+    "signal": "NEUTRAL",
+    "poc": 63061.88,
+    "detail": "POC 63,062 ≈ fiyat (+1.0%) → nötr",
+    "entry_price": 62488.9,
+    "amount": 0.0
+  }
+}

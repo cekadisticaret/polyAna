@@ -1,8 +1,7 @@
 """
-5M BTC TRADER — 4 Algoritma Konsensüs (Sanal)
-==============================================
+5M BTC TRADER — 4 Algoritma Konsensüs (Gerçek Polymarket)
+=========================================================
 A1, A4, A9, A10 analizlerinin 5 dakikalık BTC versiyonu.
-1h analizleriyle tamamen ayrı çalışır, onlara dokunmaz.
 
 4 algoritma oyu:
   1. RSI + MACD + EMA  (A1 motoru — 5m klines)
@@ -10,17 +9,9 @@ A1, A4, A9, A10 analizlerinin 5 dakikalık BTC versiyonu.
   3. Mean Reversion    (A4/A9 — RSI + Bollinger Bands)
   4. Orderflow         (A4/A9 — CVD + Order Book imbalance)
 
-Konsensüs:
-  4/4 → $15    3/4 → $10    2/4 → $7    ≤1/4 → işlem yok
-
+Konsensüs: ≥2/4 → sabit $3 PM işlem
 Market: btc-updown-5m-{unix_timestamp}
-Bütçe:  $500 sanal
 Cron:   */5 * * * *
-
-Modlar:
-  open    → pozisyon kapat (önceki) + yeni pozisyon aç
-  weekly  → haftalık ısı haritası
-  stats   → detaylı rapor
 """
 
 import json
@@ -55,9 +46,7 @@ WEEKLY_IMG   = "/tmp/poly_5m_btc_weekly.png"
 
 SYMBOL           = "BTCUSDT"
 INITIAL_BALANCE  = 500.0
-AMOUNT_4         = 16.0   # 4/4 oylama
-AMOUNT_3         = 12.0   # 3/4 oylama
-AMOUNT_2         =  8.0   # 2/4 oylama
+TRADE_AMOUNT     =  3.0   # sabit PM işlem tutarı
 _PERIOD_SECS     = 300    # 5 dakika = 300 saniye
 _DAYS_TR         = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -66,7 +55,7 @@ _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cu
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
-_PM_DRY_RUN   = True   # Sanal: gerçek işlem açmaz
+_PM_DRY_RUN   = False  # Gerçek PM işlem
 
 LABEL = "5M 101 BTC"
 
@@ -122,6 +111,16 @@ def get_stats(history: list, period_min: int, dow: int | None = None) -> tuple[i
 def get_all_stats(history: list) -> tuple[int, int]:
     wins = sum(1 for t in history if t["win"])
     return wins, len(history)
+
+
+def _pm_bal_line() -> str:
+    """Polymarket USDC bakiyesini çekip bildirim satırı döndür."""
+    from pm_balance_guard import get_usdc_balance, PM_MIN_BALANCE
+    bal = get_usdc_balance()
+    if bal >= 9999:
+        return "🏦 PM Bakiye: sorgulanamadı"
+    icon = "🟢" if bal >= PM_MIN_BALANCE else "🔴"
+    return f"🏦 PM Bakiye: {icon} ${bal:.2f}"
 
 
 # ── Telegram ─────────────────────────────────────────────────
@@ -330,9 +329,7 @@ def analyze() -> dict | None:
             "amount": 0.0,
         }
 
-    amount = (AMOUNT_4 if consensus == 4
-              else AMOUNT_3 if consensus == 3
-              else AMOUNT_2)
+    amount = TRADE_AMOUNT
 
     return {
         "direction":   direction,
@@ -410,30 +407,41 @@ def _pm_get_client():
 
 
 def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
-                    neg_risk: bool = False) -> dict | None:
+                    neg_risk: bool = False, _retry: bool = True) -> dict | None:
+    """FAK market buy — USD tutarı doğrudan gönderilir; FAK eşleşmezse 10sn sonra tekrar dener."""
     try:
-        from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
+        from py_clob_client_v2 import MarketOrderArgs, OrderType, PartialCreateOrderOptions
         from py_clob_client_v2.order_builder.constants import BUY
         from decimal import Decimal, ROUND_DOWN
         client = _pm_get_client()
-        price  = float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
-        price  = max(0.02, min(0.98, round(price, 2)))
-        raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
-        size   = max(5.0, raw_sz)
-        spent  = round(size * price, 2)
+        amount_usd = float(Decimal(str(amount_usd)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
         if _PM_DRY_RUN:
-            print(f"[DRY RUN] token {token_id[:16]}… {size:.1f} shares @ {price:.2f} (~${spent:.2f})")
-            return {"order_id": "DRY_RUN", "size": size, "price": price, "spent": spent}
-        args   = OrderArgs(token_id=token_id, price=price, size=size, side=BUY)
-        signed = client.create_order(args, PartialCreateOrderOptions())
+            price = float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
+            price = max(0.02, min(0.98, round(price, 2)))
+            est = round(amount_usd / price, 2) if price else amount_usd
+            print(f"[DRY RUN] {token_id[:16]}… ${amount_usd:.2f} @ ~{price:.2f} (~{est} shares)")
+            return {"order_id": "DRY_RUN", "size": est, "price": price, "spent": amount_usd}
+        args   = MarketOrderArgs(token_id=token_id, amount=amount_usd, side=BUY, order_type=OrderType.FAK)
+        signed = client.create_market_order(args, PartialCreateOrderOptions(neg_risk=neg_risk))
         resp   = client.post_order(signed, order_type=OrderType.FAK)
         if not resp or not resp.get("success"):
             print(f"[{LABEL}] Order başarısız: {resp}", file=sys.stderr)
+            if _retry:
+                print(f"[{LABEL}] 10sn sonra tekrar deneniyor...", file=sys.stderr)
+                time.sleep(10)
+                return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
             return None
-        oid = resp.get("orderID") or resp.get("id", "")
+        oid   = resp.get("orderID") or resp.get("id", "")
+        spent = float(resp.get("makingAmount") or int(signed.makerAmount) / 1e6)
+        size  = float(resp.get("takingAmount") or int(signed.takerAmount) / 1e6)
+        price = round(spent / size, 4) if size else 0.0
         return {"order_id": oid, "size": size, "price": price, "spent": spent}
     except Exception as e:
         print(f"[{LABEL}] Order hatası: {e}", file=sys.stderr)
+        if _retry:
+            print(f"[{LABEL}] 10sn sonra tekrar deneniyor...", file=sys.stderr)
+            time.sleep(10)
+            return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
         return None
 
 
@@ -474,7 +482,7 @@ def run() -> None:
                 continue
             entry  = pos["entry_price"]
             pred   = pos["predicted_dir"]
-            amount = pos.get("amount", AMOUNT_2)
+            amount = pos.get("amount", TRADE_AMOUNT)
             to_win = pos.get("to_win", amount * 2)
 
             # PM ile aynı: periyot kapanışı vs periyot açılışı (price to beat)
@@ -535,14 +543,19 @@ def run() -> None:
             f"{sep}\n"
             f"🏁 <b>{LABEL} — {saat} Sonuçlar</b>\n"
             + "\n".join(closed_lines) + "\n"
-            f"{tur_icon} Bu tur: {'+'if tur_pnl>=0 else ''}{tur_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
+            f"{tur_icon} Bu tur: {'+'if tur_pnl>=0 else ''}{tur_pnl:.0f}$\n"
             f"{pnl_icon} Toplam P&amp;L: {'+'if state['total_pnl']>=0 else ''}{state['total_pnl']:.2f}$  |  Genel: {_wr(win_all, tot_all)}\n"
+            f"{_pm_bal_line()}\n"
             f"{sep}"
         )
         tg_send(close_msg)
         print(f"[{LABEL}] {saat} — {len(closed_lines)} pozisyon kapatıldı")
 
-    # ── 2. AÇ: Yeni 15m pozisyonu ──────────────────────────────
+    # ── 2. AÇ: Yeni 5m pozisyonu ──────────────────────────────
+    from pm_balance_guard import can_open_trade
+    if not _PM_DRY_RUN and not can_open_trade(LABEL, tg_send):
+        return
+
     result = analyze()
     from pm_signal_sync import save_signal
     save_signal("101", ts_5m, result)
@@ -553,58 +566,54 @@ def run() -> None:
     direction = result["direction"]
     consensus = result["consensus"]
     amount    = result["amount"]
-    labels    = result["labels"]
     votes     = result["votes"]
     entry_p   = result["entry_price"]
     next_time = now_tr + timedelta(minutes=5)
     next_saat = next_time.strftime("%H:%M")
 
-    # Geçmiş istatistik
     prev_wins, prev_total = get_stats(history, period_min)
     all_wins, all_total   = get_all_stats(history)
-
     sep = "━" * 26
 
     if direction is None:
-        msg = (
+        tg_send(
             f"{sep}\n"
             f"⏸ <b>{LABEL} — {saat} İST</b>\n"
             f"Konsensüs yok ({consensus}/4) → işlem açılmadı\n"
-            f"💰 Bakiye: ${state['balance']:.2f}\n"
+            f"{_pm_bal_line()}\n"
             f"{sep}"
         )
-        tg_send(msg)
         print(f"[{LABEL}] {saat} — konsensüs yok ({consensus}/4)")
         return
 
-    # Market bul + TO WIN hesapla
-    pm_slug    = None
-    pm_info    = _pm_find_5m_market(ts_5m)
-    token_price = None
-    if pm_info and not pm_info.get("closed"):
-        token_price = pm_info["up_price"] if direction == "UP" else pm_info["down_price"]
-        pm_slug = pm_info["slug"]
+    pm_info = _pm_find_5m_market(ts_5m)
+    if not pm_info or pm_info.get("closed"):
+        tg_send(f"⚠️ <b>{LABEL}</b> — PM market bulunamadı/kapalı, {saat}")
+        print(f"[{LABEL}] PM market yok, işlem atlandı")
+        return
 
-    # to_win: kazanırsak alacağımız miktar (Polymarket pay-out)
-    # Formül: $amount / token_price → kaç share aldık, her share $1 → to_win
-    if token_price and token_price > 0:
-        to_win = round(amount / token_price, 2)
-    else:
-        to_win = round(amount * 2, 2)   # fiyat alınamazsa %50 varsay
+    token_price = pm_info["up_price"] if direction == "UP" else pm_info["down_price"]
+    pm_slug     = pm_info["slug"]
+    to_win      = round(amount / token_price, 2) if token_price > 0 else round(amount * 2, 2)
 
-    if not _PM_DRY_RUN and pm_info and not pm_info.get("closed"):
-        token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
-        _pm_place_order(token_id, amount, pm_info["tick_size"], pm_info["neg_risk"])
+    order_result = None
+    token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
+    if not _PM_DRY_RUN:
+        order_result = _pm_place_order(token_id, amount, pm_info["tick_size"], pm_info["neg_risk"])
+        if not order_result:
+            tg_send(f"⚠️ <b>{LABEL}</b> — PM order başarısız, {direction} {saat}")
+            print(f"[{LABEL}] PM order başarısız, işlem atlandı")
+            return
+        to_win = order_result["size"]
+        amount = order_result["spent"]
 
-    # Bakiyeden giriş miktarını düş
     state["balance"] = round(state["balance"] - amount, 2)
-
-    # Pozisyonu state'e kaydet
-    state["open_positions"].append({
+    pos_data = {
         "symbol":           SYMBOL,
         "predicted_dir":    direction,
         "entry_price":      entry_p,
         "amount":           amount,
+        "pm_spent":         amount,
         "to_win":           to_win,
         "token_price":      token_price,
         "consensus":        consensus,
@@ -613,11 +622,19 @@ def run() -> None:
         "entry_period_min": period_min,
         "entry_dow":        dow,
         "pm_slug":          pm_slug,
+        "pm_token_dir":     direction,
+        "pm_token_id":      token_id,
         "ts_5m":            ts_5m,
-    })
+    }
+    if order_result:
+        pos_data["pm_size"]     = order_result["size"]
+        pos_data["pm_order_id"] = order_result.get("order_id", "")
+    state["open_positions"].append(pos_data)
     save_state(state)
 
-    # Bildirim
+    if not _PM_DRY_RUN:
+        time.sleep(2)
+
     dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
     dir_icon = "📈" if direction == "UP" else "📉"
     names    = ["A1", "Trend", "MR", "OF"]
@@ -626,20 +643,19 @@ def run() -> None:
         for i, v in enumerate(votes)
     )
     price_str = f"@{token_price:.2f}" if token_price else ""
-    dry_str   = "  🔶 SANAL" if _PM_DRY_RUN else ""
 
-    msg = (
+    tg_send(
         f"{sep}\n"
-        f"🆕 <b>{LABEL} — {saat} → {next_saat}</b>{dry_str}\n"
-        f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/4)  💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
+        f"🆕 <b>{LABEL} — {saat} → {next_saat}</b>\n"
+        f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/4)  💵 ${amount:.2f} {price_str} → 🏆 ${to_win:.2f}\n"
         f"Giriş: {entry_p:,.2f} USDT\n"
         f"{vote_str}\n"
         f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
-        f"💰 Bakiye: ${state['balance']:.2f}  |  🔴 ${amount:.0f} riskte\n"
+        f"PM: {pm_slug}\n"
+        f"{_pm_bal_line()}\n"
         f"{sep}"
     )
-    tg_send(msg)
-    print(f"[{LABEL}] {saat} — {dir_tr} {consensus}/4  ${amount:.0f}→${to_win:.2f}  entry:{entry_p:,.2f}")
+    print(f"[{LABEL}] {saat} — {dir_tr} {consensus}/4  ${amount:.2f}→${to_win:.2f}  entry:{entry_p:,.2f}")
 
 
 # ── WEEKLY ─────────────────────────────────────────────────────
