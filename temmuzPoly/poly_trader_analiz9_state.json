@@ -1,5 +1,23 @@
 {
-  "balance": 395.65,
-  "open_positions": [],
-  "total_pnl": 95.65
+  "balance": 402.05,
+  "open_positions": [
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 75.37,
+      "entry_time_tr": "2026-07-14T09:04:01.560719+03:00",
+      "entry_hour_tr": 9,
+      "entry_dow": 1,
+      "entry_is_weekend": false,
+      "score": -2,
+      "amount": 4.8,
+      "votes": [
+        -1,
+        0,
+        -1,
+        0
+      ]
+    }
+  ],
+  "total_pnl": 106.85
 }

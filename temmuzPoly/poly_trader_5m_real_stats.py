@@ -1,4 +1,4 @@
-"""5M 201 + 5M 202 gerçek PM trader birleşik istatistik bildirimi."""
+"""5M 102 BTC sanal trader — saatlik istatistik bildirimi."""
 import json
 import os
 import sys
@@ -12,10 +12,10 @@ _TZ_TR = ZoneInfo("Europe/Istanbul")
 BOT_TOKEN = "8799859033:AAHjOkEDP7W5sk97lFknakMokgoKBf62Ssg"
 CHAT_ID   = "830754964"
 
-SYSTEMS = [
-    ("5m_btc_real", "5M 201 BTC", "4-Algo Konsensüs"),
-    ("5m_btc_202",  "5M 202 BTC", "A1+A9 Konsensüs"),
-]
+KEY   = "5m_btc_102"
+LABEL = "5M 102 BTC"
+DESC  = "101 + Momentum (sanal $6)"
+INITIAL_BALANCE = 150.0
 
 
 def _load_json(path: str) -> list | dict:
@@ -42,76 +42,71 @@ def tg_send(text: str) -> None:
         with urllib.request.urlopen(req, timeout=10) as r:
             r.read()
     except Exception as e:
-        print(f"[5M REAL STATS] TG hata: {e}", file=sys.stderr)
+        print(f"[5M 102 STATS] TG hata: {e}", file=sys.stderr)
 
 
-def _system_stats(key: str) -> dict:
-    hist  = _load_json(os.path.join(_DIR, f"poly_trader_{key}_history.json"))
-    state = _load_json(os.path.join(_DIR, f"poly_trader_{key}_state.json"))
-    total = len(hist)
-    wins  = sum(1 for t in hist if t.get("win"))
-    losses = total - wins
-    pnl   = round(sum(t.get("pnl", 0) for t in hist), 2)
-    if not pnl and isinstance(state, dict):
-        pnl = round(state.get("total_pnl", 0.0), 2)
-    open_pos = state.get("open_positions", []) if isinstance(state, dict) else []
-    open_n   = len(open_pos)
-    risk     = round(sum(p.get("pm_spent", p.get("amount", 0)) for p in open_pos), 2)
-    return {
-        "total": total, "wins": wins, "losses": losses,
-        "pnl": pnl, "open": open_n, "risk": risk,
-    }
-
-
-def _block(label: str, desc: str, s: dict) -> list[str]:
-    pnl_icon = "🟢" if s["pnl"] >= 0 else "🔴"
-    lines = [
-        f"━━ <b>{label}</b> ━━",
-        f"<i>{desc}</i>",
-        f"📂 Açılan: <b>{s['total']}</b>  |  ✅ Başarılı: <b>{s['wins']}</b>  |  ❌ Kayıp: <b>{s['losses']}</b>",
-        f"📈 WR: <b>{_wr(s['wins'], s['total'])}</b>  |  {pnl_icon} Kar: <b>{'+' if s['pnl'] >= 0 else ''}{s['pnl']:.2f}$</b>",
-    ]
-    if s["open"]:
-        lines.append(f"🔴 Açık pozisyon: {s['open']}  |  Riskte: ${s['risk']:.2f}")
-    return lines
+def _today_key(iso_tr: str) -> bool:
+    today = datetime.now(timezone.utc).astimezone(_TZ_TR).date().isoformat()
+    return iso_tr[:10] == today
 
 
 def build_message() -> str:
+    hist  = _load_json(os.path.join(_DIR, f"poly_trader_{KEY}_history.json"))
+    state = _load_json(os.path.join(_DIR, f"poly_trader_{KEY}_state.json"))
+
+    total  = len(hist)
+    wins   = sum(1 for t in hist if t.get("win"))
+    losses = total - wins
+    pnl    = round(state.get("total_pnl", sum(t.get("pnl", 0) for t in hist)), 2)
+    balance = round(state.get("balance", INITIAL_BALANCE), 2)
+
+    today_hist = [t for t in hist if _today_key(t.get("entry_time_tr", ""))]
+    t_wins  = sum(1 for t in today_hist if t.get("win"))
+    t_total = len(today_hist)
+    t_pnl   = round(sum(t.get("pnl", 0) for t in today_hist), 2)
+
+    open_pos = state.get("open_positions", [])
+    open_n   = len(open_pos)
+    risk     = round(sum(p.get("amount", 0) for p in open_pos), 2)
+
+    up   = [t for t in hist if t.get("predicted_dir") == "UP"]
+    down = [t for t in hist if t.get("predicted_dir") == "DOWN"]
+    up_w = sum(1 for t in up if t.get("win"))
+    dn_w = sum(1 for t in down if t.get("win"))
+
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    pnl_icon = "🟢" if pnl >= 0 else "🔴"
+    t_icon   = "🟢" if t_pnl >= 0 else "🔴"
     sep = "━" * 26
+
     lines = [
         sep,
-        f"📊 <b>5M GERÇEK PM — Saatlik Özet</b>",
+        f"📊 <b>5M 102 BTC — Saatlik Özet</b>",
         f"🕐 {now_tr.strftime('%d.%m.%Y %H:%M')} İST",
+        f"<i>{DESC}</i>",
         "",
+        f"💰 Bakiye: <b>${balance:.2f}</b>  (başlangıç ${INITIAL_BALANCE:.0f})",
+        f"📂 Toplam: <b>{total}</b>  |  ✅ {wins}  |  ❌ {losses}  |  WR <b>{_wr(wins, total)}</b>",
+        f"{pnl_icon} Net P&amp;L: <b>{'+' if pnl >= 0 else ''}{pnl:.2f}$</b>",
+        "",
+        f"📅 Bugün: <b>{t_total}</b> işlem  |  WR {_wr(t_wins, t_total)}  |  {t_icon} {'+' if t_pnl >= 0 else ''}{t_pnl:.2f}$",
+        f"📈 UP: {_wr(up_w, len(up))} ({len(up)})  |  📉 DOWN: {_wr(dn_w, len(down))} ({len(down)})",
     ]
 
-    grand_total = grand_wins = grand_losses = 0
-    grand_pnl = 0.0
+    if open_n:
+        pos = open_pos[0]
+        d_tr = "YÜKSELİR" if pos.get("predicted_dir") == "UP" else "DÜŞER"
+        lines.append(f"🔴 Açık: {d_tr}  ${risk:.2f} risk  ({pos.get('consensus', '?')}/4)")
+    else:
+        lines.append("⚪ Açık pozisyon yok")
 
-    for key, label, desc in SYSTEMS:
-        s = _system_stats(key)
-        grand_total  += s["total"]
-        grand_wins   += s["wins"]
-        grand_losses += s["losses"]
-        grand_pnl    += s["pnl"]
-        lines.extend(_block(label, desc, s))
-        lines.append("")
-
-    pnl_icon = "🟢" if grand_pnl >= 0 else "🔴"
-    lines += [
-        f"━━ <b>TOPLAM (201+202)</b> ━━",
-        f"📂 Açılan: <b>{grand_total}</b>  |  ✅ Başarılı: <b>{grand_wins}</b>  |  ❌ Kayıp: <b>{grand_losses}</b>",
-        f"📈 WR: <b>{_wr(grand_wins, grand_total)}</b>  |  {pnl_icon} Net Kar: <b>{'+' if grand_pnl >= 0 else ''}{grand_pnl:.2f}$</b>",
-        sep,
-    ]
+    lines.append(sep)
     return "\n".join(lines)
 
 
 def run() -> None:
-    msg = build_message()
-    tg_send(msg)
-    print("[5M REAL STATS] saatlik özet gönderildi")
+    tg_send(build_message())
+    print("[5M 102 STATS] saatlik özet gönderildi")
 
 
 if __name__ == "__main__":

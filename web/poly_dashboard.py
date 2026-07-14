@@ -3,6 +3,7 @@ PolyMarket Dashboard — bursaapp.com/poly
 """
 import json
 import os
+import re
 import sys
 import urllib.request
 from datetime import datetime, timezone
@@ -17,9 +18,92 @@ _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 
 # Sıcaklık haritası: analiz bazlı aktif semboller (ETH analiz10'da yok)
 _HEATMAP_SYMS = {
+    "analiz6":  ["BTC", "SOL"],
     "analiz10": ["BTC", "SOL"],
+    "karisim1": ["BTC", "SOL"],
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
+
+# ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
+# Yeni analiz: isteğe bağlı özel isim için _ANALYSIS_LABELS'a ekle.
+# Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
+_ANALYSIS_ORDER = [
+    "analiz5", "analiz6", "analiz1", "analiz4", "analiz9", "analiz10", "karisim1",
+    "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_202",
+]
+_HISTORY_ORDER = [
+    "analiz1", "analiz3", "301", "analiz4", "analiz5", "analiz6", "analiz9",
+    "analiz10", "karisim1", "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_202",
+]
+_ANALYSIS_LABELS: dict[str, str] = {
+    "analiz1":    "1. Analiz",
+    "analiz3":    "3. Analiz",
+    "301":        "301. Analiz",
+    "analiz4":    "4. Analiz",
+    "analiz5":    "5. Analiz",
+    "analiz6":    "6. Analiz BTC-SOL",
+    "analiz9":    "9. Analiz",
+    "analiz10":   "10. Analiz",
+    "karisim1":   "11. Analiz",
+    "15m_btc":    "5M 101 BTC",
+    "5m_btc_102": "5M 102 BTC",
+    "5m_btc_103": "5M 103 BTC/SOL",
+    "5m_btc_202": "5M 202 BTC",
+}
+
+
+def _discover_trader_keys() -> set[str]:
+    keys: set[str] = set()
+    if not os.path.isdir(_DIR_POLY):
+        return keys
+    for fn in os.listdir(_DIR_POLY):
+        if fn.startswith("poly_trader_") and fn.endswith("_history.json"):
+            keys.add(fn[len("poly_trader_"):-len("_history.json")])
+    return keys
+
+
+def _trader_exists(key: str, on_disk: set[str]) -> bool:
+    if key in on_disk:
+        return True
+    return os.path.exists(os.path.join(_DIR_POLY, f"poly_trader_{key}_state.json"))
+
+
+def _auto_label(key: str) -> str:
+    if key in _ANALYSIS_LABELS:
+        return _ANALYSIS_LABELS[key]
+    m = re.match(r"^analiz(\d+)$", key)
+    if m:
+        return f"{m.group(1)}. Analiz"
+    if key == "karisim1":
+        return "11. Analiz"
+    if key == "15m_btc":
+        return "5M 101 BTC"
+    if key.startswith("5m_btc_"):
+        n = key.replace("5m_btc_", "")
+        if n == "real":
+            return "5M 201 BTC"
+        return f"5M {n.upper()} BTC"
+    return key.replace("_", " ").title()
+
+
+def _build_system_list(order: list[str]) -> list[tuple[str, str]]:
+    on_disk = _discover_trader_keys()
+    seen: set[str] = set()
+    out: list[tuple[str, str]] = []
+    for key in order:
+        if not _trader_exists(key, on_disk) and key not in _ANALYSIS_LABELS:
+            continue
+        out.append((key, _ANALYSIS_LABELS.get(key, _auto_label(key))))
+        seen.add(key)
+    for key in sorted(on_disk - seen):
+        out.append((key, _ANALYSIS_LABELS.get(key, _auto_label(key))))
+    return out
+
+
+_ANALYSIS_SYSTEMS = _build_system_list(_ANALYSIS_ORDER)
+_HEATMAP_ANALYSES = dict(_ANALYSIS_SYSTEMS)
+_HARITA_TAB_ANALYSES = list(_ANALYSIS_SYSTEMS)
+_HISTORY_SYSTEMS = _build_system_list(_HISTORY_ORDER)
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _BINANCE  = "https://fapi.binance.com"
 _PM_GAMMA = "https://gamma-api.polymarket.com"
@@ -137,7 +221,7 @@ _PM_POSITION_SOURCES = [
     ("analiz5",    "5. Analiz"),
     ("analiz10",   "10. Analiz"),
     ("15m_btc",    "5M 101 BTC"),
-    ("5m_btc_real","5M 201 BTC"),
+    ("5m_btc_102", "5M 102 BTC"),
     ("5m_btc_202", "5M 202 BTC"),
 ]
 
@@ -260,30 +344,6 @@ def api_klines(symbol):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-_HEATMAP_ANALYSES = {
-    "analiz5":  "5. Analiz",
-    "analiz1":  "1. Analiz",
-    "analiz4":  "4. Analiz",
-    "analiz9":  "9. Analiz",
-    "analiz10": "10. Analiz",
-    "karisim1": "11. Analiz",
-    "15m_btc":     "5M 101 BTC",
-    "5m_btc_106":  "5M 106 BTC",
-    "5m_btc_107":  "5M 107 BTC",
-    "5m_btc_real": "5M 201 BTC",
-    "5m_btc_202":  "5M 202 BTC",
-}
-
-# /harita sayfası sekmeleri — tek kaynak (API ile senkron)
-_HARITA_TAB_ANALYSES = [
-    ("analiz5",  "5. Analiz"),
-    ("analiz1",  "1. Analiz"),
-    ("analiz4",  "4. Analiz"),
-    ("analiz9",  "9. Analiz"),
-    ("analiz10", "10. Analiz"),
-    ("karisim1", "11. Analiz"),
-]
-
 
 def _harita_tabs_html() -> str:
     parts = []
@@ -294,24 +354,6 @@ def _harita_tabs_html() -> str:
             f'onclick="setAnaliz(this,\'{key}\')">{label}</button>'
         )
     return "\n    ".join(parts)
-
-
-# Geçmiş ekranı — tüm aktif sistemler
-_HISTORY_SYSTEMS = [
-    ("analiz1",    "1. Analiz"),
-    ("analiz3",    "3. Analiz"),
-    ("301",        "301. Analiz"),
-    ("analiz4",    "4. Analiz"),
-    ("analiz5",    "5. Analiz"),
-    ("analiz9",    "9. Analiz"),
-    ("analiz10",   "10. Analiz"),
-    ("karisim1",   "11. Analiz"),
-    ("15m_btc",     "5M 101 BTC"),
-    ("5m_btc_106",  "5M 106 BTC"),
-    ("5m_btc_107",  "5M 107 BTC"),
-    ("5m_btc_real","5M 201 BTC"),
-    ("5m_btc_202", "5M 202 BTC"),
-]
 
 
 def _trade_sort_ts(t: dict) -> str:
@@ -364,9 +406,7 @@ def api_history():
         except Exception:
             continue
         resolved = [t for t in hist if t.get("win") is not None]
-        if not resolved:
-            continue
-        recent = list(reversed(resolved[-limit:]))
+        recent = list(reversed(resolved[-limit:])) if resolved else []
         trades = [_format_history_trade(t, key, label) for t in recent]
         groups.append({
             "key": key, "label": label,
@@ -574,13 +614,13 @@ def api_analizler():
         ("301",        "301. Analiz",           300,  "MACD Hist Div"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM"),
+        ("analiz6",    "6. Analiz BTC-SOL",     500,  "RSI Div (Katı)"),
         ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
         ("analiz10",   "10. Analiz",            None, "Çift Konsensüs Gerçek PM"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
         ("15m_btc",     "5M 101 BTC",            None, "Gerçek PM / 4-Algo $3"),
-        ("5m_btc_106",  "5M 106 BTC",            500,  "RSI Div + Markov"),
-        ("5m_btc_107",  "5M 107 BTC",            500,  "RSI Div (#5)"),
-        ("5m_btc_real","5M 201 BTC",             None, "Gerçek PM / 4-Algo"),
+        ("5m_btc_102",  "5M 102 BTC",            150,  "101 + Momentum PM UP$4/DOWN$6"),
+        ("5m_btc_103",  "5M 103 BTC/SOL",        150,  "A10 Çift Konsensüs"),
         ("5m_btc_202", "5M 202 BTC",            None, "Gerçek PM / A1+A9"),
     ]
     results = []

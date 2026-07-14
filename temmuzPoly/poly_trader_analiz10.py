@@ -38,6 +38,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
 from pm_trader_helpers import PM_DRY_RUN, pm_get_balance, pm_try_open, pm_resolve_pnl
 from pm_balance_guard import PM_MIN_BALANCE, can_open_trade
+from momentum_filter import momentum_skip_reason_1h as momentum_skip_reason
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
@@ -251,6 +252,22 @@ async def analyze(symbol: str) -> dict | None:
 
     price = klines[-2]["close"]  # son kapanan mum = Polymarket Price to Beat
 
+    skip_reason = momentum_skip_reason(dir_a, symbol)
+    if skip_reason:
+        return {
+            "symbol":      symbol,
+            "price":       price,
+            "direction":   None,
+            "skip_reason": skip_reason,
+            "amount":      0.0,
+            "tier":        tier,
+            "conf_a":      conf_a,
+            "score_b":     score_b,
+            "labels":      [f"A:konf%{conf_a*100:.0f}", l_trend, l_mr, l_of],
+            "votes":       [+1 if dir_a == "UP" else -1, v_trend, v_mr, v_of],
+            "raw_direction": dir_a,
+        }
+
     return {
         "symbol":        symbol,
         "price":         price,
@@ -431,10 +448,15 @@ async def run_open() -> None:
     # Her sembol için çift konsensüs analizi
     candidates = []
     skipped    = []
+    momentum_skipped = []
     for sym in SYMBOLS:
         sig = await analyze(sym)
         if sig is None:
             skipped.append(sym)
+            continue
+        if sig.get("skip_reason"):
+            momentum_skipped.append(sig)
+            print(f"[10. ANALİZ] {sym} — {sig['skip_reason']}")
             continue
         candidates.append(sig)
         time.sleep(0.2)
@@ -517,10 +539,24 @@ async def run_open() -> None:
             f"🆕 <b>10. ANALİZ ✦ Çift Konsensüs PM — {saat} - {next_h}</b>\n"
             f"💵 Sabit işlem: ${TRADE_AMOUNT:.0f}\n\n"
             + "\n".join(trade_lines) + "\n"
+            + ("\n".join(
+                f"⏸ <b>{s['symbol'].replace('USDT', '')}</b> {s.get('raw_direction', '')} — {s['skip_reason']}"
+                for s in momentum_skipped
+            ) + "\n" if momentum_skipped else "")
             + ("\n".join(error_lines) + "\n" if error_lines else "")
             + f"{sep}\n"
             f"🏦 PM Bakiye: {bal_icon} {pm_bal_str}  |  Açılan: {_newly_opened}\n"
             f"{sep}"
+        )
+    elif momentum_skipped and not candidates:
+        mom_lines = [
+            f"⏸ <b>{s['symbol'].replace('USDT', '')}</b> {s.get('raw_direction', '')} — {s['skip_reason']}"
+            for s in momentum_skipped
+        ]
+        tg_send(
+            f"⏸ <b>10. ANALİZ ✦ Çift Konsensüs — {saat} İST</b>\n"
+            + "\n".join(mom_lines) + "\n"
+            f"🏦 PM Bakiye: {pm_bal_str}"
         )
     elif skipped and not candidates:
         tg_send(
@@ -534,7 +570,7 @@ async def run_open() -> None:
             + "\n".join(error_lines) + f"\n🏦 PM Bakiye: {pm_bal_str}"
         )
 
-    print(f"[10. ANALİZ open] {saat} İST — {_newly_opened} PM işlem, {len(skipped)} elendi")
+    print(f"[10. ANALİZ open] {saat} İST — {_newly_opened} PM işlem, {len(skipped)} elendi, {len(momentum_skipped)} momentum")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────

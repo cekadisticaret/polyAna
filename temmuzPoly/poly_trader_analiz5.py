@@ -19,6 +19,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
+from momentum_filter import momentum_skip_reason_1h as momentum_skip_reason
 
 # .env yükle
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -496,6 +497,22 @@ async def analyze(symbol: str) -> dict | None:
     except Exception:
         price_to_beat = pred_obj.current_price
 
+    skip_reason = momentum_skip_reason(pred_obj.predicted_dir, symbol)
+    if skip_reason:
+        return {
+            "symbol":        symbol,
+            "price":         price_to_beat,
+            "current_price": pred_obj.current_price,
+            "score":         score,
+            "predicted_dir": None,
+            "raw_direction": pred_obj.predicted_dir,
+            "skip_reason":   skip_reason,
+            "amount":        0.0,
+            "conf":          conf,
+            "votes":         [rsi_vote, macd_vote, ema_vote],
+            "labels":        [f"RSI:{pred_obj.rsi:.0f}", f"MACD:{'bull' if pred_obj.macd_bull else 'bear'}", pred_obj.trend],
+        }
+
     return {
         "symbol":        symbol,
         "price":         price_to_beat,
@@ -818,6 +835,10 @@ async def run_dual_confirm() -> None:
 
     for psig in pending:
         sym = psig["symbol"]
+        skip = momentum_skip_reason(psig["predicted_dir"], sym)
+        if skip:
+            skipped.append(f"{sym.replace('USDT', '')} ({skip})")
+            continue
         a10 = await analyze_a10(sym)
         if not a10:
             skipped.append(f"{sym.replace('USDT','')} (A10 konsensüs yok)")
@@ -902,10 +923,16 @@ async def run_open() -> None:
         return
 
     results = []
+    momentum_skipped = []
     for sym in SYMBOLS:
         sig = await analyze(sym)
-        if sig:
-            results.append(sig)
+        if not sig:
+            continue
+        if sig.get("skip_reason"):
+            momentum_skipped.append(sig)
+            print(f"[5. ANALİZ] {sym} — {sig['skip_reason']}")
+            continue
+        results.append(sig)
 
     # Mevcut ET saati (EDT = UTC-4) — _try_pm_open içinde hesaplanır
 
@@ -942,7 +969,7 @@ async def run_open() -> None:
     next_h   = f"{(hour_tr + 1) % 24:02d}:00"
     sep      = "━" * 26
     trade_lines = []
-    for sig in results:
+    for sig in results + momentum_skipped:
         name = sig["symbol"].replace("USDT", "")
         opened_pos = next((p for p in state["open_positions"] if p["symbol"] == sig["symbol"]), None)
         if opened_pos:
@@ -956,9 +983,15 @@ async def run_open() -> None:
                 f"  {d_icon} <b>{name}</b> {d_tr}  giriş:{entry:.2f}  ${pm_spent:.2f} risk{to_win}"
             )
         else:
-            conf = sig.get("conf", 0) * 100
-            d_tr = "UP" if sig["predicted_dir"] == "UP" else "DOWN"
-            trade_lines.append(f"  ⛔ <b>{name}</b> {d_tr} konf:%{conf:.0f}  → girilmedi")
+            if sig.get("skip_reason"):
+                d_tr = sig.get("raw_direction", sig["predicted_dir"])
+                trade_lines.append(
+                    f"  ⏸ <b>{name}</b> {d_tr} — {sig['skip_reason']}"
+                )
+            else:
+                conf = sig.get("conf", 0) * 100
+                d_tr = "UP" if sig["predicted_dir"] == "UP" else "DOWN"
+                trade_lines.append(f"  ⛔ <b>{name}</b> {d_tr} konf:%{conf:.0f}  → girilmedi")
 
     error_lines = []
     if _market_skip:

@@ -15,6 +15,7 @@ Cron:   */5 * * * *
 """
 
 import json
+import html
 import math
 import os
 import sys
@@ -47,7 +48,10 @@ WEEKLY_IMG   = "/tmp/poly_5m_btc_weekly.png"
 SYMBOL           = "BTCUSDT"
 INITIAL_BALANCE  = 500.0
 TRADE_AMOUNT     =  3.0   # sabit PM işlem tutarı
-_PERIOD_SECS     = 300    # 5 dakika = 300 saniye
+_PERIOD_SECS          = 300    # 5 dakika = 300 saniye
+_PM_WARMUP_SEC        = 3      # periyot başında min bekleme (orderbook)
+_PM_OPEN_DEADLINE_SEC = 30     # periyot başından max emir süresi (16:05 → 16:05:30)
+_PM_MAX_PAYOUT_RATIO  = 2.5   # to_win / harcama üst sınırı (üstü → işlem yok)
 _DAYS_TR         = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -55,7 +59,8 @@ _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cu
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
-_PM_DRY_RUN   = False  # Gerçek PM işlem
+_PM_DRY_RUN   = False  # Gerçek PM işlem (test için True)
+_PM_TRADING_ENABLED = os.getenv("PM_5M_REAL_ENABLED", "true").lower() in ("1", "true", "yes")
 
 LABEL = "5M 101 BTC"
 
@@ -124,6 +129,11 @@ def _pm_bal_line() -> str:
 
 
 # ── Telegram ─────────────────────────────────────────────────
+def _tg_esc(text: str) -> str:
+    """Algo etiketlerindeki < > & karakterleri HTML parse hatası vermesin."""
+    return html.escape(str(text), quote=False)
+
+
 def tg_send(text: str) -> None:
     try:
         url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -132,7 +142,13 @@ def tg_send(text: str) -> None:
         with urllib.request.urlopen(req, timeout=10) as r:
             r.read()
     except Exception as e:
-        print(f"[TG] Hata: {e}")
+        body = ""
+        if hasattr(e, "read"):
+            try:
+                body = e.read().decode()[:200]
+            except Exception:
+                pass
+        print(f"[TG] Hata: {e} {body}")
 
 
 def tg_send_photo(path: str, caption: str = "") -> None:
@@ -169,9 +185,20 @@ def _binance_get(path: str, params: dict | None = None) -> dict | list:
 def fetch_klines_5m(symbol: str, limit: int = 150) -> list[dict]:
     """5 dakikalık Binance futures klines."""
     raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "5m", "limit": limit})
-    return [{"open":   float(k[1]), "high":  float(k[2]),
+    return [{"open_time": int(k[0]), "open":   float(k[1]), "high":  float(k[2]),
              "low":    float(k[3]), "close": float(k[4]),
              "volume": float(k[5])} for k in raw]
+
+
+def _resolve_period_candle(ts_5m: int, retries: int = 8, wait_sec: float = 2.0) -> dict | None:
+    """Pozisyonun ait olduğu 5m mumunu ts_5m ile bul (Binance gecikmesine karşı retry)."""
+    target_ms = ts_5m * 1000
+    for _ in range(retries):
+        for k in fetch_klines_5m(SYMBOL, 30):
+            if k["open_time"] == target_ms:
+                return k
+        time.sleep(wait_sec)
+    return None
 
 
 def fetch_orderbook(symbol: str) -> dict:
@@ -406,43 +433,239 @@ def _pm_get_client():
     raise RuntimeError("Polymarket client oluşturulamadı")
 
 
-def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
-                    neg_risk: bool = False, _retry: bool = True) -> dict | None:
-    """FAK market buy — USD tutarı doğrudan gönderilir; FAK eşleşmezse 10sn sonra tekrar dener."""
+def _pm_fit_buy(size: float, price: float, min_shares: float = 5.0) -> tuple[float, float]:
+    from decimal import Decimal, ROUND_DOWN
+    p = Decimal(str(round(price, 2)))
+    if p <= 0:
+        return size, price
+    s = max(Decimal(str(round(size, 2))), Decimal(str(round(min_shares, 2))))
+    step = Decimal("0.01")
+    for _ in range(10000):
+        m = s * p
+        if (m * 100) == (m * 100).quantize(Decimal("1"), rounding=ROUND_DOWN):
+            return float(s), float(p)
+        s += step
+    return float(s), float(p)
+
+
+def _pm_best_ask(client, token_id: str, amount_usd: float) -> float | None:
+    """Gerçek en düşük ask — calculate_market_price yetersiz kalabiliyor."""
+    from py_clob_client_v2 import OrderType
     try:
-        from py_clob_client_v2 import MarketOrderArgs, OrderType, PartialCreateOrderOptions
-        from py_clob_client_v2.order_builder.constants import BUY
-        from decimal import Decimal, ROUND_DOWN
-        client = _pm_get_client()
-        amount_usd = float(Decimal(str(amount_usd)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
-        if _PM_DRY_RUN:
-            price = float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
-            price = max(0.02, min(0.98, round(price, 2)))
-            est = round(amount_usd / price, 2) if price else amount_usd
-            print(f"[DRY RUN] {token_id[:16]}… ${amount_usd:.2f} @ ~{price:.2f} (~{est} shares)")
-            return {"order_id": "DRY_RUN", "size": est, "price": price, "spent": amount_usd}
-        args   = MarketOrderArgs(token_id=token_id, amount=amount_usd, side=BUY, order_type=OrderType.FAK)
-        signed = client.create_market_order(args, PartialCreateOrderOptions(neg_risk=neg_risk))
-        resp   = client.post_order(signed, order_type=OrderType.FAK)
-        if not resp or not resp.get("success"):
-            print(f"[{LABEL}] Order başarısız: {resp}", file=sys.stderr)
-            if _retry:
-                print(f"[{LABEL}] 10sn sonra tekrar deneniyor...", file=sys.stderr)
-                time.sleep(10)
-                return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
-            return None
-        oid   = resp.get("orderID") or resp.get("id", "")
-        spent = float(resp.get("makingAmount") or int(signed.makerAmount) / 1e6)
-        size  = float(resp.get("takingAmount") or int(signed.takerAmount) / 1e6)
-        price = round(spent / size, 4) if size else 0.0
-        return {"order_id": oid, "size": size, "price": price, "spent": spent}
-    except Exception as e:
-        print(f"[{LABEL}] Order hatası: {e}", file=sys.stderr)
-        if _retry:
-            print(f"[{LABEL}] 10sn sonra tekrar deneniyor...", file=sys.stderr)
-            time.sleep(10)
-            return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
+        book = client.get_order_book(token_id)
+        asks = book.get("asks") or []
+        if asks:
+            return min(float(a["price"]) for a in asks)
+    except Exception:
+        pass
+    try:
+        return float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
+    except Exception:
         return None
+
+
+def _pm_payout_ratio(spent: float, to_win: float) -> float:
+    if spent <= 0:
+        return float("inf")
+    return round(to_win / spent, 2)
+
+
+def _pm_payout_ok(spent: float, to_win: float) -> bool:
+    return to_win <= spent * _PM_MAX_PAYOUT_RATIO
+
+
+def _notify_order_fail(
+    saat: str, next_saat: str, direction: str, consensus: int,
+    votes: list, labels: list, entry_p: float, amount: float,
+    token_price: float, pm_slug: str, reason: str, detail: str,
+) -> None:
+    """PM emir başarısız — detaylı Telegram."""
+    dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
+    dir_icon = "📈" if direction == "UP" else "📉"
+    sep      = "━" * 26
+    vote_lines = "\n".join(
+        f"  {'🟢' if v > 0 else '🔴' if v < 0 else '⚪'} {_tg_esc(labels[i])}"
+        for i, v in enumerate(votes)
+    )
+    tg_send(
+        f"{sep}\n"
+        f"⚠️ <b>{LABEL} — {saat} EMİR BAŞARISIZ</b>\n"
+        f"Sebep: {_tg_esc(reason)}\n\n"
+        f"{dir_icon} Sinyal: <b>BTC {dir_tr}</b> ({consensus}/4)\n"
+        f"💵 Planlanan: <b>${amount:.2f}</b>\n"
+        f"🎫 Token (gamma): @{token_price:.2f} ({direction})\n"
+        f"📍 BTC price-to-beat: {entry_p:,.2f} USDT\n"
+        f"🔗 PM: {pm_slug}\n"
+        f"⏱ Periyot: {saat} → {next_saat}\n"
+        f"📋 Algoritmalar:\n{vote_lines}\n\n"
+        f"ℹ️ {_tg_esc(detail)}\n"
+        f"{_pm_bal_line()}\n"
+        f"{sep}"
+    )
+    print(f"[{LABEL}] {saat} — emir başarısız: {reason}")
+
+
+def _notify_payout_skip(
+    saat: str, next_saat: str, direction: str, consensus: int,
+    votes: list, labels: list, entry_p: float, spent: float, to_win: float,
+    token_price: float, pm_slug: str, phase: str,
+) -> None:
+    """To-win çok yüksek → işlem yok; detaylı Telegram."""
+    dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
+    dir_icon = "📈" if direction == "UP" else "📉"
+    ratio    = _pm_payout_ratio(spent, to_win)
+    max_win  = round(spent * _PM_MAX_PAYOUT_RATIO, 2)
+    sep      = "━" * 26
+    vote_lines = "\n".join(
+        f"  {'🟢' if v > 0 else '🔴' if v < 0 else '⚪'} {_tg_esc(labels[i])}"
+        for i, v in enumerate(votes)
+    )
+    tg_send(
+        f"{sep}\n"
+        f"🚫 <b>{LABEL} — {saat} İŞLEM YOK</b>\n"
+        f"Sebep: To-win, giriş tutarının <b>{_PM_MAX_PAYOUT_RATIO}x</b> üstünde\n\n"
+        f"{dir_icon} Sinyal: <b>BTC {dir_tr}</b> ({consensus}/4)\n"
+        f"💵 Harcama (traded): <b>${spent:.2f}</b>\n"
+        f"🏆 To-win: <b>${to_win:.2f}</b>  → oran <b>{ratio:.2f}x</b>\n"
+        f"📊 İzin verilen max: <b>${max_win:.2f}</b> ({_PM_MAX_PAYOUT_RATIO}x)\n"
+        f"🎫 Token fiyatı: <b>@{token_price:.2f}</b> ({direction})\n"
+        f"📍 BTC price-to-beat: {entry_p:,.2f} USDT\n"
+        f"🔗 PM: {pm_slug}\n"
+        f"⏱ Periyot: {saat} → {next_saat}\n"
+        f"📋 Algoritmalar:\n{vote_lines}\n\n"
+        f"ℹ️ Token çok ucuz — piyasa yönümüze karşı fiyatlıyor olabilir.\n"
+        f"Kontrol: {_tg_esc(phase)}\n"
+        f"{_pm_bal_line()}\n"
+        f"{sep}"
+    )
+    print(
+        f"[{LABEL}] {saat} — payout {ratio:.2f}x > {_PM_MAX_PAYOUT_RATIO} "
+        f"(${spent:.2f}→${to_win:.2f} @{token_price:.2f}), işlem atlandı"
+    )
+
+
+def _pm_open_deadline(ts_5m: int) -> float:
+    return ts_5m + _PM_OPEN_DEADLINE_SEC
+
+
+def _pm_sleep_cap(deadline: float, sec: float) -> bool:
+    """deadline'a kadar en fazla sec saniye bekle; süre varsa True."""
+    left = deadline - time.time()
+    if left <= 0:
+        return False
+    time.sleep(min(sec, left))
+    return time.time() < deadline
+
+
+def _pm_period_warmup(ts_5m: int) -> None:
+    """5m periyot başında kısa warmup — deadline'ı aşmaz."""
+    deadline = _pm_open_deadline(ts_5m)
+    target   = ts_5m + _PM_WARMUP_SEC
+    now      = time.time()
+    if now < target:
+        wait = min(target - now, deadline - now)
+        if wait > 0:
+            print(f"[{LABEL}] PM orderbook bekleniyor ({wait:.0f}s)...", file=sys.stderr)
+            time.sleep(wait)
+
+
+def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
+                    neg_risk: bool = False, deadline: float | None = None) -> dict | None:
+    """FAK limit buy — best ask + slippage; deadline'a kadar kısa aralıklarla dener."""
+    from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
+    from py_clob_client_v2.order_builder.constants import BUY
+    from decimal import Decimal, ROUND_DOWN
+
+    amount_usd = float(Decimal(str(amount_usd)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+    if _PM_DRY_RUN:
+        client = _pm_get_client()
+        price = _pm_best_ask(client, token_id, amount_usd) or 0.5
+        price = max(0.02, min(0.98, round(price, 2)))
+        est = round(amount_usd / price, 2) if price else amount_usd
+        print(f"[DRY RUN] {token_id[:16]}… ${amount_usd:.2f} @ ~{price:.2f} (~{est} shares)")
+        return {"order_id": "DRY_RUN", "size": est, "price": price, "spent": amount_usd}
+
+    client = _pm_get_client()
+    opts   = PartialCreateOrderOptions(tick_size=tick_size, neg_risk=neg_risk)
+    slips  = [0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    attempt = 0
+    payout_rejected = False
+    last_reject: dict | None = None
+    orderbook_miss = 0
+    no_match = 0
+    last_err = ""
+
+    while True:
+        if deadline and time.time() >= deadline:
+            print(f"[{LABEL}] Emir süresi doldu (periyot+{_PM_OPEN_DEADLINE_SEC}s)", file=sys.stderr)
+            break
+
+        attempt += 1
+        if attempt > 1:
+            gap = min(2 + (attempt - 2), 5)
+            if deadline:
+                if not _pm_sleep_cap(deadline, gap):
+                    continue
+            else:
+                time.sleep(gap)
+
+        slip_idx = min(attempt - 1, len(slips) - 1)
+        best = _pm_best_ask(client, token_id, amount_usd)
+        if best is None:
+            orderbook_miss += 1
+            print(f"[{LABEL}] Orderbook yok (deneme {attempt})", file=sys.stderr)
+            continue
+
+        price = max(0.02, min(0.98, round(best + slips[slip_idx], 2)))
+        raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+        size, price = _pm_fit_buy(max(5.0, raw_sz), price)
+        spent = round(size * price, 2)
+
+        if not _pm_payout_ok(spent, size):
+            payout_rejected = True
+            last_reject = {"spent": spent, "to_win": size, "price": price}
+            print(
+                f"[{LABEL}] Payout oranı yüksek ({size/spent:.2f}x), "
+                f"deneme {attempt} atlandı (@{price:.2f})",
+                file=sys.stderr,
+            )
+            continue
+
+        try:
+            args   = OrderArgs(token_id=token_id, price=price, size=size, side=BUY)
+            signed = client.create_order(args, opts)
+            resp   = client.post_order(signed, order_type=OrderType.FAK)
+            if resp and resp.get("success"):
+                oid = resp.get("orderID") or resp.get("id", "")
+                print(f"[{LABEL}] PM order OK: {size} @ {price} (${spent:.2f}) deneme {attempt}")
+                return {"order_id": oid, "size": size, "price": price, "spent": spent}
+            print(f"[{LABEL}] Order başarısız (deneme {attempt}): {resp}", file=sys.stderr)
+            last_err = str(resp)
+        except Exception as e:
+            err = str(e)
+            last_err = err
+            if "no match" in err.lower() or "no orders found" in err.lower():
+                no_match += 1
+            print(f"[{LABEL}] Order hatası (deneme {attempt}): {err}", file=sys.stderr)
+            if "404" in err or "orderbook" in err.lower():
+                if deadline:
+                    _pm_sleep_cap(deadline, 2)
+                else:
+                    time.sleep(2)
+                try:
+                    client = _pm_get_client()
+                except Exception:
+                    pass
+
+    if payout_rejected and last_reject:
+        return {"_skip": "payout", **last_reject}
+    if orderbook_miss and not no_match:
+        return {"_skip": "orderbook", "attempts": attempt, "orderbook_miss": orderbook_miss}
+    if no_match:
+        return {"_skip": "no_match", "attempts": attempt, "no_match": no_match, "last_err": last_err}
+    if deadline and time.time() >= deadline:
+        return {"_skip": "deadline", "attempts": attempt, "orderbook_miss": orderbook_miss}
+    return {"_skip": "unknown", "attempts": attempt, "last_err": last_err}
 
 
 # ── Ana Çalışma Mantığı ───────────────────────────────────────
@@ -466,27 +689,26 @@ def run() -> None:
 
     if state["open_positions"]:
         # Biraz bekle — mumun kapanmasını garantile
-        time.sleep(3)
-        try:
-            klines = fetch_klines_5m(SYMBOL, 10)
-            # klines[-2] = az önce kapanan 5m mumu
-            prev_close = klines[-2]["close"]
-            prev_open  = klines[-2]["open"]
-        except Exception as e:
-            print(f"[{LABEL}] Kapanış fiyatı alınamadı: {e}")
-            prev_close = None
-            prev_open  = None
+        time.sleep(1)
 
         for pos in list(state["open_positions"]):
-            if prev_close is None:
-                continue
-            entry  = pos["entry_price"]
+            pos_ts = pos.get("ts_5m")
+            candle = _resolve_period_candle(pos_ts) if pos_ts else None
+            if candle is None:
+                try:
+                    klines = fetch_klines_5m(SYMBOL, 10)
+                    candle = klines[-2]
+                except Exception as e:
+                    print(f"[{LABEL}] Kapanış fiyatı alınamadı: {e}")
+                    continue
+
+            ref_open   = candle["open"]
+            prev_close = candle["close"]
             pred   = pos["predicted_dir"]
             amount = pos.get("amount", TRADE_AMOUNT)
             to_win = pos.get("to_win", amount * 2)
 
             # PM ile aynı: periyot kapanışı vs periyot açılışı (price to beat)
-            ref_open = klines[-2]["open"]
             actual = "UP" if prev_close >= ref_open else "DOWN"
             win    = (pred == actual)
 
@@ -505,8 +727,9 @@ def run() -> None:
                 "predicted_dir":    pred,
                 "actual_dir":       actual,
                 "win":              win,
-                "entry_price":      entry,
+                "entry_price":      ref_open,
                 "exit_price":       prev_close,
+                "ref_open":         ref_open,
                 "amount":           amount,
                 "to_win":           to_win,
                 "pnl":              pnl,
@@ -551,10 +774,8 @@ def run() -> None:
         tg_send(close_msg)
         print(f"[{LABEL}] {saat} — {len(closed_lines)} pozisyon kapatıldı")
 
-    # ── 2. AÇ: Yeni 5m pozisyonu ──────────────────────────────
-    from pm_balance_guard import can_open_trade
-    if not _PM_DRY_RUN and not can_open_trade(LABEL, tg_send):
-        return
+    # ── 2. AÇ: Sinyal + (opsiyonel) PM işlemi ─────────────────
+    ts_5m = _current_5m_ts()  # kapanış döngüsü pos_ts ile ezmemeli
 
     result = analyze()
     from pm_signal_sync import save_signal
@@ -567,6 +788,7 @@ def run() -> None:
     consensus = result["consensus"]
     amount    = result["amount"]
     votes     = result["votes"]
+    labels    = result.get("labels", [])
     entry_p   = result["entry_price"]
     next_time = now_tr + timedelta(minutes=5)
     next_saat = next_time.strftime("%H:%M")
@@ -574,6 +796,11 @@ def run() -> None:
     prev_wins, prev_total = get_stats(history, period_min)
     all_wins, all_total   = get_all_stats(history)
     sep = "━" * 26
+    names    = ["A1", "Trend", "MR", "OF"]
+    vote_str = "  ".join(
+        f"{'🟢' if v > 0 else '🔴' if v < 0 else '⚪'} {names[i]}"
+        for i, v in enumerate(votes)
+    )
 
     if direction is None:
         tg_send(
@@ -586,6 +813,27 @@ def run() -> None:
         print(f"[{LABEL}] {saat} — konsensüs yok ({consensus}/4)")
         return
 
+    dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
+    dir_icon = "📈" if direction == "UP" else "📉"
+
+    if not _PM_TRADING_ENABLED:
+        tg_send(
+            f"{sep}\n"
+            f"📡 <b>{LABEL} — {saat} → {next_saat}</b>  ⏸ PM PASIF\n"
+            f"{dir_icon} <b>Sinyal: BTC {dir_tr}</b>  ({consensus}/4)\n"
+            f"Giriş: {entry_p:,.2f} USDT\n"
+            f"{vote_str}\n"
+            f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
+            f"{_pm_bal_line()}\n"
+            f"{sep}"
+        )
+        print(f"[{LABEL}] {saat} — SİNYAL {dir_tr} ({consensus}/4) [PM pasif]")
+        return
+
+    from pm_balance_guard import can_open_trade
+    if not _PM_DRY_RUN and not can_open_trade(LABEL, tg_send):
+        return
+
     pm_info = _pm_find_5m_market(ts_5m)
     if not pm_info or pm_info.get("closed"):
         tg_send(f"⚠️ <b>{LABEL}</b> — PM market bulunamadı/kapalı, {saat}")
@@ -596,16 +844,74 @@ def run() -> None:
     pm_slug     = pm_info["slug"]
     to_win      = round(amount / token_price, 2) if token_price > 0 else round(amount * 2, 2)
 
+    if not _pm_payout_ok(amount, to_win):
+        _notify_payout_skip(
+            saat, next_saat, direction, consensus, votes, labels,
+            entry_p, amount, to_win, token_price, pm_slug, "market fiyatı (ön kontrol)",
+        )
+        return
+
     order_result = None
     token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
     if not _PM_DRY_RUN:
-        order_result = _pm_place_order(token_id, amount, pm_info["tick_size"], pm_info["neg_risk"])
-        if not order_result:
-            tg_send(f"⚠️ <b>{LABEL}</b> — PM order başarısız, {direction} {saat}")
-            print(f"[{LABEL}] PM order başarısız, işlem atlandı")
+        deadline = _pm_open_deadline(ts_5m)
+        _pm_period_warmup(ts_5m)
+        order_result = _pm_place_order(
+            token_id, amount, pm_info["tick_size"], pm_info["neg_risk"], deadline=deadline,
+        )
+        if order_result and order_result.get("_skip") == "payout":
+            _notify_payout_skip(
+                saat, next_saat, direction, consensus, votes, labels,
+                entry_p, order_result["spent"], order_result["to_win"],
+                order_result["price"], pm_slug, "orderbook (tüm denemeler reddedildi)",
+            )
+            return
+        if (
+            order_result
+            and order_result.get("_skip") in ("orderbook", "no_match", "unknown")
+            and time.time() < deadline - 3
+        ):
+            pm_info = _pm_find_5m_market(ts_5m)
+            if pm_info:
+                token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
+                order_result = _pm_place_order(
+                    token_id, amount, pm_info["tick_size"], pm_info["neg_risk"], deadline=deadline,
+                )
+        if order_result and order_result.get("_skip") == "payout":
+            _notify_payout_skip(
+                saat, next_saat, direction, consensus, votes, labels,
+                entry_p, order_result["spent"], order_result["to_win"],
+                order_result["price"], pm_slug, "orderbook yenileme sonrası",
+            )
+            return
+        if order_result and order_result.get("_skip"):
+            skip = order_result["_skip"]
+            if skip == "deadline":
+                reason = f"Emir süresi doldu (periyot+{_PM_OPEN_DEADLINE_SEC}s)"
+                detail = (
+                    f"{order_result.get('attempts', 0)} deneme; "
+                    f"orderbook boş: {order_result.get('orderbook_miss', 0)}x."
+                )
+            elif skip == "orderbook":
+                reason = "Orderbook boş"
+                detail = f"{order_result.get('orderbook_miss', 0)} denemede satıcı emri bulunamadı."
+            elif skip == "no_match":
+                reason = "FAK eşleşmedi (no match)"
+                detail = (
+                    f"{order_result.get('no_match', 0)} deneme; "
+                    f"son: {order_result.get('last_err', '')[:120]}"
+                )
+            else:
+                reason = "Bilinmeyen hata"
+                detail = order_result.get("last_err", "")[:120]
+            _notify_order_fail(
+                saat, next_saat, direction, consensus, votes, labels,
+                entry_p, amount, token_price, pm_slug, reason, detail,
+            )
             return
         to_win = order_result["size"]
         amount = order_result["spent"]
+        token_price = order_result.get("price", token_price)
 
     state["balance"] = round(state["balance"] - amount, 2)
     pos_data = {
@@ -635,13 +941,6 @@ def run() -> None:
     if not _PM_DRY_RUN:
         time.sleep(2)
 
-    dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
-    dir_icon = "📈" if direction == "UP" else "📉"
-    names    = ["A1", "Trend", "MR", "OF"]
-    vote_str = "  ".join(
-        f"{'🟢' if v > 0 else '🔴' if v < 0 else '⚪'} {names[i]}"
-        for i, v in enumerate(votes)
-    )
     price_str = f"@{token_price:.2f}" if token_price else ""
 
     tg_send(

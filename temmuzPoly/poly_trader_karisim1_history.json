@@ -1415,5 +1415,18 @@
     "pnl": 12.0,
     "win": true,
     "count": 3
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "entry_price": 75.39,
+    "exit_price": 75.26,
+    "entry_hour_tr": 4,
+    "entry_dow": 1,
+    "amount": 20.0,
+    "pnl": 20.0,
+    "win": true,
+    "count": 2
   }
 ]

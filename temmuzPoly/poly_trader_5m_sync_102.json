@@ -1,0 +1,24 @@
+{
+  "ts_5m": 1784011200,
+  "saved_at_tr": "2026-07-14T09:40:04.647865+03:00",
+  "result": {
+    "votes": [
+      0,
+      0,
+      1,
+      -1
+    ],
+    "labels": [
+      "A1 →  RSI:27  MACD:↓  EMA:↑",
+      "Trend →  karışık (+0.11%)",
+      "MR ↑  RSI:27  BB:orta",
+      "OF ↓  CVD:-0.13  OB:-0.27"
+    ],
+    "entry_price": 62728.0,
+    "momentum": "UP",
+    "direction": null,
+    "consensus": 1,
+    "amount": 0.0,
+    "skip_reason": null
+  }
+}
