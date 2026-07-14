@@ -24,6 +24,7 @@ _TZ = ZoneInfo("Europe/Istanbul")
 
 BOT_TOKEN  = "8256912678:AAFWEoRWO7Z0siK_c4Dm5XjgtBKmh-wmF8E"
 CHAT_ID    = "830754964"
+TELEGRAM_NOTIFY_ENABLED = False  # pasif: BIST Sinyal bildirimleri kapalı
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(_DIR, "bist_scanner_history.json")
@@ -244,6 +245,8 @@ def algo_volume_quality(klines: list[dict]) -> tuple[int, str]:
 
 # ── Yardımcı ─────────────────────────────────────────────────
 def tg_send(text: str) -> None:
+    if not TELEGRAM_NOTIFY_ENABLED:
+        return
     try:
         url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()

@@ -463,6 +463,16 @@ def run() -> None:
     vote_str = "  ".join(f"{'🟢' if v > 0 else '🔴' if v < 0 else '⚪'}" for v in votes)
 
     if not _PM_LIVE:
+        to_win = round(amount / 0.5, 2)
+        state["balance"] = round(state["balance"] - amount, 2)
+        state["open_positions"].append({
+            "symbol": SYMBOL, "predicted_dir": direction,
+            "entry_price": entry_p, "amount": amount, "pm_spent": amount, "to_win": to_win,
+            "token_price": 0.5, "consensus": consensus, "votes": votes,
+            "entry_time_tr": now_tr.isoformat(), "entry_period_min": period_min,
+            "entry_dow": dow, "ts_5m": ts_5m, "virtual": True,
+        })
+        save_state(state)
         tg_send(
             f"{sep}\n"
             f"📡 <b>{LABEL} — {saat} → {next_saat}</b>  ⏸ PM PASIF\n"
@@ -471,6 +481,7 @@ def run() -> None:
             f"{vote_str}\n"
             f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
             f"{_pm_bal_line()}\n"
+            f"💰 Sanal bakiye: ${state['balance']:.2f}\n"
             f"{sep}"
         )
         print(f"[{LABEL}] {saat} — SİNYAL {dir_tr} ${amount:.0f} [PM pasif]")
@@ -536,6 +547,7 @@ def run() -> None:
     to_win      = order_result["size"]
     amount      = order_result["spent"]
     token_price = order_result.get("price", token_price)
+    pm_size     = order_result.get("size") or to_win
 
     state["balance"] = round(state["balance"] - amount, 2)
     state["open_positions"].append({
@@ -545,7 +557,7 @@ def run() -> None:
         "entry_time_tr": now_tr.isoformat(), "entry_period_min": period_min,
         "entry_dow": dow, "pm_slug": pm_slug, "pm_token_dir": direction,
         "pm_token_id": token_id, "ts_5m": ts_5m,
-        "pm_size": order_result["size"],
+        "pm_size": pm_size,
         "pm_order_id": order_result.get("order_id", ""),
     })
     save_state(state)

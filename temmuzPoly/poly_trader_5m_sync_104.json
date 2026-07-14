@@ -1,0 +1,39 @@
+{
+  "ts_5m": 1784030700,
+  "saved_at_tr": "2026-07-14T15:05:04.490202+03:00",
+  "result": {
+    "direction": null,
+    "consensus": 1,
+    "amount": 0.0,
+    "entry_price": 62791.1,
+    "momentum": "DOWN",
+    "votes": [
+      0,
+      0,
+      0,
+      -1,
+      0
+    ],
+    "labels": [
+      "A1 →  RSI:53.5  MACD:↓(h:-8.2614)  EMA9/20/50:↑",
+      "Trend →  karışık (+0.10%) ADX:18.7",
+      "MR →  RSI:53.5  BB_pos:0.55  VWAP:62,445.62",
+      "OFv2 ↓  CVD:+0.154  OB:-0.430  Spread:0.0002%",
+      "Vol →  ratio:1.36x  trend:1/5  Δ%:-0.03"
+    ],
+    "timestamp": "2026-07-14T12:05:04.484812+00:00",
+    "atr": 66.83539923860322,
+    "adx": 18.672074222648543,
+    "stop_loss": 0.0,
+    "take_profit": 0.0,
+    "trailing_activation": 0.0,
+    "trailing_step": 0.0,
+    "risk_reward": 0.0,
+    "htf_trend": "DOWN",
+    "htf_strength": 18.079050497924428,
+    "volume_ratio": 1.3555699399745986,
+    "skip_reason": "Konsensüs yok (1/5)",
+    "raw_direction": null,
+    "paper_mode": true
+  }
+}

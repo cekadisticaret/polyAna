@@ -16,9 +16,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 
-# Sıcaklık haritası: analiz bazlı aktif semboller (ETH analiz10'da yok)
+# Sıcaklık haritası: analiz bazlı aktif semboller
 _HEATMAP_SYMS = {
+    "analiz1":  ["BTC", "SOL"],
+    "analiz4":  ["BTC", "ETH"],
+    "analiz5":  ["BTC", "SOL"],
     "analiz6":  ["BTC", "SOL"],
+    "analiz9":  ["BTC", "SOL"],
     "analiz10": ["BTC", "SOL"],
     "karisim1": ["BTC", "SOL"],
 }
@@ -32,13 +36,12 @@ _ANALYSIS_ORDER = [
     "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_202",
 ]
 _HISTORY_ORDER = [
-    "analiz1", "analiz3", "301", "analiz4", "analiz5", "analiz6", "analiz9",
+    "analiz1", "analiz3", "analiz4", "analiz5", "analiz6", "analiz9",
     "analiz10", "karisim1", "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_202",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
     "analiz3":    "3. Analiz",
-    "301":        "301. Analiz",
     "analiz4":    "4. Analiz",
     "analiz5":    "5. Analiz",
     "analiz6":    "6. Analiz BTC-SOL",
@@ -217,13 +220,19 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
         pass
     return None
 
+# Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
 _PM_POSITION_SOURCES = [
+    ("5m_btc_102", "5M 102 BTC"),
     ("analiz5",    "5. Analiz"),
     ("analiz10",   "10. Analiz"),
-    ("15m_btc",    "5M 101 BTC"),
-    ("5m_btc_102", "5M 102 BTC"),
-    ("5m_btc_202", "5M 202 BTC"),
 ]
+
+def _position_visible(_key: str, pos: dict) -> bool:
+    """Yalnızca gerçek PM pozisyonları (slug/token + harcanan tutar)."""
+    spent = pos.get("pm_spent") or pos.get("amount")
+    if not spent:
+        return False
+    return bool(pos.get("pm_slug") or pos.get("pm_token_id"))
 
 def collect_positions() -> list:
     """Gerçek Polymarket açık pozisyonları (tüm aktif PM trader'lar)."""
@@ -231,7 +240,7 @@ def collect_positions() -> list:
     for key, label in _PM_POSITION_SOURCES:
         state = load_state(key)
         for pos in state.get("open_positions", []):
-            if not pos.get("pm_slug") or not (pos.get("pm_spent") or pos.get("amount")):
+            if not _position_visible(key, pos):
                 continue
             positions.append({**pos, "_analiz": key, "_analiz_label": label})
     return positions
@@ -322,6 +331,7 @@ def api_data():
             "close_val":    close_val,
             "entry_time":   pos.get("entry_time_tr", ""),
             "pm_slug":      pos.get("pm_slug", ""),
+            "closable":     bool(pos.get("pm_token_id") and pm_size),
         })
 
     cash      = get_pm_balance()
@@ -343,6 +353,15 @@ def api_klines(symbol):
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+def _allowed_syms_for(key: str) -> list[str]:
+    return _HEATMAP_SYMS.get(key, _ACTIVE_SYMS)
+
+
+def _filter_hist_for(key: str, hist: list) -> list:
+    allowed = set(_allowed_syms_for(key))
+    return [t for t in hist if t.get("symbol", "").replace("USDT", "") in allowed]
 
 
 def _harita_tabs_html() -> str:
@@ -405,6 +424,7 @@ def api_history():
                 hist = json.load(f)
         except Exception:
             continue
+        hist = _filter_hist_for(key, hist)
         resolved = [t for t in hist if t.get("win") is not None]
         recent = list(reversed(resolved[-limit:])) if resolved else []
         trades = [_format_history_trade(t, key, label) for t in recent]
@@ -440,8 +460,7 @@ def api_heatmap():
         return jsonify({"cells": []})
     with open(path) as f:
         hist = json.load(f)
-    if analiz_key == "analiz10":
-        hist = [t for t in hist if t.get("symbol", "").replace("USDT", "") != "ETH"]
+    hist = [t for t in hist if t.get("symbol", "").replace("USDT", "") in allowed_syms]
     days_tr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
     grid = defaultdict(lambda: {"w": 0, "t": 0})
     for t in hist:
@@ -508,8 +527,7 @@ def api_heatmap_detail():
         return jsonify({"trades": []})
     with open(path) as f:
         hist = json.load(f)
-    if analiz_key == "analiz10":
-        hist = [t for t in hist if t.get("symbol", "").replace("USDT", "") != "ETH"]
+    hist = [t for t in hist if t.get("symbol", "").replace("USDT", "") in allowed_syms]
 
     trades = []
     for t in hist:
@@ -553,6 +571,7 @@ def api_symbol_stats():
         return jsonify({"sym_wr": [], "top_slots": []})
     with open(path) as f:
         hist = json.load(f)
+    hist = _filter_hist_for("analiz5", hist)
 
     # Sembol bazlı WR
     sym_stat = defaultdict(lambda: {"w": 0, "t": 0})
@@ -562,9 +581,11 @@ def api_symbol_stats():
         if t.get("win"):
             sym_stat[sym]["w"] += 1
     sym_wr = []
-    for sym in _ACTIVE_SYMS:
+    for sym in _allowed_syms_for("analiz5"):
         v = sym_stat.get(sym, {"w": 0, "t": 0})
-        wr = round(v["w"] / v["t"] * 100, 1) if v["t"] else 0
+        if not v["t"]:
+            continue
+        wr = round(v["w"] / v["t"] * 100, 1)
         sym_wr.append({"sym": sym, "wr": wr, "w": v["w"], "t": v["t"]})
     sym_wr.sort(key=lambda x: x["wr"], reverse=True)
 
@@ -611,7 +632,6 @@ def api_analizler():
     _SYSTEMS = [
         ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
         ("analiz3",    "3. Analiz (Stoch ETH)", 300,  "Stochastic RSI / ETH"),
-        ("301",        "301. Analiz",           300,  "MACD Hist Div"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM"),
         ("analiz6",    "6. Analiz BTC-SOL",     500,  "RSI Div (Katı)"),
@@ -634,24 +654,31 @@ def api_analizler():
             state = json.load(open(spath)) if os.path.exists(spath) else {}
         except Exception:
             continue
+        hist = _filter_hist_for(key, hist)
         total = len(hist)
         wins  = sum(1 for t in hist if t.get("win"))
         wr    = round(wins / total * 100, 1) if total else 0
         bal   = state.get("balance", 0)
         # P&L = bakiye - başlangıç (reset sonrası kayıtları da doğru yansıtır)
         pnl   = round(bal - init_bal, 2) if init_bal else round(sum(t.get("pnl", 0) for t in hist), 2)
-        open_cnt = len(state.get("open_positions", []))
+        allowed = _allowed_syms_for(key)
+        open_cnt = len([
+            p for p in state.get("open_positions", [])
+            if p.get("symbol", "").replace("USDT", "") in allowed
+        ])
         # Sembol bazlı
         sym_stats = {}
         for t in hist:
             sym = t.get("symbol", "").replace("USDT", "")
+            if sym not in allowed:
+                continue
             if sym not in sym_stats:
                 sym_stats[sym] = {"w": 0, "t": 0}
             sym_stats[sym]["t"] += 1
             if t.get("win"):
                 sym_stats[sym]["w"] += 1
         sym_list = []
-        syms_for = _HEATMAP_SYMS.get(key, _ACTIVE_SYMS)
+        syms_for = allowed
         for sym in syms_for:
             v = sym_stats.get(sym)
             if v and v["t"]:
@@ -1022,6 +1049,7 @@ def api_stats():
             continue
         with open(path) as f:
             hist = json.load(f)
+        hist = _filter_hist_for(key, hist)
         total = len(hist)
         wins  = sum(1 for t in hist if t.get("win"))
         pnl   = sum(t.get("pnl", 0) for t in hist)
@@ -2071,20 +2099,6 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
     </div>
   </div>
 
-  <div class="settings-card">
-    <h3>ETH Ayarları</h3>
-    <div class="setting-row">
-      <div class="setting-left">
-        <div class="setting-label">ETH Çarpanı</div>
-        <div class="setting-desc">ETH işlemlerine uygulanır (ör: 0.7 → A9+A5 hemfikirde $15 × 0.7 = $10.50)</div>
-      </div>
-      <div class="setting-right">
-        <span class="setting-unit">×</span>
-        <input class="setting-input" id="eth_multiplier" type="number" step="0.05" min="0.1" max="1">
-      </div>
-    </div>
-  </div>
-
   <button class="save-btn" id="save-btn" onclick="save()">Kaydet</button>
 </div>
 </div>
@@ -2098,7 +2112,6 @@ async function load() {
   document.getElementById('amount_agree').value   = d.amount_agree;
   document.getElementById('amount_a5_only').value = d.amount_a5_only;
   document.getElementById('amount_a9_only').value = d.amount_a9_only;
-  document.getElementById('eth_multiplier').value = d.eth_multiplier;
   updateDualUI(!!d.dual_mode_enabled);
 }
 
@@ -2142,7 +2155,6 @@ async function save() {
     amount_agree:    parseFloat(document.getElementById('amount_agree').value),
     amount_a5_only:  parseFloat(document.getElementById('amount_a5_only').value),
     amount_a9_only:  parseFloat(document.getElementById('amount_a9_only').value),
-    eth_multiplier:  parseFloat(document.getElementById('eth_multiplier').value),
   };
   const r = await fetch('/poly/api/settings', {
     method: 'POST', headers: {'Content-Type':'application/json'},
@@ -2238,9 +2250,9 @@ HARITA_HTML = r"""<!DOCTYPE html>
     <div class="page-title">Sıcaklık Haritası</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="hm-filter active" onclick="setFilter(this,'ALL')">Tümü</button>
-      <button class="hm-filter" onclick="setFilter(this,'BTC')">BTC</button>
+      <button class="hm-filter" id="hm-btc-btn" onclick="setFilter(this,'BTC')">BTC</button>
       <button class="hm-filter" id="hm-eth-btn" onclick="setFilter(this,'ETH')">ETH</button>
-      <button class="hm-filter" onclick="setFilter(this,'SOL')">SOL</button>
+      <button class="hm-filter" id="hm-sol-btn" onclick="setFilter(this,'SOL')">SOL</button>
     </div>
   </div>
   <!-- Analiz sekmeleri -->
@@ -2285,6 +2297,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
 
 <script>
 const _ANALIZ_LABELS = {{ harita_labels|safe }};
+const _HEATMAP_SYMS_MAP = {{ harita_heatmap_syms|safe }};
 let _data = null, _sym = 'ALL', _analiz = 'analiz5';
 
 function hmColor(wr,t){ if(!t)return'#1a1a1a'; if(wr>=70)return'#166534'; if(wr>=55)return'#14532d'; if(wr>=50)return'#365314'; if(wr>=40)return'#78350f'; return'#450a0a'; }
@@ -2309,10 +2322,12 @@ function setAnaliz(btn, key) {
 }
 
 function updateHmSymFilters() {
-  const ethBtn = document.getElementById('hm-eth-btn');
-  const hideEth = _analiz === 'analiz10';
-  if (ethBtn) ethBtn.style.display = hideEth ? 'none' : '';
-  if (hideEth && _sym === 'ETH') {
+  const allowed = _HEATMAP_SYMS_MAP[_analiz] || ['BTC', 'ETH', 'SOL'];
+  ['BTC', 'ETH', 'SOL'].forEach(s => {
+    const btn = document.getElementById('hm-' + s.toLowerCase() + '-btn');
+    if (btn) btn.style.display = allowed.includes(s) ? '' : 'none';
+  });
+  if (_sym !== 'ALL' && !allowed.includes(_sym)) {
     _sym = 'ALL';
     document.querySelectorAll('.hm-filter').forEach(b => {
       b.classList.toggle('active', b.textContent.trim() === 'Tümü');
@@ -2469,6 +2484,7 @@ function closePopup() {
 }
 document.addEventListener('keydown', e => { if(e.key==='Escape') closePopup(); });
 
+updateHmSymFilters();
 load();
 </script>
 </body>
@@ -2807,7 +2823,6 @@ HTML = r"""<!DOCTYPE html>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="hm-filter active" data-sym="ALL" onclick="setHmFilter(this,'ALL')">Tümü</button>
       <button class="hm-filter" data-sym="BTC"  onclick="setHmFilter(this,'BTC')">BTC</button>
-      <button class="hm-filter" data-sym="ETH"  onclick="setHmFilter(this,'ETH')">ETH</button>
       <button class="hm-filter" data-sym="SOL"  onclick="setHmFilter(this,'SOL')">SOL</button>
     </div>
   </div>
@@ -3031,9 +3046,9 @@ async function refresh() {
           <div class="pos-risk-row">Riskteki: $${p.pm_spent}${cvStr}
             <span class="pos-analiz-tag">${p.analiz}</span>
           </div>
-          <div class="close-btn-wrap">
+          ${p.closable ? `<div class="close-btn-wrap">
             <button class="close-btn" onclick="closePosition('${p.analiz_key}','${p.symbol}',this)">Pozisyonu Kapat</button>
-          </div>
+          </div>` : ''}
         </div>`;
       }).join('');
     pc.innerHTML    = posHTML;
@@ -3450,13 +3465,12 @@ _SETTINGS_LABELS = {
     "amount_agree":    {"label": "A9 + A5 aynı yön", "unit": "$", "min": 1, "max": 100, "step": 0.5},
     "amount_a5_only":  {"label": "A9 sessiz, A5 var", "unit": "$", "min": 1, "max": 100, "step": 0.5},
     "amount_a9_only":  {"label": "A9 var, A5 sessiz", "unit": "$", "min": 1, "max": 100, "step": 0.5},
-    "eth_multiplier":  {"label": "ETH çarpanı", "unit": "×", "min": 0.1, "max": 1.0, "step": 0.05},
 }
 
 def _read_settings() -> dict:
     defaults = {
         "amount_agree": 15.0, "amount_a5_only": 8.0, "amount_a9_only": 6.0,
-        "eth_multiplier": 0.7, "dual_mode_enabled": False, "dual_mode_amount": 10.0,
+        "dual_mode_enabled": False, "dual_mode_amount": 10.0,
     }
     if os.path.exists(_SETTINGS_FILE):
         with open(_SETTINGS_FILE) as f:
@@ -3554,6 +3568,7 @@ def harita():
         HARITA_HTML,
         harita_tabs=_harita_tabs_html(),
         harita_labels=json.dumps(labels, ensure_ascii=False),
+        harita_heatmap_syms=json.dumps(_HEATMAP_SYMS, ensure_ascii=False),
     )
 
 if __name__ == "__main__":

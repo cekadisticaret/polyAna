@@ -1,21 +1,21 @@
 {
-  "ts_5m": 1784011200,
-  "saved_at_tr": "2026-07-14T09:40:04.647865+03:00",
+  "ts_5m": 1784030700,
+  "saved_at_tr": "2026-07-14T15:05:04.681010+03:00",
   "result": {
     "votes": [
       0,
-      0,
       1,
+      0,
       -1
     ],
     "labels": [
-      "A1 →  RSI:27  MACD:↓  EMA:↑",
-      "Trend →  karışık (+0.11%)",
-      "MR ↑  RSI:27  BB:orta",
-      "OF ↓  CVD:-0.13  OB:-0.27"
+      "A1 →  RSI:50  MACD:↓  EMA:↑",
+      "Trend ↑  E20>E50 (+0.10%)",
+      "MR →  RSI:50  BB:orta",
+      "OFv2 ↓  CVD:+0.15  OB:-0.66"
     ],
-    "entry_price": 62728.0,
-    "momentum": "UP",
+    "entry_price": 62810.3,
+    "momentum": "DOWN",
     "direction": null,
     "consensus": 1,
     "amount": 0.0,

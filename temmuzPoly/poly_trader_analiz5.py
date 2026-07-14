@@ -59,7 +59,7 @@ def _load_settings() -> dict:
         "amount_agree":       15.0,
         "amount_a5_only":      8.0,
         "amount_a9_only":      6.0,
-        "eth_multiplier":      0.7,
+        "eth_multiplier":      0.7,  # legacy — ETH kaldırıldı
         "dual_mode_enabled":   False,
         "dual_mode_amount":   10.0,
     }
