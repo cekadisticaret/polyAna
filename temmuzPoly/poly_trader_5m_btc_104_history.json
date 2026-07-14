@@ -418,5 +418,41 @@
     "label": "StochRSI ↓  K:87  D:89  (overbought)",
     "pm_slug": "btc-updown-5m-1783920000",
     "pm_dry_run": true
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 63035.1,
+    "exit_price": 62930.9,
+    "amount": 4.0,
+    "to_win": 8.08,
+    "pnl": -4.0,
+    "entry_time_tr": "2026-07-14T15:25:02.151362+03:00",
+    "entry_period_min": 925,
+    "entry_dow": 1,
+    "exit_time_tr": "2026-07-14T15:30:01.464844+03:00",
+    "consensus": 3,
+    "votes": [
+      0,
+      1,
+      -1,
+      1,
+      1
+    ],
+    "labels": [
+      "A1 →  RSI:70.6  MACD:↑(h:+21.7357)  EMA9/20/50:↑",
+      "Trend ↑  E20>E50 (+0.12%) ADX:21.3",
+      "MR ↓  RSI:70.6  BB_pos:1.30  VWAP:62,470.35",
+      "OF ↑  CVD:+0.326  OB:+0.339  Spread:0.0002%",
+      "Vol ↑  ratio:3.72x  trend:3/5  Δ%:+0.22"
+    ],
+    "atr": 76.61598108914723,
+    "adx": 21.3061548181297,
+    "htf_trend": "DOWN",
+    "pm_slug": "btc-updown-5m-1784031900",
+    "token_price": 0.495,
+    "pm_dry_run": true
   }
 ]

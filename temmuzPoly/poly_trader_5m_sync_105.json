@@ -1,13 +1,25 @@
 {
-  "ts_5m": 1783948800,
-  "saved_at_tr": "2026-07-13T16:20:02.778075+03:00",
+  "ts_5m": 1784033100,
+  "saved_at_tr": "2026-07-14T15:45:02.418684+03:00",
   "result": {
     "direction": null,
-    "consensus": 0,
-    "signal": "NEUTRAL",
-    "poc": 63061.88,
-    "detail": "POC 63,062 ≈ fiyat (+1.0%) → nötr",
-    "entry_price": 62488.9,
-    "amount": 0.0
+    "consensus": 2,
+    "amount": 0.0,
+    "entry_price": 63408.7,
+    "momentum": "DOWN",
+    "votes": [
+      0,
+      1,
+      -1,
+      1
+    ],
+    "labels": [
+      "A1 →  RSI:76  MACD:↑  EMA:↑",
+      "Trend ↑  E20>E50 (+0.26%)",
+      "MR ↓  RSI:76  BB:üst",
+      "OF ↑  CVD:+0.42  OB:+0.97"
+    ],
+    "skip_reason": "MR veto: aşırı alım (MR↓), UP için 3/4 gerekli (2/4)",
+    "raw_direction": "UP"
   }
 }

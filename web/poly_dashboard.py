@@ -33,11 +33,11 @@ _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
     "analiz5", "analiz6", "analiz1", "analiz4", "analiz9", "analiz10", "karisim1",
-    "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_202",
+    "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_104", "5m_btc_105",
 ]
 _HISTORY_ORDER = [
     "analiz1", "analiz3", "analiz4", "analiz5", "analiz6", "analiz9",
-    "analiz10", "karisim1", "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_202",
+    "analiz10", "karisim1", "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_104", "5m_btc_105",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
@@ -51,7 +51,8 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "15m_btc":    "5M 101 BTC",
     "5m_btc_102": "5M 102 BTC",
     "5m_btc_103": "5M 103 BTC/SOL",
-    "5m_btc_202": "5M 202 BTC",
+    "5m_btc_104": "5M 104 BTC",
+    "5m_btc_105": "5M 105 BTC",
 }
 
 
@@ -640,8 +641,9 @@ def api_analizler():
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
         ("15m_btc",     "5M 101 BTC",            None, "Gerçek PM / 4-Algo $3"),
         ("5m_btc_102",  "5M 102 BTC",            150,  "101 + Momentum PM UP$4/DOWN$6"),
-        ("5m_btc_103",  "5M 103 BTC/SOL",        150,  "A10 Çift Konsensüs"),
-        ("5m_btc_202", "5M 202 BTC",            None, "Gerçek PM / A1+A9"),
+        ("5m_btc_103",  "5M 103 BTC/SOL",        200,  "A10 Çift Konsensüs"),
+        ("5m_btc_104",  "5M 104 BTC",            200,  "5-Algo Enhanced Sanal"),
+        ("5m_btc_105",  "5M 105 BTC",            200,  "102 + MR veto Sanal"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:

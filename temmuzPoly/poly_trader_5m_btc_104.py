@@ -5,6 +5,7 @@ btc_5m_104_algo: A1 + Trend+ADX + MR + Orderflow v2 + Volume (≥2/5)
 Filtreler: momentum, ADX, hacim, 1H HTF.
 
 $200 sanal, UP $4 / DOWN $6. Sadece BTCUSDT.
+Gece modu: 22:00–07:00 İST yeni işlem yok
 Cron: */5 * * * *
 """
 
@@ -50,7 +51,15 @@ _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_DRY_RUN   = True
 
+_QUIET_START_HOUR = 22
+_QUIET_END_HOUR   = 7
+
 LABEL = "5M 104 BTC"
+
+
+def _trading_allowed(now_tr: datetime) -> bool:
+    h = now_tr.hour
+    return _QUIET_END_HOUR <= h < _QUIET_START_HOUR
 
 
 def _trade_amount(direction: str) -> float:
@@ -265,6 +274,10 @@ def run() -> None:
             f"{'🟢' if state['total_pnl'] >= 0 else '🔴'} Toplam P&amp;L: {'+' if state['total_pnl'] >= 0 else ''}{state['total_pnl']:.2f}$  |  {_wr(win_all, tot_all)}\n"
             f"{sep}"
         )
+
+    if not _trading_allowed(now_tr):
+        print(f"[{LABEL}] {saat} — gece modu (22:00–07:00 İST), yeni işlem yok")
+        return
 
     balance = state["balance"]
     sig = analyze(portfolio_value=INITIAL_BALANCE)

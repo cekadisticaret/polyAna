@@ -1,4 +1,4 @@
-"""Sanal → gerçek 5M BTC sinyal senkronu (102→202)."""
+"""5M BTC sinyal senkronu (dashboard / sync JSON)."""
 import json
 import os
 from datetime import datetime, timezone

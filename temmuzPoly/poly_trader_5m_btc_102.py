@@ -91,6 +91,18 @@ def _pm_bal_line() -> str:
     return _pm101._pm_bal_line()
 
 
+def _tg_balance(state: dict | None = None) -> str:
+    """Gerçek PM: Poly USDC bakiyesi; pasif modda sanal state."""
+    if _PM_LIVE:
+        from pm_balance_guard import get_usdc_balance
+        bal = get_usdc_balance()
+        if bal >= 9999:
+            return "💰 Bakiye: PM sorgulanamadı"
+        return f"💰 Bakiye: ${bal:.2f}"
+    st = state if state is not None else load_state()
+    return f"💰 Bakiye: ${st['balance']:.2f}"
+
+
 def load_state() -> dict:
     if os.path.exists(STATE_FILE):
         try:
@@ -365,7 +377,8 @@ def run() -> None:
             win    = (pred == actual)
 
             if win:
-                state["balance"] = round(state["balance"] + to_win, 2)
+                if not _PM_LIVE:
+                    state["balance"] = round(state["balance"] + to_win, 2)
                 pnl = round(to_win - amount, 2)
             else:
                 pnl = -amount
@@ -452,7 +465,7 @@ def run() -> None:
             f"⏸ <b>{LABEL} — {saat} İST</b>\n"
             f"{msg_extra}\n"
             f"📊 Momentum: {momentum}  |  {_tg_esc('  |  '.join(labels))}\n"
-            f"💰 Bakiye: ${state['balance']:.2f}\n"
+            f"{_tg_balance(state)}\n"
             f"{sep}"
         )
         print(f"[{LABEL}] {saat} — işlem yok ({skip or f'konsensüs {consensus}/4'})")
@@ -481,7 +494,7 @@ def run() -> None:
             f"{vote_str}\n"
             f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
             f"{_pm_bal_line()}\n"
-            f"💰 Sanal bakiye: ${state['balance']:.2f}\n"
+            f"{_tg_balance(state)}\n"
             f"{sep}"
         )
         print(f"[{LABEL}] {saat} — SİNYAL {dir_tr} ${amount:.0f} [PM pasif]")
@@ -549,7 +562,6 @@ def run() -> None:
     token_price = order_result.get("price", token_price)
     pm_size     = order_result.get("size") or to_win
 
-    state["balance"] = round(state["balance"] - amount, 2)
     state["open_positions"].append({
         "symbol": SYMBOL, "predicted_dir": direction,
         "entry_price": entry_p, "amount": amount, "pm_spent": amount, "to_win": to_win,
@@ -570,8 +582,7 @@ def run() -> None:
         f"Giriş: {entry_p:,.2f}  |  Momentum: {momentum}  |  Lot: UP${TRADE_AMOUNT_UP:.0f}/DOWN${TRADE_AMOUNT_DOWN:.0f}\n"
         f"{vote_str}\n"
         f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
-        f"{_pm_bal_line()}\n"
-        f"💰 Sanal bakiye: ${state['balance']:.2f}\n"
+        f"{_tg_balance(state)}\n"
         f"{sep}"
     )
     print(f"[{LABEL}] {saat} — {dir_tr} {consensus}/4 mom={momentum}  ${amount:.2f}→${to_win:.2f} [PM]")
@@ -646,7 +657,7 @@ def run_stats() -> None:
         f"📊 <b>{LABEL} İSTATİSTİK</b>\n"
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST\n"
         f"Toplam: {total}  |  {_wr(wins, total)}\n"
-        f"P&amp;L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}"
+        f"P&amp;L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  {_tg_balance(state)}"
     )
 
 

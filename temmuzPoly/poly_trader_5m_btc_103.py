@@ -4,7 +4,8 @@
 Sistem A: poly_predictor  |  Sistem B: Trend+MR+OF+Funding (5m)
 İkisi aynı yön → işlem. Momentum filtresi: son 3×5m mum.
 
-$150 sanal, $6/işlem. BTC + SOL.
+$200 sanal, $6/işlem. BTC + SOL.
+Gece modu: 22:00–07:00 İST yeni işlem yok
 Cron: */5 * * * *
 """
 
@@ -46,7 +47,7 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_btc_103_history.json")
 WEEKLY_IMG   = "/tmp/poly_5m_btc_103_weekly.png"
 
 SYMBOLS         = ["BTCUSDT", "SOLUSDT"]
-INITIAL_BALANCE = 150.0
+INITIAL_BALANCE = 200.0
 TRADE_AMOUNT    =  6.0
 _PERIOD_SECS    = 300
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -62,6 +63,14 @@ _PM_MIN_PAYOUT_RATIO = 1.25
 
 _PM_ASSET = {"BTCUSDT": "btc", "SOLUSDT": "sol"}
 LABEL = "5M 103"
+
+_QUIET_START_HOUR = 22
+_QUIET_END_HOUR   = 7
+
+
+def _trading_allowed(now_tr: datetime) -> bool:
+    h = now_tr.hour
+    return _QUIET_END_HOUR <= h < _QUIET_START_HOUR
 
 
 def load_state() -> dict:
@@ -339,6 +348,10 @@ async def run_async() -> None:
             f"{'🟢' if state['total_pnl'] >= 0 else '🔴'} Toplam P&amp;L: {'+' if state['total_pnl'] >= 0 else ''}{state['total_pnl']:.2f}$  |  {_wr(win_all, tot_all)}\n"
             f"{sep}"
         )
+
+    if not _trading_allowed(now_tr):
+        print(f"[{LABEL}] {saat} — gece modu (22:00–07:00 İST), yeni işlem yok")
+        return
 
     ts_5m = _current_5m_ts()
     next_saat = (now_tr + timedelta(minutes=5)).strftime("%H:%M")
