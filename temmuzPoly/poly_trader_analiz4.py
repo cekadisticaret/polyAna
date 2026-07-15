@@ -323,7 +323,6 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>4. ANALİZ — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[4. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
@@ -402,7 +401,7 @@ async def run_close() -> None:
     # Hata olan pozisyonlar için bildirim
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        tg_send(f"⚠️ <b>4. ANALİZ</b> — {names} fiyatı alınamadı (timeout), bir sonraki saate bırakıldı.")
+        print(f"[4. ANALİZ close] {saat} — fiyat alınamadı: {names}")
 
     if not lines:
         return
@@ -500,17 +499,12 @@ async def run_open() -> None:
         for s in skipped
     ]
 
+    if not lines:
+        print(f"[4. ANALİZ open] {saat} İST — işlem yok ({len(skipped)} elendi)")
+        return
+
     parts = [sep, f"🆕 <b>4. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>"]
-
-    if lines:
-        parts.extend(lines)
-    else:
-        parts.append("⏸ <i>Bu saat yeterli sinyal yok (|skor| ≤ 1).</i>")
-
-    if skip_lines:
-        parts.append(mini_sep)
-        parts.extend(skip_lines)
-        parts.append(mini_sep)
+    parts.extend(lines)
 
     _at_risk4 = sum(p.get("amount", AMOUNT_STRONG) for p in state["open_positions"])
     parts.append(f"💰 Ana: ${state['balance'] - _at_risk4:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${_at_risk4:.0f}  |  Toplam: ${state['balance']:.2f}")

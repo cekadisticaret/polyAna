@@ -4,6 +4,7 @@
 btc_5m_106_algo: 4-algo konsensüs + yalnızca MR veto (trend nötr / KALEM yok).
 
 $200 sanal, UP $4 / DOWN $6. Sadece BTC.
+Telegram: 102 ile aynı bot (8256912678).
 Gece modu: 22:00–07:00 İST yeni işlem yok
 Cron: */5 * * * *
 """
@@ -18,7 +19,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from btc_5m_106_algo import analyze, fetch_klines_5m
-from poly_trader_15m_btc import fetch_klines_5m as _fetch_klines, tg_send, tg_send_photo
+from poly_trader_5m_common import tg_send, tg_send_photo
 from pm_trader_helpers import pm_5m_sanal_quote, pm_5m_close, pm_5m_history_extras, pm_5m_find_market
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -169,7 +170,7 @@ def run() -> None:
             candle = _resolve_period_candle(sym, pos_ts) if pos_ts else None
             if candle is None:
                 try:
-                    candle = _fetch_klines(sym, 10)[-2]
+                    candle = fetch_klines_5m(sym, 10)[-2]
                 except Exception as e:
                     print(f"[{LABEL}] Kapanış fiyatı alınamadı ({sym}): {e}")
                     continue
@@ -311,7 +312,7 @@ def _send_tg_round(
     skip_lines: list,
     tur_pnl: float,
 ) -> None:
-    if not closed_lines and not open_lines and not skip_lines:
+    if not closed_lines and not open_lines:
         return
 
     sep = "━" * 26
@@ -335,12 +336,10 @@ def _send_tg_round(
             + "\n".join(open_lines)
             + f"\n🕐 Genel: {_wr(all_wins, all_total)}"
         )
-    elif skip_lines:
-        parts.append("⏸ " + "\n⏸ ".join(skip_lines))
 
     msg = f"{sep}\n" + "\n\n".join(parts) + f"\n💰 Bakiye: ${state['balance']:.2f}\n{sep}"
     tg_send(msg)
-    kind = "kapanış+açılış" if closed_lines and open_lines else "kapanış" if closed_lines else "açılış" if open_lines else "atlama"
+    kind = "kapanış+açılış" if closed_lines and open_lines else "kapanış" if closed_lines else "açılış"
     print(f"[{LABEL}] {saat} — TG {kind} gönderildi")
 
 

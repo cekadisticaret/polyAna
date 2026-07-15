@@ -357,7 +357,6 @@ async def run_close(cfg: DualConfig) -> None:
     sep = "━" * 26
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>{cfg.label} ✦ Sanal — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[{cfg.label} close] {saat} İST — açık pozisyon yok")
         return
 
@@ -418,7 +417,7 @@ async def run_close(cfg: DualConfig) -> None:
     state["open_positions"] = failed_pos
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        tg_send(f"⚠️ <b>{cfg.label}</b> — {names} fiyatı alınamadı.")
+        print(f"[{cfg.label} close] {saat} — fiyat alınamadı: {names}")
 
     save_state(cfg, state)
     save_history(cfg, history)
@@ -541,22 +540,10 @@ async def run_open(cfg: DualConfig) -> None:
             f"💰 Bakiye: {bal_str}  |  Açık: ${at_risk:.0f}  |  Açılan: {newly_opened}\n"
             f"{sep}"
         )
-    elif skip_details and cfg.skip_detail_tg:
-        tg_send(
-            f"{sep}\n"
-            f"⏸ <b>{cfg.label} ✦ Çift Konsensüs — {saat} İST</b>\n"
-            + "\n".join(skip_details) + "\n"
-            f"💰 Bakiye: {bal_str}\n"
-            f"{sep}"
-        )
-    elif skip_details:
-        tg_send(
-            f"⏸ <b>{cfg.label} ✦ Çift Konsensüs — {saat} İST</b>\n"
-            f"İki sistem konsensüs sağlayamadı.\n"
-            f"💰 Bakiye: {bal_str}"
-        )
+    else:
+        print(f"[{cfg.label} open] {saat} İST — işlem yok ({len(skip_details)} elendi)")
 
-    print(f"[{cfg.label} open] {saat} İST — {newly_opened} sanal işlem, {len(skip_details)} elendi")
+    print(f"[{cfg.label} open] tamam — {newly_opened} sanal işlem, {len(skip_details)} elendi")
 
 
 def run_weekly(cfg: DualConfig) -> None:

@@ -536,9 +536,14 @@ async def run_async(*, send_tg: bool = True) -> list[dict]:
     msg = build_message(votes, prev_result, trade_close)
     print(msg.replace("<b>", "").replace("</b>", ""))
 
-    if send_tg:
+    will_open = bool(predicted and n_win >= MIN_TRADE_VOTES)
+    has_trade = trade_close is not None or will_open
+
+    if send_tg and has_trade:
         tg_send(msg)
         print(f"[{TITLE}] Telegram gönderildi.")
+    elif send_tg:
+        print(f"[{TITLE}] İşlem yok — Telegram atlanıyor.")
     return votes
 
 

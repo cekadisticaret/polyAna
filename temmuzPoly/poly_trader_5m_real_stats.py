@@ -1,4 +1,4 @@
-"""5M 102/105 BTC sanal trader — saatlik istatistik bildirimi."""
+"""5M 105 BTC — saatlik istatistik bildirimi (8799859033 kanalı)."""
 import json
 import os
 import sys
@@ -15,12 +15,6 @@ from poly_tg_5m_102 import tg_send
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 
 SYSTEMS = [
-    {
-        "key": "5m_btc_102",
-        "label": "5M 102 BTC",
-        "desc": "101 + KALEM (sanal)",
-        "initial": 200.0,
-    },
     {
         "key": "5m_btc_105",
         "label": "5M 105 BTC",

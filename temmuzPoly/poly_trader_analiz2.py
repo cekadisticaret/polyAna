@@ -216,11 +216,6 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(
-            f"🤖 <b>2. ANALİZ</b> — {tarih} {saat} İST\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"⏸ Kapatılacak açık pozisyon yok."
-        )
         print(f"[2. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
@@ -284,9 +279,12 @@ async def run_close() -> None:
 
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        tg_send(f"⚠️ <b>2. ANALİZ</b> — {names} fiyatı alınamadı, bir sonraki saate bırakıldı.")
+        print(f"[2. ANALİZ close] {saat} — fiyat alınamadı: {names}")
     save_state(state)
     save_history(history)
+
+    if not lines:
+        return
 
     total_pnl  = state.get("total_pnl", 0.0)
     pnl_icon   = "🟢" if total_pnl >= 0 else "🔴"
@@ -392,32 +390,19 @@ async def run_open() -> None:
 
     sep = "━" * 26
     sess_tag = "🇺🇸 ABD açık (Analiz 1 ile aynı)" if us_open else "🌙 ABD kapalı (genişletilmiş sinyal)"
-    if lines:
-        msg = (
-            f"{sep}\n"
-            f"🆕 <b>2. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>  🔶 SANAL  {sess_tag}\n"
-            + "\n".join(lines)
-            + (("\n" + "\n".join(skipped)) if skipped else "")
-            + f"\n{sep}\n"
-            f"💰 Ana: ${state['balance'] - sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.0f}  |  Toplam: ${state['balance']:.2f}\n"
-            f"{sep}"
-        )
-    elif skipped:
-        msg = (
-            f"{sep}\n"
-            f"🆕 <b>2. ANALİZ — {saat} - {next_h}</b>  🔶 SANAL  {sess_tag}\n"
-            + "\n".join(skipped) + "\n"
-            f"💰 Bakiye: ${state['balance']:.2f}\n"
-            f"{sep}"
-        )
-    else:
-        msg = (
-            f"{sep}\n"
-            f"🆕 <b>2. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>  🔶 SANAL\n"
-            f"⏸ <i>Bu saat sinyal yok.</i>\n"
-            f"💰 Bakiye: ${state['balance']:.2f}\n"
-            f"{sep}"
-        )
+    if not lines:
+        print(f"[2. ANALİZ open] {saat} İST — işlem yok")
+        return
+
+    msg = (
+        f"{sep}\n"
+        f"🆕 <b>2. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>  🔶 SANAL  {sess_tag}\n"
+        + "\n".join(lines)
+        + (("\n" + "\n".join(skipped)) if skipped else "")
+        + f"\n{sep}\n"
+        f"💰 Ana: ${state['balance'] - sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.0f}  |  Toplam: ${state['balance']:.2f}\n"
+        f"{sep}"
+    )
 
     tg_send(msg)
     print(f"[2. ANALİZ open] {saat} İST — {len(lines)} açıldı")

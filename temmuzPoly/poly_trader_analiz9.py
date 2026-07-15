@@ -13,6 +13,7 @@ Oy sistemi (her algoritma +1/−1/0):
   |toplam| ≤ 1  →  işlem açılmaz
 
 Modlar: close / open / weekly / stats
+Pasif: `.env` → `ANALIZ9_ENABLED=false` (cron yorum satırı)
 """
 import asyncio
 import json
@@ -479,7 +480,6 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>9. ANALİZ (Eski 5) — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[9. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
@@ -593,9 +593,10 @@ async def run_close() -> None:
     # Hata olan pozisyonlar için bildirim
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        tg_send(f"⚠️ <b>9. ANALİZ (Eski 5)</b> — {names} fiyatı alınamadı (timeout), bir sonraki saate bırakıldı.")
+        print(f"[9. ANALİZ close] {saat} — fiyat alınamadı: {names}")
 
     if not lines:
+        print(f"[9. ANALİZ close] {saat} İST — kapatılan pozisyon yok")
         return
 
     closed_all = len(history)
@@ -776,17 +777,12 @@ async def run_open() -> None:
         for s in skipped
     ]
 
+    if not lines:
+        print(f"[9. ANALİZ open] {saat} İST — işlem yok ({len(skipped)} elendi)")
+        return
+
     parts = [sep, f"🆕 <b>9. ANALİZ (Eski 5) — {saat} - {next_h} Yeni İşlemler</b>"]
-
-    if lines:
-        parts.extend(lines)
-    else:
-        parts.append("⏸ <i>Bu saat yeterli sinyal yok (|skor| ≤ 1).</i>")
-
-    if skip_lines:
-        parts.append(mini_sep)
-        parts.extend(skip_lines)
-        parts.append(mini_sep)
+    parts.extend(lines)
 
     pm_bal_str = f"${state.get('balance', INITIAL_BALANCE):.2f} (sanal)"
     pm_at_risk = sum(p.get("amount", 0) for p in state["open_positions"])
@@ -810,6 +806,9 @@ async def run_open() -> None:
 
 # ── WEEKLY ────────────────────────────────────────────────────
 def run_weekly() -> None:
+    if not _ENABLED:
+        print("[9. ANALİZ] pasif (ANALIZ9_ENABLED=false)")
+        return
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -937,6 +936,9 @@ def run_weekly() -> None:
 
 # ── STATS ─────────────────────────────────────────────────────
 def run_stats() -> None:
+    if not _ENABLED:
+        print("[9. ANALİZ] pasif (ANALIZ9_ENABLED=false)")
+        return
     history   = load_history()
     state     = load_state()
     now_tr    = datetime.now(timezone.utc).astimezone(_TZ_TR)

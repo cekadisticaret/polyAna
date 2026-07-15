@@ -240,7 +240,10 @@ def run_close() -> None:
     save_history(history)
 
     if failed_pos:
-        tg_send(f"⚠️ <b>{LABEL}</b> — fiyat alınamadı, pozisyon ertelendi.")
+        print(f"[{LABEL} close] {saat} — fiyat alınamadı, pozisyon ertelendi")
+
+    if not lines:
+        return
 
     total_pnl = state.get("total_pnl", 0.0)
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
@@ -342,23 +345,19 @@ def run_open() -> None:
         )
 
     at_risk = sum(p.get("amount", TRADE_AMOUNT) for p in state["open_positions"])
-    if lines:
-        msg = (
-            f"{sep}\n"
-            f"🆕 <b>{LABEL} — {saat} → {next_h} Yeni İşlemler</b>  🔶 SANAL\n"
-            + "\n".join(lines)
-            + (("\n" + "\n".join(skipped)) if skipped else "")
-            + f"\n{sep}\n"
-            f"💰 Serbest: ${state['balance'] - at_risk:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${at_risk:.0f}  |  Toplam: ${state['balance']:.2f}\n"
-            f"{sep}"
-        )
-    else:
-        msg = (
-            f"{sep}\n"
-            f"🆕 <b>{LABEL} — {saat} → {next_h}</b>\n"
-            + ("\n".join(skipped) if skipped else "⏸ <i>Sinyal yok — işlem açılmadı.</i>")
-            + f"\n💰 Bakiye: ${state['balance']:.2f}\n{sep}"
-        )
+    if not lines:
+        print(f"[{LABEL} open] {saat} — işlem yok")
+        return
+
+    msg = (
+        f"{sep}\n"
+        f"🆕 <b>{LABEL} — {saat} → {next_h} Yeni İşlemler</b>  🔶 SANAL\n"
+        + "\n".join(lines)
+        + (("\n" + "\n".join(skipped)) if skipped else "")
+        + f"\n{sep}\n"
+        f"💰 Serbest: ${state['balance'] - at_risk:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${at_risk:.0f}  |  Toplam: ${state['balance']:.2f}\n"
+        f"{sep}"
+    )
 
     tg_send(msg)
     print(f"[{LABEL} open] {saat} — {len(opened)} yeni işlem")

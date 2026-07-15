@@ -211,7 +211,6 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>11. ANALİZ (A1+A4) — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[11. ANALİZ (A1+A4) close] {saat} İST — açık pozisyon yok")
         return
 
@@ -228,7 +227,7 @@ async def run_close() -> None:
         current_price = fetch_price_retry(symbol)
         if current_price is None:
             failed_pos.append(pos)
-            tg_send(f"⚠️ <b>11. ANALİZ (A1+A4)</b> — {symbol} fiyat alınamadı, pozisyon sonraki saate bırakıldı.")
+            print(f"[11. ANALİZ (A1+A4) close] {symbol} fiyat alınamadı")
             continue
 
         if pred == "UP":
@@ -267,6 +266,10 @@ async def run_close() -> None:
     state["open_positions"] = failed_pos
     save_state(state)
     save_history(history)
+
+    if not lines:
+        print(f"[11. ANALİZ (A1+A4) close] {saat} İST — kapatılan pozisyon yok")
+        return
 
     total_pnl    = state["total_pnl"]
     closed_all   = len(history)
@@ -333,12 +336,15 @@ async def run_open() -> None:
 
     save_state(state)
 
+    if not opened:
+        print(f"[11. ANALİZ (A1+A4) open] {saat} İST — işlem yok")
+        return
+
     # Bildirim
     at_risk = sum(p.get("amount", AMOUNT_MODERATE) for p in state["open_positions"])
     lines   = [sep, f"🤝 <b>11. ANALİZ (A1+A4) — {saat} - {next_h} Yeni İşlemler</b>"]
 
-    if opened:
-        for o in opened:
+    for o in opened:
             name    = o["symbol"].replace("USDT", "")
             dir_tr  = "YÜKSELİR" if o["direction"] == "UP" else "DÜŞER"
             dir_ico = "📈" if o["direction"] == "UP" else "📉"
@@ -352,10 +358,8 @@ async def run_open() -> None:
             lines.append(
                 f"{dir_ico} <b>{name}</b>  {dir_tr}  {pm_tg_stake(o.get('pm_pos', o))}  giriş:{o['price']:.2f} {price_note}\n"
                 f"   🤝 Konsensus: {o['count']}/2  [{sys_str}]\n"
-                f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hw,ht,warn_low=low)} | genel: {_wr(sw,st)}"
-            )
-    else:
-        lines.append("⏸ <i>Bu saat konsensus sağlanamadı (A1+A4 aynı yön gerekli).</i>")
+            f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hw,ht,warn_low=low)} | genel: {_wr(sw,st)}"
+        )
 
     lines.append(
         f"💰 Ana: ${state['balance']-at_risk:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${at_risk:.0f}  |  Toplam: ${state['balance']:.2f}"

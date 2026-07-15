@@ -1,7 +1,7 @@
 """
 5M 102 BTC — Sinyal motoru (standalone)
 
-101'in 4-algo konsensüsü + 102 düzeltmeleri tek dosyada:
+4-algo konsensüsü + 102 düzeltmeleri tek dosyada:
   1. A1: RSI + MACD + EMA
   2. Trend: EMA20/50 crossover + slope
   3. MR: RSI + Bollinger

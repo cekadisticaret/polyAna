@@ -1,7 +1,7 @@
 """
-5M 102 BTC — 101 + KALEM (Sanal)
+5M 102 BTC — KALEM (Sanal)
 ============================================
-101'in 4-algo konsensüsü (≥2/4) + düzeltmeler:
+4-algo konsensüsü (≥2/4) + düzeltmeler:
   1. Orderflow v2: CVD/OB çelişince canlı orderbook'a öncelik
   2. KALEM (deneysel): fitil yapısı + 3 peş peşe aynı yön dinlenme
 
@@ -21,8 +21,8 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import poly_trader_15m_btc as _pm101
-from poly_trader_15m_btc import (
+import poly_trader_5m_common as _pm_common
+from poly_trader_5m_common import (
     SYMBOL,
     algo_a1_rsi_macd_ema,
     algo_mr,
@@ -86,7 +86,7 @@ def _trade_amount(direction: str) -> float:
 
 
 def _pm_bal_line() -> str:
-    return _pm101._pm_bal_line()
+    return _pm_common._pm_bal_line()
 
 
 def _tg_balance(state: dict | None = None) -> str:
@@ -107,8 +107,8 @@ def _bal_line(state: dict) -> str:
 
 def _sanal_find_5m_market(ts_5m: int, direction: str) -> tuple[dict | None, float | None]:
     """Sanal mod: Gamma fiyatı (emir yok)."""
-    _pm101._PM_DRY_RUN = True
-    pm = _pm101._pm_find_5m_market(ts_5m)
+    _pm_common._PM_DRY_RUN = True
+    pm = _pm_common._pm_find_5m_market(ts_5m)
     if not pm:
         return None, None
     tp = pm["up_price"] if direction == "UP" else pm["down_price"]
@@ -184,7 +184,7 @@ def _current_5m_ts() -> int:
 
 
 def algo_orderflow_v2(klines: list[dict], ob: dict) -> tuple[int, str]:
-    """101 OF + CVD/OB çelişince canlı orderbook öncelikli."""
+    """Orderflow: CVD/OB çelişince canlı orderbook öncelikli."""
     window    = klines[-20:]
     cvd_delta = sum(k["volume"] if k["close"] >= k["open"] else -k["volume"] for k in window)
     total_vol = sum(k["volume"] for k in window) or 1
@@ -291,9 +291,9 @@ def analyze() -> dict | None:
 
 def _pm_resolve_market(ts_5m: int, direction: str, amount: float) -> tuple[dict | None, str]:
     expected = f"btc-updown-5m-{ts_5m}"
-    _pm101._PM_DRY_RUN = _PM_DRY_RUN
+    _pm_common._PM_DRY_RUN = _PM_DRY_RUN
     for attempt in range(3):
-        pm = _pm101._pm_find_5m_market(ts_5m)
+        pm = _pm_common._pm_find_5m_market(ts_5m)
         if not pm:
             if attempt < 2:
                 time.sleep(3)
@@ -410,7 +410,7 @@ def run() -> None:
     save_signal("102", ts_5m, result)
 
     if result is None:
-        tg_send(f"⚠️ <b>{LABEL}</b> — {saat} veri alınamadı")
+        print(f"[{LABEL}] {saat} — veri alınamadı")
         return
 
     direction = result["direction"]
@@ -427,30 +427,14 @@ def run() -> None:
     sep = "━" * 26
 
     if direction is None:
-        msg_extra = _tg_esc(skip) if skip else f"Konsensüs yok ({consensus}/4)"
-        tg_send(
-            f"{sep}\n"
-            f"⏸ <b>{LABEL} — {saat} İST</b>\n"
-            f"{msg_extra}\n"
-            f"📊 Momentum: {momentum}  |  {_tg_esc('  |  '.join(labels))}\n"
-            f"{_tg_balance(state)}\n"
-            f"{sep}"
-        )
-        print(f"[{LABEL}] {saat} — işlem yok ({skip or f'konsensüs {consensus}/4'})")
+        msg_extra = skip or f"Konsensüs yok ({consensus}/4)"
+        print(f"[{LABEL}] {saat} — işlem yok ({msg_extra})")
         return
 
     # --- KALEM: peş peşe aynı yön dinlenme ---
     from kalem_filters_102 import kalem_streak_skip
     kalem_streak = kalem_streak_skip(direction, history)
     if kalem_streak:
-        tg_send(
-            f"{sep}\n"
-            f"⏸ <b>{LABEL} — {saat} İST</b>\n"
-            f"{_tg_esc(kalem_streak)}\n"
-            f"📊 Momentum: {momentum}  |  ham sinyal: {direction} ({consensus}/4)\n"
-            f"{_tg_balance(state)}\n"
-            f"{sep}"
-        )
         print(f"[{LABEL}] {saat} — {kalem_streak}")
         return
     # --- /KALEM ---
@@ -461,11 +445,7 @@ def run() -> None:
 
     if not _PM_LIVE:
         if state["balance"] < amount:
-            tg_send(
-                f"{sep}\n⏸ <b>{LABEL} — {saat} İST</b>\n"
-                f"Bakiye yetersiz (${state['balance']:.2f} &lt; ${amount:.0f})\n"
-                f"{_tg_balance(state)}\n{sep}"
-            )
+            print(f"[{LABEL}] {saat} — bakiye yetersiz (${state['balance']:.2f})")
             return
 
         pm_q = pm_5m_sanal_quote(ts_5m, direction, amount)
@@ -500,16 +480,9 @@ def run() -> None:
     if not can_open_trade(LABEL, tg_send):
         return
 
-    _pm101._PM_DRY_RUN = _PM_DRY_RUN
+    _pm_common._PM_DRY_RUN = _PM_DRY_RUN
     pm_info, pm_skip = _pm_resolve_market(ts_5m, direction, amount)
     if not pm_info:
-        tg_send(
-            f"{sep}\n"
-            f"⚠️ <b>{LABEL} — {saat} İST</b>\n"
-            f"Sinyal {direction} ({consensus}/4) ${amount:.0f} — {pm_skip}\n"
-            f"{_pm_bal_line()}\n"
-            f"{sep}"
-        )
         print(f"[{LABEL}] {saat} — market atlandı: {pm_skip}")
         return
 
@@ -517,40 +490,24 @@ def run() -> None:
     pm_slug     = pm_info["slug"]
     to_win      = round(amount / token_price, 2) if token_price > 0 else round(amount * 2, 2)
 
-    if not _pm101._pm_payout_ok(amount, to_win):
-        tg_send(
-            f"{sep}\n"
-            f"🚫 <b>{LABEL} — {saat} İŞLEM YOK</b>\n"
-            f"Payout oranı yüksek: ${amount:.2f} → ${to_win:.2f}\n"
-            f"{dir_icon} BTC {dir_tr} ({consensus}/4)\n"
-            f"{_pm_bal_line()}\n"
-            f"{sep}"
-        )
+    if not _pm_common._pm_payout_ok(amount, to_win):
+        print(f"[{LABEL}] {saat} — payout yüksek (${amount:.2f}→${to_win:.2f})")
         return
 
     token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
-    deadline = _pm101._pm_open_deadline(ts_5m)
-    _pm101._pm_period_warmup(ts_5m)
-    order_result = _pm101._pm_place_order(
+    deadline = _pm_common._pm_open_deadline(ts_5m)
+    _pm_common._pm_period_warmup(ts_5m)
+    order_result = _pm_common._pm_place_order(
         token_id, amount, pm_info["tick_size"], pm_info["neg_risk"], deadline=deadline,
     )
 
     if order_result and order_result.get("_skip"):
         skip_reason = order_result.get("_skip", "unknown")
-        tg_send(
-            f"{sep}\n"
-            f"⚠️ <b>{LABEL} — {saat} EMİR BAŞARISIZ</b>\n"
-            f"Sebep: {_tg_esc(skip_reason)}\n"
-            f"{dir_icon} BTC {dir_tr}  ${amount:.0f}  @{token_price:.2f}\n"
-            f"{_pm_bal_line()}\n"
-            f"{sep}"
-        )
         print(f"[{LABEL}] {saat} — emir başarısız: {skip_reason}")
         return
 
     if not order_result:
-        tg_send(f"⚠️ <b>{LABEL}</b> — PM order başarısız, {direction} {saat}")
-        print(f"[{LABEL}] PM order başarısız")
+        print(f"[{LABEL}] {saat} — PM order başarısız")
         return
 
     to_win      = order_result["size"]

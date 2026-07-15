@@ -36,17 +36,18 @@ _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
     "analiz509": ("btc_analiz_509_history.json", "btc_analiz_509_state.json"),
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
+_PASIF_ANALYSES = frozenset({"analiz9"})
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 # Yeni analiz: isteğe bağlı özel isim için _ANALYSIS_LABELS'a ekle.
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz509", "analiz5", "analiz4", "analiz9", "analiz10", "analiz13", "karisim1",
-    "15m_btc", "5m_btc_102", "5m_btc_105", "5m_btc_106",
+    "analiz1", "analiz2", "analiz509", "analiz5", "analiz4", "analiz10", "analiz13", "karisim1",
+    "5m_btc_102", "5m_btc_105", "5m_btc_106",
 ]
 _HISTORY_ORDER = [
     "analiz509", "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
-    "analiz10", "analiz13", "karisim1", "15m_btc", "5m_btc_102", "5m_btc_105", "5m_btc_106",
+    "analiz10", "analiz13", "karisim1", "5m_btc_102", "5m_btc_105", "5m_btc_106",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz509":  "12. Analiz Algoritma",
@@ -54,11 +55,10 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz2":    "2. Analiz",
     "analiz4":    "4. Analiz",
     "analiz5":    "5. Analiz",
-    "analiz9":    "9. Analiz",
+    "analiz9":    "9. Analiz (Pasif)",
     "analiz10":   "10. Analiz",
     "analiz13":   "13. Analiz",
     "karisim1":   "11. Analiz",
-    "15m_btc":    "5M 101 BTC",
     "5m_btc_102": "5M 102 BTC",
     "5m_btc_105": "5M 105 BTC",
     "5m_btc_106": "5M 106 BTC",
@@ -142,8 +142,6 @@ def _auto_label(key: str) -> str:
         return f"{m.group(1)}. Analiz"
     if key == "karisim1":
         return "11. Analiz"
-    if key == "15m_btc":
-        return "5M 101 BTC"
     if key.startswith("5m_btc_"):
         n = key.replace("5m_btc_", "")
         if n == "real":
@@ -152,21 +150,25 @@ def _auto_label(key: str) -> str:
     return key.replace("_", " ").title()
 
 
-def _build_system_list(order: list[str]) -> list[tuple[str, str]]:
+def _build_system_list(order: list[str], *, include_pasif: bool = True) -> list[tuple[str, str]]:
     on_disk = _discover_trader_keys()
     seen: set[str] = set()
     out: list[tuple[str, str]] = []
     for key in order:
+        if not include_pasif and key in _PASIF_ANALYSES:
+            continue
         if not _trader_exists(key, on_disk) and key not in _ANALYSIS_LABELS:
             continue
         out.append((key, _ANALYSIS_LABELS.get(key, _auto_label(key))))
         seen.add(key)
     for key in sorted(on_disk - seen):
+        if not include_pasif and key in _PASIF_ANALYSES:
+            continue
         out.append((key, _ANALYSIS_LABELS.get(key, _auto_label(key))))
     return out
 
 
-_ANALYSIS_SYSTEMS = _build_system_list(_ANALYSIS_ORDER)
+_ANALYSIS_SYSTEMS = _build_system_list(_ANALYSIS_ORDER, include_pasif=False)
 _HEATMAP_ANALYSES = dict(_ANALYSIS_SYSTEMS)
 _HARITA_TAB_ANALYSES = list(_ANALYSIS_SYSTEMS)
 _HISTORY_SYSTEMS = _build_system_list(_HISTORY_ORDER)
@@ -292,6 +294,7 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
 
 # Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
 _PM_POSITION_SOURCES = [
+    ("5m_btc_105", "5M 105 BTC"),
     ("5m_btc_102", "5M 102 BTC"),   # yalnızca PM_5M_102_REAL_ENABLED=true
     ("analiz5",    "5. Analiz"),
 ]
@@ -304,6 +307,18 @@ def _position_visible(_key: str, pos: dict) -> bool:
         return False
     spent = pos.get("pm_spent") or pos.get("amount")
     return bool(spent)
+
+
+def _is_live_pm_trade(t: dict) -> bool:
+    """Geçmiş kaydında gerçek Polymarket emri (sanal simülasyon değil)."""
+    if t.get("virtual") or t.get("pm_dry_run") is True:
+        return False
+    oid = t.get("pm_order_id")
+    if oid and str(oid) not in ("DRY_RUN", ""):
+        return True
+    if t.get("pm_token_id"):
+        return True
+    return False
 
 def collect_positions() -> list:
     """Gerçek Polymarket açık pozisyonları (tüm aktif PM trader'lar)."""
@@ -708,12 +723,10 @@ def api_analizler():
         ("analiz2",    "2. Analiz",             300,  "A1 motoru $10-15-20, ABD kapalı genişletilmiş"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM"),
-        ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
         ("analiz13",   "13. Analiz",            300,  "Çift Konsensüs B≥2/4 $10-20"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
-        ("15m_btc",     "5M 101 BTC",            200,  "4-Algo Sanal $3"),
-        ("5m_btc_102",  "5M 102 BTC",            200,  "101 + KALEM Sanal"),
+        ("5m_btc_102",  "5M 102 BTC",            200,  "KALEM Sanal"),
         ("5m_btc_105",  "5M 105 BTC",            200,  "102 + MR veto + trend nötr (PM $2)"),
         ("5m_btc_106",  "5M 106 BTC",            200,  "102 + MR veto (minimal)"),
     ]
@@ -1114,7 +1127,7 @@ def api_stats():
     if _auth_required(): return redirect("/poly/login")
     analyses = dict(_HISTORY_SYSTEMS)
     algo_stats = []
-    all_history = []
+    live_history = []
 
     for key, label in analyses.items():
         hist = _load_trader_history(key)
@@ -1129,14 +1142,17 @@ def api_stats():
             "total": total, "wins": wins,
             "wr": wr, "pnl": round(pnl, 2),
         })
-        # Son işlemlere analiz adını ekle
-        for t in hist[-5:]:
-            all_history.append({**t, "_analiz": label})
 
-    # Son 20 işlem (tüm analizlerden karışık, en yeni önce)
-    all_history.sort(key=lambda x: x.get("exit_time_tr", ""), reverse=True)
+    # Son işlemler: yalnızca gerçek PM trader'lar (5. Analiz, 105, vb.)
+    for key, label in _PM_POSITION_SOURCES:
+        for t in _load_trader_history(key):
+            if t.get("win") is None or not _is_live_pm_trade(t):
+                continue
+            live_history.append({**t, "_analiz": label})
+
+    live_history.sort(key=lambda x: x.get("exit_time_tr", ""), reverse=True)
     recent = []
-    for t in all_history[:20]:
+    for t in live_history[:20]:
         sym     = t.get("symbol", "").replace("USDT", "")
         pred    = t.get("predicted_dir", "")
         win     = t.get("win", False)
@@ -2770,7 +2786,7 @@ HTML = r"""<!DOCTYPE html>
         <div class="positions" id="positions-mob">
           <div class="empty">Yükleniyor...</div>
         </div>
-        <div class="section-title" style="margin:20px 0 12px">Son İşlemler</div>
+        <div class="section-title" style="margin:20px 0 12px">Son İşlemler <span style="font-size:11px;color:#666;font-weight:600">Gerçek PM</span></div>
         <div id="recent-trades-mob"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
       </div>
 
@@ -2866,7 +2882,7 @@ HTML = r"""<!DOCTYPE html>
   </div>
 
   <div class="rp-section">
-    <div class="rp-title">Son İşlemler</div>
+    <div class="rp-title">Son İşlemler <span style="font-size:10px;color:#666;font-weight:600">Gerçek PM</span></div>
     <div id="recent-trades"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
   </div>
 
