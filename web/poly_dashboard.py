@@ -14,6 +14,7 @@ from flask import Flask, jsonify, render_template_string, request, session, redi
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
+_PANEL_STATS_ANALIZ = "analiz1"  # sağ panel: sembol WR + en etkili zaman
 _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 
 # Sıcaklık haritası: analiz bazlı aktif semboller
@@ -21,7 +22,6 @@ _HEATMAP_SYMS = {
     "analiz1":  ["BTC", "SOL"],
     "analiz4":  ["BTC", "ETH"],
     "analiz5":  ["BTC", "SOL"],
-    "analiz6":  ["BTC", "SOL"],
     "analiz9":  ["BTC", "SOL"],
     "analiz10": ["BTC", "SOL"],
     "karisim1": ["BTC", "SOL"],
@@ -32,19 +32,17 @@ _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Yeni analiz: isteğe bağlı özel isim için _ANALYSIS_LABELS'a ekle.
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
-    "analiz5", "analiz6", "analiz1", "analiz4", "analiz9", "analiz10", "karisim1",
+    "analiz5", "analiz1", "analiz4", "analiz9", "analiz10", "karisim1",
     "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_104", "5m_btc_105",
 ]
 _HISTORY_ORDER = [
-    "analiz1", "analiz3", "analiz4", "analiz5", "analiz6", "analiz9",
+    "analiz1", "analiz4", "analiz5", "analiz9",
     "analiz10", "karisim1", "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_104", "5m_btc_105",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
-    "analiz3":    "3. Analiz",
     "analiz4":    "4. Analiz",
     "analiz5":    "5. Analiz",
-    "analiz6":    "6. Analiz BTC-SOL",
     "analiz9":    "9. Analiz",
     "analiz10":   "10. Analiz",
     "karisim1":   "11. Analiz",
@@ -118,6 +116,13 @@ app.config["SESSION_COOKIE_SECURE"]   = False
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_PATH"]     = "/"
+
+@app.after_request
+def _no_cache_api(response):
+    if request.path.startswith("/poly/api/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+    return response
 
 # nginx reverse proxy arkasında çalışırken URL scheme ve host'u düzelt
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -223,17 +228,18 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
 
 # Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
 _PM_POSITION_SOURCES = [
-    ("5m_btc_102", "5M 102 BTC"),
+    ("5m_btc_102", "5M 102 BTC"),   # yalnızca PM_5M_102_REAL_ENABLED=true
     ("analiz5",    "5. Analiz"),
-    ("analiz10",   "10. Analiz"),
 ]
 
 def _position_visible(_key: str, pos: dict) -> bool:
-    """Yalnızca gerçek PM pozisyonları (slug/token + harcanan tutar)."""
-    spent = pos.get("pm_spent") or pos.get("amount")
-    if not spent:
+    """Yalnızca gerçek PM emri (token_id); sanal kotasyonları gösterme."""
+    if pos.get("virtual") or pos.get("pm_dry_run"):
         return False
-    return bool(pos.get("pm_slug") or pos.get("pm_token_id"))
+    if not pos.get("pm_token_id"):
+        return False
+    spent = pos.get("pm_spent") or pos.get("amount")
+    return bool(spent)
 
 def collect_positions() -> list:
     """Gerçek Polymarket açık pozisyonları (tüm aktif PM trader'lar)."""
@@ -567,12 +573,16 @@ def api_heatmap_detail():
 def api_symbol_stats():
     if _auth_required(): return redirect("/poly/login")
     from collections import defaultdict
-    path = os.path.join(_DIR_POLY, "poly_trader_analiz5_history.json")
+    analiz_key = request.args.get("analiz", _PANEL_STATS_ANALIZ)
+    if analiz_key not in _HEATMAP_ANALYSES:
+        analiz_key = _PANEL_STATS_ANALIZ
+    path = os.path.join(_DIR_POLY, f"poly_trader_{analiz_key}_history.json")
     if not os.path.exists(path):
-        return jsonify({"sym_wr": [], "top_slots": []})
+        return jsonify({"analiz": analiz_key, "analiz_label": _ANALYSIS_LABELS.get(analiz_key, analiz_key),
+                        "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": [], "top_slots": []})
     with open(path) as f:
         hist = json.load(f)
-    hist = _filter_hist_for("analiz5", hist)
+    hist = _filter_hist_for(analiz_key, hist)
 
     # Sembol bazlı WR
     sym_stat = defaultdict(lambda: {"w": 0, "t": 0})
@@ -582,13 +592,17 @@ def api_symbol_stats():
         if t.get("win"):
             sym_stat[sym]["w"] += 1
     sym_wr = []
-    for sym in _allowed_syms_for("analiz5"):
+    for sym in _allowed_syms_for(analiz_key):
         v = sym_stat.get(sym, {"w": 0, "t": 0})
         if not v["t"]:
             continue
         wr = round(v["w"] / v["t"] * 100, 1)
         sym_wr.append({"sym": sym, "wr": wr, "w": v["w"], "t": v["t"]})
     sym_wr.sort(key=lambda x: x["wr"], reverse=True)
+
+    total      = len(hist)
+    total_wins = sum(1 for t in hist if t.get("win"))
+    total_wr   = round(total_wins / total * 100, 1) if total else 0.0
 
     # Saat bazlı, birden fazla günde tutarlı başarı — multi-day consistency
     days_tr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -625,22 +639,29 @@ def api_symbol_stats():
             "t":         all_t,
         })
     top_slots.sort(key=lambda x: (x["good_days"], x["wr"]), reverse=True)
-    return jsonify({"sym_wr": sym_wr, "top_slots": top_slots[:3]})
+    label = _ANALYSIS_LABELS.get(analiz_key, analiz_key)
+    return jsonify({
+        "analiz": analiz_key,
+        "analiz_label": label,
+        "total": total,
+        "total_wins": total_wins,
+        "total_wr": total_wr,
+        "sym_wr": sym_wr,
+        "top_slots": top_slots[:3],
+    })
 
 @app.route("/poly/api/analizler")
 def api_analizler():
     if _auth_required(): return jsonify({"error": "unauthorized"}), 401
     _SYSTEMS = [
         ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
-        ("analiz3",    "3. Analiz (Stoch ETH)", 300,  "Stochastic RSI / ETH"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM"),
-        ("analiz6",    "6. Analiz BTC-SOL",     500,  "RSI Div (Katı)"),
         ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
         ("analiz10",   "10. Analiz",            None, "Çift Konsensüs Gerçek PM"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
         ("15m_btc",     "5M 101 BTC",            200,  "4-Algo Sanal $3"),
-        ("5m_btc_102",  "5M 102 BTC",            200,  "101 + Momentum + KALEM Sanal"),
+        ("5m_btc_102",  "5M 102 BTC",            200,  "101 + KALEM Sanal"),
         ("5m_btc_103",  "5M 103 BTC/SOL",        200,  "A10 Çift Konsensüs"),
         ("5m_btc_104",  "5M 104 BTC",            200,  "5-Algo Enhanced Sanal"),
         ("5m_btc_105",  "5M 105 BTC",            200,  "102 + MR veto Sanal"),
@@ -2776,7 +2797,7 @@ HTML = r"""<!DOCTYPE html>
 <div class="right-panel">
   <!-- Sembol WR -->
   <div class="rp-section">
-    <div class="rp-title">Sembol Başarı Oranı</div>
+    <div class="rp-title">Sembol Başarı Oranı <span id="sym-wr-label" style="font-size:11px;color:#999;font-weight:600;margin-left:4px"></span></div>
     <div id="sym-wr" style="display:flex;gap:8px">
       <div style="color:#666;font-size:13px">Yükleniyor...</div>
     </div>
@@ -2784,7 +2805,7 @@ HTML = r"""<!DOCTYPE html>
 
   <!-- En iyi gün/saat -->
   <div class="rp-section">
-    <div class="rp-title">En Etkili Zaman</div>
+    <div class="rp-title">En Etkili Zaman <span id="top-slots-label" style="font-size:10px;color:#666;font-weight:600"></span></div>
     <div id="top-slots">
       <div style="color:#666;font-size:13px">Yükleniyor...</div>
     </div>
@@ -2823,6 +2844,7 @@ HTML = r"""<!DOCTYPE html>
 
 <script>
 let chartInstance = null, seriesInstance = null, currentSym = null;
+let _panelAnaliz = 'analiz1';
 
 function initChart(container) {
   if (chartInstance) chartInstance.remove();
@@ -2892,27 +2914,36 @@ async function closePosition(analiz, symbol, btn) {
 async function refresh() {
   try {
     const [rd, rs, rss] = await Promise.all([
-      fetch('/poly/api/data'), fetch('/poly/api/stats'), fetch('/poly/api/symbol_stats')
+      fetch('/poly/api/data', {cache: 'no-store'}),
+      fetch('/poly/api/stats', {cache: 'no-store'}),
+      fetch('/poly/api/symbol_stats', {cache: 'no-store'}),
     ]);
     const d  = await rd.json();
     const s  = await rs.json();
     const ss = await rss.json();
+    _panelAnaliz = ss.analiz || 'analiz1';
+    const panelLbl = ss.analiz_label ? `· ${ss.analiz_label}` : '';
+    const totalStr = ss.total ? ` · ${ss.total} işlem` : '';
+    const symLbl = document.getElementById('sym-wr-label');
+    const slotLbl = document.getElementById('top-slots-label');
+    if (symLbl) symLbl.textContent = panelLbl + totalStr;
+    if (slotLbl) slotLbl.textContent = panelLbl;
 
     // Header stats
     document.getElementById('portfolio').textContent = d.portfolio >= 0 ? '$'+d.portfolio.toFixed(2) : '?';
     document.getElementById('cash').textContent      = d.cash >= 0 ? '$'+d.cash.toFixed(2) : '?';
     document.getElementById('updated').textContent   = d.updated;
 
-    // WR & PnL from analiz5 stats
-    const a5 = s.algo_stats.find(a => a.key === 'analiz5');
-    if (a5) {
+    // WR & PnL — 1. Analiz
+    const a1 = s.algo_stats.find(a => a.key === 'analiz1');
+    if (a1) {
       const wrEl = document.getElementById('wr-stat');
-      wrEl.textContent = a5.wr + '%';
-      wrEl.className = 'stat-val ' + (a5.wr >= 50 ? 'up' : 'down');
-      document.getElementById('wr-sub').textContent = a5.wins + 'W / ' + (a5.total-a5.wins) + 'L';
+      wrEl.textContent = a1.wr + '%';
+      wrEl.className = 'stat-val ' + (a1.wr >= 50 ? 'up' : 'down');
+      document.getElementById('wr-sub').textContent = a1.wins + 'W / ' + (a1.total - a1.wins) + 'L · ' + a1.total + ' işlem';
       const pnlEl = document.getElementById('pnl-stat');
-      pnlEl.textContent = (a5.pnl >= 0 ? '+' : '') + '$' + a5.pnl.toFixed(2);
-      pnlEl.className = 'stat-val ' + (a5.pnl >= 0 ? 'up' : 'down');
+      pnlEl.textContent = (a1.pnl >= 0 ? '+' : '') + '$' + a1.pnl.toFixed(2);
+      pnlEl.className = 'stat-val ' + (a1.pnl >= 0 ? 'up' : 'down');
     }
 
     // Risk banner
@@ -3128,8 +3159,8 @@ async function openSlotPopup(dow, hour) {
   document.getElementById('slot-body').innerHTML = '<div style="color:#555;text-align:center;padding:24px">Yükleniyor...</div>';
 
   const url = dow >= 0
-    ? `/poly/api/heatmap/detail?dow=${dow}&hour=${hour}&sym=ALL`
-    : `/poly/api/heatmap/detail?hour=${hour}&sym=ALL`;
+    ? `/poly/api/heatmap/detail?dow=${dow}&hour=${hour}&sym=ALL&analiz=${_panelAnaliz}`
+    : `/poly/api/heatmap/detail?hour=${hour}&sym=ALL&analiz=${_panelAnaliz}`;
   const r = await fetch(url);
   const d = await r.json();
 

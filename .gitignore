@@ -12,15 +12,11 @@ analiz/state.json
 *.bak[0-9]*
 temmuzPoly/poly_trader_analiz1_state.json
 temmuzPoly/poly_trader_analiz1_history.json
-temmuzPoly/poly_trader_analiz3_state.json
-temmuzPoly/poly_trader_analiz3_history.json
 temmuzPoly/poly_trader_5m_btc_105_state.json
 temmuzPoly/poly_trader_5m_btc_105_history.json
 temmuzPoly/poly_trader_analiz4_state.json
 temmuzPoly/poly_trader_analiz4_history.json
 temmuzPoly/poly_trader_analiz5_state.json
 temmuzPoly/poly_trader_analiz5_history.json
-temmuzPoly/poly_trader_analiz6_state.json
-temmuzPoly/poly_trader_analiz6_history.json
 temmuzPoly/poly_trader_analiz7_state.json
 temmuzPoly/poly_trader_analiz7_history.json

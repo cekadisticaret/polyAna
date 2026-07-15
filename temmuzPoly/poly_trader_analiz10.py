@@ -36,6 +36,7 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
+from pm_trader_helpers import apply_pm_quote, sanal_pnl
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
@@ -325,14 +326,15 @@ async def run_close() -> None:
         amount = pos.get("amount", TRADE_AMOUNT)
         actual = "UP" if current_price >= entry else "DOWN"
         win    = pred == actual
-        pnl    = round(amount if win else -amount, 2)
+        pnl    = sanal_pnl(pos, win)
         if win:
-            state["balance"] = round(state["balance"] + amount * 2, 2)
+            payout = pos.get("pm_size") or amount
+            state["balance"] = round(state["balance"] + payout, 2)
         tur_pnl += pnl
         state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
 
         votes = pos.get("votes", [None, None, None, None])
-        history.append({
+        rec = {
             "symbol":           pos["symbol"],
             "predicted_dir":    pred,
             "actual_dir":       actual,
@@ -354,12 +356,17 @@ async def run_close() -> None:
             "ind_trend_ok":     (votes[1] == (+1 if actual=="UP" else -1)) if votes[1] else None,
             "ind_mr_ok":        (votes[2] == (+1 if actual=="UP" else -1)) if votes[2] else None,
             "ind_of_ok":        (votes[3] == (+1 if actual=="UP" else -1)) if votes[3] else None,
-        })
+        }
+        for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug"):
+            if pos.get(k) is not None:
+                rec[k] = pos[k]
+        history.append(rec)
 
         icon    = "✅" if win else "❌"
         name    = pos["symbol"].replace("USDT", "")
         pct     = (current_price - entry) / entry * 100
-        pnl_str = f"kazandı +${amount:.0f}" if win else f"kaybetti -${amount:.0f}"
+        spent   = pos.get("pm_spent") or amount
+        pnl_str = f"kazandı +${pnl:.2f}" if win else f"kaybetti -${abs(spent):.2f}"
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  {pnl_str}"
         )
@@ -422,12 +429,7 @@ async def run_open() -> None:
 
     _newly_opened = 0
     for sig in candidates:
-        if state.get("balance", INITIAL_BALANCE) < TRADE_AMOUNT:
-            print(f"[10. ANALİZ] Sanal bakiye yetersiz: ${state.get('balance', 0):.2f}")
-            continue
-        if any(p["symbol"] == sig["symbol"] for p in state["open_positions"]):
-            continue
-        state["open_positions"].append({
+        pos = {
             "symbol":           sig["symbol"],
             "predicted_dir":    sig["direction"],
             "entry_price":      sig["price"],
@@ -441,14 +443,22 @@ async def run_open() -> None:
             "votes":            sig["votes"],
             "tier":             sig["tier"],
             "virtual":          True,
-        })
-        state["balance"] = round(state.get("balance", INITIAL_BALANCE) - TRADE_AMOUNT, 2)
+        }
+        apply_pm_quote(pos, sig["symbol"], sig["direction"], TRADE_AMOUNT, now)
+        risk = pos.get("pm_spent", TRADE_AMOUNT)
+        if state.get("balance", INITIAL_BALANCE) < risk:
+            print(f"[10. ANALİZ] Sanal bakiye yetersiz: ${state.get('balance', 0):.2f}")
+            continue
+        if any(p["symbol"] == sig["symbol"] for p in state["open_positions"]):
+            continue
+        state["open_positions"].append(pos)
+        state["balance"] = round(state.get("balance", INITIAL_BALANCE) - risk, 2)
         _newly_opened += 1
-        print(f"[10. ANALİZ] Sanal: {sig['symbol']} {sig['direction']} ${TRADE_AMOUNT:.0f}")
+        print(f"[10. ANALİZ] Sanal: {sig['symbol']} {sig['direction']} ${risk:.2f}")
 
     save_state(state)
 
-    at_risk = sum(p.get("amount", TRADE_AMOUNT) for p in state["open_positions"])
+    at_risk = sum(p.get("pm_spent") or p.get("amount", TRADE_AMOUNT) for p in state["open_positions"])
     bal_str = f"${state.get('balance', INITIAL_BALANCE):.2f}"
 
     trade_lines = []
@@ -462,8 +472,11 @@ async def run_open() -> None:
         if opened_pos:
             d_icon = "📈" if opened_pos["predicted_dir"] == "UP" else "📉"
             d_tr   = "YÜKSELİR" if opened_pos["predicted_dir"] == "UP" else "DÜŞER"
+            risk   = opened_pos.get("pm_spent") or TRADE_AMOUNT
+            tw     = opened_pos.get("to_win")
+            tw_str = f" → kazanç ${tw:.0f}" if tw else ""
             trade_lines.append(
-                f"{d_icon} <b>{name}</b>  {d_tr}  {sig['price']:.2f}  💵${TRADE_AMOUNT:.0f} risk\n"
+                f"{d_icon} <b>{name}</b>  {d_tr}  {sig['price']:.2f}  💵${risk:.2f}{tw_str}\n"
                 f"   {sig['tier']}  |  A:konf%{sig['conf_a']*100:.0f}  B:skor{sig['score_b']:+d}/4\n"
                 f"   {' | '.join(sig['labels'][1:])}"
             )

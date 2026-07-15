@@ -1,6 +1,7 @@
 """
-BTC ANALİZ — 45 saatlik yön oylaması (39 algo + 6 analiz trader)
+BTC ANALİZ — 27 saatlik yön oylaması (24 algo + 3 trader)
 
+Zayıf performanslı 15 algo + A4/A9 trader hariç.
 Her saat :01'de analiz + Telegram; Analiz 509 sanal işlem :02'de açılır ($400, $10–20, girişte bakiyeden düşülür).
 """
 import asyncio
@@ -17,17 +18,20 @@ if _DIR not in sys.path:
 
 from algo_signals import collect_btc_algo_votes, fetch_klines
 from poly_predictor_analysis import predict
-from poly_trader_analiz4 import analyze as analyze4
 from poly_trader_analiz5 import analyze as analyze5
-from poly_trader_analiz6 import analyze_symbol as analyze6
-from poly_trader_analiz9 import analyze as analyze9
 from poly_trader_analiz10 import analyze as analyze10
 
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 SYMBOL    = "BTCUSDT"
-TOTAL     = 45
+_ORIG_TOTAL = 44
+# Son 15 saat ~%33 ve altı — oylamadan çıkarıldı
+EXCLUDED_VOTES: set[int | str] = {
+    2, 4, 8, 9, 10, 16, 19, 21, 25, 28, 30, 31, 32, 37, 39,
+    "A4", "A9",
+}
+TOTAL     = _ORIG_TOTAL - len(EXCLUDED_VOTES)  # 27
 LABEL     = "509. ANALİZ BTC"
 INITIAL_BALANCE = 400.0
 
@@ -63,6 +67,17 @@ def _trader_dir(result: dict | None, *keys: str) -> str:
     return "NEUTRAL"
 
 
+def _scale_threshold(orig: int) -> int:
+    return max(1, round(orig * TOTAL / _ORIG_TOTAL))
+
+
+MIN_TRADE_VOTES = _scale_threshold(23)
+
+
+def _filter_votes(votes: list[dict]) -> list[dict]:
+    return [v for v in votes if v["id"] not in EXCLUDED_VOTES]
+
+
 async def _collect_trader_votes() -> list[dict]:
     votes = []
 
@@ -77,16 +92,6 @@ async def _collect_trader_votes() -> list[dict]:
         votes.append({"id": "A1", "name": "1. Analiz (Predictor)", "signal": "NEUTRAL", "group": "trader"})
 
     try:
-        r4 = analyze4(SYMBOL)
-        votes.append({
-            "id": "A4", "name": "4. Analiz (Trend+MR+OF+Fund)",
-            "signal": _trader_dir(r4, "predicted_dir"), "group": "trader",
-        })
-    except Exception as e:
-        print(f"[A4] hata: {e}")
-        votes.append({"id": "A4", "name": "4. Analiz (Trend+MR+OF+Fund)", "signal": "NEUTRAL", "group": "trader"})
-
-    try:
         r5 = await analyze5(SYMBOL)
         votes.append({
             "id": "A5", "name": "5. Analiz (Predictor + momentum)",
@@ -95,26 +100,6 @@ async def _collect_trader_votes() -> list[dict]:
     except Exception as e:
         print(f"[A5] hata: {e}")
         votes.append({"id": "A5", "name": "5. Analiz (Predictor + momentum)", "signal": "NEUTRAL", "group": "trader"})
-
-    try:
-        r6 = analyze6(SYMBOL)
-        votes.append({
-            "id": "A6", "name": "6. Analiz (RSI Diverjans)",
-            "signal": _trader_dir(r6, "direction"), "group": "trader",
-        })
-    except Exception as e:
-        print(f"[A6] hata: {e}")
-        votes.append({"id": "A6", "name": "6. Analiz (RSI Diverjans)", "signal": "NEUTRAL", "group": "trader"})
-
-    try:
-        r9 = analyze9(SYMBOL)
-        votes.append({
-            "id": "A9", "name": "9. Analiz (Trend+MR+OF+Fund v2)",
-            "signal": _trader_dir(r9, "predicted_dir"), "group": "trader",
-        })
-    except Exception as e:
-        print(f"[A9] hata: {e}")
-        votes.append({"id": "A9", "name": "9. Analiz (Trend+MR+OF+Fund v2)", "signal": "NEUTRAL", "group": "trader"})
 
     try:
         r10 = await analyze10(SYMBOL)
@@ -138,12 +123,12 @@ def _consensus_dir(n_up: int, n_down: int) -> str | None:
 
 
 def _calc_amount(n_win: int) -> float:
-    """Konsensüs gücüne göre lot: 23–24 → $10, 25–28 → $15, 29+ → $20."""
-    if n_win >= 29:
+    """Konsensüs gücüne göre lot (27 oy ölçeğinde)."""
+    if n_win >= _scale_threshold(29):
         return 20.0
-    if n_win >= 25:
+    if n_win >= _scale_threshold(25):
         return 15.0
-    if n_win >= 23:
+    if n_win >= _scale_threshold(23):
         return 10.0
     return 0.0
 
@@ -442,7 +427,7 @@ def build_message(votes: list[dict], prev_result: dict | None,
     lines.append(f"🟢 {n_up}/{TOTAL} ARTAR  |  🔴 {n_down}/{TOTAL} DÜŞER  |  ⚪ {n_neut}/{TOTAL} NÖTR")
 
     trader = _load_trader()
-    if predicted and n_win >= 23:
+    if predicted and n_win >= MIN_TRADE_VOTES:
         amt = _calc_amount(n_win)
         d = "ARTAR" if predicted == "UP" else "DÜŞER"
         lines.append(f"🤖 <b>{LABEL}</b>: {d} ${amt:.0f} — :02 sanal açılış")
@@ -495,11 +480,11 @@ async def run_async(*, send_tg: bool = True) -> list[dict]:
             hour_label,
         )
 
-    print("[BTC ANALİZ] 39 algo hesaplanıyor...")
+    print(f"[BTC ANALİZ] {TOTAL} aktif oy hesaplanıyor...")
     algo_votes = collect_btc_algo_votes()
-    print("[BTC ANALİZ] 6 trader hesaplanıyor...")
+    print("[BTC ANALİZ] trader oyları...")
     trader_votes = await _collect_trader_votes()
-    votes = algo_votes + trader_votes
+    votes = _filter_votes(algo_votes + trader_votes)
 
     if len(votes) != TOTAL:
         print(f"[BTC ANALİZ] UYARI: {len(votes)} oy (beklenen {TOTAL})")
@@ -526,7 +511,7 @@ async def run_async(*, send_tg: bool = True) -> list[dict]:
         "votes": votes,
         "saved_at": now_tr.isoformat(),
     }
-    if predicted and n_win >= 23:
+    if predicted and n_win >= MIN_TRADE_VOTES:
         state["trade_pending"] = {
             "predicted": predicted,
             "n_win": n_win,

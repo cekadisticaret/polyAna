@@ -40,9 +40,7 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-MOMENTUM_FILTER_ENABLED = os.getenv("PM_5M_105_MOMENTUM_FILTER", "true").lower() in (
-    "1", "true", "yes",
-)
+MOMENTUM_FILTER_ENABLED = False
 
 
 # ── Binance veri ──────────────────────────────────────────────
@@ -252,10 +250,10 @@ def analyze(
     5M 102 sinyal motoru.
 
     klines/orderbook verilmezse Binance'ten çeker.
-    direction None → işlem yok (konsensüs veya momentum filtresi).
+    direction None → işlem yok (konsensüs / MR veto / trend nötr).
     """
     if momentum_filter is None:
-        momentum_filter = MOMENTUM_FILTER_ENABLED
+        momentum_filter = False
 
     try:
         if klines is None:

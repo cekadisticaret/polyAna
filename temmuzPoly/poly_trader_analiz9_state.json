@@ -1,5 +1,23 @@
 {
-  "balance": 340.34,
-  "open_positions": [],
-  "total_pnl": 40.34
+  "balance": 346.74,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 64920.5,
+      "entry_time_tr": "2026-07-15T09:04:01.880757+03:00",
+      "entry_hour_tr": 9,
+      "entry_dow": 2,
+      "entry_is_weekend": false,
+      "score": 2,
+      "amount": 8.0,
+      "votes": [
+        1,
+        0,
+        1,
+        0
+      ]
+    }
+  ],
+  "total_pnl": 54.74
 }

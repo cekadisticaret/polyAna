@@ -2,7 +2,7 @@
 5M 104 BTC — Gelişmiş 5-Algo Konsensüs (Sanal)
 ================================================
 btc_5m_104_algo: A1 + Trend+ADX + MR + Orderflow v2 + Volume (≥2/5)
-Filtreler: momentum, ADX, hacim, 1H HTF.
+Filtreler: ADX, hacim, 1H HTF.
 
 $200 sanal, UP $4 / DOWN $6. Sadece BTCUSDT.
 Gece modu: 22:00–07:00 İST yeni işlem yok
@@ -21,6 +21,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from btc_5m_104_algo import analyze, format_signal, fetch_klines
+from pm_trader_helpers import pm_5m_sanal_quote, pm_5m_close, pm_5m_history_extras
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
 if os.path.exists(_ENV_FILE):
@@ -216,14 +217,13 @@ def run() -> None:
             ref_open   = candle["open"]
             prev_close = candle["close"]
             pred   = pos["predicted_dir"]
-            amount = pos.get("amount", TRADE_AMOUNT_DOWN)
-            to_win = pos.get("to_win", amount * 2)
             actual = "UP" if prev_close >= ref_open else "DOWN"
             win    = pred == actual
-            pnl    = round(to_win - amount, 2) if win else -amount
+            pnl, payout = pm_5m_close(pos, win)
+            spent = pos.get("pm_spent") or pos.get("amount", TRADE_AMOUNT_DOWN)
 
             if win:
-                state["balance"] = round(state["balance"] + to_win, 2)
+                state["balance"] = round(state["balance"] + payout, 2)
             tur_pnl += pnl
             state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
 
@@ -234,8 +234,7 @@ def run() -> None:
                 "win": win,
                 "entry_price": ref_open,
                 "exit_price": prev_close,
-                "amount": amount,
-                "to_win": to_win,
+                "amount": pos.get("amount", spent),
                 "pnl": pnl,
                 "entry_time_tr": pos["entry_time_tr"],
                 "entry_period_min": pos.get("entry_period_min"),
@@ -247,9 +246,8 @@ def run() -> None:
                 "atr": pos.get("atr"),
                 "adx": pos.get("adx"),
                 "htf_trend": pos.get("htf_trend"),
-                "pm_slug": pos.get("pm_slug"),
-                "token_price": pos.get("token_price"),
                 "pm_dry_run": _PM_DRY_RUN,
+                **pm_5m_history_extras(pos),
             })
 
             icon = "✅" if win else "❌"
@@ -257,7 +255,7 @@ def run() -> None:
             pct = (prev_close - ref_open) / ref_open * 100 if ref_open else 0
             closed_lines.append(
                 f"{icon} BTC {dir_tr}  {ref_open:,.0f}→{prev_close:,.0f} ({pct:+.1f}%)"
-                f"  {'+'+f'${to_win:.2f}' if win else '-$'+f'{amount:.0f}'}"
+                f"  {'+'+f'${pnl:.2f}' if win else '-$'+f'{spent:.2f}'}"
             )
 
         state["open_positions"] = []
@@ -317,22 +315,15 @@ def run() -> None:
         return
 
     entry_p = sig.entry_price
-    pm_info = _pm_find_5m_market(ts_5m)
-    pm_slug = pm_info["slug"] if pm_info else None
-    token_price = None
-    if pm_info:
-        token_price = pm_info["up_price"] if direction == "UP" else pm_info["down_price"]
-
-    to_win = round(amount / token_price, 2) if token_price and token_price > 0 else round(amount * 2, 2)
+    pm_q = pm_5m_sanal_quote(ts_5m, direction, amount)
+    token_price = pm_q.get("token_price")
+    to_win = pm_q.get("to_win", amount * 2)
 
     state["balance"] = round(balance - amount, 2)
     state["open_positions"].append({
         "symbol": SYMBOL,
         "predicted_dir": direction,
         "entry_price": entry_p,
-        "amount": amount,
-        "to_win": to_win,
-        "token_price": token_price,
         "consensus": sig.consensus,
         "votes": sig.votes,
         "labels": sig.labels,
@@ -342,8 +333,8 @@ def run() -> None:
         "entry_time_tr": now_tr.isoformat(),
         "entry_period_min": period_min,
         "entry_dow": dow,
-        "pm_slug": pm_slug,
         "ts_5m": ts_5m,
+        **pm_q,
     })
     save_state(state)
 

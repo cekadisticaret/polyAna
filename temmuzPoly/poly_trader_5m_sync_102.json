@@ -1,25 +1,25 @@
 {
-  "ts_5m": 1784033100,
-  "saved_at_tr": "2026-07-14T15:45:02.608494+03:00",
+  "ts_5m": 1784095200,
+  "saved_at_tr": "2026-07-15T09:00:04.785870+03:00",
   "result": {
     "votes": [
       0,
       1,
       -1,
-      1
+      -1
     ],
     "labels": [
-      "A1 →  RSI:76  MACD:↑  EMA:↑",
-      "Trend ↑  E20>E50 (+0.26%)",
-      "MR ↓  RSI:76  BB:üst",
-      "OF ↑  CVD:+0.42  OB:+0.97"
+      "A1 →  RSI:61  MACD:↑  EMA:↑",
+      "Trend ↑  E20>E50 (+0.04%)",
+      "MR ↓  RSI:61  BB:üst",
+      "OFv2 ↓  CVD:+0.04  OB:-0.73"
     ],
-    "entry_price": 63408.7,
-    "momentum": "DOWN",
+    "entry_price": 64920.5,
+    "momentum": "UP",
     "direction": null,
     "consensus": 2,
     "amount": 0.0,
-    "raw_direction": "UP",
-    "skip_reason": "momentum filtresi: son 3 5m mum düşüş, UP engellendi"
+    "raw_direction": "DOWN",
+    "skip_reason": "KALEM fitil: son 5 mumda üst fitil uçları yükseliyor (64,710 → 64,788 → 64,942), DOWN yok"
   }
 }

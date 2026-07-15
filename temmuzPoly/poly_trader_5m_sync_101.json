@@ -1,6 +1,6 @@
 {
-  "ts_5m": 1784004000,
-  "saved_at_tr": "2026-07-14T07:40:03.051556+03:00",
+  "ts_5m": 1784065200,
+  "saved_at_tr": "2026-07-15T00:40:03.739222+03:00",
   "result": {
     "direction": "UP",
     "consensus": 2,
@@ -11,12 +11,12 @@
       1
     ],
     "labels": [
-      "A1 →  RSI:79  MACD:↑  EMA:↑",
-      "Trend ↑  E20>E50 (+0.15%)",
-      "MR ↓  RSI:79  BB:orta",
-      "OF ↑  CVD:+0.10  OB:-0.71"
+      "A1 →  RSI:94  MACD:↑  EMA:↑",
+      "Trend ↑  E20>E50 (+0.09%)",
+      "MR ↓  RSI:94  BB:üst",
+      "OF ↑  CVD:+0.18  OB:-0.94"
     ],
-    "entry_price": 62732.5,
+    "entry_price": 64664.2,
     "amount": 3.0
   }
 }

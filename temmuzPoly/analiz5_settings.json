@@ -2,11 +2,5 @@
   "amount_agree": 15.0,
   "amount_a5_only": 8.0,
   "amount_a9_only": 6.0,
-  "eth_multiplier": 0.7,
-  "dual_mode_enabled": false,
-  "dual_mode_amount": 10.0,
-  "notes": {
-    "dual_mode_enabled": "A5 :04 hazırlık + A10 :05 onay (varsayılan kapalı)",
-    "dual_mode_amount": "Çift mod işlem tutarı (USD)"
-  }
+  "eth_multiplier": 0.7
 }

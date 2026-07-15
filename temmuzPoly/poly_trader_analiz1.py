@@ -21,6 +21,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
+from pm_trader_helpers import apply_pm_quote, sanal_pnl
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
@@ -167,13 +168,13 @@ async def run_close() -> None:
         amount = pos.get("amount", TRADE_AMOUNT)
         actual = "UP" if current_price >= entry else "DOWN"
         win    = (pred == actual)
-        pnl    = amount if win else -amount
+        pnl    = sanal_pnl(pos, win)
         toplam_pnl += pnl
 
         state["balance"]   = round(state["balance"] + pnl, 2)
         state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
 
-        history.append({
+        rec = {
             "symbol":           pos["symbol"],
             "predicted_dir":    pred,
             "actual_dir":       actual,
@@ -195,12 +196,16 @@ async def run_close() -> None:
             "ind_ema_ok":       ((pos.get("ind_ema_vote") == actual)
                                  if pos.get("ind_ema_vote") and pos.get("ind_ema_vote") != "NEUTRAL"
                                  else None),
-        })
+        }
+        for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug"):
+            if pos.get(k) is not None:
+                rec[k] = pos[k]
+        history.append(rec)
 
         icon    = "✅" if win else "❌"
         name    = pos["symbol"].replace("USDT", "")
         pct     = (current_price - entry) / entry * 100
-        pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
+        pnl_str = f"+{pnl:.2f}$" if win else f"{pnl:.2f}$"
         lines.append(f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  {pnl_str}")
 
     state["open_positions"] = failed_pos
@@ -268,7 +273,7 @@ async def run_open() -> None:
             entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else pred_obj.current_price
         except Exception:
             entry_price = pred_obj.current_price
-        state["open_positions"].append({
+        pos = {
             "symbol":           sym,
             "predicted_dir":    pred_obj.predicted_dir,
             "entry_price":      entry_price,
@@ -283,7 +288,9 @@ async def run_open() -> None:
             "ind_ema_vote":     ("UP" if "YUKARI" in ind_ema_raw
                                  else "DOWN" if "AŞAĞI" in ind_ema_raw
                                  else "NEUTRAL"),
-        })
+        }
+        apply_pm_quote(pos, sym, pred_obj.predicted_dir, dyn_amount, now)
+        state["open_positions"].append(pos)
 
     save_state(state)
 

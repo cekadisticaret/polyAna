@@ -21,12 +21,13 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pm_trader_helpers import pm_5m_sanal_quote, pm_5m_close, pm_5m_history_extras
 from poly_predictor_analysis import predict
 from poly_trader_15m_btc import fetch_klines_5m, fetch_orderbook
 from poly_trader_analiz10 import (
     algo_trend, algo_mr, algo_orderflow, algo_funding, fetch_funding_rate,
 )
-from momentum_filter import momentum_skip_reason_5m, recent_momentum
+from momentum_filter import recent_momentum
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
 if os.path.exists(_ENV_FILE):
@@ -234,20 +235,17 @@ async def analyze_symbol(symbol: str) -> dict | None:
     else:
         tier = "📊 İkisi orta"
 
-    skip_reason = momentum_skip_reason_5m(dir_a, symbol)
     base = {
         "symbol": symbol, "entry_price": klines[-1]["open"],
         "conf_a": conf_a, "score_b": score_b, "tier": tier,
         "labels": [f"A:{conf_a*100:.0f}%", l_trend, l_mr, l_of],
         "votes": [+1 if dir_a == "UP" else -1, v_trend, v_mr, v_of],
         "momentum": momentum,
+        "direction": dir_a,
+        "amount": TRADE_AMOUNT,
+        "skip_reason": None,
     }
-
-    if skip_reason:
-        return {**base, "direction": None, "amount": 0.0,
-                "skip_reason": skip_reason, "raw_direction": dir_a}
-
-    return {**base, "direction": dir_a, "amount": TRADE_AMOUNT, "skip_reason": None}
+    return base
 
 
 def _pm_find_5m_market(symbol: str, ts_5m: int) -> dict | None:
@@ -331,29 +329,28 @@ async def run_async() -> None:
             ref_open   = candle["open"]
             prev_close = candle["close"]
             pred   = pos["predicted_dir"]
-            amount = pos.get("amount", TRADE_AMOUNT)
-            to_win = pos.get("to_win", amount * 2)
             actual = "UP" if prev_close >= ref_open else "DOWN"
             win    = pred == actual
-            pnl    = round(to_win - amount, 2) if win else -amount
+            pnl, payout = pm_5m_close(pos, win)
+            spent = pos.get("pm_spent") or pos.get("amount", TRADE_AMOUNT)
 
             if win:
-                state["balance"] = round(state["balance"] + to_win, 2)
+                state["balance"] = round(state["balance"] + payout, 2)
             tur_pnl += pnl
             state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
 
             history.append({
                 "symbol": sym, "predicted_dir": pred, "actual_dir": actual,
                 "win": win, "entry_price": ref_open, "exit_price": prev_close,
-                "amount": amount, "to_win": to_win, "pnl": pnl,
+                "amount": pos.get("amount", spent), "pnl": pnl,
                 "entry_time_tr": pos["entry_time_tr"],
                 "entry_period_min": pos.get("entry_period_min"),
                 "entry_dow": pos.get("entry_dow"),
                 "exit_time_tr": now_tr.isoformat(),
                 "conf_a": pos.get("conf_a"), "score_b": pos.get("score_b"),
                 "tier": pos.get("tier"), "votes": pos.get("votes"),
-                "pm_slug": pos.get("pm_slug"), "token_price": pos.get("token_price"),
                 "pm_dry_run": _PM_DRY_RUN,
+                **pm_5m_history_extras(pos),
             })
 
             name = _sym_name(sym)
@@ -364,7 +361,7 @@ async def run_async() -> None:
             fmt2 = f"{prev_close:,.2f}" if sym == "BTCUSDT" else f"{prev_close:.2f}"
             closed_lines.append(
                 f"{icon} {name} {dir_tr}  {fmt}→{fmt2} ({pct:+.1f}%)"
-                f"  {'+'+f'${to_win:.2f}' if win else '-$'+f'{amount:.0f}'}"
+                f"  {'+'+f'${pnl:.2f}' if win else '-$'+f'{spent:.2f}'}"
             )
 
         state["open_positions"] = []
@@ -419,17 +416,18 @@ async def run_async() -> None:
             skip_lines.append(f"⏸ {name} {direction} — {pm_skip}")
             continue
 
-        token_price = pm_info["token_price"]
-        to_win = round(amount / token_price, 2)
+        pm_q = pm_5m_sanal_quote(ts_5m, direction, amount, sym)
+        token_price = pm_q.get("token_price") or pm_info.get("token_price")
+        to_win = pm_q.get("to_win", round(amount / token_price, 2) if token_price else amount * 2)
         state["balance"] = round(state["balance"] - amount, 2)
         state["open_positions"].append({
             "symbol": sym, "predicted_dir": direction,
-            "entry_price": entry_p, "amount": amount, "to_win": to_win,
-            "token_price": token_price, "conf_a": result["conf_a"],
+            "entry_price": entry_p, "conf_a": result["conf_a"],
             "score_b": result["score_b"], "tier": result.get("tier"),
             "votes": result.get("votes"),
             "entry_time_tr": now_tr.isoformat(), "entry_period_min": period_min,
-            "entry_dow": dow, "pm_slug": pm_info["slug"], "ts_5m": ts_5m,
+            "entry_dow": dow, "ts_5m": ts_5m,
+            **pm_q,
         })
 
         dir_tr = "YÜKSELİR" if direction == "UP" else "DÜŞER"

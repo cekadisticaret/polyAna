@@ -35,6 +35,9 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pm_trader_helpers import apply_pm_quote, sanal_pnl
+
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "8630483764:AAFmAmG4nHAGb238wpavlWgMjJZDvIy4DzE")
 CHAT_ID   = os.getenv("TELEGRAM_ANALIZ4_CHAT_ID", os.getenv("TELEGRAM_CHAT", "830754964"))
@@ -350,14 +353,14 @@ async def run_close() -> None:
         amount = pos.get("amount", AMOUNT_STRONG)
         actual = "UP" if current_price >= entry else "DOWN"
         win    = (pred == actual)
-        pnl    = amount if win else -amount
+        pnl    = sanal_pnl(pos, win)
         toplam_pnl += pnl
 
         state["balance"]   = round(state["balance"] + pnl, 2)
         state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
 
         vs = pos.get("votes", [])
-        history.append({
+        rec = {
             "symbol":           pos["symbol"],
             "predicted_dir":    pred,
             "actual_dir":       actual,
@@ -376,12 +379,16 @@ async def run_close() -> None:
             "ind_mr_ok":        _vote_ok(vs[1], actual) if len(vs) > 1 else None,
             "ind_of_ok":        _vote_ok(vs[2], actual) if len(vs) > 2 else None,
             "ind_fund_ok":      _vote_ok(vs[3], actual) if len(vs) > 3 else None,
-        })
+        }
+        for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug"):
+            if pos.get(k) is not None:
+                rec[k] = pos[k]
+        history.append(rec)
 
         icon    = "✅" if win else "❌"
         name    = pos["symbol"].replace("USDT", "")
         pct     = (current_price - entry) / entry * 100
-        pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
+        pnl_str = f"+{pnl:.2f}$" if win else f"{pnl:.2f}$"
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  "
             f"{pnl_str}  skor:{pos.get('score', 0):+d}/4"
@@ -440,7 +447,7 @@ async def run_open() -> None:
     # Pozisyon aç
     for sig in results:
         if sig["amount"] > 0 and sig["predicted_dir"]:
-            state["open_positions"].append({
+            pos = {
                 "symbol":           sig["symbol"],
                 "predicted_dir":    sig["predicted_dir"],
                 "entry_price":      sig["price"],
@@ -451,7 +458,9 @@ async def run_open() -> None:
                 "score":            sig["score"],
                 "amount":           sig["amount"],
                 "votes":            sig["votes"],
-            })
+            }
+            apply_pm_quote(pos, sig["symbol"], sig["predicted_dir"], sig["amount"], now)
+            state["open_positions"].append(pos)
 
     save_state(state)
 

@@ -260,3 +260,121 @@ def pm_resolve_pnl(pos: dict) -> tuple[bool | None, float, str]:
     except Exception as e:
         print(f"[PM] Sonuç hatası: {e}", file=sys.stderr)
         return None, 0.0, ""
+
+
+def pm_sanal_quote(symbol: str, direction: str, amount_usd: float, now: datetime) -> dict | None:
+    """1h PM gamma fiyatından sanal kotasyon (emir yok)."""
+    et_hour = (now - timedelta(hours=4)).hour
+    pm = pm_find_market(symbol, et_hour, now)
+    if not pm or pm.get("closed"):
+        return None
+    op = pm.get("outcome_prices") or []
+    if len(op) < 2:
+        return None
+    tp = float(op[0]) if direction == "UP" else float(op[1])
+    if not (0.02 <= tp <= 0.98):
+        return None
+    size = round(amount_usd / tp, 2)
+    spent = round(size * tp, 2)
+    return {
+        "pm_slug": pm["slug"],
+        "pm_title": pm.get("title", ""),
+        "pm_token_dir": direction,
+        "pm_entry_price": tp,
+        "pm_spent": spent,
+        "pm_size": size,
+        "to_win": size,
+    }
+
+
+def apply_pm_quote(pos: dict, symbol: str, direction: str, amount: float, now: datetime) -> dict:
+    q = pm_sanal_quote(symbol, direction, amount, now)
+    if q:
+        pos.update(q)
+    return pos
+
+
+def sanal_pnl(pos: dict, win: bool) -> float:
+    spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
+    size = float(pos.get("pm_size") or pos.get("to_win") or 0)
+    if size > 0 and spent > 0:
+        return round(size - spent, 2) if win else round(-spent, 2)
+    return round(spent if win else -spent, 2)
+
+
+_PM_5M_ASSET = {
+    "BTCUSDT": "btc", "SOLUSDT": "sol", "ETHUSDT": "eth",
+}
+
+
+def pm_5m_find_market(ts_5m: int, symbol: str = "BTCUSDT") -> dict | None:
+    """5m up/down market gamma fiyatı."""
+    asset = _PM_5M_ASSET.get(symbol, "btc")
+    slug = f"{asset}-updown-5m-{ts_5m}"
+    try:
+        req = urllib.request.Request(f"{_PM_GAMMA_URL}?slug={slug}", headers=_PM_HEADERS)
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.load(r)
+        if not data:
+            return None
+        event = data[0]
+        markets = event.get("markets", [])
+        if not markets:
+            return None
+        m = markets[0]
+        raw_op = m.get("outcomePrices")
+        op = json.loads(raw_op) if isinstance(raw_op, str) else (raw_op or [])
+        return {
+            "slug": slug,
+            "title": event.get("title", ""),
+            "closed": event.get("closed", False),
+            "up_price": float(op[0]) if len(op) >= 2 else 0.5,
+            "down_price": float(op[1]) if len(op) >= 2 else 0.5,
+        }
+    except Exception as e:
+        print(f"[PM] 5m gamma hatası ({slug}): {e}", file=sys.stderr)
+    return None
+
+
+def pm_5m_sanal_quote(ts_5m: int, direction: str, amount: float, symbol: str = "BTCUSDT") -> dict:
+    """5m PM kotasyon alanları (emir yok)."""
+    pm = pm_5m_find_market(ts_5m, symbol)
+    out: dict = {"amount": amount, "pm_spent": round(amount, 2)}
+    if pm and not pm.get("closed"):
+        tp = pm["up_price"] if direction == "UP" else pm["down_price"]
+        if tp and 0.02 <= tp <= 0.98:
+            size = round(amount / tp, 2)
+            out.update({
+                "pm_slug": pm["slug"],
+                "token_price": tp,
+                "pm_entry_price": tp,
+                "pm_spent": round(amount, 2),
+                "pm_size": size,
+                "to_win": size,
+            })
+            return out
+    fb = round(amount * 2, 2)
+    out.update({"pm_size": fb, "to_win": fb})
+    return out
+
+
+def pm_5m_history_extras(pos: dict) -> dict:
+    extras: dict = {}
+    for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "token_price", "pm_slug", "pm_order_id"):
+        if pos.get(k) is not None:
+            extras[k] = pos[k]
+    if "pm_spent" not in extras and pos.get("amount") is not None:
+        extras["pm_spent"] = pos["amount"]
+    if "pm_entry_price" not in extras and pos.get("token_price") is not None:
+        extras["pm_entry_price"] = pos["token_price"]
+    if "pm_size" not in extras and pos.get("to_win") is not None:
+        extras["pm_size"] = pos["to_win"]
+    return extras
+
+
+def pm_5m_close(pos: dict, win: bool) -> tuple[float, float]:
+    """(pnl, payout) — girişte kaydedilen PM kotasyonuna göre."""
+    pnl = sanal_pnl(pos, win)
+    spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
+    payout = float(pos.get("pm_size") or pos.get("to_win") or spent * 2)
+    return pnl, payout

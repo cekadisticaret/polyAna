@@ -33,6 +33,9 @@ CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
+if _DIR not in sys.path:
+    sys.path.insert(0, _DIR)
+from pm_trader_helpers import pm_5m_sanal_quote, pm_5m_close, pm_5m_history_extras
 STATE_FILE   = os.path.join(_DIR, "poly_trader_15m_btc_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_15m_btc_history.json")
 WEEKLY_IMG   = "/tmp/poly_5m_btc_weekly.png"
@@ -712,23 +715,17 @@ def run() -> None:
             ref_open   = candle["open"]
             prev_close = candle["close"]
             pred   = pos["predicted_dir"]
-            amount = pos.get("amount", TRADE_AMOUNT)
-            to_win = pos.get("to_win", amount * 2)
-
-            # PM ile aynı: periyot kapanışı vs periyot açılışı (price to beat)
             actual = "UP" if prev_close >= ref_open else "DOWN"
             win    = (pred == actual)
+            pnl, payout = pm_5m_close(pos, win)
 
-            # Açılışta amount düşülmüştü → kazanınca to_win eklenir, kaybedince sıfır
             if win:
-                state["balance"] = round(state["balance"] + to_win, 2)
-                pnl = round(to_win - amount, 2)      # net kar
-            else:
-                pnl = -amount                         # zaten düşülmüştü
+                state["balance"] = round(state["balance"] + payout, 2)
 
             tur_pnl += pnl
             state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
 
+            spent = pos.get("pm_spent") or pos.get("amount", TRADE_AMOUNT)
             history.append({
                 "symbol":           SYMBOL,
                 "predicted_dir":    pred,
@@ -737,8 +734,8 @@ def run() -> None:
                 "entry_price":      ref_open,
                 "exit_price":       prev_close,
                 "ref_open":         ref_open,
-                "amount":           amount,
-                "to_win":           to_win,
+                "amount":           pos.get("amount", spent),
+                "to_win":           pos.get("to_win"),
                 "pnl":              pnl,
                 "entry_time_tr":    pos["entry_time_tr"],
                 "entry_period_min": pos.get("entry_period_min"),
@@ -748,15 +745,15 @@ def run() -> None:
                 "votes":            pos.get("votes"),
                 "pm_slug":          pos.get("pm_slug"),
                 "pm_dry_run":       _PM_DRY_RUN,
+                **pm_5m_history_extras(pos),
             })
 
             icon    = "✅" if win else "❌"
             pct     = (prev_close - ref_open) / ref_open * 100
-            pnl_str = f"+${pnl:.2f}" if win else f"-${amount:.0f}"
             dir_tr  = "YÜKSELİR" if pred == "UP" else "DÜŞER"
             closed_lines.append(
                 f"{icon} BTC {dir_tr}  {ref_open:,.0f}→{prev_close:,.0f} ({pct:+.1f}%)"
-                f"  {'kazandı +$'+f'{to_win:.2f}' if win else 'kaybetti -$'+f'{amount:.0f}'}"
+                f"  {'kazandı +$'+f'{pnl:.2f}' if win else 'kaybetti -$'+f'{spent:.2f}'}"
             )
 
         state["open_positions"] = []
@@ -832,23 +829,19 @@ def run() -> None:
             )
             return
 
-        pm_info = _pm_find_5m_market(ts_5m)
-        token_price = None
-        pm_slug = None
-        if pm_info and not pm_info.get("closed"):
-            token_price = pm_info["up_price"] if direction == "UP" else pm_info["down_price"]
-            pm_slug = pm_info["slug"]
-        to_win = round(amount / token_price, 2) if token_price and token_price > 0 else round(amount * 2, 2)
+        pm_q = pm_5m_sanal_quote(ts_5m, direction, amount)
+        token_price = pm_q.get("token_price")
+        to_win = pm_q.get("to_win", amount * 2)
         price_str = f"@{token_price:.2f}" if token_price else ""
 
         state["balance"] = round(state["balance"] - amount, 2)
         state["open_positions"].append({
             "symbol": SYMBOL, "predicted_dir": direction,
-            "entry_price": entry_p, "amount": amount, "pm_spent": amount, "to_win": to_win,
-            "token_price": token_price, "consensus": consensus, "votes": votes,
+            "entry_price": entry_p, "consensus": consensus, "votes": votes,
             "entry_time_tr": now_tr.isoformat(), "entry_period_min": period_min,
-            "entry_dow": dow, "pm_slug": pm_slug, "ts_5m": ts_5m, "virtual": True,
+            "entry_dow": dow, "ts_5m": ts_5m, "virtual": True,
             "pm_dry_run": True,
+            **pm_q,
         })
         save_state(state)
         tg_send(

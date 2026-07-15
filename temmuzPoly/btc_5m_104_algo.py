@@ -2,7 +2,7 @@
 BTC/USDT 5 Dakikalık (5M) Gelişmiş Sinyal Motoru v2.0 — 104
 
 5 algo konsensüs (≥2/5): A1, Trend+ADX, MR, Orderflow v2, Volume
-Filtreler: momentum, ADX≥20, hacim≥1.2x, 1H HTF onayı
+Filtreler: ADX≥20, hacim≥1.2x, 1H HTF onayı
 ATR bazlı pozisyon boyutu, SL/TP/trailing seviyeleri
 
 Kullanım:
@@ -77,7 +77,7 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-MOMENTUM_FILTER_ENABLED = os.getenv("PM_5M_MOMENTUM_FILTER", "true").lower() in ("1", "true", "yes")
+MOMENTUM_FILTER_ENABLED = False
 ADX_FILTER_ENABLED = os.getenv("PM_5M_ADX_FILTER", "true").lower() in ("1", "true", "yes")
 VOLUME_FILTER_ENABLED = os.getenv("PM_5M_VOLUME_FILTER", "true").lower() in ("1", "true", "yes")
 HTF_CONFIRMATION = os.getenv("PM_5M_HTF_CONFIRMATION", "true").lower() in ("1", "true", "yes")
@@ -597,7 +597,7 @@ def analyze(
     portfolio_value: float = DEFAULT_PORTFOLIO,
 ) -> SignalResult | None:
     if momentum_filter is None:
-        momentum_filter = MOMENTUM_FILTER_ENABLED
+        momentum_filter = False
     if adx_filter is None:
         adx_filter = ADX_FILTER_ENABLED
     if volume_filter is None:

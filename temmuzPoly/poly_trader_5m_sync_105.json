@@ -1,25 +1,25 @@
 {
-  "ts_5m": 1784033100,
-  "saved_at_tr": "2026-07-14T15:45:02.418684+03:00",
+  "ts_5m": 1784095200,
+  "saved_at_tr": "2026-07-15T09:00:03.712157+03:00",
   "result": {
-    "direction": null,
+    "direction": "DOWN",
     "consensus": 2,
-    "amount": 0.0,
-    "entry_price": 63408.7,
-    "momentum": "DOWN",
+    "amount": 8.0,
+    "entry_price": 64920.5,
+    "momentum": "UP",
     "votes": [
       0,
-      1,
+      0,
       -1,
-      1
+      -1
     ],
     "labels": [
-      "A1 →  RSI:76  MACD:↑  EMA:↑",
-      "Trend ↑  E20>E50 (+0.26%)",
-      "MR ↓  RSI:76  BB:üst",
-      "OF ↑  CVD:+0.42  OB:+0.97"
+      "A1 →  RSI:61  MACD:↑  EMA:↑",
+      "Trend →  nötr (cross:+0.04% slope:+0.070%)",
+      "MR ↓  RSI:61  BB:üst",
+      "OFv2 ↓  CVD:+0.04  OB:-0.25"
     ],
-    "skip_reason": "MR veto: aşırı alım (MR↓), UP için 3/4 gerekli (2/4)",
-    "raw_direction": "UP"
+    "skip_reason": null,
+    "raw_direction": null
   }
 }
