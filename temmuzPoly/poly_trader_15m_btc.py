@@ -1,17 +1,9 @@
 """
-5M BTC TRADER — 4 Algoritma Konsensüs (Gerçek Polymarket)
-=========================================================
-A1, A4, A9, A10 analizlerinin 5 dakikalık BTC versiyonu.
-
-4 algoritma oyu:
-  1. RSI + MACD + EMA  (A1 motoru — 5m klines)
-  2. Trend Following   (A4/A9 — EMA20/50 crossover)
-  3. Mean Reversion    (A4/A9 — RSI + Bollinger Bands)
-  4. Orderflow         (A4/A9 — CVD + Order Book imbalance)
-
-Konsensüs: ≥2/4 → sabit $3 PM işlem
-Market: btc-updown-5m-{unix_timestamp}
-Cron:   */5 * * * *
+5M 101 BTC — 4 Algoritma Konsensüs (Sanal)
+==========================================
+A1 + Trend + MR + Orderflow (≥2/4). Sanal $3/işlem.
+Gerçek PM: PM_5M_101_REAL_ENABLED=true
+Cron: */5 * * * *
 """
 
 import json
@@ -46,8 +38,8 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_15m_btc_history.json")
 WEEKLY_IMG   = "/tmp/poly_5m_btc_weekly.png"
 
 SYMBOL           = "BTCUSDT"
-INITIAL_BALANCE  = 500.0
-TRADE_AMOUNT     =  3.0   # sabit PM işlem tutarı
+INITIAL_BALANCE  = 200.0
+TRADE_AMOUNT     =  3.0   # sabit işlem tutarı
 _PERIOD_SECS          = 300    # 5 dakika = 300 saniye
 _PM_WARMUP_SEC        = 3      # periyot başında min bekleme (orderbook)
 _PM_OPEN_DEADLINE_SEC = 30     # periyot başından max emir süresi (16:05 → 16:05:30)
@@ -59,8 +51,8 @@ _DAYS_FULL_TR    = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cu
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
-_PM_DRY_RUN   = False  # Gerçek PM işlem (test için True)
-_PM_TRADING_ENABLED = os.getenv("PM_5M_REAL_ENABLED", "true").lower() in ("1", "true", "yes")
+_PM_LIVE          = os.getenv("PM_5M_101_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
+_PM_DRY_RUN       = not _PM_LIVE
 
 LABEL = "5M 101 BTC"
 
@@ -126,6 +118,21 @@ def _pm_bal_line() -> str:
         return "🏦 PM Bakiye: sorgulanamadı"
     icon = "🟢" if bal >= PM_MIN_BALANCE else "🔴"
     return f"🏦 PM Bakiye: {icon} ${bal:.2f}"
+
+
+def _tg_balance(state: dict | None = None) -> str:
+    if _PM_LIVE:
+        from pm_balance_guard import get_usdc_balance
+        bal = get_usdc_balance()
+        if bal >= 9999:
+            return "💰 Bakiye: PM sorgulanamadı"
+        return f"💰 Bakiye: ${bal:.2f}"
+    st = state if state is not None else load_state()
+    return f"💰 Bakiye: ${st['balance']:.2f}"
+
+
+def _bal_line(state: dict) -> str:
+    return _pm_bal_line() if _PM_LIVE else _tg_balance(state)
 
 
 # ── Telegram ─────────────────────────────────────────────────
@@ -768,7 +775,7 @@ def run() -> None:
             + "\n".join(closed_lines) + "\n"
             f"{tur_icon} Bu tur: {'+'if tur_pnl>=0 else ''}{tur_pnl:.0f}$\n"
             f"{pnl_icon} Toplam P&amp;L: {'+'if state['total_pnl']>=0 else ''}{state['total_pnl']:.2f}$  |  Genel: {_wr(win_all, tot_all)}\n"
-            f"{_pm_bal_line()}\n"
+            f"{_bal_line(state)}\n"
             f"{sep}"
         )
         tg_send(close_msg)
@@ -807,7 +814,7 @@ def run() -> None:
             f"{sep}\n"
             f"⏸ <b>{LABEL} — {saat} İST</b>\n"
             f"Konsensüs yok ({consensus}/4) → işlem açılmadı\n"
-            f"{_pm_bal_line()}\n"
+            f"{_bal_line(state)}\n"
             f"{sep}"
         )
         print(f"[{LABEL}] {saat} — konsensüs yok ({consensus}/4)")
@@ -816,18 +823,45 @@ def run() -> None:
     dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
     dir_icon = "📈" if direction == "UP" else "📉"
 
-    if not _PM_TRADING_ENABLED:
+    if not _PM_LIVE:
+        if state["balance"] < amount:
+            tg_send(
+                f"{sep}\n⏸ <b>{LABEL} — {saat} İST</b>\n"
+                f"Bakiye yetersiz (${state['balance']:.2f} &lt; ${amount:.0f})\n"
+                f"{_tg_balance(state)}\n{sep}"
+            )
+            return
+
+        pm_info = _pm_find_5m_market(ts_5m)
+        token_price = None
+        pm_slug = None
+        if pm_info and not pm_info.get("closed"):
+            token_price = pm_info["up_price"] if direction == "UP" else pm_info["down_price"]
+            pm_slug = pm_info["slug"]
+        to_win = round(amount / token_price, 2) if token_price and token_price > 0 else round(amount * 2, 2)
+        price_str = f"@{token_price:.2f}" if token_price else ""
+
+        state["balance"] = round(state["balance"] - amount, 2)
+        state["open_positions"].append({
+            "symbol": SYMBOL, "predicted_dir": direction,
+            "entry_price": entry_p, "amount": amount, "pm_spent": amount, "to_win": to_win,
+            "token_price": token_price, "consensus": consensus, "votes": votes,
+            "entry_time_tr": now_tr.isoformat(), "entry_period_min": period_min,
+            "entry_dow": dow, "pm_slug": pm_slug, "ts_5m": ts_5m, "virtual": True,
+            "pm_dry_run": True,
+        })
+        save_state(state)
         tg_send(
             f"{sep}\n"
-            f"📡 <b>{LABEL} — {saat} → {next_saat}</b>  ⏸ PM PASIF\n"
-            f"{dir_icon} <b>Sinyal: BTC {dir_tr}</b>  ({consensus}/4)\n"
+            f"🆕 <b>{LABEL} — {saat} → {next_saat}</b>  🔶 SANAL\n"
+            f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/4)  💵 ${amount:.2f} {price_str} → 🏆 ${to_win:.2f}\n"
             f"Giriş: {entry_p:,.2f} USDT\n"
             f"{vote_str}\n"
             f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
-            f"{_pm_bal_line()}\n"
+            f"{_tg_balance(state)}  |  🔴 ${amount:.0f} riskte\n"
             f"{sep}"
         )
-        print(f"[{LABEL}] {saat} — SİNYAL {dir_tr} ({consensus}/4) [PM pasif]")
+        print(f"[{LABEL}] {saat} — {dir_tr} ${amount:.2f}→${to_win:.2f} [SANAL]")
         return
 
     from pm_balance_guard import can_open_trade

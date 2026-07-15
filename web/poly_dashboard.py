@@ -639,8 +639,8 @@ def api_analizler():
         ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
         ("analiz10",   "10. Analiz",            None, "Çift Konsensüs Gerçek PM"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
-        ("15m_btc",     "5M 101 BTC",            None, "Gerçek PM / 4-Algo $3"),
-        ("5m_btc_102",  "5M 102 BTC",            150,  "101 + Momentum PM UP$4/DOWN$6"),
+        ("15m_btc",     "5M 101 BTC",            200,  "4-Algo Sanal $3"),
+        ("5m_btc_102",  "5M 102 BTC",            200,  "101 + Momentum + KALEM Sanal"),
         ("5m_btc_103",  "5M 103 BTC/SOL",        200,  "A10 Çift Konsensüs"),
         ("5m_btc_104",  "5M 104 BTC",            200,  "5-Algo Enhanced Sanal"),
         ("5m_btc_105",  "5M 105 BTC",            200,  "102 + MR veto Sanal"),
@@ -2014,17 +2014,6 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
            border-radius:14px; font-size:13px; font-weight:600; opacity:0;
            transition:opacity .3s; pointer-events:none; }
   .toast.show { opacity:1; }
-
-  .dual-toggle-card { border:1.5px solid #2a2a2a; }
-  .dual-toggle-card.active { border-color:#c8f135; background:#151a10; }
-  .dual-toggle-btn { width:100%; border:none; border-radius:14px; padding:16px 20px; font-size:15px;
-                     font-weight:800; cursor:pointer; transition:.2s; margin-top:12px; }
-  .dual-toggle-btn.off { background:#2a2a2a; color:#888; }
-  .dual-toggle-btn.on  { background:#c8f135; color:#111; }
-  .dual-toggle-btn:hover { filter:brightness(1.05); }
-  .dual-status { font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px; }
-  .dual-status.off { background:#291414; color:#f87171; }
-  .dual-status.on  { background:#14291e; color:#4ade80; }
 </style>
 </head>
 <body>
@@ -2046,23 +2035,6 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
 <div class="main">
   <div class="page-title">Ayarlar</div>
   <div class="page-sub">5. Analiz — işlem miktarları anlık güncellenir, bir sonraki saatte devreye girer</div>
-
-  <div class="settings-card dual-toggle-card" id="dual-card">
-    <h3>Çift Mod — A5 + A10</h3>
-    <div class="setting-row" style="border:none;padding-top:0">
-      <div class="setting-left">
-        <div class="setting-label">A5 (:04) + A10 (:05) Onaylı İşlem</div>
-        <div class="setting-desc">
-          Kapalıyken normal mod: A5 tek başına :05'te $6 açar.<br>
-          Açıkken: :04 A5 hazırlık → :05 A10 onayı → ikisi hemfikirse <b>$10</b> PM işlem.
-        </div>
-      </div>
-      <span class="dual-status off" id="dual-status">KAPALI</span>
-    </div>
-    <button type="button" class="dual-toggle-btn off" id="dual-toggle-btn" onclick="toggleDualMode()">
-      Çift Modu Aktif Et
-    </button>
-  </div>
 
   <div class="settings-card">
     <h3>İşlem Miktarları</h3>
@@ -2114,40 +2086,6 @@ async function load() {
   document.getElementById('amount_agree').value   = d.amount_agree;
   document.getElementById('amount_a5_only').value = d.amount_a5_only;
   document.getElementById('amount_a9_only').value = d.amount_a9_only;
-  updateDualUI(!!d.dual_mode_enabled);
-}
-
-function updateDualUI(on) {
-  const card = document.getElementById('dual-card');
-  const btn  = document.getElementById('dual-toggle-btn');
-  const st   = document.getElementById('dual-status');
-  card.classList.toggle('active', on);
-  btn.classList.toggle('on', on);
-  btn.classList.toggle('off', !on);
-  st.classList.toggle('on', on);
-  st.classList.toggle('off', !on);
-  st.textContent = on ? 'AKTİF' : 'KAPALI';
-  btn.textContent = on ? 'Çift Modu Kapat' : 'Çift Modu Aktif Et';
-}
-
-async function toggleDualMode() {
-  const r0 = await fetch('/poly/api/settings');
-  const cur = await r0.json();
-  const next = !cur.dual_mode_enabled;
-  const btn = document.getElementById('dual-toggle-btn');
-  btn.disabled = true;
-  const r = await fetch('/poly/api/settings', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ dual_mode_enabled: next }),
-  });
-  const d = await r.json();
-  btn.disabled = false;
-  if (d.ok) {
-    updateDualUI(!!d.settings.dual_mode_enabled);
-    showToast(next ? '✅ Çift mod AKTİF — A5+A10 onaylı $10' : '⏸ Çift mod kapatıldı — normal $6 mod');
-  } else {
-    showToast('⚠️ Hata oluştu');
-  }
 }
 
 async function save() {
@@ -2671,32 +2609,11 @@ HTML = r"""<!DOCTYPE html>
 
     /* Mobilde pozisyonlar ana içerik altına gelsin */
     .mobile-positions { display:block; margin-top:16px; }
-
-    /* Çift mod butonu — mobil overview en alt */
-    .mobile-dual-bar {
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      position:fixed; bottom:0; left:0; right:0; z-index:100;
-      padding:14px 16px calc(14px + env(safe-area-inset-bottom));
-      background:#111; border-top:1px solid #2a2a2a;
-      box-shadow:0 -8px 24px rgba(0,0,0,.45);
-    }
-    .mobile-dual-bar.active { border-top-color:#3d4d00; background:#12160e; }
-    .mobile-dual-info { flex:1; min-width:0; }
-    .mobile-dual-title { display:block; font-size:13px; font-weight:800; color:#eee; }
-    .mobile-dual-sub { display:block; font-size:11px; color:#666; margin-top:2px; }
-    .mobile-dual-btn {
-      flex-shrink:0; border:none; border-radius:12px; padding:12px 18px;
-      font-size:13px; font-weight:800; cursor:pointer; transition:.2s;
-    }
-    .mobile-dual-btn.off { background:#2a2a2a; color:#aaa; }
-    .mobile-dual-btn.on  { background:#c8f135; color:#111; }
-    .main { padding-bottom:88px; }
   }
   @media (min-width: 769px) {
     .mobile-header { display:none; }
     .main { margin-right:300px; }
     .mobile-positions { display:none; }
-    .mobile-dual-bar { display:none !important; }
   }
 </style>
 </head>
@@ -2789,14 +2706,6 @@ HTML = r"""<!DOCTYPE html>
         <div id="recent-trades-mob"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
       </div>
 
-      <!-- Mobil: çift mod butonu (sabit alt bar) -->
-      <div class="mobile-dual-bar" id="mobile-dual-bar">
-        <div class="mobile-dual-info">
-          <span class="mobile-dual-title">Çift Mod — A5 + A10</span>
-          <span class="mobile-dual-sub" id="mob-dual-sub">Kapalı · normal $6 mod</span>
-        </div>
-        <button type="button" class="mobile-dual-btn off" id="mob-dual-btn" onclick="toggleDualModeMob()">Aktif Et</button>
-      </div>
     </div>
 
     <!-- SAĞ: risk + açık pozisyonlar -->
@@ -3198,52 +3107,6 @@ async function loadTop3(){
 loadTop3();
 setInterval(loadTop3, 60000);
 
-async function loadDualModeMob(){
-  try{
-    const r = await fetch('/poly/api/settings');
-    const d = await r.json();
-    updateDualMobUI(!!d.dual_mode_enabled);
-  }catch(e){ console.error(e); }
-}
-
-function updateDualMobUI(on){
-  const btn = document.getElementById('mob-dual-btn');
-  const sub = document.getElementById('mob-dual-sub');
-  const bar = document.getElementById('mobile-dual-bar');
-  if(!btn) return;
-  btn.classList.toggle('on', on);
-  btn.classList.toggle('off', !on);
-  if(bar) bar.classList.toggle('active', on);
-  btn.textContent = on ? 'Kapat' : 'Aktif Et';
-  sub.textContent = on
-    ? 'Aktif · :04 A5 + :05 A10 onay · $10'
-    : 'Kapalı · normal $6 mod';
-}
-
-async function toggleDualModeMob(){
-  const btn = document.getElementById('mob-dual-btn');
-  const sub = document.getElementById('mob-dual-sub');
-  btn.disabled = true;
-  try{
-    const r0 = await fetch('/poly/api/settings');
-    const cur = await r0.json();
-    const next = !cur.dual_mode_enabled;
-    const r = await fetch('/poly/api/settings', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ dual_mode_enabled: next }),
-    });
-    const d = await r.json();
-    if(d.ok){
-      updateDualMobUI(!!d.settings.dual_mode_enabled);
-      sub.textContent = next ? '✅ Çift mod açıldı' : '⏸ Normal moda dönüldü';
-      setTimeout(loadDualModeMob, 2000);
-    }
-  }catch(e){ console.error(e); }
-  btn.disabled = false;
-}
-
-loadDualModeMob();
-
 refresh();
 setInterval(refresh, 30000);
 window.addEventListener('resize', () => {
@@ -3472,14 +3335,13 @@ _SETTINGS_LABELS = {
 def _read_settings() -> dict:
     defaults = {
         "amount_agree": 15.0, "amount_a5_only": 8.0, "amount_a9_only": 6.0,
-        "dual_mode_enabled": False, "dual_mode_amount": 10.0,
     }
     if os.path.exists(_SETTINGS_FILE):
         with open(_SETTINGS_FILE) as f:
             data = json.load(f)
         for k in defaults:
             if k in data:
-                defaults[k] = bool(data[k]) if k == "dual_mode_enabled" else data[k]
+                defaults[k] = data[k]
     return defaults
 
 @app.route("/poly/api/algo_signals")
@@ -3522,8 +3384,6 @@ def api_settings_post():
     if _auth_required(): return jsonify({"ok": False}), 401
     body = request.get_json(force=True)
     current = _read_settings()
-    if "dual_mode_enabled" in body:
-        current["dual_mode_enabled"] = bool(body["dual_mode_enabled"])
     for k in _SETTINGS_LABELS:
         if k in body:
             try:

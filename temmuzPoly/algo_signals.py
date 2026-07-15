@@ -795,9 +795,9 @@ ALGO_META = [
 
 SKIP = {13, 14}   # Yön tahmini yok
 
-def run():
-    now    = datetime.datetime.utcnow() + datetime.timedelta(hours=3)  # Istanbul Time
 
+def _build_all_signals() -> tuple[dict, dict, dict]:
+    """39 algo sinyalleri + sembol konsensüsü."""
     kl_1h, kl_4h = {}, {}
     for sym, pair in SYMBOLS.items():
         try:
@@ -805,12 +805,12 @@ def run():
             kl_4h[sym] = fetch_klines(pair, "4h", 100)
         except Exception as e:
             print(f"Fetch error {sym}: {e}")
-            kl_1h[sym] = []; kl_4h[sym] = []
+            kl_1h[sym] = []
+            kl_4h[sym] = []
 
-    pairs_sig  = pairs_trading(kl_1h)
-    fg_signal  = fetch_fear_greed()  # Tüm semboller için aynı
+    pairs_sig = pairs_trading(kl_1h)
+    fg_signal = fetch_fear_greed()
 
-    # OI geçmişini bir kez çek
     oi_cache = {}
     for sym, pair in SYMBOLS.items():
         try:
@@ -818,7 +818,6 @@ def run():
         except Exception:
             oi_cache[sym] = []
 
-    # Funding rate'leri bir kez çek
     funding_cache = {}
     for sym, pair in SYMBOLS.items():
         try:
@@ -826,35 +825,36 @@ def run():
         except Exception:
             funding_cache[sym] = 0.0
 
-    # Sembol başına OI divergence hesapla
     def _oi_for(sym):
-        kl  = kl_1h.get(sym, [])
-        oi  = oi_cache.get(sym, [])
-        if len(oi) < 5 or len(kl) < 5: return "NEUTRAL"
+        kl = kl_1h.get(sym, [])
+        oi = oi_cache.get(sym, [])
+        if len(oi) < 5 or len(kl) < 5:
+            return "NEUTRAL"
         try:
-            c  = [k["c"] for k in kl[-10:]]
+            c = [k["c"] for k in kl[-10:]]
             pc = (c[-1] - c[-5]) / c[-5] if c[-5] else 0
             oc = (oi[-1] - oi[-5]) / oi[-5] if oi[-5] else 0
-            if pc >  0.005 and oc >  0.005: return "UP"
-            if pc < -0.005 and oc >  0.005: return "DOWN"
-            if pc >  0.005 and oc < -0.005: return "DOWN"
-            if pc < -0.005 and oc < -0.005: return "UP"
+            if pc > 0.005 and oc > 0.005:
+                return "UP"
+            if pc < -0.005 and oc > 0.005:
+                return "DOWN"
+            if pc > 0.005 and oc < -0.005:
+                return "DOWN"
+            if pc < -0.005 and oc < -0.005:
+                return "UP"
         except Exception:
             pass
         return "NEUTRAL"
 
     SIMPLE_FN = {
-        1:  ema_crossover,     2:  macd_div,          3:  supertrend,
-        4:  ichimoku,          5:  rsi_div,            6:  stoch_rsi,
-        7:  bb_squeeze,        8:  vwap,               9:  obv,
-        10: volume_profile,    11: mean_reversion,
-        16: atr_breakout,      17: heikin_ashi,        18: tema_crossover,
-        19: adx_regime,
-        25: parabolic_sar_adx, 26: macd_histogram_div, 27: stoch_rsi_kd,
-        28: triple_ema,        29: hull_ma,             30: keltner_channel,
-        31: donchian_channel,  32: vwap_volume_profile, 33: money_flow_index,
-        34: random_forest_clf, 35: markov_chain,        36: supertrend_v2,
-        37: ichimoku_v2,       38: rsi_divergence_strict, 39: h1_combination,
+        1: ema_crossover, 2: macd_div, 3: supertrend, 4: ichimoku, 5: rsi_div,
+        6: stoch_rsi, 7: bb_squeeze, 8: vwap, 9: obv, 10: volume_profile,
+        11: mean_reversion, 16: atr_breakout, 17: heikin_ashi, 18: tema_crossover,
+        19: adx_regime, 25: parabolic_sar_adx, 26: macd_histogram_div,
+        27: stoch_rsi_kd, 28: triple_ema, 29: hull_ma, 30: keltner_channel,
+        31: donchian_channel, 32: vwap_volume_profile, 33: money_flow_index,
+        34: random_forest_clf, 35: markov_chain, 36: supertrend_v2,
+        37: ichimoku_v2, 38: rsi_divergence_strict, 39: h1_combination,
     }
 
     signals = {}
@@ -879,39 +879,66 @@ def run():
             for sym in SYMBOLS:
                 kl = kl_1h.get(sym, [])
                 if kl:
-                    try: entry[sym] = analiz1_system(kl)
-                    except Exception as e: print(f"Algo 22 {sym} error: {e}")
+                    try:
+                        entry[sym] = analiz1_system(kl)
+                    except Exception as e:
+                        print(f"Algo 22 {sym} error: {e}")
         elif num == 23:
             for sym in SYMBOLS:
                 kl = kl_1h.get(sym, [])
                 if kl:
-                    try: entry[sym] = analiz9_system(kl, funding_cache.get(sym, 0.0))
-                    except Exception as e: print(f"Algo 23 {sym} error: {e}")
+                    try:
+                        entry[sym] = analiz9_system(kl, funding_cache.get(sym, 0.0))
+                    except Exception as e:
+                        print(f"Algo 23 {sym} error: {e}")
         elif num == 24:
             for sym in SYMBOLS:
                 kl = kl_1h.get(sym, [])
                 if kl:
-                    try: entry[sym] = analiz10_system(kl, funding_cache.get(sym, 0.0))
-                    except Exception as e: print(f"Algo 24 {sym} error: {e}")
+                    try:
+                        entry[sym] = analiz10_system(kl, funding_cache.get(sym, 0.0))
+                    except Exception as e:
+                        print(f"Algo 24 {sym} error: {e}")
         elif num in SIMPLE_FN:
             fn = SIMPLE_FN[num]
             for sym in SYMBOLS:
                 kl = kl_1h.get(sym, [])
                 if kl:
-                    try: entry[sym] = fn(kl)
+                    try:
+                        entry[sym] = fn(kl)
                     except Exception as e:
                         print(f"Algo {num} {sym} error: {e}")
         signals[str(num)] = entry
 
-    # Consensus (13 ve 14 hariç)
     active = [v for k, v in signals.items() if int(k) not in SKIP]
     consensus = {}
     for sym in SYMBOLS:
-        up   = sum(1 for v in active if v[sym] == "UP")
+        up = sum(1 for v in active if v[sym] == "UP")
         down = sum(1 for v in active if v[sym] == "DOWN")
-        consensus[sym] = {"UP": up, "DOWN": down, "NEUTRAL": len(active)-up-down, "total": len(active)}
+        consensus[sym] = {
+            "UP": up, "DOWN": down, "NEUTRAL": len(active) - up - down, "total": len(active),
+        }
+    return signals, consensus, kl_1h
 
-    # ── Önceki saatin doğruluk kontrolü ──────────────────────────────────
+
+def collect_btc_algo_votes() -> list[dict]:
+    """39 algo → BTC yön oyları."""
+    signals, _, _ = _build_all_signals()
+    return [
+        {
+            "id": num,
+            "name": name,
+            "signal": signals.get(str(num), {}).get("BTC", "NEUTRAL"),
+            "group": "algo",
+        }
+        for num, name in ALGO_META
+    ]
+
+
+def run():
+    now = datetime.datetime.utcnow() + datetime.timedelta(hours=3)
+
+    signals, consensus, kl_1h = _build_all_signals()
     # klines[-2] = yeni biten saatin kapanışı (bu saatin price to beat)
     # klines[-3] = bir önceki saatin kapanışı (geçen sinyalin entry_price)
     try:

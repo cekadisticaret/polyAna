@@ -27,8 +27,8 @@ TOTAL_ALGOS = 4
 TREND_NEUTRAL_CROSS_PCT = 0.06   # |E20-E50|/fiyat %
 TREND_NEUTRAL_SLOPE_PCT = 0.03   # 3 bar E20 slope %
 MOMENTUM_BARS = 3
-TRADE_AMOUNT_UP = 4.0
-TRADE_AMOUNT_DOWN = 6.0
+TRADE_AMOUNT_UP = 8.0
+TRADE_AMOUNT_DOWN = 8.0
 KLINES_LIMIT = 150
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")

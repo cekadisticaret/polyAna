@@ -1,10 +1,10 @@
 """
 5. ANALİZ — Analiz 1 Motoru (Gerçek Polymarket)
 
-Algoritma: poly_predictor_analysis.py — Analiz 1 ile birebir aynı (RSI + MACD + EMA).
-Çift mod (opsiyonel): :04 A5 hazırlık → :05 A10 onayı → $10 PM işlem.
+Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
+Sabit $8/işlem, BTC+SOL.
 
-Modlar: close / open / dual_prepare / weekly / stats
+Modlar: close / open / weekly / stats
 """
 import asyncio
 import json
@@ -19,7 +19,6 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
-from momentum_filter import momentum_skip_reason_1h as momentum_skip_reason
 
 # .env yükle
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -41,41 +40,15 @@ STATE_FILE        = os.path.join(_DIR, "poly_trader_analiz5_state.json")
 HISTORY_FILE      = os.path.join(_DIR, "poly_trader_analiz5_history.json")
 ALGO_ACCURACY_FILE = os.path.join(_DIR, "algo_accuracy.json")
 _ALGO_SIGNALS_FILE = "/tmp/algo_signals.json"
-_DUAL_PENDING_FILE = "/tmp/analiz5_dual_pending.json"
 WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
 SYMBOLS            = ["BTCUSDT", "SOLUSDT"]
-TRADE_AMOUNT       = 8.0   # genel başarı veri yok veya %50
-TRADE_AMOUNT_HIGH  = 10.0  # genel başarı > %50
-TRADE_AMOUNT_LOW   = 6.0   # genel başarı < %50
+TRADE_AMOUNT       = 8.0
+TRADE_AMOUNT_HIGH  = 8.0
+TRADE_AMOUNT_LOW   = 8.0
 MIN_STAT_COUNT  = 10
 
-_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "analiz5_settings.json")
-
-def _load_settings() -> dict:
-    """Anlık ayarları dosyadan okur. Dosya yoksa varsayılanları döner."""
-    defaults = {
-        "amount_agree":       15.0,
-        "amount_a5_only":      8.0,
-        "amount_a9_only":      6.0,
-        "eth_multiplier":      0.7,  # legacy — ETH kaldırıldı
-        "dual_mode_enabled":   False,
-        "dual_mode_amount":   10.0,
-    }
-    try:
-        with open(_SETTINGS_FILE) as f:
-            data = json.load(f)
-        for k, v in data.items():
-            if k not in defaults:
-                continue
-            if k == "dual_mode_enabled":
-                defaults[k] = bool(v)
-            else:
-                defaults[k] = v
-    except Exception:
-        pass
-    return defaults
 
 def _load_algo_snapshot() -> dict:
     """Mevcut algo_signals.json'dan per-sembol sinyal snapshot'ı döner."""
@@ -359,17 +332,6 @@ def get_symbol_stats(history: list, symbol: str) -> tuple[int, int]:
     return sum(1 for t in trades if t["win"]), len(trades)
 
 
-def _trade_amount_for_symbol(history: list, symbol: str) -> float:
-    """Analiz 1 ile aynı mantık; PM ölçeği $6 / $8 / $10."""
-    sw, st = get_symbol_stats(history, symbol)
-    rate = sw / st if st else None
-    if rate is not None and rate > 0.5:
-        return TRADE_AMOUNT_HIGH
-    if rate is not None and rate < 0.5:
-        return TRADE_AMOUNT_LOW
-    return TRADE_AMOUNT
-
-
 def _vote_ok(vote: int, actual: str) -> bool | None:
     if vote == 0:
         return None
@@ -497,29 +459,13 @@ async def analyze(symbol: str) -> dict | None:
     except Exception:
         price_to_beat = pred_obj.current_price
 
-    skip_reason = momentum_skip_reason(pred_obj.predicted_dir, symbol)
-    if skip_reason:
-        return {
-            "symbol":        symbol,
-            "price":         price_to_beat,
-            "current_price": pred_obj.current_price,
-            "score":         score,
-            "predicted_dir": None,
-            "raw_direction": pred_obj.predicted_dir,
-            "skip_reason":   skip_reason,
-            "amount":        0.0,
-            "conf":          conf,
-            "votes":         [rsi_vote, macd_vote, ema_vote],
-            "labels":        [f"RSI:{pred_obj.rsi:.0f}", f"MACD:{'bull' if pred_obj.macd_bull else 'bear'}", pred_obj.trend],
-        }
-
     return {
         "symbol":        symbol,
         "price":         price_to_beat,
         "current_price": pred_obj.current_price,
         "score":         score,
         "predicted_dir": pred_obj.predicted_dir,
-        "amount":        0.0,   # run_open'da Analiz 1 lot mantığıyla set edilir
+        "amount":        TRADE_AMOUNT,
         "conf":          conf,
         "votes":         [rsi_vote, macd_vote, ema_vote],
         "labels":        [f"RSI:{pred_obj.rsi:.0f}", f"MACD:{'bull' if pred_obj.macd_bull else 'bear'}", pred_obj.trend],
@@ -697,67 +643,9 @@ async def run_close() -> None:
 
 
 # ── OPEN ──────────────────────────────────────────────────────
-def _save_dual_pending(hour_tr: int, now_tr: datetime, signals: list[dict]) -> None:
-    payload = {
-        "hour_tr":     hour_tr,
-        "prepared_at": now_tr.isoformat(),
-        "signals":     [
-            {
-                "symbol":        s["symbol"],
-                "predicted_dir": s["predicted_dir"],
-                "price":         s["price"],
-                "score":         s.get("score", 0),
-                "conf":          s.get("conf", 0),
-                "votes":         s.get("votes", []),
-            }
-            for s in signals if s.get("predicted_dir")
-        ],
-    }
-    with open(_DUAL_PENDING_FILE, "w") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False)
-
-
-def _load_dual_pending(hour_tr: int) -> list[dict] | None:
-    if not os.path.exists(_DUAL_PENDING_FILE):
-        return None
-    try:
-        data = json.load(open(_DUAL_PENDING_FILE))
-    except Exception:
-        return None
-    if data.get("hour_tr") != hour_tr:
-        return None
-    return data.get("signals") or []
-
-
-async def run_dual_prepare() -> None:
-    """:04 — Çift mod açıksa A5 sinyallerini beklemeye alır."""
-    cfg = _load_settings()
-    if not cfg.get("dual_mode_enabled"):
-        print("[5. ANALİZ dual_prepare] çift mod kapalı, atlandı")
-        return
-
-    now    = datetime.now(timezone.utc)
-    now_tr = now.astimezone(_TZ_TR)
-    hour_tr = now_tr.hour
-    saat    = now_tr.strftime("%H:%M")
-
-    signals = []
-    for sym in SYMBOLS:
-        sig = await analyze(sym)
-        if sig and sig.get("predicted_dir"):
-            signals.append(sig)
-
-    _save_dual_pending(hour_tr, now_tr, signals)
-    names = ", ".join(
-        f"{s['symbol'].replace('USDT','')} {s['predicted_dir']}" for s in signals
-    ) or "sinyal yok"
-    print(f"[5. ANALİZ dual_prepare] {saat} İST — hazır: {names}")
-
-
 def _try_pm_open(
     state: dict, sig: dict, *, hour_tr: int, dow: int, is_weekend: bool,
     now_tr: datetime, now: datetime, amount: float, algo_snapshot: dict,
-    dual_mode: bool = False,
 ) -> tuple[dict | None, str | None]:
     """PM pozisyonu açmayı dener. (pos, hata_tipi) döner."""
     et_hour = (now - timedelta(hours=4)).hour
@@ -772,7 +660,6 @@ def _try_pm_open(
         "score":            sig.get("score", 0),
         "amount":           amount,
         "votes":            sig.get("votes", []),
-        "dual_mode":        dual_mode,
     }
     pm = _pm_find_market(sig["symbol"], et_hour, now)
     if not pm or not pm.get("active") or pm.get("closed"):
@@ -799,115 +686,7 @@ def _try_pm_open(
     return pos, None
 
 
-async def run_dual_confirm() -> None:
-    """:05 — A10 onayı ile çift mod PM işlemi açar."""
-    from poly_trader_analiz10 import analyze as analyze_a10
-
-    cfg = _load_settings()
-    amount = float(cfg.get("dual_mode_amount", 10.0))
-
-    now    = datetime.now(timezone.utc)
-    now_tr = now.astimezone(_TZ_TR)
-    hour_tr    = now_tr.hour
-    dow        = now_tr.weekday()
-    is_weekend = dow >= 5
-    saat       = now_tr.strftime("%H:%M")
-    next_h     = f"{(hour_tr + 1) % 24:02d}:00"
-    sep        = "━" * 26
-
-    state   = load_state()
-    history = load_history()
-
-    if not _PM_DRY_RUN and not can_open_trade("5. ANALİZ (Çift Mod)", tg_send):
-        return
-
-    pending = _load_dual_pending(hour_tr)
-    if pending is None:
-        tg_send(
-            f"⏸ <b>5. ANALİZ ✦ Çift Mod — {saat} İST</b>\n"
-            f":04 hazırlık bulunamadı veya saat uyuşmuyor — işlem yok."
-        )
-        print(f"[5. ANALİZ dual_confirm] {saat} — pending yok")
-        return
-
-    _algo_snapshot = _load_algo_snapshot()
-    opened, skipped = [], []
-
-    for psig in pending:
-        sym = psig["symbol"]
-        skip = momentum_skip_reason(psig["predicted_dir"], sym)
-        if skip:
-            skipped.append(f"{sym.replace('USDT', '')} ({skip})")
-            continue
-        a10 = await analyze_a10(sym)
-        if not a10:
-            skipped.append(f"{sym.replace('USDT','')} (A10 konsensüs yok)")
-            continue
-        if a10["direction"] != psig["predicted_dir"]:
-            skipped.append(
-                f"{sym.replace('USDT','')} (A5:{psig['predicted_dir']} ≠ A10:{a10['direction']})"
-            )
-            continue
-        sig = {**psig, "price": psig.get("price") or a10.get("price")}
-        pos, err = _try_pm_open(
-            state, sig, hour_tr=hour_tr, dow=dow, is_weekend=is_weekend,
-            now_tr=now_tr, now=now, amount=amount, algo_snapshot=_algo_snapshot,
-            dual_mode=True,
-        )
-        if pos:
-            opened.append((sig, a10))
-        elif err == "order":
-            name_f = sym.replace("USDT", "")
-            tg_send(
-                f"⚠️ <b>5. ANALİZ (Çift Mod)</b> — <b>{name_f}</b> "
-                f"({psig['predicted_dir']}) PM eşleşmesi yok."
-            )
-            skipped.append(f"{name_f} (PM order)")
-        elif err == "market":
-            skipped.append(f"{sym.replace('USDT','')} (market)")
-
-    save_state(state)
-    try:
-        os.remove(_DUAL_PENDING_FILE)
-    except Exception:
-        pass
-
-    trade_lines = []
-    for sig, a10 in opened:
-        name = sig["symbol"].replace("USDT", "")
-        pos  = next(p for p in state["open_positions"]
-                    if p["symbol"] == sig["symbol"] and p.get("dual_mode"))
-        d_icon = "📈" if pos["predicted_dir"] == "UP" else "📉"
-        trade_lines.append(
-            f"  {d_icon} <b>{name}</b> {pos['predicted_dir']}  "
-            f"${pos.get('pm_spent', amount):.2f}  |  A10: {a10.get('tier', 'onay')}"
-        )
-    for s in skipped:
-        trade_lines.append(f"  ⛔ {s}")
-
-    if opened:
-        time.sleep(3)
-    pm_bal = _pm_get_balance()
-    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
-
-    tg_send(
-        f"{sep}\n"
-        f"<b>5. ANALİZ ✦ Çift Mod (A5+A10) — {saat} - {next_h}</b>\n"
-        f"💵 İşlem tutarı: ${amount:.0f}\n\n"
-        + "\n".join(trade_lines or ["  ➖ onaylı işlem yok"]) + "\n"
-        f"{sep}\n"
-        f"🏦 Bütçe: {pm_bal_str}  |  Açılan: {len(opened)}\n"
-        f"{sep}"
-    )
-    print(f"[5. ANALİZ dual_confirm] {saat} — {len(opened)} açıldı, {len(skipped)} atlandı")
-
-
 async def run_open() -> None:
-    cfg = _load_settings()
-    if cfg.get("dual_mode_enabled"):
-        await run_dual_confirm()
-        return
-
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     hour_tr    = now_tr.hour
@@ -923,21 +702,11 @@ async def run_open() -> None:
         return
 
     results = []
-    momentum_skipped = []
     for sym in SYMBOLS:
         sig = await analyze(sym)
-        if not sig:
-            continue
-        if sig.get("skip_reason"):
-            momentum_skipped.append(sig)
-            print(f"[5. ANALİZ] {sym} — {sig['skip_reason']}")
+        if not sig or not sig.get("predicted_dir"):
             continue
         results.append(sig)
-
-    # Mevcut ET saati (EDT = UTC-4) — _try_pm_open içinde hesaplanır
-
-    for sig in results:
-        sig["amount"] = _trade_amount_for_symbol(history, sig["symbol"])
 
     _algo_snapshot = _load_algo_snapshot()
 
@@ -946,10 +715,10 @@ async def run_open() -> None:
     _order_fail     = []
     _newly_opened   = 0
     for sig in results:
-        if sig["amount"] > 0 and sig["predicted_dir"]:
+        if sig["predicted_dir"]:
             pos, err = _try_pm_open(
                 state, sig, hour_tr=hour_tr, dow=dow, is_weekend=is_weekend,
-                now_tr=now_tr, now=now, amount=sig["amount"],
+                now_tr=now_tr, now=now, amount=TRADE_AMOUNT,
                 algo_snapshot=_algo_snapshot,
             )
             if pos:
@@ -969,7 +738,7 @@ async def run_open() -> None:
     next_h   = f"{(hour_tr + 1) % 24:02d}:00"
     sep      = "━" * 26
     trade_lines = []
-    for sig in results + momentum_skipped:
+    for sig in results:
         name = sig["symbol"].replace("USDT", "")
         opened_pos = next((p for p in state["open_positions"] if p["symbol"] == sig["symbol"]), None)
         if opened_pos:
@@ -983,15 +752,9 @@ async def run_open() -> None:
                 f"  {d_icon} <b>{name}</b> {d_tr}  giriş:{entry:.2f}  ${pm_spent:.2f} risk{to_win}"
             )
         else:
-            if sig.get("skip_reason"):
-                d_tr = sig.get("raw_direction", sig["predicted_dir"])
-                trade_lines.append(
-                    f"  ⏸ <b>{name}</b> {d_tr} — {sig['skip_reason']}"
-                )
-            else:
-                conf = sig.get("conf", 0) * 100
-                d_tr = "UP" if sig["predicted_dir"] == "UP" else "DOWN"
-                trade_lines.append(f"  ⛔ <b>{name}</b> {d_tr} konf:%{conf:.0f}  → girilmedi")
+            conf = sig.get("conf", 0) * 100
+            d_tr = "UP" if sig["predicted_dir"] == "UP" else "DOWN"
+            trade_lines.append(f"  ⛔ <b>{name}</b> {d_tr} konf:%{conf:.0f}  → girilmedi")
 
     error_lines = []
     if _market_skip:
@@ -1039,7 +802,7 @@ async def run_open() -> None:
     ]
 
     tg_send("\n".join(parts))
-    print(f"[5. ANALİZ open] {saat} İST — {_newly_opened} işlem açıldı, {len([r for r in results if r['amount']==0])} elenendi")
+    print(f"[5. ANALİZ open] {saat} İST — {_newly_opened} işlem açıldı")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────
@@ -1190,7 +953,7 @@ def run_stats() -> None:
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
-        f"İşlem: BTC+SOL  dinamik ${TRADE_AMOUNT_LOW:.0f}/${TRADE_AMOUNT:.0f}/${TRADE_AMOUNT_HIGH:.0f}",
+        f"İşlem: BTC+SOL  sabit ${TRADE_AMOUNT:.0f}/işlem (Analiz 1 motoru)",
         f"\n🔬 <b>Algoritma İsabet Oranı</b>", *_ind_stats_lines(history),
     ]
 
@@ -1243,8 +1006,6 @@ if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "open"
     if mode == "close":
         asyncio.run(run_close())
-    elif mode == "dual_prepare":
-        asyncio.run(run_dual_prepare())
     elif mode == "weekly":
         run_weekly()
     elif mode == "stats":

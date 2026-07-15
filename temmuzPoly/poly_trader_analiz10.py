@@ -1,11 +1,11 @@
 """
-10. ANALİZ — Çift Konsensüs Gerçek Polymarket
+10. ANALİZ — Çift Konsensüs Sanal
 
 İki bağımsız sistem aynı yönü göstermeden işlem açılmaz:
   Sistem A: poly_predictor_analysis.py (Analiz 1/5 motoru)
   Sistem B: Trend + MR + OrderFlow + Funding (Analiz 4/9 motoru)
 
-PM: Analiz 5'ten bağımsız; konsensus sinyali → sabit $10 işlem.
+Sanal: $300 bakiye, sabit $10/işlem. Gerçek PM kapalı.
 
 Modlar: close / open / weekly / stats
 Cron:
@@ -24,7 +24,7 @@ import urllib.parse
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-# .env önce — pm_trader_helpers PM_DRY_RUN'ı import anında okur
+# .env önce
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
 if os.path.exists(_ENV_FILE):
     with open(_ENV_FILE) as _f:
@@ -36,24 +36,18 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
-from pm_trader_helpers import PM_DRY_RUN, pm_get_balance, pm_try_open, pm_resolve_pnl
-from pm_balance_guard import PM_MIN_BALANCE, can_open_trade
-from momentum_filter import momentum_skip_reason_1h as momentum_skip_reason
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
 CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
-_PM_LABEL = "10. ANALİZ"
-_HATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analiz10_polyhata.json")
-
 _DIR         = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE   = os.path.join(_DIR, "poly_trader_analiz10_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz10_history.json")
 WEEKLY_IMG   = "/tmp/poly_weekly_heatmap_a10.png"
 
 INITIAL_BALANCE = 300.0
-TRADE_AMOUNT    = 10.0   # sabit PM işlem tutarı
+TRADE_AMOUNT    = 10.0   # sabit sanal işlem tutarı
 
 SYMBOLS   = ["BTCUSDT", "SOLUSDT"]  # ETH/XRP/DOGE/BNB pasif
 _DAYS_TR  = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -252,22 +246,6 @@ async def analyze(symbol: str) -> dict | None:
 
     price = klines[-2]["close"]  # son kapanan mum = Polymarket Price to Beat
 
-    skip_reason = momentum_skip_reason(dir_a, symbol)
-    if skip_reason:
-        return {
-            "symbol":      symbol,
-            "price":       price,
-            "direction":   None,
-            "skip_reason": skip_reason,
-            "amount":      0.0,
-            "tier":        tier,
-            "conf_a":      conf_a,
-            "score_b":     score_b,
-            "labels":      [f"A:konf%{conf_a*100:.0f}", l_trend, l_mr, l_of],
-            "votes":       [+1 if dir_a == "UP" else -1, v_trend, v_mr, v_of],
-            "raw_direction": dir_a,
-        }
-
     return {
         "symbol":        symbol,
         "price":         price,
@@ -328,7 +306,7 @@ async def run_close() -> None:
     sep     = "━" * 26
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>10. ANALİZ ✦ PolyAktif — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
+        tg_send(f"⏸ <b>10. ANALİZ ✦ Sanal — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[10. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
@@ -346,14 +324,12 @@ async def run_close() -> None:
         pred   = pos["predicted_dir"]
         amount = pos.get("amount", TRADE_AMOUNT)
         actual = "UP" if current_price >= entry else "DOWN"
-        win    = (pred == actual)
-
-        pm_win, pm_pnl_val, pm_pnl_str = pm_resolve_pnl(pos)
-        if pm_win is not None:
-            win = pm_win
-
-        pm_spent = pos.get("pm_spent", 0) or amount
-        tur_pnl += (pos.get("pm_size") or pm_spent) - pm_spent if win else -pm_spent
+        win    = pred == actual
+        pnl    = round(amount if win else -amount, 2)
+        if win:
+            state["balance"] = round(state["balance"] + amount * 2, 2)
+        tur_pnl += pnl
+        state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
 
         votes = pos.get("votes", [None, None, None, None])
         history.append({
@@ -361,7 +337,6 @@ async def run_close() -> None:
             "predicted_dir":    pred,
             "actual_dir":       actual,
             "win":              win,
-            "pm_win":           pm_win,
             "entry_price":      entry,
             "exit_price":       current_price,
             "entry_time_tr":    pos["entry_time_tr"],
@@ -369,12 +344,8 @@ async def run_close() -> None:
             "entry_dow":        pos["entry_dow"],
             "entry_is_weekend": pos["entry_is_weekend"],
             "amount":           amount,
-            "pm_spent":         pos.get("pm_spent"),
-            "pm_size":          pos.get("pm_size"),
-            "pm_entry_price":   pos.get("pm_entry_price"),
-            "pm_order_id":      pos.get("pm_order_id"),
-            "pnl":              round(
-                (pos.get("pm_size") or pm_spent) - pm_spent if win else -pm_spent, 2),
+            "pnl":              pnl,
+            "virtual":          True,
             "exit_time_tr":     now_tr.isoformat(),
             "score_b":          pos.get("score_b", 0),
             "conf_a":           pos.get("conf_a", 0),
@@ -388,9 +359,9 @@ async def run_close() -> None:
         icon    = "✅" if win else "❌"
         name    = pos["symbol"].replace("USDT", "")
         pct     = (current_price - entry) / entry * 100
+        pnl_str = f"kazandı +${amount:.0f}" if win else f"kaybetti -${amount:.0f}"
         lines.append(
-            f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
-            f"-{pm_spent:.0f}${pm_pnl_str}"
+            f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  {pnl_str}"
         )
 
     state["open_positions"] = failed_pos
@@ -404,7 +375,6 @@ async def run_close() -> None:
     if not lines:
         return
 
-    state["total_pnl"] = state.get("total_pnl", 0.0) + tur_pnl
     save_state(state)
 
     closed_all = len(history)
@@ -412,16 +382,15 @@ async def run_close() -> None:
     genel      = _wr(win_all, closed_all)
     total_pnl  = state.get("total_pnl", 0.0)
     pnl_icon   = "🟢" if total_pnl >= 0 else "🔴"
-    pm_bal     = pm_get_balance()
-    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
+    bal_str    = f"${state.get('balance', INITIAL_BALANCE):.2f} (sanal)"
     saat_round = f"{int(saat[:2]):02d}:00"
     tur_pnl_str = f"{'+'if tur_pnl >= 0 else ''}{tur_pnl:.0f}$"
 
     tg_send(
         f"{sep}\n"
-        f"🏁 <b>10. ANALİZ — {saat_round} Sonuçlar</b>\n"
+        f"🏁 <b>10. ANALİZ — {saat_round} Sonuçlar</b>  🔶 SANAL\n"
         + "\n".join(lines) + "\n"
-        f"Bu tur: {tur_pnl_str}  |  PM Bakiye: {pm_bal_str}\n"
+        f"Bu tur: {tur_pnl_str}  |  Bakiye: {bal_str}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel}\n"
         f"{sep}"
     )
@@ -440,66 +409,47 @@ async def run_open() -> None:
     next_h     = f"{(hour_tr + 1) % 24:02d}:00"
 
     state   = load_state()
-    history = load_history()
 
-    if not PM_DRY_RUN and not can_open_trade("10. ANALİZ", tg_send):
-        return
-
-    # Her sembol için çift konsensüs analizi
     candidates = []
     skipped    = []
-    momentum_skipped = []
     for sym in SYMBOLS:
         sig = await analyze(sym)
         if sig is None:
             skipped.append(sym)
             continue
-        if sig.get("skip_reason"):
-            momentum_skipped.append(sig)
-            print(f"[10. ANALİZ] {sym} — {sig['skip_reason']}")
-            continue
         candidates.append(sig)
         time.sleep(0.2)
 
-    _market_skip  = []
-    _order_fail   = []
     _newly_opened = 0
     for sig in candidates:
-        pos, err = pm_try_open(
-            state,
-            symbol=sig["symbol"],
-            predicted_dir=sig["direction"],
-            entry_price=sig["price"],
-            amount=TRADE_AMOUNT,
-            hour_tr=hour_tr, dow=dow, is_weekend=is_weekend,
-            now_tr=now_tr, now=now,
-            label=_PM_LABEL, hata_file=_HATA_FILE,
-            extra_fields={
-                "conf_a":  sig["conf_a"],
-                "score_b": sig["score_b"],
-                "votes":   sig["votes"],
-                "tier":    sig["tier"],
-            },
-        )
-        if pos:
-            _newly_opened += 1
-        elif err == "market":
-            _market_skip.append(sig)
-        elif err == "order":
-            name_f = sig["symbol"].replace("USDT", "")
-            tg_send(
-                f"⚠️ <b>10. ANALİZ</b> — <b>{name_f}</b> ({sig['direction']}) "
-                f"Polymarket order başarısız."
-            )
-            _order_fail.append(sig)
+        if state.get("balance", INITIAL_BALANCE) < TRADE_AMOUNT:
+            print(f"[10. ANALİZ] Sanal bakiye yetersiz: ${state.get('balance', 0):.2f}")
+            continue
+        if any(p["symbol"] == sig["symbol"] for p in state["open_positions"]):
+            continue
+        state["open_positions"].append({
+            "symbol":           sig["symbol"],
+            "predicted_dir":    sig["direction"],
+            "entry_price":      sig["price"],
+            "entry_time_tr":    now_tr.isoformat(),
+            "entry_hour_tr":    hour_tr,
+            "entry_dow":        dow,
+            "entry_is_weekend": is_weekend,
+            "amount":           TRADE_AMOUNT,
+            "conf_a":           sig["conf_a"],
+            "score_b":          sig["score_b"],
+            "votes":            sig["votes"],
+            "tier":             sig["tier"],
+            "virtual":          True,
+        })
+        state["balance"] = round(state.get("balance", INITIAL_BALANCE) - TRADE_AMOUNT, 2)
+        _newly_opened += 1
+        print(f"[10. ANALİZ] Sanal: {sig['symbol']} {sig['direction']} ${TRADE_AMOUNT:.0f}")
 
     save_state(state)
 
-    if _newly_opened > 0:
-        time.sleep(3)
-    pm_bal = pm_get_balance()
-    pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
-    bal_icon = "🟢" if pm_bal > PM_MIN_BALANCE else "🟡" if pm_bal > 50 else "🔴"
+    at_risk = sum(p.get("amount", TRADE_AMOUNT) for p in state["open_positions"])
+    bal_str = f"${state.get('balance', INITIAL_BALANCE):.2f}"
 
     trade_lines = []
     for sig in candidates:
@@ -512,65 +462,34 @@ async def run_open() -> None:
         if opened_pos:
             d_icon = "📈" if opened_pos["predicted_dir"] == "UP" else "📉"
             d_tr   = "YÜKSELİR" if opened_pos["predicted_dir"] == "UP" else "DÜŞER"
-            pm_spent = opened_pos.get("pm_spent", 0) or 0
-            pm_size  = opened_pos.get("pm_size", 0) or 0
-            to_win   = f" → ${pm_size:.2f} kazanılacak" if pm_size > 0 else ""
             trade_lines.append(
-                f"{d_icon} <b>{name}</b>  {d_tr}  {sig['price']:.2f}  💵${pm_spent:.2f} risk{to_win}\n"
+                f"{d_icon} <b>{name}</b>  {d_tr}  {sig['price']:.2f}  💵${TRADE_AMOUNT:.0f} risk\n"
                 f"   {sig['tier']}  |  A:konf%{sig['conf_a']*100:.0f}  B:skor{sig['score_b']:+d}/4\n"
                 f"   {' | '.join(sig['labels'][1:])}"
             )
         else:
             trade_lines.append(
-                f"⛔ <b>{name}</b>  {sig['direction']}  → PM'e girilmedi"
+                f"⛔ <b>{name}</b>  {sig['direction']}  → açılmadı (bakiye/pozisyon)"
             )
 
-    error_lines = []
-    if _market_skip:
-        names = ", ".join(s["symbol"].replace("USDT", "") for s in _market_skip)
-        error_lines.append(f"⚠️ PM market yok: {names}")
-    if _order_fail:
-        names = ", ".join(s["symbol"].replace("USDT", "") for s in _order_fail)
-        error_lines.append(f"⚠️ PM order hatası: {names}")
-
-    if trade_lines and any(p.get("pm_spent") for p in state["open_positions"] if p.get("entry_hour_tr") == hour_tr):
+    if trade_lines and _newly_opened > 0:
         tg_send(
             f"{sep}\n"
-            f"🆕 <b>10. ANALİZ ✦ Çift Konsensüs PM — {saat} - {next_h}</b>\n"
+            f"🆕 <b>10. ANALİZ ✦ Çift Konsensüs — {saat} - {next_h}</b>  🔶 SANAL\n"
             f"💵 Sabit işlem: ${TRADE_AMOUNT:.0f}\n\n"
             + "\n".join(trade_lines) + "\n"
-            + ("\n".join(
-                f"⏸ <b>{s['symbol'].replace('USDT', '')}</b> {s.get('raw_direction', '')} — {s['skip_reason']}"
-                for s in momentum_skipped
-            ) + "\n" if momentum_skipped else "")
-            + ("\n".join(error_lines) + "\n" if error_lines else "")
-            + f"{sep}\n"
-            f"🏦 PM Bakiye: {bal_icon} {pm_bal_str}  |  Açılan: {_newly_opened}\n"
+            f"{sep}\n"
+            f"💰 Bakiye: {bal_str}  |  Açık: ${at_risk:.0f}  |  Açılan: {_newly_opened}\n"
             f"{sep}"
-        )
-    elif momentum_skipped and not candidates:
-        mom_lines = [
-            f"⏸ <b>{s['symbol'].replace('USDT', '')}</b> {s.get('raw_direction', '')} — {s['skip_reason']}"
-            for s in momentum_skipped
-        ]
-        tg_send(
-            f"⏸ <b>10. ANALİZ ✦ Çift Konsensüs — {saat} İST</b>\n"
-            + "\n".join(mom_lines) + "\n"
-            f"🏦 PM Bakiye: {pm_bal_str}"
         )
     elif skipped and not candidates:
         tg_send(
             f"⏸ <b>10. ANALİZ ✦ Çift Konsensüs — {saat} İST</b>\n"
             f"İki sistem konsensüs sağlayamadı — {', '.join(s.replace('USDT','') for s in skipped)} elenendi.\n"
-            f"🏦 PM Bakiye: {pm_bal_str}"
-        )
-    elif error_lines:
-        tg_send(
-            f"⏸ <b>10. ANALİZ — {saat} İST</b>\n"
-            + "\n".join(error_lines) + f"\n🏦 PM Bakiye: {pm_bal_str}"
+            f"💰 Bakiye: {bal_str}"
         )
 
-    print(f"[10. ANALİZ open] {saat} İST — {_newly_opened} PM işlem, {len(skipped)} elendi, {len(momentum_skipped)} momentum")
+    print(f"[10. ANALİZ open] {saat} İST — {_newly_opened} sanal işlem, {len(skipped)} elendi")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────
@@ -738,7 +657,7 @@ def run_stats() -> None:
     tg_send(
         f"📊 <b>10. ANALİZ ✦ Çift Konsensüs İSTATİSTİKLER</b>\n"
         f"Toplam: {total} işlem  |  {_wr(wins, total)} başarı\n"
-        f"PM işlem: sabit ${TRADE_AMOUNT:.0f}  |  P&L: {state.get('total_pnl',0):+.2f}$"
+        f"Sanal işlem: sabit ${TRADE_AMOUNT:.0f}  |  P&L: {state.get('total_pnl',0):+.2f}$  |  Bakiye: ${state.get('balance', INITIAL_BALANCE):.2f}"
     )
 
 

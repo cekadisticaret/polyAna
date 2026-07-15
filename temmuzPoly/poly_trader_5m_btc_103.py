@@ -2,7 +2,7 @@
 5M 103 — Analiz 10 Çift Konsensüs (BTC + SOL, Sanal)
 ====================================================
 Sistem A: poly_predictor  |  Sistem B: Trend+MR+OF+Funding (5m)
-İkisi aynı yön → işlem. Momentum filtresi: son 3×5m mum.
+A yönünde B'den ≥2/4 algo oy (net skor değil). Momentum filtresi.
 
 $200 sanal, $6/işlem. BTC + SOL.
 Gece modu: 22:00–07:00 İST yeni işlem yok
@@ -60,6 +60,7 @@ _PM_SANITY_MAX = 0.95
 _PM_TRADE_MIN  = 0.42
 _PM_TRADE_MAX  = 0.52
 _PM_MIN_PAYOUT_RATIO = 1.25
+MIN_B_VOTES = 2  # A yönünde B'den en az 2/4 algo
 
 _PM_ASSET = {"BTCUSDT": "btc", "SOLUSDT": "sol"}
 LABEL = "5M 103"
@@ -154,6 +155,19 @@ def _resolve_period_candle(symbol: str, ts_5m: int, retries: int = 8, wait_sec: 
     return None
 
 
+def _b_supports(dir_a: str, votes_b: list[int]) -> tuple[bool, str]:
+    """B tarafı A yönünde en az MIN_B_VOTES oy ve karşı yönden fazla."""
+    up_b = sum(1 for v in votes_b if v > 0)
+    down_b = sum(1 for v in votes_b if v < 0)
+    if dir_a == "UP":
+        ok = up_b >= MIN_B_VOTES and up_b > down_b
+        return ok, f"UP {up_b}/4"
+    if dir_a == "DOWN":
+        ok = down_b >= MIN_B_VOTES and down_b > up_b
+        return ok, f"DOWN {down_b}/4"
+    return False, "—"
+
+
 async def analyze_symbol(symbol: str) -> dict | None:
     try:
         pred_obj = await predict(symbol)
@@ -168,16 +182,19 @@ async def analyze_symbol(symbol: str) -> dict | None:
     v_mr,    l_mr    = algo_mr(klines)
     v_of,    l_of    = algo_orderflow(klines, ob)
     v_fund,  l_fund  = algo_funding(funding)
-    score_b = v_trend + v_mr + v_of + v_fund
-    dir_b   = "UP" if score_b > 0 else "DOWN" if score_b < 0 else None
+    votes_b = [v_trend, v_mr, v_of, v_fund]
+    score_b = sum(votes_b)
     momentum = recent_momentum(klines)
 
     if pred_obj is None:
+        up_b = sum(1 for v in votes_b if v > 0)
+        down_b = sum(1 for v in votes_b if v < 0)
+        b_hint = f"UP {up_b}/4" if up_b > down_b else f"DOWN {down_b}/4" if down_b > up_b else "—"
         return {
             "symbol": symbol, "direction": None, "amount": 0.0,
             "entry_price": klines[-1]["open"],
             "conf_a": 0.0, "score_b": score_b,
-            "skip_reason": f"Sistem A sinyal yok (B:{dir_b or '—'} {score_b:+d}/4)",
+            "skip_reason": f"Sistem A sinyal yok (B:{b_hint} skor:{score_b:+d})",
             "labels": [f"A:—", l_trend, l_mr, l_of],
             "votes": [0, v_trend, v_mr, v_of],
             "momentum": momentum,
@@ -186,20 +203,33 @@ async def analyze_symbol(symbol: str) -> dict | None:
     dir_a  = pred_obj.predicted_dir
     conf_a = max(pred_obj.prob_up, pred_obj.prob_down)
 
-    if dir_a is None or dir_b is None or dir_a != dir_b:
+    if dir_a is None:
         return {
             "symbol": symbol, "direction": None, "amount": 0.0,
             "entry_price": klines[-1]["open"],
             "conf_a": conf_a, "score_b": score_b,
-            "skip_reason": "konsensüs yok (A≠B)" if dir_a and dir_b else "konsensüs yok (A≠B)",
+            "skip_reason": "Sistem A yön vermedi",
             "labels": [f"A:{conf_a*100:.0f}%", l_trend, l_mr, l_of],
-            "votes": [+1 if dir_a == "UP" else -1 if dir_a == "DOWN" else 0, v_trend, v_mr, v_of],
+            "votes": [0, v_trend, v_mr, v_of],
             "momentum": momentum,
         }
 
-    if conf_a >= 0.65 and abs(score_b) >= 3:
+    b_ok, b_detail = _b_supports(dir_a, votes_b)
+    if not b_ok:
+        return {
+            "symbol": symbol, "direction": None, "amount": 0.0,
+            "entry_price": klines[-1]["open"],
+            "conf_a": conf_a, "score_b": score_b,
+            "skip_reason": f"konsensüs yok (A:{dir_a} B:{b_detail}, min {MIN_B_VOTES}/4)",
+            "labels": [f"A:{conf_a*100:.0f}%", l_trend, l_mr, l_of],
+            "votes": [+1 if dir_a == "UP" else -1, v_trend, v_mr, v_of],
+            "momentum": momentum,
+        }
+
+    align_b = sum(1 for v in votes_b if (dir_a == "UP" and v > 0) or (dir_a == "DOWN" and v < 0))
+    if conf_a >= 0.65 and align_b >= 3:
         tier = "💪 Her iki sistem güçlü"
-    elif conf_a >= 0.65 or abs(score_b) >= 3:
+    elif conf_a >= 0.65 or align_b >= 3:
         tier = "⚡ Bir güçlü bir orta"
     else:
         tier = "📊 İkisi orta"
@@ -256,6 +286,9 @@ def _pm_resolve_market(symbol: str, ts_5m: int, direction: str) -> tuple[dict | 
         if pm.get("slug") != expected:
             continue
         tp = pm["up_price"] if direction == "UP" else pm["down_price"]
+        if _PM_DRY_RUN:
+            pm["token_price"] = tp if tp else 0.5
+            return pm, ""
         if not (_PM_SANITY_MIN <= tp <= _PM_SANITY_MAX):
             if attempt < 2:
                 time.sleep(2)
@@ -404,7 +437,7 @@ async def run_async() -> None:
         fmt_p = f"{entry_p:,.2f}" if sym == "BTCUSDT" else f"{entry_p:.2f}"
         open_lines.append(
             f"{dir_icon} <b>{name} {dir_tr}</b>  ${amount:.2f} @{token_price:.2f} → 🏆 ${to_win:.2f}\n"
-            f"   {result.get('tier', '')}  A:{result['conf_a']*100:.0f}% B:{result['score_b']:+d}/4  mom:{result.get('momentum')}\n"
+            f"   {result.get('tier', '')}  A:{result['conf_a']*100:.0f}% B:{result['score_b']:+d}  mom:{result.get('momentum')}\n"
             f"   Giriş: {fmt_p}"
         )
         print(f"[{LABEL}] {saat} — {name} {dir_tr} ${amount:.2f}→${to_win:.2f}")

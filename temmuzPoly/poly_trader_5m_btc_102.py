@@ -1,11 +1,12 @@
 """
-5M 102 BTC — 101 + Momentum Filtresi (Gerçek PM)
-================================================
-101'in 4-algo konsensüsü (≥2/4) + iki düzeltme:
+5M 102 BTC — 101 + Momentum + KALEM (Sanal)
+============================================
+101'in 4-algo konsensüsü (≥2/4) + düzeltmeler:
   1. Orderflow v2: CVD/OB çelişince canlı orderbook'a öncelik
   2. Momentum filtresi: son 3 kapanmış 5m mum sinyale ters ise işlem yok
+  3. KALEM (deneysel): fitil yapısı + 3 peş peşe aynı yön dinlenme
 
-Gerçek Polymarket: UP $4  |  DOWN $6
+Sanal: UP $4 / DOWN $6 (gerçek PM: PM_5M_102_REAL_ENABLED=true)
 Gece modu: 22:00–07:00 İST yeni işlem yok
 Cron: */5 * * * *
 """
@@ -29,6 +30,8 @@ from poly_trader_15m_btc import (
     algo_trend,
     fetch_klines_5m,
     fetch_orderbook,
+    tg_send,
+    tg_send_photo,
 )
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -40,8 +43,6 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-BOT_TOKEN = "8256912678:AAFWEoRWO7Z0siK_c4Dm5XjgtBKmh-wmF8E"
-CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
@@ -49,7 +50,7 @@ STATE_FILE   = os.path.join(_DIR, "poly_trader_5m_btc_102_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_btc_102_history.json")
 WEEKLY_IMG   = "/tmp/poly_5m_btc_102_weekly.png"
 
-INITIAL_BALANCE   = 150.0
+INITIAL_BALANCE   = 200.0
 TRADE_AMOUNT_UP   =   4.0
 TRADE_AMOUNT_DOWN =   6.0
 _PERIOD_SECS      = 300
@@ -60,9 +61,7 @@ _DAYS_TR          = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
-_PM_ONLY      = os.getenv("PM_5M_ONLY", "102").strip()
-_PM_TRADING_ENABLED = os.getenv("PM_5M_REAL_ENABLED", "true").lower() in ("1", "true", "yes")
-_PM_LIVE      = _PM_TRADING_ENABLED and _PM_ONLY in ("102", "all", "*")
+_PM_LIVE      = os.getenv("PM_5M_102_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
 _PM_DRY_RUN   = not _PM_LIVE
 
 LABEL = "5M 102 BTC"
@@ -92,7 +91,7 @@ def _pm_bal_line() -> str:
 
 
 def _tg_balance(state: dict | None = None) -> str:
-    """Gerçek PM: Poly USDC bakiyesi; pasif modda sanal state."""
+    """Gerçek PM: Poly USDC bakiyesi; sanal modda state."""
     if _PM_LIVE:
         from pm_balance_guard import get_usdc_balance
         bal = get_usdc_balance()
@@ -101,6 +100,20 @@ def _tg_balance(state: dict | None = None) -> str:
         return f"💰 Bakiye: ${bal:.2f}"
     st = state if state is not None else load_state()
     return f"💰 Bakiye: ${st['balance']:.2f}"
+
+
+def _bal_line(state: dict) -> str:
+    return _pm_bal_line() if _PM_LIVE else _tg_balance(state)
+
+
+def _sanal_find_5m_market(ts_5m: int, direction: str) -> tuple[dict | None, float | None]:
+    """Sanal mod: Gamma fiyatı (emir yok)."""
+    _pm101._PM_DRY_RUN = True
+    pm = _pm101._pm_find_5m_market(ts_5m)
+    if not pm:
+        return None, None
+    tp = pm["up_price"] if direction == "UP" else pm["down_price"]
+    return pm, tp
 
 
 def load_state() -> dict:
@@ -154,39 +167,6 @@ def get_all_stats(history: list) -> tuple[int, int]:
 
 def _tg_esc(text: str) -> str:
     return html.escape(str(text), quote=False)
-
-
-def tg_send(text: str) -> None:
-    try:
-        url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
-        req  = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=10) as r:
-            r.read()
-    except Exception as e:
-        print(f"[TG] Hata: {e}")
-
-
-def tg_send_photo(path: str, caption: str = "") -> None:
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
-    try:
-        with open(path, "rb") as f:
-            img_data = f.read()
-        boundary = "----102Boundary"
-        body = (
-            f"--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n{CHAT_ID}\r\n"
-            f"--{boundary}\r\nContent-Disposition: form-data; name=\"caption\"\r\n\r\n{caption}\r\n"
-            f"--{boundary}\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"heatmap.png\"\r\n"
-            f"Content-Type: image/png\r\n\r\n"
-        ).encode() + img_data + f"\r\n--{boundary}--\r\n".encode()
-        req = urllib.request.Request(
-            url, data=body,
-            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
-        )
-        with urllib.request.urlopen(req, timeout=20) as r:
-            r.read()
-    except Exception as e:
-        print(f"[TG photo] Hata: {e}")
 
 
 def _resolve_period_candle(ts_5m: int, retries: int = 8, wait_sec: float = 2.0) -> dict | None:
@@ -303,6 +283,20 @@ def analyze() -> dict | None:
             "raw_direction": direction,
             "skip_reason": skip_reason,
         }
+
+    # --- KALEM: fitil filtresi ---
+    from kalem_filters_102 import kalem_wick_skip
+    kalem_wick = kalem_wick_skip(direction, klines)
+    if kalem_wick:
+        return {
+            **base,
+            "direction": None,
+            "consensus": consensus,
+            "amount": 0.0,
+            "raw_direction": direction,
+            "skip_reason": kalem_wick,
+        }
+    # --- /KALEM ---
 
     return {
         **base,
@@ -427,7 +421,7 @@ def run() -> None:
             + "\n".join(closed_lines) + "\n"
             f"{tur_icon} Bu tur: {'+'if tur_pnl>=0 else ''}{tur_pnl:.0f}$\n"
             f"{pnl_icon} Toplam P&amp;L: {'+'if state['total_pnl']>=0 else ''}{state['total_pnl']:.2f}$  |  Genel: {_wr(win_all, tot_all)}\n"
-            f"{_pm_bal_line()}\n"
+            f"{_bal_line(state)}\n"
             f"{sep}"
         )
         print(f"[{LABEL}] {saat} — {len(closed_lines)} pozisyon kapatıldı")
@@ -471,33 +465,61 @@ def run() -> None:
         print(f"[{LABEL}] {saat} — işlem yok ({skip or f'konsensüs {consensus}/4'})")
         return
 
+    # --- KALEM: peş peşe aynı yön dinlenme ---
+    from kalem_filters_102 import kalem_streak_skip
+    kalem_streak = kalem_streak_skip(direction, history)
+    if kalem_streak:
+        tg_send(
+            f"{sep}\n"
+            f"⏸ <b>{LABEL} — {saat} İST</b>\n"
+            f"{_tg_esc(kalem_streak)}\n"
+            f"📊 Momentum: {momentum}  |  ham sinyal: {direction} ({consensus}/4)\n"
+            f"{_tg_balance(state)}\n"
+            f"{sep}"
+        )
+        print(f"[{LABEL}] {saat} — {kalem_streak}")
+        return
+    # --- /KALEM ---
+
     dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
     dir_icon = "📈" if direction == "UP" else "📉"
     vote_str = "  ".join(f"{'🟢' if v > 0 else '🔴' if v < 0 else '⚪'}" for v in votes)
 
     if not _PM_LIVE:
-        to_win = round(amount / 0.5, 2)
+        if state["balance"] < amount:
+            tg_send(
+                f"{sep}\n⏸ <b>{LABEL} — {saat} İST</b>\n"
+                f"Bakiye yetersiz (${state['balance']:.2f} &lt; ${amount:.0f})\n"
+                f"{_tg_balance(state)}\n{sep}"
+            )
+            return
+
+        pm_info, token_price = _sanal_find_5m_market(ts_5m, direction)
+        pm_slug = pm_info["slug"] if pm_info else None
+        to_win = round(amount / token_price, 2) if token_price and token_price > 0 else round(amount * 2, 2)
+        price_str = f"@{token_price:.2f}" if token_price else ""
+
         state["balance"] = round(state["balance"] - amount, 2)
         state["open_positions"].append({
             "symbol": SYMBOL, "predicted_dir": direction,
             "entry_price": entry_p, "amount": amount, "pm_spent": amount, "to_win": to_win,
-            "token_price": 0.5, "consensus": consensus, "votes": votes,
+            "token_price": token_price, "consensus": consensus, "votes": votes,
             "entry_time_tr": now_tr.isoformat(), "entry_period_min": period_min,
-            "entry_dow": dow, "ts_5m": ts_5m, "virtual": True,
+            "entry_dow": dow, "pm_slug": pm_slug, "ts_5m": ts_5m, "virtual": True,
+            "pm_dry_run": True,
         })
         save_state(state)
         tg_send(
             f"{sep}\n"
-            f"📡 <b>{LABEL} — {saat} → {next_saat}</b>  ⏸ PM PASIF\n"
-            f"{dir_icon} <b>Sinyal: BTC {dir_tr}</b>  ({consensus}/4)  💵 ${amount:.0f}\n"
+            f"🆕 <b>{LABEL} — {saat} → {next_saat}</b>  🔶 SANAL\n"
+            f"{dir_icon} <b>BTC {dir_tr}</b>  ({consensus}/4)  💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
             f"Giriş: {entry_p:,.2f}  |  Momentum: {momentum}\n"
             f"{vote_str}\n"
             f"🕐 Bu periyot: {_wr(prev_wins, prev_total)}  |  Genel: {_wr(all_wins, all_total)}\n"
-            f"{_pm_bal_line()}\n"
-            f"{_tg_balance(state)}\n"
+            f"{_tg_balance(state)}  |  🔴 ${amount:.0f} riskte\n"
             f"{sep}"
         )
-        print(f"[{LABEL}] {saat} — SİNYAL {dir_tr} ${amount:.0f} [PM pasif]")
+        print(f"[{LABEL}] {saat} — {dir_tr} ${amount:.0f}→${to_win:.2f} [SANAL]")
         return
 
     from pm_balance_guard import can_open_trade
