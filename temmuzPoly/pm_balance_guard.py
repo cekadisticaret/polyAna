@@ -1,13 +1,12 @@
-"""Polymarket bakiye koruması — gerçek trader'larda yeni işlem açmadan önce kontrol."""
+"""Polymarket USDC bakiye sorgusu (işlem engeli yok)."""
 import os
 import sys
 
-PM_MIN_BALANCE = 80.0
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 
 
 def get_usdc_balance() -> float:
-    """Polymarket USDC bakiyesi. Hata durumunda 9999 (işlem engellenmez)."""
+    """Polymarket USDC bakiyesi. Hata durumunda 9999 döner."""
     try:
         from py_clob_client_v2 import ClobClient
         from py_clob_client_v2.clob_types import BalanceAllowanceParams, AssetType
@@ -29,15 +28,5 @@ def get_usdc_balance() -> float:
 
 
 def can_open_trade(label: str, tg_send=None) -> bool:
-    """Bakiye >= PM_MIN_BALANCE ise True."""
-    bal = get_usdc_balance()
-    if bal < PM_MIN_BALANCE:
-        msg = (
-            f"⚠️ <b>{label}</b> — PM bakiyesi ${bal:.2f} < ${PM_MIN_BALANCE:.0f}\n"
-            f"Yeni işlem açılmadı."
-        )
-        if tg_send:
-            tg_send(msg)
-        print(f"[{label}] PM bakiyesi düşük (${bal:.2f}), işlem atlandı", file=sys.stderr)
-        return False
+    """Bakiye kontrolü kaldırıldı — her zaman True."""
     return True

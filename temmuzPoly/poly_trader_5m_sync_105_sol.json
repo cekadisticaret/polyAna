@@ -1,0 +1,25 @@
+{
+  "ts_5m": 1784113500,
+  "saved_at_tr": "2026-07-15T14:05:06.539492+03:00",
+  "result": {
+    "direction": "DOWN",
+    "consensus": 3,
+    "amount": 8.0,
+    "entry_price": 77.35,
+    "momentum": "UP",
+    "votes": [
+      -1,
+      -1,
+      0,
+      -1
+    ],
+    "labels": [
+      "A1 ↓  RSI:46  MACD:↓  EMA:↓",
+      "Trend ↓  E20<E50 (-0.15%)",
+      "MR →  RSI:46  BB:orta",
+      "OF ↓  CVD:-0.07  OB:+0.04"
+    ],
+    "skip_reason": null,
+    "raw_direction": null
+  }
+}

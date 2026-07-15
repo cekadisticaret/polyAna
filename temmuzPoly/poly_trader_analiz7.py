@@ -29,6 +29,7 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from btc_1h_analiz7_algo import analyze, fetch_klines, TOTAL_ALGOS
+from pm_trader_helpers import apply_pm_quote, sanal_close_balance, pm_tg_stake, pm_history_extras
 
 BOT_TOKEN = os.getenv("TELEGRAM_TOKEN", "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA")
 CHAT_ID   = os.getenv("TELEGRAM_CHAT", "830754964")
@@ -203,13 +204,10 @@ def run_close() -> None:
         amount = pos.get("amount", TRADE_AMOUNT)
         actual = "UP" if current_price >= entry else "DOWN"
         win    = pred == actual
-        pnl    = amount if win else -amount
+        pnl    = sanal_close_balance(state, pos, win)
         toplam_pnl += pnl
 
-        state["balance"]   = round(state["balance"] + pnl, 2)
-        state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
-
-        history.append({
+        rec = {
             "symbol": pos["symbol"],
             "predicted_dir": pred,
             "actual_dir": actual,
@@ -226,11 +224,13 @@ def run_close() -> None:
             "consensus": pos.get("consensus"),
             "votes": pos.get("votes"),
             "algo": ALGO_NAME,
-        })
+        }
+        rec.update(pm_history_extras(pos))
+        history.append(rec)
 
         icon = "✅" if win else "❌"
         pct  = (current_price - entry) / entry * 100 if entry else 0
-        pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
+        pnl_str = f"+${pnl:.2f} ({pm_tg_stake(pos)})" if win else f"-${abs(pnl):.2f}"
         lines.append(
             f"{icon} BTC {pred}  {entry:,.0f} → {current_price:,.0f} ({pct:+.2f}%)  {pnl_str}"
         )
@@ -301,7 +301,7 @@ def run_open() -> None:
             skipped.append(f"⏸ {name} — bakiye yetersiz")
             continue
 
-        state["open_positions"].append({
+        pos = {
             "symbol": sym,
             "predicted_dir": sig["direction"],
             "entry_price": sig["entry_price"],
@@ -314,7 +314,14 @@ def run_open() -> None:
             "votes": sig["votes"],
             "labels": sig.get("labels"),
             "algo": ALGO_NAME,
-        })
+        }
+        apply_pm_quote(pos, sym, sig["direction"], TRADE_AMOUNT, now)
+        risk = pos.get("pm_spent", TRADE_AMOUNT)
+        if state["balance"] < risk:
+            skipped.append(f"⏸ {name} — bakiye yetersiz (PM ${risk:.2f})")
+            continue
+        state["open_positions"].append(pos)
+        state["balance"] = round(state["balance"] - risk, 2)
         opened.append(sig)
 
     save_state(state)
@@ -329,7 +336,7 @@ def run_open() -> None:
         sw, st = get_symbol_stats(history, sym)
         icons = " ".join("🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in sig.get("votes", []))
         lines.append(
-            f"{dir_icon} <b>BTC {dir_tr}</b>  ({sig['consensus']}/{TOTAL_ALGOS})  💵${TRADE_AMOUNT:.0f}  giriş:{sig['entry_price']:,.0f}\n"
+            f"{dir_icon} <b>BTC {dir_tr}</b>  ({sig['consensus']}/{TOTAL_ALGOS})  {pm_tg_stake(next((p for p in state['open_positions'] if p['symbol']==sym and p.get('entry_hour_tr')==hour_tr), {'amount': TRADE_AMOUNT}))}\n"
             f"   {icons}  mom:{sig.get('momentum')} ADX:{sig.get('adx', 0):.1f} vol:{sig.get('volume_ratio', 0):.2f}x HTF:{sig.get('htf_trend')} ST:{sig.get('supertrend')}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} {_wr(hw, ht)}  |  genel {_wr(sw, st)}"
         )

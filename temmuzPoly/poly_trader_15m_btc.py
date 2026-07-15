@@ -115,11 +115,11 @@ def get_all_stats(history: list) -> tuple[int, int]:
 
 def _pm_bal_line() -> str:
     """Polymarket USDC bakiyesini çekip bildirim satırı döndür."""
-    from pm_balance_guard import get_usdc_balance, PM_MIN_BALANCE
+    from pm_balance_guard import get_usdc_balance
     bal = get_usdc_balance()
     if bal >= 9999:
         return "🏦 PM Bakiye: sorgulanamadı"
-    icon = "🟢" if bal >= PM_MIN_BALANCE else "🔴"
+    icon = "🟢" if bal > 0 else "🔴"
     return f"🏦 PM Bakiye: {icon} ${bal:.2f}"
 
 

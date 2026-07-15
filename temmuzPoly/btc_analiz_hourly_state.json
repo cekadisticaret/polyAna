@@ -1,13 +1,13 @@
 {
   "pending": {
-    "hour_start": "09:00",
-    "hour_end": "10:00",
-    "hour_key": "2026-07-15T09:00",
-    "predicted": null,
-    "n_up": 7,
+    "hour_start": "17:00",
+    "hour_end": "18:00",
+    "hour_key": "2026-07-15T17:00",
+    "predicted": "UP",
+    "n_up": 9,
     "n_down": 7,
-    "n_neut": 13,
-    "entry_price": 64920.5,
+    "n_neut": 11,
+    "entry_price": 65090.2,
     "votes": [
       {
         "id": 1,
@@ -30,13 +30,13 @@
       {
         "id": 6,
         "name": "Stochastic RSI",
-        "signal": "UP",
+        "signal": "DOWN",
         "group": "algo"
       },
       {
         "id": 7,
         "name": "Bollinger Bands + Squeeze",
-        "signal": "UP",
+        "signal": "DOWN",
         "group": "algo"
       },
       {
@@ -48,7 +48,7 @@
       {
         "id": 12,
         "name": "Pairs Trading",
-        "signal": "NEUTRAL",
+        "signal": "UP",
         "group": "algo"
       },
       {
@@ -84,7 +84,7 @@
       {
         "id": 20,
         "name": "Open Interest Divergence",
-        "signal": "NEUTRAL",
+        "signal": "UP",
         "group": "algo"
       },
       {
@@ -108,7 +108,7 @@
       {
         "id": 26,
         "name": "MACD Histogram Diverjansı",
-        "signal": "DOWN",
+        "signal": "NEUTRAL",
         "group": "algo"
       },
       {
@@ -120,13 +120,13 @@
       {
         "id": 29,
         "name": "Hull Moving Average (HMA)",
-        "signal": "DOWN",
+        "signal": "UP",
         "group": "algo"
       },
       {
         "id": 33,
         "name": "Money Flow Index (MFI)",
-        "signal": "NEUTRAL",
+        "signal": "UP",
         "group": "algo"
       },
       {
@@ -172,7 +172,7 @@
         "group": "trader"
       }
     ],
-    "saved_at": "2026-07-15T09:01:07.390637+03:00"
+    "saved_at": "2026-07-15T17:01:08.482182+03:00"
   },
   "history": [
     {
@@ -421,6 +421,110 @@
       "pct": 0.304,
       "correct": true,
       "verified_at": "2026-07-15T09:01:02.458867+03:00"
+    },
+    {
+      "hour_start": "09:00",
+      "hour_end": "10:00",
+      "predicted": null,
+      "n_up": 7,
+      "n_down": 7,
+      "entry_price": 64920.5,
+      "exit_price": 64784.7,
+      "actual": "DOWN",
+      "pct": -0.209,
+      "correct": null,
+      "verified_at": "2026-07-15T10:01:03.157986+03:00"
+    },
+    {
+      "hour_start": "10:00",
+      "hour_end": "11:00",
+      "predicted": null,
+      "n_up": 8,
+      "n_down": 8,
+      "entry_price": 64784.7,
+      "exit_price": 64528.0,
+      "actual": "DOWN",
+      "pct": -0.396,
+      "correct": null,
+      "verified_at": "2026-07-15T11:01:03.364421+03:00"
+    },
+    {
+      "hour_start": "11:00",
+      "hour_end": "12:00",
+      "predicted": "DOWN",
+      "n_up": 7,
+      "n_down": 9,
+      "entry_price": 64528.0,
+      "exit_price": 64745.0,
+      "actual": "UP",
+      "pct": 0.336,
+      "correct": false,
+      "verified_at": "2026-07-15T12:01:02.975123+03:00"
+    },
+    {
+      "hour_start": "12:00",
+      "hour_end": "13:00",
+      "predicted": "UP",
+      "n_up": 9,
+      "n_down": 7,
+      "entry_price": 64745.0,
+      "exit_price": 64644.6,
+      "actual": "DOWN",
+      "pct": -0.155,
+      "correct": false,
+      "verified_at": "2026-07-15T13:01:03.108438+03:00"
+    },
+    {
+      "hour_start": "13:00",
+      "hour_end": "14:00",
+      "predicted": null,
+      "n_up": 8,
+      "n_down": 8,
+      "entry_price": 64644.6,
+      "exit_price": 64633.0,
+      "actual": "DOWN",
+      "pct": -0.018,
+      "correct": null,
+      "verified_at": "2026-07-15T14:01:02.639526+03:00"
+    },
+    {
+      "hour_start": "14:00",
+      "hour_end": "15:00",
+      "predicted": "DOWN",
+      "n_up": 7,
+      "n_down": 8,
+      "entry_price": 64633.0,
+      "exit_price": 64707.5,
+      "actual": "UP",
+      "pct": 0.115,
+      "correct": false,
+      "verified_at": "2026-07-15T15:01:03.069032+03:00"
+    },
+    {
+      "hour_start": "15:00",
+      "hour_end": "16:00",
+      "predicted": "UP",
+      "n_up": 9,
+      "n_down": 5,
+      "entry_price": 64707.5,
+      "exit_price": 65133.7,
+      "actual": "UP",
+      "pct": 0.659,
+      "correct": true,
+      "verified_at": "2026-07-15T16:01:03.260253+03:00"
+    },
+    {
+      "hour_start": "16:00",
+      "hour_end": "17:00",
+      "predicted": "UP",
+      "n_up": 9,
+      "n_down": 6,
+      "entry_price": 65133.7,
+      "exit_price": 65090.2,
+      "actual": "DOWN",
+      "pct": -0.067,
+      "correct": false,
+      "verified_at": "2026-07-15T17:01:02.152498+03:00"
     }
   ],
   "votes_log": [
@@ -4895,6 +4999,1374 @@
         }
       ],
       "verified_at": "2026-07-15T09:01:02.458883+03:00"
+    },
+    {
+      "hour_key": "2026-07-15T09:00",
+      "hour_start": "09:00",
+      "hour_end": "10:00",
+      "actual": "DOWN",
+      "votes": [
+        {
+          "id": 1,
+          "name": "EMA Crossover (9/21/50/200)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 3,
+          "name": "Supertrend",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 5,
+          "name": "RSI + Divergence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 6,
+          "name": "Stochastic RSI",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 7,
+          "name": "Bollinger Bands + Squeeze",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 11,
+          "name": "Mean Reversion (Z-Score)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 12,
+          "name": "Pairs Trading",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 13,
+          "name": "Grid Trading Bot",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 14,
+          "name": "LSTM",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 15,
+          "name": "Multi-Timeframe Confluence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 17,
+          "name": "Heikin Ashi Trend Filter",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 18,
+          "name": "TEMA Crossover (9/21)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 20,
+          "name": "Open Interest Divergence",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 22,
+          "name": "Analiz-1 Sistemi (RSI+MACD+EMA)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 23,
+          "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 24,
+          "name": "Analiz-10 Sistemi (A1+A9 Konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 26,
+          "name": "MACD Histogram Diverjansı",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 27,
+          "name": "Stochastic RSI (14) K/D",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 29,
+          "name": "Hull Moving Average (HMA)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 33,
+          "name": "Money Flow Index (MFI)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 34,
+          "name": "Random Forest Classifier",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 35,
+          "name": "Markov Zinciri Modeli",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 36,
+          "name": "SuperTrend v2 (7,2.0)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 38,
+          "name": "RSI Diverjansı (14) Katı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": "A1",
+          "name": "1. Analiz (Predictor)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A5",
+          "name": "5. Analiz (Predictor + momentum)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A10",
+          "name": "10. Analiz (A1+A9 konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        }
+      ],
+      "verified_at": "2026-07-15T10:01:03.158005+03:00"
+    },
+    {
+      "hour_key": "2026-07-15T10:00",
+      "hour_start": "10:00",
+      "hour_end": "11:00",
+      "actual": "DOWN",
+      "votes": [
+        {
+          "id": 1,
+          "name": "EMA Crossover (9/21/50/200)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 3,
+          "name": "Supertrend",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 5,
+          "name": "RSI + Divergence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 6,
+          "name": "Stochastic RSI",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 7,
+          "name": "Bollinger Bands + Squeeze",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 11,
+          "name": "Mean Reversion (Z-Score)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 12,
+          "name": "Pairs Trading",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 13,
+          "name": "Grid Trading Bot",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 14,
+          "name": "LSTM",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 15,
+          "name": "Multi-Timeframe Confluence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 17,
+          "name": "Heikin Ashi Trend Filter",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 18,
+          "name": "TEMA Crossover (9/21)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 20,
+          "name": "Open Interest Divergence",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 22,
+          "name": "Analiz-1 Sistemi (RSI+MACD+EMA)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 23,
+          "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 24,
+          "name": "Analiz-10 Sistemi (A1+A9 Konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 26,
+          "name": "MACD Histogram Diverjansı",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 27,
+          "name": "Stochastic RSI (14) K/D",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 29,
+          "name": "Hull Moving Average (HMA)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 33,
+          "name": "Money Flow Index (MFI)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 34,
+          "name": "Random Forest Classifier",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 35,
+          "name": "Markov Zinciri Modeli",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 36,
+          "name": "SuperTrend v2 (7,2.0)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 38,
+          "name": "RSI Diverjansı (14) Katı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": "A1",
+          "name": "1. Analiz (Predictor)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A5",
+          "name": "5. Analiz (Predictor + momentum)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A10",
+          "name": "10. Analiz (A1+A9 konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        }
+      ],
+      "verified_at": "2026-07-15T11:01:03.364439+03:00"
+    },
+    {
+      "hour_key": "2026-07-15T11:00",
+      "hour_start": "11:00",
+      "hour_end": "12:00",
+      "actual": "UP",
+      "votes": [
+        {
+          "id": 1,
+          "name": "EMA Crossover (9/21/50/200)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 3,
+          "name": "Supertrend",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 5,
+          "name": "RSI + Divergence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 6,
+          "name": "Stochastic RSI",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 7,
+          "name": "Bollinger Bands + Squeeze",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 11,
+          "name": "Mean Reversion (Z-Score)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 12,
+          "name": "Pairs Trading",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 13,
+          "name": "Grid Trading Bot",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 14,
+          "name": "LSTM",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 15,
+          "name": "Multi-Timeframe Confluence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 17,
+          "name": "Heikin Ashi Trend Filter",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 18,
+          "name": "TEMA Crossover (9/21)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 20,
+          "name": "Open Interest Divergence",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 22,
+          "name": "Analiz-1 Sistemi (RSI+MACD+EMA)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 23,
+          "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 24,
+          "name": "Analiz-10 Sistemi (A1+A9 Konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 26,
+          "name": "MACD Histogram Diverjansı",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 27,
+          "name": "Stochastic RSI (14) K/D",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 29,
+          "name": "Hull Moving Average (HMA)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 33,
+          "name": "Money Flow Index (MFI)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 34,
+          "name": "Random Forest Classifier",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 35,
+          "name": "Markov Zinciri Modeli",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 36,
+          "name": "SuperTrend v2 (7,2.0)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 38,
+          "name": "RSI Diverjansı (14) Katı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": "A1",
+          "name": "1. Analiz (Predictor)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A5",
+          "name": "5. Analiz (Predictor + momentum)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A10",
+          "name": "10. Analiz (A1+A9 konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        }
+      ],
+      "verified_at": "2026-07-15T12:01:02.975138+03:00"
+    },
+    {
+      "hour_key": "2026-07-15T12:00",
+      "hour_start": "12:00",
+      "hour_end": "13:00",
+      "actual": "DOWN",
+      "votes": [
+        {
+          "id": 1,
+          "name": "EMA Crossover (9/21/50/200)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 3,
+          "name": "Supertrend",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 5,
+          "name": "RSI + Divergence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 6,
+          "name": "Stochastic RSI",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 7,
+          "name": "Bollinger Bands + Squeeze",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 11,
+          "name": "Mean Reversion (Z-Score)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 12,
+          "name": "Pairs Trading",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 13,
+          "name": "Grid Trading Bot",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 14,
+          "name": "LSTM",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 15,
+          "name": "Multi-Timeframe Confluence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 17,
+          "name": "Heikin Ashi Trend Filter",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 18,
+          "name": "TEMA Crossover (9/21)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 20,
+          "name": "Open Interest Divergence",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 22,
+          "name": "Analiz-1 Sistemi (RSI+MACD+EMA)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 23,
+          "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 24,
+          "name": "Analiz-10 Sistemi (A1+A9 Konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 26,
+          "name": "MACD Histogram Diverjansı",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 27,
+          "name": "Stochastic RSI (14) K/D",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 29,
+          "name": "Hull Moving Average (HMA)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 33,
+          "name": "Money Flow Index (MFI)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 34,
+          "name": "Random Forest Classifier",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 35,
+          "name": "Markov Zinciri Modeli",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 36,
+          "name": "SuperTrend v2 (7,2.0)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 38,
+          "name": "RSI Diverjansı (14) Katı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": "A1",
+          "name": "1. Analiz (Predictor)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A5",
+          "name": "5. Analiz (Predictor + momentum)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A10",
+          "name": "10. Analiz (A1+A9 konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        }
+      ],
+      "verified_at": "2026-07-15T13:01:03.108457+03:00"
+    },
+    {
+      "hour_key": "2026-07-15T13:00",
+      "hour_start": "13:00",
+      "hour_end": "14:00",
+      "actual": "DOWN",
+      "votes": [
+        {
+          "id": 1,
+          "name": "EMA Crossover (9/21/50/200)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 3,
+          "name": "Supertrend",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 5,
+          "name": "RSI + Divergence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 6,
+          "name": "Stochastic RSI",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 7,
+          "name": "Bollinger Bands + Squeeze",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 11,
+          "name": "Mean Reversion (Z-Score)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 12,
+          "name": "Pairs Trading",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 13,
+          "name": "Grid Trading Bot",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 14,
+          "name": "LSTM",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 15,
+          "name": "Multi-Timeframe Confluence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 17,
+          "name": "Heikin Ashi Trend Filter",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 18,
+          "name": "TEMA Crossover (9/21)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 20,
+          "name": "Open Interest Divergence",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 22,
+          "name": "Analiz-1 Sistemi (RSI+MACD+EMA)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 23,
+          "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 24,
+          "name": "Analiz-10 Sistemi (A1+A9 Konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 26,
+          "name": "MACD Histogram Diverjansı",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 27,
+          "name": "Stochastic RSI (14) K/D",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 29,
+          "name": "Hull Moving Average (HMA)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 33,
+          "name": "Money Flow Index (MFI)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 34,
+          "name": "Random Forest Classifier",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 35,
+          "name": "Markov Zinciri Modeli",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 36,
+          "name": "SuperTrend v2 (7,2.0)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 38,
+          "name": "RSI Diverjansı (14) Katı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": "A1",
+          "name": "1. Analiz (Predictor)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A5",
+          "name": "5. Analiz (Predictor + momentum)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A10",
+          "name": "10. Analiz (A1+A9 konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        }
+      ],
+      "verified_at": "2026-07-15T14:01:02.639552+03:00"
+    },
+    {
+      "hour_key": "2026-07-15T14:00",
+      "hour_start": "14:00",
+      "hour_end": "15:00",
+      "actual": "UP",
+      "votes": [
+        {
+          "id": 1,
+          "name": "EMA Crossover (9/21/50/200)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 3,
+          "name": "Supertrend",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 5,
+          "name": "RSI + Divergence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 6,
+          "name": "Stochastic RSI",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 7,
+          "name": "Bollinger Bands + Squeeze",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 11,
+          "name": "Mean Reversion (Z-Score)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 12,
+          "name": "Pairs Trading",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 13,
+          "name": "Grid Trading Bot",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 14,
+          "name": "LSTM",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 15,
+          "name": "Multi-Timeframe Confluence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 17,
+          "name": "Heikin Ashi Trend Filter",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 18,
+          "name": "TEMA Crossover (9/21)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 20,
+          "name": "Open Interest Divergence",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 22,
+          "name": "Analiz-1 Sistemi (RSI+MACD+EMA)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 23,
+          "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 24,
+          "name": "Analiz-10 Sistemi (A1+A9 Konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 26,
+          "name": "MACD Histogram Diverjansı",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 27,
+          "name": "Stochastic RSI (14) K/D",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 29,
+          "name": "Hull Moving Average (HMA)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 33,
+          "name": "Money Flow Index (MFI)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 34,
+          "name": "Random Forest Classifier",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 35,
+          "name": "Markov Zinciri Modeli",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 36,
+          "name": "SuperTrend v2 (7,2.0)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 38,
+          "name": "RSI Diverjansı (14) Katı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": "A1",
+          "name": "1. Analiz (Predictor)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A5",
+          "name": "5. Analiz (Predictor + momentum)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A10",
+          "name": "10. Analiz (A1+A9 konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        }
+      ],
+      "verified_at": "2026-07-15T15:01:03.069050+03:00"
+    },
+    {
+      "hour_key": "2026-07-15T15:00",
+      "hour_start": "15:00",
+      "hour_end": "16:00",
+      "actual": "UP",
+      "votes": [
+        {
+          "id": 1,
+          "name": "EMA Crossover (9/21/50/200)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 3,
+          "name": "Supertrend",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 5,
+          "name": "RSI + Divergence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 6,
+          "name": "Stochastic RSI",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 7,
+          "name": "Bollinger Bands + Squeeze",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 11,
+          "name": "Mean Reversion (Z-Score)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 12,
+          "name": "Pairs Trading",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 13,
+          "name": "Grid Trading Bot",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 14,
+          "name": "LSTM",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 15,
+          "name": "Multi-Timeframe Confluence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 17,
+          "name": "Heikin Ashi Trend Filter",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 18,
+          "name": "TEMA Crossover (9/21)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 20,
+          "name": "Open Interest Divergence",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 22,
+          "name": "Analiz-1 Sistemi (RSI+MACD+EMA)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 23,
+          "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 24,
+          "name": "Analiz-10 Sistemi (A1+A9 Konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 26,
+          "name": "MACD Histogram Diverjansı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 27,
+          "name": "Stochastic RSI (14) K/D",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 29,
+          "name": "Hull Moving Average (HMA)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 33,
+          "name": "Money Flow Index (MFI)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 34,
+          "name": "Random Forest Classifier",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 35,
+          "name": "Markov Zinciri Modeli",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 36,
+          "name": "SuperTrend v2 (7,2.0)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 38,
+          "name": "RSI Diverjansı (14) Katı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": "A1",
+          "name": "1. Analiz (Predictor)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A5",
+          "name": "5. Analiz (Predictor + momentum)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A10",
+          "name": "10. Analiz (A1+A9 konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        }
+      ],
+      "verified_at": "2026-07-15T16:01:03.260273+03:00"
+    },
+    {
+      "hour_key": "2026-07-15T16:00",
+      "hour_start": "16:00",
+      "hour_end": "17:00",
+      "actual": "DOWN",
+      "votes": [
+        {
+          "id": 1,
+          "name": "EMA Crossover (9/21/50/200)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 3,
+          "name": "Supertrend",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 5,
+          "name": "RSI + Divergence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 6,
+          "name": "Stochastic RSI",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 7,
+          "name": "Bollinger Bands + Squeeze",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 11,
+          "name": "Mean Reversion (Z-Score)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 12,
+          "name": "Pairs Trading",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 13,
+          "name": "Grid Trading Bot",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 14,
+          "name": "LSTM",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 15,
+          "name": "Multi-Timeframe Confluence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 17,
+          "name": "Heikin Ashi Trend Filter",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 18,
+          "name": "TEMA Crossover (9/21)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 20,
+          "name": "Open Interest Divergence",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 22,
+          "name": "Analiz-1 Sistemi (RSI+MACD+EMA)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 23,
+          "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 24,
+          "name": "Analiz-10 Sistemi (A1+A9 Konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 26,
+          "name": "MACD Histogram Diverjansı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 27,
+          "name": "Stochastic RSI (14) K/D",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 29,
+          "name": "Hull Moving Average (HMA)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 33,
+          "name": "Money Flow Index (MFI)",
+          "signal": "UP",
+          "group": "algo"
+        },
+        {
+          "id": 34,
+          "name": "Random Forest Classifier",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 35,
+          "name": "Markov Zinciri Modeli",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": 36,
+          "name": "SuperTrend v2 (7,2.0)",
+          "signal": "DOWN",
+          "group": "algo"
+        },
+        {
+          "id": 38,
+          "name": "RSI Diverjansı (14) Katı",
+          "signal": "NEUTRAL",
+          "group": "algo"
+        },
+        {
+          "id": "A1",
+          "name": "1. Analiz (Predictor)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A5",
+          "name": "5. Analiz (Predictor + momentum)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        },
+        {
+          "id": "A10",
+          "name": "10. Analiz (A1+A9 konsensüs)",
+          "signal": "NEUTRAL",
+          "group": "trader"
+        }
+      ],
+      "verified_at": "2026-07-15T17:01:02.152517+03:00"
     }
   ],
   "algo_stats": {
@@ -4905,8 +6377,8 @@
     },
     "3": {
       "name": "Supertrend",
-      "total": 16,
-      "correct": 9
+      "total": 24,
+      "correct": 14
     },
     "4": {
       "name": "Ichimoku Cloud",
@@ -4915,18 +6387,18 @@
     },
     "5": {
       "name": "RSI + Divergence",
-      "total": 16,
-      "correct": 8
+      "total": 24,
+      "correct": 11
     },
     "6": {
       "name": "Stochastic RSI",
-      "total": 16,
-      "correct": 8
+      "total": 24,
+      "correct": 12
     },
     "7": {
       "name": "Bollinger Bands + Squeeze",
-      "total": 16,
-      "correct": 10
+      "total": 24,
+      "correct": 13
     },
     "8": {
       "name": "VWAP",
@@ -4940,13 +6412,13 @@
     },
     "11": {
       "name": "Mean Reversion (Z-Score)",
-      "total": 15,
-      "correct": 9
+      "total": 18,
+      "correct": 12
     },
     "12": {
       "name": "Pairs Trading",
-      "total": 4,
-      "correct": 1
+      "total": 8,
+      "correct": 3
     },
     "16": {
       "name": "ATR Momentum Breakout",
@@ -4955,13 +6427,13 @@
     },
     "17": {
       "name": "Heikin Ashi Trend Filter",
-      "total": 16,
-      "correct": 7
+      "total": 24,
+      "correct": 10
     },
     "18": {
       "name": "TEMA Crossover (9/21)",
-      "total": 16,
-      "correct": 6
+      "total": 24,
+      "correct": 11
     },
     "19": {
       "name": "ADX Market Regime",
@@ -4970,7 +6442,7 @@
     },
     "20": {
       "name": "Open Interest Divergence",
-      "total": 5,
+      "total": 6,
       "correct": 1
     },
     "21": {
@@ -4985,13 +6457,13 @@
     },
     "26": {
       "name": "MACD Histogram Diverjansı",
-      "total": 10,
-      "correct": 4
+      "total": 16,
+      "correct": 8
     },
     "27": {
       "name": "Stochastic RSI (14) K/D",
-      "total": 16,
-      "correct": 10
+      "total": 24,
+      "correct": 13
     },
     "28": {
       "name": "Triple EMA (8-21-55)",
@@ -5000,8 +6472,8 @@
     },
     "29": {
       "name": "Hull Moving Average (HMA)",
-      "total": 16,
-      "correct": 7
+      "total": 24,
+      "correct": 11
     },
     "30": {
       "name": "Keltner Kanalı (20,2)",
@@ -5020,18 +6492,18 @@
     },
     "33": {
       "name": "Money Flow Index (MFI)",
-      "total": 16,
-      "correct": 9
+      "total": 23,
+      "correct": 12
     },
     "35": {
       "name": "Markov Zinciri Modeli",
-      "total": 14,
-      "correct": 8
+      "total": 21,
+      "correct": 12
     },
     "36": {
       "name": "SuperTrend v2 (7,2.0)",
-      "total": 16,
-      "correct": 9
+      "total": 24,
+      "correct": 14
     },
     "37": {
       "name": "Ichimoku Cloud v2 (TK+Bulut)",
@@ -5080,13 +6552,13 @@
     },
     "1": {
       "name": "EMA Crossover (9/21/50/200)",
-      "total": 10,
-      "correct": 5
+      "total": 18,
+      "correct": 8
     },
     "15": {
       "name": "Multi-Timeframe Confluence",
-      "total": 10,
-      "correct": 5
+      "total": 18,
+      "correct": 8
     },
     "A10": {
       "name": "10. Analiz (A1+A9 konsensüs)",
@@ -5095,13 +6567,13 @@
     },
     "34": {
       "name": "Random Forest Classifier",
-      "total": 3,
-      "correct": 1
+      "total": 5,
+      "correct": 2
     },
     "23": {
       "name": "Analiz-9 Sistemi (Trend+MR+OF+Fund)",
-      "total": 1,
-      "correct": 1
+      "total": 5,
+      "correct": 2
     }
   },
   "trade_pending": null,

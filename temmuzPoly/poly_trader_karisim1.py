@@ -14,6 +14,9 @@ import asyncio, json, os, sys, time, urllib.request, urllib.parse
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pm_trader_helpers import apply_pm_quote, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields
+
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
 CHAT_ID   = "830754964"
@@ -230,20 +233,17 @@ async def run_close() -> None:
 
         if pred == "UP":
             win = current_price >= entry
-            pnl = amount if win else -amount
         else:
             win = current_price <= entry
-            pnl = amount if win else -amount
 
+        pnl = sanal_close_balance(state, pos, win)
         toplam_pnl += pnl
-        state["balance"] += pnl
-        state["total_pnl"] += pnl
         actual = "UP" if current_price >= entry else "DOWN"
         pct    = (current_price - entry) / entry * 100
 
         icon    = "✅" if win else "❌"
         name    = symbol.replace("USDT", "")
-        pnl_str = f"+{pnl:.0f}$" if win else f"{pnl:.0f}$"
+        pnl_str = f"+${pnl:.2f} ({pm_tg_stake(pos)})" if win else f"-${abs(pnl):.2f}"
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
             f"{pnl_str}  konsensus:{pos.get('count',2)}/2"
@@ -261,6 +261,7 @@ async def run_close() -> None:
             "pnl":           pnl,
             "win":           win,
             "count":         pos.get("count", 2),
+            **pm_history_extras(pos),
         })
 
     state["open_positions"] = failed_pos
@@ -322,8 +323,13 @@ async def run_open() -> None:
             "systems":       c["systems"],
             "price_src":     price_src,
         }
+        apply_pm_quote(pos, c["symbol"], c["direction"], c["amount"], datetime.now(timezone.utc))
+        risk = pos.get("pm_spent", c["amount"])
+        if state["balance"] < risk:
+            continue
+        state["balance"] = round(state["balance"] - risk, 2)
         state["open_positions"].append(pos)
-        opened.append({**c, "price": price, "price_src": price_src})
+        opened.append({**c, "price": price, "price_src": price_src, "pm_pos": pos})
 
     save_state(state)
 
@@ -344,7 +350,7 @@ async def run_open() -> None:
 
             price_note = "📌ort" if o.get("price_src") == "kaynak-ort" else "📡anlık"
             lines.append(
-                f"{dir_ico} <b>{name}</b>  {dir_tr}  {o['amount']:.0f}$  giriş:{o['price']:.2f} {price_note}\n"
+                f"{dir_ico} <b>{name}</b>  {dir_tr}  {pm_tg_stake(o.get('pm_pos', o))}  giriş:{o['price']:.2f} {price_note}\n"
                 f"   🤝 Konsensus: {o['count']}/2  [{sys_str}]\n"
                 f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hw,ht,warn_low=low)} | genel: {_wr(sw,st)}"
             )

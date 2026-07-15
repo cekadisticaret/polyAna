@@ -1,10 +1,12 @@
 """
-10. ANALİZ — Çift Konsensüs Sanal
+13. ANALİZ — Çift Konsensüs Sanal (10 + filtreler)
 
-Sistem A: poly_predictor (Analiz 1/5)
-Sistem B: Trend + MR + OrderFlow + Funding (Analiz 4/9)
+10. Analiz ile aynı çift konsensüs mantığı, ekstra:
+  - Sistem B min skor: 2/4 (zayıf ±1/4 elenir)
+  - İşlem tutarı: $10 / $15 / $20 (zayıf / orta / güçlü tier)
+  - Saatlik elenme nedeni Telegram (debug)
 
-$300 sanal, sabit $10/işlem. Saatlik elenme nedeni Telegram.
+$300 sanal başlangıç. Telegram: 10. Analiz kanalı.
 
 Modlar: close / open / weekly / stats
 Cron: 0 * * * * close | 3 * * * * open | 0 21 * * 6 weekly
@@ -13,7 +15,7 @@ import asyncio
 import sys
 
 from poly_analiz_dual_core import (
-    CONFIG_A10,
+    CONFIG_A13,
     analyze as _analyze,
     run_close as _run_close,
     run_open as _run_open,
@@ -21,7 +23,7 @@ from poly_analiz_dual_core import (
     run_stats as _run_stats,
 )
 
-CFG = CONFIG_A10
+CFG = CONFIG_A13
 
 
 async def analyze(symbol: str) -> dict | None:

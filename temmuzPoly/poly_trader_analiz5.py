@@ -19,6 +19,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
+from pm_trader_helpers import sanal_pnl, pm_tg_stake
 
 # .env yükle
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -104,8 +105,7 @@ _PM_ASSET_MAP = {"BTCUSDT": "bitcoin", "ETHUSDT": "ethereum", "SOLUSDT": "solana
                  "XRPUSDT": "xrp", "DOGEUSDT": "dogecoin", "BNBUSDT": "bnb"}
 _PM_DRY_RUN   = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 
-from pm_balance_guard import PM_MIN_BALANCE, can_open_trade
-_PM_MIN_BALANCE = PM_MIN_BALANCE
+from pm_balance_guard import can_open_trade
 
 def _pm_get_client():
     """Her çağrıda taze cred türet — 401 retry ile güvenli."""
@@ -596,12 +596,12 @@ async def run_close() -> None:
         icon     = "✅" if win else "❌"
         name     = pos["symbol"].replace("USDT", "")
         pct      = (current_price - entry) / entry * 100
-        pm_spent = pos.get("pm_spent", 0)
-        tur_pm_spent += pm_spent
-        tur_pnl  += pm_spent if win else -pm_spent
+        pm_spent = pos.get("pm_spent", 0) or amount
+        pnl_line = sanal_pnl(pos, win)
+        tur_pnl += pnl_line
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
-            f"-{pm_spent:.0f}$  skor:{pos.get('score', 0):+d}/3"
+            f"{pm_tg_stake(pos)}  net {'+' if pnl_line >= 0 else ''}{pnl_line:.2f}$  skor:{pos.get('score', 0):+d}/3"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak
@@ -776,7 +776,7 @@ async def run_open() -> None:
         if p.get("entry_hour_tr") == hour_tr
     )
     pm_bal_str = f"${pm_bal:.2f}" if pm_bal >= 0 else "?"
-    bal_icon   = "🟢" if pm_bal > _PM_MIN_BALANCE else "🟡" if pm_bal > 50 else "🔴"
+    bal_icon   = "🟢" if pm_bal > 50 else "🟡" if pm_bal > 20 else "🔴"
     closed_all = len(history)
     dir_wins   = sum(1 for t in history if t["win"])
     genel_dir  = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"

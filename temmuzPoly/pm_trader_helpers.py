@@ -294,12 +294,48 @@ def apply_pm_quote(pos: dict, symbol: str, direction: str, amount: float, now: d
     return pos
 
 
-def sanal_pnl(pos: dict, win: bool) -> float:
+def pm_stake_fields(pos: dict) -> tuple[float, float, float]:
+    """(harcama, to_win/pm_size, token_fiyat) — giriş kotasyonundan."""
     spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
+    entry_p = float(pos.get("pm_entry_price") or pos.get("token_price") or 0)
     size = float(pos.get("pm_size") or pos.get("to_win") or 0)
+    if size <= 0 and spent > 0 and entry_p > 0:
+        size = round(spent / entry_p, 2)
+    return spent, size, entry_p
+
+
+def pm_tg_stake(pos: dict) -> str:
+    spent, size, ep = pm_stake_fields(pos)
+    if size > 0 and spent > 0 and ep > 0:
+        return f"💵 ${spent:.2f}@{ep:.2f} → 🏆 ${size:.2f}"
+    if size > 0 and spent > 0:
+        return f"💵 ${spent:.2f} → 🏆 ${size:.2f}"
+    return f"💵 ${spent:.2f}" if spent > 0 else ""
+
+
+def pm_history_extras(pos: dict) -> dict:
+    extras: dict = {}
+    for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "token_price", "pm_slug", "pm_order_id", "tier"):
+        if pos.get(k) is not None:
+            extras[k] = pos[k]
+    return extras
+
+
+def sanal_pnl(pos: dict, win: bool) -> float:
+    spent, size, _ = pm_stake_fields(pos)
     if size > 0 and spent > 0:
         return round(size - spent, 2) if win else round(-spent, 2)
-    return round(spent if win else -spent, 2)
+    if not win:
+        return round(-spent, 2) if spent > 0 else 0.0
+    return 0.0
+
+
+def sanal_close_balance(state: dict, pos: dict, win: bool) -> float:
+    """Bakiye += net PM P&L (açılışta pm_spent düşülmüşse tutarlı)."""
+    pnl = sanal_pnl(pos, win)
+    state["balance"] = round(state.get("balance", 0) + pnl, 2)
+    state["total_pnl"] = round(state.get("total_pnl", 0) + pnl, 2)
+    return pnl
 
 
 _PM_5M_ASSET = {
@@ -340,6 +376,7 @@ def pm_5m_sanal_quote(ts_5m: int, direction: str, amount: float, symbol: str = "
     """5m PM kotasyon alanları (emir yok)."""
     pm = pm_5m_find_market(ts_5m, symbol)
     out: dict = {"amount": amount, "pm_spent": round(amount, 2)}
+    tp = 0.50
     if pm and not pm.get("closed"):
         tp = pm["up_price"] if direction == "UP" else pm["down_price"]
         if tp and 0.02 <= tp <= 0.98:
@@ -353,8 +390,8 @@ def pm_5m_sanal_quote(ts_5m: int, direction: str, amount: float, symbol: str = "
                 "to_win": size,
             })
             return out
-    fb = round(amount * 2, 2)
-    out.update({"pm_size": fb, "to_win": fb})
+    fb_size = round(amount / tp, 2) if 0.02 <= tp <= 0.98 else round(amount / 0.50, 2)
+    out.update({"pm_size": fb_size, "to_win": fb_size, "pm_entry_price": tp, "token_price": tp})
     return out
 
 
@@ -375,6 +412,6 @@ def pm_5m_history_extras(pos: dict) -> dict:
 def pm_5m_close(pos: dict, win: bool) -> tuple[float, float]:
     """(pnl, payout) — girişte kaydedilen PM kotasyonuna göre."""
     pnl = sanal_pnl(pos, win)
-    spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
-    payout = float(pos.get("pm_size") or pos.get("to_win") or spent * 2)
+    _, size, _ = pm_stake_fields(pos)
+    payout = size if win else 0.0
     return pnl, payout

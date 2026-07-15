@@ -1,4 +1,4 @@
-"""5M 102 saatlik özet + 5M 105 işlem bildirimleri (8799859033 bot)."""
+"""5M 102/105 saatlik özet + 5M 105 işlem bildirimleri (8799859033 bot)."""
 import json
 import urllib.request
 
@@ -7,19 +7,23 @@ CHAT_ID   = "830754964"
 
 
 def tg_send(text: str) -> bool:
-    try:
-        url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
-        req  = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=10) as r:
-            resp = json.loads(r.read())
-        if not resp.get("ok"):
-            print(f"[5M 102 TG] API hata: {resp.get('description', resp)}")
-            return False
-        return True
-    except Exception as e:
-        print(f"[5M 102 TG] Hata: {e}")
-        return False
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                resp = json.loads(r.read())
+            if not resp.get("ok"):
+                print(f"[5M 102 TG] API hata: {resp.get('description', resp)}")
+                return False
+            return True
+        except Exception as e:
+            print(f"[5M 102 TG] Hata ({attempt + 1}/3): {e}")
+            if attempt < 2:
+                import time
+                time.sleep(2)
+    return False
 
 
 def tg_send_photo(path: str, caption: str = "") -> None:

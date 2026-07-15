@@ -470,7 +470,7 @@ def run() -> None:
 
         pm_q = pm_5m_sanal_quote(ts_5m, direction, amount)
         token_price = pm_q.get("token_price")
-        to_win = pm_q.get("to_win", amount * 2)
+        to_win = pm_q.get("to_win") or round(amount / max(token_price, 0.02), 2)
         price_str = f"@{token_price:.2f}" if token_price else ""
 
         state["balance"] = round(state["balance"] - amount, 2)

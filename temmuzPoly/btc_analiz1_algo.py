@@ -1,17 +1,18 @@
 """
-Polymarket 1 Saatlik Fiyat Tahmin Motoru
+1. ANALİZ — Tam algoritma (standalone tek dosya)
 
-Kaynak: lab/v4/analyzer_v4.py (Tur 22 — Simetrik MR confluence, kalibre edilmiş)
-Yedek (önceki prod v5): lab/backups/30-05-2026/poly_predictor_analysis_prod_v5_30052026.py
+Analiz 1 trader (poly_trader_analiz1.py) poly_predictor_analysis.py kullanmaya devam eder;
+bu dosya aynı motorun bağımsız kopyasıdır — okuma/deneme/Analiz 2 geliştirme için.
 
 Strateji: Simetrik MR (UP + DOWN mean-reversion).
-  - _MR_UP_GATE   = 45  (oversold → UP reversal)
-  - _MR_DOWN_GATE = 40  (overbought → DOWN reversal)
-  - RSI(5), 8-mum MR, streak reversal, CVD teyidi, 30dk CVD flow
-  - Trend-takip park edildi (backtest'te sinyali seyreltti)
+  - MR_UP_GATE   = 45  (Kill Zone ET 09-11 iken 62)
+  - MR_DOWN_GATE = 40  (Kill Zone ET 09-11 iken 55)
+  - RSI(5), 8-mum MR, streak reversal, CVD, liquidity sweep, EMA50 crash kapısı
 
-Backtest (Ara'25–May'26, 6 ay):
-  %56.0 doğruluk, +$752/ay ortalama, 6/6 ay pozitif, min ay +$390
+Kullanım:
+  python3 temmuzPoly/btc_analiz1_algo.py
+  python3 temmuzPoly/btc_analiz1_algo.py SOLUSDT
+  python3 -c "from btc_analiz1_algo import analyze; import asyncio; print(asyncio.run(analyze()))"
 """
 import asyncio
 import json
@@ -1006,3 +1007,111 @@ async def predict_all() -> list[PolyPrediction]:
     if results:
         save_predictions(results)
     return results
+
+
+# ── Standalone arayüz (102/105 algo pattern) ──────────────────
+SYMBOLS_DEFAULT = ["BTCUSDT", "SOLUSDT"]
+
+
+@dataclass
+class Analiz1Signal:
+    symbol: str
+    direction: str | None
+    confidence: float
+    entry_price: float
+    current_price: float
+    rsi: float
+    macd_bull: bool
+    trend: str
+    prob_up: float
+    prob_down: float
+    factors: list[str]
+    skip_reason: str | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "symbol": self.symbol,
+            "direction": self.direction,
+            "confidence": self.confidence,
+            "entry_price": self.entry_price,
+            "current_price": self.current_price,
+            "rsi": self.rsi,
+            "macd_bull": self.macd_bull,
+            "trend": self.trend,
+            "prob_up": self.prob_up,
+            "prob_down": self.prob_down,
+            "factors": self.factors,
+            "skip_reason": self.skip_reason,
+        }
+
+
+async def analyze(symbol: str = "BTCUSDT") -> Analiz1Signal | None:
+    """Analiz 1 sinyali — predict() + price-to-beat (son kapanan 1h)."""
+    pred = await predict(symbol)
+    if pred is None:
+        status = await predict_status(symbol)
+        return Analiz1Signal(
+            symbol=symbol,
+            direction=None,
+            confidence=0.0,
+            entry_price=0.0,
+            current_price=0.0,
+            rsi=0.0,
+            macd_bull=False,
+            trend="—",
+            prob_up=0.0,
+            prob_down=0.0,
+            factors=[],
+            skip_reason=status.get("reason") or "Konsensüs yok",
+        )
+
+    klines = await _fetch_klines(symbol, "1h", 3)
+    entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else pred.current_price
+    conf = max(pred.prob_up, pred.prob_down)
+
+    return Analiz1Signal(
+        symbol=symbol,
+        direction=pred.predicted_dir,
+        confidence=round(conf * 100, 1),
+        entry_price=entry_price,
+        current_price=pred.current_price,
+        rsi=pred.rsi,
+        macd_bull=pred.macd_bull,
+        trend=pred.trend,
+        prob_up=pred.prob_up,
+        prob_down=pred.prob_down,
+        factors=list(pred.factors),
+    )
+
+
+def format_signal(sig: Analiz1Signal | None) -> str:
+    if sig is None:
+        return "Veri yok"
+    name = sig.symbol.replace("USDT", "")
+    if not sig.direction:
+        return f"{name}: SİNYAL YOK — {sig.skip_reason or '?'}"
+    dir_tr = "YUKSELIS" if sig.direction == "UP" else "DUSUS"
+    lines = [
+        f"{name} {dir_tr}  konf:%{sig.confidence:.0f}",
+        f"  giris:{sig.entry_price:.2f}  fiyat:{sig.current_price:.2f}",
+        f"  RSI:{sig.rsi:.0f}  MACD:{'bull' if sig.macd_bull else 'bear'}  trend:{sig.trend}",
+    ]
+    if sig.factors:
+        lines.append("  " + " | ".join(sig.factors[:4]))
+    return "\n".join(lines)
+
+
+async def _main_async(symbols: list[str]) -> None:
+    for sym in symbols:
+        try:
+            sig = await analyze(sym)
+            print(format_signal(sig))
+            print()
+        except Exception as e:
+            print(f"[btc_analiz1_algo] {sym} hata: {e}", flush=True)
+
+
+if __name__ == "__main__":
+    import sys
+    syms = [sys.argv[1].upper()] if len(sys.argv) > 1 else SYMBOLS_DEFAULT
+    asyncio.run(_main_async(syms))

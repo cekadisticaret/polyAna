@@ -35,6 +35,9 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, pm_tg_stake, pm_history_extras
+
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ9_BOT_TOKEN", "8654967936:AAFp0hDESfXi0iZDRVc5I1JwyTS9N9_rAXE")
 CHAT_ID   = os.getenv("TELEGRAM_ANALIZ9_CHAT_ID", os.getenv("TELEGRAM_CHAT", "830754964"))
@@ -510,9 +513,9 @@ async def run_close() -> None:
         pm_win     = None
         pm_pnl_str = ""
         if _VIRTUAL_ONLY:
-            pnl = round(amount if win else -amount, 2)
+            pnl = sanal_pnl(pos, win)
             pm_win = win
-            pm_pnl_str = f"  |  💵{'+'if win else ''}{pnl:.2f}$"
+            pm_pnl_str = f"  |  {pm_tg_stake(pos)}  net {'+' if pnl >= 0 else ''}{pnl:.2f}$"
             pm_tur_pnl += pnl
         elif pos.get("pm_slug") and not pos.get("pm_error"):
             pnl = round(-(pos.get("pm_spent") or amount) if not win else (pos.get("pm_spent") or amount), 2)
@@ -698,9 +701,9 @@ async def run_open() -> None:
                 "votes":            sig["votes"],
             }
             if _VIRTUAL_ONLY:
+                apply_pm_quote(pos, sig["symbol"], sig["predicted_dir"], sig["amount"], now)
                 state["open_positions"].append(pos)
-                state["balance"] = round(state.get("balance", INITIAL_BALANCE) - sig["amount"], 2)
-                print(f"[9. ANALİZ] Sanal: {sig['symbol']} {sig['predicted_dir']} ${sig['amount']:.2f}")
+                print(f"[9. ANALİZ] Sanal: {sig['symbol']} {sig['predicted_dir']} {pm_tg_stake(pos)}")
                 continue
             # PM yolu (devre dışı — _VIRTUAL_ONLY=True)
             pm = _pm_find_market(sig["symbol"], et_hour, now)

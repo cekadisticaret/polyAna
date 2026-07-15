@@ -1,12 +1,13 @@
 """
-5M 105 BTC — Sinyal motoru (102 + MR veto + Trend nötr band)
+5M 106 — Sinyal motoru (102 + yalnızca MR veto)
 
-102'nin 4-algo konsensüsü + ek filtreler:
-  1. MR -1 iken UP için 3/4 konsensüs gerekir (2/4 yetmez)
-  2. Trend nötr band: zayıf E20/E50 cross veya slope → 0 oy
+102'nin 4-algo konsensüsü + tek düzeltme:
+  MR↓ iken UP için 3/4 konsensüs gerekir (2/4 yetmez)
 
+Trend nötr band ve KALEM yok — işlem sıklığı 102'ye yakın kalır.
 Kullanım:
-  python3 temmuzPoly/btc_5m_105_algo.py
+  python3 temmuzPoly/btc_5m_106_algo.py
+  python3 -c "from btc_5m_106_algo import analyze; print(analyze(symbol='SOLUSDT'))"
 """
 
 from __future__ import annotations
@@ -24,11 +25,9 @@ SYMBOL = "BTCUSDT"
 MIN_CONSENSUS = 2
 MIN_CONSENSUS_UP_VS_MR = 3  # MR -1 iken UP için
 TOTAL_ALGOS = 4
-TREND_NEUTRAL_CROSS_PCT = 0.06   # |E20-E50|/fiyat %
-TREND_NEUTRAL_SLOPE_PCT = 0.03   # 3 bar E20 slope %
 MOMENTUM_BARS = 3
-TRADE_AMOUNT_UP = 2.0
-TRADE_AMOUNT_DOWN = 2.0
+TRADE_AMOUNT_UP = 4.0
+TRADE_AMOUNT_DOWN = 6.0
 KLINES_LIMIT = 150
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -140,10 +139,6 @@ def algo_trend(klines: list[dict]) -> tuple[int, str]:
     cross = e20[-1] - e50[-1]
     slope = e20[-1] - e20[-4] if len(e20) >= 4 else 0
     pct = cross / closes[-1] * 100
-    slope_pct = slope / closes[-1] * 100 if closes[-1] else 0
-
-    if abs(pct) < TREND_NEUTRAL_CROSS_PCT or abs(slope_pct) < TREND_NEUTRAL_SLOPE_PCT:
-        return 0, f"Trend →  nötr (cross:{pct:+.2f}% slope:{slope_pct:+.3f}%)"
 
     if cross > 0 and slope > 0:
         return +1, f"Trend ↑  E20>E50 ({pct:+.2f}%)"
@@ -248,10 +243,10 @@ def analyze(
     momentum_filter: bool | None = None,
 ) -> SignalResult | None:
     """
-    5M 102 sinyal motoru.
+    5M 106 sinyal motoru.
 
     klines/orderbook verilmezse Binance'ten çeker.
-    direction None → işlem yok (konsensüs / MR veto / trend nötr).
+    direction None → işlem yok (konsensüs / MR veto).
     """
     if momentum_filter is None:
         momentum_filter = False
@@ -262,7 +257,7 @@ def analyze(
         if orderbook is None:
             orderbook = fetch_orderbook(symbol)
     except Exception as e:
-        print(f"[btc_5m_105_algo] Veri hatası: {e}", flush=True)
+        print(f"[btc_5m_106_algo] Veri hatası: {e}", flush=True)
         return None
 
     v1, l1 = algo_a1_rsi_macd_ema(klines)

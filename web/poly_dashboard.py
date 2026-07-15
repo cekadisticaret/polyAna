@@ -19,12 +19,21 @@ _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 
 # Sıcaklık haritası: analiz bazlı aktif semboller
 _HEATMAP_SYMS = {
+    "analiz509": ["BTC"],
     "analiz1":  ["BTC", "SOL"],
+    "analiz2":  ["BTC", "SOL"],
     "analiz4":  ["BTC", "ETH"],
     "analiz5":  ["BTC", "SOL"],
     "analiz9":  ["BTC", "SOL"],
     "analiz10": ["BTC", "SOL"],
+    "analiz13": ["BTC", "SOL"],
     "karisim1": ["BTC", "SOL"],
+    "5m_btc_105": ["BTC"],
+    "5m_btc_106": ["BTC"],
+}
+# poly_trader_* dışındaki analiz dosyaları (history, state)
+_CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
+    "analiz509": ("btc_analiz_509_history.json", "btc_analiz_509_state.json"),
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 
@@ -32,25 +41,27 @@ _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Yeni analiz: isteğe bağlı özel isim için _ANALYSIS_LABELS'a ekle.
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
-    "analiz5", "analiz1", "analiz4", "analiz9", "analiz10", "karisim1",
-    "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_104", "5m_btc_105",
+    "analiz1", "analiz2", "analiz509", "analiz5", "analiz4", "analiz9", "analiz10", "analiz13", "karisim1",
+    "15m_btc", "5m_btc_102", "5m_btc_105", "5m_btc_106",
 ]
 _HISTORY_ORDER = [
-    "analiz1", "analiz4", "analiz5", "analiz9",
-    "analiz10", "karisim1", "15m_btc", "5m_btc_102", "5m_btc_103", "5m_btc_104", "5m_btc_105",
+    "analiz509", "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
+    "analiz10", "analiz13", "karisim1", "15m_btc", "5m_btc_102", "5m_btc_105", "5m_btc_106",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
+    "analiz509":  "12. Analiz Algoritma",
     "analiz1":    "1. Analiz",
+    "analiz2":    "2. Analiz",
     "analiz4":    "4. Analiz",
     "analiz5":    "5. Analiz",
     "analiz9":    "9. Analiz",
     "analiz10":   "10. Analiz",
+    "analiz13":   "13. Analiz",
     "karisim1":   "11. Analiz",
     "15m_btc":    "5M 101 BTC",
     "5m_btc_102": "5M 102 BTC",
-    "5m_btc_103": "5M 103 BTC/SOL",
-    "5m_btc_104": "5M 104 BTC",
     "5m_btc_105": "5M 105 BTC",
+    "5m_btc_106": "5M 106 BTC",
 }
 
 
@@ -67,7 +78,60 @@ def _discover_trader_keys() -> set[str]:
 def _trader_exists(key: str, on_disk: set[str]) -> bool:
     if key in on_disk:
         return True
+    if key in _CUSTOM_TRADER_FILES:
+        hist_fn, _ = _CUSTOM_TRADER_FILES[key]
+        return os.path.exists(os.path.join(_DIR_POLY, hist_fn))
     return os.path.exists(os.path.join(_DIR_POLY, f"poly_trader_{key}_state.json"))
+
+
+def _trader_history_path(key: str) -> str:
+    if key in _CUSTOM_TRADER_FILES:
+        return os.path.join(_DIR_POLY, _CUSTOM_TRADER_FILES[key][0])
+    return os.path.join(_DIR_POLY, f"poly_trader_{key}_history.json")
+
+
+def _trader_state_path(key: str) -> str:
+    if key in _CUSTOM_TRADER_FILES:
+        return os.path.join(_DIR_POLY, _CUSTOM_TRADER_FILES[key][1])
+    return os.path.join(_DIR_POLY, f"poly_trader_{key}_state.json")
+
+
+def _enrich_entry_time_fields(t: dict) -> dict:
+    if t.get("entry_dow") is not None and t.get("entry_hour_tr") is not None:
+        return t
+    out = dict(t)
+    ts = out.get("entry_time_tr")
+    if ts:
+        try:
+            dt = datetime.fromisoformat(ts)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=_TZ_TR)
+            else:
+                dt = dt.astimezone(_TZ_TR)
+            if out.get("entry_dow") is None:
+                out["entry_dow"] = dt.weekday()
+            if out.get("entry_hour_tr") is None:
+                out["entry_hour_tr"] = dt.hour
+        except (ValueError, TypeError):
+            pass
+    elif out.get("entry_hour_tr") is None:
+        m = re.match(r"(\d{1,2}):", out.get("hour_label", ""))
+        if m:
+            out["entry_hour_tr"] = int(m.group(1))
+    return out
+
+
+def _load_trader_history(key: str) -> list:
+    path = _trader_history_path(key)
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path) as f:
+            hist = json.load(f)
+    except Exception:
+        return []
+    hist = [_enrich_entry_time_fields(t) for t in hist]
+    return _filter_hist_for(key, hist)
 
 
 def _auto_label(key: str) -> str:
@@ -423,15 +487,9 @@ def api_history():
     for key, label in _HISTORY_SYSTEMS:
         if analiz_filter != "ALL" and key != analiz_filter:
             continue
-        path = os.path.join(_DIR_POLY, f"poly_trader_{key}_history.json")
-        if not os.path.exists(path):
+        hist = _load_trader_history(key)
+        if not hist and not os.path.exists(_trader_history_path(key)):
             continue
-        try:
-            with open(path) as f:
-                hist = json.load(f)
-        except Exception:
-            continue
-        hist = _filter_hist_for(key, hist)
         resolved = [t for t in hist if t.get("win") is not None]
         recent = list(reversed(resolved[-limit:])) if resolved else []
         trades = [_format_history_trade(t, key, label) for t in recent]
@@ -462,12 +520,9 @@ def api_heatmap():
     allowed_syms = _HEATMAP_SYMS.get(analiz_key, _ACTIVE_SYMS)
     if sym_filter != "ALL" and sym_filter not in allowed_syms:
         sym_filter = "ALL"
-    path = os.path.join(_DIR_POLY, f"poly_trader_{analiz_key}_history.json")
-    if not os.path.exists(path):
+    hist = _load_trader_history(analiz_key)
+    if not hist:
         return jsonify({"cells": []})
-    with open(path) as f:
-        hist = json.load(f)
-    hist = [t for t in hist if t.get("symbol", "").replace("USDT", "") in allowed_syms]
     days_tr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
     grid = defaultdict(lambda: {"w": 0, "t": 0})
     for t in hist:
@@ -529,12 +584,9 @@ def api_heatmap_detail():
     allowed_syms = _HEATMAP_SYMS.get(analiz_key, _ACTIVE_SYMS)
     if sym != "ALL" and sym not in allowed_syms:
         sym = "ALL"
-    path = os.path.join(_DIR_POLY, f"poly_trader_{analiz_key}_history.json")
-    if not os.path.exists(path):
+    hist = _load_trader_history(analiz_key)
+    if not hist:
         return jsonify({"trades": []})
-    with open(path) as f:
-        hist = json.load(f)
-    hist = [t for t in hist if t.get("symbol", "").replace("USDT", "") in allowed_syms]
 
     trades = []
     for t in hist:
@@ -576,13 +628,10 @@ def api_symbol_stats():
     analiz_key = request.args.get("analiz", _PANEL_STATS_ANALIZ)
     if analiz_key not in _HEATMAP_ANALYSES:
         analiz_key = _PANEL_STATS_ANALIZ
-    path = os.path.join(_DIR_POLY, f"poly_trader_{analiz_key}_history.json")
-    if not os.path.exists(path):
+    hist = _load_trader_history(analiz_key)
+    if not hist:
         return jsonify({"analiz": analiz_key, "analiz_label": _ANALYSIS_LABELS.get(analiz_key, analiz_key),
                         "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": [], "top_slots": []})
-    with open(path) as f:
-        hist = json.load(f)
-    hist = _filter_hist_for(analiz_key, hist)
 
     # Sembol bazlı WR
     sym_stat = defaultdict(lambda: {"w": 0, "t": 0})
@@ -654,30 +703,31 @@ def api_symbol_stats():
 def api_analizler():
     if _auth_required(): return jsonify({"error": "unauthorized"}), 401
     _SYSTEMS = [
+        ("analiz509",   "12. Analiz Algoritma",  400,  "27-Algo Konsensüs Sanal"),
         ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
+        ("analiz2",    "2. Analiz",             300,  "A1 motoru $10-15-20, ABD kapalı genişletilmiş"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM"),
         ("analiz9",    "9. Analiz",             300,  "Çoklu Algo Sanal"),
-        ("analiz10",   "10. Analiz",            None, "Çift Konsensüs Gerçek PM"),
+        ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
+        ("analiz13",   "13. Analiz",            300,  "Çift Konsensüs B≥2/4 $10-20"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
         ("15m_btc",     "5M 101 BTC",            200,  "4-Algo Sanal $3"),
         ("5m_btc_102",  "5M 102 BTC",            200,  "101 + KALEM Sanal"),
-        ("5m_btc_103",  "5M 103 BTC/SOL",        200,  "A10 Çift Konsensüs"),
-        ("5m_btc_104",  "5M 104 BTC",            200,  "5-Algo Enhanced Sanal"),
-        ("5m_btc_105",  "5M 105 BTC",            200,  "102 + MR veto Sanal"),
+        ("5m_btc_105",  "5M 105 BTC",            200,  "102 + MR veto + trend nötr (PM $2)"),
+        ("5m_btc_106",  "5M 106 BTC",            200,  "102 + MR veto (minimal)"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:
-        hpath = os.path.join(_DIR_POLY, f"poly_trader_{key}_history.json")
-        spath = os.path.join(_DIR_POLY, f"poly_trader_{key}_state.json")
+        hpath = _trader_history_path(key)
+        spath = _trader_state_path(key)
         if not os.path.exists(hpath):
             continue
         try:
-            hist  = json.load(open(hpath))
+            hist  = _load_trader_history(key)
             state = json.load(open(spath)) if os.path.exists(spath) else {}
         except Exception:
             continue
-        hist = _filter_hist_for(key, hist)
         total = len(hist)
         wins  = sum(1 for t in hist if t.get("win"))
         wr    = round(wins / total * 100, 1) if total else 0
@@ -1067,12 +1117,9 @@ def api_stats():
     all_history = []
 
     for key, label in analyses.items():
-        path = os.path.join(_DIR_POLY, f"poly_trader_{key}_history.json")
-        if not os.path.exists(path):
+        hist = _load_trader_history(key)
+        if not hist and not os.path.exists(_trader_history_path(key)):
             continue
-        with open(path) as f:
-            hist = json.load(f)
-        hist = _filter_hist_for(key, hist)
         total = len(hist)
         wins  = sum(1 for t in hist if t.get("win"))
         pnl   = sum(t.get("pnl", 0) for t in hist)
@@ -2220,7 +2267,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
     {{ harita_tabs|safe }}
   </div>
-  <div class="page-sub" id="hm-subtitle">5. Analiz — gün × saat kazanma oranı</div>
+  <div class="page-sub" id="hm-subtitle">{{ harita_default_label }} — gün × saat kazanma oranı</div>
 
   <div id="hm-top" style="display:grid;grid-template-columns:200px 1fr;gap:14px;margin-bottom:16px;align-items:start">
     <div id="hm-summary" style="display:flex;flex-direction:column;gap:12px"></div>
@@ -2259,7 +2306,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
 <script>
 const _ANALIZ_LABELS = {{ harita_labels|safe }};
 const _HEATMAP_SYMS_MAP = {{ harita_heatmap_syms|safe }};
-let _data = null, _sym = 'ALL', _analiz = 'analiz5';
+let _data = null, _sym = 'ALL', _analiz = '{{ harita_default_analiz }}';
 
 function hmColor(wr,t){ if(!t)return'#1a1a1a'; if(wr>=70)return'#166534'; if(wr>=55)return'#14532d'; if(wr>=50)return'#365314'; if(wr>=40)return'#78350f'; return'#450a0a'; }
 function hmTxt(wr,t){ if(!t)return'#333'; if(wr>=55)return'#4ade80'; if(wr>=50)return'#c8f135'; if(wr>=40)return'#fbbf24'; return'#f87171'; }
@@ -3457,11 +3504,15 @@ def dashboard():
 def harita():
     if _auth_required(): return redirect("/poly/login")
     labels = {k: v for k, v in _HARITA_TAB_ANALYSES}
+    default_key = _HARITA_TAB_ANALYSES[0][0] if _HARITA_TAB_ANALYSES else "analiz5"
+    default_label = labels.get(default_key, "Analiz")
     return render_template_string(
         HARITA_HTML,
         harita_tabs=_harita_tabs_html(),
         harita_labels=json.dumps(labels, ensure_ascii=False),
         harita_heatmap_syms=json.dumps(_HEATMAP_SYMS, ensure_ascii=False),
+        harita_default_analiz=default_key,
+        harita_default_label=default_label,
     )
 
 if __name__ == "__main__":

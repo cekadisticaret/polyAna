@@ -1,5 +1,5 @@
 """
-BTC ANALİZ — 27 saatlik yön oylaması (24 algo + 3 trader)
+12. ANALİZ ALGORİTMA — 27 saatlik yön oylaması (24 algo + 3 trader)
 
 Zayıf performanslı 15 algo + A4/A9 trader hariç.
 Her saat :01'de analiz + Telegram; Analiz 509 sanal işlem :02'de açılır ($400, $10–20, girişte bakiyeden düşülür).
@@ -20,6 +20,7 @@ from algo_signals import collect_btc_algo_votes, fetch_klines
 from poly_predictor_analysis import predict
 from poly_trader_analiz5 import analyze as analyze5
 from poly_trader_analiz10 import analyze as analyze10
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras
 
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
 CHAT_ID   = "830754964"
@@ -32,6 +33,7 @@ EXCLUDED_VOTES: set[int | str] = {
     "A4", "A9",
 }
 TOTAL     = _ORIG_TOTAL - len(EXCLUDED_VOTES)  # 27
+TITLE     = "12. ANALİZ ALGORİTMA"
 LABEL     = "509. ANALİZ BTC"
 INITIAL_BALANCE = 400.0
 
@@ -188,7 +190,7 @@ def _hour_entry_price() -> float | None:
         if len(kl) >= 2:
             return kl[-2]["c"]
     except Exception as e:
-        print(f"[BTC ANALİZ] entry price hatası: {e}")
+        print(f"[{TITLE}] entry price hatası: {e}")
     return None
 
 
@@ -198,7 +200,7 @@ def _hour_exit_price() -> float | None:
         if len(kl) >= 2:
             return kl[-2]["c"]
     except Exception as e:
-        print(f"[BTC ANALİZ] exit price hatası: {e}")
+        print(f"[{TITLE}] exit price hatası: {e}")
     return None
 
 
@@ -288,11 +290,8 @@ def _close_trader(exit_price: float, actual: str, hour_label: str) -> dict | Non
     pred = pos["predicted_dir"]
     amount = pos.get("amount", 10.0)
     win = pred == actual and actual != "FLAT"
-    pnl = amount if win else -amount
-
-    if win:
-        trader["balance"] = round(trader["balance"] + amount * 2, 2)
-    trader["total_pnl"] = round(trader.get("total_pnl", 0.0) + pnl, 2)
+    pos["predicted_dir"] = pred
+    pnl = sanal_close_balance(trader, pos, win)
 
     record = {
         "symbol": SYMBOL,
@@ -302,11 +301,14 @@ def _close_trader(exit_price: float, actual: str, hour_label: str) -> dict | Non
         "entry_price": pos["entry_price"],
         "exit_price": exit_price,
         "entry_time_tr": pos.get("entry_time_tr"),
+        "entry_dow": pos.get("entry_dow"),
+        "entry_hour_tr": pos.get("entry_hour_tr"),
         "exit_time_tr": datetime.now(_TZ_TR).isoformat(),
         "hour_label": hour_label,
         "amount": amount,
         "n_win": pos.get("n_win"),
         "pnl": pnl,
+        **pm_history_extras(pos),
     }
     hist.append(record)
     _save_trader(trader)
@@ -329,6 +331,7 @@ def _open_trader(predicted: str, n_win: int, entry_price: float,
         return None
 
     now_tr = datetime.now(_TZ_TR)
+    now_utc = datetime.now(timezone.utc)
     pos = {
         "symbol": SYMBOL,
         "predicted_dir": predicted,
@@ -336,11 +339,18 @@ def _open_trader(predicted: str, n_win: int, entry_price: float,
         "amount": amount,
         "n_win": n_win,
         "entry_time_tr": now_tr.isoformat(),
+        "entry_dow": now_tr.weekday(),
+        "entry_hour_tr": now_tr.hour,
         "hour_start": hour_start.strftime("%H:%M"),
         "hour_end": hour_end.strftime("%H:%M"),
     }
+    apply_pm_quote(pos, SYMBOL, predicted, amount, now_utc)
+    risk = pos.get("pm_spent", amount)
+    if trader["balance"] < risk:
+        print(f"[509] Yetersiz bakiye: ${trader['balance']:.2f} < ${risk:.2f}")
+        return None
     trader["open_positions"].append(pos)
-    trader["balance"] = round(trader["balance"] - amount, 2)
+    trader["balance"] = round(trader["balance"] - risk, 2)
     _save_trader(trader)
     return pos
 
@@ -418,7 +428,7 @@ def build_message(votes: list[dict], prev_result: dict | None,
         n_win = 0
 
     lines = [
-        f"📊 <b>BTC ANALİZ</b> — {now_tr.strftime('%d.%m.%Y %H:%M')} İST",
+        f"📊 <b>{TITLE}</b> — {now_tr.strftime('%d.%m.%Y %H:%M')} İST",
         "━━━━━━━━━━━━━━━━━━━━━━━━━━",
     ]
     lines += _format_prev_result(prev_result, trade_close)
@@ -480,14 +490,14 @@ async def run_async(*, send_tg: bool = True) -> list[dict]:
             hour_label,
         )
 
-    print(f"[BTC ANALİZ] {TOTAL} aktif oy hesaplanıyor...")
+    print(f"[{TITLE}] {TOTAL} aktif oy hesaplanıyor...")
     algo_votes = collect_btc_algo_votes()
-    print("[BTC ANALİZ] trader oyları...")
+    print(f"[{TITLE}] trader oyları...")
     trader_votes = await _collect_trader_votes()
     votes = _filter_votes(algo_votes + trader_votes)
 
     if len(votes) != TOTAL:
-        print(f"[BTC ANALİZ] UYARI: {len(votes)} oy (beklenen {TOTAL})")
+        print(f"[{TITLE}] UYARI: {len(votes)} oy (beklenen {TOTAL})")
 
     n_up = sum(1 for v in votes if v["signal"] == "UP")
     n_down = sum(1 for v in votes if v["signal"] == "DOWN")
@@ -528,7 +538,7 @@ async def run_async(*, send_tg: bool = True) -> list[dict]:
 
     if send_tg:
         tg_send(msg)
-        print("[BTC ANALİZ] Telegram gönderildi.")
+        print(f"[{TITLE}] Telegram gönderildi.")
     return votes
 
 
