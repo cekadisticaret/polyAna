@@ -1,10 +1,11 @@
 """
-5M 105 — 102 + MR Veto + Trend Nötr (BTC, Sanal)
-================================================
-btc_5m_105_algo: 4-algo konsensüs + iki düzeltme.
+5M 107 — 105 Konsensüs + Trendline Break Pro (BTC, PM)
+=====================================================
+btc_5m_107_algo: 105 (4-algo) + trendline_break_pro aynı yön.
 
-$3/işlem sanal simülasyon. Sadece BTC. PM_5M_105_REAL_ENABLED=false (varsayılan)
-Telegram: 8799859033 bot — tur bildirimi.
+$5/işlem. Başlangıç $200. P&L PM kotasyonundan (105 ile aynı mantık).
+PM_5M_107_REAL_ENABLED=true → gerçek PM (105 ile aynı cüzdan).
+Telegram: 8799859033 bot.
 Gece modu: 22:00–07:00 İST yeni işlem yok
 Cron: */5 * * * *
 """
@@ -18,7 +19,7 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from btc_5m_105_algo import analyze, format_signal, fetch_klines_5m
+from btc_5m_107_algo import analyze, fetch_klines_5m
 import poly_trader_5m_common as _pm_common
 from poly_tg_5m_102 import tg_send, tg_send_photo
 from pm_trader_helpers import pm_5m_sanal_quote, pm_5m_close, pm_5m_history_extras, pm_5m_find_market
@@ -35,23 +36,23 @@ if os.path.exists(_ENV_FILE):
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE   = os.path.join(_DIR, "poly_trader_5m_btc_105_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_btc_105_history.json")
+STATE_FILE   = os.path.join(_DIR, "poly_trader_5m_btc_107_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_btc_107_history.json")
 WEEKLY_IMG   = "/tmp/poly_5m_btc_105_weekly.png"
 
 SYMBOLS           = ["BTCUSDT"]
 SYMBOL            = "BTCUSDT"
 INITIAL_BALANCE   = 200.0
-TRADE_AMOUNT      = 3.0
-TRADE_AMOUNT_UP   = 3.0
-TRADE_AMOUNT_DOWN = 3.0
+TRADE_AMOUNT      = 5.0
+TRADE_AMOUNT_UP   = 5.0
+TRADE_AMOUNT_DOWN = 5.0
 _PERIOD_SECS      = 300
 _TOTAL_ALGOS      = 4
 _DAYS_TR          = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
-_PM_LIVE      = os.getenv("PM_5M_105_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
+_PM_LIVE      = os.getenv("PM_5M_107_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
 _PM_DRY_RUN   = not _PM_LIVE
 
 _PM_SANITY_MIN = 0.05
@@ -63,7 +64,7 @@ _PM_MIN_PAYOUT_RATIO = 1.25
 _QUIET_START_HOUR = 22
 _QUIET_END_HOUR   = 7
 
-LABEL = "5M 105 BTC"
+LABEL = "5M 107 BTC"
 
 
 def _sym_name(symbol: str) -> str:
@@ -362,7 +363,7 @@ def run() -> None:
 
         try:
             from pm_signal_sync import save_signal
-            save_signal(f"105_{name.lower()}", ts_5m, sig.to_dict() if sig else None)
+            save_signal(f"107_{name.lower()}", ts_5m, sig.to_dict() if sig else None)
         except Exception as e:
             print(f"[{LABEL}] save_signal: {e}")
 
@@ -389,6 +390,10 @@ def run() -> None:
         dir_icon = "📈" if direction == "UP" else "📉"
         icons = " ".join("🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in sig.votes)
 
+        tl_note = ""
+        if getattr(sig, "trendline_label", None):
+            tl_note = f"\n   📐 {_tg_esc(sig.trendline_label)}"
+
         if not _PM_LIVE:
             pm_info, pm_skip = _pm_resolve_market(sym, ts_5m, direction, amount)
             if not pm_info:
@@ -414,7 +419,7 @@ def run() -> None:
             open_lines.append(
                 f"{dir_icon} <b>{name} {dir_tr}</b>  ({sig.consensus}/{_TOTAL_ALGOS})  "
                 f"💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
-                f"Giriş: {_fmt_price(sym, entry_p)}  |  Momentum: {sig.momentum}\n"
+                f"Giriş: {_fmt_price(sym, entry_p)}  |  Momentum: {sig.momentum}{tl_note}\n"
                 f"{icons}"
             )
             print(f"[{LABEL}] {saat} — {name} {dir_tr} ${amount:.0f}→${to_win:.2f} [SANAL]")
@@ -478,7 +483,7 @@ def run() -> None:
         })
         open_lines.append(
             f"{dir_icon} <b>{name} {dir_tr}</b>  ({sig.consensus}/{_TOTAL_ALGOS})  "
-            f"💵 ${amount:.2f} @{token_price:.2f} → 🏆 ${to_win:.2f}  🔴 GERÇEK PM"
+            f"💵 ${amount:.2f} @{token_price:.2f} → 🏆 ${to_win:.2f}  🔴 GERÇEK PM{tl_note}"
         )
         print(f"[{LABEL}] {saat} — {name} {dir_tr} {sig.consensus}/{_TOTAL_ALGOS}  ${amount:.2f}→${to_win:.2f} [PM]")
 

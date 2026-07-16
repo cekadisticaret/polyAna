@@ -10,6 +10,7 @@ Modlar:
 Algoritma: poly_predictor_analysis.py
 Sanal bütçe: $300, işlem $10/$15/$20 (WR tier).
 Hacim filtresi yok. ABD açıkken Analiz 1 ile aynı; kapalıyken predict() boşsa gevşek yedek sinyal.
+Gece modu: 22:00–08:00 İST yeni işlem/önizleme yok (close devam eder).
 """
 import asyncio
 import json
@@ -24,7 +25,7 @@ from dataclasses import dataclass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines, _rsi, _macd, _ema
-from pm_trader_helpers import apply_pm_quote, sanal_pnl
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, pm_tg_stake, pm_stake_fields, pm_resolve_pnl
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
@@ -44,6 +45,14 @@ TRADE_AMOUNT_LOW   = 10.0   # genel başarı < %50
 SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # XRP/DOGE/BNB pasif
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
+
+_QUIET_START_HOUR = 22   # 22:00 İST ve sonrası kapalı
+_QUIET_END_HOUR   = 8    # 08:00 İST'te tekrar açılır
+
+
+def _trading_allowed(now_tr: datetime) -> bool:
+    h = now_tr.hour
+    return _QUIET_END_HOUR <= h < _QUIET_START_HOUR
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -234,8 +243,14 @@ async def run_close() -> None:
         pred   = pos["predicted_dir"]
         amount = pos.get("amount", TRADE_AMOUNT)
         actual = "UP" if current_price >= entry else "DOWN"
-        win    = (pred == actual)
-        pnl    = sanal_pnl(pos, win)
+
+        pm_win, pm_pnl, _ = pm_resolve_pnl(pos)
+        if pm_win is not None:
+            win = pm_win
+            pnl = pm_pnl
+        else:
+            win = pred == actual
+            pnl = sanal_pnl(pos, win)
         toplam_pnl += pnl
 
         state["balance"]   = round(state["balance"] + pnl, 2)
@@ -255,6 +270,7 @@ async def run_close() -> None:
             "amount":           amount,
             "exit_time_tr":     now_tr.isoformat(),
             "pnl":              pnl,
+            "pm_win":           pm_win if pm_win is not None else win,
             "ind_rsi_vote":     pos.get("ind_rsi_vote"),
             "ind_rsi_ok":       (pos.get("ind_rsi_vote") == actual) if pos.get("ind_rsi_vote") else None,
             "ind_macd_vote":    pos.get("ind_macd_vote"),
@@ -272,8 +288,12 @@ async def run_close() -> None:
         icon    = "✅" if win else "❌"
         name    = pos["symbol"].replace("USDT", "")
         pct     = (current_price - entry) / entry * 100
-        pnl_str = f"+{pnl:.2f}$" if win else f"{pnl:.2f}$"
-        lines.append(f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)  {pnl_str}")
+        stake   = pm_tg_stake(pos) or f"💵 ${amount:.0f}"
+        pnl_str = f"{'+' if pnl >= 0 else ''}{pnl:.2f}$"
+        lines.append(
+            f"{icon} {name}  {pred}  {entry:.2f} → {current_price:.2f} ({pct:+.2f}%)\n"
+            f"   {stake}  net {pnl_str}"
+        )
 
     state["open_positions"] = failed_pos
 
@@ -315,6 +335,10 @@ async def run_open() -> None:
     is_weekend = dow >= 5
     saat       = now_tr.strftime("%H:%M")
     tarih      = now_tr.strftime("%d.%m.%Y")
+
+    if not _trading_allowed(now_tr):
+        print(f"[2. ANALİZ open] {saat} İST — gece modu (22:00–08:00), işlem açılmıyor")
+        return
 
     state   = load_state()
     history = load_history()
@@ -363,7 +387,7 @@ async def run_open() -> None:
         state["open_positions"].append(pos)
         opened.append({
             "sym": sym, "pred_obj": pred_obj, "entry_price": entry_price,
-            "amount": dyn_amount, "sig_mode": sig_mode,
+            "pos": pos, "sig_mode": sig_mode,
         })
 
     save_state(state)
@@ -379,11 +403,20 @@ async def run_open() -> None:
         dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins,  sym_total  = get_symbol_stats(history, sym)
-        pos_amount = c["amount"]
+        pos         = c["pos"]
         entry_price = c["entry_price"]
-        mode_tag = "  🌙yedek" if c["sig_mode"] == "fallback" else ""
+        mode_tag    = "  🌙yedek" if c["sig_mode"] == "fallback" else ""
+        pm_line     = pm_tg_stake(pos)
+        spent, size, _ = pm_stake_fields(pos)
+        if pm_line:
+            pm_detail = f"   {pm_line}"
+            if size > 0 and spent > 0:
+                pm_detail += f"  (kazanırsa +${round(size - spent, 2):.2f})"
+        else:
+            pm_detail = f"   💵 ${pos.get('amount', TRADE_AMOUNT):.0f}  ⚠️ PM kotasyon alınamadı"
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{entry_price:.2f}  💵{pos_amount:.0f}${mode_tag}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{entry_price:.2f}{mode_tag}\n"
+            f"{pm_detail}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )
@@ -394,13 +427,15 @@ async def run_open() -> None:
         print(f"[2. ANALİZ open] {saat} İST — işlem yok")
         return
 
+    _at_risk = sum(p.get("pm_spent") or p.get("amount", TRADE_AMOUNT) for p in state["open_positions"])
     msg = (
         f"{sep}\n"
         f"🆕 <b>2. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>  🔶 SANAL  {sess_tag}\n"
+        f"<i>PM gamma kotasyonu — gerçek emir yok</i>\n"
         + "\n".join(lines)
         + (("\n" + "\n".join(skipped)) if skipped else "")
         + f"\n{sep}\n"
-        f"💰 Ana: ${state['balance'] - sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.0f}  |  Toplam: ${state['balance']:.2f}\n"
+        f"💰 Ana: ${state['balance'] - _at_risk:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${_at_risk:.0f}  |  Toplam: ${state['balance']:.2f}\n"
         f"{sep}"
     )
 
@@ -412,6 +447,9 @@ async def run_open() -> None:
 def run_preview() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
+    if not _trading_allowed(now_tr):
+        print(f"[2. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — gece modu (22:00–08:00), atlanıyor")
+        return
     next_hour = (now_tr.hour + 1) % 24
     dow       = now_tr.weekday()
     gun_tr    = _DAYS_FULL_TR[dow]
@@ -449,8 +487,8 @@ def run_preview() -> None:
         f"\n{sep}\n"
         f"<i>Geçmiş başarı oranları — 05'te işlem açılacak</i>"
     )
-    tg_send(msg)
-    print(f"[2. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — {next_hour:02d}:00 önizleme gönderildi")
+    print(msg.replace("<b>", "").replace("</b>", ""))
+    print(f"[2. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — {next_hour:02d}:00 önizleme (TG atlanıyor)")
 
 
 # ── WEEKLY: Pazar 00:00 — ısı haritası görseli ───────────────

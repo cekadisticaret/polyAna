@@ -30,6 +30,7 @@ _HEATMAP_SYMS = {
     "karisim1": ["BTC", "SOL"],
     "5m_btc_105": ["BTC"],
     "5m_btc_106": ["BTC"],
+    "5m_btc_107": ["BTC"],
 }
 # poly_trader_* dışındaki analiz dosyaları (history, state)
 _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
@@ -43,11 +44,11 @@ _PASIF_ANALYSES = frozenset({"analiz9"})
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2", "analiz509", "analiz5", "analiz4", "analiz10", "analiz13", "karisim1",
-    "5m_btc_102", "5m_btc_105", "5m_btc_106",
+    "5m_btc_102", "5m_btc_105", "5m_btc_106", "5m_btc_107",
 ]
 _HISTORY_ORDER = [
     "analiz509", "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
-    "analiz10", "analiz13", "karisim1", "5m_btc_102", "5m_btc_105", "5m_btc_106",
+    "analiz10", "analiz13", "karisim1", "5m_btc_102", "5m_btc_105", "5m_btc_106", "5m_btc_107",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz509":  "12. Analiz Algoritma",
@@ -62,6 +63,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "5m_btc_102": "5M 102 BTC",
     "5m_btc_105": "5M 105 BTC",
     "5m_btc_106": "5M 106 BTC",
+    "5m_btc_107": "5M 107 BTC",
 }
 
 
@@ -294,7 +296,6 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
 
 # Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
 _PM_POSITION_SOURCES = [
-    ("5m_btc_105", "5M 105 BTC"),
     ("5m_btc_102", "5M 102 BTC"),   # yalnızca PM_5M_102_REAL_ENABLED=true
     ("analiz5",    "5. Analiz"),
 ]
@@ -727,7 +728,8 @@ def api_analizler():
         ("analiz13",   "13. Analiz",            300,  "Çift Konsensüs B≥2/4 $10-20"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
         ("5m_btc_102",  "5M 102 BTC",            200,  "KALEM Sanal"),
-        ("5m_btc_105",  "5M 105 BTC",            200,  "102 + MR veto + trend nötr (PM $2)"),
+        ("5m_btc_105",  "5M 105 BTC",            200,  "102 + MR veto + trend nötr (sanal $3)"),
+        ("5m_btc_107",  "5M 107 BTC",            200,  "105 + Trendline Break Pro (PM $5)"),
         ("5m_btc_106",  "5M 106 BTC",            200,  "102 + MR veto (minimal)"),
     ]
     results = []

@@ -16,20 +16,23 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/kalem_filters_102.py` | KALEM deneysel filtreler (102: fitil + seri dinlenme) |
 | `temmuzPoly/btc_5m_102_algo.py` | 5M 102 sinyal motoru (standalone, 4 algo; trader'dan bağımsız) |
 | `temmuzPoly/btc_5m_105_algo.py` | 5M 105 sinyal motoru (102 + MR veto + Trend nötr band) |
+| `temmuzPoly/trendline_break_pro.py` | Trendline Break Pro — pivot trend çizgisi kırılım sinyali |
+| `temmuzPoly/btc_5m_107_algo.py` | 5M 107 sinyal motoru (105 + Trendline Break Pro) |
 | `temmuzPoly/btc_5m_106_algo.py` | 5M 106 sinyal motoru (102 + yalnızca MR veto; trend nötr/KALEM yok) |
 | `temmuzPoly/btc_1h_analiz7_algo.py` | 7. Analiz 1H gelişmiş sinyal motoru (6 algo ≥3/6 + filtreler) |
 | `temmuzPoly/pm_trader_helpers.py` | PM emir + sanal kotasyon; P&L = pm_size − pm_spent (2x fallback yok) |
 | `temmuzPoly/btc_analiz1_algo.py` | 1. Analiz tam algoritma (standalone kopya, poly_predictor ile aynı) |
 | `temmuzPoly/poly_trader_analiz1.py` | 1. Analiz sanal (BTC+SOL); PM gamma fiyatından gerçekçi P&L |
-| `temmuzPoly/poly_trader_analiz2.py` | 2. Analiz sanal ($300, $10-15-20; ABD açık=A1, kapalı=yedek sinyal) |
+| `temmuzPoly/poly_trader_analiz2.py` | 2. Analiz sanal ($300, $10-15-20; 22:00–08:00 İST kapalı) |
 | `temmuzPoly/poly_trader_analiz4.py` | 4. Analiz sanal (BTC+ETH); PM gamma fiyatından gerçekçi P&L |
 | `temmuzPoly/poly_analiz_dual_core.py` | 10/13 çift konsensüs ortak motor (A1+A4; TG yalnızca açılış/kapanış) |
 | `temmuzPoly/poly_trader_analiz10.py` | 10. Analiz çift konsensüs sanal (BTC+SOL, $300, $10/işlem) |
 | `temmuzPoly/poly_trader_analiz9.py` | 9. Analiz sanal (PASIF — `ANALIZ9_ENABLED=false`) |
 | `temmuzPoly/poly_trader_analiz13.py` | 13. Analiz çift konsensüs sanal (B≥2/4, $10-15-20) |
 | `temmuzPoly/poly_trader_5m_btc_102.py` | 5M 102 BTC sanal (8256912678 bot, UP $4 / DOWN $6) |
-| `temmuzPoly/poly_trader_5m_real_stats.py` | 5M 105 saatlik Telegram özeti (8799859033) |
-| `temmuzPoly/poly_trader_5m_btc_105.py` | 5M 105 BTC gerçek PM ($2/işlem, 8799859033 bot) |
+| `temmuzPoly/poly_trader_5m_real_stats.py` | 5M 105 saatlik Telegram özeti (yalnızca gerçek PM açıkken) |
+| `temmuzPoly/poly_trader_5m_btc_105.py` | 5M 105 BTC sanal ($3/işlem, 8799859033 bot; `PM_5M_105_REAL_ENABLED=false`) |
+| `temmuzPoly/poly_trader_5m_btc_107.py` | 5M 107 BTC PM ($5/işlem, 105+Trendline; `PM_5M_107_REAL_ENABLED`) |
 | `temmuzPoly/poly_trader_5m_btc_106.py` | 5M 106 BTC sanal ($200, UP $4 / DOWN $6, MR veto, 102 bot) |
 | `temmuzPoly/algo_signals.py` | 39 saatlik algo sinyali (BTC/ETH/SOL); `/tmp/algo_signals.json` |
 | `temmuzPoly/btc_analiz_hourly.py` | 12. Analiz Algoritma — 27 oy özeti (:01) + Analiz 509 sanal (:02) |
@@ -44,18 +47,20 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader.py close` — saat başı (`0 * * * *`): önceki saatin sonuçlarını kapatır
 - `temmuzPoly/poly_trader.py open` — 5 geçe (`5 * * * *`): yeni tahmin + işlem açar
 - `temmuzPoly/poly_trader_5m_btc_102.py open` — her 5 dk: KALEM BTC **sanal** ($200, UP $4 / DOWN $6); 22:00–07:00 İST kapalı
-- `temmuzPoly/poly_trader_5m_btc_105.py open` — her 5 dk: 105 BTC **gerçek PM** ($2/işlem); 22:00–07:00 İST kapalı
+- `temmuzPoly/poly_trader_5m_btc_105.py open` — her 5 dk: 105 BTC **sanal** ($3/işlem); 22:00–07:00 İST kapalı
 - `temmuzPoly/poly_trader_5m_btc_105.py weekly` — Pazar 00:00 haftalık 105 ısı haritası
-- `temmuzPoly/poly_trader_5m_real_stats.py` — saat başı: 5M 105 saatlik Telegram özeti (8799859033)
+- `temmuzPoly/poly_trader_5m_btc_107.py open` — her 5 dk: 107 BTC **PM** ($5/işlem, 105+Trendline); 22:00–07:00 İST kapalı
+- `temmuzPoly/poly_trader_5m_btc_107.py weekly` — Pazar 00:00 haftalık 107 ısı haritası
+- `temmuzPoly/poly_trader_5m_real_stats.py` — saat başı: 5M 105 saatlik özet (yalnızca `PM_5M_105_REAL_ENABLED=true` iken)
 - `temmuzPoly/poly_trader_5m_btc_106.py open` — her 5 dk: 106 BTC **sanal** ($200, UP $4 / DOWN $6, MR veto); 22:00–07:00 İST kapalı
 - `temmuzPoly/poly_trader_5m_btc_106.py weekly` — Pazar 00:00 haftalık 106 ısı haritası
 - `temmuzPoly/poly_trader_analiz1.py close/open` — saat başı / 5 geçe: 1. Analiz BTC+SOL **sanal** ($300)
 - `temmuzPoly/poly_trader_analiz1.py weekly` — Cumartesi 21:00 haftalık 1 ısı haritası
-- `temmuzPoly/poly_trader_analiz2.py close/open` — saat başı / 5 geçe: 2. Analiz BTC+SOL **sanal** ($300, $10-15-20)
+- `temmuzPoly/poly_trader_analiz2.py close/open` — saat başı / 5 geçe: 2. Analiz BTC+SOL **sanal** ($300, $10-15-20); 22:00–08:00 İST yeni işlem yok
 - `temmuzPoly/poly_trader_analiz2.py weekly` — Cumartesi 21:00 haftalık 2 ısı haritası
 - `temmuzPoly/poly_trader_analiz13.py close/open` — saat başı / 3 geçe: çift konsensüs B≥2/4 **sanal** ($300, $10-15-20)
 - `temmuzPoly/poly_trader_analiz13.py weekly` — Pazar 21:00 haftalık 13 ısı haritası
-- `temmuzPoly/poly_trader_analiz5.py close/open` — saat başı / 5 geçe: A1 motoru BTC+SOL **gerçek PM** ($8/işlem)
+- `temmuzPoly/poly_trader_analiz5.py close/open` — saat başı / 5 geçe: A1 motoru BTC+SOL **gerçek PM** ($16/işlem)
 - `temmuzPoly/poly_trader_analiz7.py close/open` — saat başı / 5 geçe: Enhanced 6-algo BTC 1H sanal ($500, $15)
 - `temmuzPoly/algo_signals.py` — `:05` her saat: 39 algo sinyali → `/tmp/algo_signals.json`
 - `temmuzPoly/btc_analiz_hourly.py` — `:01` analiz/Telegram, `:02` Analiz 509 sanal açılış → karisim1 kanalı
@@ -67,4 +72,4 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 ## Telegram
 Kök `telegram_config.py`: `BOT_TOKEN`, `CHAT_ID` (varsayılan). İsteğe bağlı `CHAT_ID_BIST_HOUR` (saatlik analiz) ve `CHAT_ID_BIST_SIGNAL` (`bist_signal_hunter` — güçlü AL, örn. 15DakikaYapayZeka; boşsa `CHAT_ID`) ile kanallar ayrılır; hedef `@ad` veya `-100…` grup/kanal ID.
 
-**Poly analiz TG kuralı:** 1. Analiz ve 5. Analiz ✦ PolyAktif İşlemler hariç tüm analizlerde Telegram yalnızca gerçek açılış veya kapanışta gider; “pozisyon yok / sinyal yok / skip” mesajları log’a yazılır.
+**Poly analiz TG kuralı:** Tüm analizlerde Telegram yalnızca gerçek açılış veya kapanışta gider; “pozisyon yok / sinyal yok / skip / önizleme” log’a yazılır.

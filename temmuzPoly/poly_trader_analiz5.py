@@ -2,7 +2,7 @@
 5. ANALİZ — Analiz 1 Motoru (Gerçek Polymarket)
 
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
-Sabit $8/işlem, BTC+SOL.
+Sabit $16/işlem, BTC+SOL.
 
 Modlar: close / open / weekly / stats
 """
@@ -45,9 +45,9 @@ WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
 SYMBOLS            = ["BTCUSDT", "SOLUSDT"]
-TRADE_AMOUNT       = 8.0
-TRADE_AMOUNT_HIGH  = 8.0
-TRADE_AMOUNT_LOW   = 8.0
+TRADE_AMOUNT       = 16.0
+TRADE_AMOUNT_HIGH  = 16.0
+TRADE_AMOUNT_LOW   = 16.0
 MIN_STAT_COUNT  = 10
 
 
@@ -498,7 +498,6 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        tg_send(f"⏸ <b>5. ANALİZ ✦ PolyAktif İşlemler (1. Analiz) — {saat} İST</b>\nKapatılacak açık pozisyon yok.")
         print(f"[5. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
@@ -612,9 +611,10 @@ async def run_close() -> None:
     # Hata olan pozisyonlar için bildirim
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        tg_send(f"⚠️ <b>5. ANALİZ</b> — {names} fiyatı alınamadı (timeout), bir sonraki saate bırakıldı.")
+        print(f"[5. ANALİZ close] {saat} — fiyat alınamadı: {names}")
 
     if not lines:
+        print(f"[5. ANALİZ close] {saat} İST — kapatılan pozisyon yok")
         return
 
     # total_pnl güncelle
@@ -727,10 +727,7 @@ async def run_open() -> None:
                 _market_skip.append(sig)
             elif err == "order":
                 name_f = sig["symbol"].replace("USDT", "")
-                tg_send(
-                    f"⚠️ <b>5. ANALİZ</b> — <b>{name_f}</b> ({sig['predicted_dir']}) "
-                    f"Polymarket eşleşmesi bulunamadı, işlem açılmadı."
-                )
+                print(f"[5. ANALİZ] {name_f} ({sig['predicted_dir']}) PM order başarısız")
                 _order_fail.append(sig)
 
     save_state(state)
@@ -764,6 +761,10 @@ async def run_open() -> None:
         names = ", ".join(s["symbol"].replace("USDT", "") for s in _order_fail)
         error_lines.append(f"⚠️ PM order hatası: {names}")
 
+    if _newly_opened == 0:
+        print(f"[5. ANALİZ open] {saat} İST — işlem yok")
+        return
+
     if _newly_opened > 0:
         time.sleep(3)
     pm_bal        = _pm_get_balance()
@@ -782,13 +783,14 @@ async def run_open() -> None:
     genel_dir  = f"%{dir_wins/closed_all*100:.0f} ({closed_all})" if closed_all else "—"
     win_str    = f" → kazanılacak: ${tur_to_win:.2f}" if tur_to_win > 0 else ""
 
+    opened_lines = [ln for ln in trade_lines if "giriş:" in ln]
     parts = [
         sep,
         f"<b>5. ANALİZ ✦ PolyAktif (Analiz 1 motoru) — {saat} - {next_h}</b>",
         "",
         "📂 <b>İşleme Girilenler:</b>",
     ]
-    parts.extend(trade_lines or ["  ➖ sinyal yok"])
+    parts.extend(opened_lines)
 
     if error_lines:
         parts.append("")

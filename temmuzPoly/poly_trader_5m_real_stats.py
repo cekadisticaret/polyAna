@@ -1,4 +1,4 @@
-"""5M 105 BTC — saatlik istatistik bildirimi (8799859033 kanalı)."""
+"""5M 105 BTC — saatlik istatistik bildirimi (8799859033 kanalı, yalnızca gerçek PM)."""
 import json
 import os
 import sys
@@ -12,13 +12,24 @@ if _DIR not in sys.path:
 
 from poly_tg_5m_102 import tg_send
 
+_ENV_FILE = os.path.join(_DIR, "..", ".env")
+if os.path.exists(_ENV_FILE):
+    with open(_ENV_FILE) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
+
+_PM_LIVE = os.getenv("PM_5M_105_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
+
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 
 SYSTEMS = [
     {
         "key": "5m_btc_105",
         "label": "5M 105 BTC",
-        "desc": "102 + MR veto + trend nötr (gerçek PM $2)",
+        "desc": "102 + MR veto + trend nötr (gerçek PM $3)",
         "initial": 200.0,
     },
 ]
@@ -47,14 +58,19 @@ def _today_key(iso_tr: str) -> bool:
 
 def build_message(cfg: dict) -> str:
     key = cfg["key"]
-    hist = _load_json(os.path.join(_DIR, f"poly_trader_{key}_history.json"))
+    hist_raw = _load_json(os.path.join(_DIR, f"poly_trader_{key}_history.json"))
+    hist = (
+        [t for t in hist_raw if t.get("pm_dry_run") is False]
+        if key == "5m_btc_105"
+        else hist_raw
+    )
     state = _load_json(os.path.join(_DIR, f"poly_trader_{key}_state.json"))
     initial = cfg["initial"]
 
     total = len(hist)
     wins = sum(1 for t in hist if t.get("win"))
     losses = total - wins
-    pnl = round(state.get("total_pnl", sum(t.get("pnl", 0) for t in hist)), 2)
+    pnl = round(sum(t.get("pnl", 0) or 0 for t in hist), 2)
     balance = round(state.get("balance", initial), 2)
 
     today_hist = [t for t in hist if _today_key(t.get("entry_time_tr", ""))]
@@ -84,7 +100,7 @@ def build_message(cfg: dict) -> str:
         "",
         f"💰 Bakiye: <b>${balance:.2f}</b>  (başlangıç ${initial:.0f})",
         f"📂 Toplam: <b>{total}</b>  |  ✅ {wins}  |  ❌ {losses}  |  WR <b>{_wr(wins, total)}</b>",
-        f"{pnl_icon} Net P&amp;L: <b>{'+' if pnl >= 0 else ''}{pnl:.2f}$</b>",
+        f"{pnl_icon} Net P&amp;L (gerçek PM, kapanan işlemler): <b>{'+' if pnl >= 0 else ''}{pnl:.2f}$</b>",
         "",
         f"📅 Bugün: <b>{t_total}</b> işlem  |  WR {_wr(t_wins, t_total)}  |  {t_icon} {'+' if t_pnl >= 0 else ''}{t_pnl:.2f}$",
         f"📈 UP: {_wr(up_w, len(up))} ({len(up)})  |  📉 DOWN: {_wr(dn_w, len(down))} ({len(down)})",
@@ -107,6 +123,9 @@ def build_message(cfg: dict) -> str:
 
 
 def run(key: str | None = None) -> None:
+    if not _PM_LIVE:
+        print("[5M STATS] 105 sanal mod — saatlik gerçek PM özeti atlanıyor")
+        return
     targets = SYSTEMS
     if key:
         targets = [c for c in SYSTEMS if c["key"] == key or c["key"].endswith(key)]
