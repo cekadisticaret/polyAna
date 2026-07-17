@@ -1,5 +1,5 @@
 """
-Analiz31 Tahmin Motoru (Yama v1.1)
+Faz 1 Tahmin Motoru (Yama v1.1)
 """
 
 from dataclasses import dataclass
@@ -92,15 +92,3 @@ def predict(symbol: str, data: Dict) -> Optional[Prediction]:
         htf_bias=htf_str,
         timestamp=time.time(),
     )
-
-
-async def analyze(symbol: str) -> Optional[Prediction]:
-    """Trader entegrasyonu — Binance verisi çekip tahmin üret."""
-    from data_fetcher import fetch_all_data
-    from features import extract_all_features
-
-    raw_data = await fetch_all_data(symbol)
-    if not raw_data.get("timeframes", {}).get("1h"):
-        return None
-    features = extract_all_features(raw_data)
-    return predict(symbol, {"features": features})

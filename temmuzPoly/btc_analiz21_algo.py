@@ -1,8 +1,8 @@
 """
 21. Analiz — sembol bazlı en iyi algo sinyalleri (1H)
-  BTC → RSI Div (Katı)      # algo 38
-  ETH → Volume Profile      # algo 10
-  SOL → MACD Hist. Div      # algo 26
+  BTC → Hull MA (HMA)         # algo 29
+  ETH → Volume Profile        # algo 10
+  SOL → MACD Hist. Div        # algo 26
 """
 import asyncio
 from dataclasses import dataclass
@@ -10,13 +10,13 @@ from typing import Optional
 
 from algo_signals import (
     fetch_klines,
-    rsi_divergence_strict,
+    hull_ma,
     volume_profile,
     macd_histogram_div,
 )
 
 SYMBOL_ALGOS = {
-    "BTCUSDT": (rsi_divergence_strict, "RSI Div (Katı)"),
+    "BTCUSDT": (hull_ma, "Hull MA (HMA)"),
     "ETHUSDT": (volume_profile, "Volume Profile"),
     "SOLUSDT": (macd_histogram_div, "MACD Hist. Div"),
 }

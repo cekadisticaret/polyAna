@@ -12,16 +12,37 @@ alwaysApply: true
 | `31 14 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
 | `59 23 * * *` | `cd /root/aiProject && python3 BistAnaliz/backup.py` | `/tmp/backup.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
-| ~~`5 7-15,18 * * 1-5`~~ | ~~`bist_scanner.py`~~ **PASIF** — BIST Sinyal bildirim kapalı | — |
-| `*/15 9-18 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/yuzdeBist.py` | `/tmp/yuzde_bist.log` |
+| `0 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,7,10,13,21,31}.py close` | `/tmp/poly_trader_analiz*.log` |
+| `5 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,7,10,13,21,31}.py open` | `/tmp/poly_trader_analiz*.log` |
+| `0 21 * * 6` | `temmuzPoly/poly_trader_analiz{1,2,4,5,10,13,21,31}.py weekly` | `/tmp/poly_trader_analiz*.log` |
+| `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_real_stats.py` | `/tmp/poly_5m_real_stats.log` |
+| `*/5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_btc_105.py open` | `/tmp/poly_5m_btc_105.log` |
+| `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_btc_105.py weekly` | `/tmp/poly_5m_btc_105.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_signals.py` | `/tmp/algo_signals.log` |
+
+## Pasif / Kaldırılmış
+| Zamanlama | Durum |
+|---|---|
+| ~~`*/15 9-18 * * 1-5`~~ `yuzdeBist.py` | **PASIF** — crontab yorum satırı |
+| ~~`5 7-15,18 * * 1-5`~~ `bist_scanner.py` | **PASIF** — BIST Sinyal bildirim kapalı |
+| `poly_trader_analiz9.py` close/open/weekly | **PASIF** — `ANALIZ9_ENABLED=false` |
+| `poly_trader_5m_btc_107.py` open/weekly | **PASIF** |
+| `poly_trader_analiz3.py`, `analiz6.py`, `btc_analiz_hourly.py` | **KALDIRILDI** |
+| `polyManuel/sol_bot.py`, `poly_trader.py` | **YOK** — disk/crontab’ta yok |
 
 ## Zamanlama Notları
 - `bist_signal_hunter` seans dışında çıkar (betik içi saat kontrolü).
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
+- A7’nin `weekly` cron’u yok; diğer analizlerin çoğu Cumartesi 21:00.
+- `poly_trader_karisim1.py` crontab’ta yok (manuel).
+- Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis).
 
 ## Log Takibi
 ```bash
 tail -f /tmp/bist_visual.log
 tail -f /tmp/bist_signal_hunter.log
-tail -f /tmp/yuzde_bist.log
+tail -f /tmp/poly_trader_analiz1.log
+tail -f /tmp/poly_5m_btc_105.log
+tail -f /tmp/algo_signals.log
+tail -f /tmp/backup.log
 ```

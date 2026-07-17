@@ -9,8 +9,8 @@ Modlar:
 
 Algoritma: poly_predictor_analysis.py
 Sanal bütçe: $300, işlem $10/$15/$20 (WR tier).
-Hacim filtresi yok. ABD açıkken Analiz 1 ile aynı; kapalıyken predict() boşsa gevşek yedek sinyal.
-Gece modu kapalı — 24/7 işlem açar (ABD kapalıyken yedek sinyal devam eder).
+Hacim filtresi yok. ALLOW_FALLBACK=False → sadece predict(); True ise ABD kapalıyken yedek RSI/MACD/EMA.
+Gece modu kapalı — 24/7 açılış denemesi (fallback kapalıysa predict yoksa işlem yok).
 """
 import asyncio
 import json
@@ -42,7 +42,7 @@ INITIAL_BALANCE    = 300.0
 TRADE_AMOUNT       = 15.0   # genel başarı veri yok veya %50
 TRADE_AMOUNT_HIGH  = 20.0   # genel başarı > %50
 TRADE_AMOUNT_LOW   = 10.0   # genel başarı < %50
-SYMBOLS         = ["SOLUSDT"]
+ALLOW_FALLBACK = False  # True: ABD kapalıyken RSI/MACD/EMA yedek; False: sadece predict()
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -157,7 +157,7 @@ async def _resolve_signal(symbol: str, us_open: bool) -> tuple[object | None, st
     pred = await predict(symbol)
     if pred is not None:
         return pred, "standard"
-    if us_open:
+    if us_open or not ALLOW_FALLBACK:
         return None, "none"
     fb = await _fallback_pred(symbol)
     return (fb, "fallback") if fb else (None, "none")
@@ -427,7 +427,9 @@ async def run_open() -> None:
         )
 
     sep = "━" * 26
-    sess_tag = "🇺🇸 ABD açık (Analiz 1 ile aynı)" if us_open else "🌙 ABD kapalı (genişletilmiş sinyal)"
+    sess_tag = "🇺🇸 ABD açık (Analiz 1 ile aynı)" if us_open else (
+        "🌙 ABD kapalı (yedek sinyal)" if ALLOW_FALLBACK else "🌙 ABD kapalı (sadece standard — yedek kapalı)"
+    )
     if not lines:
         print(f"[2. ANALİZ open] {saat} İST — işlem yok")
         return

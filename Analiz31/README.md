@@ -4,7 +4,8 @@
 - **Multi-Timeframe**: 15m, 1h, 4h, 1d veri entegrasyonu
 - **Walk-Forward Backtest**: Overfitting önleme
 - **HTF Bias**: Üst zaman dilimi trend onayı
-- **Kill Zone**: ET saatlerine göre dinamik gate
+- **Kill Zone + Dinamik Gate**: ET saati + HTF/ADX/DI spread (v1.1)
+- **Trend Filtresi**: Güçlü trendde MR karşıt sinyal engeli (v1.1)
 - **Crash Kapısı**: EMA50 %8 sapma koruması
 
 ## Kurulum

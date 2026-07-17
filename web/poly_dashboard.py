@@ -722,7 +722,7 @@ def api_analizler():
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
         ("analiz13",   "13. Analiz",            300,  "Çift Konsensüs B≥2/4 $10-20"),
         ("analiz31",   "31. Analiz",            300,  "Multi-TF MR Sanal $12-16-20"),
-        ("analiz21",   "21. Analiz",            300,  "Sembol Algo: BTC RSI Div / ETH VP / SOL MACD"),
+        ("analiz21",   "21. Analiz",            300,  "Sembol Algo: BTC Hull MA / ETH VP / SOL MACD"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
         ("5m_btc_105",  "5M 105 BTC",            200,  "MR veto + trend nötr (sanal $8-12, 24/7)"),
         ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 + yön freni — cron kapalı"),

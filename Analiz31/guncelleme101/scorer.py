@@ -1,5 +1,5 @@
 """
-Analiz31 MR skorlama (Yama v1.1 — trend filtresi + dinamik gate + CVD momentum)
+Yama v1.1 - Trend filtresi + Dinamik gate + CVD momentum
 """
 
 from typing import Dict, List, Tuple
@@ -26,15 +26,17 @@ def get_dynamic_gates(features: Dict) -> Tuple[int, int]:
 
     base_up, base_down = get_kill_zone_adjustment()
 
+    # HTF bias etkisi
     htf_score = htf.get("score", 0)
 
-    if htf_score >= 2:
+    if htf_score >= 2:      # Bullish HTF
         base_up -= 5
         base_down += 15
-    elif htf_score <= -2:
+    elif htf_score <= -2:   # Bearish HTF
         base_up += 15
         base_down -= 5
 
+    # Trend gücü (ADX)
     adx = f1h.get("adx", 20)
     if adx > 35:
         base_up += 10
@@ -43,6 +45,7 @@ def get_dynamic_gates(features: Dict) -> Tuple[int, int]:
         base_up += 5
         base_down += 5
 
+    # DI spread
     plus_di = f1h.get("plus_di", 25)
     minus_di = f1h.get("minus_di", 25)
     di_spread = abs(plus_di - minus_di)

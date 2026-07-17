@@ -7,7 +7,7 @@ Modlar:
   stats   → manuel detaylı rapor
 
 Algoritma: btc_analiz21_algo.py
-  BTC → RSI Div (Katı)
+  BTC → Hull MA (HMA)
   ETH → Volume Profile
   SOL → MACD Hist. Div
 Sanal bütçe: $300, işlem $12 / $16 / $20 (WR'ye göre)
