@@ -1,1 +1,36 @@
-[]
+[
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 75.91,
+    "exit_price": 75.27,
+    "entry_time_tr": "2026-07-17T01:03:01.905225+03:00",
+    "entry_hour_tr": 1,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 15.0,
+    "pnl": 13.04,
+    "virtual": true,
+    "exit_time_tr": "2026-07-17T02:00:04.274065+03:00",
+    "score_b": -2,
+    "conf_a": 0.715,
+    "votes": [
+      -1,
+      -1,
+      0,
+      -1
+    ],
+    "ind_poly_ok": true,
+    "ind_trend_ok": true,
+    "ind_mr_ok": null,
+    "ind_of_ok": true,
+    "pm_spent": 15.0,
+    "pm_size": 28.04,
+    "pm_entry_price": 0.535,
+    "to_win": 28.04,
+    "pm_slug": "solana-up-or-down-july-16-2026-6pm-et",
+    "tier": "⚡ Bir güçlü bir orta"
+  }
+]

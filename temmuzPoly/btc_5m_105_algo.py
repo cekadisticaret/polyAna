@@ -248,7 +248,7 @@ def analyze(
     momentum_filter: bool | None = None,
 ) -> SignalResult | None:
     """
-    5M 102 sinyal motoru.
+    5M 105 sinyal motoru.
 
     klines/orderbook verilmezse Binance'ten çeker.
     direction None → işlem yok (konsensüs / MR veto / trend nötr).

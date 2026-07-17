@@ -2,7 +2,7 @@
 5. ANALİZ — Analiz 1 Motoru (Gerçek Polymarket)
 
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
-Sabit $16/işlem, BTC+SOL.
+Sabit $6–12/işlem (WR'ye göre), BTC+SOL.
 
 Modlar: close / open / weekly / stats
 """
@@ -45,9 +45,9 @@ WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
 SYMBOLS            = ["BTCUSDT", "SOLUSDT"]
-TRADE_AMOUNT       = 16.0
-TRADE_AMOUNT_HIGH  = 16.0
-TRADE_AMOUNT_LOW   = 16.0
+TRADE_AMOUNT       = 6.0   # genel WR veri yok veya tam %50
+TRADE_AMOUNT_HIGH  = 12.0  # sembol genel WR > %50
+TRADE_AMOUNT_LOW   = 8.0   # sembol genel WR < %50
 MIN_STAT_COUNT  = 10
 
 
@@ -330,6 +330,17 @@ def get_stats(history: list, symbol: str, hour_tr: int, dow: int | None = None) 
 def get_symbol_stats(history: list, symbol: str) -> tuple[int, int]:
     trades = [t for t in history if t["symbol"] == symbol]
     return sum(1 for t in trades if t["win"]), len(trades)
+
+
+def _trade_amount(history: list, symbol: str) -> float:
+    """Sembol genel WR'ye göre tutar (Analiz 1 ile aynı mantık, ölçekli)."""
+    wins, total = get_symbol_stats(history, symbol)
+    rate = wins / total if total else None
+    if rate is not None and rate > 0.5:
+        return TRADE_AMOUNT_HIGH
+    if rate is not None and rate < 0.5:
+        return TRADE_AMOUNT_LOW
+    return TRADE_AMOUNT
 
 
 def _vote_ok(vote: int, actual: str) -> bool | None:
@@ -716,9 +727,10 @@ async def run_open() -> None:
     _newly_opened   = 0
     for sig in results:
         if sig["predicted_dir"]:
+            amount = _trade_amount(history, sig["symbol"])
             pos, err = _try_pm_open(
                 state, sig, hour_tr=hour_tr, dow=dow, is_weekend=is_weekend,
-                now_tr=now_tr, now=now, amount=TRADE_AMOUNT,
+                now_tr=now_tr, now=now, amount=amount,
                 algo_snapshot=_algo_snapshot,
             )
             if pos:
@@ -955,7 +967,7 @@ def run_stats() -> None:
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
-        f"İşlem: BTC+SOL  sabit ${TRADE_AMOUNT:.0f}/işlem (Analiz 1 motoru)",
+        f"İşlem: BTC+SOL  ${TRADE_AMOUNT_LOW:.0f}–${TRADE_AMOUNT_HIGH:.0f}/işlem WR'ye göre (Analiz 1 motoru)",
         f"\n🔬 <b>Algoritma İsabet Oranı</b>", *_ind_stats_lines(history),
     ]
 

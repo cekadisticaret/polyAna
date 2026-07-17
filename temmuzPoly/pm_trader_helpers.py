@@ -307,10 +307,22 @@ def pm_stake_fields(pos: dict) -> tuple[float, float, float]:
 def pm_tg_stake(pos: dict) -> str:
     spent, size, ep = pm_stake_fields(pos)
     if size > 0 and spent > 0 and ep > 0:
-        return f"💵 ${spent:.2f}@{ep:.2f} → 🏆 ${size:.2f}"
+        net = round(size - spent, 2)
+        return f"💵 ${spent:.2f}@{ep:.2f} → +${net:.2f} net (${size:.2f} toplam)"
     if size > 0 and spent > 0:
-        return f"💵 ${spent:.2f} → 🏆 ${size:.2f}"
+        net = round(size - spent, 2)
+        return f"💵 ${spent:.2f} → +${net:.2f} net (${size:.2f} toplam)"
     return f"💵 ${spent:.2f}" if spent > 0 else ""
+
+
+def pm_sanal_tg_quote(spent: float, token_price: float | None, pm_size: float) -> str:
+    """Sanal 5m açılış satırı — net kazanç PM kotasyonundan (toplam ödeme − risk)."""
+    spent = round(float(spent), 2)
+    size = round(float(pm_size), 2)
+    net = round(size - spent, 2)
+    if token_price and 0 < token_price < 1:
+        return f"💵 ${spent:.2f}@{token_price:.2f} → +${net:.2f} net (${size:.2f} toplam)"
+    return f"💵 ${spent:.2f} → +${net:.2f} net (${size:.2f} toplam)"
 
 
 def pm_history_extras(pos: dict) -> dict:

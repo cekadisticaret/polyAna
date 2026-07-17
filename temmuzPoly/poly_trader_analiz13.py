@@ -2,14 +2,14 @@
 13. ANALİZ — Çift Konsensüs Sanal (10 + filtreler)
 
 10. Analiz ile aynı çift konsensüs mantığı, ekstra:
-  - Sistem B min skor: 2/4 (zayıf ±1/4 elenir)
+  - Sistem B min skor: 1/4 (10. Analiz ile aynı)
   - İşlem tutarı: $10 / $15 / $20 (zayıf / orta / güçlü tier)
   - Saatlik elenme nedeni Telegram (debug)
 
 $300 sanal başlangıç. Telegram: 10. Analiz kanalı.
 
 Modlar: close / open / weekly / stats
-Cron: 0 * * * * close | 3 * * * * open | 0 21 * * 6 weekly
+Cron: 0 * * * * close | 5 * * * * open | 0 21 * * 6 weekly
 """
 import asyncio
 import sys

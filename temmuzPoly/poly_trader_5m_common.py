@@ -1,4 +1,4 @@
-"""5M BTC trader ortak yardımcılar — Binance, 4-algo, PM emir (102/105/106)."""
+"""5M BTC trader ortak yardımcılar — Binance, 4-algo, PM emir (105/107)."""
 
 import html
 import json
@@ -25,6 +25,26 @@ _PM_HEADERS = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 _PM_DRY_RUN = True  # trader dosyası günceller
 
 LABEL = "5M PM"
+
+
+def trade_amount_by_wr(
+    history: list,
+    *,
+    low: float = 8.0,
+    mid: float = 10.0,
+    high: float = 12.0,
+) -> tuple[float, float | None]:
+    """Genel kazanma oranına göre işlem tutarı ($8 / $10 / $12)."""
+    total = len(history)
+    if total == 0:
+        return mid, None
+    wins = sum(1 for t in history if t.get("win"))
+    rate = wins / total
+    if rate > 0.5:
+        return high, rate
+    if rate < 0.5:
+        return low, rate
+    return mid, rate
 
 
 def _pm_bal_line() -> str:

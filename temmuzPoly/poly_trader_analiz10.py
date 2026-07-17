@@ -7,7 +7,7 @@ Sistem B: Trend + MR + OrderFlow + Funding (Analiz 4/9)
 $300 sanal, sabit $10/işlem. Saatlik elenme nedeni Telegram.
 
 Modlar: close / open / weekly / stats
-Cron: 0 * * * * close | 3 * * * * open | 0 21 * * 6 weekly
+Cron: 0 * * * * close | 5 * * * * open | 0 21 * * 6 weekly
 """
 import asyncio
 import sys

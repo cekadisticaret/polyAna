@@ -1,13 +1,10 @@
-"""Momentum filtresi — 5m (102) ve 1h (Analiz 5/10)."""
+"""Momentum filtresi — 5m ve 1h (Analiz 5/10)."""
 import os
 import urllib.parse
 import urllib.request
 
 MOMENTUM_BARS = 3
-MOMENTUM_FILTER = os.getenv(
-    "PM_MOMENTUM_FILTER",
-    os.getenv("PM_5M_102_MOMENTUM_FILTER", "true"),
-).lower() in ("1", "true", "yes")
+MOMENTUM_FILTER = os.getenv("PM_MOMENTUM_FILTER", "true").lower() in ("1", "true", "yes")
 
 
 def fetch_klines(symbol: str, interval: str, limit: int = 10) -> list[dict]:

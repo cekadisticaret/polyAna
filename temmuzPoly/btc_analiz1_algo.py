@@ -1,19 +1,20 @@
 """
-1. ANALİZ — Tam algoritma (standalone tek dosya)
+1. ANALİZ — Tam algoritma (tek dosya, standalone)
 
-Analiz 1 trader (poly_trader_analiz1.py) poly_predictor_analysis.py kullanmaya devam eder;
-bu dosya aynı motorun bağımsız kopyasıdır — okuma/deneme/Analiz 2 geliştirme için.
+Canlı trader poly_trader_analiz1.py → poly_predictor_analysis.py import eder.
+Bu dosya aynı motorun bağımsız kopyasıdır.
 
 Strateji: Simetrik MR (UP + DOWN mean-reversion).
   - MR_UP_GATE   = 45  (Kill Zone ET 09-11 iken 62)
   - MR_DOWN_GATE = 40  (Kill Zone ET 09-11 iken 55)
-  - RSI(5), 8-mum MR, streak reversal, CVD, liquidity sweep, EMA50 crash kapısı
+  - RSI(5), 8-mum MR, streak, CVD, liquidity sweep, EMA50 crash kapısı
 
 Kullanım:
   python3 temmuzPoly/btc_analiz1_algo.py
   python3 temmuzPoly/btc_analiz1_algo.py SOLUSDT
   python3 -c "from btc_analiz1_algo import analyze; import asyncio; print(asyncio.run(analyze()))"
 """
+
 import asyncio
 import json
 import os

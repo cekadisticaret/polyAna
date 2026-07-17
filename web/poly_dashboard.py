@@ -19,51 +19,48 @@ _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 
 # Sıcaklık haritası: analiz bazlı aktif semboller
 _HEATMAP_SYMS = {
-    "analiz509": ["BTC"],
     "analiz1":  ["BTC", "SOL"],
-    "analiz2":  ["BTC", "SOL"],
+    "analiz2":  ["SOL"],
     "analiz4":  ["BTC", "ETH"],
     "analiz5":  ["BTC", "SOL"],
     "analiz9":  ["BTC", "SOL"],
     "analiz10": ["BTC", "SOL"],
     "analiz13": ["BTC", "SOL"],
+    "analiz31": ["BTC", "SOL"],
+    "analiz21": ["BTC", "ETH", "SOL"],
     "karisim1": ["BTC", "SOL"],
     "5m_btc_105": ["BTC"],
-    "5m_btc_106": ["BTC"],
     "5m_btc_107": ["BTC"],
 }
 # poly_trader_* dışındaki analiz dosyaları (history, state)
-_CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
-    "analiz509": ("btc_analiz_509_history.json", "btc_analiz_509_state.json"),
-}
+_CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {}
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
-_PASIF_ANALYSES = frozenset({"analiz9"})
+_PASIF_ANALYSES = frozenset({"analiz9", "5m_btc_107"})
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 # Yeni analiz: isteğe bağlı özel isim için _ANALYSIS_LABELS'a ekle.
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz509", "analiz5", "analiz4", "analiz10", "analiz13", "karisim1",
-    "5m_btc_102", "5m_btc_105", "5m_btc_106", "5m_btc_107",
+    "analiz1", "analiz2", "analiz5", "analiz4", "analiz10", "analiz13", "analiz21", "analiz31", "karisim1",
+    "5m_btc_105", "5m_btc_107",
 ]
 _HISTORY_ORDER = [
-    "analiz509", "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
-    "analiz10", "analiz13", "karisim1", "5m_btc_102", "5m_btc_105", "5m_btc_106", "5m_btc_107",
+    "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
+    "analiz10", "analiz13", "analiz21", "analiz31", "karisim1", "5m_btc_105", "5m_btc_107",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
-    "analiz509":  "12. Analiz Algoritma",
     "analiz1":    "1. Analiz",
-    "analiz2":    "2. Analiz",
+    "analiz2":    "2. Analiz (SOL)",
     "analiz4":    "4. Analiz",
     "analiz5":    "5. Analiz",
     "analiz9":    "9. Analiz (Pasif)",
     "analiz10":   "10. Analiz",
     "analiz13":   "13. Analiz",
+    "analiz31":   "31. Analiz",
+    "analiz21":   "21. Analiz",
     "karisim1":   "11. Analiz",
-    "5m_btc_102": "5M 102 BTC",
     "5m_btc_105": "5M 105 BTC",
-    "5m_btc_106": "5M 106 BTC",
-    "5m_btc_107": "5M 107 BTC",
+    "5m_btc_107": "5M 107 BTC (Pasif)",
 }
 
 
@@ -296,8 +293,7 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
 
 # Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
 _PM_POSITION_SOURCES = [
-    ("5m_btc_102", "5M 102 BTC"),   # yalnızca PM_5M_102_REAL_ENABLED=true
-    ("analiz5",    "5. Analiz"),
+    ("analiz5", "5. Analiz"),
 ]
 
 def _position_visible(_key: str, pos: dict) -> bool:
@@ -719,18 +715,17 @@ def api_symbol_stats():
 def api_analizler():
     if _auth_required(): return jsonify({"error": "unauthorized"}), 401
     _SYSTEMS = [
-        ("analiz509",   "12. Analiz Algoritma",  400,  "27-Algo Konsensüs Sanal"),
         ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
-        ("analiz2",    "2. Analiz",             300,  "A1 motoru $10-15-20, ABD kapalı genişletilmiş"),
+        ("analiz2",    "2. Analiz (SOL)",       300,  "A1 motoru SOL only $10-15-20"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
-        ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM"),
+        ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM $6–12 WR"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
         ("analiz13",   "13. Analiz",            300,  "Çift Konsensüs B≥2/4 $10-20"),
+        ("analiz31",   "31. Analiz",            300,  "Multi-TF MR Sanal $12-16-20"),
+        ("analiz21",   "21. Analiz",            300,  "Sembol Algo: BTC RSI Div / ETH VP / SOL MACD"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
-        ("5m_btc_102",  "5M 102 BTC",            200,  "KALEM Sanal"),
-        ("5m_btc_105",  "5M 105 BTC",            200,  "102 + MR veto + trend nötr (sanal $3)"),
-        ("5m_btc_107",  "5M 107 BTC",            200,  "105 + Trendline Break Pro (PM $5)"),
-        ("5m_btc_106",  "5M 106 BTC",            200,  "102 + MR veto (minimal)"),
+        ("5m_btc_105",  "5M 105 BTC",            200,  "MR veto + trend nötr (sanal $8-12, 24/7)"),
+        ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 + yön freni — cron kapalı"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:
@@ -1449,7 +1444,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="top-bar">
     <div>
       <div class="page-title">Algoritma Analizi</div>
-      <div class="page-sub">39 algoritma — BTC / ETH / SOL — 1 saatlik</div>
+      <div class="page-sub">39 algoritma — BTC / ETH / SOL — 1 saatlik (konsensüs: 37 oy, #13–14 hariç)</div>
       <div id="top-sym-algos" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
     <!-- Consensus kutusu -->
@@ -1845,11 +1840,25 @@ function setSym(sym){
   renderSymRanking(_accData, sym);
 }
 
+const ALGO_NAMES = {
+  "1":"EMA Crossover","2":"MACD Divergence","3":"Supertrend","4":"Ichimoku","5":"RSI Divergence",
+  "6":"Stochastic RSI","7":"Bollinger Bands","8":"VWAP","9":"OBV","10":"Volume Profile",
+  "11":"Mean Reversion","12":"Pairs Trading","13":"Grid Bot","14":"LSTM","15":"Multi-TF",
+  "16":"ATR Breakout","17":"Heikin Ashi","18":"TEMA Crossover","19":"ADX Regime",
+  "20":"OI Divergence","21":"Fear & Greed","22":"Analiz-1","23":"Analiz-9","24":"Analiz-10",
+  "25":"Parabolic SAR+ADX","26":"MACD Hist. Div","27":"Stoch RSI K/D","28":"Triple EMA",
+  "29":"Hull MA","30":"Keltner Kanal","31":"Donchian Kanal","32":"VWAP+Vol Profile",
+  "33":"Money Flow (MFI)","34":"Random Forest","35":"Markov Zinciri","36":"SuperTrend v2",
+  "37":"Ichimoku v2","38":"RSI Div (Katı)","39":"H1 Kombinasyon"
+};
+// Sembol bazlı sıralamada gösterilmez (basit algo #22 ≠ gerçek 1. Analiz trader)
+const SYM_RANK_EXCLUDE = new Set(["22"]);
+
 function renderSymRanking(acc, sym){
   const el = document.getElementById("sym-rank-list");
   if(!el) return;
   const entries = Object.entries(acc)
-    .filter(([k,v]) => v.by_sym && v.by_sym[sym] && v.by_sym[sym].total > 0)
+    .filter(([k,v]) => !SYM_RANK_EXCLUDE.has(k) && v.by_sym && v.by_sym[sym] && v.by_sym[sym].total > 0)
     .map(([k,v]) => ({
       name: ALGO_NAMES[k] || "Algo "+k,
       total: v.by_sym[sym].total,
@@ -1876,18 +1885,6 @@ function renderSymRanking(acc, sym){
   }).join("");
 }
 
-const ALGO_NAMES = {
-  "1":"EMA Crossover","2":"MACD Divergence","3":"Supertrend","4":"Ichimoku","5":"RSI Divergence",
-  "6":"Stochastic RSI","7":"Bollinger Bands","8":"VWAP","9":"OBV","10":"Volume Profile",
-  "11":"Mean Reversion","12":"Pairs Trading","13":"Grid Bot","14":"LSTM","15":"Multi-TF",
-  "16":"ATR Breakout","17":"Heikin Ashi","18":"TEMA Crossover","19":"ADX Regime",
-  "20":"OI Divergence","21":"Fear & Greed","22":"Analiz-1","23":"Analiz-9","24":"Analiz-10",
-  "25":"Parabolic SAR+ADX","26":"MACD Hist. Div","27":"Stoch RSI K/D","28":"Triple EMA",
-  "29":"Hull MA","30":"Keltner Kanal","31":"Donchian Kanal","32":"VWAP+Vol Profile",
-  "33":"Money Flow (MFI)","34":"Random Forest","35":"Markov Zinciri","36":"SuperTrend v2",
-  "37":"Ichimoku v2","38":"RSI Div (Katı)","39":"H1 Kombinasyon"
-};
-
 function renderTopSymAlgos(acc){
   const el = document.getElementById("top-sym-algos");
   if(!el) return;
@@ -1899,6 +1896,7 @@ function renderTopSymAlgos(acc){
     let best = null, bestWr = -1, bestStat = "", bestSym = false;
 
     for(const [num, data] of Object.entries(acc)){
+      if(SYM_RANK_EXCLUDE.has(num)) continue;
       // Önce sembol-bazlı bak
       const sd = data.by_sym && data.by_sym[sym];
       if(sd && sd.total >= MIN_TRADES){
@@ -2330,13 +2328,24 @@ function hmColor(wr,t){ if(!t)return'#1a1a1a'; if(wr>=70)return'#166534'; if(wr>
 function hmTxt(wr,t){ if(!t)return'#333'; if(wr>=55)return'#4ade80'; if(wr>=50)return'#c8f135'; if(wr>=40)return'#fbbf24'; return'#f87171'; }
 
 async function load() {
-  const r = await fetch(`/poly/api/heatmap?sym=${_sym}&analiz=${_analiz}`);
-  const d = await r.json();
-  _data   = d.cells;
-  renderSummary(d.summary, d.sym_breakdown || []);
-  renderGrid(_data);
-  const lbl = _ANALIZ_LABELS[_analiz] || _analiz;
-  document.getElementById('hm-subtitle').textContent = `${lbl} — gün × saat kazanma oranı`;
+  try {
+    const r = await fetch(`/poly/api/heatmap?sym=${_sym}&analiz=${_analiz}`);
+    const d = await r.json();
+    if (!d || !Array.isArray(d.cells)) {
+      _data = [];
+      renderSummary({total:0,wins:0,losses:0,wr:0,pnl:0,spent:0}, []);
+      renderGrid([]);
+      return;
+    }
+    _data = d.cells;
+    renderSummary(d.summary || {total:0,wins:0,losses:0,wr:0,pnl:0,spent:0}, d.sym_breakdown || []);
+    renderGrid(_data);
+    const lbl = _ANALIZ_LABELS[_analiz] || _analiz;
+    document.getElementById('hm-subtitle').textContent = `${lbl} — gün × saat kazanma oranı (${d.summary?.total || 0} işlem, ${d.cells.length} dolu hücre)`;
+  } catch (e) {
+    console.error('harita load', e);
+    renderGrid([]);
+  }
 }
 
 function setAnaliz(btn, key) {
@@ -2354,9 +2363,10 @@ function updateHmSymFilters() {
     if (btn) btn.style.display = allowed.includes(s) ? '' : 'none';
   });
   if (_sym !== 'ALL' && !allowed.includes(_sym)) {
-    _sym = 'ALL';
+    _sym = allowed.length === 1 ? allowed[0] : 'ALL';
     document.querySelectorAll('.hm-filter').forEach(b => {
-      b.classList.toggle('active', b.textContent.trim() === 'Tümü');
+      const t = b.textContent.trim();
+      b.classList.toggle('active', t === 'Tümü' ? _sym === 'ALL' : t === _sym);
     });
   }
 }
@@ -2823,7 +2833,7 @@ HTML = r"""<!DOCTYPE html>
       <button class="hm-filter" data-sym="SOL"  onclick="setHmFilter(this,'SOL')">SOL</button>
     </div>
   </div>
-  <div style="font-size:13px;color:#666;margin-bottom:20px">5. Analiz — gün × saat kazanma oranı</div>
+  <div id="hm-subtitle-main" style="font-size:13px;color:#666;margin-bottom:20px">1. Analiz — gün × saat kazanma oranı</div>
 
   <!-- Özet stat kartları -->
   <div id="hm-top" style="display:grid;grid-template-columns:200px 1fr;gap:14px;margin-bottom:20px;align-items:start">
@@ -3282,7 +3292,6 @@ function closeSlotPopup() {
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeSlotPopup(); });
 
 // ── View yönetimi ──────────────────────────────────────
-let _hmData = null;
 let _hmSym  = 'ALL';
 
 function showView(v) {
@@ -3323,13 +3332,24 @@ function hmTextColor(wr, t) {
 }
 
 async function loadHeatmap() {
-  if (!_hmData) {
-    const r   = await fetch('/poly/api/heatmap?sym=' + _hmSym);
-    const d   = await r.json();
-    _hmData   = d.cells;
-    renderSummary(d.summary, d.sym_breakdown || []);
+  const analiz = _panelAnaliz || 'analiz1';
+  updateMainHmSymFilters(analiz);
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz5:'5. Analiz',analiz4:'4. Analiz',analiz10:'10. Analiz',analiz13:'13. Analiz',analiz21:'21. Analiz',analiz31:'31. Analiz',karisim1:'11. Analiz'})[analiz] || analiz;
+  const sub = document.getElementById('hm-subtitle-main');
+  if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
+  try {
+    const r = await fetch('/poly/api/heatmap?sym=' + _hmSym + '&analiz=' + analiz);
+    const d = await r.json();
+    if (!d || !Array.isArray(d.cells)) {
+      renderHeatmap([]);
+      return;
+    }
+    renderSummary(d.summary || {total:0,wins:0,losses:0,wr:0,pnl:0,spent:0}, d.sym_breakdown || []);
+    renderHeatmap(d.cells);
+  } catch (e) {
+    console.error('heatmap', e);
+    renderHeatmap([]);
   }
-  renderHeatmap(_hmData);
 }
 
 function renderSummary(s, breakdown) {
@@ -3383,11 +3403,30 @@ function renderSummary(s, breakdown) {
 }
 
 function setHmFilter(btn, sym) {
-  document.querySelectorAll('.hm-filter').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#view-heatmap .hm-filter').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   _hmSym  = sym;
   _hmData = null;
   loadHeatmap();
+}
+
+function updateMainHmSymFilters(analiz) {
+  const allowed = {{ harita_heatmap_syms|safe }}[analiz] || ['BTC', 'ETH', 'SOL'];
+  document.querySelectorAll('#view-heatmap .hm-filter').forEach(btn => {
+    const sym = btn.dataset.sym;
+    if (!sym) return;
+    if (sym === 'ALL') {
+      btn.style.display = '';
+      return;
+    }
+    btn.style.display = allowed.includes(sym) ? '' : 'none';
+  });
+  if (_hmSym !== 'ALL' && !allowed.includes(_hmSym)) {
+    _hmSym = allowed.length === 1 ? allowed[0] : 'ALL';
+    document.querySelectorAll('#view-heatmap .hm-filter').forEach(b => {
+      b.classList.toggle('active', b.dataset.sym === _hmSym);
+    });
+  }
 }
 
 function renderHeatmap(cells) {

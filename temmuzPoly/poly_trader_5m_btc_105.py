@@ -3,10 +3,9 @@
 ================================================
 btc_5m_105_algo: 4-algo konsensüs + iki düzeltme.
 
-$3/işlem sanal simülasyon. Sadece BTC. PM_5M_105_REAL_ENABLED=false (varsayılan)
+$200 başlangıç, $8/$10/$12 (WR'ye göre) sanal simülasyon. PM_5M_105_REAL_ENABLED=false
 Telegram: 8799859033 bot — tur bildirimi.
-Gece modu: 22:00–07:00 İST yeni işlem yok
-Cron: */5 * * * *
+Cron: */5 * * * * (24/7)
 """
 
 import html
@@ -21,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from btc_5m_105_algo import analyze, format_signal, fetch_klines_5m
 import poly_trader_5m_common as _pm_common
 from poly_tg_5m_102 import tg_send, tg_send_photo
-from pm_trader_helpers import pm_5m_sanal_quote, pm_5m_close, pm_5m_history_extras, pm_5m_find_market
+from pm_trader_helpers import pm_5m_sanal_quote, sanal_pnl, pm_5m_close, pm_5m_history_extras, pm_5m_find_market, pm_sanal_tg_quote
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
 if os.path.exists(_ENV_FILE):
@@ -42,9 +41,9 @@ WEEKLY_IMG   = "/tmp/poly_5m_btc_105_weekly.png"
 SYMBOLS           = ["BTCUSDT"]
 SYMBOL            = "BTCUSDT"
 INITIAL_BALANCE   = 200.0
-TRADE_AMOUNT      = 3.0
-TRADE_AMOUNT_UP   = 3.0
-TRADE_AMOUNT_DOWN = 3.0
+TRADE_AMOUNT      = 10.0   # WR = %50 veya veri yok
+TRADE_AMOUNT_LOW  = 8.0    # WR < %50
+TRADE_AMOUNT_HIGH = 12.0   # WR > %50
 _PERIOD_SECS      = 300
 _TOTAL_ALGOS      = 4
 _DAYS_TR          = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -60,9 +59,6 @@ _PM_TRADE_MIN  = 0.42
 _PM_TRADE_MAX  = 0.52
 _PM_MIN_PAYOUT_RATIO = 1.25
 
-_QUIET_START_HOUR = 22
-_QUIET_END_HOUR   = 7
-
 LABEL = "5M 105 BTC"
 
 
@@ -74,13 +70,18 @@ def _fmt_price(symbol: str, price: float) -> str:
     return f"{price:,.2f}" if symbol == "BTCUSDT" else f"{price:.2f}"
 
 
-def _trading_allowed(now_tr: datetime) -> bool:
-    h = now_tr.hour
-    return _QUIET_END_HOUR <= h < _QUIET_START_HOUR
+def _trading_allowed(_now_tr: datetime) -> bool:
+    return True
 
 
-def _trade_amount(_direction: str) -> float:
-    return TRADE_AMOUNT
+def _trade_amount(history: list) -> float:
+    amt, _ = _pm_common.trade_amount_by_wr(
+        _effective_history(history),
+        low=TRADE_AMOUNT_LOW,
+        mid=TRADE_AMOUNT,
+        high=TRADE_AMOUNT_HIGH,
+    )
+    return amt
 
 
 def _pm_bal_line() -> str:
@@ -250,6 +251,13 @@ def _sync_total_pnl(state: dict, history: list) -> None:
     state["total_pnl"] = _net_pnl(history)
 
 
+def _sync_balance(state: dict, history: list) -> None:
+    """Sanal bakiye = başlangıç + kapanmış işlemlerin net PM P&L'i."""
+    net = _net_pnl(history)
+    state["balance"] = round(INITIAL_BALANCE + net, 2)
+    state["total_pnl"] = net
+
+
 def _current_5m_ts() -> int:
     now = int(time.time())
     return now - (now % _PERIOD_SECS)
@@ -277,10 +285,8 @@ def run() -> None:
 
     state   = load_state()
     history = load_history()
-
-    if not _trading_allowed(now_tr) and not state["open_positions"]:
-        print(f"[{LABEL}] {saat} — gece modu (22:00–07:00 İST), çalıştırılmadı")
-        return
+    if not _PM_LIVE:
+        _sync_balance(state, history)
 
     closed_lines = []
     tur_pnl = 0.0
@@ -303,11 +309,13 @@ def run() -> None:
             pred   = pos["predicted_dir"]
             actual = "UP" if prev_close >= ref_open else "DOWN"
             win    = pred == actual
-            pnl, payout = pm_5m_close(pos, win)
-            spent = pos.get("pm_spent") or pos.get("amount", TRADE_AMOUNT)
-
-            if win and not _PM_LIVE:
-                state["balance"] = round(state["balance"] + payout, 2)
+            spent = pos.get("pm_spent") or pos.get("amount", _trade_amount(history))
+            if _PM_LIVE:
+                pnl, payout = pm_5m_close(pos, win)
+                if win:
+                    state["balance"] = round(state["balance"] + payout, 2)
+            else:
+                pnl = sanal_pnl(pos, win)
 
             tur_pnl += pnl
 
@@ -343,15 +351,12 @@ def run() -> None:
             )
 
         state["open_positions"] = []
-        _sync_total_pnl(state, history)
+        if _PM_LIVE:
+            _sync_total_pnl(state, history)
+        else:
+            _sync_balance(state, history)
         save_state(state)
         save_history(history)
-
-    if not _trading_allowed(now_tr):
-        if closed_lines:
-            _send_tg_round(saat, next_saat, state, history, closed_lines, [], [], tur_pnl)
-        print(f"[{LABEL}] {saat} — gece modu (22:00–07:00 İST), yeni işlem yok")
-        return
 
     open_lines = []
     skip_lines = []
@@ -377,7 +382,9 @@ def run() -> None:
             continue
 
         direction = sig.direction
-        amount = TRADE_AMOUNT
+        amount = _trade_amount(history)
+        if not _PM_LIVE:
+            _sync_balance(state, history)
         balance = state["balance"]
 
         if not _PM_LIVE and balance < amount:
@@ -397,10 +404,8 @@ def run() -> None:
             pm_q = pm_5m_sanal_quote(ts_5m, direction, amount, sym)
             token_price = pm_q.get("token_price") or pm_info.get("token_price")
             to_win = pm_q.get("to_win") or round(amount / max(token_price, 0.02), 2)
-            price_str = f"@{token_price:.2f}" if token_price else ""
+            quote = pm_sanal_tg_quote(amount, token_price, to_win)
 
-            state["balance"] = round(balance - amount, 2)
-            balance = state["balance"]
             state["open_positions"].append({
                 "symbol": sym, "predicted_dir": direction,
                 "entry_price": entry_p, "consensus": sig.consensus, "votes": sig.votes,
@@ -413,11 +418,11 @@ def run() -> None:
             })
             open_lines.append(
                 f"{dir_icon} <b>{name} {dir_tr}</b>  ({sig.consensus}/{_TOTAL_ALGOS})  "
-                f"💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
+                f"{quote}\n"
                 f"Giriş: {_fmt_price(sym, entry_p)}  |  Momentum: {sig.momentum}\n"
                 f"{icons}"
             )
-            print(f"[{LABEL}] {saat} — {name} {dir_tr} ${amount:.0f}→${to_win:.2f} [SANAL]")
+            print(f"[{LABEL}] {saat} — {name} {dir_tr} {quote} [SANAL]")
             continue
 
         if sym != "BTCUSDT":
@@ -482,6 +487,8 @@ def run() -> None:
         )
         print(f"[{LABEL}] {saat} — {name} {dir_tr} {sig.consensus}/{_TOTAL_ALGOS}  ${amount:.2f}→${to_win:.2f} [PM]")
 
+    if not _PM_LIVE:
+        _sync_balance(state, history)
     save_state(state)
     _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
 

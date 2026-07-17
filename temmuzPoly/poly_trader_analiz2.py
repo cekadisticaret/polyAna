@@ -2,7 +2,7 @@
 2. ANALİZ — Analiz 1 türevi (sanal)
 Modlar:
   close   → saat başında  (0 * * * *): önceki saatin sonuçlarını kapatır, bildirir
-  open    → 5 geçe        (5 * * * *): yeni tahmin, işlem açar
+  open    → 5 geçe        (5 * * * *): yeni tahmin, işlem açar (açılışta bakiye düşülür)
   preview → 45 geçe      (45 * * * *): bir sonraki saatin geçmiş başarı oranlarını bildirir
   weekly  → Cumartesi 21:00: haftalık ısı haritası
   stats   → manuel: detaylı başarı raporu
@@ -10,7 +10,7 @@ Modlar:
 Algoritma: poly_predictor_analysis.py
 Sanal bütçe: $300, işlem $10/$15/$20 (WR tier).
 Hacim filtresi yok. ABD açıkken Analiz 1 ile aynı; kapalıyken predict() boşsa gevşek yedek sinyal.
-Gece modu: 22:00–08:00 İST yeni işlem/önizleme yok (close devam eder).
+Gece modu kapalı — 24/7 işlem açar (ABD kapalıyken yedek sinyal devam eder).
 """
 import asyncio
 import json
@@ -42,17 +42,9 @@ INITIAL_BALANCE    = 300.0
 TRADE_AMOUNT       = 15.0   # genel başarı veri yok veya %50
 TRADE_AMOUNT_HIGH  = 20.0   # genel başarı > %50
 TRADE_AMOUNT_LOW   = 10.0   # genel başarı < %50
-SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # XRP/DOGE/BNB pasif
+SYMBOLS         = ["SOLUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
-
-_QUIET_START_HOUR = 22   # 22:00 İST ve sonrası kapalı
-_QUIET_END_HOUR   = 8    # 08:00 İST'te tekrar açılır
-
-
-def _trading_allowed(now_tr: datetime) -> bool:
-    h = now_tr.hour
-    return _QUIET_END_HOUR <= h < _QUIET_START_HOUR
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -171,6 +163,19 @@ async def _resolve_signal(symbol: str, us_open: bool) -> tuple[object | None, st
     return (fb, "fallback") if fb else (None, "none")
 
 
+def _stake(pos: dict) -> float:
+    spent, _, _ = pm_stake_fields(pos)
+    return spent
+
+
+def _credit_on_close(state: dict, pos: dict, win: bool, pnl: float) -> None:
+    """Açılışta düşülen stake: kazançta pm_size geri, kayıpta 0."""
+    _, size, _ = pm_stake_fields(pos)
+    if win and size > 0:
+        state["balance"] = round(state["balance"] + size, 2)
+    state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
+
+
 def _dyn_amount(rate: float | None) -> float:
     if rate is not None and rate > 0.5:
         return TRADE_AMOUNT_HIGH
@@ -253,8 +258,7 @@ async def run_close() -> None:
             pnl = sanal_pnl(pos, win)
         toplam_pnl += pnl
 
-        state["balance"]   = round(state["balance"] + pnl, 2)
-        state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
+        _credit_on_close(state, pos, win, pnl)
 
         rec = {
             "symbol":           pos["symbol"],
@@ -336,10 +340,6 @@ async def run_open() -> None:
     saat       = now_tr.strftime("%H:%M")
     tarih      = now_tr.strftime("%d.%m.%Y")
 
-    if not _trading_allowed(now_tr):
-        print(f"[2. ANALİZ open] {saat} İST — gece modu (22:00–08:00), işlem açılmıyor")
-        return
-
     state   = load_state()
     history = load_history()
 
@@ -384,6 +384,11 @@ async def run_open() -> None:
                                  else "NEUTRAL"),
         }
         apply_pm_quote(pos, sym, pred_obj.predicted_dir, dyn_amount, now)
+        stake = _stake(pos)
+        if state["balance"] < stake:
+            print(f"[2. ANALİZ open] {sym} — yetersiz bakiye ${state['balance']:.2f} < ${stake:.0f}")
+            continue
+        state["balance"] = round(state["balance"] - stake, 2)
         state["open_positions"].append(pos)
         opened.append({
             "sym": sym, "pred_obj": pred_obj, "entry_price": entry_price,
@@ -435,7 +440,7 @@ async def run_open() -> None:
         + "\n".join(lines)
         + (("\n" + "\n".join(skipped)) if skipped else "")
         + f"\n{sep}\n"
-        f"💰 Ana: ${state['balance'] - _at_risk:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${_at_risk:.0f}  |  Toplam: ${state['balance']:.2f}\n"
+        f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${_at_risk:.0f} riskte\n"
         f"{sep}"
     )
 
@@ -447,9 +452,6 @@ async def run_open() -> None:
 def run_preview() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
-    if not _trading_allowed(now_tr):
-        print(f"[2. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — gece modu (22:00–08:00), atlanıyor")
-        return
     next_hour = (now_tr.hour + 1) % 24
     dow       = now_tr.weekday()
     gun_tr    = _DAYS_FULL_TR[dow]

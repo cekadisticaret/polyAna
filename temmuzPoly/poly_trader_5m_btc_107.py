@@ -1,12 +1,11 @@
 """
-5M 107 — 105 Konsensüs + Trendline Break Pro (BTC, PM)
-=====================================================
-btc_5m_107_algo: 105 (4-algo) + trendline_break_pro aynı yön.
+5M 107 — 105 kopyası + yön yorgunluğu freni (BTC, Sanal)
+========================================================
+btc_5m_105_algo ile aynı sinyal; peş peşe 5 aynı yön açılış → 2 tur bekle.
 
-$5/işlem. Başlangıç $200. P&L PM kotasyonundan (105 ile aynı mantık).
-PM_5M_107_REAL_ENABLED=true → gerçek PM (105 ile aynı cüzdan).
-Telegram: 8799859033 bot.
-Gece modu: 22:00–07:00 İST yeni işlem yok
+$200 başlangıç, $8/$10/$12 (WR'ye göre), PM gamma kotasyonundan P&L. 24/7.
+PM_5M_107_REAL_ENABLED=false (varsayılan, yalnızca sanal)
+Telegram: 8256912678 bot (106 kanalı)
 Cron: */5 * * * *
 """
 
@@ -15,14 +14,14 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from btc_5m_107_algo import analyze, fetch_klines_5m
+from btc_5m_105_algo import analyze, fetch_klines_5m
 import poly_trader_5m_common as _pm_common
-from poly_tg_5m_102 import tg_send, tg_send_photo
-from pm_trader_helpers import pm_5m_sanal_quote, pm_5m_close, pm_5m_history_extras, pm_5m_find_market
+from poly_trader_5m_common import tg_send, tg_send_photo
+from pm_trader_helpers import pm_5m_sanal_quote, sanal_pnl, pm_5m_history_extras, pm_5m_find_market, pm_sanal_tg_quote
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
 if os.path.exists(_ENV_FILE):
@@ -33,36 +32,30 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-_TZ_TR    = ZoneInfo("Europe/Istanbul")
-
-_DIR         = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE   = os.path.join(_DIR, "poly_trader_5m_btc_107_state.json")
+_TZ_TR = ZoneInfo("Europe/Istanbul")
+_DIR = os.path.dirname(os.path.abspath(__file__))
+STATE_FILE = os.path.join(_DIR, "poly_trader_5m_btc_107_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_btc_107_history.json")
-WEEKLY_IMG   = "/tmp/poly_5m_btc_105_weekly.png"
+WEEKLY_IMG = "/tmp/poly_5m_btc_107_weekly.png"
 
-SYMBOLS           = ["BTCUSDT"]
-SYMBOL            = "BTCUSDT"
-INITIAL_BALANCE   = 200.0
-TRADE_AMOUNT      = 5.0
-TRADE_AMOUNT_UP   = 5.0
-TRADE_AMOUNT_DOWN = 5.0
-_PERIOD_SECS      = 300
-_TOTAL_ALGOS      = 4
-_DAYS_TR          = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
-
-_PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
-_PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
-_PM_LIVE      = os.getenv("PM_5M_107_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
-_PM_DRY_RUN   = not _PM_LIVE
+SYMBOLS = ["BTCUSDT"]
+INITIAL_BALANCE = 200.0
+TRADE_AMOUNT = 10.0
+TRADE_AMOUNT_LOW = 8.0
+TRADE_AMOUNT_HIGH = 12.0
+_PERIOD_SECS = 300
+_TOTAL_ALGOS = 4
+_DAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 
 _PM_SANITY_MIN = 0.05
 _PM_SANITY_MAX = 0.95
-_PM_TRADE_MIN  = 0.42
-_PM_TRADE_MAX  = 0.52
+_PM_TRADE_MIN = 0.42
+_PM_TRADE_MAX = 0.52
 _PM_MIN_PAYOUT_RATIO = 1.25
 
-_QUIET_START_HOUR = 22
-_QUIET_END_HOUR   = 7
+# Peş peşe aynı yön açılış freni (105 analizinden)
+_DIR_STREAK_CAP = 5
+_DIR_COOLDOWN = 2
 
 LABEL = "5M 107 BTC"
 
@@ -75,96 +68,87 @@ def _fmt_price(symbol: str, price: float) -> str:
     return f"{price:,.2f}" if symbol == "BTCUSDT" else f"{price:.2f}"
 
 
-def _trading_allowed(now_tr: datetime) -> bool:
-    h = now_tr.hour
-    return _QUIET_END_HOUR <= h < _QUIET_START_HOUR
+def _trading_allowed(_now_tr: datetime) -> bool:
+    return True
 
 
-def _trade_amount(_direction: str) -> float:
-    return TRADE_AMOUNT
+def _trade_amount(history: list) -> float:
+    amt, _ = _pm_common.trade_amount_by_wr(
+        history,
+        low=TRADE_AMOUNT_LOW,
+        mid=TRADE_AMOUNT,
+        high=TRADE_AMOUNT_HIGH,
+    )
+    return amt
 
 
-def _pm_bal_line() -> str:
-    return _pm_common._pm_bal_line()
+def _ensure_brake_state(state: dict) -> None:
+    state.setdefault("dir_streak", {"direction": None, "count": 0})
+    state.setdefault("dir_cooldown", {"UP": 0, "DOWN": 0})
 
 
-def _tg_balance(state: dict | None = None) -> str:
-    if _PM_LIVE:
-        from pm_balance_guard import get_usdc_balance
-        bal = get_usdc_balance()
-        if bal >= 9999:
-            return "💰 Bakiye: PM sorgulanamadı"
-        return f"💰 Bakiye: ${bal:.2f}"
-    st = state if state is not None else load_state()
-    return f"💰 Bakiye: ${st['balance']:.2f}"
+def _tick_cooldowns(state: dict) -> None:
+    _ensure_brake_state(state)
+    for d in ("UP", "DOWN"):
+        if state["dir_cooldown"][d] > 0:
+            state["dir_cooldown"][d] -= 1
 
 
-def _bal_line(state: dict) -> str:
-    return _pm_bal_line() if _PM_LIVE else _tg_balance(state)
+def _direction_brake_skip(state: dict, direction: str) -> str | None:
+    """Peş peşe aynı yön limiti — None = açılabilir."""
+    _ensure_brake_state(state)
+    cd = state["dir_cooldown"].get(direction, 0)
+    if cd > 0:
+        return f"Yön freni {direction}: {cd} tur bekle"
+    streak = state["dir_streak"]
+    if streak.get("direction") == direction and streak.get("count", 0) >= _DIR_STREAK_CAP:
+        state["dir_cooldown"][direction] = _DIR_COOLDOWN
+        state["dir_streak"] = {"direction": None, "count": 0}
+        return f"Yön freni: peş peşe {_DIR_STREAK_CAP}x {direction} → {_DIR_COOLDOWN} tur bekle"
+    return None
 
 
-def _sanal_find_5m_market(ts_5m: int, direction: str) -> tuple[dict | None, float | None]:
-    _pm_common._PM_DRY_RUN = True
-    pm = _pm_common._pm_find_5m_market(ts_5m)
-    if not pm:
-        return None, None
-    tp = pm["up_price"] if direction == "UP" else pm["down_price"]
-    return pm, tp
+def _record_direction_open(state: dict, direction: str) -> None:
+    _ensure_brake_state(state)
+    streak = state["dir_streak"]
+    if streak.get("direction") == direction:
+        streak["count"] = streak.get("count", 0) + 1
+    else:
+        state["dir_streak"] = {"direction": direction, "count": 1}
 
 
 def _pm_resolve_market(symbol: str, ts_5m: int, direction: str, amount: float) -> tuple[dict | None, str]:
-    if _PM_LIVE and symbol != "BTCUSDT":
-        return None, "gerçek PM yalnızca BTC"
-    if not _PM_LIVE:
-        pm = pm_5m_find_market(ts_5m, symbol)
-        if not pm or pm.get("closed"):
-            return None, "PM market yok"
-        tp = pm["up_price"] if direction == "UP" else pm["down_price"]
-        if not (_PM_SANITY_MIN <= tp <= _PM_SANITY_MAX):
-            return None, f"token @{tp:.2f} sanity dışı"
-        if not (_PM_TRADE_MIN <= tp <= _PM_TRADE_MAX):
-            return None, f"token @{tp:.2f} band dışı ({_PM_TRADE_MIN}–{_PM_TRADE_MAX})"
-        est = round(amount / tp, 2) if tp > 0 else 0
-        if est < amount * _PM_MIN_PAYOUT_RATIO:
-            return None, f"payout {est/amount:.2f}x < {_PM_MIN_PAYOUT_RATIO} (@{tp:.2f})"
-        pm["token_price"] = tp
-        return pm, ""
-
-    expected = f"btc-updown-5m-{ts_5m}"
-    _pm_common._PM_DRY_RUN = _PM_DRY_RUN
-    for attempt in range(3):
-        pm = _pm_common._pm_find_5m_market(ts_5m)
-        if not pm:
-            if attempt < 2:
-                time.sleep(3)
-            continue
-        if pm.get("slug") != expected or pm.get("closed"):
-            if attempt < 2:
-                time.sleep(2)
-            continue
-        tp = pm["up_price"] if direction == "UP" else pm["down_price"]
-        if not (_PM_SANITY_MIN <= tp <= _PM_SANITY_MAX):
-            if attempt < 2:
-                time.sleep(3)
-            continue
-        if not (_PM_TRADE_MIN <= tp <= _PM_TRADE_MAX):
-            return None, f"token @{tp:.2f} band dışı ({_PM_TRADE_MIN}–{_PM_TRADE_MAX})"
-        est = round(amount / tp, 2) if tp > 0 else 0
-        if est < amount * _PM_MIN_PAYOUT_RATIO:
-            return None, f"payout {est/amount:.2f}x < {_PM_MIN_PAYOUT_RATIO} (@{tp:.2f})"
-        pm["token_price"] = tp
-        return pm, ""
-    return None, "PM fiyat/market geçersiz"
+    pm = pm_5m_find_market(ts_5m, symbol)
+    if not pm or pm.get("closed"):
+        return None, "PM market yok"
+    tp = pm["up_price"] if direction == "UP" else pm["down_price"]
+    if not (_PM_SANITY_MIN <= tp <= _PM_SANITY_MAX):
+        return None, f"token @{tp:.2f} sanity dışı"
+    if not (_PM_TRADE_MIN <= tp <= _PM_TRADE_MAX):
+        return None, f"token @{tp:.2f} band dışı ({_PM_TRADE_MIN}–{_PM_TRADE_MAX})"
+    est = round(amount / tp, 2) if tp > 0 else 0
+    if est < amount * _PM_MIN_PAYOUT_RATIO:
+        return None, f"payout {est/amount:.2f}x < {_PM_MIN_PAYOUT_RATIO} (@{tp:.2f})"
+    pm["token_price"] = tp
+    return pm, ""
 
 
 def load_state() -> dict:
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE) as f:
-                return json.load(f)
+                st = json.load(f)
+            _ensure_brake_state(st)
+            return st
         except Exception:
             pass
-    return {"balance": INITIAL_BALANCE, "open_positions": [], "total_pnl": 0.0}
+    return {
+        "balance": INITIAL_BALANCE,
+        "open_positions": [],
+        "total_pnl": 0.0,
+        "dir_streak": {"direction": None, "count": 0},
+        "dir_cooldown": {"UP": 0, "DOWN": 0},
+    }
 
 
 def save_state(state: dict) -> None:
@@ -195,60 +179,27 @@ def _tg_esc(text: str) -> str:
     return html.escape(str(text), quote=False)
 
 
-def get_stats(history: list, period_min: int, dow: int | None = None) -> tuple[int, int]:
-    trades = [
-        t for t in history
-        if t.get("entry_period_min") == period_min
-        and (dow is None or t.get("entry_dow") == dow)
-    ]
-    return sum(1 for t in trades if t["win"]), len(trades)
-
-
 def get_all_stats(history: list) -> tuple[int, int]:
-    rows = _effective_history(history)
-    return sum(1 for t in rows if t.get("win")), len(rows)
-
-
-def _effective_history(history: list) -> list:
-    """Gerçek PM modunda yalnızca canlı işlemler (sanal dönem hariç)."""
-    if _PM_LIVE:
-        return [t for t in history if t.get("pm_dry_run") is False]
-    return list(history)
+    return sum(1 for t in history if t.get("win")), len(history)
 
 
 def _net_pnl(history: list) -> float:
-    return round(sum(t.get("pnl", 0) or 0 for t in _effective_history(history)), 2)
+    return round(sum(t.get("pnl", 0) or 0 for t in history), 2)
 
 
-def _cumulative_stats(history: list) -> tuple[int, int, float, str]:
-    rows = _effective_history(history)
-    wins = sum(1 for t in rows if t.get("win"))
-    total = len(rows)
-    net = round(sum(t.get("pnl", 0) or 0 for t in rows), 2)
-    since = ""
-    if rows:
-        d = rows[0].get("entry_time_tr", "")[:10]
-        if len(d) == 10:
-            y, m, day = d.split("-")
-            since = f"{day}.{m}.{y}"
-    return wins, total, net, since
+def _sync_balance(state: dict, history: list) -> None:
+    net = _net_pnl(history)
+    state["balance"] = round(INITIAL_BALANCE + net, 2)
+    state["total_pnl"] = net
 
 
 def _cumulative_line(history: list) -> str:
-    wins, total, net, since = _cumulative_stats(history)
+    wins, total = get_all_stats(history)
+    net = _net_pnl(history)
     if total == 0:
         return "📊 Net P&L: henüz kapanmış işlem yok"
     icon = "🟢" if net >= 0 else "🔴"
-    scope = "gerçek PM" if _PM_LIVE else "sanal"
-    since_part = f" · {since}'den beri" if since else ""
-    return (
-        f"📊 Net P&L ({scope}{since_part}): {icon} <b>{net:+.2f}$</b>"
-        f"  |  {total} işlem  |  {_wr(wins, total)}"
-    )
-
-
-def _sync_total_pnl(state: dict, history: list) -> None:
-    state["total_pnl"] = _net_pnl(history)
+    return f"📊 Net P&L (sanal): {icon} <b>{net:+.2f}$</b>  |  {total} işlem  |  {_wr(wins, total)}"
 
 
 def _current_5m_ts() -> int:
@@ -266,22 +217,34 @@ def _resolve_period_candle(symbol: str, ts_5m: int, retries: int = 8, wait_sec: 
     return None
 
 
+def _period_open_price(symbol: str, ts_5m: int, fallback: float) -> float:
+    """5M periyot referans açılışı — Poly/Binance slot open (sig.entry_price değil)."""
+    candle = _resolve_period_candle(symbol, ts_5m, retries=3, wait_sec=1.0)
+    if candle:
+        return float(candle["open"])
+    try:
+        kl = fetch_klines_5m(symbol, 5)
+        if kl and kl[-1]["open_time"] == ts_5m * 1000:
+            return float(kl[-1]["open"])
+    except Exception:
+        pass
+    return fallback
+
+
 def run() -> None:
-    now    = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
-    dow    = now_tr.weekday()
+    dow = now_tr.weekday()
     period_min = (now_tr.hour * 60 + now_tr.minute) // 5 * 5
-    ts_5m      = _current_5m_ts()
+    ts_5m = _current_5m_ts()
     saat = f"{period_min // 60:02d}:{period_min % 60:02d}"
     next_period_min = period_min + 5
     next_saat = f"{next_period_min // 60:02d}:{next_period_min % 60:02d}"
 
-    state   = load_state()
+    state = load_state()
     history = load_history()
-
-    if not _trading_allowed(now_tr) and not state["open_positions"]:
-        print(f"[{LABEL}] {saat} — gece modu (22:00–07:00 İST), çalıştırılmadı")
-        return
+    _sync_balance(state, history)
+    _tick_cooldowns(state)
 
     closed_lines = []
     tur_pnl = 0.0
@@ -299,17 +262,13 @@ def run() -> None:
                     print(f"[{LABEL}] Kapanış fiyatı alınamadı ({sym}): {e}")
                     continue
 
-            ref_open   = candle["open"]
+            ref_open = pos.get("entry_price") or candle["open"]
             prev_close = candle["close"]
-            pred   = pos["predicted_dir"]
+            pred = pos["predicted_dir"]
             actual = "UP" if prev_close >= ref_open else "DOWN"
-            win    = pred == actual
-            pnl, payout = pm_5m_close(pos, win)
-            spent = pos.get("pm_spent") or pos.get("amount", TRADE_AMOUNT)
-
-            if win and not _PM_LIVE:
-                state["balance"] = round(state["balance"] + payout, 2)
-
+            win = pred == actual
+            pnl = sanal_pnl(pos, win)
+            spent = pos.get("pm_spent") or pos.get("amount", _trade_amount(history))
             tur_pnl += pnl
 
             history.append({
@@ -330,7 +289,7 @@ def run() -> None:
                 "votes": pos.get("votes"),
                 "labels": pos.get("labels"),
                 "momentum": pos.get("momentum"),
-                "pm_dry_run": _PM_DRY_RUN,
+                "pm_dry_run": True,
                 **pm_5m_history_extras(pos),
             })
 
@@ -339,20 +298,14 @@ def run() -> None:
             dir_tr = "YÜKSELİR" if pred == "UP" else "DÜŞER"
             pct = (prev_close - ref_open) / ref_open * 100 if ref_open else 0
             closed_lines.append(
-                f"{icon} {name} {dir_tr}  {_fmt_price(sym, ref_open)}→{_fmt_price(sym, prev_close)} ({pct:+.1f}%)"
+                f"{icon} {name} {dir_tr}  {_fmt_price(sym, ref_open)}→{_fmt_price(sym, prev_close)} ({pct:+.2f}%)"
                 f"  {'+'+f'${pnl:.2f}' if win else '-$'+f'{spent:.2f}'}"
             )
 
         state["open_positions"] = []
-        _sync_total_pnl(state, history)
+        _sync_balance(state, history)
         save_state(state)
         save_history(history)
-
-    if not _trading_allowed(now_tr):
-        if closed_lines:
-            _send_tg_round(saat, next_saat, state, history, closed_lines, [], [], tur_pnl)
-        print(f"[{LABEL}] {saat} — gece modu (22:00–07:00 İST), yeni işlem yok")
-        return
 
     open_lines = []
     skip_lines = []
@@ -378,115 +331,61 @@ def run() -> None:
             continue
 
         direction = sig.direction
-        amount = TRADE_AMOUNT
-        balance = state["balance"]
+        amount = _trade_amount(history)
 
-        if not _PM_LIVE and balance < amount:
+        brake = _direction_brake_skip(state, direction)
+        if brake:
+            skip_lines.append(f"⏸ {name} — {_tg_esc(brake)}")
+            print(f"[{LABEL}] {saat} — {name} atlandı: {brake}")
+            continue
+
+        if state["balance"] < amount:
             skip_lines.append(f"⏸ {name} — bakiye yetersiz")
             continue
 
-        entry_p = sig.entry_price
-        dir_tr = "YÜKSELİR" if direction == "UP" else "DÜŞER"
-        dir_icon = "📈" if direction == "UP" else "📉"
-        icons = " ".join("🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in sig.votes)
-
-        tl_note = ""
-        if getattr(sig, "trendline_label", None):
-            tl_note = f"\n   📐 {_tg_esc(sig.trendline_label)}"
-
-        if not _PM_LIVE:
-            pm_info, pm_skip = _pm_resolve_market(sym, ts_5m, direction, amount)
-            if not pm_info:
-                skip_lines.append(f"⏸ {name} {direction} — {pm_skip}")
-                continue
-            pm_q = pm_5m_sanal_quote(ts_5m, direction, amount, sym)
-            token_price = pm_q.get("token_price") or pm_info.get("token_price")
-            to_win = pm_q.get("to_win") or round(amount / max(token_price, 0.02), 2)
-            price_str = f"@{token_price:.2f}" if token_price else ""
-
-            state["balance"] = round(balance - amount, 2)
-            balance = state["balance"]
-            state["open_positions"].append({
-                "symbol": sym, "predicted_dir": direction,
-                "entry_price": entry_p, "consensus": sig.consensus, "votes": sig.votes,
-                "labels": sig.labels, "momentum": sig.momentum,
-                "entry_time_tr": now_tr.isoformat(), "entry_period_min": period_min,
-                "entry_dow": dow, "entry_hour_tr": now_tr.hour,
-                "ts_5m": ts_5m, "virtual": True,
-                "pm_dry_run": True,
-                **pm_q,
-            })
-            open_lines.append(
-                f"{dir_icon} <b>{name} {dir_tr}</b>  ({sig.consensus}/{_TOTAL_ALGOS})  "
-                f"💵 ${amount:.0f} {price_str} → 🏆 ${to_win:.2f}\n"
-                f"Giriş: {_fmt_price(sym, entry_p)}  |  Momentum: {sig.momentum}{tl_note}\n"
-                f"{icons}"
-            )
-            print(f"[{LABEL}] {saat} — {name} {dir_tr} ${amount:.0f}→${to_win:.2f} [SANAL]")
-            continue
-
-        if sym != "BTCUSDT":
-            skip_lines.append(f"⏸ {name} — gerçek PM yalnızca BTC")
-            continue
-
-        from pm_balance_guard import can_open_trade
-        if not can_open_trade(LABEL, tg_send):
-            save_state(state)
-            if closed_lines:
-                _send_tg_round(saat, next_saat, state, history, closed_lines, [], [], tur_pnl)
-            return
-
-        _pm_common._PM_DRY_RUN = _PM_DRY_RUN
         pm_info, pm_skip = _pm_resolve_market(sym, ts_5m, direction, amount)
         if not pm_info:
             skip_lines.append(f"⏸ {name} {direction} — {pm_skip}")
             continue
 
-        token_price = pm_info["token_price"]
-        pm_slug = pm_info["slug"]
-        to_win = round(amount / token_price, 2) if token_price > 0 else round(amount * 2, 2)
+        pm_q = pm_5m_sanal_quote(ts_5m, direction, amount, sym)
+        token_price = pm_q.get("token_price") or pm_info.get("token_price")
+        to_win = pm_q.get("to_win") or round(amount / max(token_price, 0.02), 2)
+        quote = pm_sanal_tg_quote(amount, token_price, to_win)
+        entry_p = _period_open_price(sym, ts_5m, sig.entry_price)
 
-        if not _pm_common._pm_payout_ok(amount, to_win):
-            skip_lines.append(f"⏸ {name} — payout düşük")
-            continue
-
-        token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
-        deadline = _pm_common._pm_open_deadline(ts_5m)
-        _pm_common._pm_period_warmup(ts_5m)
-        order_result = _pm_common._pm_place_order(
-            token_id, amount, pm_info["tick_size"], pm_info["neg_risk"], deadline=deadline,
-        )
-
-        if order_result and order_result.get("_skip"):
-            skip_lines.append(f"⏸ {name} — emir başarısız")
-            continue
-        if not order_result:
-            skip_lines.append(f"⏸ {name} — PM order başarısız")
-            continue
-
-        to_win = order_result["size"]
-        amount = order_result["spent"]
-        token_price = order_result.get("price", token_price)
-        pm_size = order_result.get("size") or to_win
-
+        _record_direction_open(state, direction)
         state["open_positions"].append({
-            "symbol": sym, "predicted_dir": direction,
-            "entry_price": entry_p, "amount": amount, "pm_spent": amount, "to_win": to_win,
-            "token_price": token_price, "consensus": sig.consensus, "votes": sig.votes,
-            "labels": sig.labels, "momentum": sig.momentum,
-            "entry_time_tr": now_tr.isoformat(), "entry_period_min": period_min,
-            "entry_dow": dow, "entry_hour_tr": now_tr.hour,
-            "pm_slug": pm_slug, "pm_token_dir": direction,
-            "pm_token_id": token_id, "ts_5m": ts_5m, "pm_size": pm_size,
-            "pm_entry_price": token_price,
-            "pm_order_id": order_result.get("order_id", ""),
+            "symbol": sym,
+            "predicted_dir": direction,
+            "entry_price": entry_p,
+            "consensus": sig.consensus,
+            "votes": sig.votes,
+            "labels": sig.labels,
+            "momentum": sig.momentum,
+            "entry_time_tr": now_tr.isoformat(),
+            "entry_period_min": period_min,
+            "entry_dow": dow,
+            "entry_hour_tr": now_tr.hour,
+            "ts_5m": ts_5m,
+            "virtual": True,
+            "pm_dry_run": True,
+            **pm_q,
         })
+
+        dir_tr = "YÜKSELİR" if direction == "UP" else "DÜŞER"
+        dir_icon = "📈" if direction == "UP" else "📉"
+        icons = " ".join("🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in sig.votes)
+        streak_n = state["dir_streak"].get("count", 0)
         open_lines.append(
             f"{dir_icon} <b>{name} {dir_tr}</b>  ({sig.consensus}/{_TOTAL_ALGOS})  "
-            f"💵 ${amount:.2f} @{token_price:.2f} → 🏆 ${to_win:.2f}  🔴 GERÇEK PM{tl_note}"
+            f"{quote}\n"
+            f"Giriş: {_fmt_price(sym, entry_p)}  |  mom:{sig.momentum}  |  seri:{streak_n}/{_DIR_STREAK_CAP}\n"
+            f"{icons}"
         )
-        print(f"[{LABEL}] {saat} — {name} {dir_tr} {sig.consensus}/{_TOTAL_ALGOS}  ${amount:.2f}→${to_win:.2f} [PM]")
+        print(f"[{LABEL}] {saat} — {name} {dir_tr} {quote} [SANAL] seri={streak_n}")
 
+    _sync_balance(state, history)
     save_state(state)
     _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
 
@@ -508,18 +407,15 @@ def _send_tg_round(
     parts: list[str] = [f"<b>{LABEL} — {saat}</b>"]
 
     if closed_lines:
-        win_all, tot_all = get_all_stats(history)
         parts.append(
             "🏁 <b>Sonuçlar</b> (biten tur)\n"
             + "\n".join(closed_lines)
             + f"\n{'🟢' if tur_pnl >= 0 else '🔴'} Bu tur: {tur_pnl:+.2f}$"
-            + f"  |  {_wr(win_all, tot_all)}"
         )
 
     if open_lines:
         parts.append(
-            f"🆕 <b>{saat} → {next_saat}</b>  "
-            f"{'🔶 SANAL' if not _PM_LIVE else '🔴 GERÇEK PM'}\n"
+            f"🆕 <b>{saat} → {next_saat}</b>  🔶 SANAL\n"
             + "\n".join(open_lines)
         )
 
@@ -527,12 +423,12 @@ def _send_tg_round(
         f"{sep}\n"
         + "\n\n".join(parts)
         + f"\n{_cumulative_line(history)}\n"
-        + f"{_bal_line(state)}\n"
+        f"💰 Bakiye: ${state['balance']:.2f}\n"
         f"{sep}"
     )
-    ok = tg_send(msg)
+    tg_send(msg)
     kind = "kapanış+açılış" if closed_lines and open_lines else "kapanış" if closed_lines else "açılış"
-    print(f"[{LABEL}] {saat} — TG {kind} gönderildi" if ok else f"[{LABEL}] {saat} — TG {kind} HATA")
+    print(f"[{LABEL}] {saat} — TG {kind} gönderildi")
 
 
 def run_weekly() -> None:
@@ -543,8 +439,9 @@ def run_weekly() -> None:
     import numpy as np
 
     history = load_history()
-    state   = load_state()
-    now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    state = load_state()
+    _sync_balance(state, history)
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
 
     if not history:
         tg_send(f"📊 <b>{LABEL} WEEKLY</b>\nHenüz veri yok.")
@@ -584,10 +481,10 @@ def run_weekly() -> None:
     ax.tick_params(length=0)
 
     total = len(history)
-    wins  = sum(1 for t in history if t["win"])
+    wins = sum(1 for t in history if t["win"])
     genel = f"%{wins/total*100:.0f}" if total else "—"
     balance = state.get("balance", INITIAL_BALANCE)
-    total_pnl = state.get("total_pnl", 0.0)
+    total_pnl = state.get("total_pnl", _net_pnl(history))
     ax.set_title(
         f"{LABEL} — Haftalık Isı Haritası  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
         f"Toplam: {total} işlem  |  {genel}  |  Bakiye: ${balance:.2f}  |  P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$",
@@ -600,28 +497,9 @@ def run_weekly() -> None:
     tg_send_photo(WEEKLY_IMG, f"📊 {LABEL} Haftalık  {now_tr.strftime('%d.%m.%Y')}  {total} işlem | {genel}")
 
 
-def run_stats() -> None:
-    history = load_history()
-    state   = load_state()
-    now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    total   = len(history)
-    wins    = sum(1 for t in history if t["win"])
-    total_pnl = state.get("total_pnl", 0.0)
-    tg_send(
-        f"📊 <b>{LABEL} İSTATİSTİKLER</b>\n"
-        f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"Toplam: {total} işlem  |  {_wr(wins, total)}\n"
-        f"{'🟢' if total_pnl >= 0 else '🔴'} P&amp;L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
-        f"Başlangıç: ${INITIAL_BALANCE:.2f}"
-    )
-
-
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "open"
     if mode == "weekly":
         run_weekly()
-    elif mode == "stats":
-        run_stats()
     else:
         run()
