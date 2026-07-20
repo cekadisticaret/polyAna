@@ -28,6 +28,9 @@ from pm_trader_helpers import (
     pm_15m_sanal_quote,
     pm_15m_find_market,
     sanal_pnl,
+    sanal_debit_on_open,
+    sanal_credit_on_close,
+    pm_stake_fields,
     pm_5m_close,
     pm_5m_history_extras,
     pm_sanal_tg_quote,
@@ -170,7 +173,13 @@ def _cumulative_stats(history: list) -> tuple[int, int, float, str]:
 def _bal_line(state: dict) -> str:
     if _PM_LIVE:
         return _pm_common._pm_bal_line()
-    return f"💰 Bakiye: ${state['balance']:.2f}"
+    at_risk = sum(
+        (p.get("pm_spent") or p.get("amount", 0)) for p in state.get("open_positions", [])
+    )
+    bal = state["balance"]
+    if at_risk > 0:
+        return f"💰 Bakiye: ${bal:.2f}  |  📂 ${at_risk:.0f} riskte"
+    return f"💰 Bakiye: ${bal:.2f}"
 
 
 def _current_period_ts() -> int:
@@ -256,8 +265,6 @@ def run() -> None:
 
     state = load_state()
     history = load_history()
-    if not _PM_LIVE:
-        _sync_balance(state, history)
 
     closed_lines: list[str] = []
     tur_pnl = 0.0
@@ -287,6 +294,7 @@ def run() -> None:
                     state["balance"] = round(state["balance"] + payout, 2)
             else:
                 pnl = sanal_pnl(pos, win)
+                sanal_credit_on_close(state, pos, win, pnl)
 
             tur_pnl += pnl
             history.append({
@@ -323,8 +331,6 @@ def run() -> None:
         state["open_positions"] = []
         if _PM_LIVE:
             _sync_total_pnl(state, history)
-        else:
-            _sync_balance(state, history)
         save_state(state)
         save_history(history)
 
@@ -351,8 +357,6 @@ def run() -> None:
 
         direction = sig.direction
         amount = _trade_amount(history)
-        if not _PM_LIVE:
-            _sync_balance(state, history)
         balance = state["balance"]
 
         if not _PM_LIVE and balance < amount:
@@ -374,7 +378,7 @@ def run() -> None:
             to_win = pm_q.get("to_win") or round(amount / max(float(token_price or 0.02), 0.02), 2)
             quote = pm_sanal_tg_quote(amount, token_price, to_win)
 
-            state["open_positions"].append({
+            pos = {
                 "symbol": sym,
                 "predicted_dir": direction,
                 "entry_price": entry_p,
@@ -392,7 +396,13 @@ def run() -> None:
                 "virtual": True,
                 "pm_dry_run": True,
                 **pm_q,
-            })
+            }
+            stake, _, _ = pm_stake_fields(pos)
+            if balance < stake:
+                skip_lines.append(f"⏸ {name} — bakiye yetersiz")
+                continue
+            sanal_debit_on_open(state, pos)
+            state["open_positions"].append(pos)
             open_lines.append(
                 f"{dir_icon} <b>{name} {dir_tr}</b>  "
                 f"skor UP={sig.up_score} DOWN={sig.down_score}  "
@@ -476,8 +486,6 @@ def run() -> None:
         )
         print(f"[{LABEL}] {saat} — {name} {dir_tr} ${amount:.2f}→${to_win:.2f} [GERÇEK PM A32]")
 
-    if not _PM_LIVE:
-        _sync_balance(state, history)
     save_state(state)
     _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
 

@@ -362,6 +362,22 @@ def sanal_pnl(pos: dict, win: bool) -> float:
     return 0.0
 
 
+def sanal_debit_on_open(state: dict, pos: dict) -> float:
+    """Açılışta stake bakiyeden düşülür (A2 modeli)."""
+    spent, _, _ = pm_stake_fields(pos)
+    if spent > 0:
+        state["balance"] = round(state.get("balance", 0) - spent, 2)
+    return spent
+
+
+def sanal_credit_on_close(state: dict, pos: dict, win: bool, pnl: float) -> None:
+    """Kapanış: kazançta pm_size geri, kayıpta 0; total_pnl güncellenir."""
+    _, size, _ = pm_stake_fields(pos)
+    if win and size > 0:
+        state["balance"] = round(state.get("balance", 0) + size, 2)
+    state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
+
+
 def sanal_close_balance(state: dict, pos: dict, win: bool) -> float:
     """Bakiye += net PM P&L (açılışta pm_spent düşülmüşse tutarlı)."""
     pnl = sanal_pnl(pos, win)

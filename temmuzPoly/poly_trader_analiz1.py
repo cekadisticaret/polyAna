@@ -10,7 +10,7 @@ Modlar:
 
 Algoritma: poly_predictor_analysis.py — değiştirilmedi.
 Sanal bütçe: $300 başlangıç, her işlem $10.
-Hafta sonu duraklama: Cuma 22:00 – Pazar 22:00 İST (open/preview atlanır; close açık pozisyon varsa çalışır).
+Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open/preview atlanır; close açık pozisyon varsa çalışır).
 """
 import asyncio
 import json
@@ -45,14 +45,14 @@ _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cum
 
 
 def _in_weekend_pause(now_tr: datetime) -> bool:
-    """Cuma 22:00 – Pazar 22:00 İST arası yeni işlem açılmaz."""
+    """Cuma 22:00 – Pazar 18:00 İST arası yeni işlem açılmaz."""
     dow = now_tr.weekday()  # 0=Pzt … 4=Cum 5=Cmt 6=Paz
     h = now_tr.hour
     if dow == 4 and h >= 22:
         return True
     if dow == 5:
         return True
-    if dow == 6 and h < 22:
+    if dow == 6 and h < 18:
         return True
     return False
 
@@ -256,7 +256,7 @@ async def run_open() -> None:
     saat   = now_tr.strftime("%H:%M")
 
     if _in_weekend_pause(now_tr):
-        print(f"[1. ANALİZ open] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 22:00), işlem yok")
+        print(f"[1. ANALİZ open] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok")
         return
 
     hour_tr    = now_tr.hour
