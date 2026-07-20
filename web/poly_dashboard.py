@@ -33,6 +33,7 @@ _HEATMAP_SYMS = {
     "karisim1": ["BTC", "SOL"],
     "5m_btc_107": ["BTC"],
     "5m_sol_110": ["SOL"],
+    "5m_sol_111": ["SOL"],
 }
 # poly_trader_* dışındaki analiz dosyaları (history, state)
 _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {}
@@ -44,11 +45,11 @@ _PASIF_ANALYSES = frozenset({"analiz9", "5m_btc_107"})
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2", "analiz5", "analiz4", "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "karisim1",
-    "5m_btc_107", "5m_sol_110",
+    "5m_btc_107", "5m_sol_110", "5m_sol_111",
 ]
 _HISTORY_ORDER = [
     "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
-    "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "karisim1", "5m_btc_107", "5m_sol_110",
+    "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "karisim1", "5m_btc_107", "5m_sol_110", "5m_sol_111",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
@@ -65,6 +66,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "karisim1":   "11. Analiz",
     "5m_btc_107": "5M 107 BTC (Pasif)",
     "5m_sol_110": "15M 110 SOL",
+    "5m_sol_111": "15M 111 SOL",
 }
 
 
@@ -299,6 +301,7 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
 _PM_POSITION_SOURCES = [
     ("analiz5", "5. Analiz"),
     ("5m_sol_110", "15M 110 SOL"),
+    ("5m_sol_111", "15M 111 SOL"),
 ]
 
 def _position_visible(_key: str, pos: dict) -> bool:
@@ -733,7 +736,8 @@ def api_analizler():
         ("analiz23",   "23. Analiz",            500,  "A4 BTC + A2 SOL hibrit $20-30-40"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
         ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 algo + yön freni — cron kapalı"),
-        ("5m_sol_110",  "15M 110 SOL",           300,  "Analiz32 15m SOL gerçek PM $8-10-12"),
+        ("5m_sol_110",  "15M 110 SOL",           300,  "Analiz32 15m SOL sanal $8-10-12"),
+        ("5m_sol_111",  "15M 111 SOL",           300,  "A32 15m filtreli sanal $8-10-12"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:

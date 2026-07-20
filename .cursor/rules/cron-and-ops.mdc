@@ -17,8 +17,10 @@ alwaysApply: true
 | `0 21 * * *` | `temmuzPoly/poly_trader_analiz{1,32}.py daily` | `/tmp/poly_trader_analiz*.log` |
 | `0 21 * * 6` | `temmuzPoly/poly_trader_analiz{1,2,4,5,10,13,21,23,31,32}.py weekly` | `/tmp/poly_trader_analiz*.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_real_stats.py` | `/tmp/poly_5m_real_stats.log` |
-| `*/15 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_110.py open` (gerçek PM $8-12) | `/tmp/poly_5m_sol_110.log` |
+| `*/15 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_110.py open` (sanal $8-12) | `/tmp/poly_5m_sol_110.log` |
 | `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_110.py weekly` | `/tmp/poly_5m_sol_110.log` |
+| `*/15 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_111.py open` (sanal filtreli $8-12) | `/tmp/poly_5m_sol_111.log` |
+| `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_111.py weekly` | `/tmp/poly_5m_sol_111.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_signals.py` | `/tmp/algo_signals.log` |
 
 ## Pasif / Kaldırılmış
@@ -45,6 +47,7 @@ tail -f /tmp/bist_visual.log
 tail -f /tmp/bist_signal_hunter.log
 tail -f /tmp/poly_trader_analiz1.log
 tail -f /tmp/poly_5m_sol_110.log
+tail -f /tmp/poly_5m_sol_111.log
 tail -f /tmp/algo_signals.log
 tail -f /tmp/backup.log
 ```

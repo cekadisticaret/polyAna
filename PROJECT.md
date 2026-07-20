@@ -46,7 +46,9 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/poly_trader_karisim1.py` | A1+A4 meta konsensüs sanal — **crontab yok** (manuel) |
 | `temmuzPoly/analiz32_5m_adapter.py` | Analiz32 → 5m sinyal adaptörü (algo bozulmaz) |
 | `temmuzPoly/analiz32_15m_adapter.py` | Analiz32 → 15m sinyal adaptörü (110 SOL) |
-| `temmuzPoly/poly_trader_5m_sol_110.py` | 15M 110 SOL — A32 gerçek PM $8-10-12, başlangıç $300, cron */15 |
+| `temmuzPoly/analiz32_15m_adapter_111.py` | Analiz32 15m filtreli adaptör (skor≥20, trend uyumu; algo bozulmaz) |
+| `temmuzPoly/poly_trader_5m_sol_110.py` | 15M 110 SOL — A32 sanal $8-10-12, başlangıç $300, cron */15 |
+| `temmuzPoly/poly_trader_5m_sol_111.py` | 15M 111 SOL — A32 + filtreler sanal $8-10-12, başlangıç $300, cron */15 |
 | `temmuzPoly/poly_trader_5m_real_stats.py` | 15M gerçek PM saatlik Telegram özeti (yalnızca gerçek PM açıkken) |
 | `temmuzPoly/poly_trader_5m_btc_107.py` | 5M 107 BTC sanal — **PASIF** ($200, $8-12/işlem, 105 algo+fren) |
 | `temmuzPoly/algo_signals.py` | 39 saatlik algo sinyali (BTC/ETH/SOL); `/tmp/algo_signals.json` |
@@ -87,9 +89,10 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 # PASIF: `BistAnaliz/yuzdeBist.py` — crontab yorum satırı
 # PASIF: `BistAnaliz/bist_scanner.py` — BIST Sinyal bildirim kapalı
 # PASIF: `temmuzPoly/poly_trader_analiz9.py close/open/weekly` — 9. Analiz sanal (`ANALIZ9_ENABLED=false`)
-# PASIF: `temmuzPoly/poly_trader_5m_sol_110.py open/weekly` — eski 5M cron (artık */15 aktif)
-- `temmuzPoly/poly_trader_5m_sol_110.py open` — 15M 110 SOL A32 gerçek PM $3 (*/15)
-- `temmuzPoly/poly_trader_5m_sol_110.py weekly` — Pazar 00:00 haftalık
+- `temmuzPoly/poly_trader_5m_sol_110.py open` — 15M 110 SOL A32 **sanal** $8-10-12 (*/15)
+- `temmuzPoly/poly_trader_5m_sol_110.py weekly` — Pazar 00:00 haftalık 110
+- `temmuzPoly/poly_trader_5m_sol_111.py open` — 15M 111 SOL filtreli **sanal** $8-10-12 (*/15)
+- `temmuzPoly/poly_trader_5m_sol_111.py weekly` — Pazar 00:00 haftalık 111
 # PASIF: `temmuzPoly/poly_trader_5m_btc_107.py open/weekly` — 5M 107 BTC sanal
 # KALDIRILDI: `temmuzPoly/poly_trader_analiz3.py`, `poly_trader_analiz6.py`, `btc_analiz_hourly.py`, `poly_trader_5m_btc_105.py`
 # YOK (disk/crontab): `polyManuel/sol_bot.py`, `temmuzPoly/poly_trader.py`
