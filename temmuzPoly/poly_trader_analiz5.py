@@ -4,6 +4,8 @@
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
 Sabit $6–12/işlem (WR'ye göre), BTC+SOL.
 
+Hafta sonu duraklama: Cuma 22:00 – Pazar 22:00 İST (open atlanır; close açık pozisyon varsa çalışır).
+
 Modlar: close (:02 — PM sonucu için) / open (:05) / weekly / stats
 """
 import asyncio
@@ -49,6 +51,19 @@ TRADE_AMOUNT       = 6.0   # genel WR veri yok veya tam %50
 TRADE_AMOUNT_HIGH  = 12.0  # sembol genel WR > %50
 TRADE_AMOUNT_LOW   = 8.0   # sembol genel WR < %50
 MIN_STAT_COUNT  = 10
+
+
+def _in_weekend_pause(now_tr: datetime) -> bool:
+    """Cuma 22:00 – Pazar 22:00 İST arası yeni işlem açılmaz (A1 ile aynı)."""
+    dow = now_tr.weekday()  # 0=Pzt … 4=Cum 5=Cmt 6=Paz
+    h = now_tr.hour
+    if dow == 4 and h >= 22:
+        return True
+    if dow == 5:
+        return True
+    if dow == 6 and h < 22:
+        return True
+    return False
 
 
 def _load_algo_snapshot() -> dict:
@@ -755,10 +770,15 @@ def _try_pm_open(
 async def run_open() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
+    saat   = now_tr.strftime("%H:%M")
+
+    if _in_weekend_pause(now_tr):
+        print(f"[5. ANALİZ open] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 22:00), işlem yok")
+        return
+
     hour_tr    = now_tr.hour
     dow        = now_tr.weekday()
     is_weekend = dow >= 5
-    saat       = now_tr.strftime("%H:%M")
 
     state   = load_state()
     history = load_history()

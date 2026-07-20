@@ -6,7 +6,7 @@
   - Ardışık kayıp soğuma periyodu: son 2 işlem kayıpsa 1 tur atlanır
 
 Gerçek PM: PM_5M_111_REAL_ENABLED=true, işlem $8/$10/$12 (WR), başlangıç $300.
-Cron: */15 * * * * (24/7)
+Cron: */15 * * * * — açılış +15 sn gecikme, 110 snapshot'ından sinyal
 Modlar: open (varsayılan close+open) / weekly / stats
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from analiz32_15m_adapter_111 import analyze_15m  # ← 111: yeni filtreli adapter
+from analiz32_15m_adapter_111 import analyze_15m_from_110
 from btc_5m_105_algo import fetch_klines_15m
 import poly_trader_5m_common as _pm_common
 from poly_tg_5m_102 import tg_send, tg_send_photo
@@ -79,6 +79,7 @@ _PM_TRADE_MAX = 0.52
 _PM_MIN_PAYOUT_RATIO = 1.25
 
 LABEL = "15M 111 SOL"
+OPEN_DELAY_SEC = 15  # 110'dan 15 sn sonra — aynı snapshot
 
 
 def _sym_name(symbol: str) -> str:
@@ -466,9 +467,12 @@ def run() -> None:
         _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
         return
 
+    if OPEN_DELAY_SEC > 0:
+        time.sleep(OPEN_DELAY_SEC)
+
     for sym in SYMBOLS:
         name = _sym_name(sym)
-        sig = analyze_15m(symbol=sym)
+        sig = analyze_15m_from_110(symbol=sym, ts_period=ts_period)
 
         if sig is None:
             skip_lines.append(f"⚠️ {name} — veri yok")

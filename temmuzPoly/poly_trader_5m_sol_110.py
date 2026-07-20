@@ -4,7 +4,7 @@
 Algoritma: Analiz32/ (composite_signal) — bozulmaz; 15m adaptör üzerinden.
 
 Gerçek PM: PM_5M_110_REAL_ENABLED=true, işlem $8/$10/$12 (WR), başlangıç $300.
-Cron: */15 * * * * (24/7)
+Cron: */15 * * * * — açılış +1 sn gecikme (mum kapanışı)
 Modlar: open (varsayılan close+open) / weekly / stats
 """
 from __future__ import annotations
@@ -20,6 +20,7 @@ from zoneinfo import ZoneInfo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from analiz32_15m_adapter import analyze_15m
+from analiz32_15m_signal_snapshot import save_snapshot
 from btc_5m_105_algo import fetch_klines_15m
 import poly_trader_5m_common as _pm_common
 from poly_tg_5m_102 import tg_send, tg_send_photo
@@ -67,6 +68,7 @@ _PM_TRADE_MAX = 0.52
 _PM_MIN_PAYOUT_RATIO = 1.25
 
 LABEL = "15M 110 SOL"
+OPEN_DELAY_SEC = 1  # :15:01 vb. — mum kapanışından sonra
 
 
 def _sym_name(symbol: str) -> str:
@@ -329,9 +331,14 @@ def run() -> None:
     open_lines: list[str] = []
     skip_lines: list[str] = []
 
+    if OPEN_DELAY_SEC > 0:
+        time.sleep(OPEN_DELAY_SEC)
+
     for sym in SYMBOLS:
         name = _sym_name(sym)
         sig = analyze_15m(symbol=sym)
+        if sig is not None:
+            save_snapshot(ts_period, sym, sig)
 
         if sig is None:
             skip_lines.append(f"⚠️ {name} — veri yok")

@@ -30,7 +30,7 @@ _HEATMAP_SYMS = {
     "analiz32": ["SOL"],
     "analiz21": ["BTC", "SOL"],
     "analiz23": ["BTC", "SOL"],
-    "karisim1": ["BTC", "SOL"],
+    "analiz6": ["BTC", "SOL"],
     "5m_btc_107": ["BTC"],
     "5m_sol_110": ["SOL"],
     "5m_sol_111": ["SOL"],
@@ -44,12 +44,12 @@ _PASIF_ANALYSES = frozenset({"analiz9", "5m_btc_107"})
 # Yeni analiz: isteğe bağlı özel isim için _ANALYSIS_LABELS'a ekle.
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz5", "analiz4", "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "karisim1",
+    "analiz1", "analiz2", "analiz5", "analiz4", "analiz6", "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32",
     "5m_btc_107", "5m_sol_110", "5m_sol_111",
 ]
 _HISTORY_ORDER = [
     "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
-    "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "karisim1", "5m_btc_107", "5m_sol_110", "5m_sol_111",
+    "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "analiz6", "5m_btc_107", "5m_sol_110", "5m_sol_111",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
@@ -63,7 +63,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz32":   "32. Analiz",
     "analiz21":   "21. Analiz",
     "analiz23":   "23. Analiz",
-    "karisim1":   "11. Analiz",
+    "analiz6":    "6. Analiz (A1+A4)",
     "5m_btc_107": "5M 107 BTC (Pasif)",
     "5m_sol_110": "15M 110 SOL",
     "5m_sol_111": "15M 111 SOL",
@@ -145,8 +145,8 @@ def _auto_label(key: str) -> str:
     m = re.match(r"^analiz(\d+)$", key)
     if m:
         return f"{m.group(1)}. Analiz"
-    if key == "karisim1":
-        return "11. Analiz"
+    if key == "analiz6":
+        return "6. Analiz (A1+A4)"
     if key.startswith("5m_btc_"):
         n = key.replace("5m_btc_", "")
         if n == "real":
@@ -733,8 +733,8 @@ def api_analizler():
         ("analiz31",   "31. Analiz",            300,  "Multi-TF MR Sanal $12-16-20"),
         ("analiz32",   "32. Analiz",            300,  "FeatureEngine composite SOL only $12-16-20"),
         ("analiz21",   "21. Analiz",            300,  "Sembol Algo: BTC Hull MA / SOL MACD"),
-        ("analiz23",   "23. Analiz",            500,  "A4 BTC + A2 SOL hibrit $20-30-40"),
-        ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
+        ("analiz23",   "23. Analiz",            300,  "A4 BTC + A2 SOL hibrit $20-30-40"),
+        ("analiz6",    "6. Analiz (A1+A4)",       300,  "A1+A4 konsensus $20"),
         ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 algo + yön freni — cron kapalı"),
         ("5m_sol_110",  "15M 110 SOL",           300,  "Analiz32 15m SOL sanal $8-10-12"),
         ("5m_sol_111",  "15M 111 SOL",           300,  "A32 15m filtreli sanal $8-10-12"),
@@ -3346,7 +3346,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz5:'5. Analiz',analiz4:'4. Analiz',analiz10:'10. Analiz',analiz13:'13. Analiz',analiz21:'21. Analiz',analiz23:'23. Analiz',analiz31:'31. Analiz',analiz32:'32. Analiz',karisim1:'11. Analiz'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz5:'5. Analiz',analiz4:'4. Analiz',analiz6:'6. Analiz (A1+A4)',analiz10:'10. Analiz',analiz13:'13. Analiz',analiz21:'21. Analiz',analiz23:'23. Analiz',analiz31:'31. Analiz',analiz32:'32. Analiz'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {

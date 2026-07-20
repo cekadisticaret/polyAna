@@ -1,5 +1,5 @@
 """
-11. ANALİZ (A1+A4) — Meta Konsensus Trader
+6. ANALİZ — Meta Konsensus Trader
 
 Analiz 1 ve 4'ün bu saat açtığı pozisyonları okur.
 Her iki sistemin aynı yönde seçtiği kriptolara girer.
@@ -23,8 +23,8 @@ CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _DIR      = os.path.dirname(os.path.abspath(__file__))
 
-STATE_FILE   = os.path.join(_DIR, "poly_trader_karisim1_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_karisim1_history.json")
+STATE_FILE   = os.path.join(_DIR, "poly_trader_analiz6_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz6_history.json")
 
 INITIAL_BALANCE = 300.0
 SYMBOLS         = ["BTCUSDT", "SOLUSDT"]
@@ -89,7 +89,7 @@ def tg_send_photo(path: str, caption: str = "") -> None:
     try:
         with open(path, "rb") as f:
             img_data = f.read()
-        boundary = "----Karisim1Boundary"
+        boundary = "----Analiz6Boundary"
         body = (
             f"--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n{CHAT_ID}\r\n"
             f"--{boundary}\r\nContent-Disposition: form-data; name=\"caption\"\r\n\r\n{caption}\r\n"
@@ -121,7 +121,7 @@ def fetch_price_retry(symbol: str, retries: int = 3) -> float | None:
             if i < retries - 1:
                 time.sleep(2)
             else:
-                print(f"[11. ANALİZ (A1+A4)] {symbol} fiyat hatası: {e}", file=sys.stderr)
+                print(f"[6. ANALİZ] {symbol} fiyat hatası: {e}", file=sys.stderr)
     return None
 
 
@@ -211,7 +211,7 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        print(f"[11. ANALİZ (A1+A4) close] {saat} İST — açık pozisyon yok")
+        print(f"[6. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
     lines      = []
@@ -227,7 +227,7 @@ async def run_close() -> None:
         current_price = fetch_price_retry(symbol)
         if current_price is None:
             failed_pos.append(pos)
-            print(f"[11. ANALİZ (A1+A4) close] {symbol} fiyat alınamadı")
+            print(f"[6. ANALİZ close] {symbol} fiyat alınamadı")
             continue
 
         if pred == "UP":
@@ -268,7 +268,7 @@ async def run_close() -> None:
     save_history(history)
 
     if not lines:
-        print(f"[11. ANALİZ (A1+A4) close] {saat} İST — kapatılan pozisyon yok")
+        print(f"[6. ANALİZ close] {saat} İST — kapatılan pozisyon yok")
         return
 
     total_pnl    = state["total_pnl"]
@@ -280,13 +280,13 @@ async def run_close() -> None:
 
     tg_send(
         f"{sep}\n"
-        f"🏁 <b>11. ANALİZ (A1+A4) — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
+        f"🏁 <b>6. ANALİZ — {int(saat[:2]):02d}:00 Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
         f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel} ({closed_all} işlem)\n"
         f"{sep}"
     )
-    print(f"[11. ANALİZ (A1+A4) close] {saat} İST — {len(lines)} pozisyon kapatıldı")
+    print(f"[6. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
 
 
 # ── OPEN ──────────────────────────────────────────────────────
@@ -337,38 +337,38 @@ async def run_open() -> None:
     save_state(state)
 
     if not opened:
-        print(f"[11. ANALİZ (A1+A4) open] {saat} İST — işlem yok")
+        print(f"[6. ANALİZ open] {saat} İST — işlem yok")
         return
 
     # Bildirim
     at_risk = sum(p.get("amount", AMOUNT_MODERATE) for p in state["open_positions"])
-    lines   = [sep, f"🤝 <b>11. ANALİZ (A1+A4) — {saat} - {next_h} Yeni İşlemler</b>"]
+    lines   = [sep, f"🤝 <b>6. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>"]
 
     for o in opened:
-            name    = o["symbol"].replace("USDT", "")
-            dir_tr  = "YÜKSELİR" if o["direction"] == "UP" else "DÜŞER"
-            dir_ico = "📈" if o["direction"] == "UP" else "📉"
-            sys_str = "+".join(o["systems"])
+        name    = o["symbol"].replace("USDT", "")
+        dir_tr  = "YÜKSELİR" if o["direction"] == "UP" else "DÜŞER"
+        dir_ico = "📈" if o["direction"] == "UP" else "📉"
+        sys_str = "+".join(o["systems"])
 
-            sw, st  = get_symbol_stats(history, o["symbol"])
-            hw, ht  = get_stats(history, o["symbol"], hour_tr)
-            low     = ht < MIN_STAT_COUNT
+        sw, st  = get_symbol_stats(history, o["symbol"])
+        hw, ht  = get_stats(history, o["symbol"], hour_tr)
+        low     = ht < MIN_STAT_COUNT
 
-            price_note = "📌ort" if o.get("price_src") == "kaynak-ort" else "📡anlık"
-            lines.append(
-                f"{dir_ico} <b>{name}</b>  {dir_tr}  {pm_tg_stake(o.get('pm_pos', o))}  giriş:{o['price']:.2f} {price_note}\n"
-                f"   🤝 Konsensus: {o['count']}/2  [{sys_str}]\n"
+        price_note = "📌ort" if o.get("price_src") == "kaynak-ort" else "📡anlık"
+        lines.append(
+            f"{dir_ico} <b>{name}</b>  {dir_tr}  {pm_tg_stake(o.get('pm_pos', o))}  giriş:{o['price']:.2f} {price_note}\n"
+            f"   🤝 Konsensus: {o['count']}/2  [{sys_str}]\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} başarı: {_wr(hw,ht,warn_low=low)} | genel: {_wr(sw,st)}"
         )
 
     lines.append(
         f"💰 Ana: ${state['balance']-at_risk:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${at_risk:.0f}  |  Toplam: ${state['balance']:.2f}"
     )
-    lines.append(f"<i>Eşik: 4→20$  3→12$  2→8$</i>")
+    lines.append(f"<i>Konsensus 2/2 (A1+A4) → $20</i>")
     lines.append(sep)
 
     tg_send("\n".join(lines))
-    print(f"[11. ANALİZ (A1+A4) open] {saat} İST — {len(opened)} işlem açıldı")
+    print(f"[6. ANALİZ open] {saat} İST — {len(opened)} işlem açıldı")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────
@@ -382,7 +382,7 @@ def run_weekly() -> None:
     history = load_history()
     state   = load_state()
     if not history:
-        tg_send("📊 <b>11. ANALİZ (A1+A4) HAFTALIK</b>\nHenüz veri yok.")
+        tg_send("📊 <b>6. ANALİZ HAFTALIK</b>\nHenüz veri yok.")
         return
 
     days   = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -409,10 +409,10 @@ def run_weekly() -> None:
     ax.set_yticks(range(7))
     ax.set_yticklabels(days, fontsize=9)
     plt.colorbar(im, ax=ax, label="Başarı %")
-    ax.set_title("11. ANALİZ (A1+A4) — Haftalık Başarı Haritası")
+    ax.set_title("6. ANALİZ — Haftalık Başarı Haritası")
     plt.tight_layout()
 
-    img_path = "/tmp/karisim1_weekly.png"
+    img_path = "/tmp/analiz6_weekly.png"
     plt.savefig(img_path, dpi=110, bbox_inches="tight")
     plt.close()
 
@@ -420,7 +420,7 @@ def run_weekly() -> None:
     wins   = sum(1 for t in history if t["win"])
     sep    = "━" * 26
     caption = (
-        f"11. ANALİZ (A1+A4) Haftalık\n"
+        f"6. ANALİZ Haftalık\n"
         f"Bakiye: ${state['balance']:.2f} | P&L: {state['total_pnl']:+.2f}$\n"
         f"Toplam: {wins}/{total} (%{wins/total*100:.0f})"
     )
@@ -436,13 +436,13 @@ def run_weekly() -> None:
         if st:
             sym_lines.append(f"  {name}: {len(st)} işlem / {sw} başarılı (%{sw/len(st)*100:.0f})")
     tg_send(
-        f"📊 <b>11. ANALİZ (A1+A4) HAFTALIK İSTATİSTİKLER</b>\n"
+        f"📊 <b>6. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  %{wins/total*100:.0f} başarı\n"
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"\n📈 <b>Sembol Dağılımı</b>\n" + "\n".join(sym_lines)
     )
-    print("[11. ANALİZ (A1+A4) weekly] görsel gönderildi")
+    print("[6. ANALİZ weekly] görsel gönderildi")
 
 
 # ── Entry ─────────────────────────────────────────────────────

@@ -4,7 +4,7 @@
   BTC → 4. Analiz motoru (Trend+MR+OF+Fund, |skor|≥2)
   SOL → 2. Analiz motoru (poly_predictor, fallback kapalı)
 
-$500 sanal, işlem $20 / $30 / $40 (sembol WR).
+$300 sanal, işlem $20 / $30 / $40 (sembol WR).
 Telegram: 5M 107 kanalı (poly_trader_5m_common)
 Modlar: close / open / weekly / stats
 """
@@ -29,7 +29,7 @@ STATE_FILE   = os.path.join(_DIR, "poly_trader_analiz23_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz23_history.json")
 WEEKLY_IMG   = "/tmp/poly_weekly_heatmap_analiz23.png"
 
-INITIAL_BALANCE   = 500.0
+INITIAL_BALANCE   = 300.0
 TRADE_AMOUNT_LOW  = 20.0
 TRADE_AMOUNT      = 30.0
 TRADE_AMOUNT_HIGH = 40.0
