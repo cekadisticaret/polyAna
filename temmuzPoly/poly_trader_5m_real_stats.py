@@ -1,4 +1,4 @@
-"""5M 105 BTC — saatlik istatistik bildirimi (8799859033 kanalı, yalnızca gerçek PM)."""
+"""5M gerçek PM — saatlik istatistik (8799859033 kanalı)."""
 import json
 import os
 import sys
@@ -21,18 +21,25 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-_PM_LIVE = os.getenv("PM_5M_105_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
-
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 
-SYSTEMS = [
+_ALL_SYSTEMS = [
     {
-        "key": "5m_btc_105",
-        "label": "5M 105 BTC",
-        "desc": "102 + MR veto + trend nötr (gerçek PM $3)",
-        "initial": 200.0,
+        "key": "5m_sol_110",
+        "label": "15M 110 SOL",
+        "desc": "Analiz32 FeatureEngine 15m (gerçek PM $8-10-12)",
+        "initial": 300.0,
+        "env": "PM_5M_110_REAL_ENABLED",
     },
 ]
+
+
+def _live_systems() -> list:
+    out = []
+    for cfg in _ALL_SYSTEMS:
+        if os.getenv(cfg["env"], "false").lower() in ("1", "true", "yes"):
+            out.append(cfg)
+    return out
 
 
 def _load_json(path: str) -> list | dict:
@@ -59,11 +66,7 @@ def _today_key(iso_tr: str) -> bool:
 def build_message(cfg: dict) -> str:
     key = cfg["key"]
     hist_raw = _load_json(os.path.join(_DIR, f"poly_trader_{key}_history.json"))
-    hist = (
-        [t for t in hist_raw if t.get("pm_dry_run") is False]
-        if key == "5m_btc_105"
-        else hist_raw
-    )
+    hist = [t for t in hist_raw if t.get("pm_dry_run") is False]
     state = _load_json(os.path.join(_DIR, f"poly_trader_{key}_state.json"))
     initial = cfg["initial"]
 
@@ -71,7 +74,12 @@ def build_message(cfg: dict) -> str:
     wins = sum(1 for t in hist if t.get("win"))
     losses = total - wins
     pnl = round(sum(t.get("pnl", 0) or 0 for t in hist), 2)
-    balance = round(state.get("balance", initial), 2)
+    try:
+        from pm_balance_guard import get_usdc_balance
+        bal = get_usdc_balance()
+        balance = bal if bal < 9999 else round(state.get("balance", initial), 2)
+    except Exception:
+        balance = round(state.get("balance", initial), 2)
 
     today_hist = [t for t in hist if _today_key(t.get("entry_time_tr", ""))]
     t_wins = sum(1 for t in today_hist if t.get("win"))
@@ -123,14 +131,14 @@ def build_message(cfg: dict) -> str:
 
 
 def run(key: str | None = None) -> None:
-    if not _PM_LIVE:
-        print("[5M STATS] 105 sanal mod — saatlik gerçek PM özeti atlanıyor")
+    targets = _live_systems()
+    if not targets:
+        print("[5M STATS] canlı 5M yok — saatlik özet atlanıyor")
         return
-    targets = SYSTEMS
     if key:
-        targets = [c for c in SYSTEMS if c["key"] == key or c["key"].endswith(key)]
+        targets = [c for c in targets if c["key"] == key or c["key"].endswith(key)]
         if not targets:
-            print(f"[5M STATS] Bilinmeyen key: {key}")
+            print(f"[5M STATS] Bilinmeyen/pasif key: {key}")
             return
 
     for i, cfg in enumerate(targets):

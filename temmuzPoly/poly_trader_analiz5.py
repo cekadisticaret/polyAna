@@ -4,7 +4,7 @@
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
 Sabit $6–12/işlem (WR'ye göre), BTC+SOL.
 
-Modlar: close / open / weekly / stats
+Modlar: close (:02 — PM sonucu için) / open (:05) / weekly / stats
 """
 import asyncio
 import json
@@ -127,6 +127,51 @@ def _pm_get_client():
             print(f"[5. ANALİZ] Client init ({attempt+1}/3): {e}", file=sys.stderr)
             time.sleep(2)
     raise RuntimeError("Polymarket client oluşturulamadı")
+
+
+def _pm_fetch_resolution(slug: str) -> dict | None:
+    """PM market sonucu. Kesinleşmediyse None.
+    closed=False olsa bile outcomePrices 0.99/0.01 ise sonuç sayılır.
+    """
+    if not slug:
+        return None
+    try:
+        req = urllib.request.Request(
+            f"{_PM_GAMMA_URL}?slug={slug}",
+            headers=_PM_HEADERS,
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            pm_data = json.load(r)
+        if not pm_data:
+            return None
+        pm_ev = pm_data[0]
+        pm_m = pm_ev.get("markets", [{}])[0]
+        raw_op = pm_m.get("outcomePrices")
+        op = json.loads(raw_op) if isinstance(raw_op, str) else (raw_op or [])
+        if not op or len(op) < 1:
+            return None
+        up_p = float(op[0])
+        down_p = float(op[1]) if len(op) > 1 else (1.0 - up_p)
+        closed = bool(pm_ev.get("closed"))
+        decisive = up_p >= 0.99 or down_p >= 0.99 or up_p <= 0.01
+        if not (closed or decisive):
+            return None
+        if up_p >= 0.99 or (decisive and up_p > down_p):
+            up_won = True
+        elif down_p >= 0.99 or up_p <= 0.01:
+            up_won = False
+        else:
+            return None
+        return {
+            "up_won": up_won,
+            "closed": closed,
+            "up_price": up_p,
+            "down_price": down_p,
+            "title": pm_ev.get("title"),
+        }
+    except Exception as e:
+        print(f"[5. ANALİZ close] PM sonuç hatası ({slug}): {e}", file=sys.stderr)
+        return None
 
 
 def _pm_get_balance() -> float:
@@ -538,45 +583,53 @@ async def run_close() -> None:
         entry  = pos["entry_price"]
         pred   = pos["predicted_dir"]
         amount = pos.get("amount", TRADE_AMOUNT)
-        actual = "UP" if current_price >= entry else "DOWN"
-        win    = (pred == actual)
+        binance_actual = "UP" if current_price >= entry else "DOWN"
+        binance_win = (pred == binance_actual)
 
-        # Polymarket gerçek sonucu kontrol et
-        pm_pnl_str  = ""
-        pm_win      = None
-        if pos.get("pm_slug") and not pos.get("pm_error"):
-            try:
-                req = urllib.request.Request(
-                    f"{_PM_GAMMA_URL}?slug={pos['pm_slug']}",
-                    headers=_PM_HEADERS,
+        # Gerçek PM emri varsa → PM sonucu esas; yoksa Binance fallback
+        has_pm = bool(pos.get("pm_slug") and pos.get("pm_order_id") and not pos.get("pm_error"))
+        pm_win = None
+        pm_source = False
+        if has_pm:
+            res = _pm_fetch_resolution(pos["pm_slug"])
+            if res is None:
+                # Henüz kesinleşmedi — Binance ile kapatma; sonraki close'a bırak
+                print(
+                    f"[5. ANALİZ close] {pos['symbol']} PM sonucu bekleniyor "
+                    f"({pos.get('pm_slug')}) — ertelendi",
+                    file=sys.stderr,
                 )
-                with urllib.request.urlopen(req, timeout=10) as r:
-                    pm_data = json.load(r)
-                if pm_data:
-                    pm_ev = pm_data[0]
-                    pm_m  = pm_ev.get("markets", [{}])[0]
-                    raw_op = pm_m.get("outcomePrices")
-                    op     = json.loads(raw_op) if isinstance(raw_op, str) else (raw_op or [])
-                    if op and pm_ev.get("closed"):
-                        up_won  = float(op[0]) >= 0.99
-                        our_won = (pos["pm_token_dir"] == "UP" and up_won) or \
-                                  (pos["pm_token_dir"] == "DOWN" and not up_won)
-                        pm_win   = our_won
-                        pm_size  = pos.get("pm_size", 0)
-                        pm_spent = pos.get("pm_spent", 0)
-                        pm_pnl_val = round(pm_size - pm_spent, 2) if our_won else round(-pm_spent, 2)
-                        pm_pnl_str  = f"  |  🎯PM: {'+'if our_won else ''}{pm_pnl_val:.2f}$"
-                        pm_tur_pnl += pm_pnl_val
-            except Exception as e:
-                print(f"[5. ANALİZ close] PM sonuç hatası: {e}", file=sys.stderr)
+                failed_pos.append(pos)
+                continue
+            token_dir = pos.get("pm_token_dir") or pred
+            pm_win = (token_dir == "UP" and res["up_won"]) or (
+                token_dir == "DOWN" and not res["up_won"]
+            )
+            actual = "UP" if res["up_won"] else "DOWN"
+            win = bool(pm_win)
+            pm_source = True
+        else:
+            actual = binance_actual
+            win = binance_win
+
+        pm_spent = float(pos.get("pm_spent") or amount or 0)
+        pm_size = float(pos.get("pm_size") or 0)
+        if pm_source and pm_size > 0 and pm_spent > 0:
+            pnl_line = round(pm_size - pm_spent, 2) if win else round(-pm_spent, 2)
+        else:
+            pnl_line = sanal_pnl(pos, win)
+        if pm_source:
+            pm_tur_pnl += pnl_line
 
         vs = pos.get("votes", [])
         history.append({
             "symbol":           pos["symbol"],
             "predicted_dir":    pred,
             "actual_dir":       actual,
+            "binance_actual":   binance_actual,
             "win":              win,
             "pm_win":           pm_win,
+            "settle_source":    "pm" if pm_source else "binance",
             "entry_price":      entry,
             "exit_price":       current_price,
             "entry_time_tr":    pos["entry_time_tr"],
@@ -589,29 +642,31 @@ async def run_close() -> None:
             "pm_size":          pos.get("pm_size"),
             "pm_entry_price":   pos.get("pm_entry_price"),
             "pm_order_id":      pos.get("pm_order_id"),
+            "pm_slug":          pos.get("pm_slug"),
+            "pm_token_dir":     pos.get("pm_token_dir"),
             "a9_agree":         pos.get("a9_agree"),
             "exit_time_tr":     now_tr.isoformat(),
-            "pnl":              round(
-                                    (pos.get("pm_size") or pos.get("pm_spent", 0)) - pos.get("pm_spent", 0)
-                                    if win else -pos.get("pm_spent", 0),
-                                    2),
+            "pnl":              pnl_line,
             "ind_rsi_ok":       _vote_ok(vs[0], actual) if len(vs) > 0 else None,
             "ind_macd_ok":      _vote_ok(vs[1], actual) if len(vs) > 1 else None,
             "ind_ema_ok":       _vote_ok(vs[2], actual) if len(vs) > 2 else None,
         })
 
-        # Algoritma doğruluk güncelle
+        # Algoritma doğruluk: yön tahmini vs gerçekleşen (PM varsa PM yönü)
         _update_algo_accuracy(pos, win)
 
         icon     = "✅" if win else "❌"
         name     = pos["symbol"].replace("USDT", "")
         pct      = (current_price - entry) / entry * 100
-        pm_spent = pos.get("pm_spent", 0) or amount
-        pnl_line = sanal_pnl(pos, win)
+        src_tag  = "🎯PM" if pm_source else "BN"
+        bn_note  = ""
+        if pm_source and binance_win != win:
+            bn_note = f"  (BN:{'✅' if binance_win else '❌'})"
         tur_pnl += pnl_line
         lines.append(
             f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
-            f"{pm_tg_stake(pos)}  net {'+' if pnl_line >= 0 else ''}{pnl_line:.2f}$  skor:{pos.get('score', 0):+d}/3"
+            f"{pm_tg_stake(pos)}  net {'+' if pnl_line >= 0 else ''}{pnl_line:.2f}$  "
+            f"{src_tag}{bn_note}  skor:{pos.get('score', 0):+d}/3"
         )
 
     # Başarısız pozisyonları bir sonraki saate bırak

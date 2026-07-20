@@ -1,5 +1,5 @@
 """
-5M 105 BTC — Sinyal motoru (102 + MR veto + Trend nötr band)
+5M ortak sinyal motoru (107 + 15M adaptörleri; 102 + MR veto + Trend nötr band)
 
 102'nin 4-algo konsensüsü + ek filtreler:
   1. MR -1 iken UP için 3/4 konsensüs gerekir (2/4 yetmez)
@@ -55,6 +55,21 @@ def _binance_get(path: str, params: dict | None = None) -> dict | list:
 
 def fetch_klines_5m(symbol: str = SYMBOL, limit: int = KLINES_LIMIT) -> list[dict]:
     raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "5m", "limit": limit})
+    return [
+        {
+            "open_time": int(k[0]),
+            "open": float(k[1]),
+            "high": float(k[2]),
+            "low": float(k[3]),
+            "close": float(k[4]),
+            "volume": float(k[5]),
+        }
+        for k in raw
+    ]
+
+
+def fetch_klines_15m(symbol: str = SYMBOL, limit: int = KLINES_LIMIT) -> list[dict]:
+    raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "15m", "limit": limit})
     return [
         {
             "open_time": int(k[0]),
@@ -248,7 +263,7 @@ def analyze(
     momentum_filter: bool | None = None,
 ) -> SignalResult | None:
     """
-    5M 105 sinyal motoru.
+    5M ortak sinyal motoru (107 + 15M adaptörleri).
 
     klines/orderbook verilmezse Binance'ten çeker.
     direction None → işlem yok (konsensüs / MR veto / trend nötr).

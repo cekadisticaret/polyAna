@@ -24,7 +24,7 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, predict_status, _fetch_klines
-from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT
 
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
 CHAT_ID = "830754964"
@@ -32,7 +32,7 @@ _TZ_TR = ZoneInfo("Europe/Istanbul")
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _DAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 IND_NAMES = ["PolyPred", "Trend", "MR", "OF"]
-SYMBOLS = ["BTCUSDT", "SOLUSDT"]
+_DEFAULT_SYMBOLS = ("BTCUSDT", "SOLUSDT")
 
 
 @dataclass(frozen=True)
@@ -42,12 +42,13 @@ class DualConfig:
     state_file: str
     history_file: str
     weekly_img: str
-    initial_balance: float = 300.0
+    symbols: tuple[str, ...] = _DEFAULT_SYMBOLS
+    initial_balance: float = SANAL_INITIAL_BALANCE
     min_score_b: int = 1
     variable_amounts: bool = False
-    amount_weak: float = 10.0
-    amount_mid: float = 15.0
-    amount_strong: float = 20.0
+    amount_weak: float = SANAL_TRADE_AMOUNT
+    amount_mid: float = SANAL_TRADE_AMOUNT
+    amount_strong: float = SANAL_TRADE_AMOUNT
     skip_detail_tg: bool = False
 
 
@@ -59,9 +60,9 @@ CONFIG_A10 = DualConfig(
     weekly_img="/tmp/poly_weekly_heatmap_a10.png",
     min_score_b=1,
     variable_amounts=False,
-    amount_weak=10.0,
-    amount_mid=10.0,
-    amount_strong=10.0,
+    amount_weak=SANAL_TRADE_AMOUNT,
+    amount_mid=SANAL_TRADE_AMOUNT,
+    amount_strong=SANAL_TRADE_AMOUNT,
     skip_detail_tg=True,
 )
 
@@ -71,17 +72,39 @@ CONFIG_A13 = DualConfig(
     state_file=os.path.join(_DIR, "poly_trader_analiz13_state.json"),
     history_file=os.path.join(_DIR, "poly_trader_analiz13_history.json"),
     weekly_img="/tmp/poly_weekly_heatmap_a13.png",
+    symbols=("SOLUSDT",),
     min_score_b=1,
-    variable_amounts=True,
-    amount_weak=10.0,
-    amount_mid=15.0,
-    amount_strong=20.0,
+    variable_amounts=False,
+    amount_weak=24.0,
+    amount_mid=32.0,
+    amount_strong=40.0,
     skip_detail_tg=True,
 )
 
 
 def _wr(wins: int, total: int) -> str:
     return f"%{wins/total*100:.0f} ({wins}/{total})" if total else "veri yok"
+
+
+def _trade_amount(history: list, symbol: str, cfg: DualConfig) -> float:
+    """Sembol WR'ye göre cfg.amount_weak/mid/strong."""
+    trades = [t for t in history if t.get("symbol") == symbol]
+    if not trades:
+        return cfg.amount_mid
+    wins = sum(1 for t in trades if t.get("win"))
+    rate = wins / len(trades)
+    if rate > 0.5:
+        return cfg.amount_strong
+    if rate < 0.5:
+        return cfg.amount_weak
+    return cfg.amount_mid
+
+
+def _amount_note(cfg: DualConfig) -> str:
+    return (
+        f"💵 İşlem: ${cfg.amount_weak:.0f}/${cfg.amount_mid:.0f}/${cfg.amount_strong:.0f} "
+        f"(sembol WR — düşük/orta/yüksek)"
+    )
 
 
 def _ema(values: list[float], period: int) -> list[float]:
@@ -184,16 +207,6 @@ def algo_funding(rate: float) -> tuple[int, str]:
     return 0, f"Fund→ nötr ({pct:.3f}%)"
 
 
-def _trade_amount(cfg: DualConfig, strong_a: bool, strong_b: bool) -> float:
-    if not cfg.variable_amounts:
-        return cfg.amount_weak
-    if strong_a and strong_b:
-        return cfg.amount_strong
-    if strong_a or strong_b:
-        return cfg.amount_mid
-    return cfg.amount_weak
-
-
 def _format_a_status(status: dict) -> str:
     if status.get("reason") and status.get("conf_up_score") is not None:
         return f"A sinyal yok ({status['reason']})"
@@ -265,7 +278,7 @@ async def evaluate_symbol(symbol: str, cfg: DualConfig) -> tuple[dict | None, st
     else:
         tier = "📊 İkisi orta"
 
-    amount = _trade_amount(cfg, strong_a, strong_b)
+    amount = 0.0  # run_open içinde sembol WR ile set edilir
     price = klines[-2]["close"]
 
     return {
@@ -453,10 +466,11 @@ async def run_open(cfg: DualConfig) -> None:
     next_h = f"{(hour_tr + 1) % 24:02d}:00"
 
     state = load_state(cfg)
+    history = load_history(cfg)
     candidates = []
     skip_details: list[str] = []
 
-    for sym in SYMBOLS:
+    for sym in cfg.symbols:
         sig, reason, _ = await evaluate_symbol(sym, cfg)
         name = sym.replace("USDT", "")
         if sig is None:
@@ -467,7 +481,7 @@ async def run_open(cfg: DualConfig) -> None:
 
     newly_opened = 0
     for sig in candidates:
-        amount = sig["amount"]
+        amount = _trade_amount(history, sig["symbol"], cfg)
         pos = {
             "symbol": sig["symbol"],
             "predicted_dir": sig["direction"],
@@ -524,11 +538,7 @@ async def run_open(cfg: DualConfig) -> None:
                 f"⛔ <b>{name}</b>  {sig['direction']}  → açılmadı (bakiye/pozisyon)"
             )
 
-    amount_note = (
-        f"💵 İşlem: ${cfg.amount_weak:.0f}/${cfg.amount_mid:.0f}/${cfg.amount_strong:.0f} (zayıf/orta/güçlü)"
-        if cfg.variable_amounts
-        else f"💵 Sabit işlem: ${cfg.amount_weak:.0f}"
-    )
+    amount_note = _amount_note(cfg)
 
     if trade_lines and newly_opened > 0:
         tg_send(
@@ -557,20 +567,23 @@ def run_weekly(cfg: DualConfig) -> None:
     state = load_state(cfg)
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
 
-    sym_names = [s.replace("USDT", "") for s in SYMBOLS]
+    sym_names = [s.replace("USDT", "") for s in cfg.symbols]
     grid_w = [[0] * 24 for _ in range(7)]
     grid_n = [[0] * 24 for _ in range(7)]
     grid_sym = {s: {"w": [[0] * 24 for _ in range(7)], "n": [[0] * 24 for _ in range(7)]} for s in sym_names}
 
+    allowed_sn = {s.replace("USDT", "") for s in cfg.symbols}
     for t in history:
         d = t.get("entry_dow")
         h = t.get("entry_hour_tr")
         if d is None or h is None:
             continue
+        sn = t["symbol"].replace("USDT", "")
+        if sn not in allowed_sn:
+            continue
         grid_n[d][h] += 1
         if t["win"]:
             grid_w[d][h] += 1
-        sn = t["symbol"].replace("USDT", "")
         if sn in grid_sym:
             grid_sym[sn]["n"][d][h] += 1
             if t["win"]:
@@ -628,7 +641,7 @@ def run_weekly(cfg: DualConfig) -> None:
     total_pnl = state.get("total_pnl", 0.0)
 
     sym_stats = []
-    for sym in SYMBOLS:
+    for sym in cfg.symbols:
         name = sym.replace("USDT", "")
         st = [t for t in history if t["symbol"] == sym]
         sw = sum(1 for t in st if t["win"])
@@ -694,10 +707,7 @@ def run_stats(cfg: DualConfig) -> None:
     resolved = [t for t in history if t.get("win") is not None]
     wins = sum(1 for t in resolved if t["win"])
     total = len(resolved)
-    amt = (
-        f"${cfg.amount_weak:.0f}/${cfg.amount_mid:.0f}/${cfg.amount_strong:.0f}"
-        if cfg.variable_amounts else f"${cfg.amount_weak:.0f}"
-    )
+    amt = f"${cfg.amount_weak:.0f}/${cfg.amount_mid:.0f}/${cfg.amount_strong:.0f} (sembol WR)"
     tg_send(
         f"📊 <b>{cfg.label} ✦ Çift Konsensüs İSTATİSTİKLER</b>\n"
         f"Toplam: {total} işlem  |  {_wr(wins, total)} başarı\n"

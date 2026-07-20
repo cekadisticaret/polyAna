@@ -7,7 +7,7 @@ Modlar:
   weekly  → Cumartesi 21:00: haftalık ısı haritası
   stats   → manuel detaylı rapor
 
-Algoritma: Analiz31/ (multi-TF MR + HTF bias + kill zone)
+Algoritma: Analiz31/ (multi-TF MR v1.2 — trend rejimi, SOL filtresi, gate 75)
 Sanal bütçe: $300, işlem $12 / $16 / $20 (WR'ye göre)
 """
 import asyncio
@@ -26,7 +26,7 @@ sys.path.insert(0, _A31)
 
 from predictor import analyze
 from data_fetcher import fetch_klines
-from pm_trader_helpers import apply_pm_quote, sanal_pnl
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH, SANAL_TRADE_AMOUNT_LOW
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
@@ -37,10 +37,10 @@ STATE_FILE   = os.path.join(_DIR, "poly_trader_analiz31_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz31_history.json")
 WEEKLY_IMG   = "/tmp/poly_weekly_heatmap_analiz31.png"
 
-INITIAL_BALANCE   = 300.0
-TRADE_AMOUNT      = 16.0
-TRADE_AMOUNT_HIGH = 20.0
-TRADE_AMOUNT_LOW  = 12.0
+INITIAL_BALANCE   = SANAL_INITIAL_BALANCE
+TRADE_AMOUNT      = SANAL_TRADE_AMOUNT
+TRADE_AMOUNT_HIGH = SANAL_TRADE_AMOUNT_HIGH
+TRADE_AMOUNT_LOW  = SANAL_TRADE_AMOUNT_LOW
 SYMBOLS           = ["BTCUSDT", "SOLUSDT"]
 _DAYS_TR          = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR     = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -101,13 +101,7 @@ def get_symbol_stats(history: list, symbol: str) -> tuple[int, int]:
 
 
 def _trade_amount(history: list, symbol: str) -> float:
-    sw, st = get_symbol_stats(history, symbol)
-    rate = sw / st if st else None
-    if rate is not None and rate > 0.5:
-        return TRADE_AMOUNT_HIGH
-    if rate is not None and rate < 0.5:
-        return TRADE_AMOUNT_LOW
-    return TRADE_AMOUNT
+    return symbol_wr_amount(history, symbol)
 
 
 def tg_send(text: str) -> None:

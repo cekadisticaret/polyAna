@@ -1,13 +1,15 @@
 """
-Analiz31 Tahmin Motoru (Yama v1.1)
+Analiz31 Tahmin Motoru (Yama v1.2)
 """
 
 from dataclasses import dataclass
 from typing import Optional, Dict
 import time
+from zoneinfo import ZoneInfo
 from scorer import (
     mr_confluence_up, mr_confluence_down,
     apply_crash_gate, get_dynamic_gates,
+    is_trend_regime, sol_symbol_hour_allowed,
 )
 
 
@@ -28,17 +30,47 @@ class Prediction:
     timestamp: float
 
 
+def _empty_prediction(symbol: str, f1h: dict, htf_str: str, factors: list) -> Prediction:
+    return Prediction(
+        symbol=symbol,
+        current_price=f1h.get("current", 0),
+        predicted_dir=None,
+        prob_up=0.0,
+        prob_down=0.0,
+        confidence=0.0,
+        up_score=0,
+        down_score=0,
+        up_gate=0,
+        down_gate=0,
+        factors=factors,
+        htf_bias=htf_str,
+        timestamp=time.time(),
+    )
+
+
 def predict(symbol: str, data: Dict) -> Optional[Prediction]:
     features = data.get("features", {})
     f1h = features.get("1h", {})
+    hour_ist = data.get("hour_ist")
 
     if not f1h.get("valid"):
         return None
 
-    up_gate, down_gate = get_dynamic_gates(features)
+    htf = features.get("htf_bias", {})
+    htf_str = f"4h:{htf.get('4h', '?')} 1d:{htf.get('1d', '?')}"
 
-    up_score, up_factors = mr_confluence_up(features)
-    down_score, down_factors = mr_confluence_down(features)
+    trending, trend_reason = is_trend_regime(features)
+    if trending:
+        return _empty_prediction(symbol, f1h, htf_str, [trend_reason])
+
+    hour_ok, hour_reason = sol_symbol_hour_allowed(symbol, hour_ist)
+    if not hour_ok:
+        return _empty_prediction(symbol, f1h, htf_str, [hour_reason])
+
+    up_gate, down_gate = get_dynamic_gates(features, symbol)
+
+    up_score, up_factors = mr_confluence_up(features, symbol)
+    down_score, down_factors = mr_confluence_down(features, symbol)
 
     up_score, up_factors = apply_crash_gate(features, up_score, up_factors)
 
@@ -74,9 +106,6 @@ def predict(symbol: str, data: Dict) -> Optional[Prediction]:
         confidence = 0.0
         factors = up_factors + down_factors
 
-    htf = features.get("htf_bias", {})
-    htf_str = f"4h:{htf.get('4h', '?')} 1d:{htf.get('1d', '?')}"
-
     return Prediction(
         symbol=symbol,
         current_price=f1h.get("current", 0),
@@ -96,6 +125,7 @@ def predict(symbol: str, data: Dict) -> Optional[Prediction]:
 
 async def analyze(symbol: str) -> Optional[Prediction]:
     """Trader entegrasyonu — Binance verisi çekip tahmin üret."""
+    from datetime import datetime, timezone
     from data_fetcher import fetch_all_data
     from features import extract_all_features
 
@@ -103,4 +133,5 @@ async def analyze(symbol: str) -> Optional[Prediction]:
     if not raw_data.get("timeframes", {}).get("1h"):
         return None
     features = extract_all_features(raw_data)
-    return predict(symbol, {"features": features})
+    hour_ist = datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/Istanbul")).hour
+    return predict(symbol, {"features": features, "hour_ist": hour_ist})

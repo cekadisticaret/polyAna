@@ -8,7 +8,6 @@ Modlar:
 
 Algoritma: btc_analiz21_algo.py
   BTC → Hull MA (HMA)
-  ETH → Volume Profile
   SOL → MACD Hist. Div
 Sanal bütçe: $300, işlem $12 / $16 / $20 (WR'ye göre)
 """
@@ -26,7 +25,7 @@ sys.path.insert(0, _DIR)
 
 from btc_analiz21_algo import analyze
 from algo_signals import fetch_klines
-from pm_trader_helpers import apply_pm_quote, sanal_pnl
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH, SANAL_TRADE_AMOUNT_LOW
 
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
 CHAT_ID   = "830754964"
@@ -36,11 +35,11 @@ STATE_FILE   = os.path.join(_DIR, "poly_trader_analiz21_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz21_history.json")
 WEEKLY_IMG   = "/tmp/poly_weekly_heatmap_analiz21.png"
 
-INITIAL_BALANCE   = 300.0
-TRADE_AMOUNT      = 16.0
-TRADE_AMOUNT_HIGH = 20.0
-TRADE_AMOUNT_LOW  = 12.0
-SYMBOLS           = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+INITIAL_BALANCE   = SANAL_INITIAL_BALANCE
+TRADE_AMOUNT      = SANAL_TRADE_AMOUNT
+TRADE_AMOUNT_HIGH = SANAL_TRADE_AMOUNT_HIGH
+TRADE_AMOUNT_LOW  = SANAL_TRADE_AMOUNT_LOW
+SYMBOLS           = ["BTCUSDT", "SOLUSDT"]
 _DAYS_TR          = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR     = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 _LABEL            = "21. ANALİZ"
@@ -104,13 +103,7 @@ def get_symbol_stats(history: list, symbol: str) -> tuple[int, int]:
 
 
 def _trade_amount(history: list, symbol: str) -> float:
-    sw, st = get_symbol_stats(history, symbol)
-    rate = sw / st if st else None
-    if rate is not None and rate > 0.5:
-        return TRADE_AMOUNT_HIGH
-    if rate is not None and rate < 0.5:
-        return TRADE_AMOUNT_LOW
-    return TRADE_AMOUNT
+    return symbol_wr_amount(history, symbol)
 
 
 def tg_send(text: str) -> None:

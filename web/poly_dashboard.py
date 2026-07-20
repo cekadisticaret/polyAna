@@ -25,12 +25,14 @@ _HEATMAP_SYMS = {
     "analiz5":  ["BTC", "SOL"],
     "analiz9":  ["BTC", "SOL"],
     "analiz10": ["BTC", "SOL"],
-    "analiz13": ["BTC", "SOL"],
+    "analiz13": ["SOL"],
     "analiz31": ["BTC", "SOL"],
-    "analiz21": ["BTC", "ETH", "SOL"],
+    "analiz32": ["SOL"],
+    "analiz21": ["BTC", "SOL"],
+    "analiz23": ["BTC", "SOL"],
     "karisim1": ["BTC", "SOL"],
-    "5m_btc_105": ["BTC"],
     "5m_btc_107": ["BTC"],
+    "5m_sol_110": ["SOL"],
 }
 # poly_trader_* dışındaki analiz dosyaları (history, state)
 _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {}
@@ -41,12 +43,12 @@ _PASIF_ANALYSES = frozenset({"analiz9", "5m_btc_107"})
 # Yeni analiz: isteğe bağlı özel isim için _ANALYSIS_LABELS'a ekle.
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz5", "analiz4", "analiz10", "analiz13", "analiz21", "analiz31", "karisim1",
-    "5m_btc_105", "5m_btc_107",
+    "analiz1", "analiz2", "analiz5", "analiz4", "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "karisim1",
+    "5m_btc_107", "5m_sol_110",
 ]
 _HISTORY_ORDER = [
     "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
-    "analiz10", "analiz13", "analiz21", "analiz31", "karisim1", "5m_btc_105", "5m_btc_107",
+    "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "karisim1", "5m_btc_107", "5m_sol_110",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
@@ -55,12 +57,14 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz5":    "5. Analiz",
     "analiz9":    "9. Analiz (Pasif)",
     "analiz10":   "10. Analiz",
-    "analiz13":   "13. Analiz",
+    "analiz13":   "13. Analiz (SOL)",
     "analiz31":   "31. Analiz",
+    "analiz32":   "32. Analiz",
     "analiz21":   "21. Analiz",
+    "analiz23":   "23. Analiz",
     "karisim1":   "11. Analiz",
-    "5m_btc_105": "5M 105 BTC",
     "5m_btc_107": "5M 107 BTC (Pasif)",
+    "5m_sol_110": "15M 110 SOL",
 }
 
 
@@ -294,11 +298,12 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
 # Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
 _PM_POSITION_SOURCES = [
     ("analiz5", "5. Analiz"),
+    ("5m_sol_110", "15M 110 SOL"),
 ]
 
 def _position_visible(_key: str, pos: dict) -> bool:
     """Yalnızca gerçek PM emri (token_id); sanal kotasyonları gösterme."""
-    if pos.get("virtual") or pos.get("pm_dry_run"):
+    if pos.get("virtual") is True or pos.get("pm_dry_run") is True:
         return False
     if not pos.get("pm_token_id"):
         return False
@@ -521,6 +526,7 @@ def api_history():
         "systems": [{"key": k, "label": l} for k, l in _HISTORY_SYSTEMS],
     })
 
+
 @app.route("/poly/api/heatmap")
 def api_heatmap():
     if _auth_required(): return redirect("/poly/login")
@@ -532,7 +538,7 @@ def api_heatmap():
     allowed_syms = _HEATMAP_SYMS.get(analiz_key, _ACTIVE_SYMS)
     if sym_filter != "ALL" and sym_filter not in allowed_syms:
         sym_filter = "ALL"
-    hist = _load_trader_history(analiz_key)
+    hist = _filter_hist_for(analiz_key, _load_trader_history(analiz_key))
     if not hist:
         return jsonify({"cells": []})
     days_tr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -596,7 +602,7 @@ def api_heatmap_detail():
     allowed_syms = _HEATMAP_SYMS.get(analiz_key, _ACTIVE_SYMS)
     if sym != "ALL" and sym not in allowed_syms:
         sym = "ALL"
-    hist = _load_trader_history(analiz_key)
+    hist = _filter_hist_for(analiz_key, _load_trader_history(analiz_key))
     if not hist:
         return jsonify({"trades": []})
 
@@ -640,7 +646,7 @@ def api_symbol_stats():
     analiz_key = request.args.get("analiz", _PANEL_STATS_ANALIZ)
     if analiz_key not in _HEATMAP_ANALYSES:
         analiz_key = _PANEL_STATS_ANALIZ
-    hist = _load_trader_history(analiz_key)
+    hist = _filter_hist_for(analiz_key, _load_trader_history(analiz_key))
     if not hist:
         return jsonify({"analiz": analiz_key, "analiz_label": _ANALYSIS_LABELS.get(analiz_key, analiz_key),
                         "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": [], "top_slots": []})
@@ -720,12 +726,14 @@ def api_analizler():
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM $6–12 WR"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
-        ("analiz13",   "13. Analiz",            300,  "Çift Konsensüs B≥2/4 $10-20"),
+        ("analiz13",   "13. Analiz (SOL)",      300,  "Çift Konsensüs SOL only $24-32-40"),
         ("analiz31",   "31. Analiz",            300,  "Multi-TF MR Sanal $12-16-20"),
-        ("analiz21",   "21. Analiz",            300,  "Sembol Algo: BTC Hull MA / ETH VP / SOL MACD"),
+        ("analiz32",   "32. Analiz",            300,  "FeatureEngine composite SOL only $12-16-20"),
+        ("analiz21",   "21. Analiz",            300,  "Sembol Algo: BTC Hull MA / SOL MACD"),
+        ("analiz23",   "23. Analiz",            500,  "A4 BTC + A2 SOL hibrit $20-30-40"),
         ("karisim1",   "11. Analiz",            300,  "A1+A4 Meta"),
-        ("5m_btc_105",  "5M 105 BTC",            200,  "MR veto + trend nötr (sanal $8-12, 24/7)"),
-        ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 + yön freni — cron kapalı"),
+        ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 algo + yön freni — cron kapalı"),
+        ("5m_sol_110",  "15M 110 SOL",           300,  "Analiz32 15m SOL gerçek PM $8-10-12"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:
@@ -1542,7 +1550,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
     </div>
     <div class="card" data-algo="13">
       <div class="card-top"><div class="card-num">13</div><div class="card-name">Grid Trading Bot</div></div>
-      <div class="card-signals" id="sigs-13"><div class="sig-na sig-pill">BTC —</div><div class="sig-na sig-pill">ETH —</div><div class="sig-na sig-pill">SOL —</div></div>
+      <div class="card-signals" id="sigs-13"><div class="sig-na sig-pill">SOL —</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-13"></div><div class="card-acc" id="acc-13"><span class="acc-none pct-none">Nötr</span></div></div>
     </div>
   </div>
@@ -1597,7 +1605,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
     </div>
     <div class="card" data-algo="21">
       <div class="card-top"><div class="card-num">21</div><div class="card-name">Fear &amp; Greed</div></div>
-      <div class="card-signals" id="sigs-21"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
+      <div class="card-signals" id="sigs-21"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">SOL</div></div>
       <div class="card-footer"><div class="mini-chart" id="chart-21"></div><div class="card-acc" id="acc-21"><span class="acc-none pct-none">—</span></div></div>
     </div>
   </div>
@@ -3334,7 +3342,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz5:'5. Analiz',analiz4:'4. Analiz',analiz10:'10. Analiz',analiz13:'13. Analiz',analiz21:'21. Analiz',analiz31:'31. Analiz',karisim1:'11. Analiz'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz5:'5. Analiz',analiz4:'4. Analiz',analiz10:'10. Analiz',analiz13:'13. Analiz',analiz21:'21. Analiz',analiz23:'23. Analiz',analiz31:'31. Analiz',analiz32:'32. Analiz',karisim1:'11. Analiz'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {

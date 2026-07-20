@@ -1,5 +1,5 @@
 """
-Analiz31 MR skorlama (Yama v1.1 — trend filtresi + dinamik gate + CVD momentum)
+Analiz31 MR skorlama (Yama v1.2 — trend rejimi + SOL filtresi + yüksek gate)
 """
 
 from typing import Dict, List, Tuple
@@ -9,6 +9,9 @@ from config import (
     _MR_UP_GATE, _MR_DOWN_GATE,
     _MR_UP_GATE_KILLZONE, _MR_DOWN_GATE_KILLZONE,
     _KILL_ZONE_ET_HOURS, _CRASH_EMA50_PCT,
+    _GATE_FLOOR, _TREND_REGIME_ADX, _TREND_REGIME_DI_SPREAD,
+    _SOL_DOWN_EXTRA_GATE, _SOL_MOMENTUM_CVD_MIN, _SOL_MOMENTUM_RSI_MIN,
+    _SOL_ALLOWED_HOURS_IST,
 )
 
 
@@ -19,21 +22,65 @@ def get_kill_zone_adjustment() -> Tuple[int, int]:
     return _MR_UP_GATE, _MR_DOWN_GATE
 
 
-def get_dynamic_gates(features: Dict) -> Tuple[int, int]:
-    """Piyasa rejimine göre dinamik gate'ler"""
+def is_trend_regime(features: Dict) -> Tuple[bool, str]:
+    """Güçlü trend rejiminde MR tamamen kapalı."""
+    f1h = features.get("1h", {})
+    if not f1h.get("valid"):
+        return False, ""
+
+    adx = f1h.get("adx", 0)
+    plus_di = f1h.get("plus_di", 25)
+    minus_di = f1h.get("minus_di", 25)
+    di_spread = abs(plus_di - minus_di)
+
+    if adx >= _TREND_REGIME_ADX and di_spread >= _TREND_REGIME_DI_SPREAD:
+        dir_label = "UPTREND" if plus_di > minus_di else "DOWNTREND"
+        return True, (
+            f"🚫 Trend rejimi (ADX:{adx:.0f}, DIΔ:{di_spread:.0f}, {dir_label}) — MR kapalı"
+        )
+    return False, ""
+
+
+def sol_symbol_hour_allowed(symbol: str, hour_ist: int | None) -> Tuple[bool, str]:
+    """SOL yalnızca belirli İST saatlerinde MR açar."""
+    if symbol != "SOLUSDT" or hour_ist is None:
+        return True, "OK"
+    if hour_ist not in _SOL_ALLOWED_HOURS_IST:
+        return False, f"🚫 SOL — {hour_ist:02d}:00 İST MR penceresi dışı"
+    return True, "OK"
+
+
+def short_term_momentum_up(features: Dict) -> bool:
+    """Kısa vadeli yukarı momentum — SOL DOWN için engel."""
+    f1h = features.get("1h", {})
+    f15m = features.get("15m", {})
+    cvd_5m, cvd_delta = _cvd_momentum(features)
+
+    if cvd_5m > _SOL_MOMENTUM_CVD_MIN or cvd_delta > 0.01:
+        return True
+    if f15m.get("valid") and f15m.get("macd_bull"):
+        return True
+    if f1h.get("rsi", 50) > _SOL_MOMENTUM_RSI_MIN:
+        return True
+    if f1h.get("streak_dir") == 1 and f1h.get("streak", 0) >= 2:
+        return True
+    if f1h.get("current", 0) > f1h.get("ema9", 0) > f1h.get("ema21", 0):
+        return True
+    return False
+
+
+def get_dynamic_gates(features: Dict, symbol: str = "") -> Tuple[int, int]:
+    """Piyasa rejimine göre dinamik gate'ler — taban 75, yalnızca yukarı ayarlanır."""
     f1h = features.get("1h", {})
     htf = features.get("htf_bias", {})
 
     base_up, base_down = get_kill_zone_adjustment()
-
     htf_score = htf.get("score", 0)
 
     if htf_score >= 2:
-        base_up -= 5
         base_down += 15
     elif htf_score <= -2:
         base_up += 15
-        base_down -= 5
 
     adx = f1h.get("adx", 20)
     if adx > 35:
@@ -53,11 +100,14 @@ def get_dynamic_gates(features: Dict) -> Tuple[int, int]:
         else:
             base_up += 10
 
-    return max(30, base_up), max(30, base_down)
+    if symbol == "SOLUSDT":
+        base_down += _SOL_DOWN_EXTRA_GATE
+
+    return max(_GATE_FLOOR, base_up), max(_GATE_FLOOR, base_down)
 
 
 def _trend_filter(features: Dict, direction: str) -> Tuple[bool, str]:
-    """Trend karşıtı MR'ı engelle"""
+    """Trend karşıtı MR'ı engelle."""
     f1h = features.get("1h", {})
     htf = features.get("htf_bias", {})
 
@@ -76,6 +126,8 @@ def _trend_filter(features: Dict, direction: str) -> Tuple[bool, str]:
             return False, f"🚫 Strong UPTREND (ADX:{adx:.0f}, +DI>{minus_di:.0f}) — DOWN blocked"
         if htf_score >= 3:
             return False, f"🚫 Bullish HTF (score:{htf_score}) — DOWN blocked"
+        if short_term_momentum_up(features):
+            return False, "🚫 Kısa vadeli momentum UP — DOWN blocked"
 
     elif direction == "UP":
         if is_strong_trend and minus_di > plus_di:
@@ -87,14 +139,14 @@ def _trend_filter(features: Dict, direction: str) -> Tuple[bool, str]:
 
 
 def _cvd_momentum(features: Dict) -> Tuple[float, float]:
-    """CVD değişim hızı (momentum)"""
+    """CVD değişim hızı (momentum)."""
     cvd_5m = features.get("cvd_5m", 0)
     cvd_30m = features.get("cvd_30m", 0)
     cvd_delta = cvd_5m - (cvd_30m / 6)
     return cvd_5m, cvd_delta
 
 
-def mr_confluence_up(features: Dict) -> Tuple[int, List[str]]:
+def mr_confluence_up(features: Dict, symbol: str = "") -> Tuple[int, List[str]]:
     f1h = features.get("1h", {})
     f15m = features.get("15m", {})
     htf = features.get("htf_bias", {})
@@ -171,13 +223,16 @@ def mr_confluence_up(features: Dict) -> Tuple[int, List[str]]:
     return s, factors
 
 
-def mr_confluence_down(features: Dict) -> Tuple[int, List[str]]:
+def mr_confluence_down(features: Dict, symbol: str = "") -> Tuple[int, List[str]]:
     f1h = features.get("1h", {})
     f15m = features.get("15m", {})
     htf = features.get("htf_bias", {})
 
     if not f1h.get("valid"):
         return 0, ["Invalid 1h data"]
+
+    if symbol == "SOLUSDT" and short_term_momentum_up(features):
+        return -999, ["🚫 SOL DOWN — kısa vadeli momentum UP (HTF bearish olsa bile)"]
 
     allowed, reason = _trend_filter(features, "DOWN")
     if not allowed:

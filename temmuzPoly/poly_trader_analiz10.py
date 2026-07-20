@@ -4,7 +4,7 @@
 Sistem A: poly_predictor (Analiz 1/5)
 Sistem B: Trend + MR + OrderFlow + Funding (Analiz 4/9)
 
-$300 sanal, sabit $10/işlem. Saatlik elenme nedeni Telegram.
+$300 sanal, işlem $12/$16/$20 (sembol WR — 1. Analiz mantığı). Saatlik elenme nedeni Telegram.
 
 Modlar: close / open / weekly / stats
 Cron: 0 * * * * close | 5 * * * * open | 0 21 * * 6 weekly

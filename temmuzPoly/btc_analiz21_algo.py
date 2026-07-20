@@ -1,7 +1,6 @@
 """
 21. Analiz — sembol bazlı en iyi algo sinyalleri (1H)
   BTC → Hull MA (HMA)         # algo 29
-  ETH → Volume Profile        # algo 10
   SOL → MACD Hist. Div        # algo 26
 """
 import asyncio
@@ -11,13 +10,11 @@ from typing import Optional
 from algo_signals import (
     fetch_klines,
     hull_ma,
-    volume_profile,
     macd_histogram_div,
 )
 
 SYMBOL_ALGOS = {
     "BTCUSDT": (hull_ma, "Hull MA (HMA)"),
-    "ETHUSDT": (volume_profile, "Volume Profile"),
     "SOLUSDT": (macd_histogram_div, "MACD Hist. Div"),
 }
 

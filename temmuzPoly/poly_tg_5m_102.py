@@ -1,4 +1,4 @@
-"""5M 102/105 saatlik özet + 5M 105 işlem bildirimleri (8799859033 bot)."""
+"""5M/15M gerçek PM saatlik özet + işlem bildirimleri (8799859033 bot)."""
 import json
 import urllib.request
 

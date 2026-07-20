@@ -256,9 +256,26 @@ def _current_5m_ts() -> int:
     return now - (now % _PERIOD_SECS)  # 300 = 5 * 60
 
 
-def _pm_find_5m_market(ts_5m: int) -> dict | None:
-    """btc-updown-5m-{ts_5m} marketini Polymarket'ta ara."""
-    slug = f"btc-updown-5m-{ts_5m}"
+_PM_5M_ASSET = {
+    "BTCUSDT": "btc",
+    "SOLUSDT": "sol",
+    "ETHUSDT": "eth",
+}
+
+
+def _pm_find_5m_market(ts_5m: int, symbol: str = "BTCUSDT") -> dict | None:
+    """{asset}-updown-5m-{ts} marketini Polymarket'ta ara (token + fiyat)."""
+    return _pm_find_updown_market(ts_5m, symbol, period_min=5)
+
+
+def _pm_find_15m_market(ts_15m: int, symbol: str = "SOLUSDT") -> dict | None:
+    """{asset}-updown-15m-{ts} marketini Polymarket'ta ara (token + fiyat)."""
+    return _pm_find_updown_market(ts_15m, symbol, period_min=15)
+
+
+def _pm_find_updown_market(ts: int, symbol: str, period_min: int = 5) -> dict | None:
+    asset = _PM_5M_ASSET.get(symbol, "btc")
+    slug = f"{asset}-updown-{period_min}m-{ts}"
     try:
         req = urllib.request.Request(f"{_PM_GAMMA_URL}?slug={slug}", headers=_PM_HEADERS)
         with urllib.request.urlopen(req, timeout=10) as r:
@@ -449,8 +466,58 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
             resp   = client.post_order(signed, order_type=OrderType.FAK)
             if resp and resp.get("success"):
                 oid = resp.get("orderID") or resp.get("id", "")
-                print(f"[{LABEL}] PM order OK: {size} @ {price} (${spent:.2f}) deneme {attempt}")
-                return {"order_id": oid, "size": size, "price": price, "spent": spent}
+                fill_size = size
+                fill_spent = spent
+                fill_price = price
+                # FAK kısmi fill: response / get_order'dan gerçek eşleşeni al
+                try:
+                    ta = resp.get("takingAmount")
+                    ma = resp.get("makingAmount")
+                    # BUY: makingAmount ≈ USDC (6 decimals), takingAmount ≈ shares
+                    if ta not in (None, "") and ma not in (None, ""):
+                        ta_f = float(ta)
+                        ma_f = float(ma)
+                        if ta_f > 1000:  # atomic units
+                            ta_f /= 1_000_000
+                        if ma_f > 1000:
+                            ma_f /= 1_000_000
+                        if ta_f > 0 and ma_f > 0:
+                            fill_size = round(ta_f, 4)
+                            fill_spent = round(ma_f, 2)
+                            fill_price = round(ma_f / ta_f, 4)
+                    elif oid:
+                        time.sleep(0.4)
+                        od = client.get_order(oid)
+                        matched = float(od.get("size_matched") or 0)
+                        opx = float(od.get("price") or price)
+                        if matched > 0:
+                            fill_size = round(matched, 4)
+                            fill_price = opx
+                            fill_spent = round(matched * opx, 2)
+                except Exception as fe:
+                    print(f"[{LABEL}] Fill doğrulama: {fe}", file=sys.stderr)
+
+                # Çok küçük kısmi fill'i işlem sayma — yeniden dene
+                if fill_spent < max(1.0, amount_usd * 0.5):
+                    print(
+                        f"[{LABEL}] Kısmi fill yetersiz: {fill_size} @ {fill_price} "
+                        f"(${fill_spent:.2f} < hedef ${amount_usd:.2f}) deneme {attempt}",
+                        file=sys.stderr,
+                    )
+                    last_err = f"partial_fill:{fill_spent}"
+                    continue
+
+                print(
+                    f"[{LABEL}] PM order OK: {fill_size} @ {fill_price} "
+                    f"(${fill_spent:.2f}) deneme {attempt}"
+                    + (f" [kısmi, hedef {size}@${spent:.2f}]" if fill_size + 1e-9 < size else "")
+                )
+                return {
+                    "order_id": oid,
+                    "size": fill_size,
+                    "price": fill_price,
+                    "spent": fill_spent,
+                }
             print(f"[{LABEL}] Order başarısız (deneme {attempt}): {resp}", file=sys.stderr)
             last_err = str(resp)
         except Exception as e:

@@ -8,9 +8,9 @@
   4. Funding Rate     → Binance futures funding rate (contrarian)
 
 Oy sistemi (her algoritma +1/−1/0):
-  |toplam| ≥ 3  →  $20 işlem
-  |toplam| = 2  →  $12 işlem
+  |toplam| ≥ 2  →  işlem açılır
   |toplam| ≤ 1  →  işlem açılmaz
+  Tutar: sembol WR'ye göre $12 / $16 / $20 (1. Analiz mantığı)
 
 Modlar: close / open / weekly / stats
 """
@@ -36,7 +36,7 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pm_trader_helpers import apply_pm_quote, sanal_pnl
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "8630483764:AAFmAmG4nHAGb238wpavlWgMjJZDvIy4DzE")
@@ -48,13 +48,12 @@ STATE_FILE   = os.path.join(_DIR, "poly_trader_analiz4_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz4_history.json")
 WEEKLY_IMG   = "/tmp/poly_analiz4_weekly_heatmap.png"
 
-INITIAL_BALANCE = 300.0
+INITIAL_BALANCE = SANAL_INITIAL_BALANCE
 SYMBOLS         = ["BTCUSDT", "ETHUSDT"]  # SOL kaldırıldı
+MIN_SCORE_OPEN  = 2   # |skor| >= 2 → işlem
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
-AMOUNT_STRONG   = 20.0   # |skor| >= 3
-AMOUNT_MODERATE = 12.0   # |skor| == 2
 MIN_STAT_COUNT  = 10
 
 
@@ -283,14 +282,12 @@ def analyze(symbol: str) -> dict | None:
     v4, l4 = algo_funding(funding)
     score   = v1 + v2 + v3 + v4
 
-    amount = AMOUNT_STRONG if abs(score) >= 3 else AMOUNT_MODERATE if abs(score) == 2 else 0.0
-
     return {
         "symbol":        symbol,
         "price":         klines[-2]["close"],  # son kapanan mum = Polymarket Price to Beat
         "score":         score,
         "predicted_dir": "UP" if score > 0 else "DOWN" if score < 0 else None,
-        "amount":        amount,
+        "open_ok":       abs(score) >= MIN_SCORE_OPEN,
         "votes":         [v1, v2, v3, v4],
         "labels":        [l1, l2, l3, l4],
     }
@@ -349,7 +346,7 @@ async def run_close() -> None:
         current_price = klines[-1]["close"]
         entry  = pos["entry_price"]
         pred   = pos["predicted_dir"]
-        amount = pos.get("amount", AMOUNT_STRONG)
+        amount = pos.get("amount", SANAL_TRADE_AMOUNT)
         actual = "UP" if current_price >= entry else "DOWN"
         win    = (pred == actual)
         pnl    = sanal_pnl(pos, win)
@@ -445,7 +442,8 @@ async def run_open() -> None:
 
     # Pozisyon aç
     for sig in results:
-        if sig["amount"] > 0 and sig["predicted_dir"]:
+        if sig["predicted_dir"] and sig.get("open_ok"):
+            amount = symbol_wr_amount(history, sig["symbol"])
             pos = {
                 "symbol":           sig["symbol"],
                 "predicted_dir":    sig["predicted_dir"],
@@ -455,10 +453,10 @@ async def run_open() -> None:
                 "entry_dow":        dow,
                 "entry_is_weekend": is_weekend,
                 "score":            sig["score"],
-                "amount":           sig["amount"],
+                "amount":           amount,
                 "votes":            sig["votes"],
             }
-            apply_pm_quote(pos, sig["symbol"], sig["predicted_dir"], sig["amount"], now)
+            apply_pm_quote(pos, sig["symbol"], sig["predicted_dir"], amount, now)
             state["open_positions"].append(pos)
 
     save_state(state)
@@ -466,15 +464,15 @@ async def run_open() -> None:
     next_h   = f"{(hour_tr + 1) % 24:02d}:00"
     sep      = "━" * 26
     mini_sep = "━" * 10
-    opened   = [s for s in results if s["amount"] > 0 and s["predicted_dir"]]
-    skipped  = [s for s in results if s["amount"] == 0]
+    opened   = [s for s in results if s.get("open_ok") and s["predicted_dir"]]
+    skipped  = [s for s in results if not (s.get("open_ok") and s["predicted_dir"])]
 
     lines = []
     for sig in opened:
         sym      = sig["symbol"]
         name     = sym.replace("USDT", "")
         score    = sig["score"]
-        amount   = sig["amount"]
+        amount   = symbol_wr_amount(history, sym)
         dir_icon = "📈" if sig["predicted_dir"] == "UP" else "📉"
         dir_tr   = "YÜKSELİR" if sig["predicted_dir"] == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
@@ -506,10 +504,10 @@ async def run_open() -> None:
     parts = [sep, f"🆕 <b>4. ANALİZ — {saat} - {next_h} Yeni İşlemler</b>"]
     parts.extend(lines)
 
-    _at_risk4 = sum(p.get("amount", AMOUNT_STRONG) for p in state["open_positions"])
+    _at_risk4 = sum(p.get("amount", SANAL_TRADE_AMOUNT) for p in state["open_positions"])
     parts.append(f"💰 Ana: ${state['balance'] - _at_risk4:.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${_at_risk4:.0f}  |  Toplam: ${state['balance']:.2f}")
     parts.append(
-        f"<i>Eşik: |skor|≥3→{AMOUNT_STRONG:.0f}$  |skor|=2→{AMOUNT_MODERATE:.0f}$  ≤1→yok</i>"
+        f"<i>Eşik: |skor|≥{MIN_SCORE_OPEN} açılır  |  Tutar: $12/$16/$20 (sembol WR)</i>"
     )
     parts.append(sep)
 
@@ -641,7 +639,7 @@ def run_stats() -> None:
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
-        f"Eşik: |skor|≥3→{AMOUNT_STRONG:.0f}$  |skor|=2→{AMOUNT_MODERATE:.0f}$",
+        f"Eşik: |skor|≥{MIN_SCORE_OPEN}  |  Tutar: $12/$16/$20 (sembol WR)",
         f"\n🔬 <b>Algoritma İsabet Oranı</b>", *_ind_stats_lines(history),
     ]
 

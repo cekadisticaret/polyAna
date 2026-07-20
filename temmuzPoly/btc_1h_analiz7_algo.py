@@ -1,7 +1,7 @@
 """
 BTC/USDT 1 Saatlik Gelişmiş Sinyal Motoru v2.0 — 7. Analiz
 
-6 algo konsensüs (≥3/6): A1, Trend+ST+ADX, MR, Orderflow v2, Volume, Ichimoku
+6 algo konsensüs (≥2/6): A1, Trend+ST+ADX, MR, Orderflow v2, Volume, Ichimoku
 Filtreler: momentum, ADX≥25, hacim≥1.3x, 4H HTF onayı
 MACD 12/26/9, RSI 30/70, Ichimoku, SuperTrend v2, HMA
 
@@ -26,7 +26,7 @@ SYMBOL = "BTCUSDT"
 INTERVAL = "1h"
 HTF_INTERVAL = "4h"
 
-MIN_CONSENSUS = 3
+MIN_CONSENSUS = 2
 TOTAL_ALGOS = 6
 
 RSI_OVERSOLD = 30
@@ -85,7 +85,7 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-MOMENTUM_FILTER_ENABLED = os.getenv("PM_1H_MOMENTUM_FILTER", "true").lower() in ("1", "true", "yes")
+MOMENTUM_FILTER_ENABLED = os.getenv("PM_1H_MOMENTUM_FILTER", "false").lower() in ("1", "true", "yes")
 ADX_FILTER_ENABLED = os.getenv("PM_1H_ADX_FILTER", "true").lower() in ("1", "true", "yes")
 VOLUME_FILTER_ENABLED = os.getenv("PM_1H_VOLUME_FILTER", "true").lower() in ("1", "true", "yes")
 HTF_CONFIRMATION = os.getenv("PM_1H_HTF_CONFIRMATION", "true").lower() in ("1", "true", "yes")

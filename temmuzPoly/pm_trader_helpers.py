@@ -17,6 +17,26 @@ _PM_ASSET_MAP = {
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 PM_DRY_RUN = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 
+# Sanal trader giriş tutarları (1. Analiz mantığı — A5 hariç ortak)
+SANAL_INITIAL_BALANCE = 300.0
+SANAL_TRADE_AMOUNT = 16.0       # sembol WR veri yok veya tam %50
+SANAL_TRADE_AMOUNT_HIGH = 20.0  # sembol genel WR > %50
+SANAL_TRADE_AMOUNT_LOW = 12.0   # sembol genel WR < %50
+
+
+def symbol_wr_amount(history: list, symbol: str) -> float:
+    """Sembol bazlı geçmiş WR'ye göre işlem tutarı ($12 / $16 / $20)."""
+    trades = [t for t in history if t.get("symbol") == symbol]
+    if not trades:
+        return SANAL_TRADE_AMOUNT
+    wins = sum(1 for t in trades if t.get("win"))
+    rate = wins / len(trades)
+    if rate > 0.5:
+        return SANAL_TRADE_AMOUNT_HIGH
+    if rate < 0.5:
+        return SANAL_TRADE_AMOUNT_LOW
+    return SANAL_TRADE_AMOUNT
+
 
 def pm_get_client():
     from py_clob_client_v2 import ClobClient
@@ -357,8 +377,17 @@ _PM_5M_ASSET = {
 
 def pm_5m_find_market(ts_5m: int, symbol: str = "BTCUSDT") -> dict | None:
     """5m up/down market gamma fiyatı."""
+    return pm_updown_find_market(ts_5m, symbol, period_min=5)
+
+
+def pm_15m_find_market(ts_15m: int, symbol: str = "SOLUSDT") -> dict | None:
+    """15m up/down market gamma fiyatı."""
+    return pm_updown_find_market(ts_15m, symbol, period_min=15)
+
+
+def pm_updown_find_market(ts: int, symbol: str, period_min: int = 5) -> dict | None:
     asset = _PM_5M_ASSET.get(symbol, "btc")
-    slug = f"{asset}-updown-5m-{ts_5m}"
+    slug = f"{asset}-updown-{period_min}m-{ts}"
     try:
         req = urllib.request.Request(f"{_PM_GAMMA_URL}?slug={slug}", headers=_PM_HEADERS)
         with urllib.request.urlopen(req, timeout=10) as r:
@@ -386,7 +415,16 @@ def pm_5m_find_market(ts_5m: int, symbol: str = "BTCUSDT") -> dict | None:
 
 def pm_5m_sanal_quote(ts_5m: int, direction: str, amount: float, symbol: str = "BTCUSDT") -> dict:
     """5m PM kotasyon alanları (emir yok)."""
-    pm = pm_5m_find_market(ts_5m, symbol)
+    return pm_updown_sanal_quote(ts_5m, direction, amount, symbol, period_min=5)
+
+
+def pm_15m_sanal_quote(ts_15m: int, direction: str, amount: float, symbol: str = "SOLUSDT") -> dict:
+    """15m PM kotasyon alanları (emir yok)."""
+    return pm_updown_sanal_quote(ts_15m, direction, amount, symbol, period_min=15)
+
+
+def pm_updown_sanal_quote(ts: int, direction: str, amount: float, symbol: str, period_min: int = 5) -> dict:
+    pm = pm_updown_find_market(ts, symbol, period_min=period_min)
     out: dict = {"amount": amount, "pm_spent": round(amount, 2)}
     tp = 0.50
     if pm and not pm.get("closed"):
@@ -427,3 +465,123 @@ def pm_5m_close(pos: dict, win: bool) -> tuple[float, float]:
     _, size, _ = pm_stake_fields(pos)
     payout = size if win else 0.0
     return pnl, payout
+
+
+def pm_5m_fetch_resolution(slug: str, min_decisive: float = 0.99) -> dict | None:
+    """PM 5m market sonucu. Kesinleşmediyse None.
+
+    min_decisive: örn. 0.99 sıkı; periyot bitince 0.90 ile erken kabul.
+    closed=True ise fiyat çoğunluğuna göre sonuçlanır.
+    """
+    if not slug:
+        return None
+    thr = float(min_decisive)
+    thr = max(0.51, min(0.99, thr))
+    low = round(1.0 - thr, 4)
+    try:
+        req = urllib.request.Request(f"{_PM_GAMMA_URL}?slug={slug}", headers=_PM_HEADERS)
+        with urllib.request.urlopen(req, timeout=10) as r:
+            pm_data = json.load(r)
+        if not pm_data:
+            return None
+        pm_ev = pm_data[0]
+        pm_m = pm_ev.get("markets", [{}])[0]
+        raw_op = pm_m.get("outcomePrices")
+        op = json.loads(raw_op) if isinstance(raw_op, str) else (raw_op or [])
+        if not op:
+            return None
+        up_p = float(op[0])
+        down_p = float(op[1]) if len(op) > 1 else (1.0 - up_p)
+        closed = bool(pm_ev.get("closed"))
+        decisive = up_p >= thr or down_p >= thr or up_p <= low
+        if not (closed or decisive):
+            return None
+        if up_p >= thr or (decisive and up_p > down_p):
+            up_won = True
+        elif down_p >= thr or up_p <= low:
+            up_won = False
+        elif closed:
+            up_won = up_p >= down_p
+        else:
+            return None
+        return {
+            "up_won": up_won,
+            "closed": closed,
+            "up_price": up_p,
+            "down_price": down_p,
+            "title": pm_ev.get("title"),
+        }
+    except Exception as e:
+        print(f"[PM] 5m sonuç hatası ({slug}): {e}", file=sys.stderr)
+    return None
+
+
+def trades_for_exit_day(history: list, day) -> list:
+    """exit_time_tr (İST) belirtilen takvim gününe düşen kapalı işlemler."""
+    ds = day.isoformat()
+    out = [
+        t for t in history
+        if (t.get("exit_time_tr") or "")[:10] == ds
+    ]
+    out.sort(key=lambda t: t.get("exit_time_tr") or "")
+    return out
+
+
+def format_daily_history_tg(
+    label: str,
+    trades: list,
+    day,
+    now_tr: datetime | None = None,
+    suffix: str = "",
+) -> list[str]:
+    """Günlük işlem geçmişi Telegram mesaj(ları). 4096 karakter sınırına böler."""
+    now_tr = now_tr or datetime.now(_TZ_TR)
+    day_str = day.strftime("%d.%m.%Y")
+    wins = sum(1 for t in trades if t.get("win"))
+    total = len(trades)
+    pnl = round(sum(float(t.get("pnl") or 0) for t in trades), 2)
+    pnl_icon = "🟢" if pnl >= 0 else "🔴"
+
+    header = [
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+        f"📋 <b>{label} — Günlük Rapor ({day_str})</b>",
+        f"🕐 {now_tr.strftime('%d.%m.%Y %H:%M')} İST",
+        f"📊 {wins}/{total} kazanç  |  {pnl_icon} Net: {pnl:+.2f}$",
+    ]
+    if suffix:
+        header.append(suffix)
+    header.append("")
+
+    if not trades:
+        return ["\n".join(header + ["ℹ️ Bu gün kapanan işlem yok."])]
+
+    def _fmt_time(iso: str) -> str:
+        if not iso or len(iso) < 16:
+            return "??:??"
+        return iso[11:16]
+
+    body_lines = []
+    for i, t in enumerate(reversed(trades), 1):
+        sym = (t.get("symbol") or "").replace("USDT", "")
+        pred = t.get("predicted_dir", "?")
+        actual = t.get("actual_dir", "?")
+        icon = "✅" if t.get("win") else "❌"
+        pnl_t = float(t.get("pnl") or 0)
+        amt = float(t.get("amount") or t.get("pm_spent") or 0)
+        t0 = _fmt_time(t.get("entry_time_tr", ""))
+        t1 = _fmt_time(t.get("exit_time_tr", ""))
+        body_lines.append(
+            f"{i}. {icon} <b>{sym}</b> {pred}→{actual}  ${amt:.0f}  {pnl_t:+.2f}$\n"
+            f"   {t0} → {t1}"
+        )
+
+    chunks: list[str] = []
+    current = header[:]
+    for line in body_lines:
+        candidate = "\n".join(current + [line])
+        if len(candidate) > 3900 and len(current) > len(header):
+            chunks.append("\n".join(current))
+            current = [f"📋 <b>{label} — devam ({day_str})</b>", ""]
+        current.append(line)
+    chunks.append("\n".join(current))
+    return chunks

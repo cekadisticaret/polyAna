@@ -206,7 +206,8 @@ async def run_backtest(
 
             with patch.object(a31_scorer, "datetime") as mock_dt:
                 mock_dt.now = _fake_now
-                pred = a31_predict(sym, {"features": features})
+                hour_ist = datetime.fromtimestamp(open_ms / 1000, tz=timezone.utc).astimezone(_TZ_TR).hour
+                pred = a31_predict(sym, {"features": features, "hour_ist": hour_ist})
 
             if pred is None or not pred.predicted_dir:
                 skipped += 1

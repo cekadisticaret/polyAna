@@ -4,11 +4,13 @@ Modlar:
   close   → saat başında  (0 * * * *): önceki saatin sonuçlarını kapatır, bildirir
   open    → 5 geçe        (5 * * * *): yeni tahmin, işlem açar
   preview → 45 geçe      (45 * * * *): bir sonraki saatin geçmiş başarı oranlarını bildirir
-  weekly  → Pazar 00:00   (0 0 * * 0): haftalık ısı haritası görseli üretir, Telegram'a gönderir
+  weekly  → Cumartesi 21:00: haftalık ısı haritası görseli üretir, Telegram'a gönderir
+  daily   → Her gün 00:00 İST: önceki günün kapanan işlemleri Telegram'a gönderir
   stats   → manuel: detaylı başarı raporu
 
 Algoritma: poly_predictor_analysis.py — değiştirilmedi.
 Sanal bütçe: $300 başlangıç, her işlem $10.
+Hafta sonu duraklama: Cuma 22:00 – Pazar 22:00 İST (open/preview atlanır; close açık pozisyon varsa çalışır).
 """
 import asyncio
 import json
@@ -21,7 +23,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
-from pm_trader_helpers import apply_pm_quote, sanal_pnl
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, trades_for_exit_day, format_daily_history_tg, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH, SANAL_TRADE_AMOUNT_LOW
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
@@ -33,13 +35,26 @@ STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz1_state.json")
 HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz1_history.json")
 WEEKLY_IMG    = "/tmp/poly_weekly_heatmap.png"
 
-INITIAL_BALANCE    = 300.0
-TRADE_AMOUNT       = 16.0   # genel başarı veri yok veya %50
-TRADE_AMOUNT_HIGH  = 20.0   # genel başarı > %50
-TRADE_AMOUNT_LOW   = 12.0   # genel başarı < %50
+INITIAL_BALANCE    = SANAL_INITIAL_BALANCE
+TRADE_AMOUNT       = SANAL_TRADE_AMOUNT
+TRADE_AMOUNT_HIGH  = SANAL_TRADE_AMOUNT_HIGH
+TRADE_AMOUNT_LOW   = SANAL_TRADE_AMOUNT_LOW
 SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # XRP/DOGE/BNB pasif
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
+
+
+def _in_weekend_pause(now_tr: datetime) -> bool:
+    """Cuma 22:00 – Pazar 22:00 İST arası yeni işlem açılmaz."""
+    dow = now_tr.weekday()  # 0=Pzt … 4=Cum 5=Cmt 6=Paz
+    h = now_tr.hour
+    if dow == 4 and h >= 22:
+        return True
+    if dow == 5:
+        return True
+    if dow == 6 and h < 22:
+        return True
+    return False
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -238,6 +253,12 @@ async def run_close() -> None:
 async def run_open() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
+    saat   = now_tr.strftime("%H:%M")
+
+    if _in_weekend_pause(now_tr):
+        print(f"[1. ANALİZ open] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 22:00), işlem yok")
+        return
+
     hour_tr    = now_tr.hour
     dow        = now_tr.weekday()
     is_weekend = dow >= 5
@@ -260,11 +281,7 @@ async def run_open() -> None:
         sym         = c["sym"]
         pred_obj    = c["pred_obj"]
         ind_ema_raw = pred_obj.trend.upper()
-        sw, st      = get_symbol_stats(history, sym)
-        rate        = sw / st if st else None
-        dyn_amount  = (TRADE_AMOUNT_HIGH if (rate is not None and rate > 0.5)
-                       else TRADE_AMOUNT_LOW if (rate is not None and rate < 0.5)
-                       else TRADE_AMOUNT)
+        dyn_amount  = symbol_wr_amount(history, sym)
         # Saatin başındaki fiyat (son kapanan 1h mumu) = Polymarket "Price to Beat"
         try:
             klines = await _fetch_klines(sym, "1h", 3)
@@ -302,11 +319,8 @@ async def run_open() -> None:
         dir_icon = "📈" if pred_obj.predicted_dir == "UP" else "📉"
         dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
-        sym_wins,  sym_total  = get_symbol_stats(history, sym)
-        sym_rate   = sym_wins / sym_total if sym_total else None
-        pos_amount = (TRADE_AMOUNT_HIGH if (sym_rate is not None and sym_rate > 0.5)
-                      else TRADE_AMOUNT_LOW if (sym_rate is not None and sym_rate < 0.5)
-                      else TRADE_AMOUNT)
+        sym_wins, sym_total = get_symbol_stats(history, sym)
+        pos_amount = symbol_wr_amount(history, sym)
         lines.append(
             f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{entry_price:.2f}  💵{pos_amount:.0f}$\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
@@ -335,6 +349,9 @@ async def run_open() -> None:
 def run_preview() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
+    if _in_weekend_pause(now_tr):
+        print(f"[1. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — hafta sonu duraklama, atlandı")
+        return
     next_hour = (now_tr.hour + 1) % 24
     dow       = now_tr.weekday()
     gun_tr    = _DAYS_FULL_TR[dow]
@@ -539,6 +556,18 @@ def _ind_stats_lines(history: list) -> list[str]:
     return lines
 
 
+# ── DAILY: Gece yarısı — önceki günün işlem geçmişi ───────────
+def run_daily() -> None:
+    from datetime import timedelta
+
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    day = (now_tr - timedelta(days=1)).date()
+    trades = trades_for_exit_day(load_history(), day)
+    for msg in format_daily_history_tg("1. ANALİZ", trades, day, now_tr):
+        tg_send(msg)
+    print(f"[1. ANALİZ daily] {day} — {len(trades)} işlem gönderildi")
+
+
 # ── STATS: Manuel detaylı rapor ──────────────────────────────
 def run_stats() -> None:
     history = load_history()
@@ -637,6 +666,8 @@ if __name__ == "__main__":
         run_preview()
     elif mode == "weekly":
         run_weekly()
+    elif mode == "daily":
+        run_daily()
     elif mode == "stats":
         run_stats()
     else:

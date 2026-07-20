@@ -18,13 +18,24 @@ TIMEFRAMES = {
     "1d": {"limit": 30, "weight": 0.05},
 }
 
-# Simetrik gate'ler (v1.1)
-_MR_UP_GATE = 50
-_MR_DOWN_GATE = 50
-_MR_UP_GATE_KILLZONE = 65
-_MR_DOWN_GATE_KILLZONE = 65
+# Simetrik gate'ler (v1.2 — yükseltilmiş taban)
+_MR_UP_GATE = 75
+_MR_DOWN_GATE = 75
+_MR_UP_GATE_KILLZONE = 75
+_MR_DOWN_GATE_KILLZONE = 75
+_GATE_FLOOR = 75
 
 _KILL_ZONE_ET_HOURS = frozenset({9, 10, 11})
+
+# Trend rejimi — ADX yüksek + DI spread geniş → MR kapalı
+_TREND_REGIME_ADX = 28
+_TREND_REGIME_DI_SPREAD = 12
+
+# SOL sembol ayrımı
+_SOL_ALLOWED_HOURS_IST = frozenset({6, 7, 21, 22, 23, 0, 1, 2})
+_SOL_DOWN_EXTRA_GATE = 15
+_SOL_MOMENTUM_CVD_MIN = 0.02
+_SOL_MOMENTUM_RSI_MIN = 52
 
 # Crash kapısı
 _CRASH_EMA50_PCT = -8.0

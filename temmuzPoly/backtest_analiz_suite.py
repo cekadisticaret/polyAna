@@ -146,7 +146,7 @@ ANALIZ_CONFIG = {
     },
     21: {
         "label": "21. ANALİZ",
-        "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
+        "symbols": ["BTCUSDT", "SOLUSDT"],
         "signal": signal_analiz21,
         "min_bars": 50,
         "out": "backtest_analiz21_1y.json",

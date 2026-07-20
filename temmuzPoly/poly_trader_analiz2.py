@@ -8,7 +8,7 @@ Modlar:
   stats   → manuel: detaylı başarı raporu
 
 Algoritma: poly_predictor_analysis.py
-Sanal bütçe: $300, işlem $10/$15/$20 (WR tier).
+Sanal bütçe: $300, işlem $12/$16/$20 (sembol WR — 1. Analiz mantığı).
 Hacim filtresi yok. ALLOW_FALLBACK=False → sadece predict(); True ise ABD kapalıyken yedek RSI/MACD/EMA.
 Gece modu kapalı — 24/7 açılış denemesi (fallback kapalıysa predict yoksa işlem yok).
 """
@@ -25,7 +25,12 @@ from dataclasses import dataclass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines, _rsi, _macd, _ema
-from pm_trader_helpers import apply_pm_quote, sanal_pnl, pm_tg_stake, pm_stake_fields, pm_resolve_pnl
+from pm_trader_helpers import (
+    apply_pm_quote, sanal_pnl, symbol_wr_amount,
+    SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT,
+    SANAL_TRADE_AMOUNT_HIGH, SANAL_TRADE_AMOUNT_LOW,
+    pm_tg_stake, pm_stake_fields, pm_resolve_pnl,
+)
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
@@ -38,10 +43,11 @@ STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz2_state.json")
 HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz2_history.json")
 WEEKLY_IMG    = "/tmp/poly_analiz2_weekly_heatmap.png"
 
-INITIAL_BALANCE    = 300.0
-TRADE_AMOUNT       = 15.0   # genel başarı veri yok veya %50
-TRADE_AMOUNT_HIGH  = 20.0   # genel başarı > %50
-TRADE_AMOUNT_LOW   = 10.0   # genel başarı < %50
+INITIAL_BALANCE    = SANAL_INITIAL_BALANCE
+TRADE_AMOUNT       = SANAL_TRADE_AMOUNT
+TRADE_AMOUNT_HIGH  = SANAL_TRADE_AMOUNT_HIGH
+TRADE_AMOUNT_LOW   = SANAL_TRADE_AMOUNT_LOW
+SYMBOLS            = ["SOLUSDT"]
 ALLOW_FALLBACK = False  # True: ABD kapalıyken RSI/MACD/EMA yedek; False: sadece predict()
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -174,14 +180,6 @@ def _credit_on_close(state: dict, pos: dict, win: bool, pnl: float) -> None:
     if win and size > 0:
         state["balance"] = round(state["balance"] + size, 2)
     state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
-
-
-def _dyn_amount(rate: float | None) -> float:
-    if rate is not None and rate > 0.5:
-        return TRADE_AMOUNT_HIGH
-    if rate is not None and rate < 0.5:
-        return TRADE_AMOUNT_LOW
-    return TRADE_AMOUNT
 
 
 # ── Telegram ─────────────────────────────────────────────────
@@ -354,9 +352,7 @@ async def run_open() -> None:
             continue
 
         name = sym.replace("USDT", "")
-        sw, st = get_symbol_stats(history, sym)
-        rate = sw / st if st else None
-        dyn_amount = _dyn_amount(rate)
+        dyn_amount = symbol_wr_amount(history, sym)
 
         try:
             klines = await _fetch_klines(sym, "1h", 3)

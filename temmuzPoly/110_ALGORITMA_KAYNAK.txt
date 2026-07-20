@@ -1,0 +1,1365 @@
+# 15M 110 SOL — Algoritma Kaynak Dosyası
+# Oluşturulma: otomatik birleştirme
+#
+# AKIŞ:
+#   poly_trader_5m_sol_110.py
+#     → analiz32_15m_adapter.analyze_15m()
+#       → btc_5m_105_algo.fetch_klines_15m()
+#       → Analiz32/predictor.predict_from_klines()
+#         → FeatureEngine.compute() → composite_signal
+#         → gate ±15 → UP / DOWN / skip
+#
+# ASIL KARAR NOKTASI: Analiz32/predictor.py (_SIGNAL_GATE = 15)
+# ASIL SKOR FORMÜLÜ: Analiz32/features/composite.py (composite_signal)
+#
+# Not: core/indicators/ altındaki numba kernel'lar ham indikatör hesabıdır;
+#      bu dosyada feature katmanı + gate yer alır.
+#
+
+================================================================================
+=== 110 GİRİŞ: analiz32_15m_adapter.py ===
+# path: temmuzPoly/analiz32_15m_adapter.py
+================================================================================
+
+"""
+15M sinyal adaptörü — Analiz32 FeatureEngine'i bozmadan 15m mumlara uygular.
+"""
+from __future__ import annotations
+
+import os
+import sys
+from dataclasses import dataclass
+from typing import Optional
+
+_DIR = os.path.dirname(os.path.abspath(__file__))
+_A32 = os.path.join(os.path.dirname(_DIR), "Analiz32")
+sys.path.insert(0, _DIR)
+sys.path.insert(0, _A32)
+
+from btc_5m_105_algo import fetch_klines_15m
+from predictor import predict_from_klines
+
+SYMBOL_DEFAULT = "SOLUSDT"
+KLINES_LIMIT = 150
+
+
+@dataclass
+class Signal15m:
+    symbol: str
+    direction: Optional[str]
+    entry_price: float
+    confidence: float
+    up_score: int
+    down_score: int
+    factors: list
+    htf_bias: str
+    skip_reason: str = ""
+
+
+def analyze_15m(symbol: str = SYMBOL_DEFAULT) -> Optional[Signal15m]:
+    try:
+        klines = fetch_klines_15m(symbol, KLINES_LIMIT)
+    except Exception as e:
+        print(f"[A32-15M] kline hata {symbol}: {e}")
+        return None
+    if not klines or len(klines) < 80:
+        return Signal15m(
+            symbol=symbol, direction=None, entry_price=0.0,
+            confidence=0.0, up_score=0, down_score=0,
+            factors=[], htf_bias="", skip_reason="yetersiz 15m veri",
+        )
+
+    pred = predict_from_klines(symbol, klines)
+    if pred is None:
+        return Signal15m(
+            symbol=symbol, direction=None, entry_price=float(klines[-2]["close"]),
+            confidence=0.0, up_score=0, down_score=0,
+            factors=[], htf_bias="", skip_reason="predict yok",
+        )
+
+    if not pred.predicted_dir:
+        return Signal15m(
+            symbol=symbol, direction=None, entry_price=pred.current_price,
+            confidence=0.0, up_score=pred.up_score, down_score=pred.down_score,
+            factors=pred.factors, htf_bias=pred.htf_bias,
+            skip_reason=f"gate (UP={pred.up_score} DOWN={pred.down_score})",
+        )
+
+    return Signal15m(
+        symbol=symbol,
+        direction=pred.predicted_dir,
+        entry_price=pred.current_price,
+        confidence=pred.confidence,
+        up_score=pred.up_score,
+        down_score=pred.down_score,
+        factors=pred.factors,
+        htf_bias=pred.htf_bias,
+    )
+
+================================================================================
+=== TRADE GATE: Analiz32/predictor.py ===
+# path: Analiz32/predictor.py
+================================================================================
+
+"""
+Analiz32 trader adaptörü.
+
+FeatureEngine / CompositeScores çıktısını (composite_signal) saatlik
+UP/DOWN tahminine çevirir. core/ ve features/ algoritmasına dokunmaz.
+"""
+from __future__ import annotations
+
+import os
+import sys
+import time
+from dataclasses import dataclass
+from typing import List, Optional
+
+import numpy as np
+
+_DIR = os.path.dirname(os.path.abspath(__file__))
+if _DIR not in sys.path:
+    sys.path.insert(0, _DIR)
+
+from core.base import OHLCV
+from features.engine import FeatureEngine
+
+# Adaptör eşiği — kütüphane içi skorları değiştirmez; yalnızca trade gate
+_SIGNAL_GATE = 15.0
+_MIN_BARS = 80
+_ENGINE = FeatureEngine()
+
+
+@dataclass
+class Prediction:
+    symbol: str
+    current_price: float
+    predicted_dir: Optional[str]
+    prob_up: float
+    prob_down: float
+    confidence: float
+    up_score: int
+    down_score: int
+    up_gate: int
+    down_gate: int
+    factors: list
+    htf_bias: str
+    timestamp: float
+
+
+def _klines_to_ohlcv(klines: list[dict]) -> OHLCV:
+    return OHLCV(
+        open_=np.array([k["open"] for k in klines], dtype=np.float64),
+        high=np.array([k["high"] for k in klines], dtype=np.float64),
+        low=np.array([k["low"] for k in klines], dtype=np.float64),
+        close=np.array([k["close"] for k in klines], dtype=np.float64),
+        volume=np.array([k["volume"] for k in klines], dtype=np.float64),
+    )
+
+
+def _last(arr, default=0.0) -> float:
+    """Son geçerli (non-NaN) değer; yoksa default."""
+    if arr is None or len(arr) == 0:
+        return default
+    for v in arr[::-1]:
+        fv = float(v)
+        if not np.isnan(fv):
+            return fv
+    return default
+
+
+def predict_from_klines(symbol: str, klines: list[dict]) -> Optional[Prediction]:
+    """Kapalı mumlar üzerinde FeatureEngine → Prediction."""
+    if not klines or len(klines) < _MIN_BARS:
+        return None
+
+    # Son bar çoğu zaman oluşumda; özellik için kapalı mumlar
+    closed = klines[:-1] if len(klines) > _MIN_BARS else klines
+    if len(closed) < _MIN_BARS:
+        return None
+
+    ohlcv = _klines_to_ohlcv(closed)
+    fv = _ENGINE.compute(ohlcv)
+    by_name = fv.to_dict()
+
+    composite = _last(by_name.get("composite_signal"))
+    trend = _last(by_name.get("trend_score"))
+    momentum = _last(by_name.get("momentum_score"))
+    vol_pressure = _last(by_name.get("volume_pressure"))
+    regime = _last(by_name.get("market_regime"))
+    price = float(closed[-1]["close"])
+
+    up_score = int(round(max(0.0, composite)))
+    down_score = int(round(max(0.0, -composite)))
+    gate = int(_SIGNAL_GATE)
+
+    predicted_dir = None
+    if composite >= _SIGNAL_GATE:
+        predicted_dir = "UP"
+    elif composite <= -_SIGNAL_GATE:
+        predicted_dir = "DOWN"
+
+    if predicted_dir:
+        strength = min(1.0, abs(composite) / 100.0)
+        confidence = max(0.50, min(0.90, 0.50 + strength * 0.40))
+        prob_up = confidence if predicted_dir == "UP" else 1.0 - confidence
+        prob_down = confidence if predicted_dir == "DOWN" else 1.0 - confidence
+    else:
+        confidence = 0.0
+        prob_up = prob_down = 0.0
+
+    factors: List[str] = [
+        f"composite:{composite:+.1f}",
+        f"trend:{trend:+.1f}",
+        f"momentum:{momentum:+.1f}",
+        f"vol_pressure:{vol_pressure:+.1f}",
+        f"regime:{regime:+.0f}",
+    ]
+
+    regime_lbl = {2: "strong_up", 1: "up", 0: "range", -1: "down", -2: "strong_down"}.get(
+        int(regime), f"{regime:+.0f}"
+    )
+    htf_str = f"regime:{regime_lbl} trend:{trend:+.0f}"
+
+    return Prediction(
+        symbol=symbol,
+        current_price=price,
+        predicted_dir=predicted_dir,
+        prob_up=prob_up,
+        prob_down=prob_down,
+        confidence=confidence,
+        up_score=up_score,
+        down_score=down_score,
+        up_gate=gate,
+        down_gate=gate,
+        factors=factors,
+        htf_bias=htf_str,
+        timestamp=time.time(),
+    )
+
+
+async def analyze(symbol: str) -> Optional[Prediction]:
+    """Trader entegrasyonu — 1h Binance verisi + FeatureEngine."""
+    from data_fetcher import fetch_klines
+
+    klines = await fetch_klines(symbol, "1h", 150)
+    return predict_from_klines(symbol, klines)
+
+================================================================================
+=== FEATURE ENGINE: Analiz32/features/engine.py ===
+# path: Analiz32/features/engine.py
+================================================================================
+
+"""
+features/engine.py
+
+Main FeatureEngine class — orchestrates all feature extraction.
+
+Produces a standardized feature vector for each bar, suitable for:
+- Machine learning models (XGBoost, LSTM, etc.)
+- Backtesting frameworks
+- Real-time streaming
+
+Feature categories:
+    - Trend: EMA alignment, slope, distance
+    - Momentum: RSI, MACD, StochRSI, WilliamsR
+    - Volatility: ATR, Bollinger width, expansion
+    - Volume: Spike, z-score, delta, profile
+    - Composite: Trend score, momentum score, regime
+
+Example:
+    >>> engine = FeatureEngine()
+    >>> features = engine.compute(ohlcv_data)
+    >>> print(features.shape)  # (n_bars, n_features)
+    >>> print(engine.feature_names)  # List of feature names
+"""
+
+from __future__ import annotations
+
+import numpy as np
+from numpy.typing import NDArray
+from typing import Dict, List, Optional, Tuple, Any
+from dataclasses import dataclass, field
+
+from core.base import OHLCV, IndicatorResult
+from core.indicators import (
+    EMA, SMA, RSI, MACD, StochasticRSI, WilliamsR, CCI,
+    ATR, BollingerBands,
+    VWAP, OBV, CMF,
+    ADX,
+)
+from features.trend import TrendFeatures
+from features.momentum import MomentumFeatures
+from features.volatility import VolatilityFeatures
+from features.volume import VolumeFeatures
+from features.composite import CompositeScores
+
+
+@dataclass
+class FeatureVector:
+    """
+    Container for computed features.
+
+    Attributes:
+        values: (n_bars, n_features) float64 array
+        names: List of feature names (columns)
+        metadata: Additional computation info
+    """
+    values: NDArray[np.float64]
+    names: List[str]
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def n_features(self) -> int:
+        return len(self.names)
+
+    @property
+    def n_bars(self) -> int:
+        return len(self.values)
+
+    def get(self, name: str) -> Optional[NDArray[np.float64]]:
+        """Get a single feature by name."""
+        if name in self.names:
+            idx = self.names.index(name)
+            return self.values[:, idx]
+        return None
+
+    def slice(self, start: int, end: int) -> "FeatureVector":
+        """Return a time slice."""
+        return FeatureVector(
+            values=self.values[start:end],
+            names=self.names.copy(),
+            metadata=self.metadata.copy(),
+        )
+
+    def to_dict(self) -> Dict[str, NDArray[np.float64]]:
+        """Convert to dictionary of feature arrays."""
+        return {name: self.values[:, i] for i, name in enumerate(self.names)}
+
+    def __repr__(self) -> str:
+        return f"FeatureVector(bars={self.n_bars}, features={self.n_features})"
+
+
+class FeatureEngine:
+    """
+    Comprehensive feature extraction engine.
+
+    Computes 50+ technical features from OHLCV data.
+    All features are normalized where appropriate for ML use.
+
+    Args:
+        trend_periods: List of EMA periods (default [9, 21, 50])
+        rsi_period: RSI period (default 14)
+        macd_params: (fast, slow, signal) tuple (default (12, 26, 9))
+        atr_period: ATR period (default 14)
+        bb_period: Bollinger period (default 20)
+        volume_lookback: Volume normalization lookback (default 20)
+
+    Example:
+        >>> engine = FeatureEngine()
+        >>> features = engine.compute(ohlcv)
+        >>> 
+        >>> # Use specific features
+        >>> rsi_feature = features.get("rsi_14")
+        >>> trend_score = features.get("trend_score")
+    """
+
+    def __init__(
+        self,
+        trend_periods: Optional[List[int]] = None,
+        rsi_period: int = 14,
+        macd_params: Tuple[int, int, int] = (12, 26, 9),
+        atr_period: int = 14,
+        bb_period: int = 20,
+        volume_lookback: int = 20,
+    ) -> None:
+        self.trend_periods = trend_periods or [9, 21, 50]
+        self.rsi_period = rsi_period
+        self.macd_params = macd_params
+        self.atr_period = atr_period
+        self.bb_period = bb_period
+        self.volume_lookback = volume_lookback
+
+        # Initialize sub-engines
+        self._trend = TrendFeatures(self.trend_periods)
+        self._momentum = MomentumFeatures(rsi_period, macd_params)
+        self._volatility = VolatilityFeatures(atr_period, bb_period)
+        self._volume = VolumeFeatures(volume_lookback)
+        self._composite = CompositeScores()
+
+        self._feature_names: List[str] = []
+        self._is_fitted = False
+
+    @property
+    def feature_names(self) -> List[str]:
+        """List of all feature names."""
+        return self._feature_names
+
+    def compute(self, ohlcv: OHLCV) -> FeatureVector:
+        """
+        Compute all features from OHLCV data.
+
+        Args:
+            ohlcv: OHLCV data container
+
+        Returns:
+            FeatureVector with (n_bars, n_features) values
+        """
+        n = len(ohlcv)
+
+        # Compute sub-feature groups
+        trend_features = self._trend.compute(ohlcv)
+        momentum_features = self._momentum.compute(ohlcv)
+        volatility_features = self._volatility.compute(ohlcv)
+        volume_features = self._volume.compute(ohlcv)
+        composite_features = self._composite.compute(
+            ohlcv, trend_features, momentum_features, volatility_features, volume_features
+        )
+
+        # Combine all features
+        all_features = []
+        all_names = []
+
+        for feat_dict in [
+            trend_features,
+            momentum_features,
+            volatility_features,
+            volume_features,
+            composite_features,
+        ]:
+            for name, values in feat_dict.items():
+                all_features.append(values)
+                all_names.append(name)
+
+        # Stack into matrix
+        feature_matrix = np.column_stack(all_features)
+
+        # Replace inf with nan
+        feature_matrix = np.where(
+            np.isinf(feature_matrix), np.nan, feature_matrix
+        )
+
+        self._feature_names = all_names
+        self._is_fitted = True
+
+        return FeatureVector(
+            values=feature_matrix.astype(np.float64),
+            names=all_names,
+            metadata={
+                "n_bars": n,
+                "n_features": len(all_names),
+                "trend_periods": self.trend_periods,
+                "rsi_period": self.rsi_period,
+            }
+        )
+
+    def compute_for_bar(self, ohlcv: OHLCV, bar_idx: int) -> Dict[str, float]:
+        """
+        Compute features for a single bar (streaming).
+
+        Args:
+            ohlcv: Full OHLCV history
+            bar_idx: Index of bar to compute
+
+        Returns:
+            Dictionary of feature name -> value
+        """
+        features = self.compute(ohlcv)
+        if bar_idx >= features.n_bars:
+            raise IndexError(f"bar_idx {bar_idx} >= n_bars {features.n_bars}")
+
+        return {
+            name: float(features.values[bar_idx, i])
+            for i, name in enumerate(features.names)
+        }
+
+    def get_feature_groups(self) -> Dict[str, List[str]]:
+        """
+        Get feature names grouped by category.
+
+        Returns:
+            Dictionary of group_name -> [feature_names]
+        """
+        if not self._is_fitted:
+            raise RuntimeError("Must call compute() first")
+
+        groups = {
+            "trend": [],
+            "momentum": [],
+            "volatility": [],
+            "volume": [],
+            "composite": [],
+        }
+
+        for name in self._feature_names:
+            if name.startswith("ema") or name.startswith("trend"):
+                groups["trend"].append(name)
+            elif name.startswith("rsi") or name.startswith("macd") or name.startswith("stoch"):
+                groups["momentum"].append(name)
+            elif name.startswith("atr") or name.startswith("bb") or name.startswith("vol"):
+                groups["volatility"].append(name)
+            elif name.startswith("vol") or name.startswith("obv") or name.startswith("cmf"):
+                groups["volume"].append(name)
+            else:
+                groups["composite"].append(name)
+
+        return groups
+
+================================================================================
+=== COMPOSITE (asıl sinyal): Analiz32/features/composite.py ===
+# path: Analiz32/features/composite.py
+================================================================================
+
+"""
+features/composite.py
+
+Composite scores: trend, momentum, volatility, regime.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+from numpy.typing import NDArray
+from typing import Dict
+
+from core.base import OHLCV
+
+
+class CompositeScores:
+    """Compute composite feature scores."""
+
+    def compute(
+        self,
+        ohlcv: OHLCV,
+        trend: Dict[str, NDArray[np.float64]],
+        momentum: Dict[str, NDArray[np.float64]],
+        volatility: Dict[str, NDArray[np.float64]],
+        volume: Dict[str, NDArray[np.float64]],
+    ) -> Dict[str, NDArray[np.float64]]:
+        n = len(ohlcv)
+        features: Dict[str, NDArray[np.float64]] = {}
+
+        # Trend score
+        trend_score = np.zeros(n, dtype=np.float64)
+        if "ema_alignment" in trend:
+            trend_score += trend["ema_alignment"] * 30
+        if "ema_9_slope" in trend:
+            trend_score += np.clip(trend["ema_9_slope"] * 10, -30, 30)
+        if "ema_21_slope" in trend:
+            trend_score += np.clip(trend["ema_21_slope"] * 10, -30, 30)
+        features["trend_score"] = np.clip(trend_score, -100, 100)
+
+        # Momentum score
+        mom_score = np.zeros(n, dtype=np.float64)
+        if "rsi_norm" in momentum:
+            mom_score += momentum["rsi_norm"] * 40
+        if "macd_above_signal" in momentum:
+            mom_score += momentum["macd_above_signal"] * 30
+        if "macd_hist_momentum" in momentum:
+            mom_score += np.clip(momentum["macd_hist_momentum"] * 50, -30, 30)
+        features["momentum_score"] = np.clip(mom_score, -100, 100)
+
+        # Volatility score
+        vol_score = np.zeros(n, dtype=np.float64)
+        if "atr_pct" in volatility:
+            atr_pct = volatility["atr_pct"]
+            vol_score += np.clip(atr_pct * 10, 0, 50)
+        if "bb_width" in volatility:
+            bbw = volatility["bb_width"]
+            vol_score += np.clip(bbw * 100, 0, 50)
+        features["volatility_score"] = np.clip(vol_score, 0, 100)
+
+        # Volume pressure
+        vol_pressure = np.zeros(n, dtype=np.float64)
+        if "cmf" in volume:
+            vol_pressure += volume["cmf"] * 50
+        if "obv_slope" in volume:
+            vol_pressure += np.clip(volume["obv_slope"], -50, 50)
+        features["volume_pressure"] = np.clip(vol_pressure, -100, 100)
+
+        # Market regime
+        regime = np.zeros(n, dtype=np.float64)
+        for i in range(n):
+            ts = features["trend_score"][i]
+            vs = features["volatility_score"][i]
+
+            if np.isnan(ts) or np.isnan(vs):
+                regime[i] = np.nan
+                continue
+
+            if vs > 60:
+                regime[i] = 2.0 if ts > 0 else -2.0
+            elif abs(ts) > 50:
+                regime[i] = 1.0 if ts > 0 else -1.0
+            else:
+                regime[i] = 0.0
+
+        features["market_regime"] = regime
+
+        # Composite signal
+        composite = (
+            features["trend_score"] * 0.3 +
+            features["momentum_score"] * 0.3 +
+            features["volume_pressure"] * 0.2 +
+            (50 - features["volatility_score"]) * 0.2
+        )
+        features["composite_signal"] = np.clip(composite, -100, 100)
+
+        return features
+
+================================================================================
+=== TREND features ===
+# path: Analiz32/features/trend.py
+================================================================================
+
+"""
+features/trend.py
+
+Trend features: EMA alignment, slope, distance, crossovers.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+from numpy.typing import NDArray
+from typing import Dict, List
+
+from core.base import OHLCV
+from core.indicators import EMA
+
+
+class TrendFeatures:
+    """Extract trend-related features."""
+
+    def __init__(self, periods: List[int] = None) -> None:
+        self.periods = periods or [9, 21, 50]
+
+    def compute(self, ohlcv: OHLCV) -> Dict[str, NDArray[np.float64]]:
+        close = ohlcv.close
+        n = len(close)
+        features: Dict[str, NDArray[np.float64]] = {}
+
+        # EMA values
+        emas = {}
+        for p in self.periods:
+            ema = EMA(period=p).calculate(close).values
+            emas[p] = ema
+            features[f"ema_{p}"] = ema
+
+        # EMA alignment
+        if len(self.periods) >= 2:
+            alignment = np.zeros(n, dtype=np.float64)
+            for i in range(n):
+                vals = [emas[p][i] for p in self.periods]
+                if all(np.isnan(v) for v in vals):
+                    alignment[i] = np.nan
+                else:
+                    is_asc = all(vals[j] <= vals[j+1] for j in range(len(vals)-1) if not np.isnan(vals[j]) and not np.isnan(vals[j+1]))
+                    is_desc = all(vals[j] >= vals[j+1] for j in range(len(vals)-1) if not np.isnan(vals[j]) and not np.isnan(vals[j+1]))
+                    if is_asc:
+                        alignment[i] = 1.0
+                    elif is_desc:
+                        alignment[i] = -1.0
+                    else:
+                        alignment[i] = 0.0
+            features["ema_alignment"] = alignment
+
+        # EMA slopes
+        for p in self.periods:
+            ema = emas[p]
+            slope = np.empty(n, dtype=np.float64)
+            slope[:] = np.nan
+            for i in range(1, n):
+                if not np.isnan(ema[i]) and not np.isnan(ema[i-1]) and ema[i-1] != 0:
+                    slope[i] = (ema[i] - ema[i-1]) / ema[i-1] * 100
+            features[f"ema_{p}_slope"] = slope
+
+        # Price distance from EMAs
+        for p in self.periods:
+            ema = emas[p]
+            dist = np.empty(n, dtype=np.float64)
+            dist[:] = np.nan
+            for i in range(n):
+                if not np.isnan(ema[i]) and ema[i] != 0:
+                    dist[i] = (close[i] - ema[i]) / ema[i] * 100
+            features[f"price_dist_ema_{p}"] = dist
+
+        # EMA crossovers
+        if len(self.periods) >= 2:
+            fast = emas[self.periods[0]]
+            slow = emas[self.periods[1]]
+            crossover = np.zeros(n, dtype=np.float64)
+            for i in range(1, n):
+                if np.isnan(fast[i]) or np.isnan(slow[i]) or np.isnan(fast[i-1]) or np.isnan(slow[i-1]):
+                    continue
+                if fast[i-1] <= slow[i-1] and fast[i] > slow[i]:
+                    crossover[i] = 1.0
+                elif fast[i-1] >= slow[i-1] and fast[i] < slow[i]:
+                    crossover[i] = -1.0
+            features["ema_crossover"] = crossover
+
+        return features
+
+================================================================================
+=== MOMENTUM features ===
+# path: Analiz32/features/momentum.py
+================================================================================
+
+"""
+features/momentum.py
+
+Momentum features: RSI, MACD, StochRSI, WilliamsR, CCI, ROC.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+from numpy.typing import NDArray
+from typing import Dict, Tuple
+
+from core.base import OHLCV
+from core.indicators import RSI, MACD, StochasticRSI, WilliamsR, CCI, ROC, Momentum
+
+
+class MomentumFeatures:
+    """Extract momentum oscillator features."""
+
+    def __init__(
+        self,
+        rsi_period: int = 14,
+        macd_params: Tuple[int, int, int] = (12, 26, 9),
+    ) -> None:
+        self.rsi_period = rsi_period
+        self.macd_params = macd_params
+
+    def compute(self, ohlcv: OHLCV) -> Dict[str, NDArray[np.float64]]:
+        close = ohlcv.close
+        n = len(close)
+        features: Dict[str, NDArray[np.float64]] = {}
+
+        # RSI
+        rsi = RSI(period=self.rsi_period).calculate(close)
+        features["rsi"] = rsi.values
+        features["rsi_norm"] = (rsi.values - 50) / 50
+
+        # MACD
+        macd = MACD(*self.macd_params).calculate(close)
+        features["macd"] = macd.values
+        features["macd_signal"] = macd.signal
+        features["macd_hist"] = macd.histogram
+        features["macd_above_signal"] = np.where(
+            np.isnan(macd.values) | np.isnan(macd.signal), np.nan,
+            np.where(macd.values > macd.signal, 1.0, -1.0)
+        )
+
+        # MACD histogram momentum
+        hist_momentum = np.empty(n, dtype=np.float64)
+        hist_momentum[:] = np.nan
+        for i in range(1, n):
+            if not np.isnan(macd.histogram[i]) and not np.isnan(macd.histogram[i-1]):
+                hist_momentum[i] = macd.histogram[i] - macd.histogram[i-1]
+        features["macd_hist_momentum"] = hist_momentum
+
+        # Stochastic RSI
+        stoch = StochasticRSI().calculate(close)
+        features["stoch_rsi_k"] = stoch.values
+        features["stoch_rsi_d"] = stoch.signal
+
+        # Williams %R
+        williams = WilliamsR(period=14).calculate(ohlcv)
+        features["williams_r"] = williams.values
+        features["williams_r_norm"] = williams.values / -100
+
+        # CCI
+        cci = CCI(period=20).calculate(ohlcv)
+        features["cci"] = cci.values
+        features["cci_norm"] = np.clip(cci.values / 200, -1, 1)
+
+        # ROC
+        roc = ROC(period=12).calculate(close)
+        features["roc"] = roc.values
+
+        # Momentum
+        mom = Momentum(period=10).calculate(close)
+        features["momentum"] = mom.values
+
+        return features
+
+================================================================================
+=== VOLATILITY features ===
+# path: Analiz32/features/volatility.py
+================================================================================
+
+"""
+features/volatility.py
+
+Volatility features: ATR, Bollinger Bands, expansion.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+from numpy.typing import NDArray
+from typing import Dict
+
+from core.base import OHLCV
+from core.indicators import ATR, BollingerBands
+
+
+class VolatilityFeatures:
+    """Extract volatility features."""
+
+    def __init__(
+        self,
+        atr_period: int = 14,
+        bb_period: int = 20,
+    ) -> None:
+        self.atr_period = atr_period
+        self.bb_period = bb_period
+
+    def compute(self, ohlcv: OHLCV) -> Dict[str, NDArray[np.float64]]:
+        close = ohlcv.close
+        n = len(close)
+        features: Dict[str, NDArray[np.float64]] = {}
+
+        # ATR
+        atr = ATR(period=self.atr_period).calculate(ohlcv)
+        features["atr"] = atr.values
+        features["atr_pct"] = np.where(close > 0, atr.values / close * 100, np.nan)
+
+        # ATR expansion
+        atr_ema = np.empty(n, dtype=np.float64)
+        atr_ema[:] = np.nan
+        alpha = 2.0 / (self.atr_period + 1)
+        for i in range(n):
+            if not np.isnan(atr.values[i]):
+                if i == 0 or np.isnan(atr_ema[i-1]):
+                    atr_ema[i] = atr.values[i]
+                else:
+                    atr_ema[i] = atr.values[i] * alpha + atr_ema[i-1] * (1 - alpha)
+        features["atr_expansion"] = np.where(
+            atr_ema > 0, (atr.values - atr_ema) / atr_ema, np.nan
+        )
+
+        # Bollinger Bands
+        bb = BollingerBands(period=self.bb_period, num_std=2.0).calculate(close)
+        features["bb_upper"] = bb.upper
+        features["bb_lower"] = bb.lower
+        features["bb_middle"] = bb.middle
+        features["bb_width"] = bb.metadata["bandwidth"]
+        features["bb_percent_b"] = bb.metadata["percent_b"]
+
+        # Bollinger squeeze
+        bb_width_ma = np.empty(n, dtype=np.float64)
+        bb_width_ma[:] = np.nan
+        for i in range(self.bb_period - 1, n):
+            window = features["bb_width"][max(0, i-self.bb_period+1):i+1]
+            valid = window[~np.isnan(window)]
+            if len(valid) > 0:
+                bb_width_ma[i] = np.mean(valid)
+        features["bb_squeeze"] = np.where(
+            bb_width_ma > 0, features["bb_width"] / bb_width_ma, np.nan
+        )
+
+        # Volatility regime
+        features["vol_regime"] = np.where(
+            features["atr_pct"] > np.nanpercentile(features["atr_pct"], 75), 2.0,
+            np.where(features["atr_pct"] > np.nanpercentile(features["atr_pct"], 25), 1.0, 0.0)
+        )
+
+        return features
+
+================================================================================
+=== VOLUME features ===
+# path: Analiz32/features/volume.py
+================================================================================
+
+"""
+features/volume.py
+
+Volume features: spike, z-score, delta, profile.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+from numpy.typing import NDArray
+from typing import Dict
+
+from core.base import OHLCV
+from core.indicators import VWAP, OBV, CMF
+
+
+class VolumeFeatures:
+    """Extract volume-based features."""
+
+    def __init__(self, lookback: int = 20) -> None:
+        self.lookback = lookback
+
+    def compute(self, ohlcv: OHLCV) -> Dict[str, NDArray[np.float64]]:
+        volume = ohlcv.volume
+        if volume is None:
+            return {"volume_dummy": np.zeros(len(ohlcv))}
+
+        close = ohlcv.close
+        n = len(close)
+        features: Dict[str, NDArray[np.float64]] = {}
+
+        # Volume z-score
+        vol_mean = np.empty(n, dtype=np.float64)
+        vol_std = np.empty(n, dtype=np.float64)
+        vol_mean[:] = np.nan
+        vol_std[:] = np.nan
+
+        for i in range(self.lookback - 1, n):
+            window = volume[i-self.lookback+1:i+1]
+            vol_mean[i] = np.mean(window)
+            vol_std[i] = np.std(window)
+
+        features["volume_zscore"] = np.where(
+            vol_std > 0, (volume - vol_mean) / vol_std, np.nan
+        )
+
+        # Volume spike
+        features["volume_spike"] = np.where(features["volume_zscore"] > 2.0, 1.0, 0.0)
+
+        # Volume trend
+        vol_slope = np.empty(n, dtype=np.float64)
+        vol_slope[:] = np.nan
+        for i in range(self.lookback, n):
+            if vol_mean[i-1] > 0:
+                vol_slope[i] = (vol_mean[i] - vol_mean[i-1]) / vol_mean[i-1] * 100
+        features["volume_trend"] = vol_slope
+
+        # Relative volume
+        features["relative_volume"] = np.where(vol_mean > 0, volume / vol_mean, np.nan)
+
+        # VWAP distance
+        vwap = VWAP().calculate(ohlcv)
+        features["vwap"] = vwap.values
+        features["vwap_dist"] = np.where(
+            vwap.values > 0, (close - vwap.values) / vwap.values * 100, np.nan
+        )
+
+        # OBV
+        obv = OBV().calculate(ohlcv)
+        features["obv"] = obv.values
+
+        # OBV slope
+        obv_slope = np.empty(n, dtype=np.float64)
+        obv_slope[:] = np.nan
+        for i in range(1, n):
+            if not np.isnan(obv.values[i]) and not np.isnan(obv.values[i-1]) and obv.values[i-1] != 0:
+                obv_slope[i] = (obv.values[i] - obv.values[i-1]) / abs(obv.values[i-1]) * 100
+        features["obv_slope"] = obv_slope
+
+        # CMF
+        cmf = CMF(period=20).calculate(ohlcv)
+        features["cmf"] = cmf.values
+
+        # Delta volume
+        delta = np.empty(n, dtype=np.float64)
+        for i in range(n):
+            if ohlcv.close[i] > ohlcv.open[i]:
+                delta[i] = volume[i]
+            elif ohlcv.close[i] < ohlcv.open[i]:
+                delta[i] = -volume[i]
+            else:
+                delta[i] = 0
+        features["delta_volume"] = delta
+
+        # Cumulative delta
+        features["cum_delta"] = np.cumsum(delta)
+
+        return features
+
+================================================================================
+=== 15m KLINE: btc_5m_105_algo.py (fetch_klines_15m) ===
+# path: temmuzPoly/btc_5m_105_algo.py
+================================================================================
+
+"""
+5M ortak sinyal motoru (107 + 15M adaptörleri; 102 + MR veto + Trend nötr band)
+
+102'nin 4-algo konsensüsü + ek filtreler:
+  1. MR -1 iken UP için 3/4 konsensüs gerekir (2/4 yetmez)
+  2. Trend nötr band: zayıf E20/E50 cross veya slope → 0 oy
+
+Kullanım:
+  python3 temmuzPoly/btc_5m_105_algo.py
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import os
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass
+from typing import Any
+
+# ── Config ────────────────────────────────────────────────────
+SYMBOL = "BTCUSDT"
+MIN_CONSENSUS = 2
+MIN_CONSENSUS_UP_VS_MR = 3  # MR -1 iken UP için
+TOTAL_ALGOS = 4
+TREND_NEUTRAL_CROSS_PCT = 0.06   # |E20-E50|/fiyat %
+TREND_NEUTRAL_SLOPE_PCT = 0.03   # 3 bar E20 slope %
+MOMENTUM_BARS = 3
+TRADE_AMOUNT_UP = 2.0
+TRADE_AMOUNT_DOWN = 2.0
+KLINES_LIMIT = 150
+
+_ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+if os.path.exists(_ENV_FILE):
+    with open(_ENV_FILE) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
+
+MOMENTUM_FILTER_ENABLED = False
+
+
+# ── Binance veri ──────────────────────────────────────────────
+def _binance_get(path: str, params: dict | None = None) -> dict | list:
+    base = "https://fapi.binance.com"
+    qs = urllib.parse.urlencode(params or {})
+    url = f"{base}{path}?{qs}" if qs else f"{base}{path}"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read())
+
+
+def fetch_klines_5m(symbol: str = SYMBOL, limit: int = KLINES_LIMIT) -> list[dict]:
+    raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "5m", "limit": limit})
+    return [
+        {
+            "open_time": int(k[0]),
+            "open": float(k[1]),
+            "high": float(k[2]),
+            "low": float(k[3]),
+            "close": float(k[4]),
+            "volume": float(k[5]),
+        }
+        for k in raw
+    ]
+
+
+def fetch_klines_15m(symbol: str = SYMBOL, limit: int = KLINES_LIMIT) -> list[dict]:
+    raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "15m", "limit": limit})
+    return [
+        {
+            "open_time": int(k[0]),
+            "open": float(k[1]),
+            "high": float(k[2]),
+            "low": float(k[3]),
+            "close": float(k[4]),
+            "volume": float(k[5]),
+        }
+        for k in raw
+    ]
+
+
+def fetch_orderbook(symbol: str = SYMBOL) -> dict:
+    return _binance_get("/fapi/v1/depth", {"symbol": symbol, "limit": 20})
+
+
+# ── Teknik hesaplamalar ───────────────────────────────────────
+def ema(values: list[float], period: int) -> list[float]:
+    k = 2 / (period + 1)
+    out = [values[0]]
+    for v in values[1:]:
+        out.append(v * k + out[-1] * (1 - k))
+    return out
+
+
+def rsi_14(closes: list[float], period: int = 14) -> float:
+    if len(closes) < period + 1:
+        return 50.0
+    diffs = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
+    gains = [max(d, 0) for d in diffs]
+    losses = [max(-d, 0) for d in diffs]
+    ag = sum(gains[-period:]) / period
+    al = sum(losses[-period:]) / period
+    if al == 0:
+        return 100.0
+    return 100 - 100 / (1 + ag / al)
+
+
+def bollinger(closes: list[float], period: int = 20) -> tuple[float, float, float]:
+    w = closes[-period:] if len(closes) >= period else closes
+    mid = sum(w) / len(w)
+    std = math.sqrt(sum((x - mid) ** 2 for x in w) / len(w))
+    return mid + 2 * std, mid, mid - 2 * std
+
+
+def macd_12_26_9(closes: list[float]) -> tuple[float, float]:
+    if len(closes) < 26:
+        return 0.0, 0.0
+    ema12 = ema(closes, 12)
+    ema26 = ema(closes, 26)
+    macd_line = [a - b for a, b in zip(ema12, ema26)]
+    signal = ema(macd_line[-9:], 9) if len(macd_line) >= 9 else [macd_line[-1]]
+    return macd_line[-1], signal[-1]
+
+
+# ── 4 Algoritma ───────────────────────────────────────────────
+def algo_a1_rsi_macd_ema(klines: list[dict]) -> tuple[int, str]:
+    closes = [k["close"] for k in klines]
+    rsi = rsi_14(closes)
+    macd_v, signal_v = macd_12_26_9(closes)
+    e20 = ema(closes, 20)
+    e50 = ema(closes, 50) if len(closes) >= 50 else e20
+
+    rsi_v = +1 if rsi < 40 else -1 if rsi > 60 else 0
+    macd_v2 = +1 if macd_v > signal_v else -1 if macd_v < signal_v else 0
+    ema_v = +1 if e20[-1] > e50[-1] else -1
+
+    score = rsi_v + macd_v2 + ema_v
+    vote = +1 if score >= 2 else -1 if score <= -2 else 0
+    arr = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    return vote, (
+        f"A1 {arr}  RSI:{rsi:.0f}  "
+        f"MACD:{'↑' if macd_v2 > 0 else '↓' if macd_v2 < 0 else '→'}  "
+        f"EMA:{'↑' if ema_v > 0 else '↓'}"
+    )
+
+
+def algo_trend(klines: list[dict]) -> tuple[int, str]:
+    closes = [k["close"] for k in klines]
+    e20 = ema(closes, 20)
+    e50 = ema(closes, 50) if len(closes) >= 50 else ema(closes, 20)
+    cross = e20[-1] - e50[-1]
+    slope = e20[-1] - e20[-4] if len(e20) >= 4 else 0
+    pct = cross / closes[-1] * 100
+    slope_pct = slope / closes[-1] * 100 if closes[-1] else 0
+
+    if abs(pct) < TREND_NEUTRAL_CROSS_PCT or abs(slope_pct) < TREND_NEUTRAL_SLOPE_PCT:
+        return 0, f"Trend →  nötr (cross:{pct:+.2f}% slope:{slope_pct:+.3f}%)"
+
+    if cross > 0 and slope > 0:
+        return +1, f"Trend ↑  E20>E50 ({pct:+.2f}%)"
+    if cross < 0 and slope < 0:
+        return -1, f"Trend ↓  E20<E50 ({pct:+.2f}%)"
+    return 0, f"Trend →  karışık ({pct:+.2f}%)"
+
+
+def algo_mr(klines: list[dict]) -> tuple[int, str]:
+    closes = [k["close"] for k in klines]
+    rsi = rsi_14(closes)
+    upper, _, lower = bollinger(closes, 20)
+    price = closes[-1]
+
+    rsi_v = +1 if rsi <= 35 else -1 if rsi >= 65 else 0
+    bb_v = +1 if price <= lower else -1 if price >= upper else 0
+
+    vote = max(-1, min(1, rsi_v + bb_v))
+    arr = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    bb_lbl = "alt" if price <= lower else "üst" if price >= upper else "orta"
+    return vote, f"MR {arr}  RSI:{rsi:.0f}  BB:{bb_lbl}"
+
+
+def algo_orderflow_v2(klines: list[dict], ob: dict) -> tuple[int, str]:
+    """CVD/OB çelişince canlı orderbook öncelikli (102)."""
+    window = klines[-20:]
+    cvd_delta = sum(
+        k["volume"] if k["close"] >= k["open"] else -k["volume"] for k in window
+    )
+    total_vol = sum(k["volume"] for k in window) or 1
+    cvd_r = cvd_delta / total_vol
+
+    bids = sum(float(b[1]) for b in ob.get("bids", [])[:10])
+    asks = sum(float(a[1]) for a in ob.get("asks", [])[:10])
+    ob_r = (bids - asks) / (bids + asks) if (bids + asks) else 0
+
+    cvd_v = +1 if cvd_r > 0.05 else -1 if cvd_r < -0.05 else 0
+    ob_v = +1 if ob_r > 0.10 else -1 if ob_r < -0.10 else 0
+
+    if cvd_v == ob_v:
+        vote = cvd_v
+    elif ob_v != 0:
+        vote = ob_v
+    elif cvd_v != 0:
+        vote = cvd_v
+    else:
+        vote = 0
+
+    tag = "v2" if cvd_v != ob_v and ob_v != 0 else ""
+    arr = "↑" if vote > 0 else "↓" if vote < 0 else "→"
+    return vote, f"OF{tag} {arr}  CVD:{cvd_r:+.2f}  OB:{ob_r:+.2f}"
+
+
+def recent_momentum(klines: list[dict], n: int = MOMENTUM_BARS) -> str:
+    """Son n kapanmış 5m mum (açık mum hariç)."""
+    if len(klines) < n + 1:
+        return "MIXED"
+    closed = klines[-(n + 1):-1]
+    ups = sum(1 for k in closed if k["close"] >= k["open"])
+    if ups >= n - 1:
+        return "UP"
+    if ups <= 1:
+        return "DOWN"
+    return "MIXED"
+
+
+def trade_amount(direction: str) -> float:
+    return TRADE_AMOUNT_UP if direction == "UP" else TRADE_AMOUNT_DOWN
+
+
+@dataclass
+class SignalResult:
+    direction: str | None
+    consensus: int
+    amount: float
+    entry_price: float
+    momentum: str
+    votes: list[int]
+    labels: list[str]
+    skip_reason: str | None = None
+    raw_direction: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "direction": self.direction,
+            "consensus": self.consensus,
+            "amount": self.amount,
+            "entry_price": self.entry_price,
+            "momentum": self.momentum,
+            "votes": self.votes,
+            "labels": self.labels,
+            "skip_reason": self.skip_reason,
+            "raw_direction": self.raw_direction,
+        }
+
+
+def analyze(
+    klines: list[dict] | None = None,
+    orderbook: dict | None = None,
+    *,
+    symbol: str = SYMBOL,
+    momentum_filter: bool | None = None,
+) -> SignalResult | None:
+    """
+    5M ortak sinyal motoru (107 + 15M adaptörleri).
+
+    klines/orderbook verilmezse Binance'ten çeker.
+    direction None → işlem yok (konsensüs / MR veto / trend nötr).
+    """
+    if momentum_filter is None:
+        momentum_filter = False
+
+    try:
+        if klines is None:
+            klines = fetch_klines_5m(symbol)
+        if orderbook is None:
+            orderbook = fetch_orderbook(symbol)
+    except Exception as e:
+        print(f"[btc_5m_105_algo] Veri hatası: {e}", flush=True)
+        return None
+
+    v1, l1 = algo_a1_rsi_macd_ema(klines)
+    v2, l2 = algo_trend(klines)
+    v3, l3 = algo_mr(klines)
+    v4, l4 = algo_orderflow_v2(klines, orderbook)
+
+    votes = [v1, v2, v3, v4]
+    labels = [l1, l2, l3, l4]
+    up_v = sum(1 for v in votes if v > 0)
+    down_v = sum(1 for v in votes if v < 0)
+    entry_price = klines[-1]["open"]
+    momentum = recent_momentum(klines)
+
+    if up_v >= MIN_CONSENSUS and up_v > down_v:
+        if v3 < 0 and up_v < MIN_CONSENSUS_UP_VS_MR:
+            return SignalResult(
+                direction=None,
+                consensus=up_v,
+                amount=0.0,
+                entry_price=entry_price,
+                momentum=momentum,
+                votes=votes,
+                labels=labels,
+                raw_direction="UP",
+                skip_reason=(
+                    f"MR veto: aşırı alım (MR↓), UP için {MIN_CONSENSUS_UP_VS_MR}/{TOTAL_ALGOS} gerekli ({up_v}/{TOTAL_ALGOS})"
+                ),
+            )
+        direction, consensus = "UP", up_v
+    elif down_v >= MIN_CONSENSUS and down_v > up_v:
+        direction, consensus = "DOWN", down_v
+    else:
+        return SignalResult(
+            direction=None,
+            consensus=max(up_v, down_v),
+            amount=0.0,
+            entry_price=entry_price,
+            momentum=momentum,
+            votes=votes,
+            labels=labels,
+            skip_reason=None,
+        )
+
+    if momentum_filter:
+        if direction == "DOWN" and momentum == "UP":
+            return SignalResult(
+                direction=None,
+                consensus=consensus,
+                amount=0.0,
+                entry_price=entry_price,
+                momentum=momentum,
+                votes=votes,
+                labels=labels,
+                raw_direction="DOWN",
+                skip_reason=(
+                    f"momentum filtresi: son {MOMENTUM_BARS} 5m mum yükseliş, DOWN engellendi"
+                ),
+            )
+        if direction == "UP" and momentum == "DOWN":
+            return SignalResult(
+                direction=None,
+                consensus=consensus,
+                amount=0.0,
+                entry_price=entry_price,
+                momentum=momentum,
+                votes=votes,
+                labels=labels,
+                raw_direction="UP",
+                skip_reason=(
+                    f"momentum filtresi: son {MOMENTUM_BARS} 5m mum düşüş, UP engellendi"
+                ),
+            )
+
+    return SignalResult(
+        direction=direction,
+        consensus=consensus,
+        amount=trade_amount(direction),
+        entry_price=entry_price,
+        momentum=momentum,
+        votes=votes,
+        labels=labels,
+        skip_reason=None,
+    )
+
+
+def format_signal(result: SignalResult | None) -> str:
+    if result is None:
+        return "Veri alınamadı"
+    if result.direction is None:
+        extra = result.skip_reason or f"konsensüs yok ({result.consensus}/{TOTAL_ALGOS})"
+        return f"Sinyal yok — {extra} | momentum={result.momentum}"
+    icons = " ".join("🟢" if v > 0 else "🔴" if v < 0 else "⚪" for v in result.votes)
+    return (
+        f"{result.direction} ({result.consensus}/{TOTAL_ALGOS}) ${result.amount:.0f} "
+        f"@ {result.entry_price:,.2f} | mom={result.momentum}\n"
+        f"{icons}\n" + " | ".join(result.labels)
+    )
+
+
+if __name__ == "__main__":
+    sig = analyze()
+    print(format_signal(sig))
+    if sig:
+        print(json.dumps(sig.to_dict(), ensure_ascii=False, indent=2))

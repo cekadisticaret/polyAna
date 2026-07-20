@@ -1,9 +1,9 @@
 """
 7. ANALİZ — Gelişmiş 6-Algo Konsensüs (1 Saatlik, Sanal)
 
-btc_1h_analiz7_algo: A1+HMA + Trend+ST + MR + OF v2 + Volume + Ichimoku (≥3/6)
+btc_1h_analiz7_algo: A1+HMA + Trend+ST + MR + OF v2 + Volume + Ichimoku (≥2/6, momentum kapalı)
 Sembol: BTCUSDT
-Sanal bütçe: $500  |  İşlem: $15
+Sanal bütçe: $300  |  İşlem: $12/$16/$20 (sembol WR, 1. Analiz mantığı)
 
 Modlar: close / open / weekly / stats
 Cron: 0 * * * * close  |  5 * * * * open
@@ -29,7 +29,10 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from btc_1h_analiz7_algo import analyze, fetch_klines, TOTAL_ALGOS
-from pm_trader_helpers import apply_pm_quote, sanal_close_balance, pm_tg_stake, pm_history_extras
+from pm_trader_helpers import (
+    apply_pm_quote, sanal_close_balance, pm_tg_stake, pm_history_extras,
+    symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT,
+)
 
 BOT_TOKEN = os.getenv("TELEGRAM_TOKEN", "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA")
 CHAT_ID   = os.getenv("TELEGRAM_CHAT", "830754964")
@@ -42,8 +45,8 @@ WEEKLY_IMG   = "/tmp/poly_analiz7_weekly_heatmap.png"
 
 LABEL           = "7. ANALİZ"
 ALGO_NAME       = "Enhanced 6-Algo 1H"
-INITIAL_BALANCE = 500.0
-TRADE_AMOUNT    = 15.0
+INITIAL_BALANCE = SANAL_INITIAL_BALANCE
+TRADE_AMOUNT    = SANAL_TRADE_AMOUNT
 SYMBOLS         = ["BTCUSDT"]
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _ENABLED        = os.getenv("ANALIZ7_ENABLED", "true").lower() in ("1", "true", "yes")
@@ -300,7 +303,8 @@ def run_open() -> None:
             print(f"[{LABEL}] {sym} — {reason}")
             continue
 
-        if state["balance"] < TRADE_AMOUNT:
+        dyn_amount = symbol_wr_amount(history, sym)
+        if state["balance"] < dyn_amount:
             skipped.append(f"⏸ {name} — bakiye yetersiz")
             continue
 
@@ -312,14 +316,14 @@ def run_open() -> None:
             "entry_hour_tr": hour_tr,
             "entry_dow": dow,
             "entry_is_weekend": is_weekend,
-            "amount": TRADE_AMOUNT,
+            "amount": dyn_amount,
             "consensus": sig["consensus"],
             "votes": sig["votes"],
             "labels": sig.get("labels"),
             "algo": ALGO_NAME,
         }
-        apply_pm_quote(pos, sym, sig["direction"], TRADE_AMOUNT, now)
-        risk = pos.get("pm_spent", TRADE_AMOUNT)
+        apply_pm_quote(pos, sym, sig["direction"], dyn_amount, now)
+        risk = pos.get("pm_spent", dyn_amount)
         if state["balance"] < risk:
             skipped.append(f"⏸ {name} — bakiye yetersiz (PM ${risk:.2f})")
             continue
@@ -442,7 +446,7 @@ def run_stats() -> None:
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}\n"
         f"{pnl_icon} P&L: {'+' if total_pnl >= 0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
-        f"Lot: ${TRADE_AMOUNT:.0f}/işlem  |  Başlangıç: ${INITIAL_BALANCE:.0f}"
+        f"Lot: $12–$20/işlem (sembol WR)  |  Başlangıç: ${INITIAL_BALANCE:.0f}"
     )
 
 
