@@ -2884,9 +2884,9 @@ HTML = r"""<!DOCTYPE html>
   .section-title { font-size:13px; font-weight:700; color:#888; text-transform:uppercase;
                    letter-spacing:.5px; margin-bottom:14px; }
   .positions { display:flex; flex-direction:column; gap:12px; }
-  .pos-card { background:#141414; border-radius:18px; padding:18px; border-left:4px solid #333; }
-  .pos-card.dir-up   { border-left-color:#4ade80; }
-  .pos-card.dir-down { border-left-color:#f87171; }
+  .pos-card { background:#141414; border-radius:18px; padding:18px; border:2px solid #333; }
+  .pos-card.dir-up   { border-color:#4ade80; }
+  .pos-card.dir-down { border-color:#f87171; }
   .pos-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
   .pos-name { font-size:20px; font-weight:800; color:#fff; }
   .pos-dir  { font-size:12px; font-weight:700; padding:4px 10px; border-radius:10px; }
