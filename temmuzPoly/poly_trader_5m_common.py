@@ -399,7 +399,8 @@ def _pm_period_warmup(ts_5m: int) -> None:
 
 
 def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
-                    neg_risk: bool = False, deadline: float | None = None) -> dict | None:
+                    neg_risk: bool = False, deadline: float | None = None,
+                    skip_payout_check: bool = False) -> dict | None:
     """FAK limit buy — best ask + slippage; deadline'a kadar kısa aralıklarla dener."""
     from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
     from py_clob_client_v2.order_builder.constants import BUY
@@ -450,7 +451,7 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
         size, price = _pm_fit_buy(max(5.0, raw_sz), price)
         spent = round(size * price, 2)
 
-        if not _pm_payout_ok(spent, size):
+        if not skip_payout_check and not _pm_payout_ok(spent, size):
             payout_rejected = True
             last_reject = {"spent": spent, "to_win": size, "price": price}
             print(

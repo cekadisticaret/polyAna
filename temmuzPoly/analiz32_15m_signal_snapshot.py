@@ -70,3 +70,26 @@ def analyze_15m_from_110(symbol: str, ts_period: int) -> Optional["Signal15m"]:
             skip_reason="110 snapshot yok (110 henüz çalışmadı)",
         )
     return base
+
+
+def wait_for_110_snapshot(
+    symbol: str,
+    ts_period: int,
+    timeout: float = 20.0,
+    poll: float = 0.5,
+) -> "Signal15m":
+    """110 snapshot gelene kadar bekle (race önleme)."""
+    from analiz32_15m_adapter import Signal15m
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        base = load_snapshot(ts_period, symbol)
+        if base is not None:
+            return base
+        time.sleep(poll)
+    return Signal15m(
+        symbol=symbol, direction=None, entry_price=0.0,
+        confidence=0.0, up_score=0, down_score=0,
+        factors=[], htf_bias="",
+        skip_reason="110 snapshot yok (timeout)",
+    )

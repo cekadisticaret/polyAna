@@ -4,7 +4,7 @@
 110'un birebir canlı kopyası: aynı sinyal (110 snapshot), farklı stake.
 
 Gerçek PM: PM_5M_210_REAL_ENABLED (varsayılan true), işlem $4/$6/$8 (WR), başlangıç $300.
-Cron: */15 * * * * — açılış +3 sn (110 snapshot sonrası)
+Cron: */15 * * * * — 110 snapshot poll (max 20 sn)
 Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open atlanır; close çalışır)
 Modlar: open (varsayılan close+open) / hourly / weekly / stats
 """
@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from analiz32_15m_signal_snapshot import analyze_15m_from_110
+from analiz32_15m_signal_snapshot import wait_for_110_snapshot
 from btc_5m_105_algo import fetch_klines_15m
 import poly_trader_5m_common as _pm_common
 
@@ -76,7 +76,8 @@ _PM_TRADE_MAX = 0.52
 _PM_MIN_PAYOUT_RATIO = 1.25
 
 LABEL = "15M 210 SOL"
-OPEN_DELAY_SEC = 3  # 110 snapshot (+1 sn) sonrası
+SNAPSHOT_WAIT_SEC = 20  # 110 snapshot gelene kadar poll (race önleme)
+SNAPSHOT_ORDER_BUFFER_SEC = 8  # snapshot sonrası PM emir için ayrılan süre
 TG_HEADER = "210 SOL ✦ PolyAktif (110 canlı PM)"
 STATS_SINCE_KEY = "stats_since_tr"
 HOURLY_ROLLING_N = 10
@@ -265,7 +266,8 @@ def _resolve_period_candle(symbol: str, ts_period: int, retries: int = 8, wait_s
     return None
 
 
-def _pm_resolve_market(symbol: str, ts_period: int, direction: str, amount: float) -> tuple[dict | None, str]:
+def _pm_resolve_market(symbol: str, ts_period: int, direction: str, amount: float,
+                       *, mirror_110: bool = False) -> tuple[dict | None, str]:
     if not _PM_LIVE:
         pm = pm_15m_find_market(ts_period, symbol)
         if not pm or pm.get("closed"):
@@ -273,11 +275,12 @@ def _pm_resolve_market(symbol: str, ts_period: int, direction: str, amount: floa
         tp = pm["up_price"] if direction == "UP" else pm["down_price"]
         if not (_PM_SANITY_MIN <= tp <= _PM_SANITY_MAX):
             return None, f"token @{tp:.2f} sanity dışı"
-        if not (_PM_TRADE_MIN <= tp <= _PM_TRADE_MAX):
-            return None, f"token @{tp:.2f} band dışı ({_PM_TRADE_MIN}–{_PM_TRADE_MAX})"
-        est = round(amount / tp, 2) if tp > 0 else 0
-        if est < amount * _PM_MIN_PAYOUT_RATIO:
-            return None, f"payout {est/amount:.2f}x < {_PM_MIN_PAYOUT_RATIO} (@{tp:.2f})"
+        if not mirror_110:
+            if not (_PM_TRADE_MIN <= tp <= _PM_TRADE_MAX):
+                return None, f"token @{tp:.2f} band dışı ({_PM_TRADE_MIN}–{_PM_TRADE_MAX})"
+            est = round(amount / tp, 2) if tp > 0 else 0
+            if est < amount * _PM_MIN_PAYOUT_RATIO:
+                return None, f"payout {est/amount:.2f}x < {_PM_MIN_PAYOUT_RATIO} (@{tp:.2f})"
         pm["token_price"] = tp
         return pm, ""
 
@@ -298,11 +301,12 @@ def _pm_resolve_market(symbol: str, ts_period: int, direction: str, amount: floa
             if attempt < 2:
                 time.sleep(3)
             continue
-        if not (_PM_TRADE_MIN <= tp <= _PM_TRADE_MAX):
-            return None, f"token @{tp:.2f} band dışı ({_PM_TRADE_MIN}–{_PM_TRADE_MAX})"
-        est = round(amount / tp, 2) if tp > 0 else 0
-        if est < amount * _PM_MIN_PAYOUT_RATIO:
-            return None, f"payout {est/amount:.2f}x < {_PM_MIN_PAYOUT_RATIO} (@{tp:.2f})"
+        if not mirror_110:
+            if not (_PM_TRADE_MIN <= tp <= _PM_TRADE_MAX):
+                return None, f"token @{tp:.2f} band dışı ({_PM_TRADE_MIN}–{_PM_TRADE_MAX})"
+            est = round(amount / tp, 2) if tp > 0 else 0
+            if est < amount * _PM_MIN_PAYOUT_RATIO:
+                return None, f"payout {est/amount:.2f}x < {_PM_MIN_PAYOUT_RATIO} (@{tp:.2f})"
         pm["token_price"] = tp
         return pm, ""
     return None, "PM fiyat/market geçersiz"
@@ -319,6 +323,13 @@ def _cumulative_line(history: list, state: dict) -> str:
         f"📊 Net P&L ({scope}{since_part}): {icon} <b>{net:+.2f}$</b>"
         f"  |  {total} işlem  |  {_wr(wins, total)}"
     )
+
+
+def _snapshot_wait_timeout(ts_period: int) -> float:
+    """PM emir deadline'ına yetişecek snapshot bekleme süresi."""
+    pm_deadline = ts_period + _pm_common._PM_OPEN_DEADLINE_SEC
+    budget = pm_deadline - time.time() - SNAPSHOT_ORDER_BUFFER_SEC
+    return max(0.0, min(SNAPSHOT_WAIT_SEC, budget))
 
 
 def run() -> None:
@@ -412,12 +423,10 @@ def run() -> None:
             _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
         return
 
-    if OPEN_DELAY_SEC > 0:
-        time.sleep(OPEN_DELAY_SEC)
-
     for sym in SYMBOLS:
         name = _sym_name(sym)
-        sig = analyze_15m_from_110(symbol=sym, ts_period=ts_period)
+        snap_timeout = _snapshot_wait_timeout(ts_period)
+        sig = wait_for_110_snapshot(symbol=sym, ts_period=ts_period, timeout=snap_timeout)
 
         if sig is None:
             skip_lines.append(f"⚠️ {name} — veri yok")
@@ -494,7 +503,7 @@ def run() -> None:
             return
 
         _pm_common._PM_DRY_RUN = _PM_DRY_RUN
-        pm_info, pm_skip = _pm_resolve_market(sym, ts_period, direction, amount)
+        pm_info, pm_skip = _pm_resolve_market(sym, ts_period, direction, amount, mirror_110=True)
         if not pm_info:
             skip_lines.append(f"⏸ {name} {direction} — {pm_skip}")
             continue
@@ -502,15 +511,13 @@ def run() -> None:
         token_price = pm_info["token_price"]
         pm_slug = pm_info["slug"]
         to_win = round(amount / token_price, 2) if token_price > 0 else round(amount * 2, 2)
-        if not _pm_common._pm_payout_ok(amount, to_win):
-            skip_lines.append(f"⏸ {name} — payout düşük/yüksek")
-            continue
 
         token_id = pm_info["up_token"] if direction == "UP" else pm_info["down_token"]
         deadline = _pm_common._pm_open_deadline(ts_period)
         _pm_common._pm_period_warmup(ts_period)
         order_result = _pm_common._pm_place_order(
-            token_id, amount, pm_info["tick_size"], pm_info["neg_risk"], deadline=deadline,
+            token_id, amount, pm_info["tick_size"], pm_info["neg_risk"],
+            deadline=deadline, skip_payout_check=True,
         )
 
         if order_result and order_result.get("_skip"):
@@ -573,7 +580,7 @@ def _send_tg_round(
     skip_lines: list,
     tur_pnl: float,
 ) -> None:
-    if not closed_lines and not open_lines:
+    if not closed_lines and not open_lines and not skip_lines:
         return
 
     sep = "━" * 26
@@ -594,6 +601,9 @@ def _send_tg_round(
             f"{'🔶 SANAL' if not _PM_LIVE else '🔴 GERÇEK PM'}\n"
             + "\n".join(open_lines)
         )
+
+    if skip_lines:
+        parts.append("⏸ <b>Atlandı</b>\n" + "\n".join(skip_lines))
 
     msg = (
         f"{sep}\n"
