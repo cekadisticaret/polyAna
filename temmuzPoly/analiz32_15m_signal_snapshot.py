@@ -1,4 +1,4 @@
-"""110'un hesapladığı 15m sinyali 111 ile paylaşır (aynı kline/skor)."""
+"""110'un hesapladığı 15m sinyali 111/210 ile paylaşır (aynı kline/skor)."""
 from __future__ import annotations
 
 import json
@@ -55,3 +55,18 @@ def load_snapshot(ts_period: int, symbol: str) -> Optional["Signal15m"]:
     from analiz32_15m_adapter import Signal15m
 
     return _signal_from_dict(raw, Signal15m)
+
+
+def analyze_15m_from_110(symbol: str, ts_period: int) -> Optional["Signal15m"]:
+    """210: 110'un kaydettiği sinyali aynen kullanır (ek filtre yok)."""
+    from analiz32_15m_adapter import Signal15m
+
+    base = load_snapshot(ts_period, symbol)
+    if base is None:
+        return Signal15m(
+            symbol=symbol, direction=None, entry_price=0.0,
+            confidence=0.0, up_score=0, down_score=0,
+            factors=[], htf_bias="",
+            skip_reason="110 snapshot yok (110 henüz çalışmadı)",
+        )
+    return base

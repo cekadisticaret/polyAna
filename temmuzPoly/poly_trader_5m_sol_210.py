@@ -1,14 +1,12 @@
 """
-15M 111 SOL — Analiz32 FeatureEngine + güçlendirilmiş filtreler (canlı PM, SOL only)
-======================================================================================
-110'un aynısı, farklar:
-  - analiz32_15m_adapter_111 kullanılır (trend/momentum uyum + skor eşiği 20)
-  - Ardışık kayıp soğuma periyodu: son 2 işlem kayıpsa 1 tur atlanır
+15M 210 SOL — Analiz32 FeatureEngine (gerçek PM, SOL only)
+===========================================================
+110'un birebir canlı kopyası: aynı sinyal (110 snapshot), farklı stake.
 
-Gerçek PM: PM_5M_111_REAL_ENABLED=true, işlem $8/$10/$12 (WR), başlangıç $300.
-Cron: */15 * * * * — açılış +15 sn gecikme, 110 snapshot'ından sinyal
+Gerçek PM: PM_5M_210_REAL_ENABLED (varsayılan true), işlem $4/$6/$8 (WR), başlangıç $300.
+Cron: */15 * * * * — açılış +3 sn (110 snapshot sonrası)
 Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open atlanır; close çalışır)
-Modlar: open (varsayılan close+open) / weekly / stats
+Modlar: open (varsayılan close+open) / hourly / weekly / stats
 """
 from __future__ import annotations
 
@@ -17,15 +15,19 @@ import json
 import os
 import sys
 import time
+import urllib.request
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from analiz32_15m_adapter_111 import analyze_15m_from_110
+from analiz32_15m_signal_snapshot import analyze_15m_from_110
 from btc_5m_105_algo import fetch_klines_15m
 import poly_trader_5m_common as _pm_common
-from poly_tg_5m_102 import tg_send, tg_send_photo
+
+# 5. Analiz ile aynı Telegram (PolyAktif bot)
+BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
+CHAT_ID   = "830754964"
 from pm_trader_helpers import (
     pm_15m_sanal_quote,
     pm_15m_find_market,
@@ -50,31 +52,21 @@ if os.path.exists(_ENV_FILE):
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 _DIR = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE = os.path.join(_DIR, "poly_trader_5m_sol_111_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_sol_111_history.json")
-WEEKLY_IMG = "/tmp/poly_15m_sol_111_weekly.png"
-
-# ── "Filtre olmasaydı ne olurdu" gölge (shadow) log ──────────
-# 111 filtreleri (skor eşiği / trend uyumu) bir sinyali elediğinde,
-# gerçek para harcanmadan o sinyalin sonucu takip edilir.
-SHADOW_PENDING_FILE = os.path.join(_DIR, "poly_trader_5m_sol_111_shadow_pending.json")
-SHADOW_HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_sol_111_shadow_history.json")
+STATE_FILE = os.path.join(_DIR, "poly_trader_5m_sol_210_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_sol_210_history.json")
+WEEKLY_IMG = "/tmp/poly_15m_sol_210_weekly.png"
 
 SYMBOLS = ["SOLUSDT"]
 SYMBOL = "SOLUSDT"
 INITIAL_BALANCE = 300.0
-TRADE_AMOUNT = 10.0
-TRADE_AMOUNT_LOW = 8.0
-TRADE_AMOUNT_HIGH = 12.0
+TRADE_AMOUNT = 6.0
+TRADE_AMOUNT_LOW = 4.0
+TRADE_AMOUNT_HIGH = 8.0
 _PERIOD_SECS = 900
 _PERIOD_MIN = 15
 _DAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 
-# ── 111: Ardışık kayıp soğuma periyodu ───────────────────────
-CONSEC_LOSS_STOP = 2      # son N işlem kayıpsa soğumaya gir
-COOLDOWN_ROUNDS = 1       # kaç tur (15dk periyodu) atlanacak
-
-_PM_LIVE = os.getenv("PM_5M_111_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
+_PM_LIVE = os.getenv("PM_5M_210_REAL_ENABLED", "true").lower() in ("1", "true", "yes")
 _PM_DRY_RUN = not _PM_LIVE
 
 _PM_SANITY_MIN = 0.05
@@ -83,8 +75,45 @@ _PM_TRADE_MIN = 0.42
 _PM_TRADE_MAX = 0.52
 _PM_MIN_PAYOUT_RATIO = 1.25
 
-LABEL = "15M 111 SOL"
-OPEN_DELAY_SEC = 15  # 110'dan 15 sn sonra — aynı snapshot
+LABEL = "15M 210 SOL"
+OPEN_DELAY_SEC = 3  # 110 snapshot (+1 sn) sonrası
+TG_HEADER = "210 SOL ✦ PolyAktif (110 canlı PM)"
+STATS_SINCE_KEY = "stats_since_tr"
+HOURLY_ROLLING_N = 10
+
+
+def tg_send(text: str) -> bool:
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        data = json.dumps({"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML"}).encode()
+        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return json.loads(r.read()).get("ok", False)
+    except Exception as e:
+        print(f"[{LABEL} TG] Hata: {e}")
+        return False
+
+
+def tg_send_photo(path: str, caption: str = "") -> None:
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+    try:
+        with open(path, "rb") as f:
+            img_data = f.read()
+        boundary = "----210Boundary"
+        body = (
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n{CHAT_ID}\r\n"
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"caption\"\r\n\r\n{caption}\r\n"
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"heatmap.png\"\r\n"
+            f"Content-Type: image/png\r\n\r\n"
+        ).encode() + img_data + f"\r\n--{boundary}--\r\n".encode()
+        req = urllib.request.Request(
+            url, data=body,
+            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+        )
+        with urllib.request.urlopen(req, timeout=20) as r:
+            r.read()
+    except Exception as e:
+        print(f"[{LABEL} TG photo] Hata: {e}")
 
 
 def _sym_name(symbol: str) -> str:
@@ -95,14 +124,40 @@ def _fmt_price(symbol: str, price: float) -> str:
     return f"{price:.2f}"
 
 
-def _trade_amount(history: list) -> float:
+def _ensure_stats_epoch(state: dict) -> str:
+    """İstatistik ve kayıt başlangıcı — ilk çalışmada şimdiki zaman."""
+    if not state.get(STATS_SINCE_KEY):
+        now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+        state[STATS_SINCE_KEY] = now_tr.isoformat()
+        save_state(state)
+    return state[STATS_SINCE_KEY]
+
+
+def _history_tracked(history: list, state: dict) -> list:
+    """stats_since'ten itibaren kapanmış gerçek PM işlemleri."""
+    since = state.get(STATS_SINCE_KEY)
+    rows = _effective_history(history)
+    if not since:
+        return rows
+    return [t for t in rows if (t.get("exit_time_tr") or t.get("entry_time_tr") or "") >= since]
+
+
+def _trade_amount(history: list, state: dict) -> float:
     amt, _ = _pm_common.trade_amount_by_wr(
-        _effective_history(history),
+        _history_tracked(history, state),
         low=TRADE_AMOUNT_LOW,
         mid=TRADE_AMOUNT,
         high=TRADE_AMOUNT_HIGH,
     )
     return amt
+
+
+def _rolling_summary(trades: list, n: int = HOURLY_ROLLING_N) -> tuple[int, int, int, float]:
+    tail = trades[-n:] if trades else []
+    wins = sum(1 for t in tail if t.get("win"))
+    losses = len(tail) - wins
+    pnl = round(sum(t.get("pnl", 0) or 0 for t in tail), 2)
+    return wins, losses, len(tail), pnl
 
 
 def _tg_esc(text: str) -> str:
@@ -116,7 +171,7 @@ def load_state() -> dict:
                 return json.load(f)
         except Exception:
             pass
-    return {"balance": INITIAL_BALANCE, "open_positions": [], "total_pnl": 0.0, "cooldown_skips_left": 0}
+    return {"balance": INITIAL_BALANCE, "open_positions": [], "total_pnl": 0.0}
 
 
 def save_state(state: dict) -> None:
@@ -158,6 +213,7 @@ def _sync_total_pnl(state: dict, history: list) -> None:
 
 
 def _sync_balance(state: dict, history: list) -> None:
+    """Sanal bakiye = başlangıç + kapanmış işlemlerin net P&L'i (105 ile aynı)."""
     net = _net_pnl(history)
     state["balance"] = round(INITIAL_BALANCE + net, 2)
     state["total_pnl"] = net
@@ -252,8 +308,8 @@ def _pm_resolve_market(symbol: str, ts_period: int, direction: str, amount: floa
     return None, "PM fiyat/market geçersiz"
 
 
-def _cumulative_line(history: list) -> str:
-    wins, total, net, since = _cumulative_stats(history)
+def _cumulative_line(history: list, state: dict) -> str:
+    wins, total, net, since = _cumulative_stats(_history_tracked(history, state))
     if total == 0:
         return "📊 Net P&L: henüz kapanmış işlem yok"
     icon = "🟢" if net >= 0 else "🔴"
@@ -265,109 +321,11 @@ def _cumulative_line(history: list) -> str:
     )
 
 
-# ── Gölge (shadow) log — "filtre olmasaydı ne olurdu" ────────
-def load_shadow_pending() -> list:
-    if os.path.exists(SHADOW_PENDING_FILE):
-        try:
-            with open(SHADOW_PENDING_FILE) as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return []
-
-
-def save_shadow_pending(pending: list) -> None:
-    with open(SHADOW_PENDING_FILE, "w") as f:
-        json.dump(pending, f, indent=2, ensure_ascii=False)
-
-
-def load_shadow_history() -> list:
-    if os.path.exists(SHADOW_HISTORY_FILE):
-        try:
-            with open(SHADOW_HISTORY_FILE) as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return []
-
-
-def save_shadow_history(rows: list) -> None:
-    with open(SHADOW_HISTORY_FILE, "w") as f:
-        json.dump(rows, f, indent=2, ensure_ascii=False)
-
-
-def _resolve_shadow_pending(now_tr: datetime) -> None:
-    """Süresi dolmuş gölge sinyalleri gerçek fiyatla çözümler, shadow_history'ye yazar."""
-    pending = load_shadow_pending()
-    if not pending:
-        return
-
-    still_pending: list = []
-    resolved: list = []
-    for item in pending:
-        candle = _resolve_period_candle(item["symbol"], item["ts_period"], retries=2, wait_sec=1.0)
-        if candle is None:
-            # mum henüz kapanmamış olabilir — bir sonraki turda tekrar denenir
-            still_pending.append(item)
-            continue
-
-        ref_open = candle["open"]
-        prev_close = candle["close"]
-        actual = "UP" if prev_close >= ref_open else "DOWN"
-        would_win = item["raw_direction"] == actual
-        pct = (prev_close - ref_open) / ref_open * 100 if ref_open else 0
-
-        resolved.append({
-            **item,
-            "actual_dir": actual,
-            "exit_price": prev_close,
-            "pct_change": round(pct, 3),
-            "would_win": would_win,
-            "resolved_time_tr": now_tr.isoformat(),
-        })
-
-    if resolved:
-        history = load_shadow_history()
-        history.extend(resolved)
-        save_shadow_history(history)
-        wins = sum(1 for r in resolved if r["would_win"])
-        print(f"[{LABEL}] gölge çözümleme: {len(resolved)} sinyal, {wins} 'kazanırdı'")
-
-    save_shadow_pending(still_pending)
-
-
-def _log_shadow_skip(sig, sym: str, ts_period: int, now_tr: datetime) -> None:
-    """111 filtreleri bir sinyali elediğinde (predictor kendi gate'ini geçmişti) kaydeder."""
-    if not sig.raw_direction:
-        return  # predictor zaten kendi gate'inde pas geçmiş, gölge işlem yok
-    pending = load_shadow_pending()
-    pending.append({
-        "symbol": sym,
-        "raw_direction": sig.raw_direction,
-        "entry_price": sig.entry_price,
-        "up_score": sig.up_score,
-        "down_score": sig.down_score,
-        "skip_reason": sig.skip_reason,
-        "ts_period": ts_period,
-        "entry_time_tr": now_tr.isoformat(),
-    })
-    save_shadow_pending(pending)
-
-
-# ── 111: Ardışık kayıp tespiti ───────────────────────────────
-def _consecutive_losses(history: list) -> int:
-    """Son kapanan işlemlerden geriye doğru, art arda kaç kayıp var."""
-    rows = _effective_history(history)
-    count = 0
-    for t in reversed(rows):
-        if t.get("win") is False:
-            count += 1
-        else:
-            break
-    return count
-
-
 def run() -> None:
+    state = load_state()
+    _ensure_stats_epoch(state)
+    history = load_history()
+
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     dow = now_tr.weekday()
@@ -376,12 +334,6 @@ def run() -> None:
     saat = f"{period_min // 60:02d}:{period_min % 60:02d}"
     next_period_min = period_min + _PERIOD_MIN
     next_saat = f"{(next_period_min % (24 * 60)) // 60:02d}:{next_period_min % 60:02d}"
-
-    state = load_state()
-    state.setdefault("cooldown_skips_left", 0)
-    history = load_history()
-
-    _resolve_shadow_pending(now_tr)
 
     closed_lines: list[str] = []
     tur_pnl = 0.0
@@ -404,7 +356,7 @@ def run() -> None:
             pred = pos["predicted_dir"]
             actual = "UP" if prev_close >= ref_open else "DOWN"
             win = pred == actual
-            spent = pos.get("pm_spent") or pos.get("amount", _trade_amount(history))
+            spent = pos.get("pm_spent") or pos.get("amount", _trade_amount(history, state))
             if _PM_LIVE:
                 pnl, payout = pm_5m_close(pos, win)
                 if win:
@@ -454,27 +406,6 @@ def run() -> None:
     open_lines: list[str] = []
     skip_lines: list[str] = []
 
-    # ── 111: soğuma periyodu kontrolü (turun başında, tüm semboller için) ──
-    if state.get("cooldown_skips_left", 0) > 0:
-        state["cooldown_skips_left"] -= 1
-        skip_lines.append(
-            f"❄️ Soğuma periyodu — ardışık kayıp sonrası bekleniyor "
-            f"({state['cooldown_skips_left']} tur kaldı)"
-        )
-        save_state(state)
-        _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
-        return
-
-    consec = _consecutive_losses(history)
-    if consec >= CONSEC_LOSS_STOP:
-        state["cooldown_skips_left"] = COOLDOWN_ROUNDS
-        skip_lines.append(
-            f"❄️ {consec} ardışık kayıp — soğuma periyodu başlıyor ({COOLDOWN_ROUNDS} tur atlanacak)"
-        )
-        save_state(state)
-        _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
-        return
-
     if in_weekend_pause_tr(now_tr):
         print(f"[{LABEL}] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok")
         if closed_lines:
@@ -495,11 +426,10 @@ def run() -> None:
             reason = sig.skip_reason or "sinyal yok"
             skip_lines.append(f"⏸ {name} — {_tg_esc(reason)}")
             print(f"[{LABEL}] {saat} — {name} atlandı: {reason}")
-            _log_shadow_skip(sig, sym, ts_period, now_tr)
             continue
 
         direction = sig.direction
-        amount = _trade_amount(history)
+        amount = _trade_amount(history, state)
         balance = state["balance"]
 
         if not _PM_LIVE and balance < amount:
@@ -552,7 +482,7 @@ def run() -> None:
                 f"{quote}\n"
                 f"Giriş: {_fmt_price(sym, entry_p)}  |  {_tg_esc(factor_hint)}"
             )
-            print(f"[{LABEL}] {saat} — {name} {dir_tr} {quote} [SANAL A32-111]")
+            print(f"[{LABEL}] {saat} — {name} {dir_tr} {quote} [SANAL A32]")
             continue
 
         # ── Canlı PM ──────────────────────────────────────────
@@ -627,7 +557,7 @@ def run() -> None:
             f"💵 ${amount:.2f} @{token_price:.2f} → 🏆 ${to_win:.2f}  🔴 GERÇEK PM\n"
             f"Giriş: {_fmt_price(sym, entry_p)}  |  {_tg_esc(factor_hint)}"
         )
-        print(f"[{LABEL}] {saat} — {name} {dir_tr} ${amount:.2f}→${to_win:.2f} [GERÇEK PM A32-111]")
+        print(f"[{LABEL}] {saat} — {name} {dir_tr} ${amount:.2f}→${to_win:.2f} [GERÇEK PM A32]")
 
     save_state(state)
     _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
@@ -647,10 +577,10 @@ def _send_tg_round(
         return
 
     sep = "━" * 26
-    parts: list[str] = [f"<b>{LABEL} — {saat}</b>"]
+    parts: list[str] = [f"<b>{TG_HEADER} — {saat} - {next_saat}</b>"]
 
     if closed_lines:
-        win_all, tot_all = get_all_stats(history)
+        win_all, tot_all = get_all_stats(_history_tracked(history, state))
         parts.append(
             "🏁 <b>Sonuçlar</b> (biten tur)\n"
             + "\n".join(closed_lines)
@@ -668,7 +598,7 @@ def _send_tg_round(
     msg = (
         f"{sep}\n"
         + "\n\n".join(parts)
-        + f"\n{_cumulative_line(history)}\n"
+        + f"\n{_cumulative_line(history, state)}\n"
         + f"{_bal_line(state)}\n"
         f"{sep}"
     )
@@ -688,7 +618,7 @@ def run_weekly() -> None:
     state = load_state()
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     if not history:
-        tg_send(f"📊 <b>{LABEL} WEEKLY</b>\nHenüz veri yok.")
+        tg_send(f"📊 <b>{TG_HEADER} WEEKLY</b>\nHenüz veri yok.")
         return
 
     grid_w_h = [[0] * 24 for _ in range(7)]
@@ -724,7 +654,7 @@ def run_weekly() -> None:
     total = len(history)
     wins = sum(1 for t in history if t["win"])
     genel = f"%{wins/total*100:.0f}" if total else "—"
-    mode = "GERÇEK PM $8-12" if _PM_LIVE else "SANAL"
+    mode = "GERÇEK PM $4-8" if _PM_LIVE else "SANAL"
     ax.set_title(
         f"{LABEL} — Haftalık  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
         f"Toplam: {total}  |  {genel}  |  {mode}",
@@ -734,41 +664,113 @@ def run_weekly() -> None:
     plt.tight_layout(pad=1.0)
     plt.savefig(WEEKLY_IMG, dpi=130, bbox_inches="tight", facecolor="#0a0e1a", pad_inches=0.1)
     plt.close()
-    tg_send_photo(WEEKLY_IMG, f"📊 {LABEL} Haftalık  {now_tr.strftime('%d.%m.%Y')}  {total} işlem | {genel} | {mode}")
+    tg_send_photo(WEEKLY_IMG, f"📊 {TG_HEADER}  {now_tr.strftime('%d.%m.%Y')}  {total} işlem | {genel} | {mode}")
 
 
-def _shadow_summary_line() -> str:
-    rows = load_shadow_history()
-    if not rows:
-        return "🕶 Gölge (elenen sinyal): henüz veri yok"
-    total = len(rows)
-    would_wins = sum(1 for r in rows if r.get("would_win"))
-    wr = f"%{would_wins/total*100:.0f}" if total else "—"
-    score_skips = sum(1 for r in rows if "skor zayıf" in (r.get("skip_reason") or ""))
-    trend_skips = sum(1 for r in rows if "çelişki" in (r.get("skip_reason") or ""))
-    return (
-        f"🕶 Gölge (elenen sinyal): {total} adet  |  'kazanırdı' oranı: {wr} ({would_wins}/{total})\n"
-        f"   — skor eşiği: {score_skips}  |  trend/mom çelişkisi: {trend_skips}"
-    )
+def _fmt_stats_since(iso_tr: str) -> str:
+    if not iso_tr:
+        return "—"
+    try:
+        dt = datetime.fromisoformat(iso_tr)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=_TZ_TR)
+        return dt.astimezone(_TZ_TR).strftime("%d.%m.%Y %H:%M")
+    except Exception:
+        return iso_tr[:16].replace("T", " ")
+
+
+def run_hourly() -> None:
+    if not _PM_LIVE:
+        print(f"[{LABEL}] hourly atlandı — gerçek PM kapalı")
+        return
+
+    state = load_state()
+    _ensure_stats_epoch(state)
+    history = load_history()
+    tracked = _history_tracked(history, state)
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    prev_h = (now_tr.hour - 1) % 24
+    hour_label = f"{prev_h:02d}:00 – {now_tr.hour:02d}:00"
+
+    rw, rl, rn, rpnl = _rolling_summary(tracked)
+    tw, tt, tpnl, since_d = _cumulative_stats(tracked)
+
+    try:
+        from pm_balance_guard import get_usdc_balance
+        bal = get_usdc_balance()
+        balance = bal if bal < 9999 else round(state.get("balance", INITIAL_BALANCE), 2)
+    except Exception:
+        balance = round(state.get("balance", INITIAL_BALANCE), 2)
+
+    open_pos = state.get("open_positions", [])
+    open_n = len(open_pos)
+    risk = round(sum(p.get("pm_spent") or p.get("amount", 0) for p in open_pos), 2)
+
+    sep = "━" * 26
+    lines = [
+        sep,
+        f"📊 <b>{TG_HEADER} — Saatlik Özet</b>",
+        f"🕐 {hour_label}  |  {now_tr.strftime('%d.%m.%Y')} İST",
+        "",
+    ]
+
+    since_fmt = _fmt_stats_since(state.get(STATS_SINCE_KEY, ""))
+    if rn == 0:
+        lines.append(f"📂 Son {HOURLY_ROLLING_N} işlem: henüz kapanmış işlem yok")
+        lines.append(f"📅 Kayıt başlangıcı: {since_fmt} İST")
+    else:
+        n_label = min(rn, HOURLY_ROLLING_N)
+        ricon = "🟢" if rpnl >= 0 else "🔴"
+        verb = "kazandırdı" if rpnl >= 0 else "zarar ettirdi"
+        lines.append(
+            f"📊 Son <b>{n_label}</b> işlem: {rw}✅ {rl}❌  |  WR {_wr(rw, rn)}"
+        )
+        lines.append(
+            f"{ricon} Bu {n_label} işlem <b>{'+' if rpnl >= 0 else ''}{rpnl:.2f}$</b> {verb}"
+        )
+        if tt > n_label:
+            ticon = "🟢" if tpnl >= 0 else "🔴"
+            lines.append(
+                f"📈 Toplam ({since_d or since_fmt[:10]}'den): "
+                f"<b>{tt}</b> işlem  |  {ticon} {'+' if tpnl >= 0 else ''}{tpnl:.2f}$"
+            )
+
+    lines.append("")
+    lines.append(f"💰 PM Bakiye: <b>${balance:.2f}</b>")
+
+    if open_n:
+        parts = []
+        for pos in open_pos[:3]:
+            d_tr = "YÜKSELİR" if pos.get("predicted_dir") == "UP" else "DÜŞER"
+            amt = pos.get("pm_spent") or pos.get("amount", 0)
+            parts.append(f"{d_tr} ${amt:.2f}")
+        extra = f" +{open_n - 3} daha" if open_n > 3 else ""
+        lines.append(f"🔴 Açık ({open_n}): {', '.join(parts)}{extra}  |  ${risk:.2f} risk")
+    else:
+        lines.append("⚪ Açık pozisyon yok")
+
+    lines.append(sep)
+    ok = tg_send("\n".join(lines))
+    print(f"[{LABEL}] hourly özet: {'OK' if ok else 'HATA'} ({rn} işlem son {HOURLY_ROLLING_N})")
 
 
 def run_stats() -> None:
-    history = _effective_history(load_history())
     state = load_state()
+    _ensure_stats_epoch(state)
+    history = _history_tracked(load_history(), state)
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     total = len(history)
     wins = sum(1 for t in history if t.get("win"))
     net = round(sum(t.get("pnl", 0) or 0 for t in history), 2)
-    mode = "🔴 GERÇEK PM $8-12" if _PM_LIVE else "🔶 SANAL"
+    mode = "🔴 GERÇEK PM $4-8" if _PM_LIVE else "🔶 SANAL"
     tg_send(
-        f"📊 <b>{LABEL} İSTATİSTİKLER</b>\n"
+        f"📊 <b>{TG_HEADER} İSTATİSTİKLER</b>\n"
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST  |  {mode}\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {_wr(wins, total)}\n"
         f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
         f"{_bal_line(state)}\n"
-        f"{_shadow_summary_line()}\n"
-        f"SOL only · Analiz32 15m · 111 filtreleri (skor≥20, trend uyumu, soğuma) · $8/$10/$12 (WR)"
+        f"SOL only · Analiz32 15m · 110 snapshot · $4/$6/$8 (WR)"
     )
 
 
@@ -776,6 +778,8 @@ if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "open"
     if mode == "weekly":
         run_weekly()
+    elif mode == "hourly":
+        run_hourly()
     elif mode == "stats":
         run_stats()
     else:

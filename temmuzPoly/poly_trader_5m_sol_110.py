@@ -3,8 +3,9 @@
 ==========================================================
 Algoritma: Analiz32/ (composite_signal) — bozulmaz; 15m adaptör üzerinden.
 
-Gerçek PM: PM_5M_110_REAL_ENABLED=true, işlem $8/$10/$12 (WR), başlangıç $300.
+Gerçek PM: PM_5M_110_REAL_ENABLED=false (sanal), işlem $8/$10/$12 (WR), başlangıç $300.
 Cron: */15 * * * * — açılış +1 sn gecikme (mum kapanışı)
+Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open atlanır; close çalışır)
 Modlar: open (varsayılan close+open) / weekly / stats
 """
 from __future__ import annotations
@@ -34,6 +35,7 @@ from pm_trader_helpers import (
     pm_5m_close,
     pm_5m_history_extras,
     pm_sanal_tg_quote,
+    in_weekend_pause_tr,
 )
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -336,6 +338,12 @@ def run() -> None:
 
     open_lines: list[str] = []
     skip_lines: list[str] = []
+
+    if in_weekend_pause_tr(now_tr):
+        print(f"[{LABEL}] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok")
+        if closed_lines:
+            _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
+        return
 
     if OPEN_DELAY_SEC > 0:
         time.sleep(OPEN_DELAY_SEC)

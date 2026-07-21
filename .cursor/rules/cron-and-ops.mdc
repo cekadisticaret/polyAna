@@ -18,8 +18,11 @@ alwaysApply: true
 | `0 21 * * *` | `temmuzPoly/poly_trader_analiz{1,32}.py daily` | `/tmp/poly_trader_analiz*.log` |
 | `0 21 * * 6` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10,13,21,23,31,32}.py weekly` | `/tmp/poly_trader_analiz*.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_real_stats.py` | `/tmp/poly_5m_real_stats.log` |
+| `0 * * * *` | `poly_trader_5m_sol_210.py hourly` (son 10 işlem P&amp;L, A5 TG) | `/tmp/poly_5m_sol_210.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_110.py open` (+1 sn gecikme) | `/tmp/poly_5m_sol_110.log` |
 | `0 0 * * 0` | `poly_trader_5m_sol_110.py weekly` | `/tmp/poly_5m_sol_110.log` |
+| `*/15 * * * *` | `poly_trader_5m_sol_210.py open` (+3 sn, 110 snapshot, gerçek PM $4-8) | `/tmp/poly_5m_sol_210.log` |
+| `0 0 * * 0` | `poly_trader_5m_sol_210.py weekly` | `/tmp/poly_5m_sol_210.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_111.py open` (+15 sn, 110 snapshot) | `/tmp/poly_5m_sol_111.log` |
 | `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_111.py weekly` | `/tmp/poly_5m_sol_111.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_signals.py` | `/tmp/algo_signals.log` |
@@ -41,7 +44,7 @@ alwaysApply: true
 - **6. Analiz** `open` **:06** — A1+A4 state okuduktan sonra (konsensus).
 - A7’nin `weekly` cron’u yok; diğer analizlerin çoğu Cumartesi 21:00.
 - `poly_trader_karisim1.py` → **6. Analiz** (`poly_trader_analiz6.py`) olarak yeniden adlandırıldı
-- **110/111 açılış:** cron `*/15`; 110 script içi +1 sn, 111 +15 sn; 111 aynı turda 110'un kaydettiği sinyal snapshot'ını kullanır.
+- **110/111/210 açılış:** cron `*/15`; hafta sonu **Cum 22:00 – Paz 18:00 İST** open kapalı.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis).
 
 ## Log Takibi
@@ -52,6 +55,7 @@ tail -f /tmp/poly_trader_analiz1.log
 tail -f /tmp/poly_trader_analiz6.log
 tail -f /tmp/poly_5m_sol_110.log
 tail -f /tmp/poly_5m_sol_111.log
+tail -f /tmp/poly_5m_sol_210.log
 tail -f /tmp/algo_signals.log
 tail -f /tmp/backup.log
 ```

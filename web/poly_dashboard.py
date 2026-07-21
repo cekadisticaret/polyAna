@@ -34,6 +34,7 @@ _HEATMAP_SYMS = {
     "5m_btc_107": ["BTC"],
     "5m_sol_110": ["SOL"],
     "5m_sol_111": ["SOL"],
+    "5m_sol_210": ["SOL"],
 }
 # poly_trader_* dışındaki analiz dosyaları (history, state)
 _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {}
@@ -45,11 +46,11 @@ _PASIF_ANALYSES = frozenset({"analiz9", "5m_btc_107"})
 # Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2", "analiz5", "analiz4", "analiz6", "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32",
-    "5m_btc_107", "5m_sol_110", "5m_sol_111",
+    "5m_btc_107", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 _HISTORY_ORDER = [
     "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
-    "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "analiz6", "5m_btc_107", "5m_sol_110", "5m_sol_111",
+    "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "analiz6", "5m_btc_107", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
@@ -67,6 +68,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "5m_btc_107": "5M 107 BTC (Pasif)",
     "5m_sol_110": "15M 110 SOL",
     "5m_sol_111": "15M 111 SOL",
+    "5m_sol_210": "15M 210 SOL",
 }
 
 
@@ -271,6 +273,12 @@ def save_state(name: str, state: dict):
     with open(path, "w") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
 
+
+def _save_trader_history(key: str, history: list) -> None:
+    path = _trader_history_path(key)
+    with open(path, "w") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+
 def get_pm_balance() -> float:
     try:
         sys.path.insert(0, _DIR_POLY)
@@ -302,6 +310,7 @@ _PM_POSITION_SOURCES = [
     ("analiz5", "5. Analiz"),
     ("5m_sol_110", "15M 110 SOL"),
     ("5m_sol_111", "15M 111 SOL"),
+    ("5m_sol_210", "15M 210 SOL"),
 ]
 
 def _position_visible(_key: str, pos: dict) -> bool:
@@ -738,6 +747,7 @@ def api_analizler():
         ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 algo + yön freni — cron kapalı"),
         ("5m_sol_110",  "15M 110 SOL",           300,  "Analiz32 15m SOL sanal $8-10-12"),
         ("5m_sol_111",  "15M 111 SOL",           300,  "A32 15m filtreli sanal $8-10-12"),
+        ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $4-6-8"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:
@@ -1179,7 +1189,42 @@ def api_stats():
     algo_stats.sort(key=lambda x: x["wr"], reverse=True)
     return jsonify({"algo_stats": algo_stats, "recent": recent})
 
-def _pm_sell_position(token_id: str, size: float) -> dict:
+def _pm_best_bid(client, token_id: str) -> float | None:
+    """Satış için en yüksek bid — orderbook yoksa None."""
+    try:
+        book = client.get_order_book(token_id)
+        bids = book.get("bids") or []
+        if bids:
+            return max(float(b["price"]) for b in bids)
+    except Exception:
+        pass
+    return None
+
+
+def _pm_sell_price(client, token_id: str, size: float, pm_slug: str = "", token_dir: str = "") -> float:
+    """Satış fiyatı: orderbook bid → market price → gamma fiyat."""
+    from py_clob_client_v2 import OrderType
+
+    bid = _pm_best_bid(client, token_id)
+    if bid and bid > 0:
+        return max(0.02, min(0.98, round(bid, 2)))
+
+    try:
+        p = float(client.calculate_market_price(token_id, "SELL", size, OrderType.FAK))
+        if p > 0:
+            return max(0.02, min(0.98, round(p, 2)))
+    except Exception:
+        pass
+
+    if pm_slug and token_dir:
+        gp = get_pm_token_price(pm_slug, token_dir)
+        if gp and gp > 0:
+            return max(0.02, min(0.98, round(gp - 0.01, 2)))
+
+    return 0.50
+
+
+def _pm_sell_position(token_id: str, size: float, pm_slug: str = "", token_dir: str = "") -> dict:
     """Polymarket'ta token sat (pozisyonu kapat)."""
     import importlib.util
     from decimal import Decimal, ROUND_DOWN
@@ -1197,29 +1242,92 @@ def _pm_sell_position(token_id: str, size: float) -> dict:
         from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
         from py_clob_client_v2.order_builder.constants import SELL
 
-        price = float(client.calculate_market_price(token_id, "SELL", size, OrderType.FAK))
-        price = max(0.02, min(0.98, round(price, 2)))
-        size  = float(Decimal(str(size)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+        size = float(Decimal(str(size)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+        if size <= 0:
+            return {"ok": False, "error": "geçersiz boyut"}
 
-        args   = OrderArgs(token_id=token_id, price=price, size=size, side=SELL)
-        signed = client.create_order(args, PartialCreateOrderOptions())
-        resp   = client.post_order(signed, order_type=OrderType.FAK)
+        last_err = "bilinmeyen hata"
+        for attempt in range(3):
+            price = _pm_sell_price(client, token_id, size, pm_slug, token_dir)
+            if attempt > 0:
+                price = max(0.02, round(price - 0.03 * attempt, 2))
 
-        print(f"[dashboard] PM sell response: {resp}", flush=True)
+            args = OrderArgs(token_id=token_id, price=price, size=size, side=SELL)
+            signed = client.create_order(args, PartialCreateOrderOptions())
+            resp = client.post_order(signed, order_type=OrderType.FAK)
+            print(f"[dashboard] PM sell attempt {attempt + 1} @{price}: {resp}", flush=True)
 
-        if not resp:
-            return {"ok": False, "error": "boş yanıt"}
+            if not resp:
+                last_err = "boş yanıt"
+                continue
 
-        # success=True ama status kontrolü — FAK eşleşmeyebilir
-        status = resp.get("status", "")
-        if resp.get("success") and status not in ("canceled", "unmatched"):
-            return {"ok": True, "price": price, "size": size,
-                    "received": round(size * price, 2), "status": status}
+            status = resp.get("status", "")
+            if resp.get("success") and status in ("matched", "live", "delayed"):
+                received_raw = resp.get("takingAmount")
+                try:
+                    received = round(float(received_raw), 2) if received_raw else round(size * price, 2)
+                except (TypeError, ValueError):
+                    received = round(size * price, 2)
+                return {
+                    "ok": True, "price": price, "size": size,
+                    "received": received, "status": status,
+                }
 
-        return {"ok": False, "error": f"FAK eşleşmedi (status={status})", "resp": str(resp)}
+            last_err = f"FAK eşleşmedi (status={status})"
+            if status in ("canceled", "unmatched"):
+                continue
+
+        return {"ok": False, "error": last_err}
 
     except Exception as e:
         return {"ok": False, "error": str(e)}
+
+
+def _record_dashboard_close(analiz: str, pos: dict, sell_result: dict) -> None:
+    """Manuel PM satışını history'ye yaz (analiz5 formatı)."""
+    if analiz != "analiz5":
+        return
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    sym = pos.get("symbol", "")
+    spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
+    received = float(sell_result.get("received") or 0)
+    pnl = round(received - spent, 2)
+    pred = pos.get("predicted_dir", "")
+    entry = float(pos.get("entry_price") or 0)
+
+    try:
+        current = get_price(sym) if sym else entry
+    except Exception:
+        current = entry
+
+    actual = "UP" if current >= entry else "DOWN"
+    history = _load_trader_history(analiz)
+    history.append({
+        "symbol": sym,
+        "predicted_dir": pred,
+        "actual_dir": actual,
+        "binance_actual": actual,
+        "win": pnl > 0,
+        "pm_win": None,
+        "settle_source": "manual_sell",
+        "entry_price": entry,
+        "exit_price": current,
+        "entry_time_tr": pos.get("entry_time_tr"),
+        "entry_hour_tr": pos.get("entry_hour_tr"),
+        "entry_dow": pos.get("entry_dow"),
+        "entry_is_weekend": pos.get("entry_is_weekend"),
+        "score": pos.get("score", 0),
+        "amount": pos.get("amount"),
+        "pm_spent": pos.get("pm_spent"),
+        "pm_size": pos.get("pm_size"),
+        "pm_entry_price": pos.get("pm_entry_price"),
+        "pm_order_id": pos.get("pm_order_id"),
+        "pm_slug": pos.get("pm_slug"),
+        "pm_token_dir": pos.get("pm_token_dir"),
+        "exit_time_tr": now_tr.isoformat(),
+        "pnl": pnl,
+    })
+    _save_trader_history(analiz, history)
 
 @app.route("/poly/api/close/<analiz>/<symbol>", methods=["POST"])
 def api_close(analiz, symbol):
@@ -1238,19 +1346,33 @@ def api_close(analiz, symbol):
         if not token_id or not pm_size:
             return jsonify({"ok": False, "error": f"token_id veya pm_size eksik ({token_id=}, {pm_size=})"}), 400
 
-        # Gerçek PM satış emri
-        sell_result = _pm_sell_position(token_id, pm_size)
+        sell_result = _pm_sell_position(
+            token_id, pm_size,
+            pm_slug=pos.get("pm_slug", ""),
+            token_dir=pos.get("pm_token_dir") or pos.get("predicted_dir", ""),
+        )
 
-        # Sadece PM satışı başarılıysa state'ten kaldır
-        if sell_result.get("ok"):
-            state["open_positions"] = [
-                p for p in state["open_positions"] if p.get("symbol") != symbol
-            ]
-            save_state(analiz, state)
+        if not sell_result.get("ok"):
+            return jsonify({
+                "ok": False,
+                "error": sell_result.get("error", "PM satış başarısız"),
+                "sell": sell_result,
+                "symbol": symbol,
+            }), 502
+
+        state["open_positions"] = [
+            p for p in state["open_positions"] if p.get("symbol") != symbol
+        ]
+        if analiz == "analiz5":
+            state["total_pnl"] = round(state.get("total_pnl", 0.0) + (
+                sell_result.get("received", 0) - float(pos.get("pm_spent") or pos.get("amount") or 0)
+            ), 2)
+        save_state(analiz, state)
+        _record_dashboard_close(analiz, pos, sell_result)
 
         return jsonify({
-            "ok":    True,
-            "sell":  sell_result,
+            "ok": True,
+            "sell": sell_result,
             "symbol": symbol,
         })
     except Exception as e:
@@ -2978,24 +3100,33 @@ function buildTabs(syms) {
 async function closePosition(analiz, symbol, btn) {
   btn.classList.add('loading'); btn.textContent = 'Kapatılıyor...';
   try {
-    const r = await fetch('/poly/api/close/' + analiz + '/' + symbol, {method:'POST'});
-    const d = await r.json();
-    if (!d.ok) {
-      btn.textContent = '⚠️ ' + (d.error || 'API hatası');
+    const r = await fetch('/poly/api/close/' + analiz + '/' + symbol, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {'Accept': 'application/json'},
+    });
+    let d;
+    try { d = await r.json(); } catch (_) {
+      btn.textContent = '⚠️ Sunucu yanıtı okunamadı';
       btn.style.background = '#f87171'; btn.classList.remove('loading'); return;
     }
-    const s = d.sell;
-    if (s && s.ok) {
-      btn.style.background = '#4ade80';
-      btn.textContent = '✅ Kapatıldı · $' + s.received;
-      setTimeout(refresh, 2000);
-    } else {
-      // PM satışı başarısız — pozisyon state'te kaldı
+    if (!d.ok) {
+      btn.textContent = '⚠️ ' + (d.error || 'Satış başarısız');
       btn.style.background = '#f87171';
-      btn.textContent = '⚠️ PM: ' + (s ? s.error : 'bilinmeyen hata');
       btn.classList.remove('loading');
+      setTimeout(() => { btn.textContent = 'Pozisyonu Kapat'; btn.style.background = ''; }, 4000);
+      return;
     }
-  } catch(e) { btn.textContent = '⚠️ ' + e.message; btn.classList.remove('loading'); }
+    const s = d.sell || {};
+    btn.style.background = '#4ade80';
+    btn.textContent = '✅ Kapatıldı · $' + (s.received || '?');
+    setTimeout(refresh, 1500);
+  } catch(e) {
+    btn.textContent = '⚠️ ' + e.message;
+    btn.style.background = '#f87171';
+    btn.classList.remove('loading');
+    setTimeout(() => { btn.textContent = 'Pozisyonu Kapat'; btn.style.background = ''; }, 4000);
+  }
 }
 
 async function refresh() {

@@ -17,6 +17,20 @@ _PM_ASSET_MAP = {
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 PM_DRY_RUN = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 
+
+def in_weekend_pause_tr(now_tr: datetime) -> bool:
+    """Cuma 22:00 – Pazar 18:00 İST arası yeni işlem açılmaz."""
+    dow = now_tr.weekday()  # 0=Pzt … 4=Cum 5=Cmt 6=Paz
+    h = now_tr.hour
+    if dow == 4 and h >= 22:
+        return True
+    if dow == 5:
+        return True
+    if dow == 6 and h < 18:
+        return True
+    return False
+
+
 # Sanal trader giriş tutarları (1. Analiz mantığı — A5 hariç ortak)
 SANAL_INITIAL_BALANCE = 300.0
 SANAL_TRADE_AMOUNT = 16.0       # sembol WR veri yok veya tam %50
