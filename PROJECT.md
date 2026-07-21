@@ -9,7 +9,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BistAnaliz/BistHourSinyal/` | `bist_visual_v2.py` — trend + momentum metin bildirimi. |
 | `BistAnaliz/BistYapayAnaliz/` | `bist_signal_hunter.py` — 15m/1h güçlü AL; geçmiş: `bist_signal_hunter_history.json`. |
 | `BistAnaliz/yuzdeBist.py` | BIST 5dk güven tarayıcı — **PASIF** (crontab yorum satırı). |
-| `web/poly_dashboard.py` | Poly dashboard — harita/geçmiş; port **5050**. |
+| `web/poly_dashboard.py` | Poly dashboard — harita/geçmiş, PM saatlik + 15dk kotasyon; port **5050**. |
 | `temmuzPoly/` | Poly trader'lar, algo motorları, backtest; dashboard port **5050**. |
 | `Analiz31/` | Multi-TF tahmin motoru (15m/1h/4h/1d, walk-forward backtest) |
 | `Analiz31/main.py` | CLI — `--once`, `--loop`, `--backtest` |

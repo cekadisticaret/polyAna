@@ -305,6 +305,114 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
         pass
     return None
 
+
+def get_pm_hourly_quotes() -> list[dict]:
+    """Aktif 1h PM marketleri — BTC/SOL UP/DOWN anlık fiyat (Analiz 5 ile aynı slug)."""
+    from datetime import timedelta
+
+    try:
+        sys.path.insert(0, _DIR_POLY)
+        from poly_trader_analiz5 import _pm_find_market
+    except Exception:
+        return []
+
+    now_utc = datetime.now(timezone.utc)
+    et_hour = (now_utc - timedelta(hours=4)).hour
+    out: list[dict] = []
+
+    for sym in ("BTCUSDT", "SOLUSDT"):
+        name = sym.replace("USDT", "")
+        row: dict = {"symbol": sym, "name": name}
+        try:
+            row["binance"] = round(get_price(sym), 2 if name == "BTC" else 4)
+        except Exception:
+            row["binance"] = None
+
+        try:
+            pm = _pm_find_market(sym, et_hour, now_utc)
+        except Exception:
+            pm = None
+
+        if not pm:
+            row["error"] = "market yok"
+            out.append(row)
+            continue
+
+        op = pm.get("outcome_prices") or []
+        up_p = float(op[0]) if len(op) > 0 else None
+        down_p = float(op[1]) if len(op) > 1 else None
+        title = pm.get("title") or ""
+        # "Bitcoin Up or Down - July 21, 10AM ET" → "10AM ET"
+        hour_lbl = title.split(",")[-1].strip() if "," in title else title
+
+        row.update({
+            "title": title,
+            "hour_et": hour_lbl,
+            "slug": pm.get("slug", ""),
+            "up": round(up_p, 3) if up_p is not None else None,
+            "down": round(down_p, 3) if down_p is not None else None,
+            "up_cents": round(up_p * 100, 1) if up_p is not None else None,
+            "down_cents": round(down_p * 100, 1) if down_p is not None else None,
+            "closed": bool(pm.get("closed")),
+        })
+        out.append(row)
+
+    return out
+
+
+def get_pm_15m_quotes() -> list[dict]:
+    """Aktif 15m PM up/down — BTC/SOL (110/210 ile aynı slug)."""
+    import time
+
+    try:
+        sys.path.insert(0, _DIR_POLY)
+        from pm_trader_helpers import pm_15m_find_market
+    except Exception:
+        return []
+
+    now = int(time.time())
+    ts_period = now - (now % 900)
+    period_tr = datetime.fromtimestamp(ts_period, _TZ_TR).strftime("%H:%M")
+    out: list[dict] = []
+
+    for sym in ("BTCUSDT", "SOLUSDT"):
+        name = sym.replace("USDT", "")
+        row: dict = {"symbol": sym, "name": name}
+        try:
+            row["binance"] = round(get_price(sym), 2 if name == "BTC" else 4)
+        except Exception:
+            row["binance"] = None
+
+        try:
+            pm = pm_15m_find_market(ts_period, sym)
+        except Exception:
+            pm = None
+
+        if not pm:
+            row["error"] = "market yok"
+            out.append(row)
+            continue
+
+        up_p = float(pm.get("up_price", 0))
+        down_p = float(pm.get("down_price", 0))
+        title = pm.get("title") or ""
+        period_lbl = title.split(",")[-1].strip() if "," in title else f"{period_tr} İST"
+
+        row.update({
+            "title": title,
+            "period_lbl": period_lbl,
+            "period_tr": period_tr,
+            "slug": pm.get("slug", ""),
+            "up": round(up_p, 3),
+            "down": round(down_p, 3),
+            "up_cents": round(up_p * 100, 1),
+            "down_cents": round(down_p * 100, 1),
+            "closed": bool(pm.get("closed")),
+        })
+        out.append(row)
+
+    return out
+
 # Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
 _PM_POSITION_SOURCES = [
     ("analiz5", "5. Analiz"),
@@ -407,8 +515,12 @@ def api_data():
             actual  = "UP" if current_p >= entry_p else "DOWN"
             winning = (actual == pred)
             pct     = (current_p - entry_p) / entry_p * 100
+            delta   = current_p - entry_p
         else:
-            winning, pct = None, 0.0
+            winning, pct, delta = None, 0.0, None
+
+        name = sym.replace("USDT", "")
+        delta_round = round(delta, 1 if name == "BTC" else 2) if delta is not None else None
 
         # Polymarket'tan anlık token fiyatı → kapama değeri
         token_price   = get_pm_token_price(pos.get("pm_slug", ""), token_dir)
@@ -425,6 +537,7 @@ def api_data():
             "entry":        round(entry_p, 4),
             "current":      round(current_p, 4) if current_p else None,
             "pct":          round(pct, 2),
+            "delta":        delta_round,
             "winning":      winning,
             "pm_spent":     round(pm_spent, 2),
             "pm_size":      pm_size,
@@ -441,6 +554,8 @@ def api_data():
         "cash":      round(cash, 2),
         "portfolio": portfolio,
         "positions": enriched,
+        "pm_hourly": get_pm_hourly_quotes(),
+        "pm_15m":    get_pm_15m_quotes(),
         "updated":   datetime.now(_TZ_TR).strftime("%H:%M:%S"),
     })
 
@@ -2736,6 +2851,25 @@ HTML = r"""<!DOCTYPE html>
   .top3-pill.bad  { background:#291414; color:#f87171; }
   @media(max-width:700px){ .top3-desktop-only { display:none !important; } }
 
+  /* PM 1H kotasyon */
+  .pm-hourly-wrap { margin-bottom:14px; }
+  .pm-hourly-title { font-size:15px; font-weight:700; color:#fff; margin-bottom:10px; }
+  .pm-hourly-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .pm-hourly-card { background:#141414; border-radius:16px; padding:12px 14px; border:1px solid #1e1e1e; }
+  .pm-hourly-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .pm-hourly-sym { font-size:14px; font-weight:800; color:#fff; }
+  .pm-hourly-et { font-size:10px; color:#666; font-weight:600; }
+  .pm-hourly-prices { display:flex; gap:8px; }
+  .pm-hourly-pill { flex:1; border-radius:10px; padding:8px 10px; text-align:center; }
+  .pm-hourly-pill.up { background:#14291e; }
+  .pm-hourly-pill.down { background:#291414; }
+  .pm-hourly-lbl { font-size:9px; font-weight:700; letter-spacing:.4px; margin-bottom:2px; }
+  .pm-hourly-pill.up .pm-hourly-lbl { color:#4ade80; }
+  .pm-hourly-pill.down .pm-hourly-lbl { color:#f87171; }
+  .pm-hourly-val { font-size:16px; font-weight:800; color:#fff; }
+  .pm-hourly-bn { font-size:14px; font-weight:700; color:#e8e8e8; margin-top:8px; letter-spacing:.2px; }
+  @media(max-width:700px){ .pm-hourly-row { grid-template-columns:1fr; } }
+
   /* Grafik */
   .chart-wrap { background:#141414; border-radius:20px; overflow:hidden; margin-bottom:24px; }
   .chart-head { display:flex; align-items:center; justify-content:space-between; padding:16px 18px 0; }
@@ -2758,11 +2892,15 @@ HTML = r"""<!DOCTYPE html>
   .pos-dir  { font-size:12px; font-weight:700; padding:4px 10px; border-radius:10px; }
   .pos-dir.up   { background:#14532d; color:#4ade80; }
   .pos-dir.down { background:#450a0a; color:#f87171; }
-  .pos-price-row { display:flex; align-items:baseline; gap:8px; margin:2px 0; }
-  .pos-current { font-size:22px; font-weight:700; }
+  .pos-price-row { display:flex; align-items:baseline; gap:8px; margin:2px 0 6px; }
+  .pos-current { font-size:22px; font-weight:700; color:#fff; }
+  .pos-win-icon { font-size:18px; font-weight:800; line-height:1; margin-left:2px; }
+  .pos-win-icon.ok { color:#4ade80; }
+  .pos-win-icon.bad { color:#f87171; }
   .pos-pct { font-size:13px; font-weight:600; }
   .pos-pct.pos { color:#4ade80; } .pos-pct.neg { color:#f87171; }
-  .pos-entry { font-size:12px; color:#555; margin-bottom:10px; }
+  .pos-entry { font-size:14px; font-weight:600; color:#e8e8e8; margin-bottom:10px; }
+  .pos-entry-lbl { color:#888; font-weight:500; }
   .pos-risk-row { font-size:12px; color:#666; margin-top:8px; }
   .pos-analiz-tag { display:inline-block; background:#1c1c1e; color:#555; font-size:10px;
                     padding:2px 7px; border-radius:6px; margin-left:6px; }
@@ -2899,6 +3037,22 @@ HTML = r"""<!DOCTYPE html>
         <div class="stat-card">
           <div class="stat-label">Toplam P&amp;L</div>
           <div class="stat-val" id="pnl-stat">—</div>
+        </div>
+      </div>
+
+      <!-- PM 1H anlık kotasyon (BTC/SOL) -->
+      <div class="pm-hourly-wrap">
+        <div class="pm-hourly-title">Saatlik</div>
+        <div class="pm-hourly-row" id="pm-hourly">
+          <div class="pm-hourly-card"><div style="color:#555;font-size:12px">PM 1H yükleniyor…</div></div>
+        </div>
+      </div>
+
+      <!-- PM 15m anlık kotasyon (BTC/SOL) -->
+      <div class="pm-hourly-wrap">
+        <div class="pm-hourly-title">15 Dakikalık</div>
+        <div class="pm-hourly-row" id="pm-15m">
+          <div class="pm-hourly-card"><div style="color:#555;font-size:12px">PM 15m yükleniyor…</div></div>
         </div>
       </div>
 
@@ -3152,6 +3306,34 @@ async function refresh() {
     document.getElementById('cash').textContent      = d.cash >= 0 ? '$'+d.cash.toFixed(2) : '?';
     document.getElementById('updated').textContent   = d.updated;
 
+    // PM kotasyon (saatlik + 15dk)
+    function renderPmQuotes(el, quotes, timeKey) {
+      if (!el || !quotes) return;
+      el.innerHTML = quotes.map(q => {
+        if (q.error) {
+          return `<div class="pm-hourly-card"><div class="pm-hourly-head"><span class="pm-hourly-sym">${q.name}</span></div><div style="color:#666;font-size:12px">${q.error}</div></div>`;
+        }
+        const bn = q.binance != null ? `$${q.binance}` : '—';
+        const dec = q.name === 'BTC' ? 1 : 2;
+        const upC = q.up_cents != null ? q.up_cents.toFixed(dec) : '—';
+        const dnC = q.down_cents != null ? q.down_cents.toFixed(dec) : '—';
+        const tl = q[timeKey] || '';
+        return `<div class="pm-hourly-card">
+          <div class="pm-hourly-head">
+            <span class="pm-hourly-sym">${q.name}</span>
+            <span class="pm-hourly-et">${tl}${q.closed ? ' · kapalı' : ''}</span>
+          </div>
+          <div class="pm-hourly-prices">
+            <div class="pm-hourly-pill up"><div class="pm-hourly-lbl">UP</div><div class="pm-hourly-val">${upC}¢</div></div>
+            <div class="pm-hourly-pill down"><div class="pm-hourly-lbl">DOWN</div><div class="pm-hourly-val">${dnC}¢</div></div>
+          </div>
+          <div class="pm-hourly-bn">Binance ${bn}</div>
+        </div>`;
+      }).join('');
+    }
+    renderPmQuotes(document.getElementById('pm-hourly'), d.pm_hourly, 'hour_et');
+    renderPmQuotes(document.getElementById('pm-15m'), d.pm_15m, 'period_lbl');
+
     // WR & PnL — 1. Analiz
     const a1 = s.algo_stats.find(a => a.key === 'analiz1');
     if (a1) {
@@ -3189,20 +3371,29 @@ async function refresh() {
       : d.positions.map(p => {
         const dirClass = p.dir==='UP' ? 'dir-up' : 'dir-down';
         const dc = p.dir==='UP'?'up':'down';
-        const pctStr = (p.pct>=0?'+':'') + p.pct.toFixed(2)+'%';
+        const dec = p.name === 'BTC' ? 1 : 2;
+        const deltaStr = p.delta != null
+          ? (p.delta >= 0 ? '+' : '-') + '$' + Math.abs(p.delta).toFixed(dec)
+          : '';
+        const deltaUp = p.delta != null && p.delta >= 0;
         const time   = p.entry_time ? p.entry_time.substring(11,16)+' İST' : '';
         const cvColor = p.close_val !== null ? (parseFloat(p.close_val)>=parseFloat(p.pm_spent)?'#4ade80':'#f87171') : '#555';
         const cvStr  = p.close_val !== null ? ` <span style="color:${cvColor};font-weight:700">→ $${p.close_val}</span>` : '';
+        const winIcon = p.current == null ? '' : p.winning === true
+          ? '<span class="pos-win-icon ok" title="Yön tutuyor">✓</span>'
+          : p.winning === false
+            ? '<span class="pos-win-icon bad" title="Yön ters">✕</span>'
+            : '';
         return `<div class="pos-card ${dirClass}">
           <div class="pos-top">
             <div class="pos-name">${p.name}</div>
             <div class="pos-dir ${dc}">${p.dir_tr}</div>
           </div>
           <div class="pos-price-row">
-            <span class="pos-current">${p.current?'$'+p.current:'—'}</span>
-            <span class="pos-pct ${p.pct>=0?'pos':'neg'}">${p.current?pctStr:''}</span>
+            <span class="pos-current">${p.current?'$'+p.current:''}${winIcon}</span>
+            <span class="pos-pct ${deltaUp?'pos':'neg'}">${p.current?deltaStr:''}</span>
           </div>
-          <div class="pos-entry">Giriş: $${p.entry} · ${time}</div>
+          <div class="pos-entry"><span class="pos-entry-lbl">Giriş:</span> $${p.entry}${time ? ' · '+time : ''}</div>
           <div class="pos-risk-row">Riskteki: $${p.pm_spent}${cvStr}
             <span class="pos-analiz-tag">${p.analiz}</span>
           </div>
