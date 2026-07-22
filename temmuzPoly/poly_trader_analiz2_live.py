@@ -40,6 +40,7 @@ from pm_trader_helpers import (
     pm_log_hata,
     pm_stake_fields,
     pm_tg_stake,
+    compute_top_slot_hours,
 )
 from pm_balance_guard import can_open_trade
 
@@ -63,6 +64,7 @@ HATA_FILE = os.path.join(_DIR, "analiz2_live_polyhata.json")
 
 LABEL = "2. ANALİZ LIVE"
 PM_LIVE_AMOUNT = 6.0
+ANALIZ2_HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "poly_trader_analiz2_history.json")
 INITIAL_BALANCE = 300.0
 
 _PM_LIVE = os.getenv("PM_ANALIZ2_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
@@ -116,6 +118,16 @@ def _pm_bal_line() -> str:
     return f"💰 PM Bakiye: ${bal:.2f}" if bal >= 0 else "💰 PM Bakiye: ?"
 
 
+def load_analiz2_signal_history() -> list:
+    if not os.path.exists(ANALIZ2_HISTORY_FILE):
+        return []
+    try:
+        with open(ANALIZ2_HISTORY_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
 def _try_pm_open(
     state: dict,
     *,
@@ -128,6 +140,7 @@ def _try_pm_open(
     now_tr: datetime,
     now: datetime,
     extra: dict,
+    amount: float = PM_LIVE_AMOUNT,
 ) -> tuple[dict | None, str | None]:
     import pm_trader_helpers as pmh
     pmh.PM_DRY_RUN = not _PM_LIVE
@@ -141,7 +154,7 @@ def _try_pm_open(
         "entry_hour_tr": hour_tr,
         "entry_dow": dow,
         "entry_is_weekend": is_weekend,
-        "amount": PM_LIVE_AMOUNT,
+        "amount": amount,
         **extra,
     }
     pm = pm_find_market(sym, et_hour, now)
@@ -151,7 +164,7 @@ def _try_pm_open(
         return None, "market"
     token_id = pm["up_token"] if direction == "UP" else pm["down_token"]
     order = pm_place_order(
-        token_id, PM_LIVE_AMOUNT, pm["tick_size"], pm["neg_risk"],
+        token_id, amount, pm["tick_size"], pm["neg_risk"],
         label=LABEL, hata_file=HATA_FILE,
     )
     if not order:
@@ -323,6 +336,8 @@ async def run_open() -> None:
 
     state = load_state()
     history = load_history()
+    signal_hist = load_analiz2_signal_history()
+    hot_hours = compute_top_slot_hours(signal_hist)
 
     if not can_open_trade(LABEL, tg_send):
         return
@@ -354,6 +369,10 @@ async def run_open() -> None:
                 else "NEUTRAL"
             ),
         }
+        amount = PM_LIVE_AMOUNT
+        if hour_tr in hot_hours:
+            amount = round(amount * 1.5, 2)
+            print(f"[{LABEL}] 🔥 etkili saat {hour_tr:02d}:00 — ${PM_LIVE_AMOUNT:.0f} → ${amount:.0f}")
         pos, err = _try_pm_open(
             state,
             sym=sym,
@@ -365,6 +384,7 @@ async def run_open() -> None:
             now_tr=now_tr,
             now=now,
             extra=extra,
+            amount=amount,
         )
         if pos:
             opened.append({
@@ -418,7 +438,7 @@ async def run_open() -> None:
         f"🆕 <b>{LABEL} — {saat} - {next_h}</b>  🔴 GERÇEK PM  ${PM_LIVE_AMOUNT:.0f}/işlem  {sess_tag}\n"
         + "\n".join(lines)
         + f"\n{sep}\n"
-        f"{_pm_bal_line()}  |  📂 ${_at_risk:.0f} riskte\n"
+        f"{_pm_bal_line()}  |  📂 ${at_risk:.0f} riskte\n"
         f"{sep}"
     )
     print(f"[{LABEL} open] {saat} İST — {len(opened)} açıldı")

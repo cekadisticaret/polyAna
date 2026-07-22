@@ -336,9 +336,12 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
     return None
 
 
-def get_pm_hourly_quotes() -> list[dict]:
+def get_pm_hourly_quotes(only_names: set[str] | None = None) -> list[dict]:
     """Aktif 1h PM marketleri — BTC/SOL UP/DOWN anlık fiyat (Analiz 5 ile aynı slug)."""
     from datetime import timedelta
+
+    if only_names is not None and not only_names:
+        return []
 
     try:
         sys.path.insert(0, _DIR_POLY)
@@ -352,6 +355,8 @@ def get_pm_hourly_quotes() -> list[dict]:
 
     for sym in ("BTCUSDT", "SOLUSDT"):
         name = sym.replace("USDT", "")
+        if only_names is not None and name not in only_names:
+            continue
         row: dict = {"symbol": sym, "name": name}
         try:
             row["binance"] = round(get_price(sym), 2 if name == "BTC" else 4)
@@ -390,9 +395,12 @@ def get_pm_hourly_quotes() -> list[dict]:
     return out
 
 
-def get_pm_15m_quotes() -> list[dict]:
+def get_pm_15m_quotes(only_names: set[str] | None = None) -> list[dict]:
     """Aktif 15m PM up/down — BTC/SOL (110/210 ile aynı slug)."""
     import time
+
+    if only_names is not None and not only_names:
+        return []
 
     try:
         sys.path.insert(0, _DIR_POLY)
@@ -407,6 +415,8 @@ def get_pm_15m_quotes() -> list[dict]:
 
     for sym in ("BTCUSDT", "SOLUSDT"):
         name = sym.replace("USDT", "")
+        if only_names is not None and name not in only_names:
+            continue
         row: dict = {"symbol": sym, "name": name}
         try:
             row["binance"] = round(get_price(sym), 2 if name == "BTC" else 4)
@@ -446,10 +456,29 @@ def get_pm_15m_quotes() -> list[dict]:
 # Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
 _PM_POSITION_SOURCES = [
     ("analiz5", "5. Analiz"),
+    ("analiz2_live", "A2 Live"),
     ("5m_sol_110", "15M 110 SOL"),
     ("5m_sol_111", "15M 111 SOL"),
     ("5m_sol_210", "15M 210 SOL"),
 ]
+_HOURLY_PM_ANALYSES = frozenset({"analiz5", "analiz2_live"})
+_15M_PM_ANALYSES = frozenset({"5m_sol_110", "5m_sol_111", "5m_sol_210"})
+
+
+def _pm_quote_symbol_sets(positions: list) -> tuple[set[str], set[str]]:
+    """Açık pozisyonlara göre saatlik / 15dk kotasyon sembolleri."""
+    hourly: set[str] = set()
+    m15: set[str] = set()
+    for pos in positions:
+        key = pos.get("_analiz") or pos.get("analiz_key", "")
+        sym = pos.get("symbol", "").replace("USDT", "")
+        if not sym:
+            continue
+        if key in _HOURLY_PM_ANALYSES:
+            hourly.add(sym)
+        elif key in _15M_PM_ANALYSES:
+            m15.add(sym)
+    return hourly, m15
 
 def _position_visible(_key: str, pos: dict) -> bool:
     """Yalnızca gerçek PM emri (token_id); sanal kotasyonları gösterme."""
@@ -580,12 +609,14 @@ def api_data():
     cash      = get_pm_balance()
     portfolio = round(cash + total_pos_value, 2) if cash >= 0 else -1
 
+    hourly_syms, m15_syms = _pm_quote_symbol_sets(positions)
+
     return jsonify({
         "cash":      round(cash, 2),
         "portfolio": portfolio,
         "positions": enriched,
-        "pm_hourly": get_pm_hourly_quotes(),
-        "pm_15m":    get_pm_15m_quotes(),
+        "pm_hourly": get_pm_hourly_quotes(hourly_syms),
+        "pm_15m":    get_pm_15m_quotes(m15_syms),
         "updated":   datetime.now(_TZ_TR).strftime("%H:%M:%S"),
     })
 
@@ -951,21 +982,22 @@ def page_analizler():
 
 
 _SIDEBAR_PROFIT_CSS = """
+  /* pm-kar-donut */
   .sidebar-profit { margin:10px 0 4px; padding:14px 10px 12px; background:#0f140f;
-    border:1px solid #1a2218; border-radius:18px; }
-  .sp-title { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:.4px; margin-bottom:12px; }
-  .sp-inner { display:flex; flex-direction:column; align-items:center; gap:14px; }
-  .sp-chart { position:relative; width:132px; height:132px; flex-shrink:0; }
-  .sp-chart svg { width:132px; height:132px; display:block; }
-  .sp-center { position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; pointer-events:none; }
-  .sp-total { font-size:17px; font-weight:800; color:#fff; line-height:1.1; }
-  .sp-sub { font-size:9px; color:#555; margin-top:3px; text-align:center; }
-  .sp-legend { width:100%; display:flex; justify-content:space-between; gap:6px; }
-  .sp-leg-item { flex:1; display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; }
-  .sp-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-bottom:2px; }
-  .sp-leg-lbl { font-size:10px; color:#888; line-height:1.2; font-weight:600; }
-  .sp-leg-val { font-size:12px; font-weight:700; color:#ddd; line-height:1.2; }
+    border:1px solid #1a2218; border-radius:18px; box-sizing:border-box; }
+  .sidebar-profit .sp-title { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:.4px; margin-bottom:12px; }
+  .sidebar-profit .sp-inner { display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; }
+  .sidebar-profit .sp-chart { position:relative; width:132px; height:132px; flex-shrink:0; }
+  .sidebar-profit .sp-chart svg { width:132px; height:132px; display:block; }
+  .sidebar-profit .sp-center { position:absolute; top:0; left:0; width:132px; height:132px; z-index:2;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+  .sidebar-profit .sp-total { font-size:17px; font-weight:800; color:#fff; line-height:1.1; }
+  .sidebar-profit .sp-sub { font-size:9px; color:#555; margin-top:3px; text-align:center; }
+  .sidebar-profit .sp-legend { width:100%; flex-shrink:0; display:flex; justify-content:space-between; gap:6px; }
+  .sidebar-profit .sp-leg-item { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; }
+  .sidebar-profit .sp-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-bottom:2px; }
+  .sidebar-profit .sp-leg-lbl { font-size:10px; color:#888; line-height:1.2; font-weight:600; }
+  .sidebar-profit .sp-leg-val { font-size:12px; font-weight:700; color:#ddd; line-height:1.2; }
 """
 
 _SIDEBAR_PROFIT_HTML = """
@@ -985,40 +1017,44 @@ _SIDEBAR_PROFIT_HTML = """
 
 _SIDEBAR_PROFIT_JS = """
 <script>
-window.renderSidebarProfit = async function() {
-  const totalEl = document.getElementById('sp-total');
-  const legendEl = document.getElementById('sp-legend');
-  const svgEl = document.getElementById('sp-donut');
+window._renderPmProfitTo = function(d, ids) {
+  const totalEl = document.getElementById(ids.total);
+  const legendEl = document.getElementById(ids.legend);
+  const svgEl = document.getElementById(ids.svg);
   if (!totalEl || !legendEl || !svgEl) return;
+  const total = d.total || 0;
+  const items = d.items || [];
+  const sign = total >= 0 ? '+' : '';
+  totalEl.textContent = sign + '$' + Math.abs(total).toFixed(0);
+  totalEl.style.color = total >= 0 ? '#4ade80' : '#f87171';
+  const cx=66, cy=66, r0=48, sw=11, circ=2*Math.PI*r0;
+  let arcs = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r0+'" fill="none" stroke="#1a1a1a" stroke-width="'+sw+'"/>';
+  const pos = items.filter(i => i.pnl > 0);
+  const sum = pos.reduce((a,b)=>a+b.pnl,0);
+  if (sum > 0) {
+    let rot = -90;
+    pos.forEach(item => {
+      const angle = (item.pnl / sum) * 360;
+      if (angle < 0.5) return;
+      const len = circ * (item.pnl / sum);
+      arcs += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r0+'" fill="none" stroke="'+item.color+'" stroke-width="'+sw+'" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-linecap="round" transform="rotate('+rot+' '+cx+' '+cy+')"/>';
+      rot += angle;
+    });
+  }
+  svgEl.innerHTML = arcs;
+  legendEl.innerHTML = items.map(item => {
+    const v = item.pnl || 0;
+    const vs = (v>=0?'+':'')+'$'+Math.abs(v).toFixed(0);
+    const vc = v>=0?'#4ade80':'#f87171';
+    return '<div class="sp-leg-item"><span class="sp-dot" style="background:'+item.color+'"></span><div class="sp-leg-lbl">'+item.label+'</div><div class="sp-leg-val" style="color:'+vc+'">'+vs+'</div></div>';
+  }).join('');
+};
+window.renderSidebarProfit = async function() {
   try {
     const r = await fetch('/poly/api/pm-profit', {cache:'no-store'});
     const d = await r.json();
-    const total = d.total || 0;
-    const items = d.items || [];
-    const sign = total >= 0 ? '+' : '';
-    totalEl.textContent = sign + '$' + Math.abs(total).toFixed(0);
-    totalEl.style.color = total >= 0 ? '#4ade80' : '#f87171';
-    const cx=66, cy=66, r0=48, sw=11, circ=2*Math.PI*r0;
-    let arcs = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r0+'" fill="none" stroke="#1a1a1a" stroke-width="'+sw+'"/>';
-    const pos = items.filter(i => i.pnl > 0);
-    const sum = pos.reduce((a,b)=>a+b.pnl,0);
-    if (sum > 0) {
-      let rot = -90;
-      pos.forEach(item => {
-        const angle = (item.pnl / sum) * 360;
-        if (angle < 0.5) return;
-        const len = circ * (item.pnl / sum);
-        arcs += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r0+'" fill="none" stroke="'+item.color+'" stroke-width="'+sw+'" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-linecap="round" transform="rotate('+rot+' '+cx+' '+cy+')"/>';
-        rot += angle;
-      });
-    }
-    svgEl.innerHTML = arcs;
-    legendEl.innerHTML = items.map(item => {
-      const v = item.pnl || 0;
-      const vs = (v>=0?'+':'')+'$'+Math.abs(v).toFixed(0);
-      const vc = v>=0?'#4ade80':'#f87171';
-      return '<div class="sp-leg-item"><span class="sp-dot" style="background:'+item.color+'"></span><div class="sp-leg-lbl">'+item.label+'</div><div class="sp-leg-val" style="color:'+vc+'">'+vs+'</div></div>';
-    }).join('');
+    _renderPmProfitTo(d, {total:'sp-total', legend:'sp-legend', svg:'sp-donut'});
+    _renderPmProfitTo(d, {total:'sp-mob-total', legend:'sp-mob-legend', svg:'sp-mob-donut'});
   } catch(e) { console.error('sidebar profit', e); }
 };
 if (!window._spBoot) {
@@ -1047,7 +1083,7 @@ def _patch_sidebar_profit(html: str) -> str:
         + '\n  <div class="sidebar-footer"',
         1,
     )
-    if '.sidebar-profit' not in html:
+    if '/* pm-kar-donut */' not in html:
         html = html.replace('</style>', _SIDEBAR_PROFIT_CSS + '\n</style>', 1)
     return html
 
@@ -2995,6 +3031,7 @@ HTML = r"""<!DOCTYPE html>
   .pm-hourly-wrap { margin-bottom:14px; }
   .pm-hourly-title { font-size:15px; font-weight:700; color:#fff; margin-bottom:10px; }
   .pm-hourly-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .pm-hourly-row.single { grid-template-columns:1fr; max-width:320px; }
   .pm-hourly-card { background:#141414; border-radius:16px; padding:12px 14px; border:1px solid #1e1e1e; }
   .pm-hourly-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
   .pm-hourly-sym { font-size:14px; font-weight:800; color:#fff; }
@@ -3008,7 +3045,26 @@ HTML = r"""<!DOCTYPE html>
   .pm-hourly-pill.down .pm-hourly-lbl { color:#f87171; }
   .pm-hourly-val { font-size:16px; font-weight:800; color:#fff; }
   .pm-hourly-bn { font-size:14px; font-weight:700; color:#e8e8e8; margin-top:8px; letter-spacing:.2px; }
-  @media(max-width:700px){ .pm-hourly-row { grid-template-columns:1fr; } }
+  @media(max-width:700px){ .pm-hourly-row { grid-template-columns:1fr; width:100%; } }
+  .mobile-recent-section { display:none; }
+  .mobile-profit-wrap { display:none; }
+
+  /* pm-kar-donut — overview (mobil widget burada; patch sidebar için ayrı enjekte eder) */
+  .sidebar-profit { margin:10px 0 4px; padding:14px 10px 12px; background:#0f140f;
+    border:1px solid #1a2218; border-radius:18px; box-sizing:border-box; }
+  .sidebar-profit .sp-title { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:.4px; margin-bottom:12px; }
+  .sidebar-profit .sp-inner { display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; }
+  .sidebar-profit .sp-chart { position:relative; width:132px; height:132px; flex-shrink:0; }
+  .sidebar-profit .sp-chart svg { width:132px; height:132px; display:block; }
+  .sidebar-profit .sp-center { position:absolute; top:0; left:0; width:132px; height:132px; z-index:2;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+  .sidebar-profit .sp-total { font-size:17px; font-weight:800; color:#fff; line-height:1.1; }
+  .sidebar-profit .sp-sub { font-size:9px; color:#555; margin-top:3px; text-align:center; }
+  .sidebar-profit .sp-legend { width:100%; flex-shrink:0; display:flex; justify-content:space-between; gap:6px; }
+  .sidebar-profit .sp-leg-item { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; }
+  .sidebar-profit .sp-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-bottom:2px; }
+  .sidebar-profit .sp-leg-lbl { font-size:10px; color:#888; line-height:1.2; font-weight:600; }
+  .sidebar-profit .sp-leg-val { font-size:12px; font-weight:700; color:#ddd; line-height:1.2; }
 
   /* Grafik */
   .chart-wrap { background:#141414; border-radius:20px; overflow:hidden; margin-bottom:24px; }
@@ -3041,9 +3097,9 @@ HTML = r"""<!DOCTYPE html>
   .pos-pct.pos { color:#4ade80; } .pos-pct.neg { color:#f87171; }
   .pos-entry { font-size:14px; font-weight:600; color:#e8e8e8; margin-bottom:10px; }
   .pos-entry-lbl { color:#888; font-weight:500; }
-  .pos-risk-row { font-size:12px; color:#666; margin-top:8px; }
-  .pos-analiz-tag { display:inline-block; background:#1c1c1e; color:#555; font-size:10px;
-                    padding:2px 7px; border-radius:6px; margin-left:6px; }
+  .pos-risk-row { font-size:14px; color:#fff; font-weight:600; margin-top:8px; }
+  .pos-analiz-tag { display:inline-block; background:#2a2a2a; color:#ccc; font-size:11px;
+                    padding:2px 8px; border-radius:6px; margin-left:6px; font-weight:600; }
   .close-btn-wrap { display:flex; justify-content:flex-end; margin-top:12px; }
   .close-btn { background:#c8f135; border:none; color:#111; font-size:12px; font-weight:800;
                padding:8px 18px; border-radius:12px; cursor:pointer; white-space:nowrap; transition:.2s; }
@@ -3111,6 +3167,27 @@ HTML = r"""<!DOCTYPE html>
     .stat-val.green { font-size:34px; }
     .stat-val.bright-green { font-size:34px; }
     #chart { height:200px; }
+    .pm-hourly-row.single { max-width:none; width:100%; }
+    .pm-hourly-wrap { width:100%; }
+    .pm-hourly-card { width:100%; box-sizing:border-box; }
+    .mobile-recent-section {
+      display:block; background:#1f1f1f; border-radius:20px;
+      padding:16px 14px; margin-top:8px;
+    }
+    .mobile-recent-section .trade-item:last-child { border-bottom:none; }
+    .mobile-profit-wrap {
+      display:block; margin:16px 0 8px;
+    }
+    .mobile-profit-wrap .sidebar-profit {
+      margin:0; padding:18px 16px 16px; width:100%; box-sizing:border-box;
+    }
+    .mobile-profit-wrap .sidebar-profit .sp-chart,
+    .mobile-profit-wrap .sidebar-profit .sp-chart svg,
+    .mobile-profit-wrap .sidebar-profit .sp-center { width:150px; height:150px; }
+    .mobile-profit-wrap .sidebar-profit .sp-total { font-size:20px; }
+    .mobile-profit-wrap .sidebar-profit .sp-leg-val { font-size:13px; }
+    .chart-wrap { margin-top:0; }
+    .updated-bar { display:none; }
     .mobile-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
     .mobile-logo { font-size:16px; font-weight:800; color:#c8f135; }
     .mobile-logout { font-size:12px; color:#555; text-decoration:none; }
@@ -3180,16 +3257,16 @@ HTML = r"""<!DOCTYPE html>
         </div>
       </div>
 
-      <!-- PM 1H anlık kotasyon (BTC/SOL) -->
-      <div class="pm-hourly-wrap">
+      <!-- PM 1H anlık kotasyon (açık pozisyon varsa) -->
+      <div class="pm-hourly-wrap" id="pm-hourly-wrap" style="display:none">
         <div class="pm-hourly-title">Saatlik</div>
         <div class="pm-hourly-row" id="pm-hourly">
           <div class="pm-hourly-card"><div style="color:#555;font-size:12px">PM 1H yükleniyor…</div></div>
         </div>
       </div>
 
-      <!-- PM 15m anlık kotasyon (BTC/SOL) -->
-      <div class="pm-hourly-wrap">
+      <!-- PM 15m anlık kotasyon (açık pozisyon varsa) -->
+      <div class="pm-hourly-wrap" id="pm-15m-wrap" style="display:none">
         <div class="pm-hourly-title">15 Dakikalık</div>
         <div class="pm-hourly-row" id="pm-15m">
           <div class="pm-hourly-card"><div style="color:#555;font-size:12px">PM 15m yükleniyor…</div></div>
@@ -3226,8 +3303,25 @@ HTML = r"""<!DOCTYPE html>
         <div class="positions" id="positions-mob">
           <div class="empty">Yükleniyor...</div>
         </div>
-        <div class="section-title" style="margin:20px 0 12px">Son İşlemler <span style="font-size:11px;color:#666;font-weight:600">Gerçek PM</span></div>
-        <div id="recent-trades-mob"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
+        <div class="mobile-profit-wrap">
+          <div class="sidebar-profit">
+            <div class="sp-title">PM Kar</div>
+            <div class="sp-inner">
+              <div class="sp-chart">
+                <svg id="sp-mob-donut" viewBox="0 0 132 132"></svg>
+                <div class="sp-center">
+                  <div class="sp-total" id="sp-mob-total">$—</div>
+                  <div class="sp-sub">Toplam Kar</div>
+                </div>
+              </div>
+              <div class="sp-legend" id="sp-mob-legend"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mobile-recent-section">
+          <div class="section-title" style="margin:16px 0 12px">Son İşlemler <span style="font-size:11px;color:#666;font-weight:600">Gerçek PM</span></div>
+          <div id="recent-trades-mob"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
+        </div>
       </div>
 
     </div>
@@ -3446,9 +3540,15 @@ async function refresh() {
     document.getElementById('cash').textContent      = d.cash >= 0 ? '$'+d.cash.toFixed(2) : '?';
     document.getElementById('updated').textContent   = d.updated;
 
-    // PM kotasyon (saatlik + 15dk)
+    // PM kotasyon — yalnızca açık pozisyonun timeframe/sembolü
     function renderPmQuotes(el, quotes, timeKey) {
-      if (!el || !quotes) return;
+      if (!el) return;
+      if (!quotes || !quotes.length) {
+        el.innerHTML = '';
+        el.classList.remove('single');
+        return;
+      }
+      el.classList.toggle('single', quotes.length === 1);
       el.innerHTML = quotes.map(q => {
         if (q.error) {
           return `<div class="pm-hourly-card"><div class="pm-hourly-head"><span class="pm-hourly-sym">${q.name}</span></div><div style="color:#666;font-size:12px">${q.error}</div></div>`;
@@ -3471,6 +3571,12 @@ async function refresh() {
         </div>`;
       }).join('');
     }
+    const hourlyWrap = document.getElementById('pm-hourly-wrap');
+    const m15Wrap = document.getElementById('pm-15m-wrap');
+    const hasHourly = d.pm_hourly && d.pm_hourly.length;
+    const hasM15 = d.pm_15m && d.pm_15m.length;
+    if (hourlyWrap) hourlyWrap.style.display = hasHourly ? '' : 'none';
+    if (m15Wrap) m15Wrap.style.display = hasM15 ? '' : 'none';
     renderPmQuotes(document.getElementById('pm-hourly'), d.pm_hourly, 'hour_et');
     renderPmQuotes(document.getElementById('pm-15m'), d.pm_15m, 'period_lbl');
 
@@ -3589,8 +3695,7 @@ async function refresh() {
     }).join('') || '<div style="color:#666;font-size:13px">Veri yok</div>';
 
     // Son işlemler (sağ panel + mobil)
-    const rt = document.getElementById('recent-trades');
-    const recentHTML = s.recent.map(t => {
+    function tradeItemHTML(t) {
       const pnlC = t.pnl >= 0 ? 'pos' : 'neg';
       const pnlStr = (t.pnl>=0?'+':'')+'$'+Math.abs(t.pnl).toFixed(2);
       const dirIcon = t.dir==='UP' ? '📈' : '📉';
@@ -3601,10 +3706,15 @@ async function refresh() {
         </div>
         <div class="trade-pnl ${pnlC}">${pnlStr}</div>
       </div>`;
-    }).join('') || '<div style="color:#666;font-size:13px">Henüz işlem yok</div>';
+    }
+    const rt = document.getElementById('recent-trades');
+    const recentHTML = s.recent.map(tradeItemHTML).join('') || '<div style="color:#666;font-size:13px">Henüz işlem yok</div>';
     if (rt) rt.innerHTML = recentHTML;
     const rtMob = document.getElementById('recent-trades-mob');
-    if (rtMob) rtMob.innerHTML = recentHTML;
+    if (rtMob) {
+      const mobRecent = s.recent.slice(0, 10);
+      rtMob.innerHTML = mobRecent.map(tradeItemHTML).join('') || '<div style="color:#666;font-size:13px">Henüz işlem yok</div>';
+    }
 
     // Algoritma performansı
     const as = document.getElementById('algo-stats');

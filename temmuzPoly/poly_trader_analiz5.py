@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
-from pm_trader_helpers import sanal_pnl, pm_tg_stake
+from pm_trader_helpers import sanal_pnl, pm_tg_stake, compute_top_slot_hours
 
 # .env yükle
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -800,9 +800,14 @@ async def run_open() -> None:
     _market_skip    = []
     _order_fail     = []
     _newly_opened   = 0
+    hot_hours = compute_top_slot_hours(history)
     for sig in results:
         if sig["predicted_dir"]:
             amount = _trade_amount(history, sig["symbol"])
+            if hour_tr in hot_hours:
+                base = amount
+                amount = round(amount * 1.5, 2)
+                print(f"[5. ANALİZ] 🔥 etkili saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f}")
             pos, err = _try_pm_open(
                 state, sig, hour_tr=hour_tr, dow=dow, is_weekend=is_weekend,
                 now_tr=now_tr, now=now, amount=amount,

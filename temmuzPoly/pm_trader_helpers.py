@@ -548,6 +548,56 @@ def pm_5m_fetch_resolution(slug: str, min_decisive: float = 0.99) -> dict | None
 
 pm_fetch_resolution = pm_5m_fetch_resolution  # 1h saatlik marketler de aynı format
 
+# Dashboard "En Etkili Zaman" ile aynı mantık — top 3 saatte canlı giriş %50 artış
+HOT_HOUR_BOOST = 1.5
+HOT_HOUR_MIN_TRADES = 3
+
+
+def compute_top_slot_hours(
+    history: list,
+    *,
+    min_trades: int = HOT_HOUR_MIN_TRADES,
+    top_n: int = 3,
+) -> frozenset[int]:
+    """Birden fazla günde tutarlı başarılı saatler (dashboard top_slots ile uyumlu)."""
+    hour_day: dict[int, dict[int, dict[str, int]]] = {}
+    for t in history:
+        dow = t.get("entry_dow")
+        hour = t.get("entry_hour_tr")
+        if dow is None or hour is None:
+            continue
+        hour_day.setdefault(hour, {}).setdefault(dow, {"w": 0, "t": 0})
+        hour_day[hour][dow]["t"] += 1
+        if t.get("win"):
+            hour_day[hour][dow]["w"] += 1
+
+    slots: list[tuple[int, int, float]] = []
+    for h, day_data in hour_day.items():
+        good_days = [
+            v for v in day_data.values()
+            if v["t"] >= 1 and v["w"] / v["t"] > 0.5
+        ]
+        all_w = sum(v["w"] for v in day_data.values())
+        all_t = sum(v["t"] for v in day_data.values())
+        if not good_days or all_t < min_trades:
+            continue
+        wr = all_w / all_t * 100 if all_t else 0.0
+        slots.append((h, len(good_days), wr))
+    slots.sort(key=lambda x: (x[1], x[2]), reverse=True)
+    return frozenset(h for h, _, _ in slots[:top_n])
+
+
+def apply_hot_hour_boost(
+    base_amount: float,
+    hour_tr: int,
+    history: list,
+    boost: float = HOT_HOUR_BOOST,
+) -> tuple[float, bool]:
+    """En etkili saatlerde giriş tutarını artır (varsayılan +%50)."""
+    if hour_tr in compute_top_slot_hours(history):
+        return round(base_amount * boost, 2), True
+    return base_amount, False
+
 
 def trades_for_exit_day(history: list, day) -> list:
     """exit_time_tr (İST) belirtilen takvim gününe düşen kapalı işlemler."""
