@@ -442,5 +442,29 @@
     "symbol": "SOLUSDT",
     "hata_turu": "order_basarisiz",
     "detay": "dir=DOWN amount=12.0"
+  },
+  {
+    "zaman": "2026-07-20T10:05:20.017114+03:00",
+    "symbol": "34966610224604540751",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 46910, order amount: 12500590'}]"
+  },
+  {
+    "zaman": "2026-07-20T10:05:20.018307+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=12.0"
+  },
+  {
+    "zaman": "2026-07-20T21:05:20.457983+03:00",
+    "symbol": "71648340518646080238",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'no orders found to match with FAK order. FAK orders are partially filled or killed if no match is found.', 'orderID': '0xb940ddd89df3ece7b83c2450ab71760cb7e94bdaaff23058aff8cae0849c4af1'}]"
+  },
+  {
+    "zaman": "2026-07-20T21:05:20.461052+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=12.0"
   }
 ]

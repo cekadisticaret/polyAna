@@ -1,5 +1,5 @@
 """
-15M 111 SOL — Analiz32 FeatureEngine + güçlendirilmiş filtreler (canlı PM, SOL only)
+15M 111 SOL — 5M110Analiz FeatureEngine + güçlendirilmiş filtreler (canlı PM, SOL only)
 ======================================================================================
 110'un aynısı, farklar:
   - analiz32_15m_adapter_111 kullanılır (trend/momentum uyum + skor eşiği 20)
@@ -768,7 +768,7 @@ def run_stats() -> None:
         f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
         f"{_bal_line(state)}\n"
         f"{_shadow_summary_line()}\n"
-        f"SOL only · Analiz32 15m · 111 filtreleri (skor≥20, trend uyumu, soğuma) · $8/$10/$12 (WR)"
+        f"SOL only · 5M110Analiz 15m · 111 filtreleri (skor≥20, trend uyumu, soğuma) · $8/$10/$12 (WR)"
     )
 
 

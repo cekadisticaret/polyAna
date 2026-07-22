@@ -5,12 +5,12 @@
 #   poly_trader_5m_sol_110.py
 #     → analiz32_15m_adapter.analyze_15m()
 #       → btc_5m_105_algo.fetch_klines_15m()
-#       → Analiz32/predictor.predict_from_klines()
+#       → 5M110Analiz/predictor.predict_from_klines()
 #         → FeatureEngine.compute() → composite_signal
 #         → gate ±15 → UP / DOWN / skip
 #
-# ASIL KARAR NOKTASI: Analiz32/predictor.py (_SIGNAL_GATE = 15)
-# ASIL SKOR FORMÜLÜ: Analiz32/features/composite.py (composite_signal)
+# ASIL KARAR NOKTASI: 5M110Analiz/predictor.py (_SIGNAL_GATE = 15)
+# ASIL SKOR FORMÜLÜ: 5M110Analiz/features/composite.py (composite_signal)
 #
 # Not: core/indicators/ altındaki numba kernel'lar ham indikatör hesabıdır;
 #      bu dosyada feature katmanı + gate yer alır.
@@ -22,7 +22,7 @@
 ================================================================================
 
 """
-15M sinyal adaptörü — Analiz32 FeatureEngine'i bozmadan 15m mumlara uygular.
+15M sinyal adaptörü — 5M110Analiz FeatureEngine'i bozmadan 15m mumlara uygular.
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
-_A32 = os.path.join(os.path.dirname(_DIR), "Analiz32")
+_A32 = os.path.join(os.path.dirname(_DIR), "5M110Analiz")
 sys.path.insert(0, _DIR)
 sys.path.insert(0, _A32)
 
@@ -97,12 +97,12 @@ def analyze_15m(symbol: str = SYMBOL_DEFAULT) -> Optional[Signal15m]:
     )
 
 ================================================================================
-=== TRADE GATE: Analiz32/predictor.py ===
-# path: Analiz32/predictor.py
+=== TRADE GATE: 5M110Analiz/predictor.py ===
+# path: 5M110Analiz/predictor.py
 ================================================================================
 
 """
-Analiz32 trader adaptörü.
+5M110Analiz trader adaptörü.
 
 FeatureEngine / CompositeScores çıktısını (composite_signal) saatlik
 UP/DOWN tahminine çevirir. core/ ve features/ algoritmasına dokunmaz.
@@ -246,8 +246,8 @@ async def analyze(symbol: str) -> Optional[Prediction]:
     return predict_from_klines(symbol, klines)
 
 ================================================================================
-=== FEATURE ENGINE: Analiz32/features/engine.py ===
-# path: Analiz32/features/engine.py
+=== FEATURE ENGINE: 5M110Analiz/features/engine.py ===
+# path: 5M110Analiz/features/engine.py
 ================================================================================
 
 """
@@ -506,8 +506,8 @@ class FeatureEngine:
         return groups
 
 ================================================================================
-=== COMPOSITE (asıl sinyal): Analiz32/features/composite.py ===
-# path: Analiz32/features/composite.py
+=== COMPOSITE (asıl sinyal): 5M110Analiz/features/composite.py ===
+# path: 5M110Analiz/features/composite.py
 ================================================================================
 
 """
@@ -609,7 +609,7 @@ class CompositeScores:
 
 ================================================================================
 === TREND features ===
-# path: Analiz32/features/trend.py
+# path: 5M110Analiz/features/trend.py
 ================================================================================
 
 """
@@ -702,7 +702,7 @@ class TrendFeatures:
 
 ================================================================================
 === MOMENTUM features ===
-# path: Analiz32/features/momentum.py
+# path: 5M110Analiz/features/momentum.py
 ================================================================================
 
 """
@@ -787,7 +787,7 @@ class MomentumFeatures:
 
 ================================================================================
 === VOLATILITY features ===
-# path: Analiz32/features/volatility.py
+# path: 5M110Analiz/features/volatility.py
 ================================================================================
 
 """
@@ -871,7 +871,7 @@ class VolatilityFeatures:
 
 ================================================================================
 === VOLUME features ===
-# path: Analiz32/features/volume.py
+# path: 5M110Analiz/features/volume.py
 ================================================================================
 
 """

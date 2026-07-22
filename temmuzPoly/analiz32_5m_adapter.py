@@ -1,7 +1,7 @@
 """
-5M sinyal adaptörü — Analiz32 FeatureEngine'i bozmadan 5m mumlara uygular.
+5M sinyal adaptörü — 5M110Analiz FeatureEngine'i bozmadan 5m mumlara uygular.
 
-Analiz32/core ve features DOKUNULMAZ.
+5M110Analiz/core ve features DOKUNULMAZ.
 Yalnızca predictor.predict_from_klines + Binance 5m kline.
 """
 from __future__ import annotations
@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
-_A32 = os.path.join(os.path.dirname(_DIR), "Analiz32")
+_A32 = os.path.join(os.path.dirname(_DIR), "5M110Analiz")
 sys.path.insert(0, _DIR)
 sys.path.insert(0, _A32)
 

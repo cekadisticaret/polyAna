@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-4 / 10 / 21. Analiz — 1Y walk-forward backtest
+4 / 10. Analiz — 1Y walk-forward backtest
 
 Canlı trader ve algo dosyalarına DOKUNULMAZ; sadece import edilir.
 Varsayılan: $1000 · 2025-07-17 · bugün
@@ -33,13 +33,13 @@ from backtest_common import (
     run_walk_forward,
     print_summary,
     to_a4_klines,
-    to_algo21_klines,
 )
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 INITIAL_BALANCE = 1000.0
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
 CHAT_ID = "830754964"
+
 
 # ── Analiz 4 sinyal (poly_trader_analiz4 algo fonksiyonları) ──
 def signal_analiz4(sym, kslice, open_ms, history, amount_fn):
@@ -95,40 +95,6 @@ async def signal_analiz10(sym, kslice, open_ms, history, amount_fn):
     }
 
 
-# ── Analiz 21 sinyal (btc_analiz21_algo) ──
-def _dyn_a21(history: list[Trade], sym: str) -> float:
-    low, mid, high = 12.0, 16.0, 20.0
-    sh = [t for t in history if t.symbol == sym]
-    if not sh:
-        return mid
-    rate = sum(1 for t in sh if t.win) / len(sh)
-    if rate > 0.5:
-        return high
-    if rate < 0.5:
-        return low
-    return mid
-
-
-def signal_analiz21(sym, kslice, open_ms, history, amount_fn):
-    from btc_analiz21_algo import SYMBOL_ALGOS
-    cfg = SYMBOL_ALGOS.get(sym)
-    if not cfg:
-        return None
-    fn, algo_name = cfg
-    kl = to_algo21_klines(kslice)
-    if len(kl) < 50:
-        return None
-    sig = fn(kl)
-    if sig not in ("UP", "DOWN"):
-        return None
-    return {
-        "predicted_dir": sig,
-        "amount": _dyn_a21(history, sym),
-        "entry_price": kslice[-1]["close"],
-        "extra": {"algo": algo_name},
-    }
-
-
 ANALIZ_CONFIG = {
     4: {
         "label": "4. ANALİZ",
@@ -143,13 +109,6 @@ ANALIZ_CONFIG = {
         "signal": signal_analiz10,
         "min_bars": 60,
         "out": "backtest_analiz10_1y.json",
-    },
-    21: {
-        "label": "21. ANALİZ",
-        "symbols": ["BTCUSDT", "SOLUSDT"],
-        "signal": signal_analiz21,
-        "min_bars": 50,
-        "out": "backtest_analiz21_1y.json",
     },
 }
 
@@ -183,7 +142,7 @@ def build_tg_report(results: list[dict]) -> str:
     sep = "━" * 28
     parts = [
         sep,
-        "📊 <b>1Y BACKTEST — Analiz 4 / 10 / 21</b>",
+        "📊 <b>1Y BACKTEST — Analiz 4 / 10</b>",
         f"${results[0]['initial_balance']:.0f} · 17 Tem 2025 → bugün",
         "<i>Algo dosyaları değiştirilmedi · OB/funding nötr sim.</i>",
         "",
@@ -209,8 +168,8 @@ def build_tg_report(results: list[dict]) -> str:
 
 async def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--analiz", type=int, choices=[4, 10, 21], help="Tek analiz")
-    p.add_argument("--all", action="store_true", help="4+10+21 hepsi")
+    p.add_argument("--analiz", type=int, choices=[4, 10], help="Tek analiz")
+    p.add_argument("--all", action="store_true", help="4+10 hepsi")
     p.add_argument("--balance", type=float, default=INITIAL_BALANCE)
     p.add_argument("--start", default="2025-07-17")
     p.add_argument("--telegram", action="store_true")
@@ -222,7 +181,7 @@ async def main():
     y, m, d = map(int, args.start.split("-"))
     start = datetime(y, m, d, 0, 0, 0, tzinfo=_TZ_TR)
 
-    ids = [4, 10, 21] if args.all else [args.analiz]
+    ids = [4, 10] if args.all else [args.analiz]
     t0 = time.time()
     results = []
     for aid in ids:
@@ -235,7 +194,7 @@ async def main():
         results.append(r)
 
     print(f"\nToplam süre: {time.time()-t0:.0f}s")
-    if args.telegram:
+    if args.telegram and results:
         tg_send(build_tg_report(results))
 
 

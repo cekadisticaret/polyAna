@@ -27,7 +27,7 @@ _ALL_SYSTEMS = [
     {
         "key": "5m_sol_110",
         "label": "15M 110 SOL",
-        "desc": "Analiz32 FeatureEngine 15m (sanal $8-10-12)",
+        "desc": "5M110Analiz FeatureEngine 15m (sanal $8-10-12)",
         "initial": 300.0,
         "env": "PM_5M_110_REAL_ENABLED",
     },

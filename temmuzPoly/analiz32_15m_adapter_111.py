@@ -3,7 +3,7 @@
 15M sinyal adaptörü — 111 (güçlendirilmiş sürüm)
 ==================================================
 110'un kaydettiği sinyal snapshot'ını okur; kendi kline çekmez.
-Analiz32/predictor.py ve Analiz32/features/*'a DOKUNULMAZ.
+5M110Analiz/predictor.py ve 5M110Analiz/features/*'a DOKUNULMAZ.
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
-_A32 = os.path.join(os.path.dirname(_DIR), "Analiz32")
+_A32 = os.path.join(os.path.dirname(_DIR), "5M110Analiz")
 sys.path.insert(0, _DIR)
 sys.path.insert(0, _A32)
 

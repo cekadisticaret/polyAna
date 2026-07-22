@@ -26,11 +26,6 @@ _HEATMAP_SYMS = {
     "analiz9":  ["BTC", "SOL"],
     "analiz10": ["BTC", "SOL"],
     "analiz13": ["SOL"],
-    "analiz31": ["BTC", "SOL"],
-    "analiz32": ["SOL"],
-    "analiz21": ["BTC", "SOL"],
-    "analiz23": ["BTC", "SOL"],
-    "analiz6": ["BTC", "SOL"],
     "5m_btc_107": ["BTC"],
     "5m_sol_110": ["SOL"],
     "5m_sol_111": ["SOL"],
@@ -40,17 +35,24 @@ _HEATMAP_SYMS = {
 _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {}
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 _PASIF_ANALYSES = frozenset({"analiz9", "5m_btc_107"})
+# Kaldırılmış trader'lar — diskte history kalsa bile listelenmez
+_REMOVED_ANALYSES = frozenset({
+    "analiz6", "analiz7", "analiz21", "analiz23", "analiz31", "analiz32",
+})
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
-# Yeni analiz: isteğe bağlı özel isim için _ANALYSIS_LABELS'a ekle.
-# Eklenmezse poly_trader_analiz7_history.json → otomatik "7. Analiz" sekmesi açılır.
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz5", "analiz4", "analiz6", "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32",
+    "analiz1", "analiz2", "analiz5", "analiz4", "analiz10", "analiz13",
     "5m_btc_107", "5m_sol_110", "5m_sol_111", "5m_sol_210",
+]
+# Sıcaklık haritası sekmeleri — yalnızca bu liste (auto-discover yok)
+_HEATMAP_ORDER = [
+    "analiz1", "analiz2", "analiz5", "analiz4", "analiz10", "analiz13",
+    "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 _HISTORY_ORDER = [
     "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
-    "analiz10", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32", "analiz6", "5m_btc_107", "5m_sol_110", "5m_sol_111", "5m_sol_210",
+    "analiz10", "analiz13", "5m_btc_107", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
@@ -60,11 +62,6 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz9":    "9. Analiz (Pasif)",
     "analiz10":   "10. Analiz",
     "analiz13":   "13. Analiz (SOL)",
-    "analiz31":   "31. Analiz",
-    "analiz32":   "32. Analiz",
-    "analiz21":   "21. Analiz",
-    "analiz23":   "23. Analiz",
-    "analiz6":    "6. Analiz (A1+A4)",
     "5m_btc_107": "5M 107 BTC (Pasif)",
     "5m_sol_110": "15M 110 SOL",
     "5m_sol_111": "15M 111 SOL",
@@ -147,8 +144,6 @@ def _auto_label(key: str) -> str:
     m = re.match(r"^analiz(\d+)$", key)
     if m:
         return f"{m.group(1)}. Analiz"
-    if key == "analiz6":
-        return "6. Analiz (A1+A4)"
     if key.startswith("5m_btc_"):
         n = key.replace("5m_btc_", "")
         if n == "real":
@@ -162,6 +157,8 @@ def _build_system_list(order: list[str], *, include_pasif: bool = True) -> list[
     seen: set[str] = set()
     out: list[tuple[str, str]] = []
     for key in order:
+        if key in _REMOVED_ANALYSES:
+            continue
         if not include_pasif and key in _PASIF_ANALYSES:
             continue
         if not _trader_exists(key, on_disk) and key not in _ANALYSIS_LABELS:
@@ -169,15 +166,29 @@ def _build_system_list(order: list[str], *, include_pasif: bool = True) -> list[
         out.append((key, _ANALYSIS_LABELS.get(key, _auto_label(key))))
         seen.add(key)
     for key in sorted(on_disk - seen):
+        if key in _REMOVED_ANALYSES:
+            continue
         if not include_pasif and key in _PASIF_ANALYSES:
             continue
         out.append((key, _ANALYSIS_LABELS.get(key, _auto_label(key))))
     return out
 
 
+def _build_harita_tabs() -> list[tuple[str, str]]:
+    on_disk = _discover_trader_keys()
+    out: list[tuple[str, str]] = []
+    for key in _HEATMAP_ORDER:
+        if key in _REMOVED_ANALYSES:
+            continue
+        if not _trader_exists(key, on_disk) and key not in _ANALYSIS_LABELS:
+            continue
+        out.append((key, _ANALYSIS_LABELS.get(key, _auto_label(key))))
+    return out
+
+
 _ANALYSIS_SYSTEMS = _build_system_list(_ANALYSIS_ORDER, include_pasif=False)
-_HEATMAP_ANALYSES = dict(_ANALYSIS_SYSTEMS)
-_HARITA_TAB_ANALYSES = list(_ANALYSIS_SYSTEMS)
+_HARITA_TAB_ANALYSES = _build_harita_tabs()
+_HEATMAP_ANALYSES = dict(_HARITA_TAB_ANALYSES)
 _HISTORY_SYSTEMS = _build_system_list(_HISTORY_ORDER)
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _BINANCE  = "https://fapi.binance.com"
@@ -980,13 +991,8 @@ def api_analizler():
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM $6–12 WR"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
         ("analiz13",   "13. Analiz (SOL)",      300,  "Çift Konsensüs SOL only $10 sabit"),
-        ("analiz31",   "31. Analiz",            300,  "Multi-TF MR Sanal $12-16-20"),
-        ("analiz32",   "32. Analiz",            300,  "FeatureEngine composite SOL only $12-16-20"),
-        ("analiz21",   "21. Analiz",            300,  "Sembol Algo: BTC Hull MA / SOL MACD"),
-        ("analiz23",   "23. Analiz",            300,  "A4 BTC + A2 SOL hibrit $20-30-40"),
-        ("analiz6",    "6. Analiz (A1+A4)",       300,  "A1+A4 konsensus $20"),
         ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 algo + yön freni — cron kapalı"),
-        ("5m_sol_110",  "15M 110 SOL",           300,  "Analiz32 15m SOL sanal $8-10-12"),
+        ("5m_sol_110",  "15M 110 SOL",           300,  "5M110Analiz 15m SOL sanal $8-10-12"),
         ("5m_sol_111",  "15M 111 SOL",           300,  "A32 15m filtreli sanal $8-10-12"),
         ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $4-5-6"),
     ]
@@ -1639,6 +1645,48 @@ def _pm_sell_position(token_id: str, size: float, pm_slug: str = "", token_dir: 
         return {"ok": False, "error": str(e)}
 
 
+_PM_TG_LABELS = {
+    "analiz5": "5. ANALİZ",
+    "analiz2_live": "2. ANALİZ LIVE",
+    "manual": "MANUEL PM",
+}
+
+
+def _tg_notify_pm_early_close(analiz: str, pos: dict, sell_result: dict) -> None:
+    """Dashboard erken PM satışı — PolyAktif kanalına bildirim."""
+    if analiz not in _HOURLY_PM_ANALYSES:
+        return
+    label = _PM_TG_LABELS.get(analiz, analiz.upper())
+    try:
+        from pm_trader_helpers import tg_send_pm_live, pm_get_balance, pm_tg_stake
+    except ImportError:
+        return
+
+    sym = pos.get("symbol", "")
+    name = sym.replace("USDT", "")
+    pred = pos.get("predicted_dir") or pos.get("pm_token_dir", "")
+    entry = float(pos.get("entry_price") or 0)
+    spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
+    received = float(sell_result.get("received") or 0)
+    pnl = round(received - spent, 2)
+    icon = "✅" if pnl >= 0 else "❌"
+    stake = pm_tg_stake(pos) or f"💵 ${spent:.2f}"
+    hour = pos.get("entry_hour_tr")
+    slot = f"{int(hour):02d}:00" if hour is not None else "—"
+    bal = pm_get_balance()
+    bal_line = f"💰 PM Bakiye: ${bal:.2f}" if bal >= 0 else "💰 PM Bakiye: ?"
+    sep = "━" * 26
+    tg_send_pm_live(
+        f"{sep}\n"
+        f"⏹ <b>{label} — {slot} Erken Kapatma</b>  🔴 GERÇEK PM\n"
+        f"{icon} <b>{name}</b>  {pred}  giriş:{entry:.2f}\n"
+        f"   {stake}  alınan ${received:.2f}  net {'+' if pnl >= 0 else ''}{pnl:.2f}$\n"
+        f"{bal_line}\n"
+        f"{sep}",
+        label=label,
+    )
+
+
 def _record_dashboard_close(analiz: str, pos: dict, sell_result: dict) -> None:
     """Manuel PM satışını history'ye yaz (analiz5 formatı)."""
     if analiz != "analiz5":
@@ -1725,6 +1773,7 @@ def api_close(analiz, symbol):
             ), 2)
         save_state(analiz, state)
         _record_dashboard_close(analiz, pos, sell_result)
+        _tg_notify_pm_early_close(analiz, pos, sell_result)
 
         return jsonify({
             "ok": True,
@@ -4011,7 +4060,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz5:'5. Analiz',analiz4:'4. Analiz',analiz6:'6. Analiz (A1+A4)',analiz10:'10. Analiz',analiz13:'13. Analiz',analiz21:'21. Analiz',analiz23:'23. Analiz',analiz31:'31. Analiz',analiz32:'32. Analiz'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz5:'5. Analiz',analiz4:'4. Analiz',analiz10:'10. Analiz',analiz13:'13. Analiz'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {
@@ -4238,13 +4287,14 @@ def dashboard():
 def harita():
     if _auth_required(): return redirect("/poly/login")
     labels = {k: v for k, v in _HARITA_TAB_ANALYSES}
+    hm_syms = {k: v for k, v in _HEATMAP_SYMS.items() if k in _HEATMAP_ANALYSES}
     default_key = _HARITA_TAB_ANALYSES[0][0] if _HARITA_TAB_ANALYSES else "analiz5"
     default_label = labels.get(default_key, "Analiz")
     return render_template_string(
         HARITA_HTML,
         harita_tabs=_harita_tabs_html(),
         harita_labels=json.dumps(labels, ensure_ascii=False),
-        harita_heatmap_syms=json.dumps(_HEATMAP_SYMS, ensure_ascii=False),
+        harita_heatmap_syms=json.dumps(hm_syms, ensure_ascii=False),
         harita_default_analiz=default_key,
         harita_default_label=default_label,
     )

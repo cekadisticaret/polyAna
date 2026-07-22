@@ -19,7 +19,7 @@ async def fetch_klines(symbol: str, interval: str, limit: int) -> List[dict]:
     })
     url = f"{BINANCE_FAPI}/fapi/v1/klines?{params}"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Analiz32/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "5M110Analiz/1.0"})
         with urllib.request.urlopen(req, timeout=12) as r:
             data = json.loads(r.read().decode())
         if not isinstance(data, list):

@@ -1,7 +1,7 @@
 """
-15M 210 SOL — Analiz32 FeatureEngine (gerçek PM, SOL only)
+15M 210 SOL — 5M110Analiz FeatureEngine (gerçek PM, SOL only)
 ===========================================================
-110'un birebir canlı kopyası: aynı sinyal (110 snapshot), farklı stake.
+110'un birebir canlı kopyası: 110 aynı turda açtıysa mirror; açmadıysa 210 katiyen açmaz.
 
 Gerçek PM: PM_5M_210_REAL_ENABLED (varsayılan true), işlem $4/$5/$6 (WR), başlangıç $300.
 Cron: */15 * * * * — 110 snapshot poll (max 20 sn)
@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from analiz32_15m_signal_snapshot import wait_for_110_snapshot
+from analiz32_15m_signal_snapshot import wait_for_110_open_decision
 from btc_5m_105_algo import fetch_klines_15m
 import poly_trader_5m_common as _pm_common
 
@@ -426,7 +426,15 @@ def run() -> None:
     for sym in SYMBOLS:
         name = _sym_name(sym)
         snap_timeout = _snapshot_wait_timeout(ts_period)
-        sig = wait_for_110_snapshot(symbol=sym, ts_period=ts_period, timeout=snap_timeout)
+        sig, opened_110, skip_110 = wait_for_110_open_decision(
+            symbol=sym, ts_period=ts_period, timeout=snap_timeout,
+        )
+
+        if not opened_110:
+            reason = skip_110 or "110 açmadı"
+            skip_lines.append(f"⏸ {name} — 110 açmadı: {_tg_esc(reason)}")
+            print(f"[{LABEL}] {saat} — {name} atlandı: 110 açmadı ({reason})")
+            continue
 
         if sig is None:
             skip_lines.append(f"⚠️ {name} — veri yok")
@@ -782,7 +790,7 @@ def run_stats() -> None:
         f"Toplam: {total} işlem  |  {_wr(wins, total)}\n"
         f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
         f"{_bal_line(state)}\n"
-        f"SOL only · Analiz32 15m · 110 snapshot · $4/$5/$6 (WR)"
+        f"SOL only · 5M110Analiz 15m · 110 snapshot · $4/$5/$6 (WR)"
     )
 
 

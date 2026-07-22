@@ -1,5 +1,5 @@
 """
-Analiz32 trader adaptörü.
+5M110Analiz trader adaptörü.
 
 FeatureEngine / CompositeScores çıktısını (composite_signal) saatlik
 UP/DOWN tahminine çevirir. core/ ve features/ algoritmasına dokunmaz.

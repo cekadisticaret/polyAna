@@ -1,7 +1,7 @@
 """
-15M 110 SOL — Analiz32 FeatureEngine (canlı PM, SOL only)
+15M 110 SOL — 5M110Analiz FeatureEngine (canlı PM, SOL only)
 ==========================================================
-Algoritma: Analiz32/ (composite_signal) — bozulmaz; 15m adaptör üzerinden.
+Algoritma: 5M110Analiz/ (composite_signal) — bozulmaz; 15m adaptör üzerinden.
 
 Gerçek PM: PM_5M_110_REAL_ENABLED=false (sanal), işlem $8/$10/$12 (WR), başlangıç $300.
 Cron: */15 * * * * — açılış +1 sn gecikme (mum kapanışı)
@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from analiz32_15m_adapter import analyze_15m
-from analiz32_15m_signal_snapshot import save_snapshot
+from analiz32_15m_signal_snapshot import save_snapshot, set_snapshot_opened
 from btc_5m_105_algo import fetch_klines_15m
 import poly_trader_5m_common as _pm_common
 from poly_tg_5m_102 import tg_send, tg_send_photo
@@ -350,15 +350,21 @@ def run() -> None:
 
     for sym in SYMBOLS:
         name = _sym_name(sym)
+
+        def _110_skip(reason: str) -> None:
+            set_snapshot_opened(ts_period, sym, False, reason=reason)
+
         sig = analyze_15m(symbol=sym)
         if sig is not None:
             save_snapshot(ts_period, sym, sig)
 
         if sig is None:
+            _110_skip("veri yok")
             skip_lines.append(f"⚠️ {name} — veri yok")
             continue
         if sig.direction is None:
             reason = sig.skip_reason or "sinyal yok"
+            _110_skip(reason)
             skip_lines.append(f"⏸ {name} — {_tg_esc(reason)}")
             print(f"[{LABEL}] {saat} — {name} atlandı: {reason}")
             continue
@@ -368,6 +374,7 @@ def run() -> None:
         balance = state["balance"]
 
         if not _PM_LIVE and balance < amount:
+            _110_skip("bakiye yetersiz")
             skip_lines.append(f"⏸ {name} — bakiye yetersiz")
             continue
 
@@ -379,6 +386,7 @@ def run() -> None:
         if not _PM_LIVE:
             pm_info, pm_skip = _pm_resolve_market(sym, ts_period, direction, amount)
             if not pm_info:
+                _110_skip(pm_skip or "PM market yok")
                 skip_lines.append(f"⏸ {name} {direction} — {pm_skip}")
                 continue
             pm_q = pm_15m_sanal_quote(ts_period, direction, amount, sym)
@@ -407,10 +415,12 @@ def run() -> None:
             }
             stake, _, _ = pm_stake_fields(pos)
             if balance < stake:
+                _110_skip("bakiye yetersiz (stake)")
                 skip_lines.append(f"⏸ {name} — bakiye yetersiz")
                 continue
             sanal_debit_on_open(state, pos)
             state["open_positions"].append(pos)
+            set_snapshot_opened(ts_period, sym, True)
             open_lines.append(
                 f"{dir_icon} <b>{name} {dir_tr}</b>  "
                 f"skor UP={sig.up_score} DOWN={sig.down_score}  "
@@ -423,6 +433,7 @@ def run() -> None:
         # ── Canlı PM ──────────────────────────────────────────
         from pm_balance_guard import can_open_trade
         if not can_open_trade(LABEL, tg_send):
+            _110_skip("PM bakiye guard")
             save_state(state)
             if closed_lines:
                 _send_tg_round(saat, next_saat, state, history, closed_lines, [], [], tur_pnl)
@@ -431,6 +442,7 @@ def run() -> None:
         _pm_common._PM_DRY_RUN = _PM_DRY_RUN
         pm_info, pm_skip = _pm_resolve_market(sym, ts_period, direction, amount)
         if not pm_info:
+            _110_skip(pm_skip or "PM market yok")
             skip_lines.append(f"⏸ {name} {direction} — {pm_skip}")
             continue
 
@@ -438,6 +450,7 @@ def run() -> None:
         pm_slug = pm_info["slug"]
         to_win = round(amount / token_price, 2) if token_price > 0 else round(amount * 2, 2)
         if not _pm_common._pm_payout_ok(amount, to_win):
+            _110_skip("payout düşük/yüksek")
             skip_lines.append(f"⏸ {name} — payout düşük/yüksek")
             continue
 
@@ -449,9 +462,11 @@ def run() -> None:
         )
 
         if order_result and order_result.get("_skip"):
+            _110_skip("emir başarısız")
             skip_lines.append(f"⏸ {name} — emir başarısız")
             continue
         if not order_result:
+            _110_skip("PM order başarısız")
             skip_lines.append(f"⏸ {name} — PM order başarısız")
             continue
 
@@ -486,6 +501,7 @@ def run() -> None:
             "pm_entry_price": token_price,
             "pm_order_id": order_result.get("order_id", ""),
         })
+        set_snapshot_opened(ts_period, sym, True)
         open_lines.append(
             f"{dir_icon} <b>{name} {dir_tr}</b>  "
             f"skor UP={sig.up_score} DOWN={sig.down_score}  "
@@ -617,7 +633,7 @@ def run_stats() -> None:
         f"Toplam: {total} işlem  |  {_wr(wins, total)}\n"
         f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
         f"{_bal_line(state)}\n"
-        f"SOL only · Analiz32 15m · $8/$10/$12 (WR)"
+        f"SOL only · 5M110Analiz 15m · $8/$10/$12 (WR)"
     )
 
 
