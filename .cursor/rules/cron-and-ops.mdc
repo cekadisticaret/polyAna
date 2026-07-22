@@ -25,7 +25,7 @@ alwaysApply: true
 | `0 * * * *` | `poly_trader_5m_sol_210.py hourly` (son 10 işlem P&amp;L, A5 TG) | `/tmp/poly_5m_sol_210.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_110.py open` (+1 sn gecikme) | `/tmp/poly_5m_sol_110.log` |
 | `0 0 * * 0` | `poly_trader_5m_sol_110.py weekly` | `/tmp/poly_5m_sol_110.log` |
-| `*/15 * * * *` | `poly_trader_5m_sol_210.py open` (+3 sn, 110 snapshot, gerçek PM $4-8) | `/tmp/poly_5m_sol_210.log` |
+| `*/15 * * * *` | `poly_trader_5m_sol_210.py open` (+3 sn, 110 snapshot, gerçek PM $4-6) | `/tmp/poly_5m_sol_210.log` |
 | `0 0 * * 0` | `poly_trader_5m_sol_210.py weekly` | `/tmp/poly_5m_sol_210.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_111.py open` (+15 sn, 110 snapshot) | `/tmp/poly_5m_sol_111.log` |
 | `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_111.py weekly` | `/tmp/poly_5m_sol_111.log` |

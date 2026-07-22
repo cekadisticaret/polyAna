@@ -17,6 +17,29 @@ _PM_ASSET_MAP = {
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 PM_DRY_RUN = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 
+# Gerçek PM trader'lar — A5 / 210 / A2 Live aynı Telegram kanalı
+PM_LIVE_TG_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
+PM_LIVE_TG_CHAT = "830754964"
+
+
+def tg_send_pm_live(text: str, *, label: str = "PM") -> bool:
+    """5. Analiz ile aynı PolyAktif bot + chat."""
+    try:
+        url = f"https://api.telegram.org/bot{PM_LIVE_TG_TOKEN}/sendMessage"
+        data = json.dumps({
+            "chat_id": PM_LIVE_TG_CHAT,
+            "text": text,
+            "parse_mode": "HTML",
+        }).encode()
+        req = urllib.request.Request(
+            url, data=data, headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.loads(r.read()).get("ok", False)
+    except Exception as e:
+        print(f"[{label} TG] Hata: {e}", file=sys.stderr)
+        return False
+
 
 def in_weekend_pause_tr(now_tr: datetime) -> bool:
     """Cuma 22:00 – Pazar 18:00 İST arası yeni işlem açılmaz."""

@@ -457,12 +457,66 @@ def get_pm_15m_quotes(only_names: set[str] | None = None) -> list[dict]:
 _PM_POSITION_SOURCES = [
     ("analiz5", "5. Analiz"),
     ("analiz2_live", "A2 Live"),
+    ("manual", "Manuel"),
     ("5m_sol_110", "15M 110 SOL"),
     ("5m_sol_111", "15M 111 SOL"),
     ("5m_sol_210", "15M 210 SOL"),
 ]
-_HOURLY_PM_ANALYSES = frozenset({"analiz5", "analiz2_live"})
+_HOURLY_PM_ANALYSES = frozenset({"analiz5", "analiz2_live", "manual"})
 _15M_PM_ANALYSES = frozenset({"5m_sol_110", "5m_sol_111", "5m_sol_210"})
+
+
+def _position_slot_range(pos: dict, analiz_key: str) -> str | None:
+    """Pozisyonun PM slot aralığı — 15dk: 13:45-14:00, saatlik: 12:00-13:00."""
+    from datetime import timedelta
+
+    if analiz_key in _15M_PM_ANALYSES:
+        ts = pos.get("ts_period") or pos.get("ts_5m")
+        if ts:
+            start = datetime.fromtimestamp(int(ts), _TZ_TR)
+            end = start + timedelta(minutes=15)
+            return f"{start.strftime('%H:%M')}-{end.strftime('%H:%M')}"
+        period_min = pos.get("entry_period_min")
+        if period_min is not None:
+            h, m = divmod(int(period_min), 60)
+            end_min = int(period_min) + 15
+            eh, em = divmod(end_min, 60)
+            return f"{h:02d}:{m:02d}-{eh % 24:02d}:{em:02d}"
+        return None
+
+    if analiz_key in _HOURLY_PM_ANALYSES:
+        h = pos.get("entry_hour_tr")
+        if h is None:
+            ts = pos.get("entry_time_tr", "")
+            if ts:
+                try:
+                    h = datetime.fromisoformat(ts).astimezone(_TZ_TR).hour
+                except (ValueError, TypeError):
+                    h = None
+        if h is not None:
+            return f"{int(h):02d}:00-{(int(h) + 1) % 24:02d}:00"
+    return None
+
+
+def _attach_live_position_to_quotes(
+    quotes: list[dict], positions: list[dict], allowed_keys: frozenset,
+) -> None:
+    """PM kotasyon kartına açık pozisyon giriş + anlık kapanış değeri ekle."""
+    by_name: dict[str, list[dict]] = {}
+    for p in positions:
+        if p.get("analiz_key") not in allowed_keys:
+            continue
+        by_name.setdefault(p.get("name", ""), []).append(p)
+
+    for q in quotes:
+        ps = by_name.get(q.get("name", ""), [])
+        if not ps:
+            continue
+        q["pos_entry"] = ps[0].get("entry")
+        q["pos_live"] = round(sum(p.get("close_val") or 0 for p in ps), 2) or None
+        q["pos_risk"] = round(sum(p.get("pm_spent") or 0 for p in ps), 2)
+        dirs = {p.get("dir") for p in ps}
+        q["pos_dir"] = next(iter(dirs)) if len(dirs) == 1 else None
 
 
 def _pm_quote_symbol_sets(positions: list) -> tuple[set[str], set[str]]:
@@ -584,6 +638,8 @@ def api_data():
         # Polymarket'tan anlık token fiyatı → kapama değeri
         token_price   = get_pm_token_price(pos.get("pm_slug", ""), token_dir)
         close_val     = round(pm_size * token_price, 2) if token_price and pm_size else None
+        win_payout    = round(float(pm_size), 2) if pm_size else None
+        win_profit    = round(float(pm_size) - float(pm_spent), 2) if pm_size and pm_spent else None
         total_pos_value += close_val if close_val else pm_spent
 
         enriched.append({
@@ -601,7 +657,11 @@ def api_data():
             "pm_spent":     round(pm_spent, 2),
             "pm_size":      pm_size,
             "close_val":    close_val,
+            "win_payout":   win_payout,
+            "win_profit":   win_profit,
             "entry_time":   pos.get("entry_time_tr", ""),
+            "slot_range":   _position_slot_range(pos, pos["_analiz"]),
+            "is_15m":       pos["_analiz"] in _15M_PM_ANALYSES,
             "pm_slug":      pos.get("pm_slug", ""),
             "closable":     bool(pos.get("pm_token_id") and pm_size),
         })
@@ -611,12 +671,17 @@ def api_data():
 
     hourly_syms, m15_syms = _pm_quote_symbol_sets(positions)
 
+    pm_hourly = get_pm_hourly_quotes(hourly_syms)
+    pm_15m = get_pm_15m_quotes(m15_syms)
+    _attach_live_position_to_quotes(pm_hourly, enriched, _HOURLY_PM_ANALYSES)
+    _attach_live_position_to_quotes(pm_15m, enriched, _15M_PM_ANALYSES)
+
     return jsonify({
         "cash":      round(cash, 2),
         "portfolio": portfolio,
         "positions": enriched,
-        "pm_hourly": get_pm_hourly_quotes(hourly_syms),
-        "pm_15m":    get_pm_15m_quotes(m15_syms),
+        "pm_hourly": pm_hourly,
+        "pm_15m":    pm_15m,
         "updated":   datetime.now(_TZ_TR).strftime("%H:%M:%S"),
     })
 
@@ -914,7 +979,7 @@ def api_analizler():
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
         ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM $6–12 WR"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
-        ("analiz13",   "13. Analiz (SOL)",      300,  "Çift Konsensüs SOL only $24-32-40"),
+        ("analiz13",   "13. Analiz (SOL)",      300,  "Çift Konsensüs SOL only $10 sabit"),
         ("analiz31",   "31. Analiz",            300,  "Multi-TF MR Sanal $12-16-20"),
         ("analiz32",   "32. Analiz",            300,  "FeatureEngine composite SOL only $12-16-20"),
         ("analiz21",   "21. Analiz",            300,  "Sembol Algo: BTC Hull MA / SOL MACD"),
@@ -923,7 +988,7 @@ def api_analizler():
         ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 algo + yön freni — cron kapalı"),
         ("5m_sol_110",  "15M 110 SOL",           300,  "Analiz32 15m SOL sanal $8-10-12"),
         ("5m_sol_111",  "15M 111 SOL",           300,  "A32 15m filtreli sanal $8-10-12"),
-        ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $4-6-8"),
+        ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $4-5-6"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:
@@ -3044,7 +3109,11 @@ HTML = r"""<!DOCTYPE html>
   .pm-hourly-pill.up .pm-hourly-lbl { color:#4ade80; }
   .pm-hourly-pill.down .pm-hourly-lbl { color:#f87171; }
   .pm-hourly-val { font-size:16px; font-weight:800; color:#fff; }
-  .pm-hourly-bn { font-size:14px; font-weight:700; color:#e8e8e8; margin-top:8px; letter-spacing:.2px; }
+  .pm-hourly-bn { font-size:13px; font-weight:600; color:#aaa; margin-top:8px; display:flex; flex-wrap:wrap; gap:10px 14px; }
+  .pm-hourly-bn span { white-space:nowrap; }
+  .pm-hourly-bn .bn-lbl { color:#666; font-weight:500; }
+  .pm-hourly-bn .bn-val { color:#e8e8e8; font-weight:700; }
+  .pm-hourly-bn .pos-live { color:#c8f135; font-weight:800; }
   @media(max-width:700px){ .pm-hourly-row { grid-template-columns:1fr; width:100%; } }
   .mobile-recent-section { display:none; }
   .mobile-profit-wrap { display:none; }
@@ -3095,9 +3164,13 @@ HTML = r"""<!DOCTYPE html>
   .pos-win-icon.bad { color:#f87171; }
   .pos-pct { font-size:13px; font-weight:600; }
   .pos-pct.pos { color:#4ade80; } .pos-pct.neg { color:#f87171; }
-  .pos-entry { font-size:14px; font-weight:600; color:#e8e8e8; margin-bottom:10px; }
+  .pos-entry { font-size:14px; font-weight:600; color:#e8e8e8; margin-bottom:6px; }
   .pos-entry-lbl { color:#888; font-weight:500; }
+  .pos-slot { font-size:13px; font-weight:600; color:#aaa; margin-bottom:10px; }
+  .pos-slot-lbl { color:#666; font-weight:500; }
   .pos-risk-row { font-size:14px; color:#fff; font-weight:600; margin-top:8px; }
+  .pos-win-row { font-size:14px; color:#4ade80; font-weight:600; margin-top:6px; }
+  .pos-win-row .win-lbl { color:#888; font-weight:500; }
   .pos-analiz-tag { display:inline-block; background:#2a2a2a; color:#ccc; font-size:11px;
                     padding:2px 8px; border-radius:6px; margin-left:6px; font-weight:600; }
   .close-btn-wrap { display:flex; justify-content:flex-end; margin-top:12px; }
@@ -3558,6 +3631,15 @@ async function refresh() {
         const upC = q.up_cents != null ? q.up_cents.toFixed(dec) : '—';
         const dnC = q.down_cents != null ? q.down_cents.toFixed(dec) : '—';
         const tl = q[timeKey] || '';
+        const entryStr = q.pos_entry != null
+          ? `<span><span class="bn-lbl">Giriş</span> <span class="bn-val">$${Number(q.pos_entry).toFixed(dec)}</span></span>`
+          : '';
+        const liveBnStr = `<span><span class="bn-lbl">Anlık</span> <span class="bn-val">${bn}</span></span>`;
+        const posLiveStr = q.pos_live != null
+          ? `<span><span class="bn-lbl">Pozisyon</span> <span class="pos-live">$${q.pos_live.toFixed(2)}</span>`
+            + (q.pos_risk ? `<span style="color:#666;font-weight:600"> / $${q.pos_risk.toFixed(2)}</span>` : '')
+            + `</span>`
+          : '';
         return `<div class="pm-hourly-card">
           <div class="pm-hourly-head">
             <span class="pm-hourly-sym">${q.name}</span>
@@ -3567,7 +3649,7 @@ async function refresh() {
             <div class="pm-hourly-pill up"><div class="pm-hourly-lbl">UP</div><div class="pm-hourly-val">${upC}¢</div></div>
             <div class="pm-hourly-pill down"><div class="pm-hourly-lbl">DOWN</div><div class="pm-hourly-val">${dnC}¢</div></div>
           </div>
-          <div class="pm-hourly-bn">Binance ${bn}</div>
+          <div class="pm-hourly-bn">${entryStr}${liveBnStr}${posLiveStr}</div>
         </div>`;
       }).join('');
     }
@@ -3622,9 +3704,16 @@ async function refresh() {
           ? (p.delta >= 0 ? '+' : '-') + '$' + Math.abs(p.delta).toFixed(dec)
           : '';
         const deltaUp = p.delta != null && p.delta >= 0;
-        const time   = p.entry_time ? p.entry_time.substring(11,16)+' İST' : '';
+        const slotStr = p.slot_range
+          ? `<div class="pos-slot"><span class="pos-slot-lbl">${p.is_15m ? '15dk slot:' : 'Saat slot:'}</span> ${p.slot_range} İST</div>`
+          : (p.entry_time ? `<div class="pos-slot"><span class="pos-slot-lbl">Saat:</span> ${p.entry_time.substring(11,16)} İST</div>` : '');
         const cvColor = p.close_val !== null ? (parseFloat(p.close_val)>=parseFloat(p.pm_spent)?'#4ade80':'#f87171') : '#555';
         const cvStr  = p.close_val !== null ? ` <span style="color:${cvColor};font-weight:700">→ $${p.close_val}</span>` : '';
+        const winStr = p.win_payout != null
+          ? `<div class="pos-win-row"><span class="win-lbl">Kazanırsa:</span> $${p.win_payout.toFixed(2)}`
+            + (p.win_profit != null ? ` <span style="opacity:.85">(${p.win_profit >= 0 ? '+' : ''}$${p.win_profit.toFixed(2)})</span>` : '')
+            + '</div>'
+          : '';
         const winIcon = p.current == null ? '' : p.winning === true
           ? '<span class="pos-win-icon ok" title="Yön tutuyor">✓</span>'
           : p.winning === false
@@ -3639,10 +3728,12 @@ async function refresh() {
             <span class="pos-current">${p.current?'$'+p.current:''}${winIcon}</span>
             <span class="pos-pct ${deltaUp?'pos':'neg'}">${p.current?deltaStr:''}</span>
           </div>
-          <div class="pos-entry"><span class="pos-entry-lbl">Giriş:</span> $${p.entry}${time ? ' · '+time : ''}</div>
+          <div class="pos-entry"><span class="pos-entry-lbl">Giriş:</span> $${p.entry}</div>
+          ${slotStr}
           <div class="pos-risk-row">Riskteki: $${p.pm_spent}${cvStr}
             <span class="pos-analiz-tag">${p.analiz}</span>
           </div>
+          ${winStr}
           ${p.closable ? `<div class="close-btn-wrap">
             <button class="close-btn" onclick="closePosition('${p.analiz_key}','${p.symbol}',this)">Pozisyonu Kapat</button>
           </div>` : ''}

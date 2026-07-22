@@ -3,7 +3,7 @@
 
 10. Analiz ile aynı çift konsensüs mantığı, ekstra:
   - Sistem B min skor: 1/4 (10. Analiz ile aynı)
-  - İşlem tutarı: $24 / $32 / $40 (sembol WR)
+  - İşlem tutarı: $10 sabit
   - Saatlik elenme nedeni Telegram (debug)
 
 $300 sanal başlangıç. Telegram: 10. Analiz kanalı.

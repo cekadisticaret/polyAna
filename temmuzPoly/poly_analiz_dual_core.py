@@ -75,9 +75,9 @@ CONFIG_A13 = DualConfig(
     symbols=("SOLUSDT",),
     min_score_b=1,
     variable_amounts=False,
-    amount_weak=24.0,
-    amount_mid=32.0,
-    amount_strong=40.0,
+    amount_weak=10.0,
+    amount_mid=10.0,
+    amount_strong=10.0,
     skip_detail_tg=True,
 )
 
@@ -101,6 +101,8 @@ def _trade_amount(history: list, symbol: str, cfg: DualConfig) -> float:
 
 
 def _amount_note(cfg: DualConfig) -> str:
+    if cfg.amount_weak == cfg.amount_mid == cfg.amount_strong:
+        return f"💵 İşlem: ${cfg.amount_mid:.0f} (sabit)"
     return (
         f"💵 İşlem: ${cfg.amount_weak:.0f}/${cfg.amount_mid:.0f}/${cfg.amount_strong:.0f} "
         f"(sembol WR — düşük/orta/yüksek)"
@@ -707,7 +709,11 @@ def run_stats(cfg: DualConfig) -> None:
     resolved = [t for t in history if t.get("win") is not None]
     wins = sum(1 for t in resolved if t["win"])
     total = len(resolved)
-    amt = f"${cfg.amount_weak:.0f}/${cfg.amount_mid:.0f}/${cfg.amount_strong:.0f} (sembol WR)"
+    amt = (
+        f"${cfg.amount_mid:.0f} (sabit)"
+        if cfg.amount_weak == cfg.amount_mid == cfg.amount_strong
+        else f"${cfg.amount_weak:.0f}/${cfg.amount_mid:.0f}/${cfg.amount_strong:.0f} (sembol WR)"
+    )
     tg_send(
         f"📊 <b>{cfg.label} ✦ Çift Konsensüs İSTATİSTİKLER</b>\n"
         f"Toplam: {total} işlem  |  {_wr(wins, total)} başarı\n"

@@ -41,6 +41,7 @@ from pm_trader_helpers import (
     pm_stake_fields,
     pm_tg_stake,
     compute_top_slot_hours,
+    tg_send_pm_live,
 )
 from pm_balance_guard import can_open_trade
 
@@ -53,10 +54,7 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
-CHAT_ID = "830754964"
 _TZ_TR = ZoneInfo("Europe/Istanbul")
-
 _DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(_DIR, "poly_trader_analiz2_live_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz2_live_history.json")
@@ -101,16 +99,7 @@ def save_history(history: list) -> None:
 
 
 def tg_send(text: str) -> None:
-    try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        body = urllib.parse.urlencode({
-            "chat_id": CHAT_ID, "text": text, "parse_mode": "HTML",
-        }).encode()
-        req = urllib.request.Request(url, data=body)
-        with urllib.request.urlopen(req, timeout=10) as r:
-            r.read()
-    except Exception as e:
-        print(f"[{LABEL} TG] Hata: {e}")
+    tg_send_pm_live(text, label=LABEL)
 
 
 def _pm_bal_line() -> str:
