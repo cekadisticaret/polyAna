@@ -546,6 +546,9 @@ def pm_5m_fetch_resolution(slug: str, min_decisive: float = 0.99) -> dict | None
     return None
 
 
+pm_fetch_resolution = pm_5m_fetch_resolution  # 1h saatlik marketler de aynı format
+
+
 def trades_for_exit_day(history: list, day) -> list:
     """exit_time_tr (İST) belirtilen takvim gününe düşen kapalı işlemler."""
     ds = day.isoformat()

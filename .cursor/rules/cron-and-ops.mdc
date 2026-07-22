@@ -13,10 +13,14 @@ alwaysApply: true
 | `59 23 * * *` | `cd /root/aiProject && python3 BistAnaliz/backup.py` | `/tmp/backup.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,7,10,13,21,23,31,32}.py close` | `/tmp/poly_trader_analiz*.log` |
+| `2 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py close` (A2 canlı PM SOL $6) | `/tmp/poly_trader_analiz2_live.log` |
 | `5 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,7,10,13,21,23,31,32}.py open` | `/tmp/poly_trader_analiz*.log` |
+| `5 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py open` (`PM_ANALIZ2_REAL_ENABLED`) | `/tmp/poly_trader_analiz2_live.log` |
 | `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6.py open` (A1+A4 sonrası) | `/tmp/poly_trader_analiz6.log` |
 | `0 21 * * *` | `temmuzPoly/poly_trader_analiz{1,32}.py daily` | `/tmp/poly_trader_analiz*.log` |
 | `0 21 * * 6` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10,13,21,23,31,32}.py weekly` | `/tmp/poly_trader_analiz*.log` |
+| `30 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz5_midcheck.py` | `/tmp/poly_trader_analiz5_midcheck.log` |
+| `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/pm_balance_hourly.py` | `/tmp/pm_balance_hourly.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_real_stats.py` | `/tmp/poly_5m_real_stats.log` |
 | `0 * * * *` | `poly_trader_5m_sol_210.py hourly` (son 10 işlem P&amp;L, A5 TG) | `/tmp/poly_5m_sol_210.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_110.py open` (+1 sn gecikme) | `/tmp/poly_5m_sol_110.log` |
@@ -55,6 +59,7 @@ tail -f /tmp/poly_trader_analiz1.log
 tail -f /tmp/poly_trader_analiz6.log
 tail -f /tmp/poly_5m_sol_110.log
 tail -f /tmp/poly_5m_sol_111.log
+tail -f /tmp/pm_balance_hourly.log
 tail -f /tmp/poly_5m_sol_210.log
 tail -f /tmp/algo_signals.log
 tail -f /tmp/backup.log

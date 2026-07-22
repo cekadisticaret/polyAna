@@ -287,6 +287,36 @@ def get_pm_balance() -> float:
     except Exception:
         return -1.0
 
+
+# Gerçek PM trader'lar — sidebar kar donut
+_PM_LIVE_PROFIT_SOURCES = [
+    ("analiz5", "A5", "#a855f7"),
+    ("5m_sol_210", "210", "#c8f135"),
+    ("analiz2_live", "A2", "#2dd4bf"),
+]
+
+
+def _read_trader_total_pnl(key: str) -> float:
+    path = _trader_state_path(key)
+    if not os.path.isfile(path):
+        return 0.0
+    try:
+        with open(path, encoding="utf-8") as f:
+            state = json.load(f)
+        return round(float(state.get("total_pnl") or 0), 2)
+    except Exception:
+        return 0.0
+
+
+def get_pm_profit_breakdown() -> dict:
+    items = []
+    for key, label, color in _PM_LIVE_PROFIT_SOURCES:
+        pnl = _read_trader_total_pnl(key)
+        items.append({"key": key, "label": label, "pnl": pnl, "color": color})
+    total = round(sum(i["pnl"] for i in items), 2)
+    return {"total": total, "items": items}
+
+
 def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
     """Polymarket'tan anlık token fiyatını çeker (0-1 arası)."""
     try:
@@ -920,6 +950,108 @@ def page_analizler():
     return ANALIZLER_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
+_SIDEBAR_PROFIT_CSS = """
+  .sidebar-profit { margin:10px 0 4px; padding:14px 10px 12px; background:#0f140f;
+    border:1px solid #1a2218; border-radius:18px; }
+  .sp-title { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:.4px; margin-bottom:12px; }
+  .sp-inner { display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .sp-chart { position:relative; width:132px; height:132px; flex-shrink:0; }
+  .sp-chart svg { width:132px; height:132px; display:block; }
+  .sp-center { position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; pointer-events:none; }
+  .sp-total { font-size:17px; font-weight:800; color:#fff; line-height:1.1; }
+  .sp-sub { font-size:9px; color:#555; margin-top:3px; text-align:center; }
+  .sp-legend { width:100%; display:flex; justify-content:space-between; gap:6px; }
+  .sp-leg-item { flex:1; display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; }
+  .sp-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-bottom:2px; }
+  .sp-leg-lbl { font-size:10px; color:#888; line-height:1.2; font-weight:600; }
+  .sp-leg-val { font-size:12px; font-weight:700; color:#ddd; line-height:1.2; }
+"""
+
+_SIDEBAR_PROFIT_HTML = """
+  <div class="sidebar-profit" id="sidebar-profit">
+    <div class="sp-title">PM Kar</div>
+    <div class="sp-inner">
+      <div class="sp-chart">
+        <svg id="sp-donut" viewBox="0 0 132 132"></svg>
+        <div class="sp-center">
+          <div class="sp-total" id="sp-total">$—</div>
+          <div class="sp-sub">Toplam Kar</div>
+        </div>
+      </div>
+      <div class="sp-legend" id="sp-legend"></div>
+    </div>
+  </div>"""
+
+_SIDEBAR_PROFIT_JS = """
+<script>
+window.renderSidebarProfit = async function() {
+  const totalEl = document.getElementById('sp-total');
+  const legendEl = document.getElementById('sp-legend');
+  const svgEl = document.getElementById('sp-donut');
+  if (!totalEl || !legendEl || !svgEl) return;
+  try {
+    const r = await fetch('/poly/api/pm-profit', {cache:'no-store'});
+    const d = await r.json();
+    const total = d.total || 0;
+    const items = d.items || [];
+    const sign = total >= 0 ? '+' : '';
+    totalEl.textContent = sign + '$' + Math.abs(total).toFixed(0);
+    totalEl.style.color = total >= 0 ? '#4ade80' : '#f87171';
+    const cx=66, cy=66, r0=48, sw=11, circ=2*Math.PI*r0;
+    let arcs = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r0+'" fill="none" stroke="#1a1a1a" stroke-width="'+sw+'"/>';
+    const pos = items.filter(i => i.pnl > 0);
+    const sum = pos.reduce((a,b)=>a+b.pnl,0);
+    if (sum > 0) {
+      let rot = -90;
+      pos.forEach(item => {
+        const angle = (item.pnl / sum) * 360;
+        if (angle < 0.5) return;
+        const len = circ * (item.pnl / sum);
+        arcs += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r0+'" fill="none" stroke="'+item.color+'" stroke-width="'+sw+'" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-linecap="round" transform="rotate('+rot+' '+cx+' '+cy+')"/>';
+        rot += angle;
+      });
+    }
+    svgEl.innerHTML = arcs;
+    legendEl.innerHTML = items.map(item => {
+      const v = item.pnl || 0;
+      const vs = (v>=0?'+':'')+'$'+Math.abs(v).toFixed(0);
+      const vc = v>=0?'#4ade80':'#f87171';
+      return '<div class="sp-leg-item"><span class="sp-dot" style="background:'+item.color+'"></span><div class="sp-leg-lbl">'+item.label+'</div><div class="sp-leg-val" style="color:'+vc+'">'+vs+'</div></div>';
+    }).join('');
+  } catch(e) { console.error('sidebar profit', e); }
+};
+if (!window._spBoot) {
+  window._spBoot = true;
+  document.addEventListener('DOMContentLoaded', () => {
+    renderSidebarProfit();
+    setInterval(renderSidebarProfit, 60000);
+  });
+}
+</script>"""
+
+_SIDEBAR_PROFIT_BLOCK = _SIDEBAR_PROFIT_HTML + _SIDEBAR_PROFIT_JS
+
+
+def _patch_sidebar_profit(html: str) -> str:
+    marker = (
+        '  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>\n'
+        '  <div class="sidebar-footer"'
+    )
+    if marker not in html:
+        return html
+    html = html.replace(
+        marker,
+        '  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>\n'
+        + _SIDEBAR_PROFIT_BLOCK
+        + '\n  <div class="sidebar-footer"',
+        1,
+    )
+    if '.sidebar-profit' not in html:
+        html = html.replace('</style>', _SIDEBAR_PROFIT_CSS + '\n</style>', 1)
+    return html
+
+
 ANALIZLER_HTML = """<!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -1303,6 +1435,14 @@ def api_stats():
 
     algo_stats.sort(key=lambda x: x["wr"], reverse=True)
     return jsonify({"algo_stats": algo_stats, "recent": recent})
+
+
+@app.route("/poly/api/pm-profit")
+def api_pm_profit():
+    if _auth_required():
+        return redirect("/poly/login")
+    return jsonify(get_pm_profit_breakdown())
+
 
 def _pm_best_bid(client, token_id: str) -> float | None:
     """Satış için en yüksek bid — orderbook yoksa None."""
@@ -3475,6 +3615,8 @@ async function refresh() {
         <div class="algo-wr" style="color:${a.wr>=55?'#4ade80':a.wr>=50?'#a3e635':'#f87171'}">${a.wr}%</div>
       </div>`).join('') || '<div style="color:#666;font-size:13px">Veri yok</div>';
 
+    if (window.renderSidebarProfit) await renderSidebarProfit();
+
   } catch(e) { console.error(e); }
 }
 
@@ -3905,6 +4047,9 @@ def harita():
         harita_default_analiz=default_key,
         harita_default_label=default_label,
     )
+
+for _html_name in ("ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "AYARLAR_HTML", "HARITA_HTML", "HTML"):
+    globals()[_html_name] = _patch_sidebar_profit(globals()[_html_name])
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=False)

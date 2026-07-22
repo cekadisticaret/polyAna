@@ -580,7 +580,9 @@ def _send_tg_round(
     skip_lines: list,
     tur_pnl: float,
 ) -> None:
-    if not closed_lines and not open_lines and not skip_lines:
+    if not closed_lines and not open_lines:
+        if skip_lines:
+            print(f"[{LABEL}] {saat} — atlandı (TG yok): {'; '.join(skip_lines)}")
         return
 
     sep = "━" * 26
@@ -602,7 +604,7 @@ def _send_tg_round(
             + "\n".join(open_lines)
         )
 
-    if skip_lines:
+    if skip_lines and (closed_lines or open_lines):
         parts.append("⏸ <b>Atlandı</b>\n" + "\n".join(skip_lines))
 
     msg = (
