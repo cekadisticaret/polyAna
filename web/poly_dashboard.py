@@ -994,7 +994,7 @@ def api_analizler():
         ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 algo + yön freni — cron kapalı"),
         ("5m_sol_110",  "15M 110 SOL",           300,  "5M110Analiz 15m SOL sanal $8-10-12"),
         ("5m_sol_111",  "15M 111 SOL",           300,  "A32 15m filtreli sanal $8-10-12"),
-        ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $4-5-6"),
+        ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $8-10-12"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:
@@ -1551,6 +1551,31 @@ def api_pm_profit():
     return jsonify(get_pm_profit_breakdown())
 
 
+def _pm_get_clob_client():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "a5", os.path.join(_DIR_POLY, "poly_trader_analiz5.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod._pm_get_client()
+
+
+def _pm_conditional_shares(token_id: str) -> float:
+    """Zincirdeki gerçek conditional token adedi (-1 = okunamadı)."""
+    from decimal import Decimal, ROUND_DOWN
+    try:
+        from py_clob_client_v2.clob_types import BalanceAllowanceParams, AssetType
+        client = _pm_get_clob_client()
+        bal = client.get_balance_allowance(
+            BalanceAllowanceParams(asset_type=AssetType.CONDITIONAL, token_id=token_id)
+        )
+        raw = int(bal.get("balance", 0))
+        return float(Decimal(str(raw / 1_000_000)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+    except Exception as e:
+        print(f"[dashboard] conditional balance: {e}", flush=True)
+        return -1.0
+
+
 def _pm_best_bid(client, token_id: str) -> float | None:
     """Satış için en yüksek bid — orderbook yoksa None."""
     try:
@@ -1588,15 +1613,10 @@ def _pm_sell_price(client, token_id: str, size: float, pm_slug: str = "", token_
 
 def _pm_sell_position(token_id: str, size: float, pm_slug: str = "", token_dir: str = "") -> dict:
     """Polymarket'ta token sat (pozisyonu kapat)."""
-    import importlib.util
     from decimal import Decimal, ROUND_DOWN
 
     try:
-        spec = importlib.util.spec_from_file_location(
-            "a5", os.path.join(_DIR_POLY, "poly_trader_analiz5.py"))
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        client = mod._pm_get_client()
+        client = _pm_get_clob_client()
     except Exception as e:
         return {"ok": False, "error": f"client init hatası: {e}"}
 
@@ -1645,6 +1665,47 @@ def _pm_sell_position(token_id: str, size: float, pm_slug: str = "", token_dir: 
         return {"ok": False, "error": str(e)}
 
 
+def _pm_sell_position_retry(
+    token_id: str, size: float, pm_slug: str = "", token_dir: str = "",
+) -> dict:
+    """Zincir bakiyesine göre sat; kısmi dolumda tekrar dene."""
+    from decimal import Decimal, ROUND_DOWN
+
+    chain = _pm_conditional_shares(token_id)
+    req = float(Decimal(str(size)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+    if chain >= 0:
+        if chain <= 0.01:
+            return {
+                "ok": True, "received": 0.0, "size": 0.0, "price": 0.0,
+                "reconciled": True, "status": "already_closed",
+            }
+        req = min(req, chain)
+
+    remaining = req
+    total_received = 0.0
+    last: dict = {"ok": False, "error": "satış başarısız"}
+    for _ in range(6):
+        if remaining <= 0.01:
+            break
+        last = _pm_sell_position(token_id, remaining, pm_slug=pm_slug, token_dir=token_dir)
+        if not last.get("ok"):
+            break
+        got = float(last.get("received") or 0)
+        sold = float(last.get("size") or remaining)
+        total_received += got
+        remaining = round(remaining - sold, 2)
+        if remaining <= 0.01:
+            break
+
+    if total_received > 0 or last.get("reconciled"):
+        out = dict(last)
+        out["ok"] = True
+        out["received"] = round(total_received, 2)
+        out["size"] = round(req - remaining, 2)
+        return out
+    return last
+
+
 _PM_TG_LABELS = {
     "analiz5": "5. ANALİZ",
     "analiz2_live": "2. ANALİZ LIVE",
@@ -1687,16 +1748,29 @@ def _tg_notify_pm_early_close(analiz: str, pos: dict, sell_result: dict) -> None
     )
 
 
+_PM_CLOSE_ANALYSES = _HOURLY_PM_ANALYSES | _15M_PM_ANALYSES
+
+
+def _pm_close_pnl_delta(pos: dict, sell_result: dict) -> float:
+    """Erken kapatma net PnL — zincirde zaten kapalıysa tahmin etme."""
+    if sell_result.get("reconciled"):
+        return 0.0
+    spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
+    received = float(sell_result.get("received") or 0)
+    return round(received - spent, 2)
+
+
 def _record_dashboard_close(analiz: str, pos: dict, sell_result: dict) -> None:
-    """Manuel PM satışını history'ye yaz (analiz5 formatı)."""
-    if analiz != "analiz5":
+    """Dashboard erken PM satışını history'ye yaz."""
+    if analiz not in _PM_CLOSE_ANALYSES:
         return
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     sym = pos.get("symbol", "")
     spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
     received = float(sell_result.get("received") or 0)
-    pnl = round(received - spent, 2)
-    pred = pos.get("predicted_dir", "")
+    reconciled = bool(sell_result.get("reconciled"))
+    pnl = 0.0 if reconciled else round(received - spent, 2)
+    pred = pos.get("predicted_dir", "") or pos.get("pm_token_dir", "")
     entry = float(pos.get("entry_price") or 0)
 
     try:
@@ -1706,14 +1780,14 @@ def _record_dashboard_close(analiz: str, pos: dict, sell_result: dict) -> None:
 
     actual = "UP" if current >= entry else "DOWN"
     history = _load_trader_history(analiz)
-    history.append({
+    row = {
         "symbol": sym,
         "predicted_dir": pred,
         "actual_dir": actual,
         "binance_actual": actual,
-        "win": pnl > 0,
+        "win": pnl > 0 if not reconciled else None,
         "pm_win": None,
-        "settle_source": "manual_sell",
+        "settle_source": "reconciled" if reconciled else "manual_sell",
         "entry_price": entry,
         "exit_price": current,
         "entry_time_tr": pos.get("entry_time_tr"),
@@ -1730,7 +1804,12 @@ def _record_dashboard_close(analiz: str, pos: dict, sell_result: dict) -> None:
         "pm_token_dir": pos.get("pm_token_dir"),
         "exit_time_tr": now_tr.isoformat(),
         "pnl": pnl,
-    })
+        "pm_live": True,
+    }
+    if analiz in _15M_PM_ANALYSES:
+        row["ts_period"] = pos.get("ts_period") or pos.get("ts_5m")
+        row["entry_period_min"] = pos.get("entry_period_min")
+    history.append(row)
     _save_trader_history(analiz, history)
 
 @app.route("/poly/api/close/<analiz>/<symbol>", methods=["POST"])
@@ -1750,7 +1829,7 @@ def api_close(analiz, symbol):
         if not token_id or not pm_size:
             return jsonify({"ok": False, "error": f"token_id veya pm_size eksik ({token_id=}, {pm_size=})"}), 400
 
-        sell_result = _pm_sell_position(
+        sell_result = _pm_sell_position_retry(
             token_id, pm_size,
             pm_slug=pos.get("pm_slug", ""),
             token_dir=pos.get("pm_token_dir") or pos.get("predicted_dir", ""),
@@ -1767,10 +1846,9 @@ def api_close(analiz, symbol):
         state["open_positions"] = [
             p for p in state["open_positions"] if p.get("symbol") != symbol
         ]
-        if analiz == "analiz5":
-            state["total_pnl"] = round(state.get("total_pnl", 0.0) + (
-                sell_result.get("received", 0) - float(pos.get("pm_spent") or pos.get("amount") or 0)
-            ), 2)
+        if analiz in _PM_CLOSE_ANALYSES and not sell_result.get("reconciled"):
+            delta = _pm_close_pnl_delta(pos, sell_result)
+            state["total_pnl"] = round(state.get("total_pnl", 0.0) + delta, 2)
         save_state(analiz, state)
         _record_dashboard_close(analiz, pos, sell_result)
         _tg_notify_pm_early_close(analiz, pos, sell_result)
@@ -3226,6 +3304,8 @@ HTML = r"""<!DOCTYPE html>
   .close-btn { background:#c8f135; border:none; color:#111; font-size:12px; font-weight:800;
                padding:8px 18px; border-radius:12px; cursor:pointer; white-space:nowrap; transition:.2s; }
   .close-btn:hover { background:#d4ff3a; }
+  .close-btn:disabled { background:#333; color:#666; cursor:not-allowed; opacity:.65; }
+  .close-btn:disabled:hover { background:#333; }
   .close-btn.loading { opacity:.5; pointer-events:none; }
   .empty { color:#333; font-size:14px; padding:32px 0; }
 
@@ -3629,7 +3709,11 @@ async function closePosition(analiz, symbol, btn) {
     }
     const s = d.sell || {};
     btn.style.background = '#4ade80';
-    btn.textContent = '✅ Kapatıldı · $' + (s.received || '?');
+    if (s.reconciled) {
+      btn.textContent = '✅ Zincirde zaten kapalı';
+    } else {
+      btn.textContent = '✅ Kapatıldı · $' + (s.received || '?');
+    }
     setTimeout(refresh, 1500);
   } catch(e) {
     btn.textContent = '⚠️ ' + e.message;
@@ -3784,7 +3868,7 @@ async function refresh() {
           </div>
           ${winStr}
           ${p.closable ? `<div class="close-btn-wrap">
-            <button class="close-btn" onclick="closePosition('${p.analiz_key}','${p.symbol}',this)">Pozisyonu Kapat</button>
+            <button class="close-btn" disabled title="Geçici olarak devre dışı">Pozisyonu Kapat</button>
           </div>` : ''}
         </div>`;
       }).join('');
