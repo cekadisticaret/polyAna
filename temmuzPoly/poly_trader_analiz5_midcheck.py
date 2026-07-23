@@ -30,6 +30,7 @@ from poly_trader_analiz5 import (
     save_state,
     tg_send_photo,
     _pm_find_market,
+    _pm_slot_label,
     _binance_get,
 )
 
@@ -70,6 +71,50 @@ def _quote_for_symbol(sym: str) -> dict:
         "down_cents": round(down_p * 100, 1) if down_p is not None else None,
     })
     return row
+
+
+def _quote_for_position(pos: dict) -> dict:
+    """Pozisyonun kendi PM market kotasyonu (slug/title)."""
+    sym = pos.get("symbol", "")
+    name = sym.replace("USDT", "")
+    row: dict = {"symbol": sym, "name": name}
+    try:
+        row["binance"] = round(_get_price(sym), 2 if name == "BTC" else 4)
+    except Exception:
+        row["binance"] = None
+
+    slug = pos.get("pm_slug", "")
+    title = pos.get("pm_title") or ""
+    if slug:
+        try:
+            req = urllib.request.Request(
+                f"{_PM_GAMMA}?slug={slug}",
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
+            with urllib.request.urlopen(req, timeout=8) as r:
+                data = json.load(r)
+            if data:
+                ev = data[0]
+                title = title or ev.get("title", "")
+                m = ev.get("markets", [{}])[0]
+                raw = m.get("outcomePrices")
+                op = json.loads(raw) if isinstance(raw, str) else (raw or [])
+                up_p = float(op[0]) if len(op) >= 1 else None
+                down_p = float(op[1]) if len(op) >= 2 else None
+                hour_lbl = title.split(",")[-1].strip() if "," in title else title
+                row.update({
+                    "hour_et": hour_lbl,
+                    "slot_label": _pm_slot_label(pos),
+                    "up_cents": round(up_p * 100, 1) if up_p is not None else None,
+                    "down_cents": round(down_p * 100, 1) if down_p is not None else None,
+                })
+                return row
+        except Exception:
+            pass
+
+    quote = _quote_for_symbol(sym)
+    quote["slot_label"] = _pm_slot_label(pos)
+    return quote
 
 
 def _token_price_from_slug(pm_slug: str, token_dir: str) -> float | None:
@@ -120,7 +165,7 @@ def _render_card(
     from matplotlib.patches import FancyBboxPatch
 
     name = quote["name"]
-    hour_et = quote.get("hour_et") or "—"
+    hour_et = quote.get("slot_label") or quote.get("hour_et") or "—"
     up_c = quote.get("up_cents")
     down_c = quote.get("down_cents")
     bn = quote.get("binance")
@@ -200,15 +245,17 @@ def _render_card(
 def run() -> None:
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     saat = now_tr.strftime("%H:%M")
+    hour_tr = now_tr.hour
     slot = now_tr.strftime("%Y-%m-%dT%H")  # saat başına bir kez
 
     state = load_state()
     positions = [
         p for p in state.get("open_positions", [])
         if p.get("pm_slug") and p.get("pm_order_id") and not p.get("pm_error")
+        and p.get("entry_hour_tr") == hour_tr
     ]
     if not positions:
-        print(f"[{LABEL} midcheck] {saat} — açık PM pozisyon yok")
+        print(f"[{LABEL} midcheck] {saat} — bu saat ({hour_tr:02d}:00) için açık PM pozisyon yok")
         return
 
     changed = False
@@ -221,14 +268,14 @@ def run() -> None:
             continue
 
         spent, cur, _ = _position_value(pos)
-        quote = _quote_for_symbol(sym)
+        quote = _quote_for_position(pos)
         if quote.get("error"):
             print(f"[{LABEL} midcheck] {sym} — kotasyon yok", file=sys.stderr)
             continue
 
         name = sym.replace("USDT", "")
         pred = pos.get("predicted_dir") or pos.get("pm_token_dir") or "?"
-        img_path = f"/tmp/a5_midcheck_{name}_{slot.replace(':', '')}.png"
+        img_path = f"/tmp/a5_midcheck_{name}_{hour_tr:02d}_{slot.replace(':', '')}.png"
         _render_card(
             quote, pred=pred, spent=spent, cur=cur, stamp=saat, out_path=img_path,
         )

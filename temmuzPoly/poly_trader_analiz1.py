@@ -23,7 +23,12 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
-from pm_trader_helpers import apply_pm_quote, sanal_pnl, trades_for_exit_day, format_daily_history_tg, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH, SANAL_TRADE_AMOUNT_LOW
+from pm_trader_helpers import (
+    apply_pm_quote, apply_cold_hour_cut, apply_hot_hour_boost, sanal_pnl,
+    trades_for_exit_day, format_daily_history_tg, symbol_wr_amount,
+    SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
+    SANAL_TRADE_AMOUNT_LOW,
+)
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
@@ -55,6 +60,14 @@ def _in_weekend_pause(now_tr: datetime) -> bool:
     if dow == 6 and h < 18:
         return True
     return False
+
+
+def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float, bool, bool]:
+    """WR tutarı → etkili saat +%50 → 12:00 yarı."""
+    base = symbol_wr_amount(history, sym)
+    amount, hot_boost = apply_hot_hour_boost(base, hour_tr, history)
+    amount, cold_cut = apply_cold_hour_cut(amount, hour_tr)
+    return amount, hot_boost, cold_cut
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -281,7 +294,9 @@ async def run_open() -> None:
         sym         = c["sym"]
         pred_obj    = c["pred_obj"]
         ind_ema_raw = pred_obj.trend.upper()
-        dyn_amount  = symbol_wr_amount(history, sym)
+        dyn_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
+        if hot_boost:
+            print(f"[1. ANALİZ] 🔥 etkili saat {hour_tr:02d}:00 — ${symbol_wr_amount(history, sym):.0f} → ${dyn_amount:.0f}")
         # Saatin başındaki fiyat (son kapanan 1h mumu) = Polymarket "Price to Beat"
         try:
             klines = await _fetch_klines(sym, "1h", 3)
@@ -297,6 +312,8 @@ async def run_open() -> None:
             "entry_dow":        dow,
             "entry_is_weekend": is_weekend,
             "amount":           dyn_amount,
+            "hot_hour_boost":   hot_boost,
+            "cold_hour_cut":    cold_cut,
             "ind_rsi_vote":     "UP" if pred_obj.rsi < 50 else "DOWN",
             "ind_rsi_val":      round(pred_obj.rsi, 1),
             "ind_macd_vote":    "UP" if pred_obj.macd_bull else "DOWN",
@@ -320,9 +337,14 @@ async def run_open() -> None:
         dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins, sym_total = get_symbol_stats(history, sym)
-        pos_amount = symbol_wr_amount(history, sym)
+        pos_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
+        tags = ""
+        if hot_boost:
+            tags += "  🔥+%50"
+        if cold_cut:
+            tags += "  ⚠️12:00 yarı"
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{entry_price:.2f}  💵{pos_amount:.0f}$\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{entry_price:.2f}  💵{pos_amount:.0f}${tags}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )

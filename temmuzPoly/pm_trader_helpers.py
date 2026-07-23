@@ -574,6 +574,9 @@ pm_fetch_resolution = pm_5m_fetch_resolution  # 1h saatlik marketler de aynı fo
 # Dashboard "En Etkili Zaman" ile aynı mantık — top 3 saatte canlı giriş %50 artış
 HOT_HOUR_BOOST = 1.5
 HOT_HOUR_MIN_TRADES = 3
+# En başarısız saatler — giriş tutarı yarıya
+COLD_HOUR_CUT = 0.5
+COLD_HOURS = frozenset({12})
 
 
 def compute_top_slot_hours(
@@ -619,6 +622,19 @@ def apply_hot_hour_boost(
     """En etkili saatlerde giriş tutarını artır (varsayılan +%50)."""
     if hour_tr in compute_top_slot_hours(history):
         return round(base_amount * boost, 2), True
+    return base_amount, False
+
+
+def apply_cold_hour_cut(
+    base_amount: float,
+    hour_tr: int,
+    *,
+    cut: float = COLD_HOUR_CUT,
+    cold_hours: frozenset[int] = COLD_HOURS,
+) -> tuple[float, bool]:
+    """En başarısız saatlerde giriş tutarını düşür (varsayılan %50)."""
+    if hour_tr in cold_hours:
+        return round(base_amount * cut, 2), True
     return base_amount, False
 
 

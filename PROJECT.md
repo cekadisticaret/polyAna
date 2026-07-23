@@ -18,7 +18,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/btc_5m_105_algo.py` | 5M ortak sinyal motoru (107 + 15M adaptörleri; 4-algo + MR veto) |
 | `temmuzPoly/pm_trader_helpers.py` | PM emir + sanal kotasyon; P&L = pm_size − pm_spent (2x fallback yok) |
 | `temmuzPoly/btc_analiz1_algo.py` | 1. Analiz tam algoritma (standalone kopya, poly_predictor ile aynı) |
-| `temmuzPoly/poly_trader_analiz1.py` | 1. Analiz sanal (BTC+SOL); Cum 22:00–Paz 18:00 İST duraklama |
+| `temmuzPoly/poly_trader_analiz1.py` | 1. Analiz sanal (BTC+SOL); $12-16-20 WR; top-3 saatte +%50; 12:00 yarı; Cum 22–Paz 18 duraklama |
 | `temmuzPoly/poly_trader_analiz2.py` | 2. Analiz sanal (SOL only; $300; **ALLOW_FALLBACK=False**) |
 | `temmuzPoly/poly_trader_analiz2_live.py` | 2. Analiz **canlı PM** SOL $6 sabit; en etkili 3 saatte +%50 giriş (A2 geçmişi) |
 | `temmuzPoly/backtest_common.py` | 1Y walk-forward backtest ortak yardımcılar |
@@ -26,7 +26,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/backtest_analiz1.py` | 1. Analiz 1Y walk-forward backtest (BTC+SOL, predict motoru) |
 | `temmuzPoly/backtest_analiz_suite.py` | 4/10. Analiz 1Y backtest ($1000, algo import — canlıya dokunmaz) |
 | `temmuzPoly/poly_trader_analiz4.py` | 4. Analiz sanal (BTC+ETH); PM gamma fiyatından gerçekçi P&L |
-| `temmuzPoly/poly_trader_analiz5_midcheck.py` | A5 açık pozisyon :30 anlık değer + PM kotasyon görseli (TG) |
+| `temmuzPoly/poly_trader_analiz5_midcheck.py` | A5 açık pozisyon :30 anlık değer + PM kotasyon görseli — yalnızca o saatin slotu (TG) |
 | `temmuzPoly/poly_trader_analiz5.py` | 5. Analiz A1 motoru BTC+SOL **gerçek PM** ($8–12); en etkili 3 saatte +%50 giriş |
 | `temmuzPoly/poly_analiz_dual_core.py` | 10/13 çift konsensüs ortak motor (A1+A4; TG yalnızca açılış/kapanış) |
 | `temmuzPoly/poly_trader_analiz10.py` | 10. Analiz çift konsensüs sanal (BTC+SOL, $300, $12-16-20 WR) |
@@ -62,7 +62,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_analiz4.py close/open` — 4. Analiz çoklu-algo **sanal** (BTC+ETH)
 - `temmuzPoly/poly_trader_analiz4.py weekly` — Cumartesi 21:00 haftalık 4 ısı haritası
 - `temmuzPoly/poly_trader_analiz5.py close/open` — A1 motoru BTC+SOL **gerçek PM**; open Cum 22–Paz 18 duraklama
-- `temmuzPoly/poly_trader_analiz5_midcheck.py` — saat **:30** açık pozisyon anlık değer + kotasyon görseli (TG)
+- `temmuzPoly/poly_trader_analiz5_midcheck.py` — saat **:30** o saatin açık pozisyonu anlık değer + kotasyon görseli (TG)
 - `temmuzPoly/poly_trader_analiz5.py weekly` — Cumartesi 21:00 haftalık 5 ısı haritası
 - `temmuzPoly/poly_trader_analiz10.py close/open` — çift konsensüs **sanal** ($300, $12-16-20 WR)
 - `temmuzPoly/poly_trader_analiz10.py weekly` — Cumartesi 21:00 haftalık 10 ısı haritası

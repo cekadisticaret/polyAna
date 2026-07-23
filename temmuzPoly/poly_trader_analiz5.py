@@ -12,6 +12,7 @@ import asyncio
 import json
 import math
 import os
+import re
 import sys
 import time
 import urllib.request
@@ -200,6 +201,33 @@ def _pm_get_balance() -> float:
         return int(bal.get("balance", 0)) / 1e6
     except Exception:
         return -1.0
+
+
+def _pm_slot_label(pos: dict) -> str:
+    """TG satırı: 07:00→08:00 İST · 12AM ET"""
+    h = pos.get("entry_hour_tr")
+    if h is None:
+        return ""
+    end = (int(h) + 1) % 24
+    ist = f"{int(h):02d}:00→{end:02d}:00 İST"
+    title = pos.get("pm_title") or ""
+    if ", " in title and title.rstrip().endswith("ET"):
+        et = title.rsplit(", ", 1)[-1].strip()
+        return f"{ist} · {et}"
+    slug = pos.get("pm_slug") or ""
+    m = re.search(r"-(\d{1,2}(?:am|pm))-et$", slug, re.I)
+    if not m:
+        return ist
+    raw = m.group(1).lower()
+    if raw == "12am":
+        et = "12AM ET"
+    elif raw == "12pm":
+        et = "12PM ET"
+    elif raw.endswith("am"):
+        et = f"{int(raw[:-2])}AM ET"
+    else:
+        et = f"{int(raw[:-2])}PM ET"
+    return f"{ist} · {et}"
 
 
 def _pm_find_market(symbol: str, et_hour: int, date_utc) -> dict | None:
@@ -678,8 +706,10 @@ async def run_close() -> None:
         if pm_source and binance_win != win:
             bn_note = f"  (BN:{'✅' if binance_win else '❌'})"
         tur_pnl += pnl_line
+        slot = _pm_slot_label(pos)
+        slot_part = f"  {slot}" if slot else ""
         lines.append(
-            f"{icon} {name}  {pred}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
+            f"{icon} {name}  {pred}{slot_part}  {entry:.2f}→{current_price:.2f} ({pct:+.2f}%)  "
             f"{pm_tg_stake(pos)}  net {'+' if pnl_line >= 0 else ''}{pnl_line:.2f}$  "
             f"{src_tag}{bn_note}  skor:{pos.get('score', 0):+d}/3"
         )
@@ -837,8 +867,10 @@ async def run_open() -> None:
             pm_spent = opened_pos.get("pm_spent", 0) or 0
             pm_size  = opened_pos.get("pm_size", 0) or 0
             to_win = f" → ${pm_size:.2f} kazanılacak" if pm_size > 0 else ""
+            slot = _pm_slot_label(opened_pos)
+            slot_part = f"  {slot}" if slot else ""
             trade_lines.append(
-                f"  {d_icon} <b>{name}</b> {d_tr}  giriş:{entry:.2f}  ${pm_spent:.2f} risk{to_win}"
+                f"  {d_icon} <b>{name}</b> {d_tr}{slot_part}  giriş:{entry:.2f}  ${pm_spent:.2f} risk{to_win}"
             )
         else:
             conf = sig.get("conf", 0) * 100
