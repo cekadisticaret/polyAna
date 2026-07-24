@@ -2,7 +2,7 @@
 2. ANALİZ LIVE — SOL gerçek Polymarket ($5–7 WR'ye göre)
 
 Algoritma: poly_trader_analiz2 ile aynı sinyal (predict, ALLOW_FALLBACK=False).
-A5'e dokunmaz; kendi state/history; bağımsız cron.
+A1 Live'e dokunmaz; kendi state/history; bağımsız cron.
 
 Gerçek PM: PM_ANALIZ2_REAL_ENABLED (varsayılan false)
 Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open atlanır; close çalışır)

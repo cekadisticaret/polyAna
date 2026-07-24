@@ -10,7 +10,8 @@ _PM_CONTROL_FILE = os.path.join(_DIR, "pm_system_control.json")
 _TZ_TR = timezone(timedelta(hours=3))
 
 _LABEL_GROUPS = {
-    "5. ANALİZ": "analiz5",
+    "A1 LIVE": "analiz5",
+    "5. ANALİZ": "analiz5",  # geriye uyumluluk
     "2. ANALİZ LIVE": "analiz2",
     "15M 210 SOL": "m15_210",
 }
@@ -37,7 +38,7 @@ def _load_control() -> dict:
                 data["analiz5_paused"] = legacy
                 data["analiz2_paused"] = legacy
                 data["m15_210_paused"] = legacy
-            # hourly_paused → A5 + A2
+            # hourly_paused → A1 Live + A2
             if "hourly_paused" in data and "analiz5_paused" not in data:
                 h = bool(data.get("hourly_paused"))
                 data["analiz5_paused"] = h

@@ -14,6 +14,7 @@ from flask import Flask, jsonify, make_response, render_template_string, request
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _PANEL_STATS_ANALIZ = "analiz1"  # sağ panel: sembol WR + en etkili zaman
 _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 
@@ -21,8 +22,10 @@ _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 _HEATMAP_SYMS = {
     "analiz1":  ["BTC", "SOL"],
     "analiz2":  ["SOL"],
+    "analiz3":  ["BTC", "SOL", "ETH"],
     "analiz4":  ["BTC", "ETH"],
     "analiz5":  ["BTC", "SOL"],
+    "analiz8":  ["BTC", "SOL", "ETH"],
     "analiz9":  ["BTC", "SOL"],
     "analiz10": ["BTC", "SOL"],
     "analiz13": ["SOL"],
@@ -31,8 +34,17 @@ _HEATMAP_SYMS = {
     "5m_sol_111": ["SOL"],
     "5m_sol_210": ["SOL"],
 }
-# poly_trader_* dışındaki analiz dosyaları (history, state)
-_CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {}
+# poly_trader_* dışındaki analiz dosyaları (history, state) — mutlak yol
+_CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
+    "analiz3": (
+        os.path.join(_ROOT, "freqtrade/user_data/analiz3_freqtrade_history.json"),
+        os.path.join(_ROOT, "freqtrade/user_data/analiz3_freqtrade_state.json"),
+    ),
+    "analiz8": (
+        os.path.join(_ROOT, "jesse/storage/analiz8_jesse_history.json"),
+        os.path.join(_ROOT, "jesse/storage/analiz8_jesse_state.json"),
+    ),
+}
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 _PASIF_ANALYSES = frozenset({"analiz9", "5m_btc_107"})
 # Kaldırılmış trader'lar — diskte history kalsa bile listelenmez
@@ -42,23 +54,25 @@ _REMOVED_ANALYSES = frozenset({
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz5", "analiz4", "analiz10", "analiz13",
+    "analiz1", "analiz2", "analiz5", "analiz3", "analiz8", "analiz4", "analiz10", "analiz13",
     "5m_btc_107", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca bu liste (auto-discover yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz5", "analiz4", "analiz10", "analiz13",
+    "analiz1", "analiz2", "analiz5", "analiz3", "analiz8", "analiz4", "analiz10", "analiz13",
     "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz5", "analiz9",
+    "analiz2", "analiz1", "analiz4", "analiz5", "analiz3", "analiz8", "analiz9",
     "analiz10", "analiz13", "5m_btc_107", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
     "analiz2":    "2. Analiz (SOL)",
+    "analiz3":    "3. Analiz Freqtrade",
     "analiz4":    "4. Analiz",
-    "analiz5":    "5. Analiz",
+    "analiz5":    "A1 Live",
+    "analiz8":    "8. Analiz Jesse",
     "analiz9":    "9. Analiz (Pasif)",
     "analiz10":   "10. Analiz",
     "analiz13":   "13. Analiz (SOL)",
@@ -83,20 +97,19 @@ def _trader_exists(key: str, on_disk: set[str]) -> bool:
     if key in on_disk:
         return True
     if key in _CUSTOM_TRADER_FILES:
-        hist_fn, _ = _CUSTOM_TRADER_FILES[key]
-        return os.path.exists(os.path.join(_DIR_POLY, hist_fn))
+        return os.path.exists(_CUSTOM_TRADER_FILES[key][0])
     return os.path.exists(os.path.join(_DIR_POLY, f"poly_trader_{key}_state.json"))
 
 
 def _trader_history_path(key: str) -> str:
     if key in _CUSTOM_TRADER_FILES:
-        return os.path.join(_DIR_POLY, _CUSTOM_TRADER_FILES[key][0])
+        return _CUSTOM_TRADER_FILES[key][0]
     return os.path.join(_DIR_POLY, f"poly_trader_{key}_history.json")
 
 
 def _trader_state_path(key: str) -> str:
     if key in _CUSTOM_TRADER_FILES:
-        return os.path.join(_DIR_POLY, _CUSTOM_TRADER_FILES[key][1])
+        return _CUSTOM_TRADER_FILES[key][1]
     return os.path.join(_DIR_POLY, f"poly_trader_{key}_state.json")
 
 
@@ -273,14 +286,15 @@ def get_klines(symbol: str, interval="15m", limit=80):
              "l": float(k[3]), "c": float(k[4]), "v": float(k[5])} for k in raw]
 
 def load_state(name: str) -> dict:
-    path = os.path.join(_DIR_POLY, f"poly_trader_{name}_state.json")
+    path = _trader_state_path(name)
     if os.path.exists(path):
         with open(path) as f:
             return json.load(f)
     return {}
 
+
 def save_state(name: str, state: dict):
-    path = os.path.join(_DIR_POLY, f"poly_trader_{name}_state.json")
+    path = _trader_state_path(name)
     with open(path, "w") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
 
@@ -301,7 +315,7 @@ def get_pm_balance() -> float:
 
 # Gerçek PM trader'lar — sidebar kar donut
 _PM_LIVE_PROFIT_SOURCES = [
-    ("analiz5", "A5", "#a855f7"),
+    ("analiz5", "A1 Live", "#a855f7"),
     ("5m_sol_210", "210", "#c8f135"),
     ("analiz2_live", "A2", "#2dd4bf"),
 ]
@@ -348,7 +362,7 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
 
 
 def get_pm_hourly_quotes(only_names: set[str] | None = None) -> list[dict]:
-    """Aktif 1h PM marketleri — BTC/SOL UP/DOWN anlık fiyat (Analiz 5 ile aynı slug)."""
+    """Aktif 1h PM marketleri — BTC/SOL UP/DOWN anlık fiyat (A1 Live ile aynı slug)."""
     from datetime import timedelta
 
     if only_names is not None and not only_names:
@@ -466,7 +480,7 @@ def get_pm_15m_quotes(only_names: set[str] | None = None) -> list[dict]:
 
 # Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
 _PM_POSITION_SOURCES = [
-    ("analiz5", "5. Analiz"),
+    ("analiz5", "A1 Live"),
     ("analiz2_live", "A2 Live"),
     ("manual", "Manuel"),
     ("5m_sol_110", "15M 110 SOL"),
@@ -991,8 +1005,10 @@ def api_analizler():
     _SYSTEMS = [
         ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
         ("analiz2",    "2. Analiz (SOL)",       300,  "A1 motoru SOL only $10-15-20"),
+        ("analiz3",    "3. Analiz Freqtrade",   300,  "SampleStrategy TA sanal PM BTC+SOL+ETH"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
-        ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM $5–7 WR"),
+        ("analiz5",    "A1 Live",             None, "A1 Motoru Gerçek PM $5–7 WR"),
+        ("analiz8",    "8. Analiz Jesse",       300,  "GoldenCross EMA8/21 sanal PM BTC+SOL+ETH"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
         ("analiz13",   "13. Analiz (SOL)",      300,  "Çift Konsensüs SOL only $10 sabit"),
         ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 algo + yön freni — cron kapalı"),
@@ -1520,7 +1536,7 @@ def api_stats():
             "wr": wr, "pnl": round(pnl, 2),
         })
 
-    # Son işlemler: yalnızca gerçek PM trader'lar (5. Analiz, 105, vb.)
+    # Son işlemler: yalnızca gerçek PM trader'lar (A1 Live, 210, vb.)
     for key, label in _PM_POSITION_SOURCES:
         for t in _load_trader_history(key):
             if t.get("win") is None or not _is_live_pm_trade(t):
@@ -1847,7 +1863,7 @@ def _short_pm_error(err: str) -> str:
 
 
 _PM_TG_LABELS = {
-    "analiz5": "5. ANALİZ",
+    "analiz5": "A1 LIVE",
     "analiz2_live": "2. ANALİZ LIVE",
     "manual": "MANUEL PM",
 }
@@ -2891,14 +2907,14 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
 
 <div class="main">
   <div class="page-title">Ayarlar</div>
-  <div class="page-sub">5. Analiz — işlem miktarları anlık güncellenir, bir sonraki saatte devreye girer</div>
+  <div class="page-sub">A1 Live — işlem miktarları anlık güncellenir, bir sonraki saatte devreye girer</div>
 
   <div class="settings-card">
     <h3>İşlem Miktarları</h3>
 
     <div class="setting-row">
       <div class="setting-left">
-        <div class="setting-label">A9 + A5 Aynı Yön</div>
+        <div class="setting-label">A9 + A1 Live Aynı Yön</div>
         <div class="setting-desc">İki sistem hemfikir olduğunda açılan işlem miktarı</div>
       </div>
       <div class="setting-right">
@@ -2909,8 +2925,8 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
 
     <div class="setting-row">
       <div class="setting-left">
-        <div class="setting-label">A9 Sessiz — A5 Var</div>
-        <div class="setting-desc">Sadece A5 sinyal ürettiğinde açılan işlem miktarı</div>
+        <div class="setting-label">A9 Sessiz — A1 Live Var</div>
+        <div class="setting-desc">Sadece A1 Live sinyal ürettiğinde açılan işlem miktarı</div>
       </div>
       <div class="setting-right">
         <span class="setting-unit">$</span>
@@ -2920,7 +2936,7 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
 
     <div class="setting-row">
       <div class="setting-left">
-        <div class="setting-label">A9 Var — A5 Sessiz</div>
+        <div class="setting-label">A9 Var — A1 Live Sessiz</div>
         <div class="setting-desc">Sadece A9 sinyal ürettiğinde açılan işlem miktarı</div>
       </div>
       <div class="setting-right">
@@ -3612,7 +3628,7 @@ HTML = r"""<!DOCTYPE html>
       <div class="pm-system-wrap">
         <div class="pm-system-bar" id="pm-system-bar-analiz5">
           <div>
-            <div class="pm-system-status" id="pm-system-status-analiz5">✅ A5 açılış aktif</div>
+            <div class="pm-system-status" id="pm-system-status-analiz5">✅ A1 Live açılış aktif</div>
             <div class="pm-system-sub" id="pm-system-sub-analiz5">Saatlik BTC+SOL · kapanış :02 devam eder</div>
           </div>
           <button type="button" class="pm-system-btn" id="pm-system-btn-analiz5" onclick="togglePmSystem('analiz5')">Kapat</button>
@@ -3952,7 +3968,7 @@ const _PM_SYSTEM_ROWS = {
   analiz5: {
     bar: 'pm-system-bar-analiz5', btn: 'pm-system-btn-analiz5',
     status: 'pm-system-status-analiz5', sub: 'pm-system-sub-analiz5',
-    active: '✅ A5 açılış aktif', paused: '⏸ A5 kapalı',
+    active: '✅ A1 Live açılış aktif', paused: '⏸ A1 Live kapalı',
     subOn: 'Saatlik BTC+SOL · kapanış :02 devam eder',
     subOff: 'Saatlik yeni işlem açmaz · açık pozisyonlar :02 kapanır',
   },
@@ -4420,7 +4436,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz5:'5. Analiz',analiz4:'4. Analiz',analiz10:'10. Analiz',analiz13:'13. Analiz'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz4:'4. Analiz',analiz10:'10. Analiz',analiz13:'13. Analiz'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {
@@ -4548,9 +4564,9 @@ function renderHeatmap(cells) {
 
 _SETTINGS_FILE = os.path.join(_DIR_POLY, "analiz5_settings.json")
 _SETTINGS_LABELS = {
-    "amount_agree":    {"label": "A9 + A5 aynı yön", "unit": "$", "min": 1, "max": 100, "step": 0.5},
-    "amount_a5_only":  {"label": "A9 sessiz, A5 var", "unit": "$", "min": 1, "max": 100, "step": 0.5},
-    "amount_a9_only":  {"label": "A9 var, A5 sessiz", "unit": "$", "min": 1, "max": 100, "step": 0.5},
+    "amount_agree":    {"label": "A9 + A1 Live aynı yön", "unit": "$", "min": 1, "max": 100, "step": 0.5},
+    "amount_a5_only":  {"label": "A9 sessiz, A1 Live var", "unit": "$", "min": 1, "max": 100, "step": 0.5},
+    "amount_a9_only":  {"label": "A9 var, A1 Live sessiz", "unit": "$", "min": 1, "max": 100, "step": 0.5},
 }
 
 def _read_settings() -> dict:

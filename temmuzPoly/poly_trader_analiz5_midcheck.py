@@ -1,4 +1,4 @@
-"""5. Analiz — açık pozisyon :30 anlık değer + PM kotasyon görseli (Telegram)."""
+"""A1 Live — açık pozisyon :30 anlık değer + PM kotasyon görseli (Telegram)."""
 from __future__ import annotations
 
 import json
@@ -36,7 +36,7 @@ from poly_trader_analiz5 import (
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 _PM_GAMMA = "https://gamma-api.polymarket.com/events"
-LABEL = "5. ANALİZ"
+LABEL = "A1 LIVE"
 
 
 def _get_price(symbol: str) -> float:

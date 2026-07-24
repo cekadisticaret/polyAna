@@ -21,7 +21,7 @@ alwaysApply: true
 | `30 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz5_midcheck.py` | `/tmp/poly_trader_analiz5_midcheck.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/pm_balance_hourly.py` | `/tmp/pm_balance_hourly.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_real_stats.py` | `/tmp/poly_5m_real_stats.log` |
-| `0 * * * *` | `poly_trader_5m_sol_210.py hourly` (son 10 işlem P&amp;L, A5 TG) | `/tmp/poly_5m_sol_210.log` |
+| `0 * * * *` | `poly_trader_5m_sol_210.py hourly` (son 10 işlem P&amp;L, A1 Live TG) | `/tmp/poly_5m_sol_210.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_110.py open` (+1 sn gecikme) | `/tmp/poly_5m_sol_110.log` |
 | `0 0 * * 0` | `poly_trader_5m_sol_110.py weekly` | `/tmp/poly_5m_sol_110.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_210.py open` (+3 sn, 110 snapshot, gerçek PM $8-12) | `/tmp/poly_5m_sol_210.log` |
@@ -34,6 +34,8 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh open` | `/tmp/poly_analiz3_freqtrade.log` |
 | `2 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh close` | `/tmp/poly_analiz8_jesse.log` |
 | `5 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh open` | `/tmp/poly_analiz8_jesse.log` |
+| `2 * * * *` | `cd /root/aiProject && ./temmuzPoly/run_alfa.sh close` | `/tmp/poly_trader_alfa.log` |
+| `5 * * * *` | `cd /root/aiProject && ./temmuzPoly/run_alfa.sh open` | `/tmp/poly_trader_alfa.log` |
 
 ## Pasif / Kaldırılmış
 | Zamanlama | Durum |
@@ -68,4 +70,5 @@ tail -f /tmp/backup.log
 tail -f /tmp/crypto_news_monitor.log
 tail -f /tmp/poly_analiz3_freqtrade.log
 tail -f /tmp/poly_analiz8_jesse.log
+tail -f /tmp/poly_trader_alfa.log
 ```

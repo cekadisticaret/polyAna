@@ -1,5 +1,5 @@
 """
-5. ANALİZ — Analiz 1 Motoru (Gerçek Polymarket)
+A1 LIVE — Analiz 1 Motoru (Gerçek Polymarket)
 
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
 Sabit $5–7/işlem (WR'ye göre), BTC+SOL.
@@ -37,6 +37,7 @@ if os.path.exists(_ENV_FILE):
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
 CHAT_ID   = "830754964"
+LABEL     = "A1 LIVE"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR              = os.path.dirname(os.path.abspath(__file__))
@@ -111,7 +112,7 @@ def _update_algo_accuracy(pos: dict, win: bool) -> None:
         with open(ALGO_ACCURACY_FILE, "w") as f:
             json.dump(acc, f, indent=2)
     except Exception as e:
-        print(f"[5. ANALİZ] algo accuracy güncelleme hatası: {e}", file=sys.stderr)
+        print(f"[A1 LIVE] algo accuracy güncelleme hatası: {e}", file=sys.stderr)
 
 # ── Polymarket Config ──────────────────────────────────────────
 _PM_CLOB_HOST = "https://clob.polymarket.com"
@@ -140,7 +141,7 @@ def _pm_get_client():
                 creds=creds, signature_type=1, funder=funder,
             )
         except Exception as e:
-            print(f"[5. ANALİZ] Client init ({attempt+1}/3): {e}", file=sys.stderr)
+            print(f"[A1 LIVE] Client init ({attempt+1}/3): {e}", file=sys.stderr)
             time.sleep(2)
     raise RuntimeError("Polymarket client oluşturulamadı")
 
@@ -186,7 +187,7 @@ def _pm_fetch_resolution(slug: str) -> dict | None:
             "title": pm_ev.get("title"),
         }
     except Exception as e:
-        print(f"[5. ANALİZ close] PM sonuç hatası ({slug}): {e}", file=sys.stderr)
+        print(f"[A1 LIVE close] PM sonuç hatası ({slug}): {e}", file=sys.stderr)
         return None
 
 
@@ -283,7 +284,7 @@ def _pm_find_market(symbol: str, et_hour: int, date_utc) -> dict | None:
                 "outcome_prices": op,
             }
         except Exception as e:
-            print(f"[5. ANALİZ] Gamma hatası ({slug}): {e}", file=sys.stderr)
+            print(f"[A1 LIVE] Gamma hatası ({slug}): {e}", file=sys.stderr)
     return None
 
 
@@ -325,9 +326,9 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
         resp   = client.post_order(signed, order_type=OrderType.FAK)
         if not resp or not resp.get("success"):
             mesaj = str(resp)
-            print(f"[5. ANALİZ] Order başarısız: {mesaj}", file=sys.stderr)
+            print(f"[A1 LIVE] Order başarısız: {mesaj}", file=sys.stderr)
             if _retry:
-                print(f"[5. ANALİZ] 10sn sonra tekrar deneniyor...", file=sys.stderr)
+                print(f"[A1 LIVE] 10sn sonra tekrar deneniyor...", file=sys.stderr)
                 time.sleep(10)
                 return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
             _log_hata(token_id[:20], "order_basarisiz", mesaj)
@@ -335,9 +336,9 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
         oid = resp.get("orderID") or resp.get("id", "")
         return {"order_id": oid, "size": size, "price": price, "spent": spent}
     except Exception as e:
-        print(f"[5. ANALİZ] Order hatası: {e}", file=sys.stderr)
+        print(f"[A1 LIVE] Order hatası: {e}", file=sys.stderr)
         if _retry:
-            print(f"[5. ANALİZ] 10sn sonra tekrar deneniyor...", file=sys.stderr)
+            print(f"[A1 LIVE] 10sn sonra tekrar deneniyor...", file=sys.stderr)
             time.sleep(10)
             return _pm_place_order(token_id, amount_usd, tick_size, neg_risk, _retry=False)
         _log_hata(token_id[:20], "order_exception", str(e))
@@ -362,7 +363,7 @@ def _log_hata(symbol: str, hata_turu: str, detay: str) -> None:
         with open(_HATA_FILE, "w") as f:
             json.dump(kayitlar, f, ensure_ascii=False, indent=2)
     except Exception as ex:
-        print(f"[5. ANALİZ] Hata loglanamadı: {ex}", file=sys.stderr)
+        print(f"[A1 LIVE] Hata loglanamadı: {ex}", file=sys.stderr)
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -535,7 +536,7 @@ async def analyze(symbol: str) -> dict | None:
     try:
         pred_obj = await predict(symbol)
     except Exception as e:
-        print(f"[5. ANALİZ] {symbol} predict hatası: {e}", file=sys.stderr)
+        print(f"[A1 LIVE] {symbol} predict hatası: {e}", file=sys.stderr)
         return None
 
     if pred_obj is None:
@@ -597,7 +598,7 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        print(f"[5. ANALİZ close] {saat} İST — açık pozisyon yok")
+        print(f"[A1 LIVE close] {saat} İST — açık pozisyon yok")
         return
 
     lines        = []
@@ -616,7 +617,7 @@ async def run_close() -> None:
                 if attempt == 0:
                     import time as _time; _time.sleep(4)
                 else:
-                    print(f"[5. ANALİZ close] {pos['symbol']} fiyat hatası: {e}", file=sys.stderr)
+                    print(f"[A1 LIVE close] {pos['symbol']} fiyat hatası: {e}", file=sys.stderr)
                     failed_pos.append(pos)
 
         if klines is None:
@@ -638,7 +639,7 @@ async def run_close() -> None:
             if res is None:
                 # Henüz kesinleşmedi — Binance ile kapatma; sonraki close'a bırak
                 print(
-                    f"[5. ANALİZ close] {pos['symbol']} PM sonucu bekleniyor "
+                    f"[A1 LIVE close] {pos['symbol']} PM sonucu bekleniyor "
                     f"({pos.get('pm_slug')}) — ertelendi",
                     file=sys.stderr,
                 )
@@ -722,10 +723,10 @@ async def run_close() -> None:
     # Hata olan pozisyonlar için bildirim
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        print(f"[5. ANALİZ close] {saat} — fiyat alınamadı: {names}")
+        print(f"[A1 LIVE close] {saat} — fiyat alınamadı: {names}")
 
     if not lines:
-        print(f"[5. ANALİZ close] {saat} İST — kapatılan pozisyon yok")
+        print(f"[A1 LIVE close] {saat} İST — kapatılan pozisyon yok")
         return
 
     # total_pnl güncelle
@@ -744,13 +745,13 @@ async def run_close() -> None:
 
     tg_send(
         f"{sep}\n"
-        f"🏁 <b>5. ANALİZ — {saat} Sonuçlar</b>\n"
+        f"🏁 <b>A1 LIVE — {saat} Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
         f"Bu tur: {tur_pnl_str}  |  Bakiye: {pm_bal_str}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl >= 0 else ''}{total_pnl:.2f}$  |  Genel: {genel_str}\n"
         f"{sep}"
     )
-    print(f"[5. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
+    print(f"[A1 LIVE close] {saat} İST — {len(lines)} pozisyon kapatıldı")
 
 
 # ── OPEN ──────────────────────────────────────────────────────
@@ -775,14 +776,14 @@ def _try_pm_open(
     pm = _pm_find_market(sig["symbol"], et_hour, now)
     if not pm or not pm.get("active") or pm.get("closed"):
         durum = "bulunamadı" if not pm else "kapalı"
-        print(f"[5. ANALİZ] {sig['symbol']} market {durum}", file=sys.stderr)
+        print(f"[A1 LIVE] {sig['symbol']} market {durum}", file=sys.stderr)
         _log_hata(sig["symbol"], "market_" + durum, f"et_hour={et_hour} slug aranıyor")
         return None, "market"
     token_id = pm["up_token"] if sig["predicted_dir"] == "UP" else pm["down_token"]
     order = _pm_place_order(token_id, amount, pm["tick_size"], pm["neg_risk"])
     if not order:
         dir_f = sig["predicted_dir"]
-        print(f"[5. ANALİZ] {sig['symbol']} PM order başarısız", file=sys.stderr)
+        print(f"[A1 LIVE] {sig['symbol']} PM order başarısız", file=sys.stderr)
         _log_hata(sig["symbol"], "order_basarisiz", f"dir={dir_f} amount={amount}")
         return None, "order"
     pos.update({
@@ -791,7 +792,7 @@ def _try_pm_open(
         "pm_entry_price": order["price"], "pm_order_id": order["order_id"],
         "pm_spent": order["spent"], "algo_snapshot": algo_snapshot,
     })
-    print(f"[5. ANALİZ] PM order: {sig['symbol']} {sig['predicted_dir']} "
+    print(f"[A1 LIVE] PM order: {sig['symbol']} {sig['predicted_dir']} "
           f"{order['size']} shares @ {order['price']} (${order['spent']:.2f})")
     state["open_positions"].append(pos)
     return pos, None
@@ -803,7 +804,7 @@ async def run_open() -> None:
     saat   = now_tr.strftime("%H:%M")
 
     if _in_weekend_pause(now_tr):
-        print(f"[5. ANALİZ open] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok")
+        print(f"[A1 LIVE open] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok")
         return
 
     hour_tr    = now_tr.hour
@@ -814,7 +815,7 @@ async def run_open() -> None:
     history = load_history()
 
     # PM bakiye kontrolü
-    if not _PM_DRY_RUN and not can_open_trade("5. ANALİZ", tg_send):
+    if not _PM_DRY_RUN and not can_open_trade(LABEL, tg_send):
         return
 
     results = []
@@ -837,7 +838,7 @@ async def run_open() -> None:
             if hour_tr in hot_hours:
                 base = amount
                 amount = round(amount * 1.5, 2)
-                print(f"[5. ANALİZ] 🔥 etkili saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f}")
+                print(f"[A1 LIVE] 🔥 etkili saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f}")
             pos, err = _try_pm_open(
                 state, sig, hour_tr=hour_tr, dow=dow, is_weekend=is_weekend,
                 now_tr=now_tr, now=now, amount=amount,
@@ -849,7 +850,7 @@ async def run_open() -> None:
                 _market_skip.append(sig)
             elif err == "order":
                 name_f = sig["symbol"].replace("USDT", "")
-                print(f"[5. ANALİZ] {name_f} ({sig['predicted_dir']}) PM order başarısız")
+                print(f"[A1 LIVE] {name_f} ({sig['predicted_dir']}) PM order başarısız")
                 _order_fail.append(sig)
 
     save_state(state)
@@ -886,7 +887,7 @@ async def run_open() -> None:
         error_lines.append(f"⚠️ PM order hatası: {names}")
 
     if _newly_opened == 0:
-        print(f"[5. ANALİZ open] {saat} İST — işlem yok")
+        print(f"[A1 LIVE open] {saat} İST — işlem yok")
         return
 
     if _newly_opened > 0:
@@ -910,7 +911,7 @@ async def run_open() -> None:
     opened_lines = [ln for ln in trade_lines if "giriş:" in ln]
     parts = [
         sep,
-        f"<b>5. ANALİZ ✦ PolyAktif (Analiz 1 motoru) — {saat} - {next_h}</b>",
+        f"<b>A1 LIVE ✦ PolyAktif (Analiz 1 motoru) — {saat} - {next_h}</b>",
         "",
         "📂 <b>İşleme Girilenler:</b>",
     ]
@@ -928,7 +929,7 @@ async def run_open() -> None:
     ]
 
     tg_send("\n".join(parts))
-    print(f"[5. ANALİZ open] {saat} İST — {_newly_opened} işlem açıldı")
+    print(f"[A1 LIVE open] {saat} İST — {_newly_opened} işlem açıldı")
 
 
 # ── WEEKLY ────────────────────────────────────────────────────
@@ -1027,7 +1028,7 @@ def run_weekly() -> None:
     sym_line = "   |   ".join(sym_stats)
 
     ax.set_title(
-        f"5. ANALİZ — Trend + MR + Orderflow + Funding  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
+        f"A1 LIVE — Trend + MR + Orderflow + Funding  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
         f"Toplam: {total} işlem  |  {genel} doğruluk\n"
         f"{sym_line}",
         color="#00e676", fontsize=9, fontweight="bold", pad=10
@@ -1043,19 +1044,19 @@ def run_weekly() -> None:
     plt.savefig(WEEKLY_IMG, dpi=150, bbox_inches="tight", facecolor="#0a0e1a", pad_inches=0.1)
     plt.close()
 
-    tg_send_photo(WEEKLY_IMG, f"⚡ 5. ANALİZ Haftalık Rapor — {now_tr.strftime('%d.%m.%Y %H:%M İST')}\n"
+    tg_send_photo(WEEKLY_IMG, f"⚡ A1 LIVE Haftalık Rapor — {now_tr.strftime('%d.%m.%Y %H:%M İST')}\n"
                               f"{total} işlem | {genel} | Trend+MR+OF+Funding")
 
     ind_lines = _ind_stats_lines(history)
     tg_send(
-        f"📊 <b>5. ANALİZ HAFTALIK İSTATİSTİKLER</b>\n"
+        f"📊 <b>A1 LIVE HAFTALIK İSTATİSTİKLER</b>\n"
         f"{now_tr.strftime('%d.%m.%Y %H:%M İST')} İST\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {genel} başarı\n"
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"\n🔬 <b>Algoritma İsabet Oranı</b>\n" + "\n".join(ind_lines)
     )
-    print(f"[5. ANALİZ weekly] gönderildi — {total} işlem")
+    print(f"[A1 LIVE weekly] gönderildi — {total} işlem")
 
 
 # ── STATS ─────────────────────────────────────────────────────
@@ -1065,7 +1066,7 @@ def run_stats() -> None:
     now_tr    = datetime.now(timezone.utc).astimezone(_TZ_TR)
 
     if not history:
-        tg_send("📊 <b>5. ANALİZ STATS</b>\nHenüz veri yok.")
+        tg_send("📊 <b>A1 LIVE STATS</b>\nHenüz veri yok.")
         return
 
     total     = len(history)
@@ -1074,7 +1075,7 @@ def run_stats() -> None:
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
 
     parts = [
-        f"📊 <b>5. ANALİZ İSTATİSTİKLER</b>",
+        f"📊 <b>A1 LIVE İSTATİSTİKLER</b>",
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
@@ -1124,7 +1125,7 @@ def run_stats() -> None:
         parts.append(f"  {'📅' if d < 5 else '🏖'}{bar} {_DAYS_TR[d]}  {_wr(w, n)}")
 
     tg_send("\n".join(parts))
-    print("[5. ANALİZ stats] gönderildi")
+    print("[A1 LIVE stats] gönderildi")
 
 
 # ── Giriş noktası ─────────────────────────────────────────────

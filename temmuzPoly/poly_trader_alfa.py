@@ -1,9 +1,9 @@
 """
-8. ANALİZ JESSE — Saatlik Polymarket sanal (BTC + SOL + ETH)
+ALFA ANALİZ — Üçlü konsensüs sanal (A1 + A3 + A8, BTC + SOL)
 
-Sinyal: Jesse GoldenCross (EMA 8/21) — analiz8_signal.py
-Sanal: $300, PM gamma kotasyonu, gerçek emir yok.
-Jesse çekirdeğine dokunmaz; ayrı cron betiği.
+A1 (PolyPredict) + A3 (Freqtrade TA) + A8 (Jesse GoldenCross) oylaması;
+motor WR ağırlıklı puan ve min 2/3 konsensüs ile giriş.
+Sanal $300, gerçek emir yok.
 
 Modlar: close (:02) / open (:05) / stats
 Hafta sonu: Cuma 22:00 – Pazar 18:00 İST (open atlanır)
@@ -20,11 +20,9 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
-_ROOT = os.path.join(_DIR, "..")
 sys.path.insert(0, _DIR)
-sys.path.insert(0, os.path.join(_ROOT, "temmuzPoly"))
 
-from analiz8_signal import predict_pm_direction
+from alfa_signal import AlfaDecision, amount_for_decision, analyze_symbol
 from pm_trader_helpers import (
     apply_pm_quote,
     in_weekend_pause_tr,
@@ -34,35 +32,16 @@ from pm_trader_helpers import (
     SANAL_INITIAL_BALANCE,
 )
 
-_ENV_FILE = os.path.join(_ROOT, ".env")
-if os.path.exists(_ENV_FILE):
-    with open(_ENV_FILE) as _f:
-        for _line in _f:
-            _line = _line.strip()
-            if _line and not _line.startswith("#") and "=" in _line:
-                _k, _, _v = _line.partition("=")
-                os.environ.setdefault(_k.strip(), _v.strip())
+LABEL = "ALFA ANALİZ"
+BOT_TOKEN = "8256912678:AAFWEoRWO7Z0siK_c4Dm5XjgtBKmh-wmF8E"
+CHAT_ID = os.getenv("TELEGRAM_ALFA_CHAT_ID") or os.getenv("TELEGRAM_CHAT") or "830754964"
 
-LABEL = "8. ANALİZ JESSE"
-BOT_TOKEN = (
-    os.getenv("TELEGRAM_BOT_TOKEN")
-    or os.getenv("TELEGRAM_TOKEN")
-    or os.getenv("TELEGRAM_LAB_BOT_TOKEN")
-    or ""
-)
-CHAT_ID = (
-    os.getenv("TELEGRAM_CHAT_ID")
-    or os.getenv("TELEGRAM_CHAT")
-    or os.getenv("TELEGRAM_LAB_CHAT_ID")
-    or ""
-)
 _TZ_TR = ZoneInfo("Europe/Istanbul")
-_USERDATA = os.path.join(_DIR, "storage")
-STATE_FILE = os.path.join(_USERDATA, "analiz8_jesse_state.json")
-HISTORY_FILE = os.path.join(_USERDATA, "analiz8_jesse_history.json")
+STATE_FILE = os.path.join(_DIR, "poly_trader_alfa_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_alfa_history.json")
 
 INITIAL_BALANCE = SANAL_INITIAL_BALANCE
-SYMBOLS = ["BTCUSDT", "SOLUSDT", "ETHUSDT"]
+SYMBOLS = ["BTCUSDT", "SOLUSDT"]
 
 
 def load_state() -> dict:
@@ -76,7 +55,6 @@ def load_state() -> dict:
 
 
 def save_state(state: dict) -> None:
-    os.makedirs(_USERDATA, exist_ok=True)
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
 
@@ -92,7 +70,6 @@ def load_history() -> list:
 
 
 def save_history(history: list) -> None:
-    os.makedirs(_USERDATA, exist_ok=True)
     with open(HISTORY_FILE, "w") as f:
         json.dump(history, f, indent=2, ensure_ascii=False)
 
@@ -127,6 +104,22 @@ def tg_send(text: str) -> None:
         print(f"[{LABEL} TG] Hata: {exc}")
 
 
+def _vote_line(v) -> str:
+    if not v.predicted_dir:
+        return f"{v.label}: —"
+    icon = "✓" if v.predicted_dir == "UP" else "↓" if v.predicted_dir == "DOWN" else "?"
+    d = "UP" if v.predicted_dir == "UP" else "DN"
+    return f"{v.label}:{d}{icon} %{v.confidence * 100:.0f} WR:%{v.wr_weight * 100:.0f}"
+
+
+def _decision_tg_block(dec: AlfaDecision) -> str:
+    votes = " | ".join(_vote_line(v) for v in dec.votes)
+    if dec.should_trade:
+        dir_tr = "YUKSELIR" if dec.predicted_dir == "UP" else "DUSER"
+        return f"puan:{dec.score:.0f}  {dec.agree_count}/3  {dir_tr}\n   {votes}"
+    return f"ATLANDI — {dec.skip_reason}\n   {votes}"
+
+
 async def _hour_open_price(symbol: str, fallback: float) -> float:
     from poly_predictor_analysis import _fetch_klines
 
@@ -137,6 +130,15 @@ async def _hour_open_price(symbol: str, fallback: float) -> float:
     except Exception:
         pass
     return fallback
+
+
+async def _current_price(symbol: str) -> float | None:
+    from poly_predictor_analysis import _fetch_klines
+
+    klines = await _fetch_klines(symbol, "1h", 3)
+    if not klines or len(klines) < 2:
+        return None
+    return float(klines[-2]["close"])
 
 
 async def run_close() -> None:
@@ -155,15 +157,11 @@ async def run_close() -> None:
     failed: list[dict] = []
 
     for pos in list(state["open_positions"]):
-        from poly_predictor_analysis import _fetch_klines
-
-        klines = await _fetch_klines(pos["symbol"], "1h", 3)
-        if not klines or len(klines) < 2:
+        current = await _current_price(pos["symbol"])
+        if current is None:
             failed.append(pos)
             continue
 
-        # :02 kapanis — tamamlanmis onceki saat mumu (yeni saat ~2 dk once acildi)
-        current = float(klines[-2]["close"])
         entry = float(pos["entry_price"])
         pred = pos["predicted_dir"]
         actual = "UP" if current >= entry else "DOWN"
@@ -186,11 +184,11 @@ async def run_close() -> None:
             "exit_time_tr": now_tr.isoformat(),
             "amount": pos.get("amount"),
             "pnl": pnl,
-            "signal_engine": "jesse_golden_cross",
-            "ind_rsi_val": pos.get("ind_rsi_val"),
-            "ema_fast": pos.get("ema_fast"),
-            "ema_slow": pos.get("ema_slow"),
-            "golden_cross": pos.get("golden_cross"),
+            "alfa_score": pos.get("alfa_score"),
+            "alfa_agree": pos.get("alfa_agree"),
+            "votes_a1": pos.get("votes_a1"),
+            "votes_a3": pos.get("votes_a3"),
+            "votes_a8": pos.get("votes_a8"),
         }
         for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug"):
             if pos.get(k) is not None:
@@ -201,8 +199,10 @@ async def run_close() -> None:
         icon = "✅" if win else "❌"
         pct = (current - entry) / entry * 100 if entry else 0
         stake = pm_tg_stake(pos) or f"${pos.get('amount', 0):.0f}"
+        sc = pos.get("alfa_score", "?")
         lines.append(
-            f"{icon} {name} {pred}  {entry:.4g}→{current:.4g} ({pct:+.2f}%)  {stake}"
+            f"{icon} {name} {pred}  {entry:.4g}→{current:.4g} ({pct:+.2f}%)  "
+            f"puan:{sc}  {stake}"
         )
 
     state["open_positions"] = failed
@@ -216,7 +216,6 @@ async def run_close() -> None:
     closed_all = len(history)
     win_all = sum(1 for t in history if t["win"])
     genel = f"%{win_all / closed_all * 100:.0f}" if closed_all else "—"
-    # :02'de kapanan tur = az once biten saat dilimi (orn. 21:02 -> 21:00 sonuclari)
     saat_round = f"{now_tr.hour:02d}:00"
     sep = "━" * 26
     tg_send(
@@ -245,65 +244,83 @@ async def run_open() -> None:
     history = load_history()
 
     opened: list[dict] = []
+    skipped: list[str] = []
+
     for sym in SYMBOLS:
-        sig = predict_pm_direction(sym)
-        if sig is None:
+        dec = await analyze_symbol(sym)
+        if not dec.should_trade:
+            skipped.append(f"{sym.replace('USDT', '')}: {dec.skip_reason or 'elenmedi'}")
             continue
-        amount = symbol_wr_amount(history, sym)
-        entry_price = await _hour_open_price(sym, sig.current_price)
+
+        base = symbol_wr_amount(history, sym)
+        amount = amount_for_decision(base, dec)
+        if amount <= 0:
+            skipped.append(f"{sym.replace('USDT', '')}: tutar 0")
+            continue
+
+        from poly_predictor_analysis import predict
+        pred = await predict(sym)
+        fallback = pred.current_price if pred else 0.0
+        entry_price = await _hour_open_price(sym, fallback)
+
+        votes_map = {v.key: v.predicted_dir for v in dec.votes}
         pos = {
             "symbol": sym,
-            "predicted_dir": sig.predicted_dir,
+            "predicted_dir": dec.predicted_dir,
             "entry_price": entry_price,
             "entry_time_tr": now_tr.isoformat(),
             "entry_hour_tr": hour_tr,
             "entry_dow": dow,
             "entry_is_weekend": dow >= 5,
             "amount": amount,
-            "signal_engine": "jesse_golden_cross",
-            "ind_rsi_val": round(sig.rsi, 1),
-            "ema_fast": round(sig.ema_fast, 4),
-            "ema_slow": round(sig.ema_slow, 4),
-            "golden_cross": sig.golden_cross,
+            "alfa_score": dec.score,
+            "alfa_agree": dec.agree_count,
+            "votes_a1": votes_map.get("a1"),
+            "votes_a3": votes_map.get("a3"),
+            "votes_a8": votes_map.get("a8"),
         }
-        apply_pm_quote(pos, sym, sig.predicted_dir, amount, now)
+        apply_pm_quote(pos, sym, dec.predicted_dir, amount, now)
         state["open_positions"].append(pos)
-        opened.append({"sym": sym, "sig": sig, "pos": pos, "amount": amount})
+        opened.append({"sym": sym, "dec": dec, "pos": pos, "amount": amount})
 
     save_state(state)
 
-    if not opened:
-        print(f"[{LABEL} open] {saat} IST — islem yok")
-        return
-
     next_h = f"{(hour_tr + 1) % 24:02d}:00"
+    sep = "━" * 26
     lines: list[str] = []
+
     for item in opened:
-        sym, sig, pos, amount = item["sym"], item["sig"], item["pos"], item["amount"]
+        sym, dec, pos, amount = item["sym"], item["dec"], item["pos"], item["amount"]
         name = sym.replace("USDT", "")
-        conf = max(sig.prob_up, sig.prob_down) * 100
-        icon = "📈" if sig.predicted_dir == "UP" else "📉"
-        dir_tr = "YUKSELIR" if sig.predicted_dir == "UP" else "DUSER"
+        icon = "📈" if dec.predicted_dir == "UP" else "📉"
         sym_w, sym_t = get_symbol_stats(history, sym)
         pm_line = pm_tg_stake(pos) or f"💵 ${amount:.0f}"
-        cross = "Golden✓" if sig.golden_cross else "Golden✗"
         lines.append(
-            f"{icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  "
-            f"RSI:{sig.rsi:.0f}  EMA8/21:{cross}\n"
-            f"   {pm_line}  |  genel: {_wr(sym_w, sym_t)}"
+            f"{icon} <b>{name}</b>  {_decision_tg_block(dec)}\n"
+            f"   {pm_line}  |  ALFA: {_wr(sym_w, sym_t)}"
         )
 
-    at_risk = sum(p.get("pm_spent") or p.get("amount", 0) for p in state["open_positions"])
-    sep = "━" * 26
-    tg_send(
-        f"{sep}\n"
-        f"🆕 <b>{LABEL} — {saat} - {next_h}</b>  🔶 SANAL PM  Jesse GoldenCross\n"
-        + "\n".join(lines) + "\n"
-        f"{sep}\n"
-        f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Riskte: ${at_risk:.0f}  |  Acik: {len(state['open_positions'])}\n"
-        f"{sep}"
-    )
-    print(f"[{LABEL} open] {saat} IST — {len(opened)} acildi")
+    if opened:
+        at_risk = sum(p.get("pm_spent") or p.get("amount", 0) for p in state["open_positions"])
+        tg_send(
+            f"{sep}\n"
+            f"🅰️ <b>{LABEL} — {saat} - {next_h}</b>  🔶 SANAL PM  A1+A3+A8\n"
+            + "\n".join(lines) + "\n"
+            f"{sep}\n"
+            f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Riskte: ${at_risk:.0f}  |  Acik: {len(state['open_positions'])}\n"
+            + (f"⏭ Elenen: {', '.join(skipped)}\n" if skipped else "")
+            + f"{sep}"
+        )
+        print(f"[{LABEL} open] {saat} IST — {len(opened)} acildi")
+    else:
+        tg_send(
+            f"{sep}\n"
+            f"🅰️ <b>{LABEL} — {saat}</b>  🔶 SANAL PM\n"
+            f"Bu tur islem acilmadi.\n"
+            + "\n".join(skipped) + "\n"
+            f"{sep}"
+        )
+        print(f"[{LABEL} open] {saat} IST — islem yok ({len(skipped)} elendi)")
 
 
 def run_stats() -> None:
@@ -319,7 +336,7 @@ def run_stats() -> None:
         f"Toplam: {total}  |  {_wr(wins, total)}\n"
         f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
         f"Bakiye: ${state.get('balance', INITIAL_BALANCE):.2f}\n"
-        f"BTC+SOL+ETH saatlik sanal PM · Jesse GoldenCross EMA8/21"
+        f"BTC+SOL saatlik sanal · A1+A3+A8 konsensüs"
     )
 
 

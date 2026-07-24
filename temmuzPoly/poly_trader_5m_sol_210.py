@@ -26,7 +26,7 @@ from analiz32_15m_signal_snapshot import wait_for_110_open_decision
 from btc_5m_105_algo import fetch_klines_15m
 import poly_trader_5m_common as _pm_common
 
-# 5. Analiz ile aynı Telegram (PolyAktif bot)
+# A1 Live ile aynı Telegram (PolyAktif bot)
 from pm_trader_helpers import (
     PM_LIVE_TG_TOKEN as BOT_TOKEN,
     PM_LIVE_TG_CHAT as CHAT_ID,

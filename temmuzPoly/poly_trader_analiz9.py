@@ -642,7 +642,7 @@ async def run_open() -> None:
             results.append(sig)
         time.sleep(0.4)
 
-    # Sinyalleri analiz5 için JSON'a kaydet
+    # Sinyalleri A1 Live için JSON'a kaydet
     _signals_file = "/tmp/analiz9_signals.json"
     try:
         signal_data = {
@@ -766,7 +766,7 @@ async def run_open() -> None:
     parts.append(sep)
 
     tg_send("\n".join(parts))
-    # Konsensüs dosyası: Analiz 5 bu dosyayı okuyarak çelişki kontrolü yapar
+    # Konsensüs dosyası: A1 Live bu dosyayı okuyarak çelişki kontrolü yapar
     _consensus = {s["symbol"]: s["predicted_dir"] for s in results if s.get("predicted_dir")}
     try:
         with open("/tmp/analiz9_consensus.json", "w") as _cf:

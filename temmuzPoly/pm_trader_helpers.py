@@ -17,13 +17,13 @@ _PM_ASSET_MAP = {
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 PM_DRY_RUN = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 
-# Gerçek PM trader'lar — A5 / 210 / A2 Live aynı Telegram kanalı
+# Gerçek PM trader'lar — A1 Live / 210 / A2 Live aynı Telegram kanalı
 PM_LIVE_TG_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
 PM_LIVE_TG_CHAT = "830754964"
 
 
 def tg_send_pm_live(text: str, *, label: str = "PM") -> bool:
-    """5. Analiz ile aynı PolyAktif bot + chat."""
+    """A1 Live ile aynı PolyAktif bot + chat."""
     try:
         url = f"https://api.telegram.org/bot{PM_LIVE_TG_TOKEN}/sendMessage"
         data = json.dumps({
@@ -54,7 +54,7 @@ def in_weekend_pause_tr(now_tr: datetime) -> bool:
     return False
 
 
-# Sanal trader giriş tutarları (1. Analiz mantığı — A5 hariç ortak)
+# Sanal trader giriş tutarları (1. Analiz mantığı — A1 Live hariç ortak)
 SANAL_INITIAL_BALANCE = 300.0
 SANAL_TRADE_AMOUNT = 16.0       # sembol WR veri yok veya tam %50
 SANAL_TRADE_AMOUNT_HIGH = 20.0  # sembol genel WR > %50

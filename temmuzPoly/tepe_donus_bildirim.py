@@ -1,7 +1,7 @@
 """
 TEPE / DÖNÜŞ TESPİT — Saatlik Bildirim
 Her saat :01'de çalışır, BTC/ETH/SOL için tepe dönüşü kontrol eder.
-Sinyal varsa 5. ANALİZ botuna bildirim gönderir.
+Sinyal varsa A1 Live botuna bildirim gönderir.
 """
 import json
 import urllib.request
