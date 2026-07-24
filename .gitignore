@@ -1,4 +1,23 @@
 .env
+crypto-news-monitor/node_modules/
+crypto-news-monitor/data/
+freqtrade/.git/
+freqtrade/.venv/
+# freqtrade upstream — yalnizca aiProject wrapper dosyalari commit edilir
+freqtrade/*
+!freqtrade/analiz3_signal.py
+!freqtrade/poly_analiz3_freqtrade.py
+!freqtrade/run_analiz3.sh
+!freqtrade/run_dry.sh
+!freqtrade/run_webserver.sh
+!freqtrade/setup.sh
+freqtrade/user_data/data/
+freqtrade/user_data/logs/
+freqtrade/user_data/backtest_results/
+freqtrade/user_data/hyperopt_results/
+freqtrade/user_data/config.json
+freqtrade/user_data/analiz3_freqtrade_state.json
+freqtrade/user_data/analiz3_freqtrade_history.json
 telegram_config.py
 __pycache__/
 *.pyc

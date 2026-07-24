@@ -1,4 +1,4 @@
-7"""
+"""
 15M 210 SOL — 5M110Analiz FeatureEngine (gerçek PM, SOL only)
 ===========================================================
 110'un birebir canlı kopyası: 110 aynı turda açtıysa mirror; açmadıysa 210 katiyen açmaz.
