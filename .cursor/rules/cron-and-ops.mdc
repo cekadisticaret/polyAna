@@ -32,6 +32,8 @@ alwaysApply: true
 | `*/30 * * * *` | `cd /root/aiProject/crypto-news-monitor && ./run_once.sh` | `/tmp/crypto_news_monitor.log` |
 | `2 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh close` | `/tmp/poly_analiz3_freqtrade.log` |
 | `5 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh open` | `/tmp/poly_analiz3_freqtrade.log` |
+| `2 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh close` | `/tmp/poly_analiz8_jesse.log` |
+| `5 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh open` | `/tmp/poly_analiz8_jesse.log` |
 
 ## Pasif / Kaldırılmış
 | Zamanlama | Durum |
@@ -65,4 +67,5 @@ tail -f /tmp/algo_signals.log
 tail -f /tmp/backup.log
 tail -f /tmp/crypto_news_monitor.log
 tail -f /tmp/poly_analiz3_freqtrade.log
+tail -f /tmp/poly_analiz8_jesse.log
 ```

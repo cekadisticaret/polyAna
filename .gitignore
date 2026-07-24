@@ -11,6 +11,15 @@ freqtrade/*
 !freqtrade/run_dry.sh
 !freqtrade/run_webserver.sh
 !freqtrade/setup.sh
+jesse/.git/
+jesse/.venv/
+jesse/storage/
+# jesse upstream — yalnizca aiProject wrapper dosyalari commit edilir
+jesse/*
+!jesse/analiz8_signal.py
+!jesse/poly_analiz8_jesse.py
+!jesse/run_analiz8.sh
+!jesse/setup.sh
 freqtrade/user_data/data/
 freqtrade/user_data/logs/
 freqtrade/user_data/backtest_results/
