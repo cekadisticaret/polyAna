@@ -9,7 +9,7 @@ import urllib.request
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-from flask import Flask, jsonify, render_template_string, request, session, redirect, url_for
+from flask import Flask, jsonify, make_response, render_template_string, request, session, redirect, url_for
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 
@@ -687,6 +687,9 @@ def api_data():
     _attach_live_position_to_quotes(pm_hourly, enriched, _HOURLY_PM_ANALYSES)
     _attach_live_position_to_quotes(pm_15m, enriched, _15M_PM_ANALYSES)
 
+    sys.path.insert(0, _DIR_POLY)
+    from pm_balance_guard import get_pm_system_control
+
     return jsonify({
         "cash":      round(cash, 2),
         "portfolio": portfolio,
@@ -694,6 +697,7 @@ def api_data():
         "pm_hourly": pm_hourly,
         "pm_15m":    pm_15m,
         "updated":   datetime.now(_TZ_TR).strftime("%H:%M:%S"),
+        **get_pm_system_control(),
     })
 
 @app.route("/poly/api/klines/<symbol>")
@@ -988,13 +992,13 @@ def api_analizler():
         ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
         ("analiz2",    "2. Analiz (SOL)",       300,  "A1 motoru SOL only $10-15-20"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
-        ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM $6–12 WR"),
+        ("analiz5",    "5. Analiz",             None, "A1 Motoru Gerçek PM $5–7 WR"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
         ("analiz13",   "13. Analiz (SOL)",      300,  "Çift Konsensüs SOL only $10 sabit"),
         ("5m_btc_107",  "5M 107 BTC (Pasif)",    200,  "105 algo + yön freni — cron kapalı"),
         ("5m_sol_110",  "15M 110 SOL",           300,  "5M110Analiz 15m SOL sanal $8-10-12"),
         ("5m_sol_111",  "15M 111 SOL",           300,  "A32 15m filtreli sanal $8-10-12"),
-        ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $8-10-12"),
+        ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $4-5-6"),
     ]
     results = []
     for key, label, init_bal, desc in _SYSTEMS:
@@ -1551,6 +1555,49 @@ def api_pm_profit():
     return jsonify(get_pm_profit_breakdown())
 
 
+@app.route("/poly/api/pm-system", methods=["GET"])
+def api_pm_system_get():
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_POLY)
+    from pm_balance_guard import get_pm_system_control
+    return jsonify({"ok": True, **get_pm_system_control()})
+
+
+@app.route("/poly/api/pm-system", methods=["POST"])
+def api_pm_system_post():
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_POLY)
+    from pm_balance_guard import (
+        get_pm_system_control,
+        set_group_paused,
+        set_pm_open_paused,
+        toggle_group_paused,
+        toggle_pm_open_paused,
+    )
+    body = request.get_json(force=True) if request.is_json else {}
+    group = body.get("group")
+    if group in ("analiz5", "analiz2", "m15_210", "hourly"):
+        if group == "hourly":
+            if "paused" in body:
+                paused = bool(body["paused"])
+            else:
+                cur = get_pm_system_control()
+                paused = not (cur["analiz5_paused"] and cur["analiz2_paused"])
+            set_group_paused("analiz5", paused, source="dashboard")
+            state = set_group_paused("analiz2", paused, source="dashboard")
+        elif "paused" in body:
+            state = set_group_paused(group, bool(body["paused"]), source="dashboard")
+        else:
+            state = toggle_group_paused(group, source="dashboard")
+    elif "paused" in body:
+        state = set_pm_open_paused(bool(body["paused"]), source="dashboard")
+    else:
+        state = toggle_pm_open_paused(source="dashboard")
+    return jsonify({"ok": True, **state})
+
+
 def _pm_get_clob_client():
     import importlib.util
     spec = importlib.util.spec_from_file_location(
@@ -1611,6 +1658,37 @@ def _pm_sell_price(client, token_id: str, size: float, pm_slug: str = "", token_
     return 0.50
 
 
+def _pm_sell_ladder_prices(client, token_id: str, size: float, pm_slug: str = "", token_dir: str = "") -> list[float]:
+    """FAK satış için azalan fiyat listesi (gamma → bid → piyasa)."""
+    from py_clob_client_v2 import OrderType
+
+    candidates: list[float] = []
+    bid = _pm_best_bid(client, token_id)
+    if bid and bid > 0:
+        candidates.append(bid)
+    try:
+        mp = float(client.calculate_market_price(token_id, "SELL", size, OrderType.FAK))
+        if mp > 0:
+            candidates.append(mp)
+    except Exception:
+        pass
+    if pm_slug and token_dir:
+        gp = get_pm_token_price(pm_slug, token_dir)
+        if gp and gp > 0:
+            candidates.append(gp - 0.01)
+
+    start = max(candidates) if candidates else 0.50
+    start = max(0.02, min(0.98, round(start, 2)))
+    prices: list[float] = []
+    p = start
+    while p >= 0.02 and len(prices) < 20:
+        prices.append(round(p, 2))
+        p = round(p - 0.03, 2)
+    if 0.02 not in prices:
+        prices.append(0.02)
+    return prices
+
+
 def _pm_sell_position(token_id: str, size: float, pm_slug: str = "", token_dir: str = "") -> dict:
     """Polymarket'ta token sat (pozisyonu kapat)."""
     from decimal import Decimal, ROUND_DOWN
@@ -1629,15 +1707,15 @@ def _pm_sell_position(token_id: str, size: float, pm_slug: str = "", token_dir: 
             return {"ok": False, "error": "geçersiz boyut"}
 
         last_err = "bilinmeyen hata"
-        for attempt in range(3):
-            price = _pm_sell_price(client, token_id, size, pm_slug, token_dir)
-            if attempt > 0:
-                price = max(0.02, round(price - 0.03 * attempt, 2))
-
-            args = OrderArgs(token_id=token_id, price=price, size=size, side=SELL)
-            signed = client.create_order(args, PartialCreateOrderOptions())
-            resp = client.post_order(signed, order_type=OrderType.FAK)
-            print(f"[dashboard] PM sell attempt {attempt + 1} @{price}: {resp}", flush=True)
+        for price in _pm_sell_ladder_prices(client, token_id, size, pm_slug, token_dir):
+            try:
+                args = OrderArgs(token_id=token_id, price=price, size=size, side=SELL)
+                signed = client.create_order(args, PartialCreateOrderOptions())
+                resp = client.post_order(signed, order_type=OrderType.FAK)
+                print(f"[dashboard] PM sell @{price}: {resp}", flush=True)
+            except Exception as e:
+                last_err = str(e)
+                continue
 
             if not resp:
                 last_err = "boş yanıt"
@@ -1645,19 +1723,22 @@ def _pm_sell_position(token_id: str, size: float, pm_slug: str = "", token_dir: 
 
             status = resp.get("status", "")
             if resp.get("success") and status in ("matched", "live", "delayed"):
-                received_raw = resp.get("takingAmount")
                 try:
-                    received = round(float(received_raw), 2) if received_raw else round(size * price, 2)
+                    received = round(float(resp.get("takingAmount") or 0), 2)
                 except (TypeError, ValueError):
                     received = round(size * price, 2)
+                if received <= 0:
+                    received = round(size * price, 2)
+                try:
+                    sold = round(float(resp.get("makingAmount") or size), 2)
+                except (TypeError, ValueError):
+                    sold = size
                 return {
-                    "ok": True, "price": price, "size": size,
+                    "ok": True, "price": price, "size": sold,
                     "received": received, "status": status,
                 }
 
-            last_err = f"FAK eşleşmedi (status={status})"
-            if status in ("canceled", "unmatched"):
-                continue
+            last_err = resp.get("errorMsg") or f"FAK eşleşmedi (status={status})"
 
         return {"ok": False, "error": last_err}
 
@@ -1704,6 +1785,65 @@ def _pm_sell_position_retry(
         out["size"] = round(req - remaining, 2)
         return out
     return last
+
+
+def _pm_fetch_outcome_prices(slug: str) -> tuple[float, float] | None:
+    """Gamma outcome fiyatları (UP, DOWN)."""
+    if not slug:
+        return None
+    try:
+        req = urllib.request.Request(
+            f"https://gamma-api.polymarket.com/events?slug={slug}",
+            headers={"User-Agent": "Mozilla/5.0"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.load(r)
+        if not data:
+            return None
+        m = data[0].get("markets", [{}])[0]
+        raw_op = m.get("outcomePrices")
+        op = json.loads(raw_op) if isinstance(raw_op, str) else (raw_op or [])
+        if len(op) < 2:
+            return None
+        return float(op[0]), float(op[1])
+    except Exception:
+        return None
+
+
+def _pm_try_worthless_reconcile(pos: dict) -> dict | None:
+    """Token ~$0 (karşı taraf kazandı) — satış yok, kayıp olarak kapat."""
+    prices = _pm_fetch_outcome_prices(pos.get("pm_slug", ""))
+    if not prices:
+        return None
+    up_p, down_p = prices
+    token_dir = (pos.get("pm_token_dir") or pos.get("predicted_dir") or "").upper()
+    lost = (token_dir == "UP" and up_p <= 0.05) or (token_dir == "DOWN" and down_p <= 0.05)
+    if not lost:
+        return None
+    return {
+        "ok": True,
+        "reconciled": True,
+        "worthless": True,
+        "received": 0.0,
+        "size": float(pos.get("pm_size") or 0),
+        "price": 0.0,
+        "status": "settled_loss",
+    }
+
+
+def _short_pm_error(err: str) -> str:
+    """UI için kısa Türkçe hata."""
+    s = str(err or "")
+    low = s.lower()
+    if "no orders found" in low or "fak" in low:
+        return "Likidite yok — slot sonunda otomatik kapanır"
+    if "invalid token" in low or "orderbook" in low:
+        return "Piyasa kapandı — settle bekleniyor"
+    if "unauthorized" in low:
+        return "Oturum gerekli — yeniden giriş yap"
+    if len(s) > 72:
+        return s[:69] + "…"
+    return s or "PM satış başarısız"
 
 
 _PM_TG_LABELS = {
@@ -1753,6 +1893,9 @@ _PM_CLOSE_ANALYSES = _HOURLY_PM_ANALYSES | _15M_PM_ANALYSES
 
 def _pm_close_pnl_delta(pos: dict, sell_result: dict) -> float:
     """Erken kapatma net PnL — zincirde zaten kapalıysa tahmin etme."""
+    if sell_result.get("worthless"):
+        spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
+        return round(-spent, 2)
     if sell_result.get("reconciled"):
         return 0.0
     spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
@@ -1769,7 +1912,16 @@ def _record_dashboard_close(analiz: str, pos: dict, sell_result: dict) -> None:
     spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
     received = float(sell_result.get("received") or 0)
     reconciled = bool(sell_result.get("reconciled"))
-    pnl = 0.0 if reconciled else round(received - spent, 2)
+    worthless = bool(sell_result.get("worthless"))
+    if worthless:
+        pnl = round(-spent, 2)
+        win = False
+    elif reconciled:
+        pnl = 0.0
+        win = None
+    else:
+        pnl = round(received - spent, 2)
+        win = pnl > 0
     pred = pos.get("predicted_dir", "") or pos.get("pm_token_dir", "")
     entry = float(pos.get("entry_price") or 0)
 
@@ -1785,9 +1937,9 @@ def _record_dashboard_close(analiz: str, pos: dict, sell_result: dict) -> None:
         "predicted_dir": pred,
         "actual_dir": actual,
         "binance_actual": actual,
-        "win": pnl > 0 if not reconciled else None,
+        "win": win,
         "pm_win": None,
-        "settle_source": "reconciled" if reconciled else "manual_sell",
+        "settle_source": "worthless" if worthless else ("reconciled" if reconciled else "manual_sell"),
         "entry_price": entry,
         "exit_price": current,
         "entry_time_tr": pos.get("entry_time_tr"),
@@ -1836,9 +1988,12 @@ def api_close(analiz, symbol):
         )
 
         if not sell_result.get("ok"):
+            sell_result = _pm_try_worthless_reconcile(pos) or sell_result
+
+        if not sell_result.get("ok"):
             return jsonify({
                 "ok": False,
-                "error": sell_result.get("error", "PM satış başarısız"),
+                "error": _short_pm_error(sell_result.get("error", "PM satış başarısız")),
                 "sell": sell_result,
                 "symbol": symbol,
             }), 502
@@ -1846,9 +2001,10 @@ def api_close(analiz, symbol):
         state["open_positions"] = [
             p for p in state["open_positions"] if p.get("symbol") != symbol
         ]
-        if analiz in _PM_CLOSE_ANALYSES and not sell_result.get("reconciled"):
+        if analiz in _PM_CLOSE_ANALYSES:
             delta = _pm_close_pnl_delta(pos, sell_result)
-            state["total_pnl"] = round(state.get("total_pnl", 0.0) + delta, 2)
+            if delta:
+                state["total_pnl"] = round(state.get("total_pnl", 0.0) + delta, 2)
         save_state(analiz, state)
         _record_dashboard_close(analiz, pos, sell_result)
         _tg_notify_pm_early_close(analiz, pos, sell_result)
@@ -3183,6 +3339,24 @@ HTML = r"""<!DOCTYPE html>
   .overview-grid { display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start; }
   .overview-left  { min-width:0; }
   .overview-right { min-width:0; }
+  .pm-system-wrap { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .pm-system-bar {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 14px; border-radius:14px;
+    background:#132013; border:1px solid #2a3a2a;
+  }
+  .pm-system-bar.paused { background:#2a1414; border-color:#5a2a2a; }
+  .pm-system-status { font-size:13px; font-weight:600; color:#9ae66e; line-height:1.35; }
+  .pm-system-bar.paused .pm-system-status { color:#fca5a5; }
+  .pm-system-sub { font-size:11px; color:#666; margin-top:3px; font-weight:500; }
+  .pm-system-btn {
+    flex-shrink:0; border:none; border-radius:10px; padding:9px 14px;
+    font-size:12px; font-weight:800; cursor:pointer; color:#0d0d0d;
+    background:#c8f135; transition:opacity .15s; white-space:nowrap;
+  }
+  .pm-system-btn:hover { opacity:.9; }
+  .pm-system-btn.paused { background:#f87171; color:#fff; }
+  .pm-system-btn:disabled { opacity:.55; cursor:wait; }
 
   /* Stats kartları */
   .stats-row { display:grid; gap:14px; margin-bottom:14px; }
@@ -3435,6 +3609,29 @@ HTML = r"""<!DOCTYPE html>
 
     <!-- SOL: stats + grafik -->
     <div class="overview-left">
+      <div class="pm-system-wrap">
+        <div class="pm-system-bar" id="pm-system-bar-analiz5">
+          <div>
+            <div class="pm-system-status" id="pm-system-status-analiz5">✅ A5 açılış aktif</div>
+            <div class="pm-system-sub" id="pm-system-sub-analiz5">Saatlik BTC+SOL · kapanış :02 devam eder</div>
+          </div>
+          <button type="button" class="pm-system-btn" id="pm-system-btn-analiz5" onclick="togglePmSystem('analiz5')">Kapat</button>
+        </div>
+        <div class="pm-system-bar" id="pm-system-bar-analiz2">
+          <div>
+            <div class="pm-system-status" id="pm-system-status-analiz2">✅ A2 açılış aktif</div>
+            <div class="pm-system-sub" id="pm-system-sub-analiz2">Saatlik SOL · kapanış :02 devam eder</div>
+          </div>
+          <button type="button" class="pm-system-btn" id="pm-system-btn-analiz2" onclick="togglePmSystem('analiz2')">Kapat</button>
+        </div>
+        <div class="pm-system-bar" id="pm-system-bar-210">
+          <div>
+            <div class="pm-system-status" id="pm-system-status-210">✅ 210 açılış aktif</div>
+            <div class="pm-system-sub" id="pm-system-sub-210">15M yeni işlem açabilir · kapanış devam eder</div>
+          </div>
+          <button type="button" class="pm-system-btn" id="pm-system-btn-210" onclick="togglePmSystem('m15_210')">Kapat</button>
+        </div>
+      </div>
       <!-- Üst 2 kart: Portfolio + Cash -->
       <div class="stats-row top-stats">
         <div class="stat-card">
@@ -3488,7 +3685,7 @@ HTML = r"""<!DOCTYPE html>
 
       <!-- En İyi 3 Analiz (sadece desktop) -->
       <div class="section-title top3-desktop-only" style="margin:20px 0 12px">🏆 En Başarılı Analizler</div>
-      <div id="top3-analizler" class="top3-desktop-only" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+      <div id="top3-analizler" class="top3-desktop-only" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px">
         <div style="color:#555;font-size:13px;padding:16px">Yükleniyor…</div>
       </div>
 
@@ -3688,29 +3885,33 @@ function buildTabs(syms) {
 }
 
 async function closePosition(analiz, symbol, btn) {
+  if (btn.disabled || btn.classList.contains('loading')) return;
+  btn.disabled = true;
   btn.classList.add('loading'); btn.textContent = 'Kapatılıyor...';
   try {
-    const r = await fetch('/poly/api/close/' + analiz + '/' + symbol, {
+    const r = await fetch('/poly/api/close/' + encodeURIComponent(analiz) + '/' + encodeURIComponent(symbol), {
       method: 'POST',
       credentials: 'same-origin',
-      headers: {'Accept': 'application/json'},
+      headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
     });
     let d;
     try { d = await r.json(); } catch (_) {
       btn.textContent = '⚠️ Sunucu yanıtı okunamadı';
-      btn.style.background = '#f87171'; btn.classList.remove('loading'); return;
+      btn.style.background = '#f87171'; btn.classList.remove('loading'); btn.disabled = false; return;
     }
     if (!d.ok) {
       btn.textContent = '⚠️ ' + (d.error || 'Satış başarısız');
       btn.style.background = '#f87171';
       btn.classList.remove('loading');
+      btn.disabled = false;
       setTimeout(() => { btn.textContent = 'Pozisyonu Kapat'; btn.style.background = ''; }, 4000);
       return;
     }
     const s = d.sell || {};
     btn.style.background = '#4ade80';
+    btn.classList.remove('loading');
     if (s.reconciled) {
-      btn.textContent = '✅ Zincirde zaten kapalı';
+      btn.textContent = s.worthless ? '✅ Kapatıldı · kayıp' : '✅ Zincirde zaten kapalı';
     } else {
       btn.textContent = '✅ Kapatıldı · $' + (s.received || '?');
     }
@@ -3719,8 +3920,82 @@ async function closePosition(analiz, symbol, btn) {
     btn.textContent = '⚠️ ' + e.message;
     btn.style.background = '#f87171';
     btn.classList.remove('loading');
+    btn.disabled = false;
     setTimeout(() => { btn.textContent = 'Pozisyonu Kapat'; btn.style.background = ''; }, 4000);
   }
+}
+
+async function togglePmSystem(group) {
+  const btn = document.getElementById('pm-system-btn-' + (group === 'm15_210' ? '210' : group));
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  const prev = btn.textContent;
+  btn.textContent = '…';
+  try {
+    const r = await fetch('/poly/api/pm-system', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ group, toggle: true }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'Hata');
+    updatePmSystemUI(d);
+  } catch (e) {
+    btn.textContent = prev;
+    alert('Sistem anahtarı: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+const _PM_SYSTEM_ROWS = {
+  analiz5: {
+    bar: 'pm-system-bar-analiz5', btn: 'pm-system-btn-analiz5',
+    status: 'pm-system-status-analiz5', sub: 'pm-system-sub-analiz5',
+    active: '✅ A5 açılış aktif', paused: '⏸ A5 kapalı',
+    subOn: 'Saatlik BTC+SOL · kapanış :02 devam eder',
+    subOff: 'Saatlik yeni işlem açmaz · açık pozisyonlar :02 kapanır',
+  },
+  analiz2: {
+    bar: 'pm-system-bar-analiz2', btn: 'pm-system-btn-analiz2',
+    status: 'pm-system-status-analiz2', sub: 'pm-system-sub-analiz2',
+    active: '✅ A2 açılış aktif', paused: '⏸ A2 kapalı',
+    subOn: 'Saatlik SOL · kapanış :02 devam eder',
+    subOff: 'Saatlik yeni işlem açmaz · açık pozisyonlar :02 kapanır',
+  },
+  m15_210: {
+    bar: 'pm-system-bar-210', btn: 'pm-system-btn-210',
+    status: 'pm-system-status-210', sub: 'pm-system-sub-210',
+    active: '✅ 210 açılış aktif', paused: '⏸ 210 kapalı',
+    subOn: '15M yeni işlem açabilir · kapanış devam eder',
+    subOff: '15M yeni işlem açmaz · açık pozisyonlar kapanır',
+  },
+};
+
+function _pmSystemRow(group, paused, updatedAt) {
+  const cfg = _PM_SYSTEM_ROWS[group];
+  if (!cfg) return;
+  const bar = document.getElementById(cfg.bar);
+  const btn = document.getElementById(cfg.btn);
+  const status = document.getElementById(cfg.status);
+  const sub = document.getElementById(cfg.sub);
+  if (!bar || !btn || !status) return;
+  bar.classList.toggle('paused', !!paused);
+  btn.classList.toggle('paused', !!paused);
+  status.textContent = paused ? cfg.paused : cfg.active;
+  sub.textContent = paused ? cfg.subOff : cfg.subOn;
+  btn.textContent = paused ? 'Aç' : 'Kapat';
+  if (sub && updatedAt) {
+    const t = String(updatedAt).slice(11, 16);
+    if (t) sub.textContent += ' · ' + t;
+  }
+}
+
+function updatePmSystemUI(d) {
+  if (!d) return;
+  _pmSystemRow('analiz5', !!d.analiz5_paused, d.updated_at_tr);
+  _pmSystemRow('analiz2', !!d.analiz2_paused, d.updated_at_tr);
+  _pmSystemRow('m15_210', !!d.m15_210_paused, d.updated_at_tr);
 }
 
 async function refresh() {
@@ -3745,6 +4020,7 @@ async function refresh() {
     document.getElementById('portfolio').textContent = d.portfolio >= 0 ? '$'+d.portfolio.toFixed(2) : '?';
     document.getElementById('cash').textContent      = d.cash >= 0 ? '$'+d.cash.toFixed(2) : '?';
     document.getElementById('updated').textContent   = d.updated;
+    updatePmSystemUI(d);
 
     // PM kotasyon — yalnızca açık pozisyonun timeframe/sembolü
     function renderPmQuotes(el, quotes, timeKey) {
@@ -3868,7 +4144,7 @@ async function refresh() {
           </div>
           ${winStr}
           ${p.closable ? `<div class="close-btn-wrap">
-            <button class="close-btn" disabled title="Geçici olarak devre dışı">Pozisyonu Kapat</button>
+            <button class="close-btn" onclick="closePosition('${p.analiz_key}', '${p.symbol}', this)">Pozisyonu Kapat</button>
           </div>` : ''}
         </div>`;
       }).join('');
@@ -3973,12 +4249,12 @@ async function loadTop3(){
     if(!r.ok) return;
     const data = await r.json();
     if(!Array.isArray(data)) return;
-    const top3 = data.slice(0,3);
+    const top3 = data.slice(0,2);
     document.getElementById('top3-analizler').innerHTML = top3.map((a,i) => {
       const color  = top3Color(a.wr);
       const pnlCls = a.pnl>0?'color:#4ade80':a.pnl<0?'color:#f87171':'color:#888';
       const pnlStr = (a.pnl>=0?'+':'')+'$'+Math.abs(a.pnl).toFixed(2);
-      const medals = ['🥇','🥈','🥉'];
+      const medals = ['🥇','🥈'];
       const balStr = '$'+a.balance.toFixed(2);
       const loss   = a.total - a.wins;
       const openTxt = a.open ? `<div class="top3-row"><span class="top3-key">Açık Poz</span><span class="top3-val" style="color:#c8f135">${a.open}</span></div>` : '';
@@ -4364,7 +4640,9 @@ def algoritma():
 @app.route("/poly/")
 def dashboard():
     if _auth_required(): return redirect("/poly/login")
-    return render_template_string(HTML)
+    resp = make_response(render_template_string(HTML))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return resp
 
 @app.route("/harita")
 @app.route("/harita/")

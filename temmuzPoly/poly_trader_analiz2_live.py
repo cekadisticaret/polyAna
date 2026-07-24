@@ -1,5 +1,5 @@
 """
-2. ANALİZ LIVE — SOL gerçek Polymarket ($6 sabit)
+2. ANALİZ LIVE — SOL gerçek Polymarket ($5–7 WR'ye göre)
 
 Algoritma: poly_trader_analiz2 ile aynı sinyal (predict, ALLOW_FALLBACK=False).
 A5'e dokunmaz; kendi state/history; bağımsız cron.
@@ -61,7 +61,9 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz2_live_history.json")
 HATA_FILE = os.path.join(_DIR, "analiz2_live_polyhata.json")
 
 LABEL = "2. ANALİZ LIVE"
-PM_LIVE_AMOUNT = 6.0
+TRADE_AMOUNT = 6.0
+TRADE_AMOUNT_LOW = 5.0
+TRADE_AMOUNT_HIGH = 7.0
 ANALIZ2_HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "poly_trader_analiz2_history.json")
 INITIAL_BALANCE = 300.0
 
@@ -107,6 +109,16 @@ def _pm_bal_line() -> str:
     return f"💰 PM Bakiye: ${bal:.2f}" if bal >= 0 else "💰 PM Bakiye: ?"
 
 
+def _trade_amount(history: list, symbol: str) -> float:
+    wins, total = get_symbol_stats(history, symbol)
+    rate = wins / total if total else None
+    if rate is not None and rate > 0.5:
+        return TRADE_AMOUNT_HIGH
+    if rate is not None and rate < 0.5:
+        return TRADE_AMOUNT_LOW
+    return TRADE_AMOUNT
+
+
 def load_analiz2_signal_history() -> list:
     if not os.path.exists(ANALIZ2_HISTORY_FILE):
         return []
@@ -129,7 +141,7 @@ def _try_pm_open(
     now_tr: datetime,
     now: datetime,
     extra: dict,
-    amount: float = PM_LIVE_AMOUNT,
+    amount: float = TRADE_AMOUNT,
 ) -> tuple[dict | None, str | None]:
     import pm_trader_helpers as pmh
     pmh.PM_DRY_RUN = not _PM_LIVE
@@ -203,7 +215,7 @@ async def run_close() -> None:
 
         entry = pos["entry_price"]
         pred = pos["predicted_dir"]
-        amount = pos.get("amount", PM_LIVE_AMOUNT)
+        amount = pos.get("amount", TRADE_AMOUNT)
         binance_actual = "UP" if current_price >= entry else "DOWN"
 
         has_pm = bool(pos.get("pm_slug") and pos.get("pm_order_id"))
@@ -358,10 +370,11 @@ async def run_open() -> None:
                 else "NEUTRAL"
             ),
         }
-        amount = PM_LIVE_AMOUNT
+        base_amount = _trade_amount(history, sym)
+        amount = base_amount
         if hour_tr in hot_hours:
             amount = round(amount * 1.5, 2)
-            print(f"[{LABEL}] 🔥 etkili saat {hour_tr:02d}:00 — ${PM_LIVE_AMOUNT:.0f} → ${amount:.0f}")
+            print(f"[{LABEL}] 🔥 etkili saat {hour_tr:02d}:00 — ${base_amount:.0f} → ${amount:.0f}")
         pos, err = _try_pm_open(
             state,
             sym=sym,
@@ -407,7 +420,7 @@ async def run_open() -> None:
         mode_tag = "  🌙yedek" if c["sig_mode"] == "fallback" else ""
         pm_line = pm_tg_stake(pos)
         spent, size, _ = pm_stake_fields(pos)
-        pm_detail = f"   {pm_line}" if pm_line else f"   💵 ${PM_LIVE_AMOUNT:.0f}"
+        pm_detail = f"   {pm_line}" if pm_line else f"   💵 ${TRADE_AMOUNT:.0f}"
         if size > 0 and spent > 0:
             pm_detail += f"  (kazanırsa +${round(size - spent, 2):.2f})"
         lines.append(
@@ -420,11 +433,11 @@ async def run_open() -> None:
     sess_tag = "🇺🇸 ABD açık" if us_open else (
         "🌙 ABD kapalı (yedek)" if ALLOW_FALLBACK else "🌙 ABD kapalı (standard)"
     )
-    at_risk = sum(p.get("pm_spent") or PM_LIVE_AMOUNT for p in state["open_positions"])
+    at_risk = sum(p.get("pm_spent") or p.get("amount", TRADE_AMOUNT) for p in state["open_positions"])
     sep = "━" * 26
     tg_send(
         f"{sep}\n"
-        f"🆕 <b>{LABEL} — {saat} - {next_h}</b>  🔴 GERÇEK PM  ${PM_LIVE_AMOUNT:.0f}/işlem  {sess_tag}\n"
+        f"🆕 <b>{LABEL} — {saat} - {next_h}</b>  🔴 GERÇEK PM  ${TRADE_AMOUNT_LOW:.0f}–${TRADE_AMOUNT_HIGH:.0f}/işlem  {sess_tag}\n"
         + "\n".join(lines)
         + f"\n{sep}\n"
         f"{_pm_bal_line()}  |  📂 ${at_risk:.0f} riskte\n"

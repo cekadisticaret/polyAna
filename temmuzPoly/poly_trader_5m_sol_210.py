@@ -1,11 +1,12 @@
-"""
+7"""
 15M 210 SOL — 5M110Analiz FeatureEngine (gerçek PM, SOL only)
 ===========================================================
 110'un birebir canlı kopyası: 110 aynı turda açtıysa mirror; açmadıysa 210 katiyen açmaz.
 
-Gerçek PM: PM_5M_210_REAL_ENABLED (varsayılan true), işlem $8/$10/$12 (WR), başlangıç $300.
+Gerçek PM: PM_5M_210_REAL_ENABLED (varsayılan true), işlem $4/$5/$6 (WR), başlangıç $300.
 Cron: */15 * * * * — 110 snapshot poll (max 20 sn)
 Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open atlanır; close çalışır)
+Gece duraklama: her gün 22:00 – 07:00 İST (open atlanır; close çalışır)
 Modlar: open (varsayılan close+open) / hourly / weekly / stats
 """
 from __future__ import annotations
@@ -59,9 +60,9 @@ WEEKLY_IMG = "/tmp/poly_15m_sol_210_weekly.png"
 SYMBOLS = ["SOLUSDT"]
 SYMBOL = "SOLUSDT"
 INITIAL_BALANCE = 300.0
-TRADE_AMOUNT = 10.0
-TRADE_AMOUNT_LOW = 8.0
-TRADE_AMOUNT_HIGH = 12.0
+TRADE_AMOUNT = 5.0
+TRADE_AMOUNT_LOW = 4.0
+TRADE_AMOUNT_HIGH = 6.0
 _PERIOD_SECS = 900
 _PERIOD_MIN = 15
 _DAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -81,6 +82,14 @@ SNAPSHOT_ORDER_BUFFER_SEC = 8  # snapshot sonrası PM emir için ayrılan süre
 TG_HEADER = "210 SOL ✦ PolyAktif (110 canlı PM)"
 STATS_SINCE_KEY = "stats_since_tr"
 HOURLY_ROLLING_N = 10
+_NIGHT_PAUSE_START = 22  # dahil
+_NIGHT_PAUSE_END = 7     # hariç — 07:00 slotundan itibaren açılır
+
+
+def _in_night_pause_tr(now_tr: datetime) -> bool:
+    """Her gün 22:00–07:00 İST arası yeni işlem açılmaz."""
+    h = now_tr.hour
+    return h >= _NIGHT_PAUSE_START or h < _NIGHT_PAUSE_END
 
 
 def tg_send(text: str) -> bool:
@@ -423,6 +432,12 @@ def run() -> None:
             _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
         return
 
+    if _in_night_pause_tr(now_tr):
+        print(f"[{LABEL}] {saat} İST — gece duraklama (22:00 – 07:00), yeni işlem yok")
+        if closed_lines:
+            _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
+        return
+
     for sym in SYMBOLS:
         name = _sym_name(sym)
         snap_timeout = _snapshot_wait_timeout(ts_period)
@@ -674,7 +689,7 @@ def run_weekly() -> None:
     total = len(history)
     wins = sum(1 for t in history if t["win"])
     genel = f"%{wins/total*100:.0f}" if total else "—"
-    mode = "GERÇEK PM $8-12" if _PM_LIVE else "SANAL"
+    mode = "GERÇEK PM $4-6" if _PM_LIVE else "SANAL"
     ax.set_title(
         f"{LABEL} — Haftalık  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
         f"Toplam: {total}  |  {genel}  |  {mode}",
@@ -782,7 +797,7 @@ def run_stats() -> None:
     total = len(history)
     wins = sum(1 for t in history if t.get("win"))
     net = round(sum(t.get("pnl", 0) or 0 for t in history), 2)
-    mode = "🔴 GERÇEK PM $8-12" if _PM_LIVE else "🔶 SANAL"
+    mode = "🔴 GERÇEK PM $4-6" if _PM_LIVE else "🔶 SANAL"
     tg_send(
         f"📊 <b>{TG_HEADER} İSTATİSTİKLER</b>\n"
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST  |  {mode}\n"
@@ -790,7 +805,7 @@ def run_stats() -> None:
         f"Toplam: {total} işlem  |  {_wr(wins, total)}\n"
         f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
         f"{_bal_line(state)}\n"
-        f"SOL only · 5M110Analiz 15m · 110 snapshot · $8/$10/$12 (WR)"
+        f"SOL only · 5M110Analiz 15m · 110 snapshot · $4/$5/$6 (WR)"
     )
 
 

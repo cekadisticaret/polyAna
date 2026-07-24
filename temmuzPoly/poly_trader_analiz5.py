@@ -2,7 +2,7 @@
 5. ANALİZ — Analiz 1 Motoru (Gerçek Polymarket)
 
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
-Sabit $6–12/işlem (WR'ye göre), BTC+SOL.
+Sabit $5–7/işlem (WR'ye göre), BTC+SOL.
 
 Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open atlanır; close açık pozisyon varsa çalışır).
 
@@ -49,8 +49,8 @@ WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
 INITIAL_BALANCE = 300.0
 SYMBOLS            = ["BTCUSDT", "SOLUSDT"]
 TRADE_AMOUNT       = 6.0   # genel WR veri yok veya tam %50
-TRADE_AMOUNT_HIGH  = 12.0  # sembol genel WR > %50
-TRADE_AMOUNT_LOW   = 8.0   # sembol genel WR < %50
+TRADE_AMOUNT_HIGH  = 7.0   # sembol genel WR > %50
+TRADE_AMOUNT_LOW   = 5.0   # sembol genel WR < %50
 MIN_STAT_COUNT  = 10
 
 
