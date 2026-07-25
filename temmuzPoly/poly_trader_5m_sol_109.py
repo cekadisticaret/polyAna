@@ -1,12 +1,10 @@
 """
-15M 111 SOL — 5M110Analiz FeatureEngine + güçlendirilmiş filtreler (canlı PM, SOL only)
-======================================================================================
-110'un aynısı, farklar:
-  - analiz32_15m_adapter_111 kullanılır (trend/momentum uyum + skor eşiği 20)
-  - Ardışık kayıp soğuma periyodu: son 2 işlem kayıpsa 1 tur atlanır
+15M 109 SOL — 5M110Analiz FeatureEngine (110 ile aynı algo, bağımsız sanal)
+============================================================================
+Algoritma: 110 ile birebir (analiz32_15m_adapter). Kendi $300 state; 7/24 çalışır.
 
-Gerçek PM: PM_5M_111_REAL_ENABLED=true, işlem $8/$10/$12 (WR), başlangıç $300.
-Cron: */15 * * * * — açılış +15 sn gecikme, 110 snapshot'ından sinyal
+Sanal: PM_5M_109_REAL_ENABLED=false, işlem $8/$10/$12 (WR), başlangıç $300.
+Cron: 1,16,31,46 * * * * — 15dk mum kapanışından +1 dk
 Modlar: open (varsayılan close+open) / weekly / stats
 """
 from __future__ import annotations
@@ -21,7 +19,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from analiz32_15m_adapter_111 import analyze_15m_from_110
+from analiz32_15m_adapter import analyze_15m
 from btc_5m_105_algo import fetch_klines_15m
 import poly_trader_5m_common as _pm_common
 from poly_tg_5m_102 import tg_send, tg_send_photo
@@ -35,7 +33,6 @@ from pm_trader_helpers import (
     pm_5m_close,
     pm_5m_history_extras,
     pm_sanal_tg_quote,
-    skip_if_weekend_pause,
 )
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -49,15 +46,9 @@ if os.path.exists(_ENV_FILE):
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 _DIR = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE = os.path.join(_DIR, "poly_trader_5m_sol_111_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_sol_111_history.json")
-WEEKLY_IMG = "/tmp/poly_15m_sol_111_weekly.png"
-
-# ── "Filtre olmasaydı ne olurdu" gölge (shadow) log ──────────
-# 111 filtreleri (skor eşiği / trend uyumu) bir sinyali elediğinde,
-# gerçek para harcanmadan o sinyalin sonucu takip edilir.
-SHADOW_PENDING_FILE = os.path.join(_DIR, "poly_trader_5m_sol_111_shadow_pending.json")
-SHADOW_HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_sol_111_shadow_history.json")
+STATE_FILE = os.path.join(_DIR, "poly_trader_5m_sol_109_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_5m_sol_109_history.json")
+WEEKLY_IMG = "/tmp/poly_15m_sol_109_weekly.png"
 
 SYMBOLS = ["SOLUSDT"]
 SYMBOL = "SOLUSDT"
@@ -69,11 +60,7 @@ _PERIOD_SECS = 900
 _PERIOD_MIN = 15
 _DAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 
-# ── 111: Ardışık kayıp soğuma periyodu ───────────────────────
-CONSEC_LOSS_STOP = 2      # son N işlem kayıpsa soğumaya gir
-COOLDOWN_ROUNDS = 1       # kaç tur (15dk periyodu) atlanacak
-
-_PM_LIVE = os.getenv("PM_5M_111_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
+_PM_LIVE = os.getenv("PM_5M_109_REAL_ENABLED", "false").lower() in ("1", "true", "yes")
 _PM_DRY_RUN = not _PM_LIVE
 
 _PM_SANITY_MIN = 0.05
@@ -82,8 +69,8 @@ _PM_TRADE_MIN = 0.42
 _PM_TRADE_MAX = 0.52
 _PM_MIN_PAYOUT_RATIO = 1.25
 
-LABEL = "15M 111 SOL"
-OPEN_DELAY_SEC = 15  # 110'dan 15 sn sonra — aynı snapshot
+LABEL = "15M 109 SOL"
+OPEN_DELAY_SEC = 1  # :15:01 vb. — mum kapanışından sonra
 
 
 def _sym_name(symbol: str) -> str:
@@ -115,7 +102,7 @@ def load_state() -> dict:
                 return json.load(f)
         except Exception:
             pass
-    return {"balance": INITIAL_BALANCE, "open_positions": [], "total_pnl": 0.0, "cooldown_skips_left": 0}
+    return {"balance": INITIAL_BALANCE, "open_positions": [], "total_pnl": 0.0}
 
 
 def save_state(state: dict) -> None:
@@ -157,6 +144,7 @@ def _sync_total_pnl(state: dict, history: list) -> None:
 
 
 def _sync_balance(state: dict, history: list) -> None:
+    """Sanal bakiye = başlangıç + kapanmış işlemlerin net P&L'i (105 ile aynı)."""
     net = _net_pnl(history)
     state["balance"] = round(INITIAL_BALANCE + net, 2)
     state["total_pnl"] = net
@@ -264,108 +252,6 @@ def _cumulative_line(history: list) -> str:
     )
 
 
-# ── Gölge (shadow) log — "filtre olmasaydı ne olurdu" ────────
-def load_shadow_pending() -> list:
-    if os.path.exists(SHADOW_PENDING_FILE):
-        try:
-            with open(SHADOW_PENDING_FILE) as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return []
-
-
-def save_shadow_pending(pending: list) -> None:
-    with open(SHADOW_PENDING_FILE, "w") as f:
-        json.dump(pending, f, indent=2, ensure_ascii=False)
-
-
-def load_shadow_history() -> list:
-    if os.path.exists(SHADOW_HISTORY_FILE):
-        try:
-            with open(SHADOW_HISTORY_FILE) as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return []
-
-
-def save_shadow_history(rows: list) -> None:
-    with open(SHADOW_HISTORY_FILE, "w") as f:
-        json.dump(rows, f, indent=2, ensure_ascii=False)
-
-
-def _resolve_shadow_pending(now_tr: datetime) -> None:
-    """Süresi dolmuş gölge sinyalleri gerçek fiyatla çözümler, shadow_history'ye yazar."""
-    pending = load_shadow_pending()
-    if not pending:
-        return
-
-    still_pending: list = []
-    resolved: list = []
-    for item in pending:
-        candle = _resolve_period_candle(item["symbol"], item["ts_period"], retries=2, wait_sec=1.0)
-        if candle is None:
-            # mum henüz kapanmamış olabilir — bir sonraki turda tekrar denenir
-            still_pending.append(item)
-            continue
-
-        ref_open = candle["open"]
-        prev_close = candle["close"]
-        actual = "UP" if prev_close >= ref_open else "DOWN"
-        would_win = item["raw_direction"] == actual
-        pct = (prev_close - ref_open) / ref_open * 100 if ref_open else 0
-
-        resolved.append({
-            **item,
-            "actual_dir": actual,
-            "exit_price": prev_close,
-            "pct_change": round(pct, 3),
-            "would_win": would_win,
-            "resolved_time_tr": now_tr.isoformat(),
-        })
-
-    if resolved:
-        history = load_shadow_history()
-        history.extend(resolved)
-        save_shadow_history(history)
-        wins = sum(1 for r in resolved if r["would_win"])
-        print(f"[{LABEL}] gölge çözümleme: {len(resolved)} sinyal, {wins} 'kazanırdı'")
-
-    save_shadow_pending(still_pending)
-
-
-def _log_shadow_skip(sig, sym: str, ts_period: int, now_tr: datetime) -> None:
-    """111 filtreleri bir sinyali elediğinde (predictor kendi gate'ini geçmişti) kaydeder."""
-    if not sig.raw_direction:
-        return  # predictor zaten kendi gate'inde pas geçmiş, gölge işlem yok
-    pending = load_shadow_pending()
-    pending.append({
-        "symbol": sym,
-        "raw_direction": sig.raw_direction,
-        "entry_price": sig.entry_price,
-        "up_score": sig.up_score,
-        "down_score": sig.down_score,
-        "skip_reason": sig.skip_reason,
-        "ts_period": ts_period,
-        "entry_time_tr": now_tr.isoformat(),
-    })
-    save_shadow_pending(pending)
-
-
-# ── 111: Ardışık kayıp tespiti ───────────────────────────────
-def _consecutive_losses(history: list) -> int:
-    """Son kapanan işlemlerden geriye doğru, art arda kaç kayıp var."""
-    rows = _effective_history(history)
-    count = 0
-    for t in reversed(rows):
-        if t.get("win") is False:
-            count += 1
-        else:
-            break
-    return count
-
-
 def run() -> None:
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
@@ -376,14 +262,8 @@ def run() -> None:
     next_period_min = period_min + _PERIOD_MIN
     next_saat = f"{(next_period_min % (24 * 60)) // 60:02d}:{next_period_min % 60:02d}"
 
-    if skip_if_weekend_pause(LABEL, "run", now_tr):
-        return
-
     state = load_state()
-    state.setdefault("cooldown_skips_left", 0)
     history = load_history()
-
-    _resolve_shadow_pending(now_tr)
 
     closed_lines: list[str] = []
     tur_pnl = 0.0
@@ -456,42 +336,25 @@ def run() -> None:
     open_lines: list[str] = []
     skip_lines: list[str] = []
 
-    # ── 111: soğuma periyodu kontrolü (turun başında, tüm semboller için) ──
-    if state.get("cooldown_skips_left", 0) > 0:
-        state["cooldown_skips_left"] -= 1
-        skip_lines.append(
-            f"❄️ Soğuma periyodu — ardışık kayıp sonrası bekleniyor "
-            f"({state['cooldown_skips_left']} tur kaldı)"
-        )
-        save_state(state)
-        _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
-        return
-
-    consec = _consecutive_losses(history)
-    if consec >= CONSEC_LOSS_STOP:
-        state["cooldown_skips_left"] = COOLDOWN_ROUNDS
-        skip_lines.append(
-            f"❄️ {consec} ardışık kayıp — soğuma periyodu başlıyor ({COOLDOWN_ROUNDS} tur atlanacak)"
-        )
-        save_state(state)
-        _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
-        return
-
     if OPEN_DELAY_SEC > 0:
         time.sleep(OPEN_DELAY_SEC)
 
     for sym in SYMBOLS:
         name = _sym_name(sym)
-        sig = analyze_15m_from_110(symbol=sym, ts_period=ts_period)
+
+        def _109_skip(reason: str) -> None:
+            print(f"[{LABEL}] {saat} — {name} atlandı: {reason}")
+
+        sig = analyze_15m(symbol=sym)
 
         if sig is None:
+            _109_skip("veri yok")
             skip_lines.append(f"⚠️ {name} — veri yok")
             continue
         if sig.direction is None:
             reason = sig.skip_reason or "sinyal yok"
+            _109_skip(reason)
             skip_lines.append(f"⏸ {name} — {_tg_esc(reason)}")
-            print(f"[{LABEL}] {saat} — {name} atlandı: {reason}")
-            _log_shadow_skip(sig, sym, ts_period, now_tr)
             continue
 
         direction = sig.direction
@@ -499,6 +362,7 @@ def run() -> None:
         balance = state["balance"]
 
         if not _PM_LIVE and balance < amount:
+            _109_skip("bakiye yetersiz")
             skip_lines.append(f"⏸ {name} — bakiye yetersiz")
             continue
 
@@ -510,6 +374,7 @@ def run() -> None:
         if not _PM_LIVE:
             pm_info, pm_skip = _pm_resolve_market(sym, ts_period, direction, amount)
             if not pm_info:
+                _109_skip(pm_skip or "PM market yok")
                 skip_lines.append(f"⏸ {name} {direction} — {pm_skip}")
                 continue
             pm_q = pm_15m_sanal_quote(ts_period, direction, amount, sym)
@@ -538,6 +403,7 @@ def run() -> None:
             }
             stake, _, _ = pm_stake_fields(pos)
             if balance < stake:
+                _109_skip("bakiye yetersiz (stake)")
                 skip_lines.append(f"⏸ {name} — bakiye yetersiz")
                 continue
             sanal_debit_on_open(state, pos)
@@ -548,12 +414,13 @@ def run() -> None:
                 f"{quote}\n"
                 f"Giriş: {_fmt_price(sym, entry_p)}  |  {_tg_esc(factor_hint)}"
             )
-            print(f"[{LABEL}] {saat} — {name} {dir_tr} {quote} [SANAL A32-111]")
+            print(f"[{LABEL}] {saat} — {name} {dir_tr} {quote} [SANAL A32]")
             continue
 
         # ── Canlı PM ──────────────────────────────────────────
         from pm_balance_guard import can_open_trade
         if not can_open_trade(LABEL, tg_send):
+            _109_skip("PM bakiye guard")
             save_state(state)
             if closed_lines:
                 _send_tg_round(saat, next_saat, state, history, closed_lines, [], [], tur_pnl)
@@ -562,6 +429,7 @@ def run() -> None:
         _pm_common._PM_DRY_RUN = _PM_DRY_RUN
         pm_info, pm_skip = _pm_resolve_market(sym, ts_period, direction, amount)
         if not pm_info:
+            _109_skip(pm_skip or "PM market yok")
             skip_lines.append(f"⏸ {name} {direction} — {pm_skip}")
             continue
 
@@ -569,6 +437,7 @@ def run() -> None:
         pm_slug = pm_info["slug"]
         to_win = round(amount / token_price, 2) if token_price > 0 else round(amount * 2, 2)
         if not _pm_common._pm_payout_ok(amount, to_win):
+            _109_skip("payout düşük/yüksek")
             skip_lines.append(f"⏸ {name} — payout düşük/yüksek")
             continue
 
@@ -580,9 +449,11 @@ def run() -> None:
         )
 
         if order_result and order_result.get("_skip"):
+            _109_skip("emir başarısız")
             skip_lines.append(f"⏸ {name} — emir başarısız")
             continue
         if not order_result:
+            _109_skip("PM order başarısız")
             skip_lines.append(f"⏸ {name} — PM order başarısız")
             continue
 
@@ -623,7 +494,7 @@ def run() -> None:
             f"💵 ${amount:.2f} @{token_price:.2f} → 🏆 ${to_win:.2f}  🔴 GERÇEK PM\n"
             f"Giriş: {_fmt_price(sym, entry_p)}  |  {_tg_esc(factor_hint)}"
         )
-        print(f"[{LABEL}] {saat} — {name} {dir_tr} ${amount:.2f}→${to_win:.2f} [GERÇEK PM A32-111]")
+        print(f"[{LABEL}] {saat} — {name} {dir_tr} ${amount:.2f}→${to_win:.2f} [GERÇEK PM A32]")
 
     save_state(state)
     _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
@@ -733,21 +604,6 @@ def run_weekly() -> None:
     tg_send_photo(WEEKLY_IMG, f"📊 {LABEL} Haftalık  {now_tr.strftime('%d.%m.%Y')}  {total} işlem | {genel} | {mode}")
 
 
-def _shadow_summary_line() -> str:
-    rows = load_shadow_history()
-    if not rows:
-        return "🕶 Gölge (elenen sinyal): henüz veri yok"
-    total = len(rows)
-    would_wins = sum(1 for r in rows if r.get("would_win"))
-    wr = f"%{would_wins/total*100:.0f}" if total else "—"
-    score_skips = sum(1 for r in rows if "skor zayıf" in (r.get("skip_reason") or ""))
-    trend_skips = sum(1 for r in rows if "çelişki" in (r.get("skip_reason") or ""))
-    return (
-        f"🕶 Gölge (elenen sinyal): {total} adet  |  'kazanırdı' oranı: {wr} ({would_wins}/{total})\n"
-        f"   — skor eşiği: {score_skips}  |  trend/mom çelişkisi: {trend_skips}"
-    )
-
-
 def run_stats() -> None:
     history = _effective_history(load_history())
     state = load_state()
@@ -763,8 +619,7 @@ def run_stats() -> None:
         f"Toplam: {total} işlem  |  {_wr(wins, total)}\n"
         f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
         f"{_bal_line(state)}\n"
-        f"{_shadow_summary_line()}\n"
-        f"SOL only · 5M110Analiz 15m · 111 filtreleri (skor≥20, trend uyumu, soğuma) · $8/$10/$12 (WR)"
+        f"SOL only · 5M110Analiz 15m · $8/$10/$12 (WR)"
     )
 
 

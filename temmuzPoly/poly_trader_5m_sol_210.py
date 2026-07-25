@@ -5,7 +5,7 @@
 
 Gerçek PM: PM_5M_210_REAL_ENABLED (varsayılan true), işlem $4/$5/$6 (WR), başlangıç $300.
 Cron: */15 * * * * — 110 snapshot poll (max 20 sn)
-Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open atlanır; close çalışır)
+Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Paz 18:00 açılır; manuel override mümkün)
 Gece duraklama: her gün 22:00 – 07:00 İST (open atlanır; close çalışır)
 Modlar: open (varsayılan close+open) / hourly / weekly / stats
 """
@@ -39,7 +39,7 @@ from pm_trader_helpers import (
     pm_5m_close,
     pm_5m_history_extras,
     pm_sanal_tg_quote,
-    in_weekend_pause_tr,
+    skip_if_weekend_pause,
 )
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -355,6 +355,9 @@ def run() -> None:
     next_period_min = period_min + _PERIOD_MIN
     next_saat = f"{(next_period_min % (24 * 60)) // 60:02d}:{next_period_min % 60:02d}"
 
+    if skip_if_weekend_pause(LABEL, "run", now_tr):
+        return
+
     closed_lines: list[str] = []
     tur_pnl = 0.0
 
@@ -425,12 +428,6 @@ def run() -> None:
 
     open_lines: list[str] = []
     skip_lines: list[str] = []
-
-    if in_weekend_pause_tr(now_tr):
-        print(f"[{LABEL}] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok")
-        if closed_lines:
-            _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
-        return
 
     if _in_night_pause_tr(now_tr):
         print(f"[{LABEL}] {saat} İST — gece duraklama (22:00 – 07:00), yeni işlem yok")

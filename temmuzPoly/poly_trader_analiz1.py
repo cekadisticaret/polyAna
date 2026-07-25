@@ -27,7 +27,7 @@ from pm_trader_helpers import (
     apply_pm_quote, apply_cold_hour_cut, apply_hot_hour_boost, sanal_pnl,
     trades_for_exit_day, format_daily_history_tg, symbol_wr_amount,
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
-    SANAL_TRADE_AMOUNT_LOW,
+    SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause,
 )
 
 # ── Config ────────────────────────────────────────────────────
@@ -47,19 +47,6 @@ TRADE_AMOUNT_LOW   = SANAL_TRADE_AMOUNT_LOW
 SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # XRP/DOGE/BNB pasif
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
-
-
-def _in_weekend_pause(now_tr: datetime) -> bool:
-    """Cuma 22:00 – Pazar 18:00 İST arası yeni işlem açılmaz."""
-    dow = now_tr.weekday()  # 0=Pzt … 4=Cum 5=Cmt 6=Paz
-    h = now_tr.hour
-    if dow == 4 and h >= 22:
-        return True
-    if dow == 5:
-        return True
-    if dow == 6 and h < 18:
-        return True
-    return False
 
 
 def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float, bool, bool]:
@@ -166,6 +153,9 @@ async def run_close() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
+    if skip_if_weekend_pause("1. ANALİZ", "close", now_tr):
+        return
+
     tarih  = now_tr.strftime("%d.%m.%Y")
 
     state   = load_state()
@@ -268,8 +258,7 @@ async def run_open() -> None:
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
 
-    if _in_weekend_pause(now_tr):
-        print(f"[1. ANALİZ open] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok")
+    if skip_if_weekend_pause("1. ANALİZ", "open", now_tr):
         return
 
     hour_tr    = now_tr.hour
@@ -371,8 +360,7 @@ async def run_open() -> None:
 def run_preview() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
-    if _in_weekend_pause(now_tr):
-        print(f"[1. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — hafta sonu duraklama, atlandı")
+    if skip_if_weekend_pause("1. ANALİZ", "preview", now_tr):
         return
     next_hour = (now_tr.hour + 1) % 24
     dow       = now_tr.weekday()

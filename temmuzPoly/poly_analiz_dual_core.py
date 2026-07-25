@@ -1,4 +1,4 @@
-"""Çift konsensüs analiz trader çekirdeği (10. / 13. Analiz)."""
+"""Çift konsensüs analiz trader çekirdeği (10. Analiz)."""
 from __future__ import annotations
 
 import asyncio
@@ -24,7 +24,7 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, predict_status, _fetch_klines
-from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, skip_if_weekend_pause
 
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
 CHAT_ID = "830754964"
@@ -63,21 +63,6 @@ CONFIG_A10 = DualConfig(
     amount_weak=SANAL_TRADE_AMOUNT,
     amount_mid=SANAL_TRADE_AMOUNT,
     amount_strong=SANAL_TRADE_AMOUNT,
-    skip_detail_tg=True,
-)
-
-CONFIG_A13 = DualConfig(
-    key="analiz13",
-    label="13. ANALİZ",
-    state_file=os.path.join(_DIR, "poly_trader_analiz13_state.json"),
-    history_file=os.path.join(_DIR, "poly_trader_analiz13_history.json"),
-    weekly_img="/tmp/poly_weekly_heatmap_a13.png",
-    symbols=("SOLUSDT",),
-    min_score_b=1,
-    variable_amounts=False,
-    amount_weak=10.0,
-    amount_mid=10.0,
-    amount_strong=10.0,
     skip_detail_tg=True,
 )
 
@@ -367,6 +352,8 @@ def tg_send_photo(path: str, caption: str = "") -> None:
 async def run_close(cfg: DualConfig) -> None:
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     saat = now_tr.strftime("%H:%M")
+    if skip_if_weekend_pause(cfg.label, "close", now_tr):
+        return
     state = load_state(cfg)
     history = load_history(cfg)
     sep = "━" * 26
@@ -460,6 +447,8 @@ async def run_close(cfg: DualConfig) -> None:
 
 async def run_open(cfg: DualConfig) -> None:
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    if skip_if_weekend_pause(cfg.label, "open", now_tr):
+        return
     hour_tr = now_tr.hour
     dow = now_tr.weekday()
     is_weekend = dow >= 5

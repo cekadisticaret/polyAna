@@ -1,4 +1,4 @@
-"""5M BTC trader ortak yardımcılar — Binance, 4-algo, PM emir (105/107)."""
+"""5M BTC trader ortak yardımcılar — Binance, 4-algo, PM emir."""
 
 import html
 import json

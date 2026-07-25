@@ -54,6 +54,23 @@ def in_weekend_pause_tr(now_tr: datetime) -> bool:
     return False
 
 
+def skip_if_weekend_pause(label: str, mode: str, now_tr: datetime | None = None) -> bool:
+    """Hafta sonu duraklamasında True — çağıran hemen return etmeli (open/close/preview)."""
+    if now_tr is None:
+        now_tr = datetime.now(_TZ_TR)
+    elif now_tr.tzinfo is None:
+        now_tr = now_tr.replace(tzinfo=_TZ_TR)
+    else:
+        now_tr = now_tr.astimezone(_TZ_TR)
+    if in_weekend_pause_tr(now_tr):
+        print(
+            f"[{label} {mode}] {now_tr.strftime('%H:%M')} İST — "
+            f"hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok"
+        )
+        return True
+    return False
+
+
 # Sanal trader giriş tutarları (1. Analiz mantığı — A1 Live hariç ortak)
 SANAL_INITIAL_BALANCE = 300.0
 SANAL_TRADE_AMOUNT = 16.0       # sembol WR veri yok veya tam %50

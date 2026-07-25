@@ -35,7 +35,7 @@ from pm_trader_helpers import (
     pm_5m_close,
     pm_5m_history_extras,
     pm_sanal_tg_quote,
-    in_weekend_pause_tr,
+    skip_if_weekend_pause,
 )
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -265,6 +265,9 @@ def run() -> None:
     next_period_min = period_min + _PERIOD_MIN
     next_saat = f"{(next_period_min % (24 * 60)) // 60:02d}:{next_period_min % 60:02d}"
 
+    if skip_if_weekend_pause(LABEL, "run", now_tr):
+        return
+
     state = load_state()
     history = load_history()
 
@@ -338,12 +341,6 @@ def run() -> None:
 
     open_lines: list[str] = []
     skip_lines: list[str] = []
-
-    if in_weekend_pause_tr(now_tr):
-        print(f"[{LABEL}] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok")
-        if closed_lines:
-            _send_tg_round(saat, next_saat, state, history, closed_lines, open_lines, skip_lines, tur_pnl)
-        return
 
     if OPEN_DELAY_SEC > 0:
         time.sleep(OPEN_DELAY_SEC)

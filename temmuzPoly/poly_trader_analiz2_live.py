@@ -1,11 +1,11 @@
 """
-2. ANALİZ LIVE — SOL gerçek Polymarket ($5–7 WR'ye göre)
+2. ANALİZ LIVE — SOL gerçek Polymarket ($6–8 WR'ye göre)
 
 Algoritma: poly_trader_analiz2 ile aynı sinyal (predict, ALLOW_FALLBACK=False).
 A1 Live'e dokunmaz; kendi state/history; bağımsız cron.
 
 Gerçek PM: PM_ANALIZ2_REAL_ENABLED (varsayılan false)
-Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open atlanır; close çalışır)
+Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Paz 18:00 açılır; manuel override mümkün)
 Modlar: close (:02 PM sonuç) / open (:05)
 """
 from __future__ import annotations
@@ -32,7 +32,6 @@ from poly_trader_analiz2 import (
     _wr,
 )
 from pm_trader_helpers import (
-    in_weekend_pause_tr,
     pm_fetch_resolution,
     pm_get_balance,
     pm_place_order,
@@ -42,6 +41,7 @@ from pm_trader_helpers import (
     pm_tg_stake,
     compute_top_slot_hours,
     tg_send_pm_live,
+    skip_if_weekend_pause,
 )
 from pm_balance_guard import can_open_trade
 
@@ -61,9 +61,9 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_analiz2_live_history.json")
 HATA_FILE = os.path.join(_DIR, "analiz2_live_polyhata.json")
 
 LABEL = "2. ANALİZ LIVE"
-TRADE_AMOUNT = 6.0
-TRADE_AMOUNT_LOW = 5.0
-TRADE_AMOUNT_HIGH = 7.0
+TRADE_AMOUNT = 7.0
+TRADE_AMOUNT_LOW = 6.0
+TRADE_AMOUNT_HIGH = 8.0
 ANALIZ2_HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "poly_trader_analiz2_history.json")
 INITIAL_BALANCE = 300.0
 
@@ -193,6 +193,8 @@ async def run_close() -> None:
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     saat = now_tr.strftime("%H:%M")
+    if skip_if_weekend_pause(LABEL, "close", now_tr):
+        return
 
     state = load_state()
     history = load_history()
@@ -326,14 +328,12 @@ async def run_open() -> None:
 
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
+    if skip_if_weekend_pause(LABEL, "open", now_tr):
+        return
     hour_tr = now_tr.hour
     dow = now_tr.weekday()
     is_weekend = dow >= 5
     saat = now_tr.strftime("%H:%M")
-
-    if in_weekend_pause_tr(now_tr):
-        print(f"[{LABEL} open] {saat} İST — hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok")
-        return
 
     state = load_state()
     history = load_history()

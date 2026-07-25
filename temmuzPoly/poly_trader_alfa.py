@@ -6,7 +6,7 @@ motor WR ağırlıklı puan ve min 2/3 konsensüs ile giriş.
 Sanal $300, gerçek emir yok.
 
 Modlar: close (:02) / open (:05) / stats
-Hafta sonu: Cuma 22:00 – Pazar 18:00 İST (open atlanır)
+Hafta sonu: Cuma 22:00 – Pazar 18:00 İST (open/close atlanır)
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ sys.path.insert(0, _DIR)
 from alfa_signal import AlfaDecision, amount_for_decision, analyze_symbol
 from pm_trader_helpers import (
     apply_pm_quote,
-    in_weekend_pause_tr,
+    skip_if_weekend_pause,
     pm_tg_stake,
     sanal_pnl,
     symbol_wr_amount,
@@ -145,6 +145,8 @@ async def run_close() -> None:
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     saat = now_tr.strftime("%H:%M")
+    if skip_if_weekend_pause(LABEL, "close", now_tr):
+        return
 
     state = load_state()
     history = load_history()
@@ -234,8 +236,7 @@ async def run_open() -> None:
     now_tr = now.astimezone(_TZ_TR)
     saat = now_tr.strftime("%H:%M")
 
-    if in_weekend_pause_tr(now_tr):
-        print(f"[{LABEL} open] {saat} IST — hafta sonu duraklama")
+    if skip_if_weekend_pause(LABEL, "open", now_tr):
         return
 
     hour_tr = now_tr.hour

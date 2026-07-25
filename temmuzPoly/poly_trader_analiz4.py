@@ -36,7 +36,7 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pm_trader_helpers import apply_pm_quote, sanal_pnl, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, skip_if_weekend_pause
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "8630483764:AAFmAmG4nHAGb238wpavlWgMjJZDvIy4DzE")
@@ -315,6 +315,8 @@ async def run_close() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
+    if skip_if_weekend_pause("4. ANALİZ", "close", now_tr):
+        return
 
     state   = load_state()
     history = load_history()
@@ -425,6 +427,8 @@ async def run_close() -> None:
 async def run_open() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
+    if skip_if_weekend_pause("4. ANALİZ", "open", now_tr):
+        return
     hour_tr    = now_tr.hour
     dow        = now_tr.weekday()
     is_weekend = dow >= 5

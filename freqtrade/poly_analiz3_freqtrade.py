@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.join(_ROOT, "temmuzPoly"))
 from analiz3_signal import predict_pm_direction
 from pm_trader_helpers import (
     apply_pm_quote,
-    in_weekend_pause_tr,
+    skip_if_weekend_pause,
     pm_tg_stake,
     sanal_pnl,
     symbol_wr_amount,
@@ -139,6 +139,8 @@ async def run_close() -> None:
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     saat = now_tr.strftime("%H:%M")
+    if skip_if_weekend_pause(LABEL, "close", now_tr):
+        return
 
     state = load_state()
     history = load_history()
@@ -227,8 +229,7 @@ async def run_open() -> None:
     now_tr = now.astimezone(_TZ_TR)
     saat = now_tr.strftime("%H:%M")
 
-    if in_weekend_pause_tr(now_tr):
-        print(f"[{LABEL} open] {saat} IST — hafta sonu duraklama")
+    if skip_if_weekend_pause(LABEL, "open", now_tr):
         return
 
     hour_tr = now_tr.hour

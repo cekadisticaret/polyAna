@@ -10,7 +10,7 @@ Modlar:
 Algoritma: poly_predictor_analysis.py
 Sanal bütçe: $300, işlem $12/$16/$20 (sembol WR — 1. Analiz mantığı).
 Hacim filtresi yok. ALLOW_FALLBACK=False → sadece predict(); True ise ABD kapalıyken yedek RSI/MACD/EMA.
-Gece modu kapalı — 24/7 açılış denemesi (fallback kapalıysa predict yoksa işlem yok).
+Gece modu kapalı. Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open/preview atlanır; close açık pozisyon varsa çalışır).
 """
 import asyncio
 import json
@@ -30,6 +30,7 @@ from pm_trader_helpers import (
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT,
     SANAL_TRADE_AMOUNT_HIGH, SANAL_TRADE_AMOUNT_LOW,
     pm_tg_stake, pm_stake_fields, pm_resolve_pnl,
+    skip_if_weekend_pause,
 )
 
 # ── Config ────────────────────────────────────────────────────
@@ -222,7 +223,8 @@ async def run_close() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
-    tarih  = now_tr.strftime("%d.%m.%Y")
+    if skip_if_weekend_pause("2. ANALİZ", "close", now_tr):
+        return
 
     state   = load_state()
     history = load_history()
@@ -332,6 +334,11 @@ async def run_close() -> None:
 async def run_open() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
+    saat   = now_tr.strftime("%H:%M")
+
+    if skip_if_weekend_pause("2. ANALİZ", "open", now_tr):
+        return
+
     hour_tr    = now_tr.hour
     dow        = now_tr.weekday()
     is_weekend = dow >= 5
@@ -450,6 +457,8 @@ async def run_open() -> None:
 def run_preview() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
+    if skip_if_weekend_pause("2. ANALİZ", "preview", now_tr):
+        return
     next_hour = (now_tr.hour + 1) % 24
     dow       = now_tr.weekday()
     gun_tr    = _DAYS_FULL_TR[dow]

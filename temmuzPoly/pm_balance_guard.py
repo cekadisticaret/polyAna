@@ -16,6 +16,7 @@ _LABEL_GROUPS = {
     "15M 210 SOL": "m15_210",
 }
 _VALID_GROUPS = frozenset({"analiz5", "analiz2", "m15_210"})
+_WEEKEND_GROUPS = ("analiz5", "analiz2", "m15_210")
 
 
 def _load_control() -> dict:
@@ -107,15 +108,23 @@ def toggle_group_paused(group: str, *, source: str = "dashboard") -> dict:
 
 def set_pm_open_paused(paused: bool, *, source: str = "dashboard") -> dict:
     """Geriye uyumluluk — üçünü birlikte ayarla."""
-    data = {
-        "analiz5_paused": bool(paused),
-        "analiz2_paused": bool(paused),
-        "m15_210_paused": bool(paused),
-        "updated_at_tr": datetime.now(_TZ_TR).isoformat(),
-        "updated_by": source,
-    }
+    data = _load_control()
+    for g in _WEEKEND_GROUPS:
+        data[f"{g}_paused"] = bool(paused)
+    data["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
+    data["updated_by"] = source
     _save_control(data)
     return get_pm_system_control()
+
+
+def weekend_pause_all(*, source: str = "weekend_cron") -> dict:
+    """Cuma 22:00 — dashboard 3 anahtarını kapat (A1 Live + A2 + 210)."""
+    return set_pm_open_paused(True, source=source)
+
+
+def weekend_resume_all(*, source: str = "weekend_cron") -> dict:
+    """Pazar 18:00 — dashboard 3 anahtarını aç."""
+    return set_pm_open_paused(False, source=source)
 
 
 def toggle_pm_open_paused(*, source: str = "dashboard") -> dict:
