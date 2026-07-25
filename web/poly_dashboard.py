@@ -22,6 +22,7 @@ _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 _HEATMAP_SYMS = {
     "analiz1":  ["BTC", "SOL"],
     "analiz2":  ["SOL"],
+    "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
     "analiz4":  ["BTC", "ETH"],
     "analiz5":  ["BTC", "SOL"],
@@ -34,9 +35,7 @@ _HEATMAP_SYMS = {
     "alfa":       ["BTC", "SOL"],
 }
 # Sıcaklık haritası sekmesinde birleşik gösterilecek ek history kaynakları
-_HEATMAP_MERGE: dict[str, list[str]] = {
-    "analiz2": ["analiz2_live"],
-}
+_HEATMAP_MERGE: dict[str, list[str]] = {}
 # poly_trader_* dışındaki analiz dosyaları (history, state) — mutlak yol
 _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
     "analiz3": (
@@ -59,12 +58,12 @@ _REMOVED_ANALYSES = frozenset({
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz5", "analiz3", "analiz8", "analiz4", "analiz10",
+    "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz4", "analiz10",
     "5m_sol_109", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca bu liste (auto-discover yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz5", "analiz3", "analiz8", "analiz4", "analiz10",
+    "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz4", "analiz10",
     "alfa",
     "5m_sol_109", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
@@ -5391,7 +5390,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz4:'4. Analiz',analiz10:'10. Analiz',alfa:'ALFA','5m_sol_109':'15M 109 SOL','5m_sol_110':'15M 110 SOL','5m_sol_111':'15M 111 SOL','5m_sol_210':'15M 210 SOL'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz4:'4. Analiz',analiz10:'10. Analiz',alfa:'ALFA','5m_sol_109':'15M 109 SOL','5m_sol_110':'15M 110 SOL','5m_sol_111':'15M 111 SOL','5m_sol_210':'15M 210 SOL'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {

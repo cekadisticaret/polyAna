@@ -48,10 +48,10 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/poly_trader_manual_state.json` | Manuel PM işlemleri state (dashboard açık pozisyon) |
 | `temmuzPoly/analiz32_5m_adapter.py` | 5M110Analiz → 5m sinyal adaptörü (algo bozulmaz) |
 | `temmuzPoly/analiz32_15m_adapter.py` | 5M110Analiz → 15m sinyal adaptörü (110 SOL) |
-| `temmuzPoly/analiz32_15m_adapter_111.py` | 5M110Analiz 15m filtreli adaptör (skor≥20, trend uyumu; algo bozulmaz) |
+| `temmuzPoly/analiz32_15m_adapter_111.py` | 5M110Analiz 15m filtreli adaptör (skor≥15, trend uyumu; algo bozulmaz) |
 | `temmuzPoly/poly_trader_5m_sol_109.py` | 15M 109 SOL — 110 ile aynı algo; **7/24** sanal $8-10-12 |
 | `temmuzPoly/poly_trader_5m_sol_110.py` | 15M 110 SOL — A32 **sanal** $8-10-12; Cum 22–Paz 18 duraklama |
-| `temmuzPoly/poly_trader_5m_sol_111.py` | 15M 111 SOL — 110 snapshot + filtreler; Cum 22–Paz 18 duraklama |
+| `temmuzPoly/poly_trader_5m_sol_111.py` | 15M 111 SOL — 110 snapshot + filtreler; **7/24** sanal $8-10-12 |
 | `temmuzPoly/poly_trader_5m_sol_210.py` | 15M 210 SOL — 110 snapshot poll gerçek PM $4-5-6; Cum 22–Paz 18 + gece 22–07 duraklama |
 | `temmuzPoly/analiz32_15m_signal_snapshot.py` | 110→111/210 paylaşımlı 15m sinyal snapshot |
 | `temmuzPoly/pm_balance_hourly.py` | PM portföy saatlik kayıt + 00:00 Telegram özeti + 3 saat peş peşe düşüş ALERT |
@@ -93,7 +93,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_5m_sol_109.py weekly` — Pazar 00:00 haftalık 109
 - `temmuzPoly/poly_trader_5m_sol_110.py open` — 15M 110 SOL A32 **sanal** $8-10-12 (*/15, +1 sn)
 - `temmuzPoly/poly_trader_5m_sol_110.py weekly` — Pazar 00:00 haftalık 110
-- `temmuzPoly/poly_trader_5m_sol_111.py open` — 15M 111 SOL filtreli **sanal** $8-10-12 (*/15, +15 sn, 110 snapshot)
+- `temmuzPoly/poly_trader_5m_sol_111.py open` — 15M 111 SOL filtreli **sanal** $8-10-12 (**7/24**, */15 +15 sn; snapshot yoksa kendi sinyal)
 - `temmuzPoly/poly_trader_5m_sol_111.py weekly` — Pazar 00:00 haftalık 111
 - `temmuzPoly/poly_trader_5m_sol_210.py open` — 15M 210 SOL 110 snapshot **gerçek PM** $4-5-6 (*/15; dashboard hafta sonu + gece 22–07 anahtarı)
 - `temmuzPoly/poly_trader_5m_sol_210.py hourly` — saat başı son 10 işlem P&amp;L özeti (A1 Live TG)

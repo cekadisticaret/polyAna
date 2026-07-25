@@ -31,7 +31,7 @@ alwaysApply: true
 | `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_109.py weekly` | `/tmp/poly_5m_sol_109.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_210.py open` (+3 sn, 110 snapshot, gerçek PM $8-12) | `/tmp/poly_5m_sol_210.log` |
 | `0 0 * * 0` | `poly_trader_5m_sol_210.py weekly` | `/tmp/poly_5m_sol_210.log` |
-| `*/15 * * * *` | `poly_trader_5m_sol_111.py open` (+15 sn, 110 snapshot) | `/tmp/poly_5m_sol_111.log` |
+| `*/15 * * * *` | `poly_trader_5m_sol_111.py open` (+15 sn, 7/24, skor≥15) | `/tmp/poly_5m_sol_111.log` |
 | `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_111.py weekly` | `/tmp/poly_5m_sol_111.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_signals.py` | `/tmp/algo_signals.log` |
 | `*/30 * * * *` | `cd /root/aiProject/crypto-news-monitor && ./run_once.sh` | `/tmp/crypto_news_monitor.log` |

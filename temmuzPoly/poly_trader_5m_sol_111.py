@@ -2,11 +2,11 @@
 15M 111 SOL — 5M110Analiz FeatureEngine + güçlendirilmiş filtreler (canlı PM, SOL only)
 ======================================================================================
 110'un aynısı, farklar:
-  - analiz32_15m_adapter_111 kullanılır (trend/momentum uyum + skor eşiği 20)
+  - analiz32_15m_adapter_111 kullanılır (trend/momentum uyum + skor eşiği 15)
   - Ardışık kayıp soğuma periyodu: son 2 işlem kayıpsa 1 tur atlanır
 
 Gerçek PM: PM_5M_111_REAL_ENABLED=true, işlem $8/$10/$12 (WR), başlangıç $300.
-Cron: */15 * * * * — açılış +15 sn gecikme, 110 snapshot'ından sinyal
+Cron: */15 * * * * — açılış +15 sn gecikme, 110 snapshot'ından sinyal · **7/24**
 Modlar: open (varsayılan close+open) / weekly / stats
 """
 from __future__ import annotations
@@ -35,7 +35,6 @@ from pm_trader_helpers import (
     pm_5m_close,
     pm_5m_history_extras,
     pm_sanal_tg_quote,
-    skip_if_weekend_pause,
 )
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -375,9 +374,6 @@ def run() -> None:
     saat = f"{period_min // 60:02d}:{period_min % 60:02d}"
     next_period_min = period_min + _PERIOD_MIN
     next_saat = f"{(next_period_min % (24 * 60)) // 60:02d}:{next_period_min % 60:02d}"
-
-    if skip_if_weekend_pause(LABEL, "run", now_tr):
-        return
 
     state = load_state()
     state.setdefault("cooldown_skips_left", 0)
@@ -764,7 +760,7 @@ def run_stats() -> None:
         f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
         f"{_bal_line(state)}\n"
         f"{_shadow_summary_line()}\n"
-        f"SOL only · 5M110Analiz 15m · 111 filtreleri (skor≥20, trend uyumu, soğuma) · $8/$10/$12 (WR)"
+        f"SOL only · 5M110Analiz 15m · 111 filtreleri (skor≥15, trend uyumu, soğuma) · $8/$10/$12 (WR)"
     )
 
 

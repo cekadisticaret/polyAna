@@ -23,7 +23,7 @@ from predictor import predict_from_klines
 SYMBOL_DEFAULT = "SOLUSDT"
 KLINES_LIMIT = 150
 
-SCORE_GATE_111 = 20
+SCORE_GATE_111 = 15
 TREND_AGREEMENT_REQUIRED = True
 
 
@@ -123,17 +123,12 @@ def _apply_111_filters(
 
 
 def analyze_15m_from_110(symbol: str, ts_period: int) -> Optional[Signal15m]:
-    """110'un aynı turda kaydettiği sinyal + 111 filtreleri."""
+    """110 snapshot varsa aynı sinyal; yoksa (110 duraklamada) kendi kline + 111 filtre."""
     from analiz32_15m_signal_snapshot import load_snapshot
 
     base = load_snapshot(ts_period, symbol)
     if base is None:
-        return Signal15m(
-            symbol=symbol, direction=None, entry_price=0.0,
-            confidence=0.0, up_score=0, down_score=0,
-            factors=[], htf_bias="",
-            skip_reason="110 snapshot yok (110 henüz çalışmadı)",
-        )
+        return analyze_15m(symbol)
     return _apply_111_filters(
         symbol=base.symbol,
         direction=base.direction,
