@@ -38,8 +38,6 @@ alwaysApply: true
 | `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_109.py weekly` | `/tmp/poly_5m_sol_109.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_210.py open` (+3 sn, 110 snapshot, gerçek PM $8-12) | `/tmp/poly_5m_sol_210.log` |
 | `0 0 * * 0` | `poly_trader_5m_sol_210.py weekly` | `/tmp/poly_5m_sol_210.log` |
-| `*/15 * * * *` | `poly_trader_5m_sol_111.py open` (+15 sn, 7/24, skor≥15) | `/tmp/poly_5m_sol_111.log` |
-| `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_111.py weekly` | `/tmp/poly_5m_sol_111.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_signals.py` | `/tmp/algo_signals.log` |
 | `*/30 * * * *` | `cd /root/aiProject/crypto-news-monitor && ./run_once.sh` | `/tmp/crypto_news_monitor.log` |
 | `2 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh close` | `/tmp/poly_analiz3_freqtrade.log` |
@@ -56,6 +54,7 @@ alwaysApply: true
 |---|---|
 | ~~`*/15 9-18 * * 1-5`~~ `yuzdeBist.py` | **PASIF** — crontab yorum satırı |
 | ~~`5 7-15,18 * * 1-5`~~ `bist_scanner.py` | **PASIF** — BIST Sinyal bildirim kapalı |
+| ~~`poly_trader_5m_sol_111.py`~~ | **KALDIRILDI** |
 | `poly_trader_analiz3.py`, `poly_trader_karisim1.py`, `poly_trader_analiz7.py`, `poly_trader_analiz9.py`, `poly_trader_analiz13.py`, `poly_trader_analiz21.py`, `poly_trader_analiz23.py`, `poly_trader_analiz31.py`, `poly_trader_analiz32.py`, `poly_trader_5m_btc_107.py`, `btc_analiz_hourly.py`, `poly_trader_5m_btc_105.py` | **KALDIRILDI** |
 | `polyManuel/sol_bot.py`, `poly_trader.py` | **YOK** — disk/crontab’ta yok |
 
@@ -78,7 +77,6 @@ tail -f /tmp/poly_5m_sol_110.log
 tail -f /tmp/poly_5m_sol_112.log
 tail -f /tmp/poly_5m_sol_113.log
 tail -f /tmp/poly_5m_sol_114.log
-tail -f /tmp/poly_5m_sol_111.log
 tail -f /tmp/pm_balance_hourly.log
 tail -f /tmp/poly_5m_sol_210.log
 tail -f /tmp/pm_partial_tp.log

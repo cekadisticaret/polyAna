@@ -91,7 +91,7 @@ async def _vote_a1(symbol: str) -> EngineVote:
 
     path = ENGINE_META[0][2]
     try:
-        pred = await predict(symbol)
+        pred = await predict(symbol, kill_zone=False)
     except Exception as exc:
         return EngineVote("a1", "A1", None, 0.0, engine_wr(path, symbol), f"hata:{exc}")
 

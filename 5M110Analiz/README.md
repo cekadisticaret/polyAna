@@ -9,7 +9,6 @@ Indikatör/feature kütüphanesi (`core/`, `features/`) **dokunulmaz**.
 | `predictor.py` | `composite_signal` → UP/DOWN (gate ±15) |
 | `data_fetcher.py` | Binance 1h kline |
 | `temmuzPoly/analiz32_15m_adapter.py` | 110 SOL 15m sinyal |
-| `temmuzPoly/analiz32_15m_adapter_111.py` | 111 SOL filtreli sinyal |
 
 ## Kütüphane quick start
 

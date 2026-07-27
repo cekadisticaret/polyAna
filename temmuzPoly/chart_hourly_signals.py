@@ -47,10 +47,7 @@ def _a1_direction(klines: list[dict], slot_open_ms: int) -> str | None:
         rsi_val = ppa._rsi(closes)
         ema50 = ppa._ema(closes, 50)[-1]
         ema50_dev_pct = (closes[-1] - ema50) / ema50 * 100 if ema50 else 0.0
-        cur_et_hour = datetime.fromtimestamp(slot_open_ms / 1000, tz=ppa._ET_ZONE).hour
-        in_kill_zone = cur_et_hour in ppa._KILL_ZONE_ET_HOURS
-        mr_up_gate = 62 if in_kill_zone else 45
-        mr_down_gate = 55 if in_kill_zone else 40
+        mr_up_gate, mr_down_gate = 45, 40  # A1 — Kill Zone yok (yalnızca A2)
 
         conf_up, _ = ppa._mr_confluence_score(klines, rsi_val, 0.0, 0.0)
         conf_down, _ = ppa._mr_confluence_down_score(klines, rsi_val, 0.0, 0.0)

@@ -7,6 +7,7 @@ Yedek (önceki prod v5): lab/backups/30-05-2026/poly_predictor_analysis_prod_v5_
 Strateji: Simetrik MR (UP + DOWN mean-reversion).
   - _MR_UP_GATE   = 45  (oversold → UP reversal)
   - _MR_DOWN_GATE = 40  (overbought → DOWN reversal)
+  - Kill Zone (ET 9–11): yalnızca A2 — predict(kill_zone=True); A1/A1 Live kill_zone=False
   - RSI(5), 8-mum MR, streak reversal, CVD teyidi, 30dk CVD flow
   - Trend-takip park edildi (backtest'te sinyali seyreltti)
 
@@ -786,7 +787,19 @@ def _liquidity_sweep_score(klines: list[dict]) -> tuple[int, int]:
     return sweep_up, sweep_down
 
 
-async def predict(symbol: str, *, preloaded: dict | None = None) -> "PolyPrediction | None":
+def _resolve_mr_gates(kill_zone: bool, ref_ms: int | None = None) -> tuple[int, int]:
+    """A1: kill_zone=False → her zaman 45/40. A2: kill_zone=True → ET 9–11'de 62/55."""
+    if not kill_zone:
+        return 45, 40
+    if ref_ms is None:
+        ref_ms = _slot_utc_ms if _slot_utc_ms is not None else int(datetime.now(timezone.utc).timestamp() * 1000)
+    cur_et_hour = datetime.fromtimestamp(ref_ms / 1000, tz=_ET_ZONE).hour
+    if cur_et_hour in _KILL_ZONE_ET_HOURS:
+        return 62, 55
+    return 45, 40
+
+
+async def predict(symbol: str, *, preloaded: dict | None = None, kill_zone: bool = True) -> "PolyPrediction | None":
     if preloaded:
         klines = preloaded["klines"]
         cvd_5m, cvd_30m = preloaded["cvd"]
@@ -850,14 +863,9 @@ async def predict(symbol: str, *, preloaded: dict | None = None) -> "PolyPredict
     _ADX_TREND_THRESHOLD = 999
     _TREND_GATE = 999
 
-    # Katman 3: Kill Zone gate yükseltme
-    # ET 09/10/11 saatleri backtest'te %47-52 doğruluk (breakeven altı) → gate sıkılaştır
-    # Backtest modunda _slot_utc_ms modül değişkeni inject edilir; canlıda None → datetime.now()
-    _ref_ms       = _slot_utc_ms if _slot_utc_ms is not None else int(datetime.now(timezone.utc).timestamp() * 1000)
-    _cur_et_hour  = datetime.fromtimestamp(_ref_ms / 1000, tz=_ET_ZONE).hour
-    _in_kill_zone = _cur_et_hour in _KILL_ZONE_ET_HOURS
-    _MR_UP_GATE   = 62 if _in_kill_zone else 45
-    _MR_DOWN_GATE = 55 if _in_kill_zone else 40
+    # Katman 3: Kill Zone — yalnızca kill_zone=True (A2); A1/A1 Live kill_zone=False
+    _ref_ms = _slot_utc_ms if _slot_utc_ms is not None else int(datetime.now(timezone.utc).timestamp() * 1000)
+    _MR_UP_GATE, _MR_DOWN_GATE = _resolve_mr_gates(kill_zone, _ref_ms)
 
     price_dir_count = sum(
         1 for i in range(-3, 0)
@@ -930,9 +938,9 @@ async def predict(symbol: str, *, preloaded: dict | None = None) -> "PolyPredict
     )
 
 
-async def predict_status(symbol: str) -> dict:
+async def predict_status(symbol: str, *, kill_zone: bool = True) -> dict:
     """PolyPred teşhis: gate altı olsa bile ham skorları döner."""
-    pred = await predict(symbol)
+    pred = await predict(symbol, kill_zone=kill_zone)
     if pred:
         return {
             "predicted_dir": pred.predicted_dir,
@@ -970,10 +978,7 @@ async def predict_status(symbol: str) -> dict:
     ema50 = _ema(closes, 50)[-1]
     ema50_dev_pct = (closes[-1] - ema50) / ema50 * 100 if ema50 else 0.0
     _ref_ms = _slot_utc_ms if _slot_utc_ms is not None else int(datetime.now(timezone.utc).timestamp() * 1000)
-    _cur_et_hour = datetime.fromtimestamp(_ref_ms / 1000, tz=_ET_ZONE).hour
-    _in_kill_zone = _cur_et_hour in _KILL_ZONE_ET_HOURS
-    mr_up_gate = 62 if _in_kill_zone else 45
-    mr_down_gate = 55 if _in_kill_zone else 40
+    mr_up_gate, mr_down_gate = _resolve_mr_gates(kill_zone, _ref_ms)
 
     conf_up_score, _ = _mr_confluence_score(klines, rsi_val, cvd_5m, cvd_30m)
     conf_down_score, _ = _mr_confluence_down_score(klines, rsi_val, cvd_5m, cvd_30m)

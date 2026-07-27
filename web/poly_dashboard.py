@@ -31,7 +31,6 @@ _HEATMAP_SYMS = {
     "analiz10": ["BTC", "SOL"],
     "5m_sol_110": ["SOL"],
     "5m_sol_109": ["SOL"],
-    "5m_sol_111": ["SOL"],
     "5m_sol_210": ["SOL"],
     "alfa":       ["BTC", "SOL"],
 }
@@ -50,27 +49,27 @@ _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Algoritma performansı panelinde gösterilmez
-_ALGO_STATS_EXCLUDE = frozenset({"manual", "5m_sol_111_shadow"})
+_ALGO_STATS_EXCLUDE = frozenset({"manual"})
 # Kaldırılmış trader'lar — diskte history kalsa bile listelenmez
 _REMOVED_ANALYSES = frozenset({
     "analiz7", "analiz9", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32",
-    "5m_btc_107",
+    "5m_btc_107", "5m_sol_111",
 })
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz4", "analiz6", "analiz10",
-    "5m_sol_109", "5m_sol_110", "5m_sol_111", "5m_sol_210",
+    "5m_sol_109", "5m_sol_110", "5m_sol_210",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca bu liste (auto-discover yok)
 _HEATMAP_ORDER = [
     "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz4", "analiz6", "analiz10",
     "alfa",
-    "5m_sol_109", "5m_sol_110", "5m_sol_111", "5m_sol_210",
+    "5m_sol_109", "5m_sol_110", "5m_sol_210",
 ]
 _HISTORY_ORDER = [
     "analiz2", "analiz1", "analiz4", "analiz6", "analiz5", "analiz3", "analiz8",
-    "analiz10", "5m_sol_109", "5m_sol_110", "5m_sol_111", "5m_sol_210",
+    "analiz10", "5m_sol_109", "5m_sol_110", "5m_sol_210",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
@@ -83,7 +82,6 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz10":   "10. Analiz",
     "5m_sol_109": "15M 109 SOL",
     "5m_sol_110": "15M 110 SOL",
-    "5m_sol_111": "15M 111 SOL",
     "5m_sol_210": "15M 210 SOL",
     "alfa":       "ALFA",
     "analiz2_live": "A2 Live",
@@ -531,11 +529,10 @@ _PM_POSITION_SOURCES = [
     ("analiz2_live", "A2 Live"),
     ("manual", "Manuel"),
     ("5m_sol_110", "15M 110 SOL"),
-    ("5m_sol_111", "15M 111 SOL"),
     ("5m_sol_210", "15M 210 SOL"),
 ]
 _HOURLY_PM_ANALYSES = frozenset({"analiz5", "analiz2_live", "manual"})
-_15M_PM_ANALYSES = frozenset({"5m_sol_110", "5m_sol_111", "5m_sol_210"})
+_15M_PM_ANALYSES = frozenset({"5m_sol_110", "5m_sol_210"})
 
 
 def _manual_timeframe(pos: dict) -> str:
@@ -1289,7 +1286,6 @@ def api_analizler():
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
         ("5m_sol_109",  "15M 109 SOL",           300,  "110 clone 7/24 sanal $8-10-12"),
         ("5m_sol_110",  "15M 110 SOL",           300,  "5M110Analiz 15m SOL sanal $8-10-12"),
-        ("5m_sol_111",  "15M 111 SOL",           300,  "A32 15m filtreli sanal $8-10-12"),
         ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $4-5-6"),
     ]
     results = []
@@ -1540,6 +1536,9 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .sig-pill.a112{background:#0c2340;color:#38bdf8;border:1px solid #0369a1}
 .sig-pill.a113{background:#0f2a24;color:#2dd4bf;border:1px solid #0d9488}
 .sig-pill.m110{background:#1a2410;color:#c8f135;border:1px solid #4d7c0f}
+.sig-pill.mc{background:#1a2410;color:#fb923c;border:1px solid #ea580c}
+.sig-pill.mc.up{background:#142814;color:#22c55e;border:1px solid #15803d}
+.sig-pill.mc.down{background:#2a1414;color:#ef4444;border:1px solid #b91c1c}
 #trade-chart{height:263px;min-height:263px;max-height:263px;width:100%;flex:none}
 .chart-empty{color:#555;font-size:13px;padding:40px 12px;text-align:center}
 .page-title{font-size:22px;font-weight:800;margin-bottom:6px}
@@ -1717,6 +1716,7 @@ let _candleSeries = null;
 let _priceLine = null;
 let _emaFastSeries = null;
 let _emaSlowSeries = null;
+let _mcEmaSeries = null;
 let _volumeSeries = null;
 let _chartSym = null;
 let _chartTf = null;
@@ -2154,6 +2154,7 @@ function resetTradeChart() {
     _priceLine = null;
     _emaFastSeries = null;
     _emaSlowSeries = null;
+    _mcEmaSeries = null;
     _volumeSeries = null;
   }
   _chartScaleMin = null;
@@ -2231,6 +2232,46 @@ function addMotorMarkers(markers, ov, skipTime) {
   });
 }
 
+function multiConfirmTip(cur) {
+  if (!cur) return '';
+  return 'Form:' + (cur.pattern || '-') + ' Vol:' + (cur.volume_ok ? 'OK' : '-')
+    + ' Sev:' + (cur.level_ok ? 'OK' : '-') + ' Mom:' + (cur.momentum_ok ? 'OK' : '-');
+}
+
+function multiConfirmPillHtml(mc) {
+  if (!mc || !mc.ok || !mc.current) return '<span class="sig-pill mc">MC —</span>';
+  const cur = mc.current;
+  const dir = cur.direction;
+  const cls = dir === 'UP' ? 'mc up' : (dir === 'DOWN' ? 'mc down' : 'mc');
+  const tip = multiConfirmTip(cur).replace(/"/g, '&quot;');
+  return '<span class="sig-pill ' + cls + '" title="' + tip + '">MC · ' + (cur.label || '—') + '</span>';
+}
+
+function multiConfirmMarker(s) {
+  const sc = s.score != null ? String(s.score) : '';
+  return {
+    time: s.time,
+    position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: s.dir === 'UP' ? '#22c55e' : '#ef4444',
+    shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: (s.dir === 'UP' ? 'L' : 'S') + sc,
+  };
+}
+
+function addMultiConfirmMarkers(markers, mc) {
+  if (!mc || !mc.ok) return;
+  (mc.signals || []).forEach(s => markers.push(multiConfirmMarker(s)));
+}
+
+function applyMultiConfirmEma(mc) {
+  if (!_mcEmaSeries) return;
+  if (mc && mc.ok && mc.overlays) {
+    _mcEmaSeries.setData(mc.overlays.ema_level || []);
+  } else {
+    _mcEmaSeries.setData([]);
+  }
+}
+
 function applyMotorEma(ov) {
   if (!_emaFastSeries || !_emaSlowSeries) return;
   if (ov && ov.ok && ov.overlays) {
@@ -2245,12 +2286,19 @@ function applyMotorEma(ov) {
 function updateChartGuideLegend(d, tf) {
   const el = document.getElementById('chart-signals');
   if (!el) return;
+  let html = '';
   if (tf === '1h') {
     updateHourlyLegend(d.hourly_current);
+    html = el.innerHTML;
+    html += multiConfirmPillHtml(d.multi_confirm);
+    el.innerHTML = html;
     return;
   }
   if (tf === '15m') {
     updateFifteenMotorLegend(d);
+    html = el.innerHTML;
+    html += multiConfirmPillHtml(d.multi_confirm);
+    el.innerHTML = html;
     return;
   }
   const ov = d.algo_overlay;
@@ -2258,13 +2306,14 @@ function updateChartGuideLegend(d, tf) {
   const dir = cur && cur.direction;
   if (dir === 'UP' || dir === 'DOWN') {
     el.innerHTML = '<span class="sig-pill m110">110 · ' + dir + '</span>'
-      + (cur.label ? ' <span style="color:#666;font-size:9px">' + cur.label + '</span>' : '');
+      + (cur.label ? ' <span style="color:#666;font-size:9px">' + cur.label + '</span>' : '')
+      + multiConfirmPillHtml(d && d.multi_confirm);
   } else if (ov && ov.error) {
-    el.innerHTML = '<span class="sig-pill m110">110 · —</span>';
+    el.innerHTML = '<span class="sig-pill m110">110 · —</span>' + multiConfirmPillHtml(d && d.multi_confirm);
   } else if (cur && cur.label) {
-    el.innerHTML = '<span class="sig-pill m110">110 · ' + cur.label + '</span>';
+    el.innerHTML = '<span class="sig-pill m110">110 · ' + cur.label + '</span>' + multiConfirmPillHtml(d && d.multi_confirm);
   } else {
-    el.innerHTML = '<span class="sig-pill m110">110 · gate altı</span>';
+    el.innerHTML = '<span class="sig-pill m110">110 · gate altı</span>' + multiConfirmPillHtml(d && d.multi_confirm);
   }
 }
 
@@ -2369,6 +2418,9 @@ function ensureTradeChart() {
     });
     _emaSlowSeries = _chart.addLineSeries({
       color: '#818cf8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+    });
+    _mcEmaSeries = _chart.addLineSeries({
+      color: 'rgba(251,146,60,0.85)', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
     });
     _volumeSeries = _chart.addHistogramSeries({
       priceFormat: { type: 'volume' },
@@ -2488,9 +2540,9 @@ async function loadTradeChart() {
     document.getElementById('chart-title').textContent = name + ' · ' + pxLbl;
     document.getElementById('chart-meta').textContent =
       (d.slot_label ? d.slot_label + ' İST · ' : '') + slotLbl + ' slot · '
-      + (tf === '1h'
-        ? 'A1+A3+A8+ALFA saatlik · A3/A8 ' + (d.a3a8_signal_mode_label || 'sıkı')
-        : tf === '15m' ? '110+112+113' : '110 motor UP/DOWN')
+      +       (tf === '1h'
+        ? 'A1+A3+A8+ALFA saatlik · A3/A8 ' + (d.a3a8_signal_mode_label || 'sıkı') + ' · MC teyit'
+        : tf === '15m' ? '110+112+113 · MC teyit' : '110 motor · MC teyit')
       + ' · ' + pxLbl + ' mum';
     updateChartGuideLegend(d, tf);
     document.getElementById('chart-ref-lbl').textContent =
@@ -2538,6 +2590,8 @@ async function loadTradeChart() {
         markers.push(hourlyMarker(s));
       });
       applyMotorEma(null);
+      applyMultiConfirmEma(d.multi_confirm);
+      addMultiConfirmMarkers(markers, d.multi_confirm);
     } else {
       appendMotorSlotMarkers(markers, d, candles, ov);
       addMotorMarkers(markers, ov, d.window_start);
@@ -2546,6 +2600,8 @@ async function loadTradeChart() {
         addFifteenMarkers(markers, d.fifteen_signals, d.window_start);
       }
       applyMotorEma(ov);
+      applyMultiConfirmEma(d.multi_confirm);
+      addMultiConfirmMarkers(markers, d.multi_confirm);
     }
     _candleSeries.setMarkers(markers);
   } catch (e) {
@@ -2619,6 +2675,15 @@ async function loadDesk() {
   }
 }
 
+async function parseJsonResp(r) {
+  const text = await r.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error(r.ok ? 'Geçersiz sunucu yanıtı' : ('HTTP ' + r.status));
+  }
+}
+
 async function openTrade() {
   const btn = document.getElementById('open-btn');
   const amount = parseFloat(document.getElementById('amount').value);
@@ -2636,7 +2701,7 @@ async function openTrade() {
         amount: amount,
       }),
     });
-    const estD = await estR.json();
+    const estD = await parseJsonResp(estR);
     if (estD.plan && !estD.plan.allowed) {
       showMsg('❌ Min ~$' + estD.plan.min_amount.toFixed(2) + ' gerekir (5 pay kuralı)', false);
       btn.disabled = false;
@@ -2652,7 +2717,7 @@ async function openTrade() {
         amount: amount,
       }),
     });
-    const d = await r.json();
+    const d = await parseJsonResp(r);
     if (d.ok) {
       showMsg('✅ ' + (d.message || 'Açıldı'), true);
       loadDesk();
@@ -2792,6 +2857,9 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .algo-badge.a113.down{background:#2a1418;color:#5eead4;border:1px solid #0d9488}
 .algo-badge.m110.up{background:#1a2410;color:#c8f135;border:1px solid #4d7c0f}
 .algo-badge.m110.down{background:#2a1418;color:#f87171;border:1px solid #5a2a2a}
+.algo-badge.mc{background:#2a1f0a;color:#fb923c;border:1px solid #ea580c}
+.algo-badge.mc.up{background:#142814;color:#22c55e;border:1px solid #15803d}
+.algo-badge.mc.down{background:#2a1414;color:#ef4444;border:1px solid #b91c1c}
 .composite-wrap{margin-top:8px;border-top:1px solid #1a1a1a;padding-top:8px;flex-shrink:0}
 .composite-lbl{font-size:10px;color:#555;text-transform:uppercase;font-weight:700;margin-bottom:4px}
 #composite-chart{height:96px;width:100%}
@@ -2858,7 +2926,7 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 <script>
 let _tf = '15m', _sym = 'SOLUSDT', _priceTf = '1m', _gate = 15;
 let _chart = null, _candleSeries = null, _priceLine = null;
-let _emaFastSeries = null, _emaSlowSeries = null, _volumeSeries = null;
+let _emaFastSeries = null, _emaSlowSeries = null, _mcEmaSeries = null, _volumeSeries = null;
 let _chartSym = null, _chartTf = null, _chartReq = 0;
 let _chartScaleMin = null, _chartScaleMax = null, _lastCandles = [];
 
@@ -3004,7 +3072,7 @@ function focusCandleWindow(candles) {
 
 function resetAllCharts() {
   if (_chart) { _chart.remove(); _chart = null; }
-  _candleSeries = _priceLine = _emaFastSeries = _emaSlowSeries = _volumeSeries = null;
+  _candleSeries = _priceLine = _emaFastSeries = _emaSlowSeries = _mcEmaSeries = _volumeSeries = null;
   _chartScaleMin = _chartScaleMax = null; _chartSym = null;
 }
 
@@ -3095,6 +3163,46 @@ function addMotorMarkers(markers, ov, skipTime) {
   });
 }
 
+function multiConfirmTip(cur) {
+  if (!cur) return '';
+  return 'Form:' + (cur.pattern || '-') + ' Vol:' + (cur.volume_ok ? 'OK' : '-')
+    + ' Sev:' + (cur.level_ok ? 'OK' : '-') + ' Mom:' + (cur.momentum_ok ? 'OK' : '-');
+}
+
+function multiConfirmBadgeHtml(mc) {
+  if (!mc || !mc.ok || !mc.current) return '<span class="algo-badge neutral mc">MC —</span>';
+  const cur = mc.current;
+  const dir = cur.direction;
+  const cls = dir === 'UP' ? 'mc up' : (dir === 'DOWN' ? 'mc down' : 'mc neutral');
+  const tip = multiConfirmTip(cur).replace(/"/g, '&quot;');
+  return '<span class="algo-badge ' + cls + '" title="' + tip + '">MC · ' + (cur.label || '—') + '</span>';
+}
+
+function multiConfirmMarker(s) {
+  const sc = s.score != null ? String(s.score) : '';
+  return {
+    time: s.time,
+    position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: s.dir === 'UP' ? '#22c55e' : '#ef4444',
+    shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: (s.dir === 'UP' ? 'L' : 'S') + sc,
+  };
+}
+
+function addMultiConfirmMarkers(markers, mc) {
+  if (!mc || !mc.ok) return;
+  (mc.signals || []).forEach(s => markers.push(multiConfirmMarker(s)));
+}
+
+function applyMultiConfirmEma(mc) {
+  if (!_mcEmaSeries) return;
+  if (mc && mc.ok && mc.overlays) {
+    _mcEmaSeries.setData(mc.overlays.ema_level || []);
+  } else {
+    _mcEmaSeries.setData([]);
+  }
+}
+
 function ensureTradeChart() {
   const container = document.getElementById('trade-chart');
   if (!container) return false;
@@ -3122,6 +3230,10 @@ function ensureTradeChart() {
     });
     _emaSlowSeries = _chart.addLineSeries({
       color: '#818cf8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+      autoscaleInfoProvider: () => (_chartScaleMin != null) ? { priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } } : null,
+    });
+    _mcEmaSeries = _chart.addLineSeries({
+      color: 'rgba(251,146,60,0.85)', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
       autoscaleInfoProvider: () => (_chartScaleMin != null) ? { priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } } : null,
     });
     _volumeSeries = _chart.addHistogramSeries({
@@ -3157,24 +3269,24 @@ function renderHourlyBadges(hc) {
     }
     const up = cur.dir === 'UP';
     return '<span class="algo-badge ' + cls + ' ' + (up ? 'up' : 'down') + '"' + det + '>' + (cur.label || tag) + '</span>';
-  }).join('');
+  }).join('') + multiConfirmBadgeHtml(window._lastMultiConfirm);
 }
 
 function updateMotorBadge(ov) {
   const el = document.getElementById('algo-badges');
   if (!el) return;
   if (!ov || !ov.ok || !ov.current) {
-    el.innerHTML = '<span class="algo-badge neutral m110">110 · —</span>';
+    el.innerHTML = '<span class="algo-badge neutral m110">110 · —</span>' + multiConfirmBadgeHtml(window._lastMultiConfirm);
     return;
   }
   const cur = ov.current;
   const dir = cur.direction;
   if (dir === 'UP' || dir === 'DOWN') {
     const cls = dir === 'UP' ? 'up' : 'down';
-    el.innerHTML = '<span class="algo-badge m110 ' + cls + '">110 · ' + dir + '</span>';
+    el.innerHTML = '<span class="algo-badge m110 ' + cls + '">110 · ' + dir + '</span>' + multiConfirmBadgeHtml(window._lastMultiConfirm);
     return;
   }
-  el.innerHTML = '<span class="algo-badge neutral m110">110 · ' + (cur.label || '—') + '</span>';
+  el.innerHTML = '<span class="algo-badge neutral m110">110 · ' + (cur.label || '—') + '</span>' + multiConfirmBadgeHtml(window._lastMultiConfirm);
 }
 
 function renderFifteenBadges(d, ov) {
@@ -3202,6 +3314,7 @@ function renderFifteenBadges(d, ov) {
     const up = cur.dir === 'UP';
     html += '<span class="algo-badge ' + cls + ' ' + (up ? 'up' : 'down') + '">' + (cur.label || tag) + '</span>';
   });
+  html += multiConfirmBadgeHtml(d.multi_confirm);
   el.innerHTML = html;
 }
 
@@ -3339,12 +3452,13 @@ async function loadTradeChart() {
   try {
     const r = await fetch(chartUrl(), { cache: 'no-store' });
     const d = prepareChartPayload(await r.json());
+    window._lastMultiConfirm = d.multi_confirm;
     if (reqId !== _chartReq || tf !== _tf || sym !== selectedSymbol()) return;
     const dec = d.dec != null ? d.dec : 2;
     const pxLbl = d.price_tf === '1h' ? '1h' : (d.price_tf === '15m' ? '15m' : (d.price_tf === '5m' ? '5m' : '1m'));
     document.getElementById('chart-title').textContent = (d.name || sym.replace('USDT','')) + ' · ' + pxLbl;
     document.getElementById('chart-meta').textContent =
-      (_tf === '1h' ? 'A1 + A3 + A8 + ALFA saatlik · A3/A8 ' + (d.a3a8_signal_mode_label || 'sıkı') : _tf === '15m' ? '110 + 112 + 113' : '110 motor UP/DOWN') + ' · ' + pxLbl + ' mum · ' + (d.slot_label || '') + ' İST';
+      (_tf === '1h' ? 'A1 + A3 + A8 + ALFA saatlik · A3/A8 ' + (d.a3a8_signal_mode_label || 'sıkı') + ' · MC teyit' : _tf === '15m' ? '110 + 112 + 113 · MC teyit' : '110 motor · MC teyit') + ' · ' + pxLbl + ' mum · ' + (d.slot_label || '') + ' İST';
     document.getElementById('chart-ref-lbl').textContent = d.ref_price != null ? '$' + Number(d.ref_price).toFixed(dec) : '—';
     if (_priceLine) { _candleSeries.removePriceLine(_priceLine); _priceLine = null; }
     if (!d.candles || !d.candles.length) {
@@ -3374,6 +3488,8 @@ async function loadTradeChart() {
       appendSlotMarkers(markers, d, d.candles);
       addHourlyMarkers(markers, d.hourly_signals, d);
       if (_emaFastSeries) { _emaFastSeries.setData([]); _emaSlowSeries.setData([]); }
+      applyMultiConfirmEma(d.multi_confirm);
+      addMultiConfirmMarkers(markers, d.multi_confirm);
     } else {
       if (_tf === '15m') renderFifteenBadges(d, ov);
       else updateMotorBadge(ov);
@@ -3387,6 +3503,8 @@ async function loadTradeChart() {
         _emaFastSeries.setData(ov.overlays.ema_fast || []);
         _emaSlowSeries.setData(ov.overlays.ema_slow || []);
       }
+      applyMultiConfirmEma(d.multi_confirm);
+      addMultiConfirmMarkers(markers, d.multi_confirm);
     }
     focusCandleWindow(d.candles);
     _candleSeries.setMarkers(markers);
@@ -4424,6 +4542,16 @@ def _pm_buy_plan(amount: float, price: float) -> dict:
     }
 
 
+def _pm_market_prices(pm: dict) -> tuple[float, float]:
+    """5m/15m up_price+down_price; saatlik outcome_prices."""
+    if pm.get("up_price") is not None and pm.get("down_price") is not None:
+        return float(pm["up_price"]), float(pm["down_price"])
+    op = pm.get("outcome_prices") or []
+    up = float(op[0]) if len(op) >= 1 else 0.5
+    down = float(op[1]) if len(op) >= 2 else 0.5
+    return up, down
+
+
 def _trade_desk_resolve_pm(timeframe: str, symbol: str) -> tuple[dict | None, int | None]:
     ts_period = None
     sys.path.insert(0, _DIR_POLY)
@@ -4475,7 +4603,8 @@ def _trade_desk_open(timeframe: str, symbol: str, direction: str, amount: float)
     if not pm or pm.get("closed"):
         return {"ok": False, "error": "PM market bulunamadı veya kapalı"}
 
-    quote_p = float(pm["up_price"] if direction == "UP" else pm["down_price"])
+    up_p, down_p = _pm_market_prices(pm)
+    quote_p = up_p if direction == "UP" else down_p
     token_id = pm["up_token"] if direction == "UP" else pm["down_token"]
     live_p = _trade_desk_live_price(token_id, amount, quote_p)
     plan = _pm_buy_plan(amount, live_p)
@@ -4807,6 +4936,7 @@ def _trade_desk_chart(
         "hourly_current": {},
         "fifteen_signals": [],
         "fifteen_current": {},
+        "multi_confirm": None,
     }
     if algo_key not in ("", "off", "none", "0"):
         try:
@@ -4880,6 +5010,13 @@ def _trade_desk_chart(
         except Exception:
             result["fifteen_signals"] = []
             result["fifteen_current"] = {}
+    if candles:
+        try:
+            sys.path.insert(0, _DIR_POLY)
+            from chart_multi_confirm_signals import compute_multi_confirm_signals
+            result["multi_confirm"] = compute_multi_confirm_signals(candles, dec=dec)
+        except Exception as e:
+            result["multi_confirm"] = {"ok": False, "error": str(e)}
     _trade_chart_cache[cache_key] = (now_f, result)
     if len(_trade_chart_cache) > 48:
         cutoff = now_f - 120
@@ -4957,7 +5094,8 @@ def api_trade_desk_estimate():
     pm, _ = _trade_desk_resolve_pm(timeframe, symbol)
     if not pm:
         return jsonify({"ok": False, "error": "market yok"}), 400
-    quote_p = float(pm["up_price"] if direction == "UP" else pm["down_price"])
+    up_p, down_p = _pm_market_prices(pm)
+    quote_p = up_p if direction == "UP" else down_p
     token_id = pm["up_token"] if direction == "UP" else pm["down_token"]
     live_p = _trade_desk_live_price(token_id, max(amount, 1.0), quote_p)
     plan = _pm_buy_plan(amount, live_p)
@@ -7637,7 +7775,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz4:'4. Analiz',analiz6:'6. Analiz',analiz10:'10. Analiz',alfa:'ALFA','5m_sol_109':'15M 109 SOL','5m_sol_110':'15M 110 SOL','5m_sol_111':'15M 111 SOL','5m_sol_210':'15M 210 SOL'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz4:'4. Analiz',analiz6:'6. Analiz',analiz10:'10. Analiz',alfa:'ALFA','5m_sol_109':'15M 109 SOL','5m_sol_110':'15M 110 SOL','5m_sol_210':'15M 210 SOL'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {

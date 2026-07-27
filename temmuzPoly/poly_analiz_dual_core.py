@@ -207,13 +207,13 @@ async def evaluate_symbol(symbol: str, cfg: DualConfig) -> tuple[dict | None, st
     diag: dict = {"symbol": symbol}
 
     try:
-        pred_obj = await predict(symbol)
+        pred_obj = await predict(symbol, kill_zone=False)
     except Exception as e:
         return None, f"A hata: {e}", diag
 
     a_status: dict = {}
     if pred_obj is None:
-        a_status = await predict_status(symbol)
+        a_status = await predict_status(symbol, kill_zone=False)
         diag["a_status"] = a_status
 
     try:
