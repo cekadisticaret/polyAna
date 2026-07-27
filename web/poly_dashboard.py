@@ -1523,6 +1523,8 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .chart-title{font-size:12px;font-weight:800;color:#fff;white-space:nowrap}
 .chart-meta{font-size:9px;color:#555;margin-top:1px}
 .chart-ref{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0}
+.chart-head-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.live-clock{font-size:13px;font-weight:700;color:#9ae66e;font-variant-numeric:tabular-nums;letter-spacing:.04em;font-family:ui-monospace,'SF Mono',Consolas,monospace;white-space:nowrap}
 .chart-ref-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.3px;font-weight:700}
 .chart-ref-val{font-size:12px;font-weight:800;color:#fbbf24}
 .chart-signals{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;min-height:18px}
@@ -1655,7 +1657,7 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
       <div class="field field-amt">
         <div class="lbl">Tutar ($)</div>
         <div class="amt-row">
-          <input type="number" id="amount" class="amt-input" min="1" max="500" step="1" value="7" oninput="updatePreview()">
+          <input type="number" id="amount" class="amt-input" min="1" max="500" step="1" value="7" oninput="updatePreview()" onchange="updatePreview()">
           <button type="button" class="open-btn" id="open-btn" onclick="openTrade()">İşlem Aç</button>
         </div>
       </div>
@@ -1689,9 +1691,12 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
         </div>
         <div class="chart-signals" id="chart-signals"></div>
       </div>
-      <div class="chart-ref">
-        <span class="chart-ref-lbl">Başlangıç (price to beat)</span>
-        <span class="chart-ref-val" id="chart-ref-lbl">—</span>
+      <div class="chart-head-right">
+        <div class="live-clock" id="live-clock">—</div>
+        <div class="chart-ref">
+          <span class="chart-ref-lbl">Başlangıç (price to beat)</span>
+          <span class="chart-ref-val" id="chart-ref-lbl">—</span>
+        </div>
       </div>
     </div>
     <div id="trade-chart"></div>
@@ -1717,6 +1722,8 @@ let _chartSym = null;
 let _chartTf = null;
 let _chartPx = null;
 let _chartReq = 0;
+let _estSeq = 0;
+let _deskInit = false;
 
 const _CHART_TZ = 'Europe/Istanbul';
 function utcToIstChartTime(utcSec) {
@@ -1857,6 +1864,56 @@ function currentQuote() {
   return selectedQuote();
 }
 
+function buyPlanLocal(amount, price) {
+  price = Math.max(0.02, Math.min(0.98, Math.round(price * 100) / 100));
+  let size = Math.max(5, Math.floor(amount / price * 100) / 100);
+  for (let i = 0; i < 10000; i++) {
+    const spent = size * price;
+    if (Math.abs(spent * 100 - Math.floor(spent * 100)) < 1e-9) {
+      const spentR = Math.round(spent * 100) / 100;
+      let minSize = 5;
+      for (let j = 0; j < 10000; j++) {
+        const minSpent = minSize * price;
+        if (Math.abs(minSpent * 100 - Math.floor(minSpent * 100)) < 1e-9) {
+          const minAmount = Math.round(minSpent * 100) / 100;
+          return {
+            price: price,
+            size: size,
+            spent: spentR,
+            profit: Math.round((size - spentR) * 100) / 100,
+            min_amount: minAmount,
+            allowed: amount + 0.01 >= minAmount,
+          };
+        }
+        minSize = Math.round((minSize + 0.01) * 100) / 100;
+      }
+      return null;
+    }
+    size = Math.round((size + 0.01) * 100) / 100;
+  }
+  return null;
+}
+
+function renderPreviewPlan(el, p, amount) {
+  if (!el) return;
+  if (!p) {
+    el.className = 'payout-preview';
+    el.innerHTML = '<div class="profit">—</div><div class="sub">Kazanırsan net</div>';
+    return;
+  }
+  if (!p.allowed) {
+    el.className = 'payout-preview warn';
+    el.innerHTML =
+      '<div class="profit">Min ~$' + p.min_amount.toFixed(2) + '</div>' +
+      '<div class="sub">⚠️ $' + amount.toFixed(2) + ' ile ~$' + p.spent.toFixed(2) + ' açılır (min 5 pay)</div>';
+    return;
+  }
+  el.className = 'payout-preview';
+  el.innerHTML =
+    '<div class="profit">+$' + p.profit.toFixed(2) + '</div>' +
+    '<div class="sub">🏆 $' + p.size.toFixed(2) + ' to win · gerçek risk ~$' + p.spent.toFixed(2) + '</div>';
+}
+
 function updatePreview() {
   const el = document.getElementById('payout-preview');
   if (!el) return;
@@ -1866,8 +1923,16 @@ function updatePreview() {
     el.innerHTML = '<div class="profit">—</div><div class="sub">Kazanırsan net</div>';
     return;
   }
+  const q = selectedQuote();
+  const quotePrice = q ? (_dir === 'UP' ? q.up : q.down) : null;
+  if (quotePrice != null) {
+    renderPreviewPlan(el, buyPlanLocal(amount, quotePrice), amount);
+  }
   clearTimeout(window._estTimer);
+  const seq = ++_estSeq;
   window._estTimer = setTimeout(async () => {
+    const reqAmount = parseFloat(document.getElementById('amount').value) || 0;
+    if (reqAmount < 0.01) return;
     try {
       const r = await fetch('/poly/api/trade-desk/estimate', {
         method: 'POST',
@@ -1876,31 +1941,17 @@ function updatePreview() {
           timeframe: _tf,
           symbol: selectedSymbol(),
           direction: _dir,
-          amount: amount,
+          amount: reqAmount,
         }),
       });
+      if (seq !== _estSeq) return;
       const d = await r.json();
-      const p = d.plan;
-      if (!p) {
-        el.className = 'payout-preview';
-        el.innerHTML = '<div class="profit">—</div><div class="sub">Kazanırsan net</div>';
-        return;
-      }
-      if (!p.allowed) {
-        el.className = 'payout-preview warn';
-        el.innerHTML =
-          '<div class="profit">Min ~$' + p.min_amount.toFixed(2) + '</div>' +
-          '<div class="sub">⚠️ $' + amount.toFixed(2) + ' ile ~$' + p.spent.toFixed(2) + ' açılır (min 5 pay)</div>';
-        return;
-      }
-      el.className = 'payout-preview';
-      el.innerHTML =
-        '<div class="profit">+$' + p.profit.toFixed(2) + '</div>' +
-        '<div class="sub">🏆 $' + p.size.toFixed(2) + ' to win · gerçek risk ~$' + p.spent.toFixed(2) + '</div>';
+      if (seq !== _estSeq) return;
+      renderPreviewPlan(el, d.plan, reqAmount);
     } catch (e) {
       console.error(e);
     }
-  }, 180);
+  }, 280);
 }
 
 function applySpot(q) {
@@ -2536,6 +2587,8 @@ async function refreshCash() {
 
 async function loadDesk() {
   try {
+    const symBefore = selectedSymbol();
+    const idxBefore = _selectedIdx;
     const r = await fetch('/poly/api/trade-desk', {cache: 'no-store'});
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
@@ -2552,8 +2605,12 @@ async function loadDesk() {
     renderQuotes(quotes);
     renderOpen(d.open_positions || []);
     saveDeskPrefs();
-    refreshSpot();
-    updatePreview();
+    const needPreview = !_deskInit || idxBefore !== _selectedIdx || symBefore !== selectedSymbol();
+    _deskInit = true;
+    if (needPreview) {
+      refreshSpot();
+      updatePreview();
+    }
     loadTradeChart();
   } catch (e) {
     console.error(e);
@@ -2647,6 +2704,22 @@ setInterval(loadDesk, 15000);
 setInterval(refreshCash, 10000);
 setInterval(refreshSpot, 10000);
 setInterval(loadTradeChart, 5000);
+
+function tickLiveClock() {
+  const el = document.getElementById('live-clock');
+  if (!el) return;
+  const parts = new Intl.DateTimeFormat('tr-TR', {
+    timeZone: 'Europe/Istanbul',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+  const g = t => parts.find(p => p.type === t)?.value || '';
+  el.textContent = g('day') + '.' + g('month') + '.' + g('year') + ' '
+    + g('hour') + ':' + g('minute') + ':' + g('second') + ' İST';
+}
+tickLiveClock();
+setInterval(tickLiveClock, 1000);
 </script>
 </body>
 </html>"""

@@ -12,6 +12,7 @@ Canlı mantık kopyası:
 
 Not: CVD/orderbook/funding geçmişi yok → predict'e nötr flow enjekte edilir.
 PM token sabit 0.50 (gamma simülasyonu).
+Hafta sonu: Cum 22:00 – Pzt 08:00 İST open+close kapalı (canlı A1 ile aynı).
 """
 from __future__ import annotations
 
@@ -33,6 +34,7 @@ sys.path.insert(0, _DIR)
 import poly_predictor_analysis as pa
 from poly_predictor_analysis import predict
 from backtest_analiz2 import fetch_klines_history, _neutral_preloaded
+from pm_trader_helpers import in_weekend_pause_tr
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 
@@ -122,6 +124,7 @@ async def run_backtest(
     history: list[Trade] = []
     open_pos: dict[str, dict] = {}
     skipped = 0
+    skipped_weekend = 0
 
     for i in range(warmup, min_len - 1):
         ref_bar = bars_by_sym[SYMBOLS[0]][i]
@@ -147,6 +150,10 @@ async def run_backtest(
 
             ts_open = datetime.fromtimestamp(pos["open_ms"] / 1000, tz=timezone.utc)
             ts_close = datetime.fromtimestamp(bar["open_time"] / 1000 + 3600, tz=timezone.utc)
+            if in_weekend_pause_tr(ts_close.astimezone(_TZ_TR)):
+                pos["settle_idx"] = i + 1
+                skipped_weekend += 1
+                continue
             if ts_open.timestamp() >= start_date.timestamp():
                 history.append(Trade(
                     entry_time=ts_open.astimezone(_TZ_TR).isoformat(),
@@ -171,6 +178,10 @@ async def run_backtest(
             continue
 
         open_ms = nxt_ms + 5 * 60 * 1000
+        open_tr = datetime.fromtimestamp(open_ms / 1000, tz=timezone.utc).astimezone(_TZ_TR)
+        if in_weekend_pause_tr(open_tr):
+            skipped_weekend += 1
+            continue
 
         for sym in SYMBOLS:
             if sym in open_pos:
@@ -238,6 +249,8 @@ async def run_backtest(
         "win_rate_pct": round(wr, 1),
         "max_drawdown_pct": round(max_dd, 1),
         "skipped_signals": skipped,
+        "skipped_weekend": skipped_weekend,
+        "weekend_pause": "Cum 22:00 – Pzt 08:00 İST",
         "monthly_pnl": monthly,
         "by_symbol": {
             k: {
@@ -263,6 +276,7 @@ def _print_summary(r: dict) -> None:
     print(f"  Bakiye     : ${r['initial_balance']:.0f} → ${r['final_balance']:.2f}")
     print(f"  Max DD     : {r['max_drawdown_pct']}%")
     print(f"  Atlanan    : {r['skipped_signals']} saat (predict boş)")
+    print(f"  Hafta sonu : {r.get('skipped_weekend', 0)} slot (Cum 22 – Pzt 08)")
     for sym, st in r["by_symbol"].items():
         name = sym.replace("USDT", "")
         print(f"  {name:4s}       : {st['trades']} işlem  WR {st['win_rate_pct']}%  P&L {'+' if st['pnl']>=0 else ''}${st['pnl']:.0f}")
@@ -286,6 +300,15 @@ def tg_send(text: str) -> None:
         print(f"[TG] Hata: {e}")
 
 
+def _month_label(ym: str) -> str:
+    names = ("", "Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara")
+    try:
+        y, m = ym.split("-")
+        return f"{names[int(m)]} {y}"
+    except Exception:
+        return ym
+
+
 def build_tg_report(r: dict) -> str:
     sep = "━" * 28
     sym_lines = []
@@ -293,31 +316,32 @@ def build_tg_report(r: dict) -> str:
         name = sym.replace("USDT", "")
         sym_lines.append(
             f"  {name}: {st['trades']} işlem  WR {st['win_rate_pct']}%  "
-            f"P&L {'+' if st['pnl']>=0 else ''}${st['pnl']:.0f}"
+            f"P&L {'+' if st['pnl'] >= 0 else ''}${st['pnl']:.0f}"
         )
     monthly = "\n".join(
-        f"  {m}: {'+' if p>=0 else ''}${p:.0f}"
+        f"  {_month_label(m)}: {'+' if p >= 0 else ''}${p:.0f}"
         for m, p in sorted(r["monthly_pnl"].items())
     )
     ret = (r["final_balance"] / r["initial_balance"] - 1) * 100
     return "\n".join([
         sep,
-        "📊 <b>1. ANALİZ — 1Y BACKTEST</b>",
-        f"BTC+SOL · ${r['initial_balance']:.0f} başlangıç",
+        "📊 <b>A1 — 1Y BACKTEST</b>",
+        f"1. Analiz motoru · BTC+SOL · ${r['initial_balance']:.0f} başlangıç",
         f"Dönem: {r['period']}",
         "",
         f"İşlem: {r['trades']} ({r['wins']}W/{r['losses']}L)  WR: {r['win_rate_pct']}%",
-        f"P&L: {'+' if r['total_pnl']>=0 else ''}${r['total_pnl']:.0f}",
+        f"P&L: {'+' if r['total_pnl'] >= 0 else ''}${r['total_pnl']:.0f}",
         f"Bakiye: ${r['initial_balance']:.0f} → ${r['final_balance']:.0f} ({ret:+.0f}%)",
         f"Max DD: {r['max_drawdown_pct']}%",
+        f"Hafta sonu atlanan: {r.get('skipped_weekend', 0)} slot (Cum 22 – Pzt 08)",
         "",
         "<b>Sembol bazlı</b>",
         *sym_lines,
         "",
-        "<b>Aylık P&L</b>",
+        "<b>Aylık P&amp;L</b>",
         monthly,
         "",
-        "<i>predict() motoru · fallback yok · algo değiştirilmedi</i>",
+        "<i>predict() · fallback yok · PM 0.50 sim · $12/$16/$20 · Cum 22–Pzt 08 kapalı</i>",
         sep,
     ])
 
