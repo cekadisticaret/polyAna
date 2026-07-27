@@ -466,5 +466,17 @@
     "symbol": "SOLUSDT",
     "hata_turu": "order_basarisiz",
     "detay": "dir=DOWN amount=12.0"
+  },
+  {
+    "zaman": "2026-07-24T07:05:16.951146+03:00",
+    "symbol": "72769780499474836885",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=425, error_message={'error': 'order manager not ready, please retry'}]"
+  },
+  {
+    "zaman": "2026-07-24T07:05:16.952739+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=8.0"
   }
 ]

@@ -30,6 +30,7 @@ from pm_trader_helpers import (
     skip_if_weekend_pause,
     pm_tg_stake,
     sanal_pnl,
+    sanal_tg_balance_footer,
     symbol_wr_amount,
     SANAL_INITIAL_BALANCE,
 )
@@ -287,14 +288,13 @@ async def run_open() -> None:
             f"   {pm_line}  |  genel: {_wr(sym_w, sym_t)}"
         )
 
-    at_risk = sum(p.get("pm_spent") or p.get("amount", 0) for p in state["open_positions"])
     sep = "━" * 26
     tg_send(
         f"{sep}\n"
         f"🆕 <b>{LABEL} — {saat} - {next_h}</b>  🔶 SANAL PM  Freqtrade TA\n"
         + "\n".join(lines) + "\n"
         f"{sep}\n"
-        f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Riskte: ${at_risk:.0f}  |  Acik: {len(state['open_positions'])}\n"
+        f"{sanal_tg_balance_footer(state)}\n"
         f"{sep}"
     )
     print(f"[{LABEL} open] {saat} IST — {len(opened)} acildi")

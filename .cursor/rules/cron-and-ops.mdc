@@ -12,22 +12,29 @@ alwaysApply: true
 | `31 14 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
 | `59 23 * * *` | `cd /root/aiProject && python3 BistAnaliz/backup.py` | `/tmp/backup.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
-| `2 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,10}.py close` | `/tmp/poly_trader_analiz*.log` |
+| `2 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10}.py close` | `/tmp/poly_trader_analiz*.log` |
 | `3 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_cem_analiz.py close_hourly` | `/tmp/poly_trader_cem_analiz.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py close` (A2 canlı PM SOL $6–8) | `/tmp/poly_trader_analiz2_live.log` |
-| `5 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,10}.py open` | `/tmp/poly_trader_analiz*.log` |
+| `5 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10}.py open` | `/tmp/poly_trader_analiz*.log` |
 | `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_cem_analiz.py open_hourly` | `/tmp/poly_trader_cem_analiz.log` |
 | `5 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py open` (`PM_ANALIZ2_REAL_ENABLED`) | `/tmp/poly_trader_analiz2_live.log` |
 | `0 21 * * *` | `temmuzPoly/poly_trader_analiz1.py daily` | `/tmp/poly_trader_analiz*.log` |
-| `0 21 * * 6` | `temmuzPoly/poly_trader_analiz{1,2,4,5,10}.py weekly` | `/tmp/poly_trader_analiz*.log` |
+| `0 21 * * 6` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10}.py weekly` | `/tmp/poly_trader_analiz*.log` |
 | `30 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz5_midcheck.py` | `/tmp/poly_trader_analiz5_midcheck.log` |
+| `*/5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/pm_partial_takeprofit.py` | `/tmp/pm_partial_tp.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/pm_balance_hourly.py` | `/tmp/pm_balance_hourly.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_real_stats.py` | `/tmp/poly_5m_real_stats.log` |
 | `0 * * * *` | `poly_trader_5m_sol_210.py hourly` (son 10 işlem P&amp;L, A1 Live TG) | `/tmp/poly_5m_sol_210.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_110.py open` (+1 sn gecikme) | `/tmp/poly_5m_sol_110.log` |
+| `*/15 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_112.py open` (15M 112 A8, +2 sn) | `/tmp/poly_5m_sol_112.log` |
+| `*/15 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_113.py open` (15M 113 A3, +3 sn) | `/tmp/poly_5m_sol_113.log` |
+| `*/15 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_114.py open` (15M 114 filtreli, +4 sn) | `/tmp/poly_5m_sol_114.log` |
 | `1,16,31,46 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_109.py open` | `/tmp/poly_5m_sol_109.log` |
 | `1,16,31,46 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_cem_analiz.py sync_15m` | `/tmp/poly_trader_cem_analiz.log` |
 | `0 0 * * 0` | `poly_trader_5m_sol_110.py weekly` | `/tmp/poly_5m_sol_110.log` |
+| `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_112.py weekly` | `/tmp/poly_5m_sol_112.log` |
+| `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_113.py weekly` | `/tmp/poly_5m_sol_113.log` |
+| `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_114.py weekly` | `/tmp/poly_5m_sol_114.log` |
 | `0 0 * * 0` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_sol_109.py weekly` | `/tmp/poly_5m_sol_109.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_210.py open` (+3 sn, 110 snapshot, gerçek PM $8-12) | `/tmp/poly_5m_sol_210.log` |
 | `0 0 * * 0` | `poly_trader_5m_sol_210.py weekly` | `/tmp/poly_5m_sol_210.log` |
@@ -42,24 +49,23 @@ alwaysApply: true
 | `2 * * * *` | `cd /root/aiProject && ./temmuzPoly/run_alfa.sh close` | `/tmp/poly_trader_alfa.log` |
 | `5 * * * *` | `cd /root/aiProject && ./temmuzPoly/run_alfa.sh open` | `/tmp/poly_trader_alfa.log` |
 | `0 19 * * 5` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py close` | `/tmp/pm_weekend_sync.log` |
-| `0 15 * * 0` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py open` | `/tmp/pm_weekend_sync.log` |
+| `0 5 * * 1` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py open` | `/tmp/pm_weekend_sync.log` |
 
 ## Pasif / Kaldırılmış
 | Zamanlama | Durum |
 |---|---|
 | ~~`*/15 9-18 * * 1-5`~~ `yuzdeBist.py` | **PASIF** — crontab yorum satırı |
 | ~~`5 7-15,18 * * 1-5`~~ `bist_scanner.py` | **PASIF** — BIST Sinyal bildirim kapalı |
-| `poly_trader_analiz3.py`, `poly_trader_karisim1.py`, `poly_trader_analiz6.py`, `poly_trader_analiz7.py`, `poly_trader_analiz9.py`, `poly_trader_analiz13.py`, `poly_trader_analiz21.py`, `poly_trader_analiz23.py`, `poly_trader_analiz31.py`, `poly_trader_analiz32.py`, `poly_trader_5m_btc_107.py`, `btc_analiz_hourly.py`, `poly_trader_5m_btc_105.py` | **KALDIRILDI** |
+| `poly_trader_analiz3.py`, `poly_trader_karisim1.py`, `poly_trader_analiz7.py`, `poly_trader_analiz9.py`, `poly_trader_analiz13.py`, `poly_trader_analiz21.py`, `poly_trader_analiz23.py`, `poly_trader_analiz31.py`, `poly_trader_analiz32.py`, `poly_trader_5m_btc_107.py`, `btc_analiz_hourly.py`, `poly_trader_5m_btc_105.py` | **KALDIRILDI** |
 | `polyManuel/sol_bot.py`, `poly_trader.py` | **YOK** — disk/crontab’ta yok |
 
 ## Zamanlama Notları
 - `bist_signal_hunter` seans dışında çıkar (betik içi saat kontrolü).
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
 - Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk).
-- **6. Analiz** `open` **:06** kaldırıldı (A6 silindi).
 - A7’nin cron’u yoktu; trader kaldırıldı.
-- **Hafta sonu (tüm aktif analizler):** Cum **22:00** – Paz **18:00** İST — open + close atlanır (`skip_if_weekend_pause`); 210 ek olarak her gece 22–07.
-- **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Paz **18:00** İST (`0 19 * * 5` / `0 15 * * 0` UTC); A1 Live + A2 Live + 210 anahtarları senkron.
+- **Hafta sonu (gerçek PM):** Cum **22:00** – Pzt **08:00** İST — A1 Live / A2 Live / 210 open + close atlanır (`skip_if_weekend_pause` + dashboard anahtarı). **Sanal** (A1, 110, 109 vb.) dashboard/hafta sonu duraklamasından etkilenmez.
+- **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **08:00** İST (`0 19 * * 5` / `0 5 * * 1` UTC); A1 Live + A2 Live + 210 anahtarları senkron.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis).
 
 ## Log Takibi
@@ -69,9 +75,13 @@ tail -f /tmp/bist_signal_hunter.log
 tail -f /tmp/poly_trader_analiz1.log
 tail -f /tmp/poly_5m_sol_109.log
 tail -f /tmp/poly_5m_sol_110.log
+tail -f /tmp/poly_5m_sol_112.log
+tail -f /tmp/poly_5m_sol_113.log
+tail -f /tmp/poly_5m_sol_114.log
 tail -f /tmp/poly_5m_sol_111.log
 tail -f /tmp/pm_balance_hourly.log
 tail -f /tmp/poly_5m_sol_210.log
+tail -f /tmp/pm_partial_tp.log
 tail -f /tmp/algo_signals.log
 tail -f /tmp/backup.log
 tail -f /tmp/crypto_news_monitor.log

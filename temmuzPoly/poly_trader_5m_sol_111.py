@@ -550,10 +550,9 @@ def run() -> None:
         # ── Canlı PM ──────────────────────────────────────────
         from pm_balance_guard import can_open_trade
         if not can_open_trade(LABEL, tg_send):
-            save_state(state)
-            if closed_lines:
-                _send_tg_round(saat, next_saat, state, history, closed_lines, [], [], tur_pnl)
-            return
+            skip_lines.append(f"⏸ {name} — gerçek PM kapalı (dashboard)")
+            print(f"[{LABEL}] {saat} — {name} atlandı: dashboard PM kapalı")
+            continue
 
         _pm_common._PM_DRY_RUN = _PM_DRY_RUN
         pm_info, pm_skip = _pm_resolve_market(sym, ts_period, direction, amount)

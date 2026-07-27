@@ -14,10 +14,14 @@ from pathlib import Path
 import numpy as np
 
 _DIR = Path(__file__).resolve().parent
+_POLY = _DIR.parent / "temmuzPoly"
 if str(_DIR) not in sys.path:
     sys.path.insert(0, str(_DIR))
+if str(_POLY) not in sys.path:
+    sys.path.insert(0, str(_POLY))
 
 from jesse.indicators import ema, rsi  # noqa: E402 — jesse kurulumu gerekli
+from a3a8_signal_mode import is_a3a8_strict  # noqa: E402
 
 FAST_EMA = 8
 SLOW_EMA = 21
@@ -77,7 +81,16 @@ def predict_pm_direction(symbol: str) -> JessePmSignal | None:
     rsi_val = float(rsi(candles, RSI_PERIOD))
     golden = ema_fast > ema_slow
 
-    if golden:
+    if is_a3a8_strict():
+        ema_fast_prev = float(ema(candles[:-1], FAST_EMA))
+        ema_slow_prev = float(ema(candles[:-1], SLOW_EMA))
+        if ema_fast_prev <= ema_slow_prev and ema_fast > ema_slow:
+            predicted = "UP"
+        elif ema_fast_prev >= ema_slow_prev and ema_fast < ema_slow:
+            predicted = "DOWN"
+        else:
+            return None
+    elif golden:
         predicted = "UP"
     elif ema_fast < ema_slow:
         predicted = "DOWN"

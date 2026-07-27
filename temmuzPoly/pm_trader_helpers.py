@@ -42,20 +42,28 @@ def tg_send_pm_live(text: str, *, label: str = "PM") -> bool:
 
 
 def in_weekend_pause_tr(now_tr: datetime) -> bool:
-    """Cuma 22:00 – Pazar 18:00 İST arası yeni işlem açılmaz."""
+    """Cuma 22:00 – Pazartesi 08:00 İST arası yeni işlem açılmaz (A1/A2/210 gerçek PM)."""
     dow = now_tr.weekday()  # 0=Pzt … 4=Cum 5=Cmt 6=Paz
     h = now_tr.hour
     if dow == 4 and h >= 22:
         return True
     if dow == 5:
         return True
-    if dow == 6 and h < 18:
+    if dow == 6:
+        return True
+    if dow == 0 and h < 8:
         return True
     return False
 
 
 def skip_if_weekend_pause(label: str, mode: str, now_tr: datetime | None = None) -> bool:
-    """Hafta sonu duraklamasında True — çağıran hemen return etmeli (open/close/preview)."""
+    """Hafta sonu duraklamasında True — yalnızca gerçek PM (dashboard grubu) trader'ları."""
+    try:
+        from pm_balance_guard import is_live_pm_label
+        if not is_live_pm_label(label):
+            return False
+    except Exception:
+        pass
     if now_tr is None:
         now_tr = datetime.now(_TZ_TR)
     elif now_tr.tzinfo is None:
@@ -65,7 +73,7 @@ def skip_if_weekend_pause(label: str, mode: str, now_tr: datetime | None = None)
     if in_weekend_pause_tr(now_tr):
         print(
             f"[{label} {mode}] {now_tr.strftime('%H:%M')} İST — "
-            f"hafta sonu duraklama (Cum 22:00 – Paz 18:00), işlem yok"
+            f"hafta sonu duraklama (Cum 22:00 – Pzt 08:00), işlem yok"
         )
         return True
     return False
@@ -378,6 +386,26 @@ def pm_stake_fields(pos: dict) -> tuple[float, float, float]:
     return spent, size, entry_p
 
 
+def sanal_at_risk(state: dict) -> float:
+    total = 0.0
+    for p in state.get("open_positions", []):
+        spent, _, _ = pm_stake_fields(p)
+        total += spent
+    return round(total, 2)
+
+
+def sanal_tg_balance_footer(state: dict) -> str:
+    """Sanal PM TG — Ana (serbest) / Riskte / Toplam equity."""
+    at_risk = sanal_at_risk(state)
+    total = round(float(state.get("balance", SANAL_INITIAL_BALANCE)), 2)
+    ana = round(total - at_risk, 2)
+    n = len(state.get("open_positions", []))
+    return (
+        f"💰 Ana: ${ana:.2f}  |  📂 Riskte: ${at_risk:.0f}  |  "
+        f"Toplam: ${total:.2f}  |  Acik: {n}"
+    )
+
+
 def pm_tg_stake(pos: dict) -> str:
     spent, size, ep = pm_stake_fields(pos)
     if size > 0 and spent > 0 and ep > 0:
@@ -401,7 +429,10 @@ def pm_sanal_tg_quote(spent: float, token_price: float | None, pm_size: float) -
 
 def pm_history_extras(pos: dict) -> dict:
     extras: dict = {}
-    for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "token_price", "pm_slug", "pm_order_id", "tier"):
+    for k in (
+        "pm_spent", "pm_size", "pm_entry_price", "to_win", "token_price", "pm_slug", "pm_order_id", "tier",
+        "pm_spent_original", "pm_partial_received", "pm_partial_sold_size", "pm_partial_tp_done",
+    ):
         if pos.get(k) is not None:
             extras[k] = pos[k]
     return extras
@@ -531,7 +562,11 @@ def pm_5m_history_extras(pos: dict) -> dict:
 
 def pm_5m_close(pos: dict, win: bool) -> tuple[float, float]:
     """(pnl, payout) — girişte kaydedilen PM kotasyonuna göre."""
-    pnl = sanal_pnl(pos, win)
+    try:
+        from pm_partial_takeprofit import pm_realized_pnl
+        pnl = pm_realized_pnl(pos, win)
+    except Exception:
+        pnl = sanal_pnl(pos, win)
     _, size, _ = pm_stake_fields(pos)
     payout = size if win else 0.0
     return pnl, payout

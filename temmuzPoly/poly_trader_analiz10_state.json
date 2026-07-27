@@ -1,5 +1,33 @@
 {
-  "balance": 55.68,
-  "open_positions": [],
-  "total_pnl": 7.68
+  "balance": 281.91,
+  "open_positions": [
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 76.26,
+      "entry_time_tr": "2026-07-27T12:05:05.999537+03:00",
+      "entry_hour_tr": 12,
+      "entry_dow": 0,
+      "entry_is_weekend": false,
+      "amount": 16.0,
+      "conf_a": 0.775,
+      "score_b": 2,
+      "votes": [
+        1,
+        1,
+        0,
+        1
+      ],
+      "tier": "⚡ Bir güçlü bir orta",
+      "virtual": true,
+      "pm_slug": "solana-up-or-down-july-27-2026-5am-et",
+      "pm_title": "Solana Up or Down - July 27, 5AM ET",
+      "pm_token_dir": "UP",
+      "pm_entry_price": 0.545,
+      "pm_spent": 16.0,
+      "pm_size": 29.36,
+      "to_win": 29.36
+    }
+  ],
+  "total_pnl": 13.91
 }

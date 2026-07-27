@@ -430,11 +430,9 @@ def run() -> None:
         # ── Canlı PM ──────────────────────────────────────────
         from pm_balance_guard import can_open_trade
         if not can_open_trade(LABEL, tg_send):
-            _110_skip("PM bakiye guard")
-            save_state(state)
-            if closed_lines:
-                _send_tg_round(saat, next_saat, state, history, closed_lines, [], [], tur_pnl)
-            return
+            _110_skip("PM açılış kapalı (dashboard)")
+            skip_lines.append(f"⏸ {name} — gerçek PM kapalı")
+            continue
 
         _pm_common._PM_DRY_RUN = _PM_DRY_RUN
         pm_info, pm_skip = _pm_resolve_market(sym, ts_period, direction, amount)
@@ -634,11 +632,56 @@ def run_stats() -> None:
     )
 
 
+def run_recent(limit: int = 10) -> None:
+    history = _effective_history(load_history())
+    state = load_state()
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    rows = history[-limit:]
+    if not rows:
+        tg_send(f"📋 <b>{LABEL} — son işlemler</b>\nHenüz kapanmış işlem yok.")
+        return
+
+    lines: list[str] = []
+    for i, t in enumerate(reversed(rows), 1):
+        sym = _sym_name(t.get("symbol", "SOLUSDT"))
+        pred = t.get("predicted_dir", "?")
+        dir_tr = "YÜKSELİR" if pred == "UP" else "DÜŞER"
+        icon = "✅" if t.get("win") else "❌"
+        entry = t.get("entry_price")
+        exit_p = t.get("exit_price")
+        pnl = t.get("pnl", 0) or 0
+        amt = t.get("amount", 0)
+        et = (t.get("entry_time_tr") or "")[11:16] or "—"
+        price_bit = ""
+        if entry is not None and exit_p is not None:
+            price_bit = f"  {_fmt_price(t.get('symbol', 'SOLUSDT'), entry)}→{_fmt_price(t.get('symbol', 'SOLUSDT'), exit_p)}"
+        lines.append(
+            f"{i}. {icon} {et} {sym} {dir_tr}{price_bit}  "
+            f"{'+' if pnl >= 0 else ''}${pnl:.2f} (${amt:.0f})"
+        )
+
+    wins = sum(1 for t in rows if t.get("win"))
+    net = round(sum(t.get("pnl", 0) or 0 for t in rows), 2)
+    mode = "🔴 GERÇEK PM" if _PM_LIVE else "🔶 SANAL"
+    tg_send(
+        f"📋 <b>{LABEL} — son {len(rows)} işlem</b>\n"
+        f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST  |  {mode}\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        + "\n".join(lines) + "\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"Özet: {_wr(wins, len(rows))}  |  {'🟢' if net >= 0 else '🔴'} {net:+.2f}$\n"
+        f"{_bal_line(state)}"
+    )
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "open"
     if mode == "weekly":
         run_weekly()
     elif mode == "stats":
         run_stats()
+    elif mode == "recent":
+        n = int(sys.argv[2]) if len(sys.argv) > 2 else 10
+        run_recent(n)
     else:
         run()

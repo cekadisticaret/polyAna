@@ -21,6 +21,7 @@ _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 # Sıcaklık haritası: analiz bazlı aktif semboller
 _HEATMAP_SYMS = {
     "analiz1":  ["BTC", "SOL"],
+    "analiz6":  ["BTC", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
@@ -52,23 +53,23 @@ _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 _ALGO_STATS_EXCLUDE = frozenset({"manual", "5m_sol_111_shadow"})
 # Kaldırılmış trader'lar — diskte history kalsa bile listelenmez
 _REMOVED_ANALYSES = frozenset({
-    "analiz6", "analiz7", "analiz9", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32",
+    "analiz7", "analiz9", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32",
     "5m_btc_107",
 })
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz4", "analiz10",
+    "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz4", "analiz6", "analiz10",
     "5m_sol_109", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca bu liste (auto-discover yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz4", "analiz10",
+    "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz4", "analiz6", "analiz10",
     "alfa",
     "5m_sol_109", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz5", "analiz3", "analiz8",
+    "analiz2", "analiz1", "analiz4", "analiz6", "analiz5", "analiz3", "analiz8",
     "analiz10", "5m_sol_109", "5m_sol_110", "5m_sol_111", "5m_sol_210",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
@@ -76,6 +77,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz2":    "2. Analiz (SOL)",
     "analiz3":    "3. Analiz Freqtrade",
     "analiz4":    "4. Analiz",
+    "analiz6":    "6. Analiz",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -318,10 +320,17 @@ def _binance(path, params=None):
 def get_price(symbol: str) -> float:
     return float(_binance("/fapi/v1/ticker/price", {"symbol": symbol})["price"])
 
-def get_klines(symbol: str, interval="15m", limit=80):
-    raw = _binance("/fapi/v1/klines", {"symbol": symbol, "interval": interval, "limit": limit})
+def get_klines(symbol: str, interval="15m", limit=80, start_time_ms: int | None = None):
+    params = {"symbol": symbol, "interval": interval, "limit": limit}
+    if start_time_ms is not None:
+        params["startTime"] = int(start_time_ms)
+    raw = _binance("/fapi/v1/klines", params)
     return [{"t": int(k[0]), "o": float(k[1]), "h": float(k[2]),
              "l": float(k[3]), "c": float(k[4]), "v": float(k[5])} for k in raw]
+
+
+_trade_chart_cache: dict[tuple, tuple[float, dict]] = {}
+_TRADE_CHART_CACHE_TTL = 2.0
 
 def load_state(name: str) -> dict:
     path = _trader_state_path(name)
@@ -531,11 +540,81 @@ _15M_PM_ANALYSES = frozenset({"5m_sol_110", "5m_sol_111", "5m_sol_210"})
 
 def _manual_timeframe(pos: dict) -> str:
     tf = pos.get("timeframe")
-    if tf in ("15m", "1h"):
+    if tf in ("5m", "15m", "1h"):
         return tf
-    if pos.get("ts_period") or pos.get("entry_period_min") == 15:
+    ep = pos.get("entry_period_min")
+    if ep == 5:
+        return "5m"
+    if pos.get("ts_period") or ep == 15:
         return "15m"
     return "1h"
+
+
+def _trade_desk_slot_ref(symbol: str, timeframe: str, ts_period: int | None = None) -> float | None:
+    """PM price-to-beat — slot başlangıç mum açılışı (Binance)."""
+    if not symbol:
+        return None
+    name = symbol.replace("USDT", "")
+    dec = 1 if name == "BTC" else 2
+    interval = {"5m": "5m", "15m": "15m", "1h": "1h"}.get(timeframe)
+    if not interval:
+        return None
+    mod = {"5m": 300, "15m": 900, "1h": 3600}[timeframe]
+    try:
+        import time
+        ts = int(ts_period if ts_period is not None else time.time() - (int(time.time()) % mod))
+        target_ms = ts * 1000
+        for k in get_klines(symbol, interval, 12):
+            if k["t"] == target_ms:
+                return round(float(k["o"]), dec)
+        kl = get_klines(symbol, interval, 3)
+        if kl:
+            return round(float(kl[-1]["o"]), dec)
+    except Exception:
+        pass
+    return None
+
+
+def _manual_slot_ref_price(pos: dict) -> float | None:
+    sym = pos.get("symbol") or ""
+    ts = pos.get("ts_period") or pos.get("ts_5m")
+    if not sym or not ts:
+        return None
+    return _trade_desk_slot_ref(sym, _manual_timeframe(pos), int(ts))
+
+
+def _effective_entry_price(pos: dict, analiz_key: str) -> float:
+    """Manuel PM — giriş = slot açılışı (price to beat); botlar ham entry_price."""
+    if analiz_key == "manual":
+        slot_ref = _manual_slot_ref_price(pos)
+        if slot_ref is not None:
+            return slot_ref
+    return float(pos.get("entry_price") or 0)
+
+
+def _manual_pos_id(pos: dict) -> str:
+    oid = pos.get("pm_order_id")
+    if oid and str(oid) not in ("DRY_RUN", ""):
+        return str(oid)
+    slug = pos.get("pm_slug") or ""
+    et = pos.get("entry_time_tr") or ""
+    return f"{slug}:{et}"
+
+
+def _manual_pos_match(
+    pos: dict,
+    req_sym: str,
+    *,
+    timeframe: str | None = None,
+    order_id: str | None = None,
+) -> bool:
+    if pos.get("symbol", "").upper() != req_sym:
+        return False
+    if order_id:
+        return _manual_pos_id(pos) == order_id or str(pos.get("pm_order_id") or "") == order_id
+    if timeframe in ("5m", "15m", "1h"):
+        return _manual_timeframe(pos) == timeframe
+    return True
 
 
 def _is_15m_analiz_pos(analiz_key: str, pos: dict) -> bool:
@@ -560,6 +639,14 @@ def _position_slot_range(pos: dict, analiz_key: str) -> str | None:
             end_min = int(period_min) + 15
             eh, em = divmod(end_min, 60)
             return f"{h:02d}:{m:02d}-{eh % 24:02d}:{em:02d}"
+        return None
+
+    if analiz_key == "manual" and _manual_timeframe(pos) == "5m":
+        ts = pos.get("ts_period") or pos.get("ts_5m")
+        if ts:
+            start = datetime.fromtimestamp(int(ts), _TZ_TR)
+            end = start + timedelta(minutes=5)
+            return f"{start.strftime('%H:%M')}-{end.strftime('%H:%M')}"
         return None
 
     if analiz_key in _HOURLY_PM_ANALYSES:
@@ -636,6 +723,98 @@ def _is_live_pm_trade(t: dict) -> bool:
         return True
     return False
 
+
+def _format_local_pm_trade(t: dict, label: str) -> dict | None:
+    """Trader history kaydını Son İşlemler satırına çevir."""
+    if not _is_live_pm_trade(t):
+        return None
+    slug = t.get("pm_slug") or ""
+    exit_tr = t.get("exit_time_tr") or t.get("entry_time_tr") or ""
+    if not exit_tr:
+        return None
+    spent = float(t.get("pm_spent") or t.get("amount") or 0)
+    pnl_val = t.get("pnl")
+    if pnl_val is None:
+        return None
+    win = t.get("win")
+    if win is None:
+        win = float(pnl_val) >= 0
+    return {
+        "sym": (t.get("symbol") or "").replace("USDT", "") or "?",
+        "dir": t.get("predicted_dir") or t.get("pm_token_dir") or "?",
+        "spent": round(spent, 2),
+        "pnl": round(float(pnl_val), 2),
+        "win": bool(win),
+        "time": exit_tr[:16].replace("T", " "),
+        "analiz": label,
+        "source": "local",
+        "pending": False,
+        "slug": slug,
+    }
+
+
+def _local_pm_closed_by_slug() -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for key, label in _PM_POSITION_SOURCES:
+        for t in _load_trader_history(key):
+            row = _format_local_pm_trade(t, label)
+            if not row or not row["slug"]:
+                continue
+            prev = out.get(row["slug"])
+            if not prev or row["time"] > prev["time"]:
+                out[row["slug"]] = row
+    return out
+
+
+def _local_pm_open_slugs() -> set[str]:
+    slugs: set[str] = set()
+    for key, _label in _PM_POSITION_SOURCES:
+        state = load_state(key)
+        for pos in state.get("open_positions", []):
+            if not _position_visible(key, pos):
+                continue
+            slug = pos.get("pm_slug")
+            if slug:
+                slugs.add(str(slug))
+    return slugs
+
+
+def _merge_pm_recent_trades(pending: list[dict], recent: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Poly data-api + yerel kapanış — zincir gecikince BEKLİYOR takılmasın."""
+    local_closed = _local_pm_closed_by_slug()
+    local_open = _local_pm_open_slugs()
+
+    pending_out: list[dict] = []
+    for p in pending:
+        slug = str(p.get("slug") or "")
+        if slug and slug in local_closed:
+            continue
+        if slug and slug not in local_open:
+            # Zincirde açık görünüp yerelde iz yok — eski orphan; listeleme
+            continue
+        pending_out.append(p)
+
+    recent_out: list[dict] = []
+    seen_slugs: set[str] = set()
+    for r in recent:
+        slug = str(r.get("slug") or "")
+        if slug and slug in local_closed:
+            recent_out.append(local_closed[slug])
+            seen_slugs.add(slug)
+        else:
+            recent_out.append(r)
+            if slug:
+                seen_slugs.add(slug)
+
+    for slug, row in local_closed.items():
+        if slug not in seen_slugs:
+            recent_out.append(row)
+            seen_slugs.add(slug)
+
+    recent_out.sort(key=lambda x: str(x.get("time") or ""), reverse=True)
+    pending_out.sort(key=lambda x: str(x.get("time") or ""), reverse=True)
+    return pending_out[:10], recent_out[:20]
+
 def collect_positions() -> list:
     """Gerçek Polymarket açık pozisyonları (tüm aktif PM trader'lar)."""
     positions = []
@@ -698,7 +877,7 @@ def api_data():
     for pos in positions:
         sym      = pos["symbol"]
         current_p = prices.get(sym)
-        entry_p  = pos.get("entry_price", 0)
+        entry_p  = _effective_entry_price(pos, pos["_analiz"])
         pred     = pos.get("predicted_dir", "")
         pm_spent = pos.get("pm_spent", 0)
         pm_size  = pos.get("pm_size", 0)
@@ -748,6 +927,8 @@ def api_data():
             "slot_range":   _position_slot_range(pos, pos["_analiz"]),
             "is_15m":       _is_15m_analiz_pos(pos["_analiz"], pos),
             "pm_slug":      pos.get("pm_slug", ""),
+            "pm_order_id":  pos.get("pm_order_id", ""),
+            "pos_id":       _manual_pos_id(pos) if pos["_analiz"] == "manual" else "",
             "closable":     bool(pos.get("pm_token_id") and pm_size),
         })
 
@@ -1102,6 +1283,7 @@ def api_analizler():
         ("analiz2",    "2. Analiz (SOL)",       300,  "A1 motoru SOL only $10-15-20"),
         ("analiz3",    "3. Analiz Freqtrade",   300,  "SampleStrategy TA sanal PM BTC+SOL+ETH"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
+        ("analiz6",    "6. Analiz",             300,  "MACD Hist. Div #26"),
         ("analiz5",    "A1 Live",             None, "A1 Motoru Gerçek PM $6–8 WR"),
         ("analiz8",    "8. Analiz Jesse",       300,  "GoldenCross EMA8/21 sanal PM BTC+SOL+ETH"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
@@ -1254,35 +1436,58 @@ if (!window._spBoot) {
 _SIDEBAR_PROFIT_BLOCK = _SIDEBAR_PROFIT_HTML + _SIDEBAR_PROFIT_JS
 
 
+def _patch_sidebar_cleanup(html: str) -> str:
+    html = html.replace('  <div class="nav-label">Hesap</div>\n', '')
+    html = html.replace('  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>\n', '')
+    return html
+
+
 def _patch_sidebar_profit(html: str) -> str:
-    marker = (
-        '  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>\n'
-        '  <div class="sidebar-footer"'
-    )
-    if marker not in html:
+    if _SIDEBAR_PROFIT_BLOCK in html:
         return html
-    html = html.replace(
-        marker,
-        '  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>\n'
-        + _SIDEBAR_PROFIT_BLOCK
-        + '\n  <div class="sidebar-footer"',
-        1,
+    markers = (
+        '  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>\n  <div class="sidebar-footer"',
+        '  <div class="sidebar-footer"><span class="dot"></span>Canlı</div>',
+        '  <div class="sidebar-footer"><span class="live-dot"></span>Canlı</div>',
+        '  <div class="sidebar-footer"',
     )
+    for marker in markers:
+        if marker not in html:
+            continue
+        if marker.startswith('  <a class="nav-item" href="/ayarlar"'):
+            html = html.replace(
+                marker,
+                '  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>\n'
+                + _SIDEBAR_PROFIT_BLOCK
+                + '\n  <div class="sidebar-footer"',
+                1,
+            )
+        else:
+            html = html.replace(marker, _SIDEBAR_PROFIT_BLOCK + '\n  ' + marker, 1)
+        break
     if '/* pm-kar-donut */' not in html:
         html = html.replace('</style>', _SIDEBAR_PROFIT_CSS + '\n</style>', 1)
     return html
 
 
 def _patch_nav_islemler(html: str) -> str:
-    link = '<a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>\n  '
+    grafik_link = '<a class="nav-item" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>\n  '
+    islemler_link = '<a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>\n  '
+    if 'href="/poly/grafik"' not in html and 'href="/poly/islemler"' in html:
+        html = html.replace(
+            '<a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>\n',
+            islemler_link + grafik_link,
+            1,
+        )
     if 'href="/poly/islemler"' in html:
         return html
+    link_block = islemler_link + grafik_link
     for needle in (
         '<a class="nav-item active" href="/poly/gecmis">',
         '<a class="nav-item" href="/poly/gecmis">',
     ):
         if needle in html:
-            return html.replace(needle, link + needle, 1)
+            return html.replace(needle, link_block + needle, 1)
     return html
 
 
@@ -1292,13 +1497,15 @@ ISLEMLER_HTML = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>İşlemler — PolyMarket</title>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex}
 .sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
-.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:20px;letter-spacing:-0.5px}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px}
 .logo span{color:#c8f135}
+.sidebar-cash{display:block;background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:8px 12px;font-size:13px;color:#9ae66e;font-weight:700;margin-bottom:16px;width:100%;text-align:center}
 .nav-label{font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:14px;transition:.15s}
 .nav-item:hover{background:#1a1a1a;color:#fff}
@@ -1307,37 +1514,69 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:#c8f135}
 .sidebar-footer{margin-top:auto;font-size:11px;color:#444;padding:12px;display:flex;align-items:center;gap:6px}
 .sidebar-footer .dot{width:6px;height:6px;border-radius:50%;background:#4ade80}
-.main{flex:1;padding:28px 32px;max-width:900px}
+.main{flex:1;padding:28px 32px;max-width:560px;min-width:0}
+.content-wrap{display:flex;flex:1;min-width:0;align-items:flex-start}
+.chart-panel{flex:1;min-width:340px;padding:20px 24px 20px 0;border-left:1px solid #1e1e1e;display:flex;flex-direction:column;align-self:flex-start;position:sticky;top:0;gap:12px}
+.chart-pos-card{margin:0;width:100%}
+.chart-panel-inner{background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;width:100%}
+.chart-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:nowrap}
+.chart-title{font-size:12px;font-weight:800;color:#fff;white-space:nowrap}
+.chart-meta{font-size:9px;color:#555;margin-top:1px}
+.chart-ref{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0}
+.chart-ref-lbl{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:.3px;font-weight:700}
+.chart-ref-val{font-size:12px;font-weight:800;color:#fbbf24}
+.chart-signals{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;min-height:18px}
+.chart-px-tabs{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.tab-px{background:#111;border:1px solid #2a2a2a;color:#777;font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;cursor:pointer;min-width:36px;text-align:center}
+.tab-px:hover:not(.active){border-color:#5a4a18;color:#ca8a04}
+.tab-px.active{background:#2a2410;border-color:#fbbf24;color:#fbbf24;box-shadow:0 0 0 1px rgba(251,191,36,.15)}
+.sig-pill{font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:.3px}
+.sig-pill.a1{background:#2a1a3a;color:#c084fc;border:1px solid #6b21a8}
+.sig-pill.a3{background:#0f2a24;color:#2dd4bf;border:1px solid #0d9488}
+.sig-pill.a8{background:#0c2340;color:#38bdf8;border:1px solid #0369a1}
+.sig-pill.alfa{background:#2a1f0a;color:#fbbf24;border:1px solid #f59e0b}
+.sig-pill.a112{background:#0c2340;color:#38bdf8;border:1px solid #0369a1}
+.sig-pill.a113{background:#0f2a24;color:#2dd4bf;border:1px solid #0d9488}
+.sig-pill.m110{background:#1a2410;color:#c8f135;border:1px solid #4d7c0f}
+#trade-chart{height:263px;min-height:263px;max-height:263px;width:100%;flex:none}
+.chart-empty{color:#555;font-size:13px;padding:40px 12px;text-align:center}
 .page-title{font-size:22px;font-weight:800;margin-bottom:6px}
 .page-sub{font-size:13px;color:#666;margin-bottom:24px}
-.cash-pill{display:inline-block;background:#111;border:1px solid #2a2a2a;border-radius:20px;padding:6px 14px;font-size:13px;color:#9ae66e;font-weight:700;margin-bottom:20px}
-.tabs{display:flex;gap:8px;margin-bottom:20px}
-.tab{background:#111;border:1px solid #2a2a2a;color:#888;font-size:13px;font-weight:700;padding:10px 20px;border-radius:12px;cursor:pointer}
+.tabs{display:flex;gap:6px;margin-bottom:16px;margin-top:0;flex-wrap:wrap}
+.tab{background:#111;border:1px solid #2a2a2a;color:#888;font-size:12px;font-weight:700;padding:10px 14px;border-radius:12px;cursor:pointer;flex:1;min-width:0;text-align:center}
 .tab.active{background:#1a2e1a;border-color:#4ade80;color:#4ade80}
 .card{background:#111;border:1px solid #1e1e1e;border-radius:16px;padding:20px;margin-bottom:16px}
 .card-title{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;font-weight:700}
-.quote-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1a1a1a;font-size:13px}
+.quote-row{display:flex;justify-content:space-between;align-items:center;padding:10px 10px;border-bottom:1px solid #1a1a1a;font-size:13px;cursor:pointer;border-radius:12px;margin:0 -6px;transition:.15s}
 .quote-row:last-child{border-bottom:none}
+.quote-row:hover{background:#141414}
+.quote-row.selected{background:#1a2e1a;outline:1px solid #2a4a2a}
 .sym{font-weight:800;font-size:16px}
 .slot{color:#666;font-size:12px;margin-top:2px}
 .prices{display:flex;gap:10px;margin-top:8px}
 .price-pill{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700}
 .price-up{background:#142814;color:#4ade80}
 .price-down{background:#2a1414;color:#f87171}
-.form-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:16px}
+.form-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;margin-top:16px}
+.field-amt{flex:1 1 100%;width:100%}
+.amt-row{display:flex;align-items:center;gap:10px;width:100%}
+.amt-row .amt-input{flex:0 0 100px;width:100px}
+.amt-row .open-btn{flex:1;min-width:120px;padding:12px 16px}
+.field-dir{flex:1 1 100%;width:100%}
 .lbl{font-size:11px;color:#666;margin-bottom:6px;font-weight:600}
 .field{display:flex;flex-direction:column}
-.dir-btns{display:flex;gap:8px}
-.dir-btn{padding:10px 18px;border-radius:10px;border:1.5px solid #2a2a2a;background:#0d0d0d;color:#888;font-size:13px;font-weight:700;cursor:pointer}
+.dir-btns{display:flex;gap:8px;width:100%}
+.dir-btn{flex:1;padding:12px 18px;border-radius:10px;border:1.5px solid #2a2a2a;background:#0d0d0d;color:#888;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
 .dir-btn.up.active{background:#142814;border-color:#4ade80;color:#4ade80}
 .dir-btn.down.active{background:#2a1414;border-color:#f87171;color:#f87171}
 .amt-input{background:#0d0d0d;border:1.5px solid #2a2a2a;border-radius:10px;color:#fff;font-size:18px;font-weight:800;padding:10px 14px;width:120px}
 .amt-input:focus{outline:none;border-color:#c8f135}
-.open-btn{background:#c8f135;border:none;color:#111;font-size:14px;font-weight:800;padding:12px 24px;border-radius:12px;cursor:pointer;min-width:140px}
+.open-btn{background:#c8f135;border:none;color:#111;font-size:14px;font-weight:800;padding:12px 24px;border-radius:12px;cursor:pointer}
 .open-btn:hover{opacity:.92}
-.payout-preview{min-width:130px;padding:10px 14px;background:#0f140f;border:1px solid #2a3a2a;border-radius:10px;font-size:13px;line-height:1.35}
+.payout-preview{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;width:100%;flex:1 1 100%;padding:10px 0 0;background:none;border:none;border-radius:0;font-size:13px;line-height:1.4}
 .payout-preview .profit{font-size:18px;font-weight:800;color:#4ade80}
-.payout-preview.warn{border-color:#78350f;background:#1a1408}
+.payout-preview .sub{color:#aaa;font-size:15px;font-weight:600}
+.payout-preview.warn{padding:10px 14px;background:#1a1408;border:1px solid #78350f;border-radius:10px;flex-direction:column;align-items:flex-start;gap:4px}
 .payout-preview.warn .profit{color:#fbbf24}
 .spot-strip{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:12px 14px;background:#0d100d;border:1px solid #1e2a1e;border-radius:12px}
 .spot-tf{margin-left:auto;font-size:11px;color:#555;font-weight:700}
@@ -1354,31 +1593,35 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .pos-table th{text-align:left;color:#555;font-size:11px;text-transform:uppercase;padding:10px 8px;border-bottom:1px solid #2a2a2a}
 .pos-table td{padding:12px 8px;border-bottom:1px solid #1a1a1a}
 .close-sm{background:#2a1414;border:1px solid #5a2a2a;color:#f87171;font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer}
+.sync-btn{background:#1a2e1a;border:1px solid #4ade80;color:#4ade80;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.sync-btn:hover{background:#243824}
+.sync-btn:disabled{opacity:.55;cursor:wait}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.card-head .card-title{margin-bottom:0}
 .empty{color:#555;font-size:13px;padding:8px 0}
-@media(max-width:768px){body{flex-direction:column}.sidebar{width:100%;height:auto;position:relative}.main{padding:20px 16px}}
+@media(max-width:1100px){.content-wrap{flex-direction:column}.chart-panel{border-left:none;border-top:1px solid #1e1e1e;padding:20px 16px;min-width:0}.main{max-width:none;padding-bottom:12px}}
+@media(max-width:768px){body{flex-direction:column}.sidebar{width:100%;height:auto;position:relative}.main{padding:20px 16px}.chart-panel{padding:16px}}
 </style>
 </head>
 <body>
 <div class="sidebar">
   <div class="logo">Poly<span>Market</span></div>
+  <div class="sidebar-cash" id="cash">USDC …</div>
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item active" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
-  <div class="nav-label">Hesap</div>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
-  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
   <div class="sidebar-footer"><span class="dot"></span>Canlı</div>
 </div>
+<div class="content-wrap">
 <div class="main">
-  <div class="page-title">İşlemler</div>
-  <div class="page-sub">Gerçek Polymarket — tutarı girip anında aç</div>
-  <div class="cash-pill" id="cash">USDC …</div>
-
   <div class="tabs">
+    <button type="button" class="tab" id="tab-5m" onclick="setTf('5m')">5 Dakika</button>
     <button type="button" class="tab active" id="tab-15m" onclick="setTf('15m')">15 Dakika</button>
     <button type="button" class="tab" id="tab-1h" onclick="setTf('1h')">1 Saat</button>
   </div>
@@ -1403,56 +1646,203 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
       <span class="spot-tf" id="spot-tf"></span>
     </div>
     <div class="form-row">
-      <div class="field">
-        <div class="lbl">Sembol</div>
-        <select id="sym" class="amt-input" style="width:100px;font-size:14px" onchange="refreshSpot(); updatePreview()">
-          <option value="SOLUSDT">SOL</option>
-          <option value="BTCUSDT">BTC</option>
-        </select>
-      </div>
-      <div class="field">
-        <div class="lbl">Yön</div>
+      <div class="field field-dir">
         <div class="dir-btns">
           <button type="button" class="dir-btn up active" id="btn-up" onclick="setDir('UP')">📈 Yükselir</button>
           <button type="button" class="dir-btn down" id="btn-down" onclick="setDir('DOWN')">📉 Düşer</button>
         </div>
       </div>
-      <div class="field">
+      <div class="field field-amt">
         <div class="lbl">Tutar ($)</div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="amt-row">
           <input type="number" id="amount" class="amt-input" min="1" max="500" step="1" value="7" oninput="updatePreview()">
-          <div class="payout-preview" id="payout-preview">
-            <div class="profit">—</div>
-            <div class="sub">Kazanırsan net</div>
-          </div>
+          <button type="button" class="open-btn" id="open-btn" onclick="openTrade()">İşlem Aç</button>
         </div>
       </div>
-      <div class="field">
-        <div class="lbl">&nbsp;</div>
-        <button type="button" class="open-btn" id="open-btn" onclick="openTrade()">İşlem Aç</button>
+      <div class="payout-preview" id="payout-preview">
+        <div class="profit">—</div>
+        <div class="sub">Kazanırsan net</div>
       </div>
     </div>
     <div class="msg" id="msg"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Açık manuel pozisyonlar</div>
+  <div class="card" id="open-pos-card">
+    <div class="card-head">
+      <div class="card-title">Açık manuel pozisyonlar</div>
+      <button type="button" class="sync-btn" id="sync-btn" onclick="syncManual()">↻ Senkron Et</button>
+    </div>
     <div id="open-pos"><div class="empty">Yükleniyor…</div></div>
   </div>
 </div>
+<div class="chart-panel" id="chart-panel">
+  <div class="chart-panel-inner">
+    <div class="chart-head">
+      <div>
+        <div class="chart-title" id="chart-title">Grafik</div>
+        <div class="chart-meta" id="chart-meta">Market seç · 1m · 110 motor</div>
+        <div class="chart-px-tabs">
+          <button type="button" class="tab-px active" id="tab-px-1m" onclick="setPriceTf('1m')">1m</button>
+          <button type="button" class="tab-px" id="tab-px-5m" onclick="setPriceTf('5m')">5m</button>
+          <button type="button" class="tab-px" id="tab-px-15m" onclick="setPriceTf('15m')">15m</button>
+          <button type="button" class="tab-px" id="tab-px-1h" onclick="setPriceTf('1h')">1h</button>
+        </div>
+        <div class="chart-signals" id="chart-signals"></div>
+      </div>
+      <div class="chart-ref">
+        <span class="chart-ref-lbl">Başlangıç (price to beat)</span>
+        <span class="chart-ref-val" id="chart-ref-lbl">—</span>
+      </div>
+    </div>
+    <div id="trade-chart"></div>
+  </div>
+</div>
+</div>
 <script>
 let _tf = '15m';
+let _priceTf = '1m';
 let _dir = 'UP';
+let _deskSymPref = 'SOLUSDT';
+let _quotes5 = [];
 let _quotes15 = [];
 let _quotes1h = [];
+let _selectedIdx = 0;
+let _chart = null;
+let _candleSeries = null;
+let _priceLine = null;
+let _emaFastSeries = null;
+let _emaSlowSeries = null;
+let _chartSym = null;
+let _chartTf = null;
+let _chartPx = null;
+let _chartReq = 0;
+
+const _CHART_TZ = 'Europe/Istanbul';
+function utcToIstChartTime(utcSec) {
+  if (utcSec == null) return utcSec;
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: _CHART_TZ,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).formatToParts(new Date(utcSec * 1000));
+  const g = (t) => parseInt(parts.find(p => p.type === t).value, 10);
+  return Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute'), g('second')) / 1000;
+}
+function shiftSeriesTimes(arr) {
+  return (arr || []).map(p => Object.assign({}, p, { time: utcToIstChartTime(p.time) }));
+}
+function shiftSignalTimes(arr) {
+  return (arr || []).map(s => Object.assign({}, s, { time: utcToIstChartTime(s.time) }));
+}
+function prepareChartPayload(raw) {
+  const d = Object.assign({}, raw);
+  d.candles = shiftSeriesTimes(raw.candles);
+  if (raw.window_start != null) d.window_start = utcToIstChartTime(raw.window_start);
+  if (raw.window_end != null) d.window_end = utcToIstChartTime(raw.window_end);
+  if (raw.algo_overlay) {
+    const ov = Object.assign({}, raw.algo_overlay);
+    if (ov.overlays) {
+      ov.overlays = Object.assign({}, ov.overlays, {
+        ema_fast: shiftSeriesTimes(ov.overlays.ema_fast),
+        ema_slow: shiftSeriesTimes(ov.overlays.ema_slow),
+      });
+    }
+    ov.signals = shiftSignalTimes(ov.signals);
+    d.algo_overlay = ov;
+  }
+  d.hourly_signals = shiftSignalTimes(raw.hourly_signals);
+  return d;
+}
+const _chartLoc = {
+  locale: 'tr-TR',
+  timeFormatter: (t) => {
+    const p = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false })
+      .formatToParts(new Date(t * 1000));
+    return p.find(x => x.type === 'hour').value + ':' + p.find(x => x.type === 'minute').value;
+  },
+};
+
+function saveDeskPrefs() {
+  try {
+    sessionStorage.setItem('islemler_sym', selectedSymbol());
+    sessionStorage.setItem('islemler_tf', _tf);
+    sessionStorage.setItem('islemler_price_tf', _priceTf);
+  } catch (e) {}
+}
+
+function syncPxTabs() {
+  ['1m', '5m', '15m', '1h'].forEach(px => {
+    const el = document.getElementById('tab-px-' + px);
+    if (el) el.classList.toggle('active', _priceTf === px);
+  });
+}
+
+function tfLabel(tf) {
+  return tf === '5m' ? '5dk' : tf === '15m' ? '15dk' : '1saat';
+}
+
+function syncTfTabs() {
+  ['5m', '15m', '1h'].forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (el) el.classList.toggle('active', _tf === t);
+  });
+}
+
+function loadDeskPrefs() {
+  try {
+    const sym = sessionStorage.getItem('islemler_sym');
+    const tf = sessionStorage.getItem('islemler_tf');
+    const px = sessionStorage.getItem('islemler_price_tf');
+    _deskSymPref = sym || 'SOLUSDT';
+    _tf = (tf === '1h' || tf === '5m') ? tf : '15m';
+    if (px === '1m' || px === '5m' || px === '15m' || px === '1h') _priceTf = px;
+  } catch (e) {
+    _deskSymPref = 'SOLUSDT';
+    _tf = '15m';
+    _priceTf = '1m';
+  }
+  syncTfTabs();
+  syncPxTabs();
+}
+
+function setPriceTf(px) {
+  _priceTf = px;
+  syncPxTabs();
+  saveDeskPrefs();
+  resetTradeChart();
+  _chartSym = null;
+  _chartTf = null;
+  _chartPx = null;
+  loadTradeChart();
+}
 
 function setTf(tf) {
   _tf = tf;
-  document.getElementById('tab-15m').classList.toggle('active', tf === '15m');
-  document.getElementById('tab-1h').classList.toggle('active', tf === '1h');
+  syncTfTabs();
+  saveDeskPrefs();
+  resetTradeChart();
+  _chartSym = null;
+  _chartTf = null;
+  _chartPx = null;
   refreshSpot();
   updatePreview();
   loadDesk();
+}
+
+function quoteList() {
+  if (_tf === '5m') return _quotes5;
+  if (_tf === '1h') return _quotes1h;
+  return _quotes15;
+}
+
+function selectedQuote() {
+  const list = quoteList();
+  return list[_selectedIdx] || list[0] || null;
+}
+
+function selectedSymbol() {
+  const q = selectedQuote();
+  return q ? q.symbol : 'SOLUSDT';
 }
 
 function setDir(d) {
@@ -1463,9 +1853,7 @@ function setDir(d) {
 }
 
 function currentQuote() {
-  const sym = document.getElementById('sym').value;
-  const list = _tf === '15m' ? _quotes15 : _quotes1h;
-  return list.find(q => q.symbol === sym);
+  return selectedQuote();
 }
 
 function updatePreview() {
@@ -1485,7 +1873,7 @@ function updatePreview() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           timeframe: _tf,
-          symbol: document.getElementById('sym').value,
+          symbol: selectedSymbol(),
           direction: _dir,
           amount: amount,
         }),
@@ -1522,7 +1910,7 @@ function applySpot(q) {
   if (!refEl || !liveEl || !deltaEl) return;
   if (tfEl) {
     const slot = q && q.slot_label ? q.slot_label + ' İST' : '';
-    tfEl.textContent = slot ? slot + ' · ' + (_tf === '15m' ? '15dk' : '1saat') : '';
+    tfEl.textContent = slot ? slot + ' · ' + tfLabel(_tf) : '';
   }
   if (!q || q.ref_price == null) {
     refEl.textContent = '—';
@@ -1535,6 +1923,13 @@ function applySpot(q) {
   refEl.textContent = '$' + Number(q.ref_price).toFixed(dec);
   if (q.live_price != null) {
     liveEl.textContent = '$' + Number(q.live_price).toFixed(dec);
+    if (_lastCandles.length && _candleSeries) {
+      const c = Object.assign({}, _lastCandles[_lastCandles.length - 1]);
+      const lp = Number(Number(q.live_price).toFixed(dec));
+      c.close = lp; c.high = Math.max(c.high, lp); c.low = Math.min(c.low, lp);
+      _lastCandles[_lastCandles.length - 1] = c;
+      _candleSeries.update(c);
+    }
     if (q.delta != null) {
       const cls = q.delta >= 0 ? 'up' : 'down';
       const sign = q.delta >= 0 ? '+' : '-';
@@ -1552,12 +1947,12 @@ function applySpot(q) {
 }
 
 async function refreshSpot() {
-  const sym = document.getElementById('sym').value;
+  const sym = selectedSymbol();
   const tf = _tf;
   try {
     const r = await fetch('/poly/api/trade-desk/spot?timeframe=' + tf + '&symbol=' + sym, {cache: 'no-store'});
     const spot = await r.json();
-    if (tf !== _tf || sym !== document.getElementById('sym').value) return;
+    if (tf !== _tf || sym !== selectedSymbol()) return;
     applySpot(spot);
   } catch (e) { console.error(e); }
 }
@@ -1574,8 +1969,9 @@ function renderQuotes(quotes) {
     box.innerHTML = '<div class="empty">Market bulunamadı</div>';
     return;
   }
-  box.innerHTML = quotes.map(q => `
-    <div class="quote-row">
+  if (_selectedIdx >= quotes.length) _selectedIdx = 0;
+  box.innerHTML = quotes.map((q, i) => `
+    <div class="quote-row${i === _selectedIdx ? ' selected' : ''}" onclick="selectQuote(${i})" role="button" tabindex="0">
       <div>
         <div class="sym">${q.name}</div>
         <div class="slot">${q.slot || ''} · ${q.title || q.slug || ''}</div>
@@ -1588,6 +1984,495 @@ function renderQuotes(quotes) {
     </div>`).join('');
 }
 
+function selectQuote(idx) {
+  const quotes = quoteList();
+  const q = quotes[idx];
+  if (!q) return;
+  _selectedIdx = idx;
+  _deskSymPref = q.symbol;
+  document.querySelectorAll('.quote-row').forEach((row, i) => {
+    row.classList.toggle('selected', i === idx);
+  });
+  saveDeskPrefs();
+  refreshSpot();
+  updatePreview();
+  loadTradeChart();
+}
+
+let _chartScaleMin = null;
+let _chartScaleMax = null;
+let _lastCandles = [];
+
+function calcTightScale(candles, refPrice) {
+  if (!candles.length) return null;
+  let lo = Math.min(...candles.map(c => c.low));
+  let hi = Math.max(...candles.map(c => c.high));
+  if (refPrice != null) {
+    lo = Math.min(lo, refPrice);
+    hi = Math.max(hi, refPrice);
+  }
+  const span = Math.max(hi - lo, 0.0001);
+  const pad = Math.max(span * 0.06, span * 0.015);
+  return { lo: lo - pad, hi: hi + pad };
+}
+
+function applyChartPriceScale(candles, refPrice) {
+  const tight = calcTightScale(candles, refPrice);
+  if (!tight) {
+    _chartScaleMin = null;
+    _chartScaleMax = null;
+    return;
+  }
+  _chartScaleMin = tight.lo;
+  _chartScaleMax = tight.hi;
+  if (_candleSeries) {
+    _candleSeries.applyOptions({
+      autoscaleInfoProvider: () => ({
+        priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax },
+      }),
+    });
+  }
+}
+
+function fitBarDensity(count) {
+  const container = document.getElementById('trade-chart');
+  if (!container || !count) return 3;
+  const w = Math.max(200, container.clientWidth - 52);
+  return Math.max(2, Math.min(7, Math.floor((w / count) * 0.82)));
+}
+
+function focusDeskCandleWindow(candles) {
+  if (!_chart || !candles || candles.length < 2) return;
+  const barSec = priceBarSeconds();
+  _chart.timeScale().setVisibleRange({
+    from: candles[0].time - barSec * 2,
+    to: candles[candles.length - 1].time + barSec * 12,
+  });
+}
+
+function priceBarSeconds() {
+  if (_priceTf === '1h') return 3600;
+  if (_priceTf === '15m') return 900;
+  if (_priceTf === '5m') return 300;
+  return 60;
+}
+
+function candleLimitForView() {
+  if (_priceTf === '1h') {
+    if (_tf === '1h') return 48;
+    if (_tf === '5m') return 12;
+    return 24;
+  }
+  if (_priceTf === '15m') {
+    if (_tf === '1h') return 48;
+    if (_tf === '5m') return 12;
+    return 16;
+  }
+  if (_priceTf === '5m') {
+    if (_tf === '1h') return 24;
+    if (_tf === '5m') return 12;
+    return 12;
+  }
+  if (_tf === '1h') return 120;
+  if (_tf === '5m') return 36;
+  return 60;
+}
+
+function resetTradeChart() {
+  if (_chart) {
+    _chart.remove();
+    _chart = null;
+    _candleSeries = null;
+    _priceLine = null;
+    _emaFastSeries = null;
+    _emaSlowSeries = null;
+  }
+  _chartScaleMin = null;
+  _chartScaleMax = null;
+}
+
+function chartAlgoParam(tf) {
+  return tf === '1h' ? 'off' : '110';
+}
+
+function clipOverlayToCandles(ov, candles) {
+  if (!ov || !ov.overlays || !candles.length) return ov;
+  const t0 = candles[0].time, t1 = candles[candles.length - 1].time;
+  const clip = (arr) => (arr || []).filter(p => p.time >= t0 && p.time <= t1);
+  return Object.assign({}, ov, {
+    overlays: Object.assign({}, ov.overlays, {
+      ema_fast: clip(ov.overlays.ema_fast),
+      ema_slow: clip(ov.overlays.ema_slow),
+    }),
+    signals: (ov.signals || []).filter(s => s.time >= t0 && s.time <= t1),
+  });
+}
+
+function motorSlotDir(ov, ws) {
+  if (!ov || !ov.ok) return null;
+  const cur = ov.current;
+  if (cur && (cur.direction === 'UP' || cur.direction === 'DOWN')) {
+    return cur.direction;
+  }
+  const sigs = ov.signals || [];
+  for (let i = sigs.length - 1; i >= 0; i--) {
+    if (sigs[i].time === ws) return sigs[i].dir;
+  }
+  let last = null;
+  for (const s of sigs) {
+    if (ws == null || s.time <= ws) last = s.dir;
+  }
+  return last;
+}
+
+function appendMotorSlotMarkers(markers, d, candles, ov) {
+  const ws = d.window_start;
+  if (!ws || !candles.some(c => c.time === ws)) return;
+  const dir = motorSlotDir(ov, ws);
+  if (!dir) {
+    markers.push({
+      time: ws,
+      position: 'aboveBar',
+      color: '#888',
+      shape: 'circle',
+      text: '110',
+    });
+    return;
+  }
+  markers.push({
+    time: ws,
+    position: dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: dir === 'UP' ? '#4ade80' : '#c8f135',
+    shape: dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: '110',
+  });
+}
+
+function addMotorMarkers(markers, ov, skipTime) {
+  if (!ov || !ov.ok) return;
+  (ov.signals || []).forEach(s => {
+    if (skipTime != null && s.time === skipTime) return;
+    markers.push({
+      time: s.time,
+      position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
+      color: s.dir === 'UP' ? '#4ade80' : '#f87171',
+      shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+      text: s.dir,
+    });
+  });
+}
+
+function applyMotorEma(ov) {
+  if (!_emaFastSeries || !_emaSlowSeries) return;
+  if (ov && ov.ok && ov.overlays) {
+    _emaFastSeries.setData(ov.overlays.ema_fast || []);
+    _emaSlowSeries.setData(ov.overlays.ema_slow || []);
+  } else {
+    _emaFastSeries.setData([]);
+    _emaSlowSeries.setData([]);
+  }
+}
+
+function updateChartGuideLegend(d, tf) {
+  const el = document.getElementById('chart-signals');
+  if (!el) return;
+  if (tf === '1h') {
+    updateHourlyLegend(d.hourly_current);
+    return;
+  }
+  if (tf === '15m') {
+    updateFifteenMotorLegend(d);
+    return;
+  }
+  const ov = d.algo_overlay;
+  const cur = ov && ov.ok ? ov.current : null;
+  const dir = cur && cur.direction;
+  if (dir === 'UP' || dir === 'DOWN') {
+    el.innerHTML = '<span class="sig-pill m110">110 · ' + dir + '</span>'
+      + (cur.label ? ' <span style="color:#666;font-size:9px">' + cur.label + '</span>' : '');
+  } else if (ov && ov.error) {
+    el.innerHTML = '<span class="sig-pill m110">110 · —</span>';
+  } else if (cur && cur.label) {
+    el.innerHTML = '<span class="sig-pill m110">110 · ' + cur.label + '</span>';
+  } else {
+    el.innerHTML = '<span class="sig-pill m110">110 · gate altı</span>';
+  }
+}
+
+function updateFifteenMotorLegend(d) {
+  const el = document.getElementById('chart-signals');
+  if (!el) return;
+  let html = '';
+  const ov = d.algo_overlay;
+  const cur = ov && ov.ok ? ov.current : null;
+  const dir = cur && cur.direction;
+  if (dir === 'UP' || dir === 'DOWN') {
+    html += '<span class="sig-pill m110">110 · ' + dir + '</span>';
+  } else if (cur && cur.label) {
+    html += '<span class="sig-pill m110">110 · ' + cur.label + '</span>';
+  } else {
+    html += '<span class="sig-pill m110">110 · —</span>';
+  }
+  const fc = d.fifteen_current || {};
+  html += hourlyPillHtml(fc, 'a112', '112', 'a112');
+  html += hourlyPillHtml(fc, 'a113', '113', 'a113');
+  el.innerHTML = html;
+}
+
+function fifteenTagColor(tag) {
+  if (tag === '112') return '#38bdf8';
+  if (tag === '113') return '#2dd4bf';
+  return '#888';
+}
+
+function fifteenMarker(s) {
+  const tag = s.tag || '?';
+  return {
+    time: s.time,
+    position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: fifteenTagColor(tag),
+    shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: tag,
+  };
+}
+
+function appendFifteenSlotMarkers(markers, d, candles) {
+  const ws = d.window_start;
+  if (!ws || !candles.some(c => c.time === ws)) return;
+  const fc = d.fifteen_current || {};
+  appendHourlySlotMarker(markers, ws, fc.a112, '112', '#38bdf8');
+  appendHourlySlotMarker(markers, ws, fc.a113, '113', '#2dd4bf');
+}
+
+function addFifteenMarkers(markers, signals, ws) {
+  (signals || []).forEach(s => {
+    if (ws && s.time === ws && (s.tag === '112' || s.tag === '113')) return;
+    markers.push(fifteenMarker(s));
+  });
+}
+
+function ensureTradeChart() {
+  const container = document.getElementById('trade-chart');
+  if (!container) return false;
+  const sym = selectedSymbol();
+  if (_chart && (_chartSym !== sym || _chartTf !== _tf || _chartPx !== _priceTf)) {
+    resetTradeChart();
+  }
+  if (!_chart) {
+    _chartSym = sym;
+    _chartTf = _tf;
+    _chartPx = _priceTf;
+    _chart = LightweightCharts.createChart(container, {
+      width: container.clientWidth,
+      height: Math.max(225, container.clientHeight || 263),
+      layout: { background: { color: '#0a0a0a' }, textColor: '#555' },
+      grid: { vertLines: { color: '#121212' }, horzLines: { color: '#121212' } },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      localization: _chartLoc,
+      timeScale: {
+        borderColor: '#1a1a1a',
+        timeVisible: true,
+        secondsVisible: false,
+        barSpacing: 3,
+        minBarSpacing: 1,
+        rightOffset: 12,
+        fixRightEdge: false,
+      },
+      rightPriceScale: {
+        borderColor: '#1a1a1a',
+        autoScale: true,
+        scaleMargins: { top: 0.01, bottom: 0.01 },
+      },
+    });
+    _candleSeries = _chart.addCandlestickSeries({
+      upColor: '#26a69a', downColor: '#ef5350',
+      borderUpColor: '#26a69a', borderDownColor: '#ef5350',
+      wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+      autoscaleInfoProvider: () => {
+        if (_chartScaleMin != null && _chartScaleMax != null) {
+          return { priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } };
+        }
+        return null;
+      },
+    });
+    _emaFastSeries = _chart.addLineSeries({
+      color: '#fbbf24', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+    });
+    _emaSlowSeries = _chart.addLineSeries({
+      color: '#818cf8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+    });
+    if (!window._tradeChartResize) {
+      window._tradeChartResize = true;
+      window.addEventListener('resize', () => {
+        const c = document.getElementById('trade-chart');
+        if (_chart && c) {
+          _chart.applyOptions({
+            width: c.clientWidth,
+            height: Math.max(225, c.clientHeight || 263),
+          });
+        }
+      });
+    }
+  }
+  return true;
+}
+
+function chartLimitForTf(tf) {
+  return candleLimitForView();
+}
+
+function deskChartUrl(tf, sym) {
+  return '/poly/api/trade-desk/chart?timeframe=' + tf + '&symbol=' + sym
+    + '&price_tf=' + _priceTf + '&limit=' + candleLimitForView()
+    + '&algo=' + chartAlgoParam(tf) + '&gate=15&_=' + Date.now();
+}
+
+function hourlyTagColor(tag) {
+  if (tag === 'A1') return '#a855f7';
+  if (tag === 'A3') return '#2dd4bf';
+  if (tag === 'ALFA') return '#f59e0b';
+  return '#38bdf8';
+}
+
+function hourlyMarker(s) {
+  const tag = s.tag || '?';
+  return {
+    time: s.time,
+    position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: hourlyTagColor(tag),
+    shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: tag,
+  };
+}
+
+function appendHourlySlotMarker(markers, ws, cur, tag, color) {
+  if (!cur || !cur.dir) return;
+  markers.push({
+    time: ws,
+    position: cur.dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: color,
+    shape: cur.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: tag,
+  });
+}
+
+function appendSlotMarkers(markers, d, candles) {
+  const ws = d.window_start;
+  const hasWs = ws && candles.some(c => c.time === ws);
+  if (!hasWs) return;
+  const hc = d.hourly_current || {};
+  markers.push({
+    time: ws,
+    position: 'aboveBar',
+    color: '#fbbf24',
+    shape: 'arrowDown',
+    text: 'A1',
+  });
+  appendHourlySlotMarker(markers, ws, hc.a1, 'A1', '#a855f7');
+  appendHourlySlotMarker(markers, ws, hc.a3, 'A3', '#2dd4bf');
+  appendHourlySlotMarker(markers, ws, hc.a8, 'A8', '#38bdf8');
+  appendHourlySlotMarker(markers, ws, hc.alfa, 'ALFA', '#f59e0b');
+}
+
+function hourlyPillHtml(hc, key, tag, cls) {
+  const cur = hc && hc[key];
+  if (cur) {
+    const det = cur.detail ? ' title="' + String(cur.detail).replace(/"/g, '&quot;') + '"' : '';
+    return '<span class="sig-pill ' + cls + '"' + det + '>' + (cur.label || tag) + '</span>';
+  }
+  return '<span class="sig-pill ' + cls + '">' + tag + ' —</span>';
+}
+
+function updateHourlyLegend(hc) {
+  const el = document.getElementById('chart-signals');
+  if (!el) return;
+  if (!hc || (!hc.a1 && !hc.a3 && !hc.a8 && !hc.alfa)) { el.innerHTML = ''; return; }
+  el.innerHTML =
+    hourlyPillHtml(hc, 'a1', 'A1', 'a1') +
+    hourlyPillHtml(hc, 'a3', 'A3', 'a3') +
+    hourlyPillHtml(hc, 'a8', 'A8', 'a8') +
+    hourlyPillHtml(hc, 'alfa', 'ALFA', 'alfa');
+}
+
+async function loadTradeChart() {
+  const reqId = ++_chartReq;
+  const sym = selectedSymbol();
+  const tf = _tf;
+  if (!ensureTradeChart()) return;
+  try {
+    const r = await fetch(deskChartUrl(tf, sym), { cache: 'no-store' });
+    const d = prepareChartPayload(await r.json());
+    if (reqId !== _chartReq) return;
+    if (tf !== _tf || sym !== selectedSymbol()) return;
+    const dec = d.dec != null ? d.dec : 2;
+    const name = d.name || sym.replace('USDT', '');
+    const slotLbl = tf === '5m' ? '5dk' : tf === '15m' ? '15dk' : '1saat';
+    const pxLbl = d.price_tf === '1h' ? '1h' : (d.price_tf === '15m' ? '15m' : (d.price_tf === '5m' ? '5m' : '1m'));
+    document.getElementById('chart-title').textContent = name + ' · ' + pxLbl;
+    document.getElementById('chart-meta').textContent =
+      (d.slot_label ? d.slot_label + ' İST · ' : '') + slotLbl + ' slot · '
+      + (tf === '1h'
+        ? 'A1+A3+A8+ALFA saatlik · A3/A8 ' + (d.a3a8_signal_mode_label || 'sıkı')
+        : tf === '15m' ? '110+112+113' : '110 motor UP/DOWN')
+      + ' · ' + pxLbl + ' mum';
+    updateChartGuideLegend(d, tf);
+    document.getElementById('chart-ref-lbl').textContent =
+      d.ref_price != null ? '$' + Number(d.ref_price).toFixed(dec) : '—';
+    if (_priceLine) {
+      _candleSeries.removePriceLine(_priceLine);
+      _priceLine = null;
+    }
+    if (!d.candles || !d.candles.length) {
+      _candleSeries.setData([]);
+      _candleSeries.setMarkers([]);
+      _chartScaleMin = null;
+      _chartScaleMax = null;
+      _chart.priceScale('right').applyOptions({ autoScale: true });
+      return;
+    }
+    const candles = d.candles;
+    _lastCandles = candles.slice();
+    applyChartPriceScale(candles, d.ref_price);
+    _candleSeries.setData(candles);
+    const barSp = fitBarDensity(candles.length);
+    _chart.timeScale().applyOptions({ barSpacing: barSp, minBarSpacing: 1, fixRightEdge: false, rightOffset: 12 });
+    focusDeskCandleWindow(candles);
+    _chart.priceScale('right').applyOptions({ autoScale: true, scaleMargins: { top: 0.01, bottom: 0.01 } });
+    if (d.ref_price != null) {
+      _priceLine = _candleSeries.createPriceLine({
+        price: d.ref_price,
+        color: '#fbbf24',
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: tf === '1h' ? 'A1' : 'Ref',
+      });
+    }
+    const markers = [];
+    const ov = tf !== '1h' && d.algo_overlay ? clipOverlayToCandles(d.algo_overlay, candles) : null;
+    if (tf === '1h') {
+      appendSlotMarkers(markers, d, candles);
+      (d.hourly_signals || []).forEach(s => {
+        const ws = d.window_start;
+        if (s.time === ws && (s.tag === 'A1' || s.tag === 'A3' || s.tag === 'A8' || s.tag === 'ALFA')) return;
+        markers.push(hourlyMarker(s));
+      });
+      applyMotorEma(null);
+    } else {
+      appendMotorSlotMarkers(markers, d, candles, ov);
+      addMotorMarkers(markers, ov, d.window_start);
+      if (tf === '15m') {
+        appendFifteenSlotMarkers(markers, d, candles);
+        addFifteenMarkers(markers, d.fifteen_signals, d.window_start);
+      }
+      applyMotorEma(ov);
+    }
+    _candleSeries.setMarkers(markers);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 function renderOpen(rows) {
   const box = document.getElementById('open-pos');
   if (!rows.length) {
@@ -1598,13 +2483,26 @@ function renderOpen(rows) {
     <th>TF</th><th>Sembol</th><th>Yön</th><th>Slot</th><th>Risk</th><th></th>
   </tr></thead><tbody>${rows.map(r => `
     <tr>
-      <td>${r.timeframe === '15m' ? '15dk' : '1saat'}</td>
+      <td>${r.timeframe === '5m' ? '5dk' : r.timeframe === '15m' ? '15dk' : '1saat'}</td>
       <td><b>${r.symbol}</b></td>
       <td>${r.dir_tr}</td>
       <td>${r.slot || '—'}</td>
       <td>$${r.spent.toFixed(2)}</td>
-      <td><button type="button" class="close-sm" onclick="closePos('${r.symbol_full}','${r.timeframe}')">Kapat</button></td>
+      <td><button type="button" class="close-sm" onclick="closePos('${r.symbol_full}','${r.timeframe}','${r.order_id || ''}')">Kapat</button></td>
     </tr>`).join('')}</tbody></table>`;
+}
+
+function applyCash(cash) {
+  const el = document.getElementById('cash');
+  if (el) el.textContent = 'USDC $' + (cash >= 0 ? cash.toFixed(2) : '?');
+}
+
+async function refreshCash() {
+  try {
+    const r = await fetch('/poly/api/trade-desk', { cache: 'no-store' });
+    const d = await r.json();
+    if (r.ok && d.cash != null) applyCash(d.cash);
+  } catch (e) { console.error(e); }
 }
 
 async function loadDesk() {
@@ -1612,14 +2510,22 @@ async function loadDesk() {
     const r = await fetch('/poly/api/trade-desk', {cache: 'no-store'});
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
-    document.getElementById('cash').textContent = 'USDC $' + (d.cash >= 0 ? d.cash.toFixed(2) : '?');
+    applyCash(d.cash);
+    _quotes5 = d.quotes_5m || [];
     _quotes15 = d.quotes_15m || [];
     _quotes1h = d.quotes_1h || [];
-    const quotes = _tf === '15m' ? _quotes15 : _quotes1h;
+    const quotes = quoteList();
+    const want = _deskSymPref || 'SOLUSDT';
+    let idx = quotes.findIndex(q => q.symbol === want);
+    if (idx < 0) idx = quotes.findIndex(q => q.symbol === 'SOLUSDT');
+    if (idx < 0) idx = 0;
+    _selectedIdx = idx;
     renderQuotes(quotes);
     renderOpen(d.open_positions || []);
+    saveDeskPrefs();
     refreshSpot();
     updatePreview();
+    loadTradeChart();
   } catch (e) {
     console.error(e);
     document.getElementById('quotes').innerHTML = '<div class="empty" style="color:#f87171">Yüklenemedi: ' + e.message + '</div>';
@@ -1639,7 +2545,7 @@ async function openTrade() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         timeframe: _tf,
-        symbol: document.getElementById('sym').value,
+        symbol: selectedSymbol(),
         direction: _dir,
         amount: amount,
       }),
@@ -1655,7 +2561,7 @@ async function openTrade() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         timeframe: _tf,
-        symbol: document.getElementById('sym').value,
+        symbol: selectedSymbol(),
         direction: _dir,
         amount: amount,
       }),
@@ -1673,19 +2579,703 @@ async function openTrade() {
   btn.disabled = false;
 }
 
-async function closePos(sym, tf) {
-  if (!confirm(sym.replace('USDT','') + ' ' + (tf==='15m'?'15dk':'1saat') + ' pozisyonu kapatılsın mı?')) return;
+async function syncManual() {
+  const btn = document.getElementById('sync-btn');
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  const prev = btn.textContent;
+  btn.textContent = 'Senkron…';
   try {
-    const r = await fetch('/poly/api/close/manual/' + sym.replace('USDT','') + '?timeframe=' + tf, {method: 'POST'});
+    const r = await fetch('/poly/api/trade-desk/sync', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'Senkron başarısız');
+    const n = d.added_count || 0;
+    showMsg(n ? ('✅ Zincirden ' + n + ' pozisyon eklendi') : '✅ Yeni pozisyon yok — liste güncel', true);
+    loadDesk();
+  } catch (e) {
+    showMsg('❌ ' + e.message, false);
+  }
+  btn.disabled = false;
+  btn.textContent = prev;
+}
+
+async function closePos(sym, tf, orderId) {
+  if (!confirm(sym.replace('USDT','') + ' ' + tfLabel(tf) + ' pozisyonu kapatılsın mı?')) return;
+  try {
+    let url = '/poly/api/close/manual/' + sym.replace('USDT','') + '?timeframe=' + encodeURIComponent(tf);
+    if (orderId) url += '&order_id=' + encodeURIComponent(orderId);
+    const r = await fetch(url, {method: 'POST'});
     const d = await r.json();
     if (d.ok) { loadDesk(); showMsg('Pozisyon kapatıldı', true); }
     else showMsg(d.error || 'Kapatılamadı', false);
   } catch (e) { showMsg(e.message, false); }
 }
 
+loadDeskPrefs();
 loadDesk();
+refreshCash();
 setInterval(loadDesk, 15000);
+setInterval(refreshCash, 10000);
 setInterval(refreshSpot, 10000);
+setInterval(loadTradeChart, 5000);
+</script>
+</body>
+</html>"""
+
+
+GRAFIK_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grafik — A1+A3+A8 — PolyMarket</title>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;overflow:hidden}
+.sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;height:100vh;overflow-y:auto}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px}
+.logo span{color:#c8f135}
+.sidebar-cash{display:block;background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:8px 12px;font-size:13px;color:#9ae66e;font-weight:700;margin-bottom:16px;width:100%;text-align:center}
+.nav-label{font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:14px;transition:.15s}
+.nav-item:hover{background:#1a1a1a;color:#fff}
+.nav-item.active{background:#1a2e1a;color:#c8f135;font-weight:600}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0}
+.nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:#c8f135}
+.sidebar-footer{margin-top:auto;font-size:11px;color:#444;padding:12px;display:flex;align-items:center;gap:6px}
+.sidebar-footer .dot{width:6px;height:6px;border-radius:50%;background:#4ade80}
+.chart-full{flex:1;display:flex;flex-direction:column;min-width:0;padding:16px 20px 16px 0;height:100vh}
+.chart-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;align-items:center;width:100%}
+.params-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;font-size:12px;color:#666}
+.param-inp{width:52px;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:8px;color:#fff;padding:6px 8px;font-size:12px;font-weight:700}
+.param-lbl{font-size:10px;color:#555;text-transform:uppercase;font-weight:700}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{background:#111;border:1px solid #2a2a2a;color:#888;font-size:13px;font-weight:700;padding:8px 16px;border-radius:12px;cursor:pointer}
+.tab.active{background:#1a2e1a;border-color:#4ade80;color:#4ade80}
+.tabs-px{margin-left:auto;display:flex;gap:6px;flex-shrink:0;align-items:center}
+.tab-px{background:#111;border:1px solid #2a2a2a;color:#777;font-size:12px;font-weight:800;padding:6px 14px;border-radius:10px;cursor:pointer;min-width:42px;text-align:center}
+.tab-px:hover:not(.active){border-color:#5a4a18;color:#ca8a04}
+.tab-px.active{background:#2a2410;border-color:#fbbf24;color:#fbbf24;box-shadow:0 0 0 1px rgba(251,191,36,.15)}
+.chart-panel-full{flex:1;background:#111;border:1px solid #1e1e1e;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;min-height:0}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+.chart-title{font-size:16px;font-weight:800;color:#fff}
+.chart-meta{font-size:11px;color:#666;margin-top:2px}
+.chart-ref{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.chart-ref-lbl{font-size:9px;color:#666;text-transform:uppercase;letter-spacing:.3px;font-weight:700}
+.chart-ref-val{font-size:16px;font-weight:800;color:#fbbf24}
+.spot-inline{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+.spot-lbl{color:#666;font-size:10px;font-weight:700;text-transform:uppercase}
+.spot-val{font-size:16px;font-weight:800;color:#fff;margin-left:6px}
+.spot-delta{font-size:13px;font-weight:700;margin-left:6px}
+.spot-delta.up{color:#4ade80}
+.spot-delta.down{color:#f87171}
+.algo-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.algo-badge{display:inline-block;padding:6px 12px;border-radius:10px;font-size:13px;font-weight:800}
+.algo-badge.up{background:#142814;color:#4ade80;border:1px solid #2a4a2a}
+.algo-badge.down{background:#2a1414;color:#f87171;border:1px solid #5a2a2a}
+.algo-badge.neutral{background:#1a1a1a;color:#888;border:1px solid #333}
+.algo-badge.a1.up{background:#2a1a3a;color:#c084fc;border:1px solid #6b21a8}
+.algo-badge.a1.down{background:#2a1420;color:#f0abfc;border:1px solid #6b21a8}
+.algo-badge.a3.up{background:#0f2a24;color:#2dd4bf;border:1px solid #0d9488}
+.algo-badge.a3.down{background:#2a1418;color:#5eead4;border:1px solid #0d9488}
+.algo-badge.a8.up{background:#142814;color:#4ade80;border:1px solid #2a4a2a}
+.algo-badge.a8.down{background:#2a1414;color:#f87171;border:1px solid #5a2a2a}
+.algo-badge.alfa.up{background:#2a1f0a;color:#fbbf24;border:1px solid #f59e0b}
+.algo-badge.alfa.down{background:#2a1410;color:#fb923c;border:1px solid #f59e0b}
+.algo-badge.a112.up{background:#0c2340;color:#38bdf8;border:1px solid #0369a1}
+.algo-badge.a112.down{background:#2a1414;color:#f87171;border:1px solid #0369a1}
+.algo-badge.a113.up{background:#0f2a24;color:#2dd4bf;border:1px solid #0d9488}
+.algo-badge.a113.down{background:#2a1418;color:#5eead4;border:1px solid #0d9488}
+.algo-badge.m110.up{background:#1a2410;color:#c8f135;border:1px solid #4d7c0f}
+.algo-badge.m110.down{background:#2a1418;color:#f87171;border:1px solid #5a2a2a}
+.composite-wrap{margin-top:8px;border-top:1px solid #1a1a1a;padding-top:8px;flex-shrink:0}
+.composite-lbl{font-size:10px;color:#555;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+#composite-chart{height:96px;width:100%}
+.chart-split{flex:1;display:flex;flex-direction:column;min-height:0}
+#trade-chart{flex:1;min-height:340px;width:100%}
+@media(max-width:768px){body{flex-direction:column;overflow:auto}.sidebar{width:100%;height:auto}.chart-full{height:auto;padding:16px}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo">Poly<span>Market</span></div>
+  <div class="sidebar-cash" id="cash">USDC …</div>
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
+  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item active" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
+  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
+  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
+  <div class="sidebar-footer"><span class="dot"></span>Canlı</div>
+</div>
+<div class="chart-full">
+  <div class="chart-toolbar">
+    <div class="tabs">
+      <button type="button" class="tab active" id="tab-sol" onclick="setSym('SOLUSDT')">SOL</button>
+      <button type="button" class="tab" id="tab-btc" onclick="setSym('BTCUSDT')">BTC</button>
+    </div>
+    <div class="tabs">
+      <button type="button" class="tab" id="tab-5m" onclick="setTf('5m')">5 Dakika</button>
+      <button type="button" class="tab active" id="tab-15m" onclick="setTf('15m')">15 Dakika</button>
+      <button type="button" class="tab" id="tab-1h" onclick="setTf('1h')">1 Saat</button>
+    </div>
+    <div class="tabs tabs-px">
+      <button type="button" class="tab-px active" id="tab-px-1m" onclick="setPriceTf('1m')">1m</button>
+      <button type="button" class="tab-px" id="tab-px-5m" onclick="setPriceTf('5m')">5m</button>
+      <button type="button" class="tab-px" id="tab-px-15m" onclick="setPriceTf('15m')">15m</button>
+      <button type="button" class="tab-px" id="tab-px-1h" onclick="setPriceTf('1h')">1h</button>
+    </div>
+  </div>
+  <div class="chart-panel-full">
+    <div class="chart-head">
+      <div>
+        <div class="chart-title" id="chart-title">Grafik</div>
+        <div class="chart-meta" id="chart-meta">110 motor UP/DOWN · 1m fiyat</div>
+        <div class="algo-badges" id="algo-badges"><span class="algo-badge neutral">—</span></div>
+      </div>
+      <div class="chart-ref">
+        <span class="chart-ref-lbl">Başlangıç (price to beat)</span>
+        <span class="chart-ref-val" id="chart-ref-lbl">—</span>
+      </div>
+    </div>
+    <div class="spot-inline">
+      <div><span class="spot-lbl">Başlangıç</span><span class="spot-val" id="spot-ref">—</span></div>
+      <div><span class="spot-lbl">Anlık</span><span class="spot-val" id="spot-live">—</span><span class="spot-delta" id="spot-delta"></span></div>
+      <div style="margin-left:auto;font-size:11px;color:#555" id="spot-tf"></div>
+    </div>
+    <div class="chart-split">
+      <div id="trade-chart"></div>
+    </div>
+  </div>
+</div>
+<script>
+let _tf = '15m', _sym = 'SOLUSDT', _priceTf = '1m', _gate = 15;
+let _chart = null, _candleSeries = null, _priceLine = null;
+let _emaFastSeries = null, _emaSlowSeries = null;
+let _chartSym = null, _chartTf = null, _chartReq = 0;
+let _chartScaleMin = null, _chartScaleMax = null, _lastCandles = [];
+
+const _CHART_TZ = 'Europe/Istanbul';
+function utcToIstChartTime(utcSec) {
+  if (utcSec == null) return utcSec;
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: _CHART_TZ,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).formatToParts(new Date(utcSec * 1000));
+  const g = (t) => parseInt(parts.find(p => p.type === t).value, 10);
+  return Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute'), g('second')) / 1000;
+}
+function shiftSeriesTimes(arr) {
+  return (arr || []).map(p => Object.assign({}, p, { time: utcToIstChartTime(p.time) }));
+}
+function shiftSignalTimes(arr) {
+  return (arr || []).map(s => Object.assign({}, s, { time: utcToIstChartTime(s.time) }));
+}
+function prepareChartPayload(raw) {
+  const d = Object.assign({}, raw);
+  d.candles = shiftSeriesTimes(raw.candles);
+  if (raw.window_start != null) d.window_start = utcToIstChartTime(raw.window_start);
+  if (raw.window_end != null) d.window_end = utcToIstChartTime(raw.window_end);
+  if (raw.algo_overlay) {
+    const ov = Object.assign({}, raw.algo_overlay);
+    if (ov.overlays) {
+      ov.overlays = Object.assign({}, ov.overlays, {
+        ema_fast: shiftSeriesTimes(ov.overlays.ema_fast),
+        ema_slow: shiftSeriesTimes(ov.overlays.ema_slow),
+      });
+    }
+    ov.signals = shiftSignalTimes(ov.signals);
+    d.algo_overlay = ov;
+  }
+  d.hourly_signals = shiftSignalTimes(raw.hourly_signals);
+  return d;
+}
+const _chartLoc = {
+  locale: 'tr-TR',
+  timeFormatter: (t) => {
+    const p = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false })
+      .formatToParts(new Date(t * 1000));
+    return p.find(x => x.type === 'hour').value + ':' + p.find(x => x.type === 'minute').value;
+  },
+};
+
+function loadPrefs() {
+  try {
+    if (sessionStorage.getItem('desk_sym')) _sym = sessionStorage.getItem('desk_sym');
+    if (sessionStorage.getItem('desk_tf')) _tf = sessionStorage.getItem('desk_tf');
+    const px = sessionStorage.getItem('desk_price_tf');
+    if (px === '1m' || px === '5m' || px === '15m' || px === '1h') _priceTf = px;
+  } catch (e) {}
+}
+function savePrefs() {
+  try {
+    sessionStorage.setItem('desk_sym', _sym);
+    sessionStorage.setItem('desk_tf', _tf);
+    sessionStorage.setItem('desk_price_tf', _priceTf);
+  } catch (e) {}
+}
+loadPrefs();
+function selectedSymbol() { return _sym; }
+
+function syncTabs() {
+  document.getElementById('tab-sol').classList.toggle('active', _sym === 'SOLUSDT');
+  document.getElementById('tab-btc').classList.toggle('active', _sym === 'BTCUSDT');
+  document.getElementById('tab-5m').classList.toggle('active', _tf === '5m');
+  document.getElementById('tab-15m').classList.toggle('active', _tf === '15m');
+  document.getElementById('tab-1h').classList.toggle('active', _tf === '1h');
+  document.getElementById('tab-px-1m').classList.toggle('active', _priceTf === '1m');
+  document.getElementById('tab-px-5m').classList.toggle('active', _priceTf === '5m');
+  document.getElementById('tab-px-15m').classList.toggle('active', _priceTf === '15m');
+  document.getElementById('tab-px-1h').classList.toggle('active', _priceTf === '1h');
+}
+
+function setSym(sym) { _sym = sym; savePrefs(); resetAllCharts(); refreshSpot(); loadTradeChart(); syncTabs(); }
+function setTf(tf) { _tf = tf; savePrefs(); resetAllCharts(); refreshSpot(); loadTradeChart(); syncTabs(); }
+function setPriceTf(px) { _priceTf = px; savePrefs(); resetAllCharts(); loadTradeChart(); syncTabs(); }
+
+function chartH() {
+  return Math.max(420, window.innerHeight - 180);
+}
+
+function candleLimitForView() {
+  if (_priceTf === '1h') {
+    if (_tf === '1h') return 48;
+    if (_tf === '5m') return 12;
+    return 24;
+  }
+  if (_priceTf === '15m') {
+    if (_tf === '1h') return 48;
+    if (_tf === '5m') return 12;
+    return 16;
+  }
+  if (_priceTf === '5m') {
+    if (_tf === '1h') return 24;
+    if (_tf === '5m') return 12;
+    return 12;
+  }
+  if (_tf === '1h') return 120;
+  if (_tf === '5m') return 36;
+  return 60;
+}
+
+function priceBarSeconds() {
+  if (_priceTf === '1h') return 3600;
+  if (_priceTf === '15m') return 900;
+  if (_priceTf === '5m') return 300;
+  return 60;
+}
+
+function calcTightScale(candles, refPrice) {
+  if (!candles.length) return null;
+  let lo = Math.min(...candles.map(c => c.low)), hi = Math.max(...candles.map(c => c.high));
+  if (refPrice != null) { lo = Math.min(lo, refPrice); hi = Math.max(hi, refPrice); }
+  const span = Math.max(hi - lo, 0.0001), pad = Math.max(span * 0.06, span * 0.015);
+  return { lo: lo - pad, hi: hi + pad };
+}
+function applyChartPriceScale(candles, refPrice) {
+  const tight = calcTightScale(candles, refPrice);
+  if (!tight) { _chartScaleMin = _chartScaleMax = null; return; }
+  _chartScaleMin = tight.lo; _chartScaleMax = tight.hi;
+  if (_candleSeries) _candleSeries.applyOptions({ autoscaleInfoProvider: () => ({ priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } }) });
+}
+function fitBarDensity(count) {
+  const c = document.getElementById('trade-chart');
+  if (!c || !count) return 8;
+  const w = Math.max(400, c.clientWidth - 64);
+  return Math.max(8, Math.min(18, Math.floor((w / count) * 0.95)));
+}
+
+function focusCandleWindow(candles) {
+  if (!_chart || !candles || candles.length < 2) return;
+  const barSec = priceBarSeconds();
+  _chart.timeScale().setVisibleRange({
+    from: candles[0].time - barSec * 2,
+    to: candles[candles.length - 1].time + barSec * 20,
+  });
+}
+
+function resetAllCharts() {
+  if (_chart) { _chart.remove(); _chart = null; }
+  _candleSeries = _priceLine = _emaFastSeries = _emaSlowSeries = null;
+  _chartScaleMin = _chartScaleMax = null; _chartSym = null;
+}
+
+function chartAlgoParam(tf) {
+  return tf === '1h' ? 'off' : '110';
+}
+
+function clipOverlayToCandles(ov, candles) {
+  if (!ov || !ov.overlays || !candles.length) return ov;
+  const t0 = candles[0].time, t1 = candles[candles.length - 1].time;
+  const clip = (arr) => (arr || []).filter(p => p.time >= t0 && p.time <= t1);
+  return Object.assign({}, ov, {
+    overlays: Object.assign({}, ov.overlays, {
+      ema_fast: clip(ov.overlays.ema_fast),
+      ema_slow: clip(ov.overlays.ema_slow),
+    }),
+    signals: (ov.signals || []).filter(s => s.time >= t0 && s.time <= t1),
+  });
+}
+
+function motorSlotDir(ov, ws) {
+  if (!ov || !ov.ok) return null;
+  const cur = ov.current;
+  if (cur && (cur.direction === 'UP' || cur.direction === 'DOWN')) {
+    return cur.direction;
+  }
+  const sigs = ov.signals || [];
+  for (let i = sigs.length - 1; i >= 0; i--) {
+    if (sigs[i].time === ws) return sigs[i].dir;
+  }
+  let last = null;
+  for (const s of sigs) {
+    if (ws == null || s.time <= ws) last = s.dir;
+  }
+  return last;
+}
+
+function appendMotorSlotMarkers(markers, d, candles, ov) {
+  const ws = d.window_start;
+  if (!ws || !candles.some(c => c.time === ws)) return;
+  const dir = motorSlotDir(ov, ws);
+  if (!dir) {
+    markers.push({
+      time: ws,
+      position: 'aboveBar',
+      color: '#888',
+      shape: 'circle',
+      text: '110',
+    });
+    return;
+  }
+  markers.push({
+    time: ws,
+    position: dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: dir === 'UP' ? '#4ade80' : '#c8f135',
+    shape: dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: '110',
+  });
+}
+
+function addMotorMarkers(markers, ov, skipTime) {
+  if (!ov || !ov.ok) return;
+  (ov.signals || []).forEach(s => {
+    if (skipTime != null && s.time === skipTime) return;
+    markers.push({
+      time: s.time,
+      position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
+      color: s.dir === 'UP' ? '#4ade80' : '#f87171',
+      shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+      text: s.dir,
+    });
+  });
+}
+
+function ensureTradeChart() {
+  const container = document.getElementById('trade-chart');
+  if (!container) return false;
+  const sym = selectedSymbol();
+  if (_chart && (_chartSym !== sym + _priceTf || _chartTf !== _tf)) resetAllCharts();
+  if (!_chart) {
+    _chartSym = sym + _priceTf; _chartTf = _tf;
+    _chart = LightweightCharts.createChart(container, {
+      width: container.clientWidth, height: chartH(),
+      layout: { background: { color: '#0a0a0a' }, textColor: '#555' },
+      grid: { vertLines: { color: '#121212' }, horzLines: { color: '#121212' } },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      localization: _chartLoc,
+      timeScale: { borderColor: '#1a1a1a', timeVisible: true, secondsVisible: false, barSpacing: 4, minBarSpacing: 1, rightOffset: 20, fixRightEdge: false },
+      rightPriceScale: { borderColor: '#1a1a1a', autoScale: true, scaleMargins: { top: 0.01, bottom: 0.01 } },
+    });
+    _candleSeries = _chart.addCandlestickSeries({
+      upColor: '#26a69a', downColor: '#ef5350', borderUpColor: '#26a69a', borderDownColor: '#ef5350',
+      wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+      autoscaleInfoProvider: () => (_chartScaleMin != null) ? { priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } } : null,
+    });
+    _emaFastSeries = _chart.addLineSeries({
+      color: '#fbbf24', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+      autoscaleInfoProvider: () => (_chartScaleMin != null) ? { priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } } : null,
+    });
+    _emaSlowSeries = _chart.addLineSeries({
+      color: '#818cf8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+      autoscaleInfoProvider: () => (_chartScaleMin != null) ? { priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } } : null,
+    });
+    window.addEventListener('resize', () => {
+      const c = document.getElementById('trade-chart');
+      if (_chart && c) _chart.applyOptions({ width: c.clientWidth, height: chartH() });
+    });
+  }
+  return true;
+}
+
+function renderHourlyBadges(hc) {
+  const el = document.getElementById('algo-badges');
+  if (!el) return;
+  const items = [
+    { key: 'a1', tag: 'A1', cls: 'a1' },
+    { key: 'a3', tag: 'A3', cls: 'a3' },
+    { key: 'a8', tag: 'A8', cls: 'a8' },
+    { key: 'alfa', tag: 'ALFA', cls: 'alfa' },
+  ];
+  el.innerHTML = items.map(({ key, tag, cls }) => {
+    const cur = hc && hc[key];
+    const det = cur && cur.detail ? ' title="' + String(cur.detail).replace(/"/g, '&quot;') + '"' : '';
+    if (!cur || !cur.dir) {
+      return '<span class="algo-badge neutral ' + cls + '"' + det + '>' + (cur && cur.label ? cur.label : tag + ' —') + '</span>';
+    }
+    const up = cur.dir === 'UP';
+    return '<span class="algo-badge ' + cls + ' ' + (up ? 'up' : 'down') + '"' + det + '>' + (cur.label || tag) + '</span>';
+  }).join('');
+}
+
+function updateMotorBadge(ov) {
+  const el = document.getElementById('algo-badges');
+  if (!el) return;
+  if (!ov || !ov.ok || !ov.current) {
+    el.innerHTML = '<span class="algo-badge neutral m110">110 · —</span>';
+    return;
+  }
+  const cur = ov.current;
+  const dir = cur.direction;
+  if (dir === 'UP' || dir === 'DOWN') {
+    const cls = dir === 'UP' ? 'up' : 'down';
+    el.innerHTML = '<span class="algo-badge m110 ' + cls + '">110 · ' + dir + '</span>';
+    return;
+  }
+  el.innerHTML = '<span class="algo-badge neutral m110">110 · ' + (cur.label || '—') + '</span>';
+}
+
+function renderFifteenBadges(d, ov) {
+  const el = document.getElementById('algo-badges');
+  if (!el) return;
+  let html = '';
+  if (!ov || !ov.ok || !ov.current) {
+    html += '<span class="algo-badge neutral m110">110 · —</span>';
+  } else {
+    const cur = ov.current;
+    const dir = cur.direction;
+    if (dir === 'UP' || dir === 'DOWN') {
+      html += '<span class="algo-badge m110 ' + (dir === 'UP' ? 'up' : 'down') + '">110 · ' + dir + '</span>';
+    } else {
+      html += '<span class="algo-badge neutral m110">110 · ' + (cur.label || '—') + '</span>';
+    }
+  }
+  const fc = d.fifteen_current || {};
+  [{ key: 'a112', tag: '112', cls: 'a112' }, { key: 'a113', tag: '113', cls: 'a113' }].forEach(({ key, tag, cls }) => {
+    const cur = fc[key];
+    if (!cur || !cur.dir) {
+      html += '<span class="algo-badge neutral ' + cls + '">' + (cur && cur.label ? cur.label : tag + ' —') + '</span>';
+      return;
+    }
+    const up = cur.dir === 'UP';
+    html += '<span class="algo-badge ' + cls + ' ' + (up ? 'up' : 'down') + '">' + (cur.label || tag) + '</span>';
+  });
+  el.innerHTML = html;
+}
+
+function fifteenTagColor(tag) {
+  if (tag === '112') return '#38bdf8';
+  if (tag === '113') return '#2dd4bf';
+  return '#888';
+}
+
+function fifteenMarker(s) {
+  const tag = s.tag || '?';
+  return {
+    time: s.time,
+    position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: fifteenTagColor(tag),
+    shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: tag,
+  };
+}
+
+function appendFifteenSlotMarkers(markers, d, candles) {
+  const ws = d.window_start;
+  if (!ws || !candles.some(c => c.time === ws)) return;
+  const fc = d.fifteen_current || {};
+  appendHourlySlotMarker(markers, ws, fc.a112, '112', '#38bdf8');
+  appendHourlySlotMarker(markers, ws, fc.a113, '113', '#2dd4bf');
+}
+
+function addFifteenMarkers(markers, signals, ws) {
+  (signals || []).forEach(s => {
+    if (ws && s.time === ws && (s.tag === '112' || s.tag === '113')) return;
+    markers.push(fifteenMarker(s));
+  });
+}
+
+function hourlyTagColor(tag) {
+  if (tag === 'A1') return '#a855f7';
+  if (tag === 'A3') return '#2dd4bf';
+  if (tag === 'ALFA') return '#f59e0b';
+  return '#38bdf8';
+}
+
+function hourlyMarker(s) {
+  const tag = s.tag || '?';
+  return {
+    time: s.time,
+    position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: hourlyTagColor(tag),
+    shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: tag,
+  };
+}
+
+function appendHourlySlotMarker(markers, ws, cur, tag, color) {
+  if (!cur || !cur.dir) return;
+  markers.push({
+    time: ws,
+    position: cur.dir === 'UP' ? 'belowBar' : 'aboveBar',
+    color: color,
+    shape: cur.dir === 'UP' ? 'arrowUp' : 'arrowDown',
+    text: tag,
+  });
+}
+
+function addHourlyMarkers(markers, hourly, d) {
+  const ws = d && d.window_start;
+  (hourly || []).forEach(s => {
+    if (s.tag === 'A1' && ws && s.time === ws) return;
+    if (s.tag === 'A3' && ws && s.time === ws) return;
+    if (s.tag === 'A8' && ws && s.time === ws) return;
+    if (s.tag === 'ALFA' && ws && s.time === ws) return;
+    markers.push(hourlyMarker(s));
+  });
+}
+
+function appendSlotMarkers(markers, d, candles) {
+  const ws = d.window_start;
+  const hasWs = ws && candles.some(c => c.time === ws);
+  if (!hasWs) return;
+  const hc = d.hourly_current || {};
+  markers.push({
+    time: ws,
+    position: 'aboveBar',
+    color: '#fbbf24',
+    shape: 'arrowDown',
+    text: 'A1',
+  });
+  appendHourlySlotMarker(markers, ws, hc.a1, 'A1', '#a855f7');
+  appendHourlySlotMarker(markers, ws, hc.a3, 'A3', '#2dd4bf');
+  appendHourlySlotMarker(markers, ws, hc.a8, 'A8', '#38bdf8');
+  appendHourlySlotMarker(markers, ws, hc.alfa, 'ALFA', '#f59e0b');
+}
+
+function patchLastCandle(price, dec) {
+  if (!_lastCandles.length || price == null) return;
+  const c = Object.assign({}, _lastCandles[_lastCandles.length - 1]);
+  c.close = Number(price.toFixed(dec != null ? dec : 2));
+  c.high = Math.max(c.high, c.close); c.low = Math.min(c.low, c.close);
+  _lastCandles[_lastCandles.length - 1] = c;
+  if (_candleSeries) _candleSeries.update(c);
+}
+
+async function refreshSpot() {
+  const sym = selectedSymbol(), tf = _tf;
+  try {
+    const r = await fetch('/poly/api/trade-desk/spot?timeframe=' + tf + '&symbol=' + sym, { cache: 'no-store' });
+    const q = await r.json();
+    if (tf !== _tf || sym !== selectedSymbol()) return;
+    const refEl = document.getElementById('spot-ref'), liveEl = document.getElementById('spot-live');
+    const deltaEl = document.getElementById('spot-delta'), tfEl = document.getElementById('spot-tf');
+    if (tfEl) tfEl.textContent = q && q.slot_label ? q.slot_label + ' İST · ' + (tf === '15m' ? '15dk' : '1saat') : '';
+    if (!q || q.ref_price == null) { refEl.textContent = liveEl.textContent = '—'; deltaEl.textContent = ''; return; }
+    const dec = q.dec != null ? q.dec : 2;
+    refEl.textContent = '$' + Number(q.ref_price).toFixed(dec);
+    liveEl.textContent = q.live_price != null ? '$' + Number(q.live_price).toFixed(dec) : '—';
+    if (q.delta != null) {
+      deltaEl.className = 'spot-delta ' + (q.delta >= 0 ? 'up' : 'down');
+      deltaEl.textContent = (q.delta >= 0 ? '+' : '-') + '$' + Math.abs(q.delta).toFixed(dec);
+    } else { deltaEl.textContent = ''; deltaEl.className = 'spot-delta'; }
+    if (q.live_price != null) patchLastCandle(Number(q.live_price), dec);
+  } catch (e) { console.error(e); }
+}
+
+function chartUrl() {
+  return '/poly/api/trade-desk/chart?timeframe=' + _tf + '&symbol=' + selectedSymbol()
+    + '&algo=' + chartAlgoParam(_tf) + '&gate=' + _gate
+    + '&price_tf=' + _priceTf + '&limit=' + candleLimitForView()
+    + '&_=' + Date.now();
+}
+
+async function loadTradeChart() {
+  const reqId = ++_chartReq;
+  const sym = selectedSymbol(), tf = _tf;
+  if (!ensureTradeChart()) return;
+  try {
+    const r = await fetch(chartUrl(), { cache: 'no-store' });
+    const d = prepareChartPayload(await r.json());
+    if (reqId !== _chartReq || tf !== _tf || sym !== selectedSymbol()) return;
+    const dec = d.dec != null ? d.dec : 2;
+    const pxLbl = d.price_tf === '1h' ? '1h' : (d.price_tf === '15m' ? '15m' : (d.price_tf === '5m' ? '5m' : '1m'));
+    document.getElementById('chart-title').textContent = (d.name || sym.replace('USDT','')) + ' · ' + pxLbl;
+    document.getElementById('chart-meta').textContent =
+      (_tf === '1h' ? 'A1 + A3 + A8 + ALFA saatlik · A3/A8 ' + (d.a3a8_signal_mode_label || 'sıkı') : _tf === '15m' ? '110 + 112 + 113' : '110 motor UP/DOWN') + ' · ' + pxLbl + ' mum · ' + (d.slot_label || '') + ' İST';
+    document.getElementById('chart-ref-lbl').textContent = d.ref_price != null ? '$' + Number(d.ref_price).toFixed(dec) : '—';
+    if (_priceLine) { _candleSeries.removePriceLine(_priceLine); _priceLine = null; }
+    if (!d.candles || !d.candles.length) { _candleSeries.setData([]); _candleSeries.setMarkers([]); return; }
+    _lastCandles = d.candles.slice();
+    applyChartPriceScale(d.candles, d.ref_price);
+    _candleSeries.setData(d.candles);
+    const barSp = fitBarDensity(d.candles.length);
+    _chart.applyOptions({ width: document.getElementById('trade-chart').clientWidth, height: chartH() });
+    _chart.timeScale().applyOptions({ barSpacing: barSp, minBarSpacing: 4, fixRightEdge: false, rightOffset: 20 });
+    if (d.ref_price != null) {
+      _priceLine = _candleSeries.createPriceLine({
+        price: d.ref_price, color: '#fbbf24', lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true,
+        title: _tf === '1h' ? 'A1' : 'Ref',
+      });
+    }
+    const markers = [];
+    const ov = _tf !== '1h' && d.algo_overlay ? clipOverlayToCandles(d.algo_overlay, d.candles) : null;
+    if (_tf === '1h') {
+      renderHourlyBadges(d.hourly_current);
+      appendSlotMarkers(markers, d, d.candles);
+      addHourlyMarkers(markers, d.hourly_signals, d);
+      if (_emaFastSeries) { _emaFastSeries.setData([]); _emaSlowSeries.setData([]); }
+    } else {
+      if (_tf === '15m') renderFifteenBadges(d, ov);
+      else updateMotorBadge(ov);
+      appendMotorSlotMarkers(markers, d, d.candles, ov);
+      addMotorMarkers(markers, ov, d.window_start);
+      if (_tf === '15m') {
+        appendFifteenSlotMarkers(markers, d, d.candles);
+        addFifteenMarkers(markers, d.fifteen_signals, d.window_start);
+      }
+      if (_emaFastSeries && ov && ov.overlays) {
+        _emaFastSeries.setData(ov.overlays.ema_fast || []);
+        _emaSlowSeries.setData(ov.overlays.ema_slow || []);
+      }
+    }
+    focusCandleWindow(d.candles);
+    _candleSeries.setMarkers(markers);
+  } catch (e) { console.error(e); }
+}
+
+async function refreshCash() {
+  try {
+    const r = await fetch('/poly/api/trade-desk', { cache: 'no-store' });
+    const d = await r.json();
+    if (r.ok && d.cash != null) {
+      const el = document.getElementById('cash');
+      if (el) el.textContent = 'USDC $' + (d.cash >= 0 ? d.cash.toFixed(2) : '?');
+    }
+  } catch (e) {}
+}
+
+syncTabs(); refreshCash(); refreshSpot(); loadTradeChart();
+setInterval(refreshCash, 10000);
+setInterval(refreshSpot, 3000);
+setInterval(loadTradeChart, 5000);
 </script>
 </body>
 </html>"""
@@ -2058,11 +3648,18 @@ def api_stats():
             slug = t.get("pm_slug")
             if slug:
                 slug_labels[slug] = label
+    for pos in collect_positions():
+        slug = pos.get("pm_slug")
+        if slug:
+            slug_labels[slug] = pos.get("_analiz_label") or slug_labels.get(slug, "PM")
 
     sys.path.insert(0, _DIR_POLY)
+    pending: list[dict] = []
     try:
-        from pm_poly_history import get_recent_pm_trades
+        from pm_poly_history import get_open_pm_trades, get_recent_pm_trades
         recent = get_recent_pm_trades(limit=20, slug_labels=slug_labels)
+        pending = get_open_pm_trades(limit=10, slug_labels=slug_labels)
+        pending, recent = _merge_pm_recent_trades(pending, recent)
     except Exception as e:
         print(f"[dashboard] pm_poly_history: {e}", file=sys.stderr)
         live_history = []
@@ -2085,9 +3682,10 @@ def api_stats():
                 "time": etime,
                 "analiz": t.get("_analiz", ""),
             })
+        pending = []
 
     algo_stats.sort(key=lambda x: x["wr"], reverse=True)
-    return jsonify({"algo_stats": algo_stats, "recent": recent})
+    return jsonify({"algo_stats": algo_stats, "recent": recent, "pending": pending})
 
 
 @app.route("/poly/api/pm-profit")
@@ -2113,12 +3711,16 @@ def api_pm_system_post():
     sys.path.insert(0, _DIR_POLY)
     from pm_balance_guard import (
         get_pm_system_control,
+        set_a3a8_signal_strict,
         set_group_paused,
         set_pm_open_paused,
         toggle_group_paused,
         toggle_pm_open_paused,
     )
     body = request.get_json(force=True) if request.is_json else {}
+    if "a3a8_signal_strict" in body:
+        state = set_a3a8_signal_strict(bool(body["a3a8_signal_strict"]), source="dashboard")
+        return jsonify({"ok": True, **state})
     group = body.get("group")
     if group in ("analiz5", "analiz2", "m15_210", "hourly"):
         if group == "hourly":
@@ -2534,8 +4136,15 @@ def _record_dashboard_close(analiz: str, pos: dict, sell_result: dict) -> None:
 
 
 # ── İşlem masası (manuel PM açılış) ─────────────────────────────
+_TRADE_DESK_5M_SYMS = ("BTCUSDT", "SOLUSDT")
 _TRADE_DESK_15M_SYMS = ("BTCUSDT", "SOLUSDT")
 _TRADE_DESK_1H_SYMS = ("BTCUSDT", "SOLUSDT")
+
+
+def _trade_desk_short_syms(timeframe: str) -> tuple[str, ...]:
+    if timeframe == "1h":
+        return _TRADE_DESK_1H_SYMS
+    return _TRADE_DESK_15M_SYMS
 
 
 def _trade_desk_spot(symbol: str, timeframe: str) -> dict:
@@ -2549,25 +4158,14 @@ def _trade_desk_spot(symbol: str, timeframe: str) -> dict:
     except Exception:
         pass
     try:
-        if timeframe == "15m":
-            import time
-            ts = int(time.time()) - (int(time.time()) % 900)
-            target_ms = ts * 1000
+        if timeframe == "5m":
+            _, slot_label = _trade_desk_period_5m()
+        elif timeframe == "15m":
             _, slot_label = _trade_desk_period_15m()
-            for k in get_klines(symbol, "15m", 12):
-                if k["t"] == target_ms:
-                    ref = k["o"]
-                    break
-            if ref is None:
-                kl = get_klines(symbol, "15m", 3)
-                if kl:
-                    ref = kl[-1]["o"]
         else:
             h = datetime.now(_TZ_TR).hour
             slot_label = f"{h:02d}:00-{(h + 1) % 24:02d}:00"
-            kl = get_klines(symbol, "1h", 2)
-            if kl:
-                ref = kl[-1]["o"]
+        ref = _trade_desk_slot_ref(symbol, timeframe)
     except Exception:
         pass
     delta = (live - ref) if ref is not None and live is not None else None
@@ -2581,12 +4179,43 @@ def _trade_desk_spot(symbol: str, timeframe: str) -> dict:
     }
 
 
+def _trade_desk_period_5m() -> tuple[int, str]:
+    import time
+    ts = int(time.time()) - (int(time.time()) % 300)
+    lbl = datetime.fromtimestamp(ts, _TZ_TR).strftime("%H:%M")
+    end = datetime.fromtimestamp(ts + 300, _TZ_TR).strftime("%H:%M")
+    return ts, f"{lbl}-{end}"
+
+
 def _trade_desk_period_15m() -> tuple[int, str]:
     import time
     ts = int(time.time()) - (int(time.time()) % 900)
     lbl = datetime.fromtimestamp(ts, _TZ_TR).strftime("%H:%M")
     end = datetime.fromtimestamp(ts + 900, _TZ_TR).strftime("%H:%M")
     return ts, f"{lbl}-{end}"
+
+
+def _trade_desk_quote_5m(symbol: str) -> dict | None:
+    sys.path.insert(0, _DIR_POLY)
+    import poly_trader_5m_common as pm_common
+    ts, slot = _trade_desk_period_5m()
+    m = pm_common._pm_find_5m_market(ts, symbol)
+    if not m:
+        return None
+    spot = _trade_desk_spot(symbol, "5m")
+    return {
+        "timeframe": "5m",
+        "symbol": symbol,
+        "name": symbol.replace("USDT", ""),
+        "ts_period": ts,
+        "slot": slot,
+        "slug": m.get("slug", ""),
+        "title": m.get("title", ""),
+        "closed": bool(m.get("closed")),
+        "up": round(float(m.get("up_price", 0.5)), 3),
+        "down": round(float(m.get("down_price", 0.5)), 3),
+        **spot,
+    }
 
 
 def _trade_desk_quote_15m(symbol: str) -> dict | None:
@@ -2625,11 +4254,13 @@ def _trade_desk_quote_1h(symbol: str) -> dict | None:
     up = float(op[0]) if len(op) >= 2 else 0.5
     down = float(op[1]) if len(op) >= 2 else 0.5
     h = datetime.now(_TZ_TR).hour
+    hour_start = datetime.now(_TZ_TR).replace(minute=0, second=0, microsecond=0)
     spot = _trade_desk_spot(symbol, "1h")
     return {
         "timeframe": "1h",
         "symbol": symbol,
         "name": symbol.replace("USDT", ""),
+        "ts_period": int(hour_start.timestamp()),
         "slot": f"{h:02d}:00-{(h + 1) % 24:02d}:00",
         "slug": m.get("slug", ""),
         "title": m.get("title", ""),
@@ -2663,7 +4294,12 @@ def _pm_buy_plan(amount: float, price: float) -> dict:
 
 def _trade_desk_resolve_pm(timeframe: str, symbol: str) -> tuple[dict | None, int | None]:
     ts_period = None
-    if timeframe == "15m":
+    sys.path.insert(0, _DIR_POLY)
+    if timeframe == "5m":
+        import poly_trader_5m_common as pm_common
+        ts_period, _ = _trade_desk_period_5m()
+        pm = pm_common._pm_find_5m_market(ts_period, symbol)
+    elif timeframe == "15m":
         import poly_trader_5m_common as pm_common
         ts_period, _ = _trade_desk_period_15m()
         pm = pm_common._pm_find_15m_market(ts_period, symbol)
@@ -2691,11 +4327,11 @@ def _trade_desk_live_price(token_id: str, amount: float, fallback: float) -> flo
 def _trade_desk_open(timeframe: str, symbol: str, direction: str, amount: float) -> dict:
     symbol = symbol.upper()
     direction = direction.upper()
-    if timeframe not in ("15m", "1h"):
-        return {"ok": False, "error": "timeframe 15m veya 1h olmalı"}
+    if timeframe not in ("5m", "15m", "1h"):
+        return {"ok": False, "error": "timeframe 5m, 15m veya 1h olmalı"}
     if direction not in ("UP", "DOWN"):
         return {"ok": False, "error": "yön UP veya DOWN olmalı"}
-    if symbol not in (_TRADE_DESK_15M_SYMS if timeframe == "15m" else _TRADE_DESK_1H_SYMS):
+    if symbol not in _trade_desk_short_syms(timeframe):
         return {"ok": False, "error": f"{symbol} bu timeframe için desteklenmiyor"}
     if amount < 1 or amount > 500:
         return {"ok": False, "error": "tutar $1–500 arası olmalı"}
@@ -2729,7 +4365,9 @@ def _trade_desk_open(timeframe: str, symbol: str, direction: str, amount: float)
         return {"ok": False, "error": "PM emri başarısız"}
 
     try:
-        entry_p = get_price(symbol)
+        entry_p = _trade_desk_slot_ref(symbol, timeframe, ts_period)
+        if entry_p is None:
+            entry_p = get_price(symbol)
     except Exception:
         entry_p = 0.0
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
@@ -2754,19 +4392,30 @@ def _trade_desk_open(timeframe: str, symbol: str, direction: str, amount: float)
         "pm_order_id": order.get("order_id", ""),
         "manual": True,
     }
-    if timeframe == "15m":
+    if timeframe == "5m":
+        pos["ts_period"] = ts_period
+        pos["ts_5m"] = ts_period
+        pos["entry_period_min"] = 5
+    elif timeframe == "15m":
         pos["ts_period"] = ts_period
         pos["ts_5m"] = ts_period
         pos["entry_period_min"] = 15
 
     state = load_state("manual")
     state.setdefault("open_positions", [])
+    pos_id = _manual_pos_id(pos)
     state["open_positions"] = [
         p for p in state["open_positions"]
-        if not (p.get("symbol") == symbol and _manual_timeframe(p) == timeframe)
+        if _manual_pos_id(p) != pos_id
     ]
     state["open_positions"].append(pos)
     save_state("manual", state)
+    sys.path.insert(0, _DIR_POLY)
+    try:
+        from pm_manual_sync import register_manual_order
+        register_manual_order(pos)
+    except Exception:
+        pass
     spent = order["spent"]
     requested = amount
     note = f" (girdiğin ${requested:.2f})" if abs(spent - requested) > 0.02 else ""
@@ -2778,6 +4427,350 @@ def _trade_desk_open(timeframe: str, symbol: str, direction: str, amount: float)
     }
 
 
+def _clip_chart_overlay(overlay: dict | None, t0: int, t1: int) -> dict | None:
+    """Overlay serilerini mum penceresine kırp (fitContent genişlemesini önler)."""
+    if not overlay or not overlay.get("ok"):
+        return overlay
+    ov = overlay.get("overlays") or {}
+
+    def _clip(series):
+        if not series:
+            return []
+        return [p for p in series if t0 <= int(p["time"]) <= t1]
+
+    out = dict(overlay)
+    out["overlays"] = {
+        **ov,
+        "ema_fast": _clip(ov.get("ema_fast")),
+        "ema_slow": _clip(ov.get("ema_slow")),
+        "composite": _clip(ov.get("composite")),
+        "trend": _clip(ov.get("trend")),
+    }
+    sigs = overlay.get("signals") or []
+    out["signals"] = [s for s in sigs if t0 <= int(s["time"]) <= t1]
+    return out
+
+
+def _snap_overlay_signals_to_chart(candles: list[dict], signals: list[dict]) -> list[dict]:
+    """110 motor oklarını mum zamanına hizala (1m grafikte 15m sinyaller)."""
+    if not candles or not signals:
+        return signals or []
+    times = [int(c["time"]) for c in candles]
+    time_set = set(times)
+
+    def _snap(t: int) -> int | None:
+        best = min(times, key=lambda x: abs(x - t))
+        return best if abs(best - t) <= 450 else None
+
+    out: list[dict] = []
+    seen: set[tuple] = set()
+    for s in signals:
+        raw_t = int(s["time"])
+        st = raw_t if raw_t in time_set else _snap(raw_t)
+        if st is None:
+            continue
+        key = (st, s.get("dir"))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({**s, "time": st})
+    return out
+
+
+def _snap_hourly_signals_to_chart(
+    candles: list[dict],
+    signals: list[dict],
+    hourly_current: dict,
+    window_start: int | None,
+) -> list[dict]:
+    """Saatlik A1/A3/A8 oklarını mum zamanına hizala (LightweightCharts tam eşleşme ister)."""
+    if not candles:
+        return []
+    times = [int(c["time"]) for c in candles]
+    time_set = set(times)
+
+    def _snap(t: int) -> int | None:
+        best = min(times, key=lambda x: abs(x - t))
+        return best if abs(best - t) <= 2700 else None
+
+    out: list[dict] = []
+    seen: set[tuple] = set()
+    for s in signals:
+        raw_t = int(s["time"])
+        st = raw_t if raw_t in time_set else _snap(raw_t)
+        if st is None:
+            continue
+        key = (st, s.get("tag"), s.get("dir"))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({**s, "time": st})
+
+    if window_start and window_start in time_set and hourly_current:
+        for tag, hk in (("A1", "a1"), ("A3", "a3"), ("A8", "a8"), ("ALFA", "alfa")):
+            cur = hourly_current.get(hk)
+            if not cur or not cur.get("dir"):
+                continue
+            key = (window_start, tag, cur["dir"])
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append({
+                "time": window_start,
+                "dir": cur["dir"],
+                "tag": tag,
+                "live": True,
+            })
+    return out
+
+
+def _snap_fifteen_signals_to_chart(
+    candles: list[dict],
+    signals: list[dict],
+    fifteen_current: dict,
+    window_start: int | None,
+) -> list[dict]:
+    """15m 112/113 oklarını mum zamanına hizala."""
+    if not candles:
+        return []
+    times = [int(c["time"]) for c in candles]
+    time_set = set(times)
+
+    def _snap(t: int) -> int | None:
+        best = min(times, key=lambda x: abs(x - t))
+        return best if abs(best - t) <= 900 else None
+
+    out: list[dict] = []
+    seen: set[tuple] = set()
+    for s in signals:
+        raw_t = int(s["time"])
+        st = raw_t if raw_t in time_set else _snap(raw_t)
+        if st is None:
+            continue
+        key = (st, s.get("tag"), s.get("dir"))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({**s, "time": st})
+
+    if window_start and window_start in time_set and fifteen_current:
+        for tag, hk in (("112", "a112"), ("113", "a113")):
+            cur = fifteen_current.get(hk)
+            if not cur or not cur.get("dir"):
+                continue
+            key = (window_start, tag, cur["dir"])
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append({
+                "time": window_start,
+                "dir": cur["dir"],
+                "tag": tag,
+                "live": True,
+            })
+    return out
+
+
+def _trade_desk_chart(
+    symbol: str,
+    timeframe: str,
+    *,
+    algo: str | None = None,
+    ema_fast: int = 9,
+    ema_slow: int = 21,
+    gate: float = 15.0,
+    price_tf: str = "1m",
+    candle_limit: int | None = None,
+) -> dict:
+    """İşlemler grafiği — mumlar + slot ref + opsiyonel 110 algo overlay."""
+    import time as _time
+    name = symbol.replace("USDT", "")
+    dec = 1 if name == "BTC" else 2
+    spot = _trade_desk_spot(symbol, timeframe)
+    if timeframe == "5m":
+        ts_period, slot_label = _trade_desk_period_5m()
+        window_secs = 300
+        limit_1m = 36
+        limit_5m = 12
+        limit_15m = 24
+        limit_1h = 12
+    elif timeframe == "15m":
+        ts_period, slot_label = _trade_desk_period_15m()
+        window_secs = 900
+        limit_1m = 60
+        limit_5m = 24
+        limit_15m = 60
+        limit_1h = 24
+    else:
+        hour_start = datetime.now(_TZ_TR).replace(minute=0, second=0, microsecond=0)
+        ts_period = int(hour_start.timestamp())
+        slot_label = spot.get("slot_label") or hour_start.strftime("%H:%M")
+        window_secs = 3600
+        limit_1m = 90
+        limit_5m = 24
+        limit_15m = 48
+        limit_1h = 48
+    algo_key = (algo or "off").lower()
+    price_tf = price_tf if price_tf in ("1m", "5m", "15m", "1h") else "1m"
+    _px_limits = {"1m": limit_1m, "5m": limit_5m, "15m": limit_15m, "1h": limit_1h}
+    if candle_limit is not None:
+        cap = max(10, min(500, int(candle_limit)))
+        _px_limits[price_tf] = cap
+    px_limit = _px_limits[price_tf]
+    now_f = _time.time()
+    cache_key = (
+        symbol, timeframe, ts_period, int(now_f) // 60,
+        algo_key, ema_fast, ema_slow, round(float(gate), 1), price_tf,
+        px_limit,
+    )
+    cached = _trade_chart_cache.get(cache_key)
+    if cached and now_f - cached[0] < _TRADE_CHART_CACHE_TTL:
+        out = dict(cached[1])
+        out["live_price"] = spot.get("live_price")
+        out["ref_price"] = spot.get("ref_price")
+        out["now"] = int(now_f)
+        if out.get("candles") and spot.get("live_price") is not None:
+            last = dict(out["candles"][-1])
+            lp = round(float(spot["live_price"]), dec)
+            last["close"] = lp
+            last["high"] = max(last["high"], lp)
+            last["low"] = min(last["low"], lp)
+            out["candles"] = out["candles"][:-1] + [last]
+        return out
+    candle_interval = price_tf
+    candle_limit = px_limit
+    raw = get_klines(symbol, candle_interval, limit=candle_limit)
+    candles = [
+        {
+            "time": k["t"] // 1000,
+            "open": round(k["o"], dec),
+            "high": round(k["h"], dec),
+            "low": round(k["l"], dec),
+            "close": round(k["c"], dec),
+        }
+        for k in raw
+    ]
+    if candles:
+        t0, t1 = candles[0]["time"], candles[-1]["time"]
+    else:
+        t0 = t1 = 0
+    now_sec = int(now_f)
+    result = {
+        "symbol": symbol,
+        "name": name,
+        "timeframe": timeframe,
+        "price_tf": price_tf,
+        "slot_label": slot_label,
+        "ts_period": ts_period,
+        "window_start": ts_period,
+        "window_end": ts_period + window_secs,
+        "ref_price": spot.get("ref_price"),
+        "live_price": spot.get("live_price"),
+        "dec": dec,
+        "candles": candles,
+        "now": now_sec,
+        "algo_overlay": None,
+        "hourly_signals": [],
+        "hourly_current": {},
+        "fifteen_signals": [],
+        "fifteen_current": {},
+    }
+    if algo_key not in ("", "off", "none", "0"):
+        try:
+            sys.path.insert(0, _DIR_POLY)
+            from chart_algo_overlay import compute_algo_overlay
+            result["algo_overlay"] = compute_algo_overlay(
+                symbol, algo=algo_key, ema_fast=ema_fast, ema_slow=ema_slow, gate=gate,
+            )
+            if candles:
+                clipped = _clip_chart_overlay(result["algo_overlay"], t0, t1)
+                if clipped and clipped.get("signals"):
+                    clipped = dict(clipped)
+                    clipped["signals"] = _snap_overlay_signals_to_chart(candles, clipped["signals"])
+                result["algo_overlay"] = clipped
+        except Exception as e:
+            result["algo_overlay"] = {"ok": False, "error": str(e), "algo": algo_key}
+    if candles:
+        t0, t1 = candles[0]["time"], candles[-1]["time"]
+        try:
+            from chart_hourly_signals import compute_hourly_chart_signals
+            hs = compute_hourly_chart_signals(symbol, t0, t1)
+            if hs.get("ok"):
+                hc = hs.get("current") or {}
+                if timeframe == "1h":
+                    try:
+                        from alfa_signal import chart_current_from_hourly
+                        hc = {**hc, "alfa": chart_current_from_hourly(hc, symbol)}
+                    except Exception:
+                        pass
+                snapped = _snap_hourly_signals_to_chart(
+                    candles,
+                    hs.get("signals") or [],
+                    hc,
+                    ts_period,
+                )
+                result["hourly_signals"] = snapped
+                result["hourly_current"] = hc
+                try:
+                    from pm_balance_guard import get_pm_system_control
+                    result.update({
+                        k: get_pm_system_control()[k]
+                        for k in ("a3a8_signal_strict", "a3a8_signal_mode", "a3a8_signal_mode_label")
+                        if k in get_pm_system_control()
+                    })
+                except Exception:
+                    pass
+            else:
+                result["hourly_signals"] = []
+                result["hourly_current"] = {}
+        except Exception:
+            result["hourly_signals"] = []
+            result["hourly_current"] = {}
+    if candles and timeframe == "15m":
+        t0, t1 = candles[0]["time"], candles[-1]["time"]
+        try:
+            from chart_15m_a3a8_signals import compute_15m_chart_signals
+            fs = compute_15m_chart_signals(symbol, t0, t1)
+            if fs.get("ok"):
+                fc = fs.get("current") or {}
+                snapped = _snap_fifteen_signals_to_chart(
+                    candles,
+                    fs.get("signals") or [],
+                    fc,
+                    ts_period,
+                )
+                result["fifteen_signals"] = snapped
+                result["fifteen_current"] = fc
+            else:
+                result["fifteen_signals"] = []
+                result["fifteen_current"] = {}
+        except Exception:
+            result["fifteen_signals"] = []
+            result["fifteen_current"] = {}
+    _trade_chart_cache[cache_key] = (now_f, result)
+    if len(_trade_chart_cache) > 48:
+        cutoff = now_f - 120
+        for k in list(_trade_chart_cache):
+            if _trade_chart_cache[k][0] < cutoff:
+                del _trade_chart_cache[k]
+    return result
+
+
+_ISLEMLER_NOCACHE = {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+}
+
+
+def _json_nocache(data, status=200):
+    resp = jsonify(data)
+    resp.status_code = status
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
+
+
 @app.route("/poly/api/trade-desk/spot")
 def api_trade_desk_spot():
     if _auth_required():
@@ -2785,6 +4778,33 @@ def api_trade_desk_spot():
     tf = str(request.args.get("timeframe", "15m"))
     sym = str(request.args.get("symbol", "SOLUSDT")).upper()
     return jsonify(_trade_desk_spot(sym, tf))
+
+
+@app.route("/poly/api/trade-desk/chart")
+def api_trade_desk_chart():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    tf = str(request.args.get("timeframe", "15m"))
+    if tf not in ("5m", "15m", "1h"):
+        return jsonify({"error": "timeframe 5m, 15m veya 1h olmalı"}), 400
+    sym = str(request.args.get("symbol", "SOLUSDT")).upper()
+    allowed = _trade_desk_short_syms(tf)
+    if sym not in allowed:
+        return jsonify({"error": "desteklenmeyen sembol"}), 400
+    algo = str(request.args.get("algo", "110")).strip().lower()
+    price_tf = str(request.args.get("price_tf", "1m")).strip().lower()
+    try:
+        ema_fast = int(request.args.get("ema_fast", 9))
+        ema_slow = int(request.args.get("ema_slow", 21))
+        gate = float(request.args.get("gate", 15))
+        candle_limit = request.args.get("limit")
+        candle_limit = int(candle_limit) if candle_limit not in (None, "") else None
+    except (TypeError, ValueError):
+        return jsonify({"error": "geçersiz algo parametresi"}), 400
+    return _json_nocache(_trade_desk_chart(
+        sym, tf, algo=algo, ema_fast=ema_fast, ema_slow=ema_slow, gate=gate, price_tf=price_tf,
+        candle_limit=candle_limit,
+    ))
 
 
 @app.route("/poly/api/trade-desk/estimate", methods=["POST"])
@@ -2815,6 +4835,7 @@ def api_trade_desk_estimate():
 def api_trade_desk():
     if _auth_required():
         return jsonify({"error": "unauthorized"}), 401
+    q5 = [_trade_desk_quote_5m(s) for s in _TRADE_DESK_5M_SYMS]
     q15 = [_trade_desk_quote_15m(s) for s in _TRADE_DESK_15M_SYMS]
     q1h = [_trade_desk_quote_1h(s) for s in _TRADE_DESK_1H_SYMS]
     manual = load_state("manual")
@@ -2833,9 +4854,11 @@ def api_trade_desk():
             "spent": round(float(p.get("pm_spent") or p.get("amount") or 0), 2),
             "size": p.get("pm_size"),
             "entry_time": (p.get("entry_time_tr") or "")[:16].replace("T", " "),
+            "order_id": _manual_pos_id(p),
         })
     return jsonify({
         "cash": round(get_pm_balance(), 2),
+        "quotes_5m": [q for q in q5 if q],
         "quotes_15m": [q for q in q15 if q],
         "quotes_1h": [q for q in q1h if q],
         "open_positions": open_pos,
@@ -2861,6 +4884,19 @@ def api_trade_desk_open():
     return jsonify(result), code
 
 
+@app.route("/poly/api/trade-desk/sync", methods=["POST"])
+def api_trade_desk_sync():
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_POLY)
+    try:
+        from pm_manual_sync import sync_manual_open_positions
+        result = sync_manual_open_positions()
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+    return jsonify(result)
+
+
 @app.route("/poly/api/close/<analiz>/<symbol>", methods=["POST"])
 def api_close(analiz, symbol):
     if _auth_required(): return jsonify({"ok": False, "error": "unauthorized"}), 401
@@ -2868,16 +4904,25 @@ def api_close(analiz, symbol):
         state  = load_state(analiz)
         symbol = symbol.upper()
         tf_filter = request.args.get("timeframe")
+        order_id = request.args.get("order_id") or request.args.get("pos_id")
         req_sym = symbol.upper()
         if not req_sym.endswith("USDT"):
             req_sym = req_sym + "USDT"
         def _match(p):
+            if analiz == "manual":
+                return _manual_pos_match(
+                    p, req_sym, timeframe=tf_filter, order_id=order_id,
+                )
             if p.get("symbol", "").upper() != req_sym:
                 return False
-            if analiz == "manual" and tf_filter in ("15m", "1h"):
-                return _manual_timeframe(p) == tf_filter
             return True
-        pos = next((p for p in state.get("open_positions", []) if _match(p)), None)
+        matches = [p for p in state.get("open_positions", []) if _match(p)]
+        if analiz == "manual" and not order_id and len(matches) > 1:
+            return jsonify({
+                "ok": False,
+                "error": "Birden fazla manuel pozisyon var — order_id gerekli",
+            }), 400
+        pos = matches[0] if matches else None
         if not pos:
             return jsonify({"ok": False, "error": "pozisyon bulunamadı"}), 404
 
@@ -4417,6 +6462,10 @@ HTML = r"""<!DOCTYPE html>
   .trade-meta { font-size:11px; color:#777; }
   .trade-pnl { font-size:14px; font-weight:800; }
   .trade-pnl.pos { color:#4ade80; } .trade-pnl.neg { color:#f87171; }
+  .trade-item.pending { opacity:.92; }
+  .trade-item.pending .trade-pnl { color:#fbbf24; font-size:12px; font-weight:700; }
+  .trade-badge-pending { font-size:9px; color:#fbbf24; background:#2a2208; padding:1px 5px;
+                         border-radius:4px; margin-left:4px; font-weight:700; vertical-align:1px; }
 
   .algo-item { display:flex; align-items:center; justify-content:space-between;
                padding:8px 0; border-bottom:1px solid #1c1c1e; }
@@ -4537,6 +6586,13 @@ HTML = r"""<!DOCTYPE html>
             <div class="pm-system-sub" id="pm-system-sub-analiz2">Saatlik SOL · kapanış :02 · Cum 22:00 otomatik kapanır</div>
           </div>
           <button type="button" class="pm-system-btn" id="pm-system-btn-analiz2" onclick="togglePmSystem('analiz2')">Kapat</button>
+        </div>
+        <div class="pm-system-bar" id="pm-system-bar-a3a8">
+          <div>
+            <div class="pm-system-status" id="pm-system-status-a3a8">A3/A8 sıkı sinyal</div>
+            <div class="pm-system-sub" id="pm-system-sub-a3a8">Entry bias + EMA kesişim · grafik + canlı A3/A8/112/113</div>
+          </div>
+          <button type="button" class="pm-system-btn" id="pm-system-btn-a3a8" onclick="toggleA3A8SignalMode()">Gevşek</button>
         </div>
         <div class="pm-system-bar" id="pm-system-bar-210">
           <div>
@@ -4798,12 +6854,14 @@ function buildTabs(syms) {
   });
 }
 
-async function closePosition(analiz, symbol, btn) {
+async function closePosition(analiz, symbol, btn, orderId) {
   if (btn.disabled || btn.classList.contains('loading')) return;
   btn.disabled = true;
   btn.classList.add('loading'); btn.textContent = 'Kapatılıyor...';
   try {
-    const r = await fetch('/poly/api/close/' + encodeURIComponent(analiz) + '/' + encodeURIComponent(symbol), {
+    let url = '/poly/api/close/' + encodeURIComponent(analiz) + '/' + encodeURIComponent(symbol);
+    if (orderId) url += '?order_id=' + encodeURIComponent(orderId);
+    const r = await fetch(url, {
       method: 'POST',
       credentials: 'same-origin',
       headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
@@ -4867,22 +6925,22 @@ const _PM_SYSTEM_ROWS = {
     bar: 'pm-system-bar-analiz5', btn: 'pm-system-btn-analiz5',
     status: 'pm-system-status-analiz5', sub: 'pm-system-sub-analiz5',
     active: '✅ A1 Live açılış aktif', paused: '⏸ A1 Live kapalı',
-    subOn: 'Saatlik BTC+SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Saatlik yeni işlem açmaz · Paz 18:00 otomatik açılır',
+    subOn: 'Gerçek PM · saatlik BTC+SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A1 devam) · Pzt 08:00 otomatik açılır',
   },
   analiz2: {
     bar: 'pm-system-bar-analiz2', btn: 'pm-system-btn-analiz2',
     status: 'pm-system-status-analiz2', sub: 'pm-system-sub-analiz2',
     active: '✅ A2 açılış aktif', paused: '⏸ A2 kapalı',
-    subOn: 'Saatlik SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Saatlik yeni işlem açmaz · Paz 18:00 otomatik açılır',
+    subOn: 'Gerçek PM · saatlik SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2 devam) · Pzt 08:00 otomatik açılır',
   },
   m15_210: {
     bar: 'pm-system-bar-210', btn: 'pm-system-btn-210',
     status: 'pm-system-status-210', sub: 'pm-system-sub-210',
     active: '✅ 210 açılış aktif', paused: '⏸ 210 kapalı',
-    subOn: '15M yeni işlem açabilir · Cum 22:00 otomatik kapanır',
-    subOff: '15M yeni işlem açmaz · Paz 18:00 otomatik açılır',
+    subOn: 'Gerçek PM 15M · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM 15M açmaz (110 sanal devam) · Pzt 08:00 otomatik açılır',
   },
 };
 
@@ -4910,6 +6968,42 @@ function updatePmSystemUI(d) {
   _pmSystemRow('analiz5', !!d.analiz5_paused, d.updated_at_tr);
   _pmSystemRow('analiz2', !!d.analiz2_paused, d.updated_at_tr);
   _pmSystemRow('m15_210', !!d.m15_210_paused, d.updated_at_tr);
+  _a3a8SignalRow(d);
+}
+
+function _a3a8SignalRow(d) {
+  const strict = d.a3a8_signal_strict !== false;
+  const bar = document.getElementById('pm-system-bar-a3a8');
+  const status = document.getElementById('pm-system-status-a3a8');
+  const sub = document.getElementById('pm-system-sub-a3a8');
+  const btn = document.getElementById('pm-system-btn-a3a8');
+  if (!bar || !status || !sub || !btn) return;
+  bar.classList.toggle('paused', !strict);
+  status.textContent = strict ? '🔒 A3/A8 sıkı sinyal' : '🔓 A3/A8 gevşek (her saat)';
+  sub.textContent = strict
+    ? 'Entry bias + EMA kesişim · grafik + canlı A3/A8/112/113'
+    : 'Skor oylaması + EMA pozisyon · eski davranış';
+  btn.textContent = strict ? 'Gevşek' : 'Sıkı';
+}
+
+async function toggleA3A8SignalMode() {
+  const btn = document.getElementById('pm-system-btn-a3a8');
+  if (btn) btn.disabled = true;
+  try {
+    const cur = await fetch('/poly/api/pm-system', {cache: 'no-store'}).then(r => r.json());
+    const strict = !(cur.a3a8_signal_strict !== false);
+    const r = await fetch('/poly/api/pm-system', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({a3a8_signal_strict: strict}),
+    });
+    const d = await r.json();
+    if (d.ok) updatePmSystemUI(d);
+  } catch (e) {
+    console.warn('a3a8 signal toggle', e);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function refresh() {
@@ -5068,7 +7162,7 @@ async function refresh() {
           </div>
           ${winStr}
           ${p.closable ? `<div class="close-btn-wrap">
-            <button class="close-btn" onclick="closePosition('${p.analiz_key}', '${p.symbol}', this)">Pozisyonu Kapat</button>
+            <button class="close-btn" onclick="closePosition('${p.analiz_key}', '${p.symbol}', this, '${p.pos_id || p.pm_order_id || ''}')">Pozisyonu Kapat</button>
           </div>` : ''}
         </div>`;
       }).join('');
@@ -5118,25 +7212,45 @@ async function refresh() {
       </div>`;
     }).join('') || '<div style="color:#666;font-size:13px">Veri yok</div>';
 
-    // Son işlemler (sağ panel + mobil)
+    // Son işlemler (sağ panel + mobil) — bekleyen + kapanmış, zamana göre
+    function fmtTradeTime(raw) {
+      const s = String(raw || '');
+      if (s.length >= 16) return s.slice(11, 16);
+      const m = s.match(/(\d{2}:\d{2})\s*$/);
+      return m ? m[1] : s;
+    }
     function tradeItemHTML(t) {
+      const pending = !!t.pending;
+      const dirIcon = t.dir==='UP' ? '📈' : '📉';
+      const tStr = fmtTradeTime(t.time);
+      if (pending) {
+        return `<div class="trade-item pending">
+          <div class="trade-left">
+            <div class="trade-sym">${dirIcon} ${t.sym} <span style="font-size:10px;color:#555">${t.analiz}</span><span class="trade-badge-pending">AÇIK</span></div>
+            <div class="trade-meta" style="color:#777">${tStr} · $${t.spent}</div>
+          </div>
+          <div class="trade-pnl">—</div>
+        </div>`;
+      }
       const pnlC = t.pnl >= 0 ? 'pos' : 'neg';
       const pnlStr = (t.pnl>=0?'+':'')+'$'+Math.abs(t.pnl).toFixed(2);
-      const dirIcon = t.dir==='UP' ? '📈' : '📉';
       return `<div class="trade-item">
         <div class="trade-left">
           <div class="trade-sym">${dirIcon} ${t.sym} <span style="font-size:10px;color:#555">${t.analiz}</span></div>
-          <div class="trade-meta" style="color:#777">${t.time} · $${t.spent}</div>
+          <div class="trade-meta" style="color:#777">${tStr} · $${t.spent}</div>
         </div>
         <div class="trade-pnl ${pnlC}">${pnlStr}</div>
       </div>`;
     }
+    const mergedRecent = [...(s.pending || []), ...(s.recent || [])]
+      .sort((a, b) => String(b.time).localeCompare(String(a.time)))
+      .slice(0, 20);
     const rt = document.getElementById('recent-trades');
-    const recentHTML = s.recent.map(tradeItemHTML).join('') || '<div style="color:#666;font-size:13px">Henüz işlem yok</div>';
+    const recentHTML = mergedRecent.map(tradeItemHTML).join('') || '<div style="color:#666;font-size:13px">Henüz işlem yok</div>';
     if (rt) rt.innerHTML = recentHTML;
     const rtMob = document.getElementById('recent-trades-mob');
     if (rtMob) {
-      const mobRecent = s.recent.slice(0, 10);
+      const mobRecent = mergedRecent.slice(0, 10);
       rtMob.innerHTML = mobRecent.map(tradeItemHTML).join('') || '<div style="color:#666;font-size:13px">Henüz işlem yok</div>';
     }
 
@@ -5390,7 +7504,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz4:'4. Analiz',analiz10:'10. Analiz',alfa:'ALFA','5m_sol_109':'15M 109 SOL','5m_sol_110':'15M 110 SOL','5m_sol_111':'15M 111 SOL','5m_sol_210':'15M 210 SOL'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz4:'4. Analiz',analiz6:'6. Analiz',analiz10:'10. Analiz',alfa:'ALFA','5m_sol_109':'15M 109 SOL','5m_sol_110':'15M 110 SOL','5m_sol_111':'15M 111 SOL','5m_sol_210':'15M 210 SOL'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {
@@ -5614,6 +7728,14 @@ def dashboard():
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     return resp
 
+@app.route("/poly/grafik")
+@app.route("/poly/grafik/")
+def page_grafik():
+    if _auth_required():
+        return _login_redirect()
+    return GRAFIK_HTML, 200, _ISLEMLER_NOCACHE
+
+
 @app.route("/poly/islemler")
 @app.route("/poly/islemler/")
 @app.route("/islemler")
@@ -5623,7 +7745,7 @@ def page_islemler():
         return redirect("/poly/islemler")
     if _auth_required():
         return _login_redirect()
-    return ISLEMLER_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+    return ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
 
 
 @app.route("/harita")
@@ -5643,8 +7765,8 @@ def harita():
         harita_default_label=default_label,
     )
 
-for _html_name in ("ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "AYARLAR_HTML", "HARITA_HTML", "ISLEMLER_HTML", "HTML"):
-    globals()[_html_name] = _patch_nav_islemler(_patch_sidebar_profit(globals()[_html_name]))
+for _html_name in ("ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "AYARLAR_HTML", "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML"):
+    globals()[_html_name] = _patch_nav_islemler(_patch_sidebar_profit(_patch_sidebar_cleanup(globals()[_html_name])))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=False)

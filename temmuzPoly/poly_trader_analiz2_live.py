@@ -5,7 +5,7 @@ Algoritma: poly_trader_analiz2 ile aynı sinyal (predict, ALLOW_FALLBACK=False).
 A1 Live'e dokunmaz; kendi state/history; bağımsız cron.
 
 Gerçek PM: PM_ANALIZ2_REAL_ENABLED (varsayılan false)
-Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Paz 18:00 açılır; manuel override mümkün)
+Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 08:00 açılır; manuel override mümkün)
 Modlar: close (:02 PM sonuç) / open (:05)
 """
 from __future__ import annotations
@@ -246,7 +246,8 @@ async def run_close() -> None:
         pm_spent = float(pos.get("pm_spent") or amount or 0)
         pm_size = float(pos.get("pm_size") or 0)
         if pm_source and pm_size > 0 and pm_spent > 0:
-            pnl = round(pm_size - pm_spent, 2) if win else round(-pm_spent, 2)
+            from pm_partial_takeprofit import pm_realized_pnl
+            pnl = pm_realized_pnl(pos, win)
         else:
             pnl = round(pm_size - pm_spent, 2) if win and pm_size else round(-pm_spent, 2)
 
@@ -274,6 +275,10 @@ async def run_close() -> None:
             "pm_order_id": pos.get("pm_order_id"),
             "pm_slug": pos.get("pm_slug"),
             "pm_token_dir": pos.get("pm_token_dir"),
+            "pm_spent_original": pos.get("pm_spent_original"),
+            "pm_partial_received": pos.get("pm_partial_received"),
+            "pm_partial_sold_size": pos.get("pm_partial_sold_size"),
+            "pm_partial_tp_done": pos.get("pm_partial_tp_done"),
             "exit_time_tr": now_tr.isoformat(),
             "pnl": pnl,
             "pm_live": True,

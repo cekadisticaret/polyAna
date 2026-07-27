@@ -1,7 +1,12 @@
 {
   "analiz5_paused": false,
-  "analiz2_paused": false,
-  "m15_210_paused": false,
-  "updated_at_tr": "2026-07-24T19:14:15.604505+03:00",
+  "analiz2_paused": true,
+  "m15_210_paused": true,
+  "a3a8_signal_strict": false,
+  "pm_partial_tp_enabled": true,
+  "pm_partial_tp_traders": ["210"],
+  "pm_partial_tp_profit_pct": 0.65,
+  "pm_partial_tp_sell_ratio": 0.75,
+  "updated_at_tr": "2026-07-27T12:16:36.612932+03:00",
   "updated_by": "dashboard"
 }

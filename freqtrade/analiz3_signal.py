@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
 import urllib.request
 from dataclasses import dataclass
 
@@ -9,6 +11,11 @@ import numpy as np
 import pandas as pd
 import talib.abstract as ta
 from technical import qtpylib
+
+_POLY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
+if _POLY not in sys.path:
+    sys.path.insert(0, _POLY)
+from a3a8_signal_mode import is_a3a8_strict  # noqa: E402
 
 # SampleStrategy varsayılanları (user_data/strategies/sample_strategy.py)
 BUY_RSI = 30
@@ -114,7 +121,15 @@ def predict_pm_direction(symbol: str) -> FreqtradePmSignal | None:
     if short_bias:
         score -= 2
 
-    predicted = "UP" if score >= 0 else "DOWN"
+    if is_a3a8_strict():
+        if long_bias:
+            predicted = "UP"
+        elif short_bias:
+            predicted = "DOWN"
+        else:
+            return None
+    else:
+        predicted = "UP" if score >= 0 else "DOWN"
     strength = min(abs(score) / 5.0, 1.0)
     prob_up = 0.5 + strength / 2 if predicted == "UP" else 0.5 - strength / 2
     prob_down = 1.0 - prob_up

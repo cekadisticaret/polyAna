@@ -1,4 +1,4 @@
-"""Hafta sonu PM dashboard senkronu — Cuma 22:00 kapat / Pazar 18:00 aç (İST).
+"""Hafta sonu PM dashboard senkronu — Cuma 22:00 kapat / Pazartesi 08:00 aç (İST).
 
 pm_system_control.json güncellenir; dashboard butonları bir sonraki yenilemede uyumlu olur.
 Manuel aç/kapat her zaman mümkün — cron yalnızca tek seferlik tetiklenir.
@@ -17,7 +17,7 @@ def main() -> None:
         print("[PM WEEKEND] Cuma 22:00 — 3 sistem kapatildi (A1 Live + A2 + 210)")
     elif mode == "open":
         state = weekend_resume_all()
-        print("[PM WEEKEND] Pazar 18:00 — 3 sistem acildi")
+        print("[PM WEEKEND] Pazartesi 08:00 — 3 sistem acildi")
     elif mode == "status":
         state = get_pm_system_control()
         print("[PM WEEKEND] durum:", state)

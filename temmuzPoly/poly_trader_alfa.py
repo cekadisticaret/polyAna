@@ -1,8 +1,8 @@
 """
-ALFA ANALİZ — Üçlü konsensüs sanal (A1 + A3 + A8, BTC + SOL)
+ALFA ANALİZ — Konsensüs sanal (A1 + A3 + A8; SOL + Markov #35)
 
-A1 (PolyPredict) + A3 (Freqtrade TA) + A8 (Jesse GoldenCross) oylaması;
-motor WR ağırlıklı puan ve min 2/3 konsensüs ile giriş.
+SOL: 4 motor — 2/4→$6, 3/4→$12, 4/4→$24
+BTC/ETH: 3 motor — 2/3→$8, 3/3→$16
 Sanal $300, gerçek emir yok.
 
 Modlar: close (:02) / open (:05) / stats
@@ -22,13 +22,12 @@ from zoneinfo import ZoneInfo
 _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
 
-from alfa_signal import AlfaDecision, amount_for_decision, analyze_symbol
+from alfa_signal import AlfaDecision, amount_for_decision, analyze_symbol, consensus_mode_label
 from pm_trader_helpers import (
     apply_pm_quote,
     skip_if_weekend_pause,
     pm_tg_stake,
     sanal_pnl,
-    symbol_wr_amount,
     SANAL_INITIAL_BALANCE,
 )
 
@@ -41,7 +40,7 @@ STATE_FILE = os.path.join(_DIR, "poly_trader_alfa_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_alfa_history.json")
 
 INITIAL_BALANCE = SANAL_INITIAL_BALANCE
-SYMBOLS = ["BTCUSDT", "SOLUSDT"]
+SYMBOLS = ["BTCUSDT", "SOLUSDT", "ETHUSDT"]
 
 
 def load_state() -> dict:
@@ -116,7 +115,7 @@ def _decision_tg_block(dec: AlfaDecision) -> str:
     votes = " | ".join(_vote_line(v) for v in dec.votes)
     if dec.should_trade:
         dir_tr = "YUKSELIR" if dec.predicted_dir == "UP" else "DUSER"
-        return f"puan:{dec.score:.0f}  {dec.agree_count}/3  {dir_tr}\n   {votes}"
+        return f"{consensus_mode_label(dec)}  {dir_tr}\n   {votes}"
     return f"ATLANDI — {dec.skip_reason}\n   {votes}"
 
 
@@ -188,9 +187,11 @@ async def run_close() -> None:
             "pnl": pnl,
             "alfa_score": pos.get("alfa_score"),
             "alfa_agree": pos.get("alfa_agree"),
+            "alfa_mode": pos.get("alfa_mode"),
             "votes_a1": pos.get("votes_a1"),
             "votes_a3": pos.get("votes_a3"),
             "votes_a8": pos.get("votes_a8"),
+            "votes_m35": pos.get("votes_m35"),
         }
         for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug"):
             if pos.get(k) is not None:
@@ -253,8 +254,7 @@ async def run_open() -> None:
             skipped.append(f"{sym.replace('USDT', '')}: {dec.skip_reason or 'elenmedi'}")
             continue
 
-        base = symbol_wr_amount(history, sym)
-        amount = amount_for_decision(base, dec)
+        amount = amount_for_decision(dec)
         if amount <= 0:
             skipped.append(f"{sym.replace('USDT', '')}: tutar 0")
             continue
@@ -276,9 +276,12 @@ async def run_open() -> None:
             "amount": amount,
             "alfa_score": dec.score,
             "alfa_agree": dec.agree_count,
+            "alfa_engines": dec.engine_total,
+            "alfa_mode": dec.consensus_mode,
             "votes_a1": votes_map.get("a1"),
             "votes_a3": votes_map.get("a3"),
             "votes_a8": votes_map.get("a8"),
+            "votes_m35": votes_map.get("m35"),
         }
         apply_pm_quote(pos, sym, dec.predicted_dir, amount, now)
         state["open_positions"].append(pos)
@@ -305,7 +308,7 @@ async def run_open() -> None:
         at_risk = sum(p.get("pm_spent") or p.get("amount", 0) for p in state["open_positions"])
         tg_send(
             f"{sep}\n"
-            f"🅰️ <b>{LABEL} — {saat} - {next_h}</b>  🔶 SANAL PM  A1+A3+A8\n"
+            f"🅰️ <b>{LABEL} — {saat} - {next_h}</b>  🔶 SANAL PM  A1+A3+A8 (+M35 SOL)\n"
             + "\n".join(lines) + "\n"
             f"{sep}\n"
             f"💰 Bakiye: ${state['balance']:.2f}  |  📂 Riskte: ${at_risk:.0f}  |  Acik: {len(state['open_positions'])}\n"
@@ -337,7 +340,7 @@ def run_stats() -> None:
         f"Toplam: {total}  |  {_wr(wins, total)}\n"
         f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
         f"Bakiye: ${state.get('balance', INITIAL_BALANCE):.2f}\n"
-        f"BTC+SOL saatlik sanal · A1+A3+A8 konsensüs"
+        f"BTC+ETH: 2/3→$8 3/3→$16 · SOL: 2/4→$6 3/4→$12 4/4→$24"
     )
 
 

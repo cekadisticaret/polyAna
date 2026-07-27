@@ -24,6 +24,7 @@ def _load_control() -> dict:
         "analiz5_paused": False,
         "analiz2_paused": False,
         "m15_210_paused": False,
+        "a3a8_signal_strict": True,
         "updated_at_tr": "",
         "updated_by": "",
     }
@@ -61,6 +62,11 @@ def _label_group(label: str) -> str | None:
     return _LABEL_GROUPS.get(label)
 
 
+def is_live_pm_label(label: str) -> bool:
+    """Dashboard anahtarı + hafta sonu duraklaması yalnızca bu label'lar için."""
+    return _label_group(label) is not None
+
+
 def is_group_paused(group: str) -> bool:
     c = _load_control()
     key = f"{group}_paused"
@@ -80,15 +86,28 @@ def get_pm_system_control() -> dict:
     a5 = bool(c.get("analiz5_paused"))
     a2 = bool(c.get("analiz2_paused"))
     m15 = bool(c.get("m15_210_paused"))
+    strict = bool(c.get("a3a8_signal_strict", True))
     return {
         "analiz5_paused": a5,
         "analiz2_paused": a2,
         "m15_210_paused": m15,
+        "a3a8_signal_strict": strict,
+        "a3a8_signal_mode": "strict" if strict else "loose",
+        "a3a8_signal_mode_label": "sıkı (entry/kesişim)" if strict else "gevşek (her saat)",
         "hourly_paused": a5 and a2,
         "pm_open_paused": a5 and a2 and m15,
         "updated_at_tr": c.get("updated_at_tr") or "",
         "updated_by": c.get("updated_by") or "",
     }
+
+
+def set_a3a8_signal_strict(strict: bool, *, source: str = "dashboard") -> dict:
+    data = _load_control()
+    data["a3a8_signal_strict"] = bool(strict)
+    data["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
+    data["updated_by"] = source
+    _save_control(data)
+    return get_pm_system_control()
 
 
 def set_group_paused(group: str, paused: bool, *, source: str = "dashboard") -> dict:
@@ -123,7 +142,7 @@ def weekend_pause_all(*, source: str = "weekend_cron") -> dict:
 
 
 def weekend_resume_all(*, source: str = "weekend_cron") -> dict:
-    """Pazar 18:00 — dashboard 3 anahtarını aç."""
+    """Pazartesi 08:00 — dashboard 3 anahtarını aç."""
     return set_pm_open_paused(False, source=source)
 
 

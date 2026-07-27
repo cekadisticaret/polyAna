@@ -4,7 +4,7 @@ A1 LIVE — Analiz 1 Motoru (Gerçek Polymarket)
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
 Sabit $6–8/işlem (WR'ye göre), BTC+SOL.
 
-Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Paz 18:00 açılır; manuel override mümkün).
+Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 08:00 açılır; manuel override mümkün).
 
 Modlar: close (:02 — PM sonucu için) / open (:05) / weekly / stats
 """
@@ -648,7 +648,8 @@ async def run_close() -> None:
         pm_spent = float(pos.get("pm_spent") or amount or 0)
         pm_size = float(pos.get("pm_size") or 0)
         if pm_source and pm_size > 0 and pm_spent > 0:
-            pnl_line = round(pm_size - pm_spent, 2) if win else round(-pm_spent, 2)
+            from pm_partial_takeprofit import pm_realized_pnl
+            pnl_line = pm_realized_pnl(pos, win)
         else:
             pnl_line = sanal_pnl(pos, win)
         if pm_source:
@@ -677,6 +678,10 @@ async def run_close() -> None:
             "pm_order_id":      pos.get("pm_order_id"),
             "pm_slug":          pos.get("pm_slug"),
             "pm_token_dir":     pos.get("pm_token_dir"),
+            "pm_spent_original": pos.get("pm_spent_original"),
+            "pm_partial_received": pos.get("pm_partial_received"),
+            "pm_partial_sold_size": pos.get("pm_partial_sold_size"),
+            "pm_partial_tp_done": pos.get("pm_partial_tp_done"),
             "a9_agree":         pos.get("a9_agree"),
             "exit_time_tr":     now_tr.isoformat(),
             "pnl":              pnl_line,

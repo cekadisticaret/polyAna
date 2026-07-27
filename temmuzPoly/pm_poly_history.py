@@ -15,7 +15,7 @@ _ENV_FILE = os.path.join(_DIR, "..", ".env")
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 _DATA_API = "https://data-api.polymarket.com"
 
-_CACHE: dict = {"ts": 0.0, "items": []}
+_CACHE: dict = {"ts": 0.0, "settled": [], "open": []}
 _CACHE_TTL = 45
 
 
@@ -93,7 +93,7 @@ def _match_label(slug: str, end_ts: int, index: dict[str, str]) -> str:
     return "PM"
 
 
-def _group_activity(acts: list[dict]) -> list[dict]:
+def _group_activity(acts: list[dict]) -> tuple[list[dict], list[dict]]:
     groups: dict[str, list[dict]] = defaultdict(list)
     for a in acts:
         if a.get("type") not in ("TRADE", "REDEEM"):
@@ -101,36 +101,80 @@ def _group_activity(acts: list[dict]) -> list[dict]:
         slug = a.get("slug") or a.get("eventSlug") or a.get("conditionId") or "?"
         groups[slug].append(a)
 
-    rounds: list[dict] = []
+    settled: list[dict] = []
+    open_rounds: list[dict] = []
     for slug, items in groups.items():
         items.sort(key=lambda x: x.get("timestamp", 0))
-        buy = sum(float(a.get("usdcSize") or 0) for a in items
-                  if a.get("type") == "TRADE" and a.get("side") == "BUY")
+        buys = [a for a in items if a.get("type") == "TRADE" and a.get("side") == "BUY"]
+        buy = sum(float(a.get("usdcSize") or 0) for a in buys)
         sell = sum(float(a.get("usdcSize") or 0) for a in items
                    if a.get("type") == "TRADE" and a.get("side") == "SELL")
         redeem = sum(float(a.get("usdcSize") or 0) for a in items if a.get("type") == "REDEEM")
         out = sell + redeem
-        if buy <= 0 or out <= 0:
+        if buy <= 0:
             continue
-        pnl = round(out - buy, 2)
-        last = items[-1]
-        end_ts = int(last.get("timestamp") or 0)
         title = items[0].get("title") or slug
         outcome = items[0].get("outcome") or ""
-        rounds.append({
+        base = {
             "slug": slug,
             "sym": _sym_from_title(title),
             "dir": _dir_from_outcome(outcome),
-            "win": pnl >= 0,
             "spent": round(buy, 2),
+            "title": title,
+        }
+        if out <= 0:
+            act_ts = max(int(a.get("timestamp") or 0) for a in buys) if buys else 0
+            open_rounds.append({
+                **base,
+                "act_ts": act_ts,
+                "time": datetime.fromtimestamp(act_ts, _TZ_TR).strftime("%Y-%m-%d %H:%M"),
+            })
+            continue
+        pnl = round(out - buy, 2)
+        end_ts = int(items[-1].get("timestamp") or 0)
+        settled.append({
+            **base,
+            "win": pnl >= 0,
             "pnl": pnl,
             "end_ts": end_ts,
             "time": datetime.fromtimestamp(end_ts, _TZ_TR).strftime("%Y-%m-%d %H:%M"),
-            "title": title,
         })
 
-    rounds.sort(key=lambda x: x["end_ts"], reverse=True)
-    return rounds
+    settled.sort(key=lambda x: x["end_ts"], reverse=True)
+    open_rounds.sort(key=lambda x: x["act_ts"], reverse=True)
+    return settled, open_rounds
+
+
+def _refresh_cache(limit: int, use_cache: bool) -> tuple[list[dict], list[dict]]:
+    now = time.time()
+    if use_cache and _CACHE["settled"] and now - _CACHE["ts"] < _CACHE_TTL:
+        return _CACHE["settled"], _CACHE["open"]
+    acts = _fetch_activity(limit=max(limit * 8, 120))
+    settled, open_rounds = _group_activity(acts)
+    _CACHE["ts"] = now
+    _CACHE["settled"] = settled
+    _CACHE["open"] = open_rounds
+    return settled, open_rounds
+
+
+def _format_trade_row(r: dict, slug_labels: dict[str, str], ts_key: str, pending: bool) -> dict:
+    ts = int(r.get(ts_key) or 0)
+    row = {
+        "sym": r["sym"],
+        "dir": r["dir"],
+        "spent": r["spent"],
+        "time": r["time"],
+        "analiz": _match_label(r["slug"], ts, slug_labels),
+        "source": "polymarket",
+        "pending": pending,
+        "slug": r.get("slug") or "",
+    }
+    if pending:
+        row["pnl"] = None
+    else:
+        row["win"] = r["win"]
+        row["pnl"] = r["pnl"]
+    return row
 
 
 def get_recent_pm_trades(
@@ -138,26 +182,22 @@ def get_recent_pm_trades(
     slug_labels: dict[str, str] | None = None,
     use_cache: bool = True,
 ) -> list[dict]:
-    now = time.time()
-    if use_cache and _CACHE["items"] and now - _CACHE["ts"] < _CACHE_TTL:
-        rounds = _CACHE["items"]
-    else:
-        acts = _fetch_activity(limit=max(limit * 8, 120))
-        rounds = _group_activity(acts)
-        _CACHE["ts"] = now
-        _CACHE["items"] = rounds
-
+    settled, _ = _refresh_cache(limit, use_cache)
     slug_labels = slug_labels or {}
-    out = []
-    for r in rounds[:limit]:
-        out.append({
-            "sym": r["sym"],
-            "dir": r["dir"],
-            "win": r["win"],
-            "spent": r["spent"],
-            "pnl": r["pnl"],
-            "time": r["time"],
-            "analiz": _match_label(r["slug"], r["end_ts"], slug_labels),
-            "source": "polymarket",
-        })
-    return out
+    return [
+        _format_trade_row(r, slug_labels, "end_ts", pending=False)
+        for r in settled[:limit]
+    ]
+
+
+def get_open_pm_trades(
+    limit: int = 10,
+    slug_labels: dict[str, str] | None = None,
+    use_cache: bool = True,
+) -> list[dict]:
+    _, open_rounds = _refresh_cache(limit, use_cache)
+    slug_labels = slug_labels or {}
+    return [
+        _format_trade_row(r, slug_labels, "act_ts", pending=True)
+        for r in open_rounds[:limit]
+    ]
