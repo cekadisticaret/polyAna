@@ -1712,6 +1712,7 @@ let _candleSeries = null;
 let _priceLine = null;
 let _emaFastSeries = null;
 let _emaSlowSeries = null;
+let _volumeSeries = null;
 let _chartSym = null;
 let _chartTf = null;
 let _chartPx = null;
@@ -2078,6 +2079,22 @@ function candleLimitForView() {
   return 60;
 }
 
+function volumeHistogramData(candles) {
+  return (candles || []).map(c => ({
+    time: c.time,
+    value: Number(c.volume) || 0,
+    color: c.close >= c.open ? 'rgba(38,166,154,0.55)' : 'rgba(239,83,80,0.55)',
+  }));
+}
+
+function applyChartVolumeLayout() {
+  if (!_chart) return;
+  _chart.priceScale('right').applyOptions({ scaleMargins: { top: 0.05, bottom: 0.28 } });
+  if (_chart.priceScale('vol')) {
+    _chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.72, bottom: 0 } });
+  }
+}
+
 function resetTradeChart() {
   if (_chart) {
     _chart.remove();
@@ -2086,6 +2103,7 @@ function resetTradeChart() {
     _priceLine = null;
     _emaFastSeries = null;
     _emaSlowSeries = null;
+    _volumeSeries = null;
   }
   _chartScaleMin = null;
   _chartScaleMax = null;
@@ -2301,6 +2319,14 @@ function ensureTradeChart() {
     _emaSlowSeries = _chart.addLineSeries({
       color: '#818cf8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
     });
+    _volumeSeries = _chart.addHistogramSeries({
+      priceFormat: { type: 'volume' },
+      priceScaleId: 'vol',
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+    _chart.priceScale('vol').applyOptions({ borderColor: '#1a1a1a' });
+    applyChartVolumeLayout();
     if (!window._tradeChartResize) {
       window._tradeChartResize = true;
       window.addEventListener('resize', () => {
@@ -2425,6 +2451,7 @@ async function loadTradeChart() {
     if (!d.candles || !d.candles.length) {
       _candleSeries.setData([]);
       _candleSeries.setMarkers([]);
+      if (_volumeSeries) _volumeSeries.setData([]);
       _chartScaleMin = null;
       _chartScaleMax = null;
       _chart.priceScale('right').applyOptions({ autoScale: true });
@@ -2434,10 +2461,12 @@ async function loadTradeChart() {
     _lastCandles = candles.slice();
     applyChartPriceScale(candles, d.ref_price);
     _candleSeries.setData(candles);
+    if (_volumeSeries) _volumeSeries.setData(volumeHistogramData(candles));
+    applyChartVolumeLayout();
     const barSp = fitBarDensity(candles.length);
     _chart.timeScale().applyOptions({ barSpacing: barSp, minBarSpacing: 1, fixRightEdge: false, rightOffset: 12 });
     focusDeskCandleWindow(candles);
-    _chart.priceScale('right').applyOptions({ autoScale: true, scaleMargins: { top: 0.01, bottom: 0.01 } });
+    _chart.priceScale('right').applyOptions({ autoScale: true });
     if (d.ref_price != null) {
       _priceLine = _candleSeries.createPriceLine({
         price: d.ref_price,
@@ -2756,7 +2785,7 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 <script>
 let _tf = '15m', _sym = 'SOLUSDT', _priceTf = '1m', _gate = 15;
 let _chart = null, _candleSeries = null, _priceLine = null;
-let _emaFastSeries = null, _emaSlowSeries = null;
+let _emaFastSeries = null, _emaSlowSeries = null, _volumeSeries = null;
 let _chartSym = null, _chartTf = null, _chartReq = 0;
 let _chartScaleMin = null, _chartScaleMax = null, _lastCandles = [];
 
@@ -2902,8 +2931,24 @@ function focusCandleWindow(candles) {
 
 function resetAllCharts() {
   if (_chart) { _chart.remove(); _chart = null; }
-  _candleSeries = _priceLine = _emaFastSeries = _emaSlowSeries = null;
+  _candleSeries = _priceLine = _emaFastSeries = _emaSlowSeries = _volumeSeries = null;
   _chartScaleMin = _chartScaleMax = null; _chartSym = null;
+}
+
+function volumeHistogramData(candles) {
+  return (candles || []).map(c => ({
+    time: c.time,
+    value: Number(c.volume) || 0,
+    color: c.close >= c.open ? 'rgba(38,166,154,0.55)' : 'rgba(239,83,80,0.55)',
+  }));
+}
+
+function applyChartVolumeLayout() {
+  if (!_chart) return;
+  _chart.priceScale('right').applyOptions({ scaleMargins: { top: 0.05, bottom: 0.28 } });
+  if (_chart.priceScale('vol')) {
+    _chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.72, bottom: 0 } });
+  }
 }
 
 function chartAlgoParam(tf) {
@@ -3006,6 +3051,14 @@ function ensureTradeChart() {
       color: '#818cf8', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
       autoscaleInfoProvider: () => (_chartScaleMin != null) ? { priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } } : null,
     });
+    _volumeSeries = _chart.addHistogramSeries({
+      priceFormat: { type: 'volume' },
+      priceScaleId: 'vol',
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+    _chart.priceScale('vol').applyOptions({ borderColor: '#1a1a1a' });
+    applyChartVolumeLayout();
     window.addEventListener('resize', () => {
       const c = document.getElementById('trade-chart');
       if (_chart && c) _chart.applyOptions({ width: c.clientWidth, height: chartH() });
@@ -3221,10 +3274,16 @@ async function loadTradeChart() {
       (_tf === '1h' ? 'A1 + A3 + A8 + ALFA saatlik · A3/A8 ' + (d.a3a8_signal_mode_label || 'sıkı') : _tf === '15m' ? '110 + 112 + 113' : '110 motor UP/DOWN') + ' · ' + pxLbl + ' mum · ' + (d.slot_label || '') + ' İST';
     document.getElementById('chart-ref-lbl').textContent = d.ref_price != null ? '$' + Number(d.ref_price).toFixed(dec) : '—';
     if (_priceLine) { _candleSeries.removePriceLine(_priceLine); _priceLine = null; }
-    if (!d.candles || !d.candles.length) { _candleSeries.setData([]); _candleSeries.setMarkers([]); return; }
+    if (!d.candles || !d.candles.length) {
+      _candleSeries.setData([]); _candleSeries.setMarkers([]);
+      if (_volumeSeries) _volumeSeries.setData([]);
+      return;
+    }
     _lastCandles = d.candles.slice();
     applyChartPriceScale(d.candles, d.ref_price);
     _candleSeries.setData(d.candles);
+    if (_volumeSeries) _volumeSeries.setData(volumeHistogramData(d.candles));
+    applyChartVolumeLayout();
     const barSp = fitBarDensity(d.candles.length);
     _chart.applyOptions({ width: document.getElementById('trade-chart').clientWidth, height: chartH() });
     _chart.timeScale().applyOptions({ barSpacing: barSp, minBarSpacing: 4, fixRightEdge: false, rightOffset: 20 });
@@ -4647,6 +4706,7 @@ def _trade_desk_chart(
             "high": round(k["h"], dec),
             "low": round(k["l"], dec),
             "close": round(k["c"], dec),
+            "volume": round(k["v"], 2),
         }
         for k in raw
     ]

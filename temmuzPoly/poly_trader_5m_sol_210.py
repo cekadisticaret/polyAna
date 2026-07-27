@@ -17,7 +17,7 @@ import os
 import sys
 import time
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -698,6 +698,39 @@ def run_weekly() -> None:
     tg_send_photo(WEEKLY_IMG, f"📊 {TG_HEADER}  {now_tr.strftime('%d.%m.%Y')}  {total} işlem | {genel} | {mode}")
 
 
+def _parse_tr_iso(iso: str) -> datetime | None:
+    if not iso:
+        return None
+    try:
+        dt = datetime.fromisoformat(iso)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=_TZ_TR)
+        return dt.astimezone(_TZ_TR)
+    except Exception:
+        return None
+
+
+def _in_hour_window(iso: str, hour_start: datetime, hour_end: datetime) -> bool:
+    dt = _parse_tr_iso(iso)
+    if dt is None:
+        return False
+    return hour_start <= dt < hour_end
+
+
+def _trades_in_hour_window(history: list, state: dict, hour_start: datetime, hour_end: datetime) -> int:
+    """Önceki 1 saat diliminde açılan veya kapanan 15m işlem sayısı."""
+    seen = 0
+    for t in _effective_history(history):
+        if _in_hour_window(t.get("exit_time_tr") or "", hour_start, hour_end):
+            seen += 1
+        elif _in_hour_window(t.get("entry_time_tr") or "", hour_start, hour_end):
+            seen += 1
+    for pos in state.get("open_positions", []):
+        if _in_hour_window(pos.get("entry_time_tr") or "", hour_start, hour_end):
+            seen += 1
+    return seen
+
+
 def _fmt_stats_since(iso_tr: str) -> str:
     if not iso_tr:
         return "—"
@@ -720,8 +753,17 @@ def run_hourly() -> None:
     history = load_history()
     tracked = _history_tracked(history, state)
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    prev_h = (now_tr.hour - 1) % 24
-    hour_label = f"{prev_h:02d}:00 – {now_tr.hour:02d}:00"
+    hour_end = now_tr.replace(minute=0, second=0, microsecond=0)
+    hour_start = hour_end - timedelta(hours=1)
+    prev_h = hour_start.hour
+    hour_label = f"{prev_h:02d}:00 – {hour_end.hour:02d}:00"
+
+    n_hour = _trades_in_hour_window(history, state, hour_start, hour_end)
+    if n_hour == 0:
+        print(
+            f"[{LABEL}] hourly atlandı — {hour_label} İST aralığında 15m işlem yok",
+        )
+        return
 
     rw, rl, rn, rpnl = _rolling_summary(tracked)
     tw, tt, tpnl, since_d = _cumulative_stats(tracked)

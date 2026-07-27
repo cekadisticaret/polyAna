@@ -1444,5 +1444,39 @@
     "to_win": 29.91,
     "pm_slug": "solana-up-or-down-july-27-2026-1am-et",
     "tier": "⚡ Bir güçlü bir orta"
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 76.26,
+    "exit_price": 76.43,
+    "entry_time_tr": "2026-07-27T12:05:05.999537+03:00",
+    "entry_hour_tr": 12,
+    "entry_dow": 0,
+    "entry_is_weekend": false,
+    "amount": 16.0,
+    "pnl": 13.36,
+    "virtual": true,
+    "exit_time_tr": "2026-07-27T13:02:04.819905+03:00",
+    "score_b": 2,
+    "conf_a": 0.775,
+    "votes": [
+      1,
+      1,
+      0,
+      1
+    ],
+    "ind_poly_ok": true,
+    "ind_trend_ok": true,
+    "ind_mr_ok": null,
+    "ind_of_ok": true,
+    "pm_spent": 16.0,
+    "pm_size": 29.36,
+    "pm_entry_price": 0.545,
+    "to_win": 29.36,
+    "pm_slug": "solana-up-or-down-july-27-2026-5am-et",
+    "tier": "⚡ Bir güçlü bir orta"
   }
 ]

@@ -116,7 +116,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_5m_sol_111.py open` — 15M 111 SOL filtreli **sanal** $8-10-12 (**7/24**, */15 +15 sn; snapshot yoksa kendi sinyal)
 - `temmuzPoly/poly_trader_5m_sol_111.py weekly` — Pazar 00:00 haftalık 111
 - `temmuzPoly/poly_trader_5m_sol_210.py open` — 15M 210 SOL 110 snapshot **gerçek PM** $4-5-6 (*/15; dashboard hafta sonu + gece 22–07 anahtarı)
-- `temmuzPoly/poly_trader_5m_sol_210.py hourly` — saat başı son 10 işlem P&amp;L özeti (A1 Live TG)
+- `temmuzPoly/poly_trader_5m_sol_210.py hourly` — saat başı son 10 işlem P&amp;L özeti (A1 Live TG; o saatte 15m işlem yoksa atlanır)
 - `temmuzPoly/poly_trader_5m_sol_210.py weekly` — Pazar 00:00 haftalık 210
 # KALDIRILDI: `poly_trader_analiz9.py`, `poly_trader_analiz13.py`, `poly_trader_5m_btc_107.py`, …
 # YOK (disk/crontab): `polyManuel/sol_bot.py`, `temmuzPoly/poly_trader.py`
