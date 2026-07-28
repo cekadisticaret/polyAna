@@ -28,7 +28,7 @@ _HEATMAP_SYMS = {
     "analiz4":  ["BTC", "ETH"],
     "analiz5":  ["BTC", "SOL"],
     "analiz8":  ["BTC", "SOL", "ETH"],
-    "analiz8_live": ["SOL", "ETH"],
+    "analiz8_live": ["BTC", "SOL", "ETH"],
     "analiz10": ["BTC", "SOL"],
     "5m_sol_110": ["SOL"],
     "5m_sol_109": ["SOL"],
@@ -1436,7 +1436,7 @@ def api_analizler():
         ("analiz6",    "6. Analiz",             300,  "MACD Hist. Div #26"),
         ("analiz5",    "A1 Live",             None, "A1 Motoru Gerçek PM $8–12–16 WR"),
         ("analiz8",    "8. Analiz Jesse",       300,  "GoldenCross EMA8/21 sanal PM BTC+SOL+ETH"),
-        ("analiz8_live", "A8 Live",           None, "Jesse A8 gerçek PM $4–6–8 WR SOL+ETH (BTC pasif)"),
+        ("analiz8_live", "A8 Live",           None, "Jesse A8 gerçek PM $4–5–6 WR BTC+SOL+ETH"),
         ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
         ("5m_sol_109",  "15M 109 SOL",           300,  "110 clone 7/24 sanal $8-10-12"),
         ("5m_sol_110",  "15M 110 SOL",           300,  "5M110Analiz 15m SOL sanal $8-10-12"),
@@ -1807,7 +1807,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260728-portfolio-baseline"
+_DASH_UI_VER = "20260728-a8-btc-456"
 
 
 def _patch_cache_bust(html: str) -> str:
@@ -3313,6 +3313,8 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;flex-wrap:wrap}
 .chart-title{font-size:16px;font-weight:800;color:#fff}
 .chart-meta{font-size:11px;color:#666;margin-top:2px}
+.chart-head-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.live-clock{font-size:13px;font-weight:700;color:#9ae66e;font-variant-numeric:tabular-nums;letter-spacing:.04em;font-family:ui-monospace,'SF Mono',Consolas,monospace;white-space:nowrap}
 .chart-ref{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .chart-ref-lbl{font-size:9px;color:#666;text-transform:uppercase;letter-spacing:.3px;font-weight:700}
 .chart-ref-val{font-size:16px;font-weight:800;color:#fbbf24}
@@ -3403,9 +3405,12 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
         <div class="algo-badges" id="algo-badges"><span class="algo-badge neutral">—</span></div>
         <div class="dir-verdict" id="dir-verdict"></div>
       </div>
-      <div class="chart-ref">
-        <span class="chart-ref-lbl">Başlangıç (price to beat)</span>
-        <span class="chart-ref-val" id="chart-ref-lbl">—</span>
+      <div class="chart-head-right">
+        <div class="live-clock" id="live-clock">—</div>
+        <div class="chart-ref">
+          <span class="chart-ref-lbl">Başlangıç (price to beat)</span>
+          <span class="chart-ref-val" id="chart-ref-lbl">—</span>
+        </div>
       </div>
     </div>
     <div class="spot-inline">
@@ -3900,21 +3905,7 @@ function ensureTradeChart() {
 function renderHourlyBadges(hc) {
   const el = document.getElementById('algo-badges');
   if (!el) return;
-  const items = [
-    { key: 'a1', tag: 'A1', cls: 'a1' },
-    { key: 'a3', tag: 'A3', cls: 'a3' },
-    { key: 'a8', tag: 'A8', cls: 'a8' },
-    { key: 'alfa', tag: 'ALFA', cls: 'alfa' },
-  ];
-  el.innerHTML = items.map(({ key, tag, cls }) => {
-    const cur = hc && hc[key];
-    const det = cur && cur.detail ? ' title="' + String(cur.detail).replace(/"/g, '&quot;') + '"' : '';
-    if (!cur || !cur.dir) {
-      return '<span class="algo-badge neutral ' + cls + '"' + det + '>' + (cur && cur.label ? cur.label : tag + ' —') + '</span>';
-    }
-    const up = cur.dir === 'UP';
-    return '<span class="algo-badge ' + cls + ' ' + (up ? 'up' : 'down') + '"' + det + '>' + (cur.label || tag) + '</span>';
-  }).join('') + multiConfirmBadgeHtml(window._lastMultiConfirm) + yonTahminBadgeHtml(window._lastYonTahmin);
+  el.innerHTML = multiConfirmBadgeHtml(window._lastMultiConfirm) + yonTahminBadgeHtml(window._lastYonTahmin);
 }
 
 function updateMotorBadge(ov) {
@@ -4121,15 +4112,13 @@ async function loadTradeChart() {
       _priceLine = _candleSeries.createPriceLine({
         price: d.ref_price, color: '#fbbf24', lineWidth: 1,
         lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true,
-        title: _tf === '1h' ? 'A1' : 'Ref',
+        title: 'Ref',
       });
     }
     const markers = [];
     const ov = _tf !== '1h' && d.algo_overlay ? clipOverlayToCandles(d.algo_overlay, d.candles) : null;
     if (_tf === '1h') {
       renderHourlyBadges(d.hourly_current);
-      appendSlotMarkers(markers, d, d.candles);
-      addHourlyMarkers(markers, d.hourly_signals, d);
       if (_emaFastSeries) { _emaFastSeries.setData([]); _emaSlowSeries.setData([]); }
       applyMultiConfirmEma(d.multi_confirm);
       applyYonTahminEma(d.yon_tahmin);
@@ -4165,6 +4154,22 @@ syncTabs(); refreshCash(); refreshSpot(); loadTradeChart();
 setInterval(refreshCash, 10000);
 setInterval(refreshSpot, 3000);
 setInterval(loadTradeChart, 5000);
+
+function tickLiveClock() {
+  const el = document.getElementById('live-clock');
+  if (!el) return;
+  const parts = new Intl.DateTimeFormat('tr-TR', {
+    timeZone: 'Europe/Istanbul',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+  const g = t => parts.find(p => p.type === t)?.value || '';
+  el.textContent = g('day') + '.' + g('month') + '.' + g('year') + ' '
+    + g('hour') + ':' + g('minute') + ':' + g('second') + ' İST';
+}
+tickLiveClock();
+setInterval(tickLiveClock, 1000);
 </script>
 </body>
 </html>"""
@@ -5948,21 +5953,32 @@ def api_close(analiz, symbol):
             return jsonify({"ok": False, "error": "pozisyon bulunamadı"}), 404
 
         token_id = pos.get("pm_token_id")
-        pm_size  = pos.get("pm_size", 0)
+        pm_size  = float(pos.get("pm_size") or 0)
+        chain_sz = _pm_conditional_shares(token_id) if token_id else -1.0
 
-        if not token_id or not pm_size:
-            return jsonify({"ok": False, "error": f"token_id veya pm_size eksik ({token_id=}, {pm_size=})"}), 400
+        if not token_id:
+            return jsonify({"ok": False, "error": f"token_id eksik ({token_id=})"}), 400
 
-        pre_est = _estimate_close_value(pos)
-
-        sell_result = _pm_sell_position_retry(
-            token_id, pm_size,
-            pm_slug=pos.get("pm_slug", ""),
-            token_dir=pos.get("pm_token_dir") or pos.get("predicted_dir", ""),
-        )
-
-        if not sell_result.get("ok"):
-            sell_result = _pm_try_worthless_reconcile(pos) or sell_result
+        if chain_sz >= 0 and chain_sz <= 0.01:
+            pre_est = _estimate_close_value(pos)
+            sell_result = _pm_try_worthless_reconcile(pos) or {
+                "ok": True, "reconciled": True, "worthless": True,
+                "received": 0.0, "size": pm_size, "price": 0.0, "status": "already_closed",
+            }
+        else:
+            if chain_sz > 0:
+                pm_size = chain_sz
+                pos = {**pos, "pm_size": chain_sz}
+            if pm_size <= 0:
+                return jsonify({"ok": False, "error": f"pm_size eksik ({pm_size=})"}), 400
+            pre_est = _estimate_close_value(pos)
+            sell_result = _pm_sell_position_retry(
+                token_id, pm_size,
+                pm_slug=pos.get("pm_slug", ""),
+                token_dir=pos.get("pm_token_dir") or pos.get("predicted_dir", ""),
+            )
+            if not sell_result.get("ok"):
+                sell_result = _pm_try_worthless_reconcile(pos) or sell_result
 
         if not sell_result.get("ok"):
             return jsonify({
@@ -7058,7 +7074,7 @@ const _PM_SYSTEM_ROWS = {
     bar: 'pm-system-bar-analiz8', btn: 'pm-system-btn-analiz8',
     status: 'pm-system-status-analiz8', sub: 'pm-system-sub-analiz8',
     active: '✅ A8 Live açılış aktif', paused: '⏸ A8 Live kapalı',
-    subOn: 'Gerçek PM · saatlik SOL+ETH · $4/6/8 · BTC pasif · Cum 22:00 otomatik kapanır',
+    subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · $4/5/6 · Cum 22:00 otomatik kapanır',
     subOff: 'Gerçek PM yeni işlem açmaz (sanal A8 devam) · Pzt 08:00 otomatik açılır',
   },
   m15_210: {
@@ -8359,7 +8375,7 @@ const _PM_SYSTEM_ROWS = {
     bar: 'pm-system-bar-analiz8', btn: 'pm-system-btn-analiz8',
     status: 'pm-system-status-analiz8', sub: 'pm-system-sub-analiz8',
     active: '✅ A8 Live açılış aktif', paused: '⏸ A8 Live kapalı',
-    subOn: 'Gerçek PM · saatlik SOL+ETH · $4/6/8 · BTC pasif · Cum 22:00 otomatik kapanır',
+    subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · $4/5/6 · Cum 22:00 otomatik kapanır',
     subOff: 'Gerçek PM yeni işlem açmaz (sanal A8 devam) · Pzt 08:00 otomatik açılır',
   },
   m15_210: {

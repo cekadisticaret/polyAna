@@ -44,6 +44,8 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh open` | `/tmp/poly_analiz3_freqtrade.log` |
 | `2 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh close` | `/tmp/poly_analiz8_jesse.log` |
 | `5 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh open` | `/tmp/poly_analiz8_jesse.log` |
+| `2 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8_live.sh close` (A8 Live gerçek PM) | `/tmp/poly_analiz8_live.log` |
+| `5 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8_live.sh open` (`PM_ANALIZ8_REAL_ENABLED` + dashboard) | `/tmp/poly_analiz8_live.log` |
 | `2 * * * *` | `cd /root/aiProject && ./temmuzPoly/run_alfa.sh close` | `/tmp/poly_trader_alfa.log` |
 | `5 * * * *` | `cd /root/aiProject && ./temmuzPoly/run_alfa.sh open` | `/tmp/poly_trader_alfa.log` |
 | `0 19 * * 5` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py close` | `/tmp/pm_weekend_sync.log` |
@@ -63,8 +65,9 @@ alwaysApply: true
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
 - Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk).
 - A7’nin cron’u yoktu; trader kaldırıldı.
-- **Hafta sonu (gerçek PM):** Cum **22:00** – Pzt **08:00** İST — A1 Live / A2 Live / 210 open + close atlanır (`skip_if_weekend_pause` + dashboard anahtarı). **Sanal** (A1, 110, 109 vb.) dashboard/hafta sonu duraklamasından etkilenmez.
-- **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **08:00** İST (`0 19 * * 5` / `0 5 * * 1` UTC); A1 Live + A2 Live + 210 anahtarları senkron.
+- **Hafta sonu (gerçek PM):** Cum **22:00** – Pzt **08:00** İST — A1 Live / A2 Live / A8 Live / 210 open + close atlanır (`skip_if_weekend_pause` + dashboard anahtarı). **Sanal** (A1, A8, 110, 109 vb.) dashboard/hafta sonu duraklamasından etkilenmez.
+- **Gece duraklama (A1 Live + A2 Live):** Her gün **22:00 – 07:00** İST — yalnızca **open** atlanır (`skip_if_night_pause`); **close** :02 çalışır (açık pozisyon kapanır).
+- **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **08:00** İST (`0 19 * * 5` / `0 5 * * 1` UTC); A1 Live + A2 Live + A8 Live + 210 anahtarları senkron.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis).
 
 ## Log Takibi
@@ -85,5 +88,6 @@ tail -f /tmp/backup.log
 tail -f /tmp/crypto_news_monitor.log
 tail -f /tmp/poly_analiz3_freqtrade.log
 tail -f /tmp/poly_analiz8_jesse.log
+tail -f /tmp/poly_analiz8_live.log
 tail -f /tmp/poly_trader_alfa.log
 ```

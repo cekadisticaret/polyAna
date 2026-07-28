@@ -17,7 +17,15 @@ _PM_ASSET_MAP = {
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 PM_DRY_RUN = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 PM_ORDER_ATTEMPTS = 3
+PM_ORDER_NOT_READY_ATTEMPTS = 8  # "order manager not ready" → 10sn × 8 ≈ 70sn
 PM_ORDER_RETRY_SEC = 10
+
+
+def _pm_order_not_ready(err: str | None) -> bool:
+    low = (err or "").lower()
+    return "order manager not ready" in low or (
+        "please retry" in low and ("425" in low or "not ready" in low)
+    )
 
 # Gerçek PM trader'lar — A1 Live / 210 / A2 Live aynı Telegram kanalı
 PM_LIVE_TG_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
@@ -54,6 +62,48 @@ def in_weekend_pause_tr(now_tr: datetime) -> bool:
     if dow == 6:
         return True
     if dow == 0 and h < 8:
+        return True
+    return False
+
+
+_NIGHT_PAUSE_START = 22  # dahil
+_NIGHT_PAUSE_END = 7     # hariç — 07:00 slotundan itibaren açılır
+_NIGHT_PAUSE_GROUPS = frozenset({"analiz5", "analiz2"})
+
+
+def in_night_pause_tr(now_tr: datetime) -> bool:
+    """Her gün 22:00–07:00 İST arası yeni işlem açılmaz (07:00 hariç)."""
+    if now_tr.tzinfo is None:
+        now_tr = now_tr.replace(tzinfo=_TZ_TR)
+    else:
+        now_tr = now_tr.astimezone(_TZ_TR)
+    h = now_tr.hour
+    return h >= _NIGHT_PAUSE_START or h < _NIGHT_PAUSE_END
+
+
+def skip_if_night_pause(label: str, mode: str, now_tr: datetime | None = None) -> bool:
+    """Gece duraklaması — A1 Live + A2 Live open atlanır; close çalışır."""
+    if mode != "open":
+        return False
+    try:
+        from pm_balance_guard import is_live_pm_label, _label_group
+        if not is_live_pm_label(label):
+            return False
+        if _label_group(label) not in _NIGHT_PAUSE_GROUPS:
+            return False
+    except Exception:
+        return False
+    if now_tr is None:
+        now_tr = datetime.now(_TZ_TR)
+    elif now_tr.tzinfo is None:
+        now_tr = now_tr.replace(tzinfo=_TZ_TR)
+    else:
+        now_tr = now_tr.astimezone(_TZ_TR)
+    if in_night_pause_tr(now_tr):
+        print(
+            f"[{label} {mode}] {now_tr.strftime('%H:%M')} İST — "
+            f"gece duraklama (22:00 – 07:00), yeni işlem yok"
+        )
         return True
     return False
 
@@ -337,13 +387,15 @@ def pm_place_order(
 ) -> dict | None:
     global _PM_LAST_ORDER_ERROR
     last_err: str | None = None
-    attempts = max(1, int(max_attempts))
     shares_before = pm_conditional_shares(token_id)
     last_size = 0.0
     last_price = 0.0
     last_spent = 0.0
+    attempt = 0
+    limit = max(1, int(max_attempts))
 
-    for attempt in range(1, attempts + 1):
+    while attempt < limit:
+        attempt += 1
         try:
             from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
             from py_clob_client_v2.order_builder.constants import BUY
@@ -367,13 +419,13 @@ def pm_place_order(
                 return {"order_id": oid, "size": size, "price": price, "spent": spent}
             last_err = str(resp)
             print(
-                f"[{label}] Order başarısız ({attempt}/{attempts}): {last_err}",
+                f"[{label}] Order başarısız ({attempt}/{limit}): {last_err}",
                 file=sys.stderr,
             )
         except Exception as e:
             last_err = str(e)
             print(
-                f"[{label}] Order hatası ({attempt}/{attempts}): {e}",
+                f"[{label}] Order hatası ({attempt}/{limit}): {e}",
                 file=sys.stderr,
             )
 
@@ -384,8 +436,16 @@ def pm_place_order(
             _PM_LAST_ORDER_ERROR = None
             return recovered
 
-        if attempt < attempts:
-            print(f"[{label}] {PM_ORDER_RETRY_SEC}s beklenip tekrar denenecek…", file=sys.stderr)
+        if _pm_order_not_ready(last_err):
+            limit = max(limit, PM_ORDER_NOT_READY_ATTEMPTS)
+
+        if attempt < limit:
+            print(
+                f"[{label}] {PM_ORDER_RETRY_SEC}s beklenip tekrar denenecek"
+                + (" (PM not ready)" if _pm_order_not_ready(last_err) else "")
+                + "…",
+                file=sys.stderr,
+            )
             time.sleep(PM_ORDER_RETRY_SEC)
 
     if hata_file and last_err:

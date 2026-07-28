@@ -115,6 +115,17 @@ def _known_keys(states: dict[str, dict]) -> set[tuple[str, str]]:
     return keys
 
 
+def _known_token_ids(states: dict[str, dict]) -> set[str]:
+    """Başka bot state'inde kayıtlı PM token — çift orphan yazmayı engelle."""
+    ids: set[str] = set()
+    for st in states.values():
+        for p in st.get("open_positions") or []:
+            tid = str(p.get("pm_token_id") or "").strip()
+            if tid:
+                ids.add(tid)
+    return ids
+
+
 def _guess_trader(slug: str, states: dict[str, dict]) -> str | None:
     slot = _hour_slot(slug)
     if not slot:
@@ -158,7 +169,9 @@ def _round_to_pos(open_round: dict, acts: list[dict], sibling: dict | None) -> d
     total_size = round(sum(float(b.get("size") or 0) for b in buys), 4)
     chain_size = pm_conditional_shares(token_id)
     if chain_size > 0:
-        total_size = max(total_size, chain_size)
+        total_size = chain_size
+    elif total_size <= 0:
+        total_size = round(sum(float(b.get("size") or 0) for b in buys), 4)
 
     spent = round(float(open_round.get("spent") or 0), 2)
     avg_price = round(spent / total_size, 4) if total_size > 0 else float(buys[-1].get("price") or 0)
@@ -202,6 +215,7 @@ def sync_live_orphan_positions(
     paths = {k: _TRADER_STATE[k] for k in keys if k in _TRADER_STATE}
     states = {k: _load_state(p) for k, p in paths.items()}
     known = _known_keys(states)
+    known_tokens = _known_token_ids(states)
 
     acts = _fetch_activity(limit=activity_limit)
     _, open_rounds = _group_activity(acts)
@@ -234,8 +248,14 @@ def sync_live_orphan_positions(
         if not pos:
             continue
 
+        tid = str(pos.get("pm_token_id") or "").strip()
+        if tid and tid in known_tokens:
+            continue
+
         states[trader].setdefault("open_positions", []).append(pos)
         known.add(key_tuple)
+        if tid:
+            known_tokens.add(tid)
         added.append({
             "trader": trader,
             "symbol": symbol,

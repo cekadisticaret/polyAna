@@ -2,9 +2,10 @@
 A1 LIVE — Analiz 1 Motoru (Gerçek Polymarket)
 
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
-Sabit $6–8/işlem (WR'ye göre), BTC+SOL.
+Sabit $8–12–16/işlem (WR'ye göre), BTC+SOL.
 
 Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 08:00 açılır; manuel override mümkün).
+Gece duraklama: her gün 22:00 – 07:00 İST (open atlanır; close çalışır).
 
 Modlar: close (:02 — PM sonucu için) / open (:05) / weekly / stats
 """
@@ -22,7 +23,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
-from pm_trader_helpers import sanal_pnl, pm_tg_stake, compute_top_slot_hours, skip_if_weekend_pause
+from pm_trader_helpers import sanal_pnl, pm_tg_stake, compute_top_slot_hours, skip_if_weekend_pause, skip_if_night_pause
 
 # .env yükle
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -49,9 +50,9 @@ WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
 SYMBOLS            = ["BTCUSDT", "SOLUSDT"]
-TRADE_AMOUNT       = 7.0   # genel WR veri yok veya tam %50
-TRADE_AMOUNT_HIGH  = 8.0   # sembol genel WR > %50
-TRADE_AMOUNT_LOW   = 6.0   # sembol genel WR < %50
+TRADE_AMOUNT       = 12.0  # genel WR veri yok veya tam %50
+TRADE_AMOUNT_HIGH  = 16.0  # sembol genel WR > %50
+TRADE_AMOUNT_LOW   = 8.0   # sembol genel WR < %50
 MIN_STAT_COUNT  = 10
 
 
@@ -797,6 +798,8 @@ async def run_open() -> None:
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
     if skip_if_weekend_pause("A1 LIVE", "open", now_tr):
+        return
+    if skip_if_night_pause("A1 LIVE", "open", now_tr):
         return
 
     hour_tr    = now_tr.hour

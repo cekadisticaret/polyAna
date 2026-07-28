@@ -26,7 +26,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `freqtrade/analiz3_signal.py` | Freqtrade TA → PM UP/DOWN sinyal motoru |
 | `jesse/` | [jesse-ai/jesse](https://github.com/jesse-ai/jesse) — kurulu venv; **8. Analiz Jesse** saatlik sanal PM (BTC+SOL+ETH) |
 | `jesse/poly_analiz8_jesse.py` | 8. Analiz Jesse — GoldenCross EMA8/21 + saatlik sanal Polymarket $300 |
-| `jesse/poly_analiz8_live.py` | A8 Live — aynı Jesse sinyali, gerçek PM SOL+ETH $4/6/8 (BTC pasif; `PM_ANALIZ8_REAL_ENABLED`) |
+| `jesse/poly_analiz8_live.py` | A8 Live — aynı Jesse sinyali, gerçek PM BTC+SOL+ETH $4/5/6 (`PM_ANALIZ8_REAL_ENABLED`) |
 | `jesse/run_analiz8_live.sh` | A8 Live cron sarmalayıcı (jesse venv) |
 | `jesse/analiz8_signal.py` | Jesse indicators → PM UP/DOWN sinyal motoru |
 | `temmuzPoly/alfa_signal.py` | ALFA — SOL: A1+A3+A8+Markov (2/4→$6, 3/4→$12, 4/4→$24); BTC/ETH: 2/3→$8, 3/3→$16 |
@@ -97,7 +97,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_analiz4.py weekly` — Cumartesi 21:00 haftalık 4 ısı haritası
 - `temmuzPoly/poly_trader_analiz6.py close/open` — 6. Analiz **MACD Hist. Div** sanal (BTC+SOL, $300); Cum 22–Paz 18 kapalı
 - `temmuzPoly/poly_trader_analiz6.py weekly` — Cumartesi 21:00 haftalık 6 ısı haritası
-- `temmuzPoly/poly_trader_analiz5.py close/open` — **A1 Live** BTC+SOL gerçek PM; hafta sonu dashboard anahtarı (`pm_weekend_sync`)
+- `temmuzPoly/poly_trader_analiz5.py close/open` — **A1 Live** BTC+SOL gerçek PM; hafta sonu dashboard anahtarı; **gece 22:00–07:00 İST open kapalı**
+- `temmuzPoly/poly_trader_analiz2_live.py close/open` — **A2 Live** SOL gerçek PM; hafta sonu dashboard anahtarı; **gece 22:00–07:00 İST open kapalı**
 - `temmuzPoly/pm_weekend_sync.py close/open` — Cum **22:00** / Pzt **08:00** İST: A1 Live + A2 + 210 dashboard anahtarları (manuel override mümkün)
 - `temmuzPoly/poly_trader_analiz5_midcheck.py` — saat **:30** o saatin açık pozisyonu anlık değer + kotasyon görseli (TG)
 - `temmuzPoly/pm_partial_takeprofit.py` — ***/5** yalnız **210**: max kâr yolunun **≥65%**'inde **75%** sat (A1/A2 dokunulmaz)
@@ -109,7 +110,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/algo_signals.py` — `:05` her saat: 39 algo sinyali → `/tmp/algo_signals.json`
 - `freqtrade/run_analiz3.sh close/open` — **3. Analiz Freqtrade** saatlik sanal PM BTC+SOL+ETH (:02/:05)
 - `jesse/run_analiz8.sh close/open` — **8. Analiz Jesse** saatlik sanal PM BTC+SOL+ETH (:02/:05)
-- `jesse/run_analiz8_live.sh close/open` — **A8 Live** gerçek PM $4/6/8 SOL+ETH, BTC pasif (:02/:05; dashboard `analiz8` anahtarı)
+- `jesse/run_analiz8_live.sh close/open` — **A8 Live** gerçek PM $4/5/6 BTC+SOL+ETH (:02/:05; dashboard `analiz8` anahtarı)
 - `temmuzPoly/run_alfa.sh close/open` — **ALFA** A1+A3+A8 konsensüs sanal PM BTC+SOL (:02/:05)
 # PASIF: `BistAnaliz/yuzdeBist.py` — crontab yorum satırı
 # PASIF: `BistAnaliz/bist_scanner.py` — BIST Sinyal bildirim kapalı

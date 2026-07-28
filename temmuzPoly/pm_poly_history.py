@@ -17,6 +17,35 @@ _DATA_API = "https://data-api.polymarket.com"
 
 _CACHE: dict = {"ts": 0.0, "settled": [], "open": []}
 _CACHE_TTL = 45
+_RES_CACHE: dict[str, tuple[float, dict | None]] = {}
+_RES_CACHE_TTL = 120.0
+
+
+def _fetch_resolution_cached(slug: str) -> dict | None:
+    import time as _time
+    now = _time.time()
+    hit = _RES_CACHE.get(slug)
+    if hit and now - hit[0] < _RES_CACHE_TTL:
+        return hit[1]
+    res = None
+    try:
+        from pm_trader_helpers import pm_fetch_resolution
+        res = pm_fetch_resolution(slug)
+    except Exception:
+        pass
+    _RES_CACHE[slug] = (now, res)
+    return res
+
+
+def _resolved_losing_position(slug: str, direction: str) -> bool:
+    """Piyasa kapandı ve token tarafımız kaybettiyse — zincirde redeem yok ama artık açık değil."""
+    res = _fetch_resolution_cached(slug)
+    if not res:
+        return False
+    d = (direction or "").upper()
+    up_won = bool(res.get("up_won"))
+    won = (d == "UP" and up_won) or (d == "DOWN" and not up_won)
+    return not won
 
 
 def _load_env() -> None:
@@ -123,6 +152,17 @@ def _group_activity(acts: list[dict]) -> tuple[list[dict], list[dict]]:
             "title": title,
         }
         if out <= 0:
+            if _resolved_losing_position(slug, base["dir"]):
+                act_ts = max(int(a.get("timestamp") or 0) for a in buys) if buys else 0
+                settled.append({
+                    **base,
+                    "win": False,
+                    "pnl": round(-buy, 2),
+                    "end_ts": act_ts,
+                    "time": datetime.fromtimestamp(act_ts, _TZ_TR).strftime("%Y-%m-%d %H:%M"),
+                    "settled_loss": True,
+                })
+                continue
             act_ts = max(int(a.get("timestamp") or 0) for a in buys) if buys else 0
             open_rounds.append({
                 **base,

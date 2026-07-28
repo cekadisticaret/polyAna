@@ -327,21 +327,55 @@ async def run_open() -> None:
         print(f"[{LABEL} open] {saat} IST — islem yok ({len(skipped)} elendi)")
 
 
-def run_stats() -> None:
+def run_stats(last_n: int = 10) -> None:
     history = load_history()
     state = load_state()
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    total = len(history)
-    wins = sum(1 for t in history if t.get("win"))
-    net = round(sum(t.get("pnl", 0) or 0 for t in history), 2)
-    tg_send(
-        f"📊 <b>{LABEL} ISTATISTIK</b>\n"
-        f"{now_tr.strftime('%d.%m.%Y %H:%M')} IST\n"
-        f"Toplam: {total}  |  {_wr(wins, total)}\n"
-        f"{'🟢' if net >= 0 else '🔴'} P&amp;L: {net:+.2f}$\n"
-        f"Bakiye: ${state.get('balance', INITIAL_BALANCE):.2f}\n"
-        f"BTC+ETH: 2/3→$8 3/3→$16 · SOL: 2/4→$6 3/4→$12 4/4→$24"
+    closed = [t for t in history if t.get("win") is not None]
+    total = len(closed)
+    wins = sum(1 for t in closed if t.get("win"))
+    net = round(sum(float(t.get("pnl") or 0) for t in closed), 2)
+    today_key = now_tr.date().isoformat()
+    today = [t for t in closed if (t.get("exit_time_tr") or "").startswith(today_key)]
+    tw = sum(1 for t in today if t.get("win"))
+    tpnl = round(sum(float(t.get("pnl") or 0) for t in today), 2)
+
+    sep = "━" * 26
+    recent_lines: list[str] = []
+    for t in closed[-last_n:][::-1]:
+        name = (t.get("symbol") or "?").replace("USDT", "")
+        pred = t.get("predicted_dir") or "?"
+        icon = "✅" if t.get("win") else "❌"
+        pnl = float(t.get("pnl") or 0)
+        et = (t.get("exit_time_tr") or "")[11:16] or "?"
+        dt = (t.get("exit_time_tr") or "")[5:10] or ""
+        recent_lines.append(
+            f"{icon} {dt} {et} {name} {pred}  {'+' if pnl >= 0 else ''}{pnl:.2f}$"
+        )
+
+    open_lines: list[str] = []
+    for p in state.get("open_positions") or []:
+        name = (p.get("symbol") or "?").replace("USDT", "")
+        pred = p.get("predicted_dir") or "?"
+        amt = float(p.get("amount") or p.get("pm_spent") or 0)
+        open_lines.append(f"📂 {name} {pred}  ${amt:.0f}")
+
+    body = (
+        f"{sep}\n"
+        f"📊 <b>{LABEL} — Son İşlemler</b>  🔶 SANAL PM\n"
+        f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST\n"
+        f"Genel: {_wr(wins, total)}  |  {'🟢' if net >= 0 else '🔴'} P&amp;L {net:+.2f}$\n"
     )
+    if today:
+        body += f"Bugün: {_wr(tw, len(today))}  |  {'🟢' if tpnl >= 0 else '🔴'} {tpnl:+.2f}$\n"
+    body += f"💰 Bakiye: ${float(state.get('balance', INITIAL_BALANCE)):.2f}\n"
+    if open_lines:
+        body += f"\n<b>Açık ({len(open_lines)})</b>\n" + "\n".join(open_lines) + "\n"
+    if recent_lines:
+        body += f"\n<b>Son {min(last_n, len(recent_lines))} kapanan</b>\n" + "\n".join(recent_lines) + "\n"
+    body += f"{sep}"
+    tg_send(body)
+    print(f"[{LABEL} stats] gonderildi — {total} islem, son {len(recent_lines)}")
 
 
 if __name__ == "__main__":

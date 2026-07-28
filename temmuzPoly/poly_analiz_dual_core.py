@@ -689,23 +689,52 @@ def run_weekly(cfg: DualConfig) -> None:
     print(f"[{cfg.label} weekly] haftalık görsel gönderildi — {total} işlem")
 
 
-def run_stats(cfg: DualConfig) -> None:
+def run_stats(cfg: DualConfig, last_n: int = 10) -> None:
     history = load_history(cfg)
     state = load_state(cfg)
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     if not history:
         tg_send(f"📊 <b>{cfg.label} İSTATİSTİKLER</b>\nHenüz veri yok.")
         return
     resolved = [t for t in history if t.get("win") is not None]
     wins = sum(1 for t in resolved if t["win"])
     total = len(resolved)
+    net = round(sum(float(t.get("pnl") or 0) for t in resolved), 2)
+    today_key = now_tr.date().isoformat()
+    today = [t for t in resolved if (t.get("exit_time_tr") or "").startswith(today_key)]
+    tw = sum(1 for t in today if t.get("win"))
+    tpnl = round(sum(float(t.get("pnl") or 0) for t in today), 2)
     amt = (
         f"${cfg.amount_mid:.0f} (sabit)"
         if cfg.amount_weak == cfg.amount_mid == cfg.amount_strong
         else f"${cfg.amount_weak:.0f}/${cfg.amount_mid:.0f}/${cfg.amount_strong:.0f} (sembol WR)"
     )
-    tg_send(
-        f"📊 <b>{cfg.label} ✦ Çift Konsensüs İSTATİSTİKLER</b>\n"
-        f"Toplam: {total} işlem  |  {_wr(wins, total)} başarı\n"
-        f"Sanal işlem: {amt}  |  P&L: {state.get('total_pnl', 0):+.2f}$  |  "
-        f"Bakiye: ${state.get('balance', cfg.initial_balance):.2f}"
+    sep = "━" * 26
+    recent_lines: list[str] = []
+    for t in resolved[-last_n:][::-1]:
+        name = (t.get("symbol") or "?").replace("USDT", "")
+        pred = t.get("predicted_dir") or "?"
+        icon = "✅" if t.get("win") else "❌"
+        pnl = float(t.get("pnl") or 0)
+        et = (t.get("exit_time_tr") or "")[11:16] or "?"
+        dt = (t.get("exit_time_tr") or "")[5:10] or ""
+        recent_lines.append(
+            f"{icon} {dt} {et} {name} {pred}  {'+' if pnl >= 0 else ''}{pnl:.2f}$"
+        )
+    body = (
+        f"{sep}\n"
+        f"📊 <b>{cfg.label} ✦ Çift Konsensüs</b>  🔶 SANAL PM\n"
+        f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST\n"
+        f"Toplam: {_wr(wins, total)}  |  {'🟢' if net >= 0 else '🔴'} P&amp;L {net:+.2f}$\n"
     )
+    if today:
+        body += f"Bugün: {_wr(tw, len(today))}  |  {'🟢' if tpnl >= 0 else '🔴'} {tpnl:+.2f}$\n"
+    body += (
+        f"Sanal işlem: {amt}  |  "
+        f"Bakiye: ${state.get('balance', cfg.initial_balance):.2f}\n"
+    )
+    if recent_lines:
+        body += f"\n<b>Son {min(last_n, len(recent_lines))} kapanan</b>\n" + "\n".join(recent_lines) + "\n"
+    body += sep
+    tg_send(body)
+    print(f"[{cfg.label} stats] gönderildi — {total} işlem, son {len(recent_lines)}")
