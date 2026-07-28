@@ -2,8 +2,13 @@
 from __future__ import annotations
 
 import os
+import sys
 from datetime import datetime
 from typing import Callable, Optional
+
+_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+if os.path.join(_ROOT, "jesse") not in sys.path:
+    sys.path.insert(0, os.path.join(_ROOT, "jesse"))
 
 from analiz32_15m_adapter import Signal15m, analyze_15m
 

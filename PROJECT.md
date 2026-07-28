@@ -10,11 +10,15 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BistAnaliz/BistYapayAnaliz/` | `bist_signal_hunter.py` — 15m/1h güçlü AL; geçmiş: `bist_signal_hunter_history.json`. |
 | `BistAnaliz/yuzdeBist.py` | BIST 5dk güven tarayıcı — **PASIF** (crontab yorum satırı). |
 | `temmuzPoly/chart_algo_overlay.py` | Grafik overlay — 5M110Analiz EMA/composite/sinyal serileri (110/111/109). |
-| `temmuzPoly/chart_multi_confirm_signals.py` | Grafik MC teyit — pattern+hacim+seviye+momentum (Pine portu, LONG/SHORT okları). |
+| `temmuzPoly/chart_multi_confirm_signals.py` | Grafik MC teyit — pattern+hacim+seviye+momentum (Pine portu; rozet, oklar kapalı). |
+| `temmuzPoly/chart_yon_tahmin_signals.py` | Grafik YT — rozet + 5m/15m slot tahmin etiketleri (Pine portu). |
+| `temmuzPoly/chart_tahmin2_signals.py` | Grafik TAHMİN2 — LM+ST+ADX+LZ+CVD oylaması (TAHMİN yanında). |
+| `temmuzPoly/pm_transfer.py` | PM Bridge yatır/çek adresleri + Relayer ERC-20 gönderim (CLI). |
 | `temmuzPoly/chart_hourly_signals.py` | Grafik overlay — 1. Analiz (A1) + 3. Freqtrade (A3) + Jesse A8 saatlik UP/DOWN okları. |
 | `temmuzPoly/a3a8_signal_mode.py` | A3/A8 sıkı vs gevşek sinyal modu (`pm_system_control.json` → `a3a8_signal_strict`) |
 | `temmuzPoly/chart_15m_a3a8_signals.py` | Grafik overlay — 15m A8 (112) + A3 (113) UP/DOWN okları. |
-| `web/poly_dashboard.py` | Poly dashboard — **`/poly/grafik`** ve **`/poly/islemler`**: 5m **110+MC**; **15m 110+112+113+MC**; **1h** A1+A3+A8+ALFA+MC; port **5050**. |
+| `web/poly_dashboard.py` | Poly dashboard — Overview **portföy grafiği** (saatlik/4s) + **aktif algoritmalar** mum listesi; **`/poly/grafik`** ve **`/poly/islemler`**: 5m/15m/1h manuel PM **BTC+ETH+SOL**; grafik 5m **110+MC+YT**; **15m 110+112+113+MC+YT**; **1h** A1+A3+A8+ALFA+MC+YT; **PM Kar** = nakit−baseline (Manuel = gerçek manuel `total_pnl`); port **5050**. |
+| `temmuzPoly/pm_profit_baseline.json` | PM Kar başlangıç bakiyesi (varsayılan $314); Toplam Kar = nakit − baseline. |
 | `temmuzPoly/` | Poly trader'lar, algo motorları, backtest; dashboard port **5050**. |
 | `crypto-news-monitor/` | Kripto haber/tweet tarayıcı — RSS + opsiyonel Twitter, Claude skor, Telegram alarm (30 dk cron) |
 | `freqtrade/` | [freqtrade/freqtrade](https://github.com/freqtrade/freqtrade) — kurulu venv; dry-run config; **3. Analiz Freqtrade** saatlik sanal PM (BTC+SOL+ETH) |
@@ -22,6 +26,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `freqtrade/analiz3_signal.py` | Freqtrade TA → PM UP/DOWN sinyal motoru |
 | `jesse/` | [jesse-ai/jesse](https://github.com/jesse-ai/jesse) — kurulu venv; **8. Analiz Jesse** saatlik sanal PM (BTC+SOL+ETH) |
 | `jesse/poly_analiz8_jesse.py` | 8. Analiz Jesse — GoldenCross EMA8/21 + saatlik sanal Polymarket $300 |
+| `jesse/poly_analiz8_live.py` | A8 Live — aynı Jesse sinyali, gerçek PM SOL+ETH $4/6/8 (BTC pasif; `PM_ANALIZ8_REAL_ENABLED`) |
+| `jesse/run_analiz8_live.sh` | A8 Live cron sarmalayıcı (jesse venv) |
 | `jesse/analiz8_signal.py` | Jesse indicators → PM UP/DOWN sinyal motoru |
 | `temmuzPoly/alfa_signal.py` | ALFA — SOL: A1+A3+A8+Markov (2/4→$6, 3/4→$12, 4/4→$24); BTC/ETH: 2/3→$8, 3/3→$16 |
 | `temmuzPoly/poly_trader_alfa.py` | ALFA sanal PM saatlik (BTC+SOL+ETH, $300; ayrı Telegram bot) |
@@ -34,6 +40,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/pm_trader_helpers.py` | PM emir + sanal kotasyon; P&L = pm_size − pm_spent (2x fallback yok) |
 | `temmuzPoly/pm_cem_pool.py` | CEM-ANALİZ ortak sanal havuz ($300, A1+A2+110 mirror) |
 | `temmuzPoly/pm_manual_sync.py` | Manuel PM — Polymarket activity → manual state senkron (5/15dk + saatlik) |
+| `temmuzPoly/pm_orphan_sync.py` | Ghost PM — zincirde açık ama state'te yok pozisyonları live trader'a yazar |
 | `temmuzPoly/pm_poly_history.py` | Polymarket data-api activity → slug bazlı gerçek PM geçmişi + açık (bekleyen) işlemler |
 | `temmuzPoly/poly_trader_cem_analiz.py` | **CEM-ANALİZ** — A1/A2/110 mirror; TG=13. Analiz kanalı |
 | `temmuzPoly/pm_balance_guard.py` | PM USDC bakiye + `pm_system_control.json` dashboard açılış anahtarı (A1 Live · A2 · 210 ayrı; sanal trader'lar etkilenmez) |
@@ -51,7 +58,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/poly_trader_analiz6.py` | 6. Analiz sanal (BTC+SOL); MACD Hist. Div #26; $300; Cum 22–Paz 18 duraklama |
 | `temmuzPoly/poly_trader_analiz5_midcheck.py` | A1 Live açık pozisyon :30 anlık değer + PM kotasyon görseli (TG) |
 | `temmuzPoly/pm_partial_takeprofit.py` | **210** kısmi kar al — max kârın %65'inde %75 sat (A1/A2 saatlik eski düzen) |
-| `temmuzPoly/poly_trader_analiz5.py` | **A1 Live** — A1 motoru BTC+SOL gerçek PM ($6–8 WR); en etkili 3 saatte +%50 giriş |
+| `temmuzPoly/poly_trader_analiz5.py` | **A1 Live** — A1 motoru BTC+SOL gerçek PM ($8–12–16 WR); en etkili 3 saatte +%50 giriş |
 | `temmuzPoly/poly_analiz_dual_core.py` | 10. Analiz çift konsensüs ortak motor (A1+A4; TG yalnızca açılış/kapanış) |
 | `temmuzPoly/poly_trader_analiz10.py` | 10. Analiz çift konsensüs sanal (BTC+SOL, $300; Cum 22–Paz 18 duraklama) |
 | `temmuzPoly/poly_trader_manual_state.json` | Manuel PM işlemleri state (dashboard açık pozisyon) |
@@ -102,6 +109,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/algo_signals.py` — `:05` her saat: 39 algo sinyali → `/tmp/algo_signals.json`
 - `freqtrade/run_analiz3.sh close/open` — **3. Analiz Freqtrade** saatlik sanal PM BTC+SOL+ETH (:02/:05)
 - `jesse/run_analiz8.sh close/open` — **8. Analiz Jesse** saatlik sanal PM BTC+SOL+ETH (:02/:05)
+- `jesse/run_analiz8_live.sh close/open` — **A8 Live** gerçek PM $4/6/8 SOL+ETH, BTC pasif (:02/:05; dashboard `analiz8` anahtarı)
 - `temmuzPoly/run_alfa.sh close/open` — **ALFA** A1+A3+A8 konsensüs sanal PM BTC+SOL (:02/:05)
 # PASIF: `BistAnaliz/yuzdeBist.py` — crontab yorum satırı
 # PASIF: `BistAnaliz/bist_scanner.py` — BIST Sinyal bildirim kapalı

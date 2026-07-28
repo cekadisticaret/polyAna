@@ -16,6 +16,8 @@ _PM_ASSET_MAP = {
 }
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 PM_DRY_RUN = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
+PM_ORDER_ATTEMPTS = 3
+PM_ORDER_RETRY_SEC = 10
 
 # Gerçek PM trader'lar — A1 Live / 210 / A2 Live aynı Telegram kanalı
 PM_LIVE_TG_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
@@ -133,6 +135,53 @@ def pm_get_balance() -> float:
         return -1.0
 
 
+def pm_conditional_shares(token_id: str) -> float:
+    """Zincirdeki conditional token adedi (-1 = okunamadı)."""
+    from decimal import Decimal, ROUND_DOWN
+    try:
+        from py_clob_client_v2.clob_types import BalanceAllowanceParams, AssetType
+        client = pm_get_client()
+        bal = client.get_balance_allowance(
+            BalanceAllowanceParams(asset_type=AssetType.CONDITIONAL, token_id=token_id)
+        )
+        raw = int(bal.get("balance", 0))
+        return float(Decimal(str(raw / 1_000_000)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+    except Exception:
+        return -1.0
+
+
+def _pm_recover_filled_order(
+    token_id: str,
+    shares_before: float,
+    size: float,
+    price: float,
+    spent: float,
+    *,
+    label: str,
+) -> dict | None:
+    """Timeout/başarısız yanıt sonrası zincirde dolmuş emri yakala."""
+    shares = pm_conditional_shares(token_id)
+    if shares < 0:
+        return None
+    before = max(0.0, shares_before)
+    delta = round(shares - before, 2)
+    if delta < 0.5:
+        return None
+    use_size = delta if delta >= 0.5 else size
+    use_spent = round(use_size * price, 2) if price > 0 else spent
+    print(
+        f"[{label}] Emir yanıt vermedi ama zincirde {use_size} share var — recover",
+        file=sys.stderr,
+    )
+    return {
+        "order_id": f"recovered:{token_id[:18]}",
+        "size": use_size,
+        "price": price,
+        "spent": use_spent,
+        "recovered": True,
+    }
+
+
 def pm_find_market(symbol: str, et_hour: int, date_utc) -> dict | None:
     asset = _PM_ASSET_MAP.get(symbol)
     if not asset:
@@ -221,52 +270,128 @@ def pm_log_hata(hata_file: str, symbol: str, hata_turu: str, detay: str) -> None
         print(f"[PM] Hata loglanamadı: {ex}", file=sys.stderr)
 
 
+_PM_LAST_ORDER_ERROR: str | None = None
+
+
+def pm_last_order_error() -> str:
+    return _PM_LAST_ORDER_ERROR or "PM emri gönderilemedi"
+
+
+def pm_clob_error_tr(err: str | Exception) -> str:
+    """CLOB / PolyApiException metnini dashboard için Türkçe özete çevir."""
+    import re
+
+    s = str(err or "").strip()
+    if not s:
+        return "Bilinmeyen PM hatası"
+
+    low = s.lower()
+    m = re.search(r"status_code=(\d+)", s)
+    code = int(m.group(1)) if m else None
+
+    if "order manager not ready" in low or code == 425:
+        return "Polymarket emir sistemi henüz hazır değil — 1–2 dakika bekleyip tekrar deneyin"
+    if "internal server error" in low or code == 500:
+        return "Polymarket sunucu hatası — birkaç dakika sonra tekrar deneyin"
+    if code == 502 or "bad gateway" in low:
+        return "Polymarket geçici olarak yanıt vermiyor — kısa süre sonra tekrar deneyin"
+    if code == 503 or "service unavailable" in low:
+        return "Polymarket aşırı yüklü veya bakımda — sonra tekrar deneyin"
+    if code == 429 or "rate limit" in low or "too many" in low:
+        return "Çok fazla istek — birkaç saniye bekleyip tekrar deneyin"
+    if "no orders found" in low:
+        return "Yeterli likidite yok — emir eşleşmedi"
+    if "fak eşleşmedi" in low or "fak eslesmedi" in low:
+        return "Satış emri eşleşmedi — likidite düşük olabilir"
+    if "invalid token" in low or "orderbook" in low:
+        return "Piyasa kapandı veya emir defteri yok — settle bekleniyor"
+    if "unauthorized" in low or code == 401:
+        return "PM API yetkisi yok — oturum veya anahtarları kontrol edin"
+    if "insufficient" in low or ("balance" in low and "order" in low):
+        return "Yetersiz bakiye — PM cüzdanını kontrol edin"
+    if "min" in low and ("size" in low or "amount" in low):
+        return "Minimum emir boyutu karşılanmıyor"
+
+    dm = re.search(r"error_message=\{([^}]+)\}", s)
+    if dm:
+        inner = dm.group(1).lower()
+        if "order manager not ready" in inner:
+            return "Polymarket emir sistemi henüz hazır değil — 1–2 dakika bekleyip tekrar deneyin"
+        if "internal server error" in inner:
+            return "Polymarket sunucu hatası — birkaç dakika sonra tekrar deneyin"
+
+    if "polyapiexception" in low:
+        if code:
+            return f"Polymarket API hatası (HTTP {code}) — kısa süre sonra tekrar deneyin"
+        return "Polymarket API hatası — kısa süre sonra tekrar deneyin"
+
+    if len(s) > 100:
+        return s[:97] + "…"
+    return s
+
+
 def pm_place_order(
     token_id: str, amount_usd: float, tick_size: str = "0.01",
     neg_risk: bool = False, *, label: str = "PM", hata_file: str | None = None,
-    _retry: bool = True,
+    max_attempts: int = PM_ORDER_ATTEMPTS,
 ) -> dict | None:
-    try:
-        from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
-        from py_clob_client_v2.order_builder.constants import BUY
-        from decimal import Decimal, ROUND_DOWN
-        client = pm_get_client()
-        price  = float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
-        price  = max(0.02, min(0.98, round(price, 2)))
-        raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
-        size, price = pm_fit_buy(max(5.0, raw_sz), price)
-        spent  = round(size * price, 2)
-        if PM_DRY_RUN:
-            print(f"[{label} DRY RUN] {token_id[:16]}… {size} shares @ {price:.2f} (~${spent:.2f})")
-            return {"order_id": "DRY_RUN", "size": size, "price": price, "spent": spent}
-        args = OrderArgs(token_id=token_id, price=price, size=size, side=BUY)
-        signed = client.create_order(args, PartialCreateOrderOptions())
-        resp   = client.post_order(signed, order_type=OrderType.FAK)
-        if not resp or not resp.get("success"):
-            mesaj = str(resp)
-            print(f"[{label}] Order başarısız: {mesaj}", file=sys.stderr)
-            if _retry:
-                time.sleep(10)
-                return pm_place_order(
-                    token_id, amount_usd, tick_size, neg_risk,
-                    label=label, hata_file=hata_file, _retry=False,
-                )
-            if hata_file:
-                pm_log_hata(hata_file, token_id[:20], "order_basarisiz", mesaj)
-            return None
-        oid = resp.get("orderID") or resp.get("id", "")
-        return {"order_id": oid, "size": size, "price": price, "spent": spent}
-    except Exception as e:
-        print(f"[{label}] Order hatası: {e}", file=sys.stderr)
-        if _retry:
-            time.sleep(10)
-            return pm_place_order(
-                token_id, amount_usd, tick_size, neg_risk,
-                label=label, hata_file=hata_file, _retry=False,
+    global _PM_LAST_ORDER_ERROR
+    last_err: str | None = None
+    attempts = max(1, int(max_attempts))
+    shares_before = pm_conditional_shares(token_id)
+    last_size = 0.0
+    last_price = 0.0
+    last_spent = 0.0
+
+    for attempt in range(1, attempts + 1):
+        try:
+            from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
+            from py_clob_client_v2.order_builder.constants import BUY
+            from decimal import Decimal, ROUND_DOWN
+            client = pm_get_client()
+            price  = float(client.calculate_market_price(token_id, "BUY", amount_usd, OrderType.FAK))
+            price  = max(0.02, min(0.98, round(price, 2)))
+            raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+            size, price = pm_fit_buy(max(5.0, raw_sz), price)
+            spent  = round(size * price, 2)
+            last_size, last_price, last_spent = size, price, spent
+            if PM_DRY_RUN:
+                print(f"[{label} DRY RUN] {token_id[:16]}… {size} shares @ {price:.2f} (~${spent:.2f})")
+                return {"order_id": "DRY_RUN", "size": size, "price": price, "spent": spent}
+            args = OrderArgs(token_id=token_id, price=price, size=size, side=BUY)
+            signed = client.create_order(args, PartialCreateOrderOptions())
+            resp   = client.post_order(signed, order_type=OrderType.FAK)
+            if resp and resp.get("success"):
+                oid = resp.get("orderID") or resp.get("id", "")
+                _PM_LAST_ORDER_ERROR = None
+                return {"order_id": oid, "size": size, "price": price, "spent": spent}
+            last_err = str(resp)
+            print(
+                f"[{label}] Order başarısız ({attempt}/{attempts}): {last_err}",
+                file=sys.stderr,
             )
-        if hata_file:
-            pm_log_hata(hata_file, token_id[:20], "order_exception", str(e))
-        return None
+        except Exception as e:
+            last_err = str(e)
+            print(
+                f"[{label}] Order hatası ({attempt}/{attempts}): {e}",
+                file=sys.stderr,
+            )
+
+        recovered = _pm_recover_filled_order(
+            token_id, shares_before, last_size, last_price, last_spent, label=label,
+        )
+        if recovered:
+            _PM_LAST_ORDER_ERROR = None
+            return recovered
+
+        if attempt < attempts:
+            print(f"[{label}] {PM_ORDER_RETRY_SEC}s beklenip tekrar denenecek…", file=sys.stderr)
+            time.sleep(PM_ORDER_RETRY_SEC)
+
+    if hata_file and last_err:
+        pm_log_hata(hata_file, token_id[:20], "order_basarisiz", last_err)
+    _PM_LAST_ORDER_ERROR = pm_clob_error_tr(last_err or "order failed")
+    return None
 
 
 def pm_try_open(
