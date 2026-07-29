@@ -5,8 +5,6 @@ Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
 Sabit $8–12–16/işlem (WR'ye göre), BTC+SOL.
 
 Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 08:00 açılır; manuel override mümkün).
-Gece duraklama: her gün 22:00 – 07:00 İST (open atlanır; close çalışır).
-
 Modlar: close (:02 — PM sonucu için) / open (:05) / weekly / stats
 """
 import asyncio
@@ -23,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
-from pm_trader_helpers import sanal_pnl, pm_tg_stake, compute_top_slot_hours, skip_if_weekend_pause, skip_if_night_pause
+from pm_trader_helpers import sanal_pnl, pm_tg_stake, compute_top_slot_hours, skip_if_weekend_pause
 
 # .env yükle
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -798,8 +796,6 @@ async def run_open() -> None:
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
     if skip_if_weekend_pause("A1 LIVE", "open", now_tr):
-        return
-    if skip_if_night_pause("A1 LIVE", "open", now_tr):
         return
 
     hour_tr    = now_tr.hour

@@ -6,7 +6,6 @@ A1 Live'e dokunmaz; kendi state/history; bağımsız cron.
 
 Gerçek PM: PM_ANALIZ2_REAL_ENABLED (varsayılan false)
 Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 08:00 açılır; manuel override mümkün)
-Gece duraklama: her gün 22:00 – 07:00 İST (open atlanır; close çalışır)
 Modlar: close (:02 PM sonuç) / open (:05)
 """
 from __future__ import annotations
@@ -43,7 +42,6 @@ from pm_trader_helpers import (
     compute_top_slot_hours,
     tg_send_pm_live,
     skip_if_weekend_pause,
-    skip_if_night_pause,
 )
 from pm_balance_guard import can_open_trade
 
@@ -336,8 +334,6 @@ async def run_open() -> None:
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     if skip_if_weekend_pause(LABEL, "open", now_tr):
-        return
-    if skip_if_night_pause(LABEL, "open", now_tr):
         return
     hour_tr = now_tr.hour
     dow = now_tr.weekday()

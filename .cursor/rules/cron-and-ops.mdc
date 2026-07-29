@@ -12,14 +12,14 @@ alwaysApply: true
 | `31 14 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
 | `59 23 * * *` | `cd /root/aiProject && python3 BistAnaliz/backup.py` | `/tmp/backup.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
-| `2 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10}.py close` | `/tmp/poly_trader_analiz*.log` |
+| `2 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10,15}.py close` | `/tmp/poly_trader_analiz*.log` |
 | `3 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_cem_analiz.py close_hourly` | `/tmp/poly_trader_cem_analiz.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py close` (A2 canlı PM SOL $6–8) | `/tmp/poly_trader_analiz2_live.log` |
-| `5 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10}.py open` | `/tmp/poly_trader_analiz*.log` |
+| `5 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10,15}.py open` | `/tmp/poly_trader_analiz*.log` |
 | `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_cem_analiz.py open_hourly` | `/tmp/poly_trader_cem_analiz.log` |
 | `5 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py open` (`PM_ANALIZ2_REAL_ENABLED`) | `/tmp/poly_trader_analiz2_live.log` |
 | `0 21 * * *` | `temmuzPoly/poly_trader_analiz1.py daily` | `/tmp/poly_trader_analiz*.log` |
-| `0 21 * * 6` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10}.py weekly` | `/tmp/poly_trader_analiz*.log` |
+| `0 21 * * 6` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10,15}.py weekly` | `/tmp/poly_trader_analiz*.log` |
 | `30 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz5_midcheck.py` | `/tmp/poly_trader_analiz5_midcheck.log` |
 | `*/5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/pm_partial_takeprofit.py` | `/tmp/pm_partial_tp.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/pm_balance_hourly.py` | `/tmp/pm_balance_hourly.log` |
@@ -66,7 +66,6 @@ alwaysApply: true
 - Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk).
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu (gerçek PM):** Cum **22:00** – Pzt **08:00** İST — A1 Live / A2 Live / A8 Live / 210 open + close atlanır (`skip_if_weekend_pause` + dashboard anahtarı). **Sanal** (A1, A8, 110, 109 vb.) dashboard/hafta sonu duraklamasından etkilenmez.
-- **Gece duraklama (A1 Live + A2 Live):** Her gün **22:00 – 07:00** İST — yalnızca **open** atlanır (`skip_if_night_pause`); **close** :02 çalışır (açık pozisyon kapanır).
 - **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **08:00** İST (`0 19 * * 5` / `0 5 * * 1` UTC); A1 Live + A2 Live + A8 Live + 210 anahtarları senkron.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis).
 

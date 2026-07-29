@@ -1,5 +1,5 @@
 """
-6. ANALİZ — Çoklu indikatör sanal trader
+15. ANALİZ — Sembol bazlı en iyi motor birleşimi
 
 Modlar:
   close   → :02 — önceki saatin sonuçlarını kapatır
@@ -8,12 +8,13 @@ Modlar:
   weekly  → Cumartesi 21:00 — haftalık ısı haritası
   stats   → manuel detaylı rapor
 
-Algoritma:
-  BTC + SOL → MACD Histogram Divergence (#26)
-  ETH       → RSI Divergence (#38)
-Sanal bütçe: $300, işlem $12/$16/$20 (sembol WR — 1. Analiz mantığı).
+Motorlar:
+  BTC → A6 MACD Histogram Divergence (#26)
+  ETH → A8 Jesse GoldenCross EMA 8/21 (sıkı — kesişim only)
+  SOL → A2 poly_predictor (standard, fallback kapalı)
+Sanal bütçe: $300, işlem $12/$16/$20 (sembol WR).
 NEUTRAL sinyalde işlem yok.
-Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open/preview atlanır; close açık pozisyon varsa çalışır).
+Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST.
 """
 import asyncio
 import json
@@ -26,11 +27,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import _fetch_klines
-from algo_signals import (
-    fetch_klines as _algo_fetch_klines,
-    macd_histogram_div,
-    rsi_divergence_strict,
-)
+from analiz15_signal import SYMBOLS, resolve_live_signal, engine_label
 from pm_trader_helpers import (
     apply_pm_quote, apply_cold_hour_cut, apply_hot_hour_boost, sanal_pnl,
     symbol_wr_amount,
@@ -44,22 +41,16 @@ CHAT_ID   = "830754964"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR          = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz6_state.json")
-HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz6_history.json")
-WEEKLY_IMG    = "/tmp/poly_analiz6_weekly_heatmap.png"
-LABEL         = "6. ANALİZ"
-ALGO_NAME     = "MACD Hist. Div + RSI Div"
+STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz15_state.json")
+HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz15_history.json")
+WEEKLY_IMG    = "/tmp/poly_analiz15_weekly_heatmap.png"
+LABEL         = "15. ANALİZ"
+ALGO_NAME     = "BTC→A6 · ETH→A8 · SOL→A2"
 
 INITIAL_BALANCE    = SANAL_INITIAL_BALANCE
 TRADE_AMOUNT       = SANAL_TRADE_AMOUNT
 TRADE_AMOUNT_HIGH  = SANAL_TRADE_AMOUNT_HIGH
 TRADE_AMOUNT_LOW   = SANAL_TRADE_AMOUNT_LOW
-SYMBOLS         = ["BTCUSDT", "SOLUSDT", "ETHUSDT"]
-_SYMBOL_ALGOS    = {
-    "BTCUSDT": (macd_histogram_div, "MACD Hist. Div"),
-    "SOLUSDT": (macd_histogram_div, "MACD Hist. Div"),
-    "ETHUSDT": (rsi_divergence_strict, "RSI Divergence"),
-}
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -72,25 +63,8 @@ def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float,
     return amount, hot_boost, cold_cut
 
 
-def _algo_for_symbol(symbol: str) -> tuple:
-    return _SYMBOL_ALGOS.get(symbol, (macd_histogram_div, "MACD Hist. Div"))
-
-
 async def _resolve_signal(symbol: str) -> tuple[str | None, float | None, str]:
-    """Sembol bazlı indikatör → UP/DOWN/None (NEUTRAL)."""
-    fn, algo_name = _algo_for_symbol(symbol)
-    try:
-        kl = await asyncio.to_thread(_algo_fetch_klines, symbol, "1h", 80)
-    except Exception as e:
-        print(f"[{LABEL}] {symbol} kline hatası: {e}")
-        return None, None, algo_name
-    if len(kl) < 30:
-        return None, None, algo_name
-    sig = fn(kl)
-    price = float(kl[-1]["c"])
-    if sig not in ("UP", "DOWN"):
-        return None, price, algo_name
-    return sig, price, algo_name
+    return await resolve_live_signal(symbol)
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -198,7 +172,7 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        print(f"[6. ANALİZ close] {saat} İST — açık pozisyon yok")
+        print(f"[15. ANALİZ close] {saat} İST — açık pozisyon yok")
         return
 
     lines      = []
@@ -256,7 +230,7 @@ async def run_close() -> None:
 
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        print(f"[6. ANALİZ close] {saat} — fiyat alınamadı: {names}")
+        print(f"[15. ANALİZ close] {saat} — fiyat alınamadı: {names}")
     save_state(state)
     save_history(history)
 
@@ -280,7 +254,7 @@ async def run_close() -> None:
         f"{sep}"
     )
     tg_send(msg)
-    print(f"[6. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
+    print(f"[15. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
 
 
 # ── OPEN: 5 geçe — yeni tahmin + pozisyon aç ─────────────────
@@ -371,7 +345,7 @@ async def run_open() -> None:
 
     sep = "━" * 26
     if not lines:
-        print(f"[6. ANALİZ open] {saat} İST — işlem yok")
+        print(f"[15. ANALİZ open] {saat} İST — işlem yok")
         return
 
     msg = (
@@ -384,7 +358,7 @@ async def run_open() -> None:
     )
 
     tg_send(msg)
-    print(f"[6. ANALİZ open] {saat} İST — {len(lines)} yeni işlem açıldı")
+    print(f"[15. ANALİZ open] {saat} İST — {len(lines)} yeni işlem açıldı")
 
 
 # ── PREVIEW: 45 geçe — bir sonraki saatin başarı oranı önizleme
@@ -431,7 +405,7 @@ def run_preview() -> None:
         f"<i>Geçmiş başarı oranları — 05'te işlem açılacak</i>"
     )
     print(msg.replace("<b>", "").replace("</b>", ""))
-    print(f"[6. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — {next_hour:02d}:00 önizleme (TG atlanıyor)")
+    print(f"[15. ANALİZ preview] {now_tr.strftime('%H:%M')} İST — {next_hour:02d}:00 önizleme (TG atlanıyor)")
 
 
 # ── WEEKLY: Pazar 00:00 — ısı haritası görseli ───────────────
@@ -578,7 +552,7 @@ def run_weekly() -> None:
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${balance:.2f}\n"
         f"\n🔬 <b>Algoritma İsabet Oranı</b>\n" + "\n".join(ind_lines)
     )
-    print(f"[6. ANALİZ weekly] haftalık görsel gönderildi — {total} işlem")
+    print(f"[15. ANALİZ weekly] haftalık görsel gönderildi — {total} işlem")
 
 
 # ── İndikatör isabet yardımcısı ───────────────────────────────
@@ -692,7 +666,7 @@ def run_stats() -> None:
         parts.append(f"  {wk}{bar} {_DAYS_TR[d]}  {_wr(w, n)}")
 
     tg_send("\n".join(parts))
-    print("[6. ANALİZ stats] gönderildi")
+    print("[15. ANALİZ stats] gönderildi")
 
 
 # ── Giriş noktası ─────────────────────────────────────────────

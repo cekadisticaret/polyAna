@@ -55,7 +55,9 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/backtest_analiz_suite.py` | 4/10. Analiz 1Y backtest ($1000, algo import — canlıya dokunmaz) |
 | `temmuzPoly/backtest_analiz3_8.py` | 3/8. Analiz 1Y backtest (BTC+SOL+ETH, $300, `--telegram`) |
 | `temmuzPoly/poly_trader_analiz4.py` | 4. Analiz sanal (BTC+ETH); Cum 22–Paz 18 duraklama |
-| `temmuzPoly/poly_trader_analiz6.py` | 6. Analiz sanal (BTC+SOL); MACD Hist. Div #26; $300; Cum 22–Paz 18 duraklama |
+| `temmuzPoly/analiz15_signal.py` | 15. Analiz sinyal — BTC→A6 MACD, ETH→A8 Jesse, SOL→A2 predictor |
+| `temmuzPoly/poly_trader_analiz15.py` | 15. Analiz sanal (BTC+ETH+SOL); BTC→A6 · ETH→A8 sıkı · SOL→A2; $300 |
+| `temmuzPoly/backtest_analiz15.py` | 15. Analiz 1Y backtest (BTC→A6, ETH→A8, SOL→A2) |
 | `temmuzPoly/poly_trader_analiz5_midcheck.py` | A1 Live açık pozisyon :30 anlık değer + PM kotasyon görseli (TG) |
 | `temmuzPoly/pm_partial_takeprofit.py` | **210** kısmi kar al — max kârın %65'inde %75 sat (A1/A2 saatlik eski düzen) |
 | `temmuzPoly/poly_trader_analiz5.py` | **A1 Live** — A1 motoru BTC+SOL gerçek PM ($8–12–16 WR); en etkili 3 saatte +%50 giriş |
@@ -95,10 +97,12 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_analiz2.py weekly` — Cumartesi 21:00 haftalık 2 ısı haritası
 - `temmuzPoly/poly_trader_analiz4.py close/open` — 4. Analiz çoklu-algo **sanal** (BTC+ETH); Cum 22–Paz 18 kapalı
 - `temmuzPoly/poly_trader_analiz4.py weekly` — Cumartesi 21:00 haftalık 4 ısı haritası
-- `temmuzPoly/poly_trader_analiz6.py close/open` — 6. Analiz **MACD Hist. Div** sanal (BTC+SOL, $300); Cum 22–Paz 18 kapalı
+- `temmuzPoly/poly_trader_analiz6.py close/open` — 6. Analiz **MACD Div (BTC/SOL) + RSI Div (ETH)** sanal ($300); Cum 22–Paz 18 kapalı
+- `temmuzPoly/poly_trader_analiz15.py close/open` — **15. Analiz** BTC→A6 · ETH→A8 · SOL→A2 sanal ($300); Cum 22–Paz 18 kapalı
 - `temmuzPoly/poly_trader_analiz6.py weekly` — Cumartesi 21:00 haftalık 6 ısı haritası
-- `temmuzPoly/poly_trader_analiz5.py close/open` — **A1 Live** BTC+SOL gerçek PM; hafta sonu dashboard anahtarı; **gece 22:00–07:00 İST open kapalı**
-- `temmuzPoly/poly_trader_analiz2_live.py close/open` — **A2 Live** SOL gerçek PM; hafta sonu dashboard anahtarı; **gece 22:00–07:00 İST open kapalı**
+- `temmuzPoly/poly_trader_analiz15.py weekly` — Cumartesi 21:00 haftalık 15 ısı haritası
+- `temmuzPoly/poly_trader_analiz5.py close/open` — **A1 Live** BTC+SOL gerçek PM; hafta sonu dashboard anahtarı (Cum 22:00–Pzt 08:00)
+- `temmuzPoly/poly_trader_analiz2_live.py close/open` — **A2 Live** SOL gerçek PM; hafta sonu dashboard anahtarı (Cum 22:00–Pzt 08:00)
 - `temmuzPoly/pm_weekend_sync.py close/open` — Cum **22:00** / Pzt **08:00** İST: A1 Live + A2 + 210 dashboard anahtarları (manuel override mümkün)
 - `temmuzPoly/poly_trader_analiz5_midcheck.py` — saat **:30** o saatin açık pozisyonu anlık değer + kotasyon görseli (TG)
 - `temmuzPoly/pm_partial_takeprofit.py` — ***/5** yalnız **210**: max kâr yolunun **≥65%**'inde **75%** sat (A1/A2 dokunulmaz)

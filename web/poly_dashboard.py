@@ -21,7 +21,8 @@ _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 # Sıcaklık haritası: analiz bazlı aktif semboller
 _HEATMAP_SYMS = {
     "analiz1":  ["BTC", "SOL"],
-    "analiz6":  ["BTC", "SOL"],
+    "analiz6":  ["BTC", "SOL", "ETH"],
+    "analiz15": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
@@ -64,18 +65,18 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz8_live",
-    "analiz4", "analiz6", "analiz10",
+    "analiz4", "analiz6", "analiz10", "analiz15",
     "5m_sol_109", "5m_sol_110", "5m_sol_210",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca bu liste (auto-discover yok)
 _HEATMAP_ORDER = [
     "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz8_live",
-    "analiz4", "analiz6", "analiz10",
+    "analiz4", "analiz6", "analiz10", "analiz15",
     "alfa",
     "5m_sol_109", "5m_sol_110", "5m_sol_210",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz6", "analiz5", "analiz3", "analiz8", "analiz8_live",
+    "analiz2", "analiz1", "analiz4", "analiz6", "analiz15", "analiz5", "analiz3", "analiz8", "analiz8_live",
     "analiz10", "5m_sol_109", "5m_sol_110", "5m_sol_210",
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
@@ -84,6 +85,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz3":    "3. Analiz Freqtrade",
     "analiz4":    "4. Analiz",
     "analiz6":    "6. Analiz",
+    "analiz15":   "15. Analiz",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz8_live": "A8 Live",
@@ -100,13 +102,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz10",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz10", "analiz15",
     "analiz3", "analiz8", "alfa",
     "5m_sol_109", "5m_sol_110", "5m_sol_112", "5m_sol_113", "5m_sol_114",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz8_live": None, "5m_sol_210": None,
-    "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz10": 300,
+    "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz10": 300, "analiz15": 300,
     "analiz3": 300, "analiz8": 300, "alfa": 300,
     "5m_sol_109": 300, "5m_sol_110": 300, "5m_sol_112": 300,
     "5m_sol_113": 300, "5m_sol_114": 300,
@@ -126,6 +128,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz2": "A2",
     "analiz4": "A4",
     "analiz6": "A6",
+    "analiz15": "A15",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -1433,7 +1436,8 @@ def api_analizler():
         ("analiz2",    "2. Analiz (SOL)",       300,  "A1 motoru SOL only $10-15-20"),
         ("analiz3",    "3. Analiz Freqtrade",   300,  "SampleStrategy TA sanal PM BTC+SOL+ETH"),
         ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
-        ("analiz6",    "6. Analiz",             300,  "MACD Hist. Div #26"),
+        ("analiz6",    "6. Analiz",             300,  "MACD Div #26 (BTC/SOL) · RSI Div #38 (ETH)"),
+        ("analiz15",   "15. Analiz",            300,  "BTC→A6 · ETH→A8 sıkı · SOL→A2"),
         ("analiz5",    "A1 Live",             None, "A1 Motoru Gerçek PM $8–12–16 WR"),
         ("analiz8",    "8. Analiz Jesse",       300,  "GoldenCross EMA8/21 sanal PM BTC+SOL+ETH"),
         ("analiz8_live", "A8 Live",           None, "Jesse A8 gerçek PM $4–5–6 WR BTC+SOL+ETH"),
@@ -8864,7 +8868,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz8_live:'A8 Live',analiz4:'4. Analiz',analiz6:'6. Analiz',analiz10:'10. Analiz',alfa:'ALFA','5m_sol_109':'15M 109 SOL','5m_sol_110':'15M 110 SOL','5m_sol_210':'15M 210 SOL'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz8_live:'A8 Live',analiz4:'4. Analiz',analiz6:'6. Analiz',analiz15:'15. Analiz',analiz10:'10. Analiz',alfa:'ALFA','5m_sol_109':'15M 109 SOL','5m_sol_110':'15M 110 SOL','5m_sol_210':'15M 210 SOL'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {

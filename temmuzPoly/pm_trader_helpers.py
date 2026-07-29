@@ -66,48 +66,6 @@ def in_weekend_pause_tr(now_tr: datetime) -> bool:
     return False
 
 
-_NIGHT_PAUSE_START = 22  # dahil
-_NIGHT_PAUSE_END = 7     # hariç — 07:00 slotundan itibaren açılır
-_NIGHT_PAUSE_GROUPS = frozenset({"analiz5", "analiz2"})
-
-
-def in_night_pause_tr(now_tr: datetime) -> bool:
-    """Her gün 22:00–07:00 İST arası yeni işlem açılmaz (07:00 hariç)."""
-    if now_tr.tzinfo is None:
-        now_tr = now_tr.replace(tzinfo=_TZ_TR)
-    else:
-        now_tr = now_tr.astimezone(_TZ_TR)
-    h = now_tr.hour
-    return h >= _NIGHT_PAUSE_START or h < _NIGHT_PAUSE_END
-
-
-def skip_if_night_pause(label: str, mode: str, now_tr: datetime | None = None) -> bool:
-    """Gece duraklaması — A1 Live + A2 Live open atlanır; close çalışır."""
-    if mode != "open":
-        return False
-    try:
-        from pm_balance_guard import is_live_pm_label, _label_group
-        if not is_live_pm_label(label):
-            return False
-        if _label_group(label) not in _NIGHT_PAUSE_GROUPS:
-            return False
-    except Exception:
-        return False
-    if now_tr is None:
-        now_tr = datetime.now(_TZ_TR)
-    elif now_tr.tzinfo is None:
-        now_tr = now_tr.replace(tzinfo=_TZ_TR)
-    else:
-        now_tr = now_tr.astimezone(_TZ_TR)
-    if in_night_pause_tr(now_tr):
-        print(
-            f"[{label} {mode}] {now_tr.strftime('%H:%M')} İST — "
-            f"gece duraklama (22:00 – 07:00), yeni işlem yok"
-        )
-        return True
-    return False
-
-
 def skip_if_weekend_pause(label: str, mode: str, now_tr: datetime | None = None) -> bool:
     """Hafta sonu duraklamasında True — yalnızca gerçek PM (dashboard grubu) trader'ları."""
     try:
