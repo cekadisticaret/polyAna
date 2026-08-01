@@ -69,12 +69,16 @@ from signals import supertrend_scored  # noqa: E402
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 STATE_FILE = os.path.join(_DIR, "crypto_futures_cr6_state.json")
 HISTORY_FILE = os.path.join(_DIR, "crypto_futures_cr6_history.json")
+CONTROL_FILE = os.path.join(_DIR, "crypto_futures_live_control.json")
 LABEL = "Supertrend"
 STRATEGY = "Supertrend"
 ALGO_NAME = "Supertrend"
 MARGIN_USD = 10.0
 LEVERAGE = 15
-TOP_N = 4
+TOP_N_DEFAULT = 4
+TOP_N_MIN = 1
+TOP_N_MAX = 10
+TOP_N = TOP_N_DEFAULT  # varsayılan; runtime get_top_n()
 # Anlık net zarar ≥ teminatın bu oranı → saatlik/ATR beklemeden market kapat
 HARD_SL_FRAC = 0.5  # $10 → -$5
 
@@ -106,8 +110,79 @@ BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "")
 CHAT_ID = os.getenv("TELEGRAM_ANALIZ4_CHAT_ID", os.getenv("TELEGRAM_CHAT", ""))
 
 
-def _enabled() -> bool:
+def _env_enabled() -> bool:
     return os.getenv("CRYPTO_FUTURES_CR6_ENABLED", "true").lower() in ("1", "true", "yes")
+
+
+def _clamp_top_n(n) -> int:
+    try:
+        v = int(n)
+    except Exception:
+        v = TOP_N_DEFAULT
+    return max(TOP_N_MIN, min(TOP_N_MAX, v))
+
+
+def get_live_control() -> dict:
+    """Dashboard Binance Live aç/kapa + max poz — sanal Algoritma/Analiz etkilenmez."""
+    data = {
+        "live_paused": False,
+        "top_n": TOP_N_DEFAULT,
+        "updated_at_tr": None,
+        "updated_by": None,
+    }
+    if os.path.exists(CONTROL_FILE):
+        try:
+            with open(CONTROL_FILE) as f:
+                raw = json.load(f) or {}
+            if isinstance(raw, dict):
+                data.update(raw)
+        except Exception:
+            pass
+    data["live_paused"] = bool(data.get("live_paused"))
+    data["top_n"] = _clamp_top_n(data.get("top_n", TOP_N_DEFAULT))
+    return data
+
+
+def get_top_n() -> int:
+    return int(get_live_control().get("top_n") or TOP_N_DEFAULT)
+
+
+def is_live_paused() -> bool:
+    return bool(get_live_control().get("live_paused"))
+
+
+def save_live_control(data: dict, *, source: str = "dashboard") -> dict:
+    out = get_live_control()
+    out.update(data or {})
+    out["live_paused"] = bool(out.get("live_paused"))
+    out["top_n"] = _clamp_top_n(out.get("top_n", TOP_N_DEFAULT))
+    out["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
+    out["updated_by"] = source
+    with open(CONTROL_FILE, "w") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+    return out
+
+
+def set_live_paused(paused: bool, *, source: str = "dashboard") -> dict:
+    return save_live_control({"live_paused": bool(paused)}, source=source)
+
+
+def set_top_n(n: int, *, source: str = "dashboard") -> dict:
+    return save_live_control({"top_n": _clamp_top_n(n)}, source=source)
+
+
+def toggle_live_paused(*, source: str = "dashboard") -> dict:
+    return set_live_paused(not is_live_paused(), source=source)
+
+
+def _trading_allowed() -> bool:
+    """Env + dashboard pause — false ise Binance open/close/trail yok."""
+    return _env_enabled() and not is_live_paused()
+
+
+def _enabled() -> bool:
+    """Geriye uyum: işlem yapılabilir mi (env ∧ !paused)."""
+    return _trading_allowed()
 
 
 def _symbols() -> list[str]:
@@ -367,6 +442,10 @@ def _close_one(pos: dict, *, reason: str) -> dict:
 
 def run_close() -> dict:
     """Saatlik :02 — ATR runner (kâr + stop_level>=1) hold; diğerleri kapat."""
+    if not _trading_allowed():
+        why = "paused" if is_live_paused() else "disabled"
+        print(f"[{LABEL}] close atlandı — {why} (Binance Live kapalı)")
+        return {"ok": False, "skipped": why, "closed": [], "held": []}
     state = load_state()
     opens = list(state.get("open_positions") or [])
     if not opens:
@@ -456,6 +535,10 @@ def should_hard_sl(pos: dict, upnl_net: float) -> bool:
 
 def run_trail() -> dict:
     """*/2 poll — hard SL (%50 teminat) + ATR peak/stop; vurulursa kapat."""
+    if not _trading_allowed():
+        why = "paused" if is_live_paused() else "disabled"
+        print(f"[{LABEL}] trail atlandı — {why} (Binance Live kapalı)")
+        return {"ok": False, "skipped": why, "closed": [], "updated": 0}
     state = load_state()
     opens = list(state.get("open_positions") or [])
     if not opens:
@@ -565,25 +648,30 @@ def run_trail() -> dict:
 
 
 def run_open() -> dict:
-    if not _enabled():
-        print(f"[{LABEL}] CRYPTO_FUTURES_CR6_ENABLED=false — open atlandı")
-        return {"ok": False, "skipped": "disabled"}
+    if not _trading_allowed():
+        why = "paused" if is_live_paused() else "disabled"
+        print(f"[{LABEL}] open atlandı — {why} (Binance Live kapalı / env)")
+        return {"ok": False, "skipped": why}
 
     state = load_state()
     if state.get("open_positions"):
         print(f"[{LABEL}] open: hâlâ {len(state['open_positions'])} açık — önce close")
         return {"ok": False, "skipped": "already_open", "open": state["open_positions"]}
 
+    top_n = get_top_n()
     rows = asyncio.run(_scan_all())
-    ranked = _pick_top(rows, n=max(TOP_N + 4, TOP_N))  # min-lot skip için ekstra aday
-    print(f"[{LABEL}] scan={len(rows)} ranked={[(r['symbol'], r['signal'], r['score']) for r in ranked]}")
+    ranked = _pick_top(rows, n=max(top_n + 4, top_n))  # min-lot skip için ekstra aday
+    print(
+        f"[{LABEL}] top_n={top_n} scan={len(rows)} "
+        f"ranked={[(r['symbol'], r['signal'], r['score']) for r in ranked]}"
+    )
 
     start, end = _slot_bounds()
     opened = []
     errors = []
 
     for cand in ranked:
-        if len(opened) >= TOP_N:
+        if len(opened) >= top_n:
             break
         sym = cand["symbol"]
         side = "LONG" if cand["signal"] == "UP" else "SHORT"
@@ -753,7 +841,7 @@ def _scan_cache_fresh(state: dict, ttl_sec: int = 60) -> bool:
 
 def _waiting_list(scan: list[dict], open_syms: set[str]) -> list[dict]:
     """Supertrend skor sırası — top-N bekleyen; açıklar işaretli."""
-    top_syms = {c["symbol"] for c in _pick_top(list(scan or []), n=TOP_N)}
+    top_syms = {c["symbol"] for c in _pick_top(list(scan or []), n=get_top_n())}
     rows = sorted(
         list(scan or []),
         key=lambda x: (
@@ -889,8 +977,12 @@ def cr6_status_block(*, refresh: bool = True) -> dict:
     except Exception as e:
         open_syms = {p.get("symbol") for p in opens if p.get("symbol")}
         scan = state.get("last_scan") or []
+        ctrl = get_live_control()
         return {
-            "enabled": _enabled(),
+            "enabled": _trading_allowed(),
+            "env_enabled": _env_enabled(),
+            "live_paused": bool(ctrl.get("live_paused")),
+            "live_control": ctrl,
             "dry_run": dry,
             "error": str(e),
             "open_positions": opens,
@@ -913,8 +1005,12 @@ def cr6_status_block(*, refresh: bool = True) -> dict:
     total_commission_est = round(sum(c.get("commission_est") or 0 for c in cards), 4)
     scan = refresh_scan(force=False, ttl_sec=60) if refresh else list(state.get("last_scan") or [])
     waiting = _waiting_list(scan, open_syms)
+    ctrl = get_live_control()
     return {
-        "enabled": _enabled(),
+        "enabled": _trading_allowed(),
+        "env_enabled": _env_enabled(),
+        "live_paused": bool(ctrl.get("live_paused")),
+        "live_control": ctrl,
         "dry_run": dry,
         "live_env": os.getenv("CRYPTO_FUTURES_LIVE", "false"),
         "label": LABEL,
@@ -923,7 +1019,9 @@ def cr6_status_block(*, refresh: bool = True) -> dict:
         "margin_usd": MARGIN_USD,
         "leverage": LEVERAGE,
         "taker_fee_rate": fee_rate,
-        "top_n": TOP_N,
+        "top_n": get_top_n(),
+        "top_n_min": TOP_N_MIN,
+        "top_n_max": TOP_N_MAX,
         "symbols": _symbols(),
         "usdt": usdt,
         "open_count": len(cards),

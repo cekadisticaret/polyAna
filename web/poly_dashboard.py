@@ -2178,7 +2178,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260801-kripto-grafik-coins"
+_DASH_UI_VER = "20260802-top-n-input"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -11505,6 +11505,41 @@ body{
 .chart-coin .cr{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
 .chart-coin .cs{font-size:11px;font-weight:700;color:#aaa}
 .chart-main{min-width:0}
+.live-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:12px 14px;margin-bottom:14px;border-radius:18px;
+  background:rgba(57,255,142,.08);border:1px solid rgba(57,255,142,.28);
+}
+.live-bar.paused{
+  background:rgba(255,92,122,.1);border-color:rgba(255,92,122,.35);
+}
+.live-bar-txt{min-width:0;flex:1 1 140px}
+.live-bar-txt b{display:block;font-size:14px;font-weight:800}
+.live-bar-txt span{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+.live-bar-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.topn-box{
+  display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:14px;
+  background:rgba(0,0,0,.25);border:1px solid var(--line);
+}
+.topn-box label{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.topn-step{
+  width:32px;height:32px;border:none;border-radius:10px;cursor:pointer;
+  background:var(--card2);color:var(--txt);font:inherit;font-size:16px;font-weight:800;
+}
+.topn-step:active{filter:brightness(1.15)}
+.topn-input{
+  width:44px;height:32px;border:1px solid var(--line);border-radius:10px;
+  background:#0e0e14;color:var(--txt);font:inherit;font-size:14px;font-weight:800;
+  text-align:center;-moz-appearance:textfield;
+}
+.topn-input::-webkit-outer-spin-button,.topn-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.live-toggle{
+  flex-shrink:0;border:none;font:inherit;font-size:13px;font-weight:800;
+  padding:12px 18px;border-radius:14px;cursor:pointer;min-width:96px;
+  background:var(--accent);color:#111;
+}
+.live-bar.paused .live-toggle{background:var(--green);color:#0b1a10}
+.live-toggle:disabled{opacity:.55;pointer-events:none}
 @media(max-width:900px){
   .chart-layout{grid-template-columns:1fr}
   .chart-coins{max-height:none}
@@ -11544,8 +11579,9 @@ body{
   .sidebar{display:none !important}
   .main{padding:14px 12px 28px}
   .hero-price{font-size:34px}
-  /* Mobil: önce toplam bakiye, sonra açık pozisyonlar */
+  /* Mobil: live bar üstte kalsın; başlık gizle */
   #view-dash > .head{display:none}
+  #view-dash .live-bar{position:sticky;top:0;z-index:5;backdrop-filter:blur(10px)}
   #view-dash .hero{
     display:flex;flex-direction:column;gap:14px;margin-bottom:14px;
   }
@@ -11579,10 +11615,25 @@ body{
 </div>
 <div class="main">
   <div id="view-dash">
+  <div class="live-bar" id="live-bar">
+    <div class="live-bar-txt">
+      <b id="live-bar-title">Binance Live</b>
+      <span id="live-bar-sub">Supertrend emirleri açık · sanal etkilenmez</span>
+    </div>
+    <div class="live-bar-actions">
+      <div class="topn-box" title="Saatlik max açık pozisyon">
+        <label for="topn-input">Max</label>
+        <button type="button" class="topn-step" onclick="nudgeTopN(-1)">−</button>
+        <input id="topn-input" class="topn-input" type="number" min="1" max="10" step="1" value="4" inputmode="numeric" onchange="saveTopN()" onkeydown="if(event.key==='Enter'){event.preventDefault();saveTopN();}">
+        <button type="button" class="topn-step" onclick="nudgeTopN(1)">+</button>
+      </div>
+      <button type="button" class="live-toggle" id="live-toggle-btn" onclick="toggleBinanceLive()">Kapat</button>
+    </div>
+  </div>
   <div class="head">
     <div>
       <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">…</span></div>
-      <div class="page-sub">Supertrend Live · alt önce · top-4 · $10 × 15x · ATR kâr kilidi</div>
+      <div class="page-sub" id="page-sub">Supertrend Live · alt önce · top-4 · $10 × 15x · ATR kâr kilidi</div>
     </div>
   </div>
 
@@ -12105,8 +12156,10 @@ function renderCards(d){
     feeEl.textContent = fee == null ? '—' : ('$' + Number(fee).toFixed(2));
   }
   const badge = document.getElementById('mode-badge');
-  if(d.dry_run){ badge.textContent='DRY-RUN'; badge.className='badge dry'; }
+  if(d.live_paused){ badge.textContent='DURDURULDU'; badge.className='badge dry'; }
+  else if(d.dry_run){ badge.textContent='DRY-RUN'; badge.className='badge dry'; }
   else { badge.textContent='CANLI'; badge.className='badge live'; }
+  renderLiveBar(d);
 
   renderHero(d);
   renderWaiting(d);
@@ -12172,10 +12225,93 @@ function renderCards(d){
         ${hardSl!=null ? `<span class="tag">SL ${hardSl.toFixed(0)}$</span>` : ''}
       </div>
       <div class="close-btn-wrap">
-        <button class="close-btn" onclick="closeCr6('${p.symbol}', ${qty || 'null'}, this)">Pozisyonu Kapat</button>
+        <button class="close-btn" onclick="event.stopPropagation(); event.preventDefault(); closeCr6('${p.symbol}', ${qty || 'null'}, this)">Pozisyonu Kapat</button>
       </div>
     </div>`;
   }).join('');
+}
+function renderLiveBar(d){
+  const bar = document.getElementById('live-bar');
+  const btn = document.getElementById('live-toggle-btn');
+  const title = document.getElementById('live-bar-title');
+  const sub = document.getElementById('live-bar-sub');
+  const topIn = document.getElementById('topn-input');
+  const pageSub = document.getElementById('page-sub');
+  if(!bar || !btn) return;
+  const dashPaused = !!d.live_paused;
+  const envOn = d.env_enabled !== false;
+  const topN = Math.max(1, Math.min(10, Number(d.top_n != null ? d.top_n : 4) || 4));
+  bar.classList.toggle('paused', dashPaused || !envOn);
+  if(title) title.textContent = dashPaused ? 'Binance Live KAPALI' : 'Binance Live AÇIK';
+  if(sub){
+    if(!envOn) sub.textContent = 'Env kapalı (CRYPTO_FUTURES_CR6_ENABLED)';
+    else if(dashPaused) sub.textContent = 'Emir yok · Algoritma/Analiz sanal devam · max ' + topN;
+    else sub.textContent = 'Supertrend aktif · max ' + topN + ' poz · sanal etkilenmez';
+  }
+  if(topIn && document.activeElement !== topIn){
+    topIn.min = d.top_n_min != null ? d.top_n_min : 1;
+    topIn.max = d.top_n_max != null ? d.top_n_max : 10;
+    topIn.value = String(topN);
+  }
+  if(pageSub) pageSub.textContent = 'Supertrend Live · alt önce · top-' + topN + ' · $10 × 15x · ATR kâr kilidi';
+  btn.textContent = dashPaused ? 'Aç' : 'Kapat';
+  btn.disabled = !envOn ? true : false;
+}
+function nudgeTopN(delta){
+  const el = document.getElementById('topn-input');
+  if(!el) return;
+  const min = Number(el.min || 1);
+  const max = Number(el.max || 10);
+  let v = Number(el.value || 4) + Number(delta || 0);
+  if(!Number.isFinite(v)) v = 4;
+  el.value = String(Math.max(min, Math.min(max, Math.round(v))));
+  saveTopN();
+}
+async function saveTopN(){
+  const el = document.getElementById('topn-input');
+  if(!el) return;
+  let v = Math.round(Number(el.value));
+  if(!Number.isFinite(v)) v = 4;
+  v = Math.max(1, Math.min(10, v));
+  el.value = String(v);
+  try{
+    const r = await fetch('/poly/api/crypto-futures/live-control', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({top_n: v}),
+    });
+    const d = await r.json();
+    if(!d.ok){ alert(d.error || 'max poz kaydedilemedi'); return; }
+    if(d.top_n != null) el.value = String(d.top_n);
+    const pageSub = document.getElementById('page-sub');
+    if(pageSub) pageSub.textContent = 'Supertrend Live · alt önce · top-' + (d.top_n || v) + ' · $10 × 15x · ATR kâr kilidi';
+    const sub = document.getElementById('live-bar-sub');
+    if(sub && sub.textContent){
+      // refresh alt yazı için hafif poll
+      refresh();
+    }
+  }catch(e){ alert(String(e)); }
+}
+async function toggleBinanceLive(){
+  const btn = document.getElementById('live-toggle-btn');
+  const bar = document.getElementById('live-bar');
+  const pausing = !(bar && bar.classList.contains('paused'));
+  const msg = pausing
+    ? 'Binance Live kapatılsın mı? Yeni open/close/trail durur. Sanal Algoritma/Analiz devam eder.'
+    : 'Binance Live açılsın mı? Supertrend emirleri tekrar çalışır.';
+  if(!confirm(msg)) return;
+  if(btn){ btn.disabled = true; btn.textContent = '…'; }
+  try{
+    const r = await fetch('/poly/api/crypto-futures/live-control', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({toggle: true}),
+    });
+    const d = await r.json();
+    if(!d.ok){ alert(d.error || 'kontrol hatası'); if(btn) btn.disabled=false; return; }
+    await refresh();
+  }catch(e){
+    alert(String(e));
+    if(btn) btn.disabled = false;
+  }
 }
 async function refresh(){
   try{
@@ -12184,6 +12320,7 @@ async function refresh(){
     if(!d.ok && d.error){
       document.getElementById('positions').innerHTML = '<div class="empty">hata: '+d.error+'</div>';
       document.getElementById('waiting').innerHTML = '<div class="empty">hata</div>';
+      renderLiveBar(d);
       return;
     }
     renderCards(d);
@@ -12598,6 +12735,60 @@ def api_crypto_futures_cr6():
     try:
         from crypto_futures_cr6 import cr6_status_block
         return jsonify({"ok": True, **cr6_status_block()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/crypto-futures/live-control", methods=["GET", "POST"])
+def api_crypto_futures_live_control():
+    """Binance Supertrend Live aç/kapa — sanal kitaplar etkilenmez."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_KRIPTO)
+    try:
+        from crypto_futures_cr6 import (
+            get_live_control,
+            set_live_paused,
+            set_top_n,
+            toggle_live_paused,
+            _trading_allowed,
+            _env_enabled,
+            is_live_paused,
+            get_top_n,
+            TOP_N_MIN,
+            TOP_N_MAX,
+        )
+        if request.method == "GET":
+            ctrl = get_live_control()
+            return jsonify({
+                "ok": True,
+                **ctrl,
+                "enabled": _trading_allowed(),
+                "env_enabled": _env_enabled(),
+                "top_n_min": TOP_N_MIN,
+                "top_n_max": TOP_N_MAX,
+            })
+        body = request.get_json(force=True) if request.is_json else {}
+        ctrl = None
+        if body.get("toggle"):
+            ctrl = toggle_live_paused(source="dashboard")
+        if "paused" in body or "live_paused" in body:
+            paused = body.get("paused", body.get("live_paused"))
+            ctrl = set_live_paused(bool(paused), source="dashboard")
+        if "top_n" in body:
+            ctrl = set_top_n(body.get("top_n"), source="dashboard")
+        if ctrl is None:
+            return jsonify({"ok": False, "error": "toggle, paused veya top_n gerekli"}), 400
+        return jsonify({
+            "ok": True,
+            **ctrl,
+            "enabled": _trading_allowed(),
+            "env_enabled": _env_enabled(),
+            "live_paused": is_live_paused(),
+            "top_n": get_top_n(),
+            "top_n_min": TOP_N_MIN,
+            "top_n_max": TOP_N_MAX,
+        })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 

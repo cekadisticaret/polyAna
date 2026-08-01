@@ -26,7 +26,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `AgustosKripto/Analizler/` | A1–A10 + A6(Supertrend $10×15x max4); ATR runner; A3/A8 venv |
 | `AgustosKripto/binance_futures_client.py` | Binance USD-M REST — emir, bakiye, commissionRate, userTrades |
 | `AgustosKripto/crypto_futures_trader.py` | Futures open/close + `dust` süpürme (|notional|≤$2); brüt/komisyon/net |
-| `AgustosKripto/crypto_futures_cr6.py` | **Supertrend Live** — top-4; $10×15x; ATR kilit + hard SL −%50 teminat; :02/:05 + `trail` */2 |
+| `AgustosKripto/crypto_futures_cr6.py` | **Supertrend Live** — top-4; $10×15x; ATR/hard SL; dashboard Binance Live aç/kapa (`live_control.json`) |
+| `AgustosKripto/crypto_futures_live_control.json` | Binance Live — `live_paused` + `top_n` (1–10); sanal Algoritma/Analiz etkilenmez |
 | `AgustosKripto/cr6_tg_card.py` | Supertrend Live TG sarı kart (ALGO2 stili) — açılış/kapanış/ATR photo |
 | `AgustosKripto/crypto_futures_config.json` | Sembol allowlist + default $6 / 10x; `CRYPTO_FUTURES_LIVE` + CR6 canlı |
 | `temmuzPoly/analiz5_settings.json` | A1/A2/A10/A6 Live WR giriş tutarları (düşük/orta/yüksek) |
