@@ -96,10 +96,10 @@ def _resolve_entry_price(symbol: str, sibling: dict | None) -> float:
     return 0.0
 
 
-def _repair_open_entries(states: dict[str, dict]) -> int:
-    """State'teki bariz yanlış giriş fiyatlarını düzelt."""
-    fixed = 0
-    for st in states.values():
+def _repair_open_entries(states: dict[str, dict]) -> set[str]:
+    """State'teki bariz yanlış giriş fiyatlarını düzelt. Dönen: değişen trader key'leri."""
+    dirty: set[str] = set()
+    for key, st in states.items():
         for p in st.get("open_positions") or []:
             sym = (p.get("symbol") or "").upper()
             ep = float(p.get("entry_price") or 0)
@@ -108,8 +108,8 @@ def _repair_open_entries(states: dict[str, dict]) -> int:
             new_ep = _hour_open_price(sym)
             if new_ep > 0 and _entry_sane(sym, new_ep):
                 p["entry_price"] = round(new_ep, 4 if sym != "BTCUSDT" else 2)
-                fixed += 1
-    return fixed
+                dirty.add(key)
+    return dirty
 
 
 def _pos_key(pos: dict) -> tuple[str, str]:
@@ -137,7 +137,28 @@ def _known_token_ids(states: dict[str, dict]) -> set[str]:
     return ids
 
 
+_15M_TS = re.compile(r"-15m-(\d{8,})$")
+
+
+def _15m_period_ts(slug: str) -> int | None:
+    m = _15M_TS.search((slug or "").lower())
+    return int(m.group(1)) if m else None
+
+
+def _15m_period_open(slug: str, now_ts: float | None = None) -> bool:
+    """15m slot hâlâ açık mı (period start + 15dk)."""
+    ts = _15m_period_ts(slug)
+    if ts is None:
+        return True
+    now = time.time() if now_ts is None else now_ts
+    return now < ts + 15 * 60
+
+
 def _guess_trader(slug: str, states: dict[str, dict]) -> str | None:
+    slug_l = (slug or "").lower()
+    # 15m updown — saatlik ET slot yok; 309 Live'a bağla
+    if "updown-15m" in slug_l or _15M_TS.search(slug_l):
+        return "15m_309_live"
     slot = _hour_slot(slug)
     if not slot:
         return None
@@ -252,6 +273,9 @@ def sync_live_orphan_positions(
         act_ts = int(rnd.get("act_ts") or 0)
         if act_ts < cutoff:
             continue
+        # Bitmiş 15m slotları orphan diye ekleme
+        if _15m_period_ts(slug) is not None and not _15m_period_open(slug):
+            continue
 
         trader = _guess_trader(slug, all_states)
         if not trader or trader not in states:
@@ -261,14 +285,23 @@ def sync_live_orphan_positions(
 
         sibling = None
         slot = _hour_slot(slug)
+        ts15 = _15m_period_ts(slug)
         for p in states[trader].get("open_positions") or []:
-            if _hour_slot(p.get("pm_slug") or "") == slot:
+            ps = p.get("pm_slug") or ""
+            if slot and _hour_slot(ps) == slot:
+                sibling = p
+                break
+            if ts15 and _15m_period_ts(ps) == ts15:
                 sibling = p
                 break
 
         pos = _round_to_pos(rnd, acts, sibling)
         if not pos:
             continue
+        if ts15:
+            pos["ts_period"] = ts15
+            pos["entry_period_min"] = (datetime.fromtimestamp(ts15, _TZ_TR).hour * 60
+                                       + datetime.fromtimestamp(ts15, _TZ_TR).minute)
 
         tid = str(pos.get("pm_token_id") or "").strip()
         if tid and tid in known_tokens:
@@ -286,15 +319,23 @@ def sync_live_orphan_positions(
             "slug": slug[:48],
         })
 
-    for key, path in paths.items():
-        _save_state(path, states[key])
+    # Sadece değişen trader state'lerini yaz — stale full-rewrite mirror open
+    # ile yarışınca (BTC açıkken SOL eklenmiş state'i ezer) pozisyon kaybolur.
+    dirty: set[str] = {a["trader"] for a in added if a.get("trader")}
+    repaired_keys = _repair_open_entries(states)
+    dirty |= repaired_keys
 
-    repaired = _repair_open_entries(states)
-    if repaired:
-        for key, path in paths.items():
+    for key in dirty:
+        path = paths.get(key) or _TRADER_STATE.get(key)
+        if path and key in states:
             _save_state(path, states[key])
 
-    return {"ok": True, "added": added, "added_count": len(added), "repaired_entries": repaired}
+    return {
+        "ok": True,
+        "added": added,
+        "added_count": len(added),
+        "repaired_entries": len(repaired_keys),
+    }
 
 
 if __name__ == "__main__":

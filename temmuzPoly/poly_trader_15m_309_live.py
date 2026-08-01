@@ -336,8 +336,15 @@ def mirror_open_from_sanal(
         "pm_live": True,
         "mirrored_from_sanal": True,
     }
-    state["open_positions"].append(pos)
-    save_state(state)
+    # Emir uzun sürebilir — orphan sync stale rewrite'ına karşı yeniden yükle
+    state = load_state()
+    for p in state.get("open_positions") or []:
+        if p.get("symbol") == symbol and p.get("ts_period") == ts_period:
+            print(f"[{LABEL} mirror] {name} state'te zaten var (paralel yazım)")
+            break
+    else:
+        state.setdefault("open_positions", []).append(pos)
+        save_state(state)
 
     dir_icon = "📈" if direction == "UP" else "📉"
     dir_tr = "YÜKSELİR" if direction == "UP" else "DÜŞER"

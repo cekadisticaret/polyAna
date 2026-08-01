@@ -27,6 +27,7 @@ from pm_trader_helpers import (
     pm_sanal_tg_quote,
     resolve_slot_trade_amount,
     sanal_pnl,
+    skip_if_weekend_pause,
     slot_amount_log,
 )
 
@@ -401,13 +402,17 @@ def _tg_round(
 
 
 def run_all(configs: list[M15Config] | None = None) -> None:
-    """Her 15dk: close önceki tur → open yeni tur (110 tarzı)."""
+    """Her 15dk: close önceki tur → open yeni tur (110 tarzı).
+
+    Cum 22:00 – Pzt 08:00 İST: yalnızca close; yeni open yok (Pzt 08:00'de devam).
+    """
     cfgs = configs or ALL_CONFIGS
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     period_min = (now_tr.hour * 60 + now_tr.minute) // _PERIOD_MIN * _PERIOD_MIN
     saat = f"{period_min // 60:02d}:{period_min % 60:02d}"
     next_period_min = period_min + _PERIOD_MIN
     next_saat = f"{(next_period_min % (24 * 60)) // 60:02d}:{next_period_min % 60:02d}"
+    pause_open = skip_if_weekend_pause("15M A2", "open", now_tr)
 
     for cfg in cfgs:
         closed, tur_pnl = run_close(cfg)
@@ -417,10 +422,14 @@ def run_all(configs: list[M15Config] | None = None) -> None:
                 live_close(wait=False)  # sanal close zaten 2s bekledi
             except Exception as e:
                 print(f"[{cfg.label}] live close hata: {e}", file=sys.stderr)
-        if OPEN_DELAY_SEC > 0:
-            time.sleep(OPEN_DELAY_SEC)
-        opened = run_open(cfg)  # 309: sanal açarken aynı anda live mirror
-        _tg_round(cfg, saat, next_saat, closed, opened, tur_pnl)
+        if pause_open:
+            opened = []
+        else:
+            if OPEN_DELAY_SEC > 0:
+                time.sleep(OPEN_DELAY_SEC)
+            opened = run_open(cfg)  # 309: sanal açarken aynı anda live mirror
+        if closed or opened:
+            _tg_round(cfg, saat, next_saat, closed, opened, tur_pnl)
 
 
 def run_weekly(configs: list[M15Config] | None = None) -> None:

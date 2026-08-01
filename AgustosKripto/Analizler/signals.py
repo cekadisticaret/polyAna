@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analiz sinyal sarmalayıcıları — A1 A2 A3 A8 A4 A10 Supertrend(a6).
+"""Analiz sinyal sarmalayıcıları — A1 A2 A3 A8 A4 A10 A6(Supertrend).
 
 Poly trader dosyalarına dokunulmaz; temmuzPoly / freqtrade / jesse import.
 A3 → freqtrade/.venv (talib), A8 → jesse/.venv (jesse) — sistem python'da yok.
@@ -30,7 +30,7 @@ ANALIZ_META = [
     {"id": "a8", "name": "A8", "title": "8. Analiz Jesse"},
     {"id": "a4", "name": "A4", "title": "4. Analiz"},
     {"id": "a10", "name": "A10", "title": "10. Analiz Dual"},
-    {"id": "a6", "name": "Supertrend", "title": "Supertrend · $10×15x · max 4 · alt (BTC/ETH yok)"},
+    {"id": "a6", "name": "A6", "title": "Supertrend · $10×15x · max 4 · alt (BTC/ETH yok)"},
 ]
 
 # Saatlik open sırasında A3/A8 batch cache

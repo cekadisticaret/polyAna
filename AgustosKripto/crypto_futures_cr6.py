@@ -75,6 +75,8 @@ ALGO_NAME = "Supertrend"
 MARGIN_USD = 10.0
 LEVERAGE = 15
 TOP_N = 4
+# Anlık net zarar ≥ teminatın bu oranı → saatlik/ATR beklemeden market kapat
+HARD_SL_FRAC = 0.5  # $10 → -$5
 
 # Sanal Supertrend (a6) ile aynı evren — BTC/ETH yok; SOL yavaş
 ST_SYMBOLS = [
@@ -328,14 +330,34 @@ def _close_one(pos: dict, *, reason: str) -> dict:
     entry = float(pos.get("entry_price") or 0)
     side = pos.get("side") or "LONG"
     q = float(r.get("qty") or qty)
-    if side == "LONG":
-        pnl = (exit_px - entry) * q
+    if r.get("pnl_gross") is not None:
+        pnl_gross = float(r["pnl_gross"])
+    elif side == "LONG":
+        pnl_gross = (exit_px - entry) * q
     else:
-        pnl = (entry - exit_px) * q
+        pnl_gross = (entry - exit_px) * q
+    pnl_gross = round(pnl_gross, 4)
+    commission = float(r.get("commission") or 0)
+    entry_fee = float(r.get("entry_fee") or 0)
+    exit_fee = float(r.get("exit_fee") or 0)
+    if commission <= 0:
+        rate = get_taker_rate(None, sym or "BTCUSDT", cfg=load_config())
+        entry_notional = float(pos.get("notional") or (entry * q))
+        exit_notional = exit_px * q
+        if entry_fee <= 0:
+            entry_fee = estimate_fee(entry_notional, rate)
+        if exit_fee <= 0:
+            exit_fee = estimate_fee(exit_notional, rate)
+        commission = round(entry_fee + exit_fee, 6)
+    pnl = float(r["pnl"]) if r.get("pnl") is not None else net_pnl(pnl_gross, commission)
     return {
         **pos,
         "exit_price": exit_px,
         "exit_time_tr": r.get("exit_time_tr"),
+        "pnl_gross": pnl_gross,
+        "commission": round(commission, 6),
+        "entry_fee": round(entry_fee, 6),
+        "exit_fee": round(exit_fee, 6),
         "pnl": round(pnl, 4),
         "close_reason": reason,
         "close_order_id": (r.get("order") or {}).get("orderId"),
@@ -422,8 +444,18 @@ def run_close() -> dict:
     }
 
 
+def hard_sl_threshold(pos: dict) -> float:
+    """Net uPnL bu seviyenin altına inerse hard SL (negatif)."""
+    margin = float(pos.get("margin_usd") or MARGIN_USD)
+    return -abs(margin) * float(HARD_SL_FRAC)
+
+
+def should_hard_sl(pos: dict, upnl_net: float) -> bool:
+    return float(upnl_net) <= hard_sl_threshold(pos)
+
+
 def run_trail() -> dict:
-    """*/2 poll — peak/stop güncelle; stop vurulursa kapat."""
+    """*/2 poll — hard SL (%50 teminat) + ATR peak/stop; vurulursa kapat."""
     state = load_state()
     opens = list(state.get("open_positions") or [])
     if not opens:
@@ -433,6 +465,8 @@ def run_trail() -> dict:
     closed = []
     remaining = []
     updated = 0
+    hard_closed = []
+    atr_closed = []
     for pos in opens:
         sym = pos.get("symbol")
         try:
@@ -451,6 +485,18 @@ def run_trail() -> dict:
                 except Exception as e:
                     print(f"[{LABEL}] trail ATR {sym}: {e}")
             _g, upnl_net, _px = _live_upnl_net(pos)
+            # Hard SL önce — saatlik/ATR runner beklemez
+            if should_hard_sl(pos, upnl_net):
+                rec = _close_one(pos, reason="hard_sl")
+                history.append(rec)
+                closed.append(rec)
+                hard_closed.append(rec)
+                print(
+                    f"[{LABEL}] HARD SL {sym} uPnL={upnl_net:+.2f} "
+                    f"limit={hard_sl_threshold(pos):+.2f} "
+                    f"pnl={rec.get('pnl', 0):+.4f}"
+                )
+                continue
             pos2, ch = update_lock(pos, upnl_net)
             if ch:
                 updated += 1
@@ -463,6 +509,7 @@ def run_trail() -> dict:
                 rec = _close_one(pos2, reason="atr_stop")
                 history.append(rec)
                 closed.append(rec)
+                atr_closed.append(rec)
                 print(
                     f"[{LABEL}] ATR STOP {sym} lvl={pos2.get('stop_level')} "
                     f"pnl={rec.get('pnl', 0):+.4f}"
@@ -477,16 +524,28 @@ def run_trail() -> dict:
     state["open_positions"] = remaining
     save_state(state)
 
-    if closed:
+    if hard_closed:
+        rows = [
+            f"{c.get('symbol')} PnL {c.get('pnl', 0):+.2f}$"
+            for c in hard_closed
+        ]
+        tot = sum(float(c.get("pnl") or 0) for c in hard_closed)
+        _tg_event_card(
+            "Supertrend · Hard SL",
+            f"{len(hard_closed)} × −%{int(HARD_SL_FRAC * 100)} teminat · {tot:+.2f}$",
+            rows,
+            footer=f"Net zarar ≥ teminat×{HARD_SL_FRAC:.0%} — anında kapatıldı",
+        )
+    if atr_closed:
         rows = [
             f"{c.get('symbol')} stop{c.get('stop_level')} "
             f"PnL {c.get('pnl', 0):+.2f}$"
-            for c in closed
+            for c in atr_closed
         ]
-        tot = sum(float(c.get("pnl") or 0) for c in closed)
+        tot = sum(float(c.get("pnl") or 0) for c in atr_closed)
         _tg_event_card(
             "Supertrend · ATR Stop",
-            f"{len(closed)} kilit · {tot:+.2f}$",
+            f"{len(atr_closed)} kilit · {tot:+.2f}$",
             rows,
             footer="Trailing kâr kilidi vuruldu",
         )
@@ -674,6 +733,7 @@ def _enrich_live(pos: dict, chain: dict | None, *, fee_rate: float | None = None
         "analiz_key": "cr6",
         "closable": True,
         "pm_spent": margin,
+        "hard_sl_usd": round(hard_sl_threshold(pos_locked), 2),
         **ls,
     }
 

@@ -267,9 +267,6 @@ def run() -> None:
     next_period_min = period_min + _PERIOD_MIN
     next_saat = f"{(next_period_min % (24 * 60)) // 60:02d}:{next_period_min % 60:02d}"
 
-    if skip_if_weekend_pause(LABEL, "run", now_tr):
-        return
-
     state = load_state()
     history = load_history()
 
@@ -343,6 +340,13 @@ def run() -> None:
 
     open_lines: list[str] = []
     skip_lines: list[str] = []
+
+    # Cum 22:00 – Pzt 08:00: close yapıldı; yeni open yok (Pzt 08:00'de devam)
+    if skip_if_weekend_pause(LABEL, "open", now_tr):
+        if closed_lines:
+            save_state(state)
+            save_history(history)
+        return
 
     if OPEN_DELAY_SEC > 0:
         time.sleep(OPEN_DELAY_SEC)

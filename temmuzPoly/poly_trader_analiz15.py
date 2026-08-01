@@ -14,7 +14,7 @@ Motorlar:
   SOL → A2 poly_predictor (standard, fallback kapalı)
 Sanal bütçe: $300, işlem $12/$16/$20 (sembol WR).
 NEUTRAL sinyalde işlem yok.
-Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST.
+Hafta sonu duraklama: Cuma 22:00 – Pazartesi 08:00 İST (open; close çalışır).
 """
 import asyncio
 import json

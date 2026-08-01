@@ -66,7 +66,27 @@ def in_weekend_pause_tr(now_tr: datetime) -> bool:
     return False
 
 
-_SANAL_WEEKEND_LABELS = frozenset({"6. ANALİZ", "A2"})
+_SANAL_WEEKEND_LABELS = frozenset({
+    "4. ANALİZ", "6. ANALİZ", "10. ANALİZ", "15. ANALİZ", "A2",
+    "15M 110 SOL",
+    "15M 309 Squeeze Mom",
+    "15M 316 Supertrend",
+    "15M 317 SuperTrend v2",
+    "15M A2",
+})
+
+
+def _weekend_pause_applies(label: str) -> bool:
+    if label in _SANAL_WEEKEND_LABELS:
+        return True
+    # Tüm 15M sanal etiketleri (15M 309 …)
+    if label.startswith("15M"):
+        return True
+    try:
+        from pm_balance_guard import is_live_pm_label
+        return is_live_pm_label(label)
+    except Exception:
+        return False
 
 
 def skip_if_weekend_pause(label: str, mode: str, now_tr: datetime | None = None) -> bool:
@@ -77,14 +97,8 @@ def skip_if_weekend_pause(label: str, mode: str, now_tr: datetime | None = None)
     """
     if mode == "close":
         return False
-    try:
-        from pm_balance_guard import is_live_pm_label
-        applies = is_live_pm_label(label) or label in _SANAL_WEEKEND_LABELS
-        if not applies:
-            return False
-    except Exception:
-        if label not in _SANAL_WEEKEND_LABELS:
-            return False
+    if not _weekend_pause_applies(label):
+        return False
     if now_tr is None:
         now_tr = datetime.now(_TZ_TR)
     elif now_tr.tzinfo is None:

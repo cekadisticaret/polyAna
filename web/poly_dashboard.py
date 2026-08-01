@@ -1344,13 +1344,24 @@ def api_positions_live():
 
 @app.route("/poly/api/klines/<symbol>")
 def api_klines(symbol):
-    if _auth_required(): return redirect("/poly/login")
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
     try:
-        data = get_klines(symbol.upper() + "USDT" if not symbol.endswith("USDT") else symbol.upper(),
-                          interval="15m", limit=80)
-        return jsonify(data)
+        sym = symbol.upper()
+        if not sym.endswith("USDT"):
+            sym = sym + "USDT"
+        interval = (request.args.get("interval") or "15m").strip()
+        if interval not in ("1m", "5m", "15m", "1h", "4h", "1d"):
+            interval = "15m"
+        try:
+            limit = int(request.args.get("limit") or 120)
+        except Exception:
+            limit = 120
+        limit = max(20, min(limit, 500))
+        data = get_klines(sym, interval=interval, limit=limit)
+        return jsonify({"ok": True, "symbol": sym, "interval": interval, "candles": data})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 
 def _allowed_syms_for(key: str) -> list[str]:
@@ -2167,7 +2178,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260801-st-live-v2"
+_DASH_UI_VER = "20260801-kripto-grafik-1m-ref"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -11465,9 +11476,16 @@ body{
 .close-btn:hover{filter:brightness(1.08)}.close-btn.loading{opacity:.5;pointer-events:none}
 
 .wait-list{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow:auto;padding-right:4px}
-.wait-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--card2);border:1px solid var(--line);border-radius:16px}
+.wait-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--card2);border:1px solid var(--line);border-radius:16px;cursor:pointer;transition:border-color .15s,background .15s}
+.wait-item:hover{border-color:rgba(200,241,53,.4);background:rgba(200,241,53,.06)}
 .wait-item.top{border-color:rgba(200,241,53,.35);background:rgba(200,241,53,.05)}
-.wait-item.open{opacity:.5}
+.wait-item.open{opacity:.85}
+.chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px;min-height:360px}
+#kf-chart{width:100%;height:min(62vh,520px)}
+.tf-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.tf-btn{border:1px solid var(--line);background:var(--card2);color:var(--muted);font:inherit;font-size:12px;font-weight:800;padding:8px 12px;border-radius:999px;cursor:pointer}
+.tf-btn.active{background:rgba(200,241,53,.14);border-color:rgba(200,241,53,.45);color:var(--accent)}
+.chart-meta{font-size:12px;color:var(--muted);font-weight:600;margin-top:8px}
 .wait-name{font-size:14px;font-weight:800}
 .wait-meta{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
 .wait-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -11526,6 +11544,7 @@ body{
     <a class="nav-item" id="nav-kripto-overview" href="/kripto"><span class="nav-dot"></span>Overview</a>
     <a class="nav-item" id="nav-kripto-algo" href="/kripto/algoritmalar"><span class="nav-dot"></span>Algoritmalar</a>
     <a class="nav-item" id="nav-kripto-analiz" href="/kripto/analizler"><span class="nav-dot"></span>Analizler</a>
+    <a class="nav-item" id="nav-kripto-grafik" href="/kripto/grafik"><span class="nav-dot"></span>Grafik</a>
     <a class="nav-item" id="nav-kripto-gecmis" href="/kripto/gecmis"><span class="nav-dot"></span>Geçmiş işlemler</a>
     <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geçiş yap</a>
     <div class="sidebar-footer"><span class="dot"></span>Canlı</div>
@@ -11578,6 +11597,27 @@ body{
   </div>
   </div><!-- /view-dash -->
 
+  <div id="view-grafik" style="display:none">
+    <div class="head">
+      <div>
+        <a class="detail-back" href="/kripto">← Overview</a>
+        <div class="page-title" id="chart-title">Grafik</div>
+        <div class="page-sub" id="chart-sub">Binance Futures · seçilen coin</div>
+      </div>
+    </div>
+    <div class="tf-row" id="chart-tf">
+      <button type="button" class="tf-btn active" data-tf="1m">1m</button>
+      <button type="button" class="tf-btn" data-tf="5m">5m</button>
+      <button type="button" class="tf-btn" data-tf="15m">15m</button>
+      <button type="button" class="tf-btn" data-tf="1h">1h</button>
+      <button type="button" class="tf-btn" data-tf="4h">4h</button>
+    </div>
+    <div class="chart-wrap">
+      <div id="kf-chart"></div>
+      <div class="chart-meta" id="chart-meta">—</div>
+    </div>
+  </div>
+
   <div id="view-gecmis" style="display:none">
     <div class="head">
       <div>
@@ -11613,7 +11653,7 @@ body{
     <div class="head">
       <div>
         <div class="page-title">Analizler</div>
-        <div class="page-sub">A1 A2 A3 A8 A4 A10 Supertrend · sanal $300 · varsayılan $15×15x · ST $10×15x max 4</div>
+        <div class="page-sub">A1 A2 A3 A8 A4 A10 A6 · sanal $300 · varsayılan $15×15x · A6 Supertrend $10×15x max 4</div>
       </div>
       <div class="chip" id="analiz-sum">—</div>
     </div>
@@ -11666,16 +11706,32 @@ body{
 }
 .detail-back:hover{filter:brightness(1.1)}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 const ICO_COLORS = ['#f5a623','#627eea','#14f195','#f3ba2f','#00aae4','#c2a633','#0033ad','#e84142','#2a5ada','#e6007a'];
 const PATH = location.pathname.replace(/\\/+$/,'');
 const _mAnaliz = PATH.match(/\\/kripto\\/analizler\\/([a-zA-Z0-9_]+)$/);
 const _mAlgo = PATH.match(/\\/kripto\\/algoritmalar\\/([a-zA-Z0-9_]+)$/);
+const _mGrafik = PATH.match(/\\/kripto\\/grafik(?:\\/([A-Za-z0-9]+))?$/);
 const DETAIL_KIND = _mAnaliz ? 'analizler' : (_mAlgo ? 'algoritmalar' : null);
 const DETAIL_ID = _mAnaliz ? _mAnaliz[1].toLowerCase() : (_mAlgo ? _mAlgo[1].replace(/^0+/, '') || '0' : null);
 const IS_GECMIS = PATH.endsWith('/gecmis');
 const IS_ALGO = PATH.endsWith('/algoritmalar');
 const IS_ANALIZ = PATH.endsWith('/analizler');
+const IS_GRAFIK = !!_mGrafik;
+let CHART_SYM = (_mGrafik && _mGrafik[1]) ? _mGrafik[1].toUpperCase().replace(/USDT$/,'') : (localStorage.getItem('kf_chart_sym') || 'INJ');
+if(localStorage.getItem('kf_chart_tf_v2') !== '1'){
+  localStorage.setItem('kf_chart_tf', '1m');
+  localStorage.setItem('kf_chart_tf_v2', '1');
+}
+const _tfStored = localStorage.getItem('kf_chart_tf');
+let CHART_TF = (_tfStored && ['1m','5m','15m','1h','4h'].includes(_tfStored)) ? _tfStored : '1m';
+const _refQ = Number(new URLSearchParams(location.search).get('ref'));
+let CHART_REF = Number.isFinite(_refQ) && _refQ > 0 ? _refQ : null;
+let CHART_REF_TIME = '';
+let _kfChart = null;
+let _kfSeries = null;
+let _kfRefLine = null;
 function fmtPx(n){
   if(n==null||isNaN(n)) return '—';
   const a=Math.abs(n);
@@ -11751,6 +11807,40 @@ function renderHero(d){
   const openN = d.open_count != null ? d.open_count : (d.cards||[]).length;
   el.innerHTML = renderHeroCard(t1, 'TOP1', openN) + renderHeroCard(t2, 'TOP2', openN);
 }
+function openKriptoChart(sym, ref){
+  const name = String(sym || '').toUpperCase().replace(/USDT$/,'');
+  if(!name) return;
+  localStorage.setItem('kf_chart_sym', name);
+  let url = '/kripto/grafik/' + encodeURIComponent(name);
+  const r = Number(ref);
+  if(Number.isFinite(r) && r > 0) url += '?ref=' + encodeURIComponent(String(r));
+  location.href = url;
+}
+async function resolveChartRef(){
+  if(CHART_REF != null && CHART_REF > 0 && CHART_REF_TIME) return;
+  try{
+    const r = await fetch('/poly/api/crypto-futures/cr6', {cache:'no-store'});
+    const d = await r.json();
+    const want = (CHART_SYM + 'USDT').toUpperCase();
+    const cards = d.cards || d.open_positions || [];
+    const hit = cards.find(c => String(c.symbol||'').toUpperCase() === want
+      || String(c.name||'').toUpperCase() === CHART_SYM);
+    if(!hit) return;
+    const ep = Number(hit.entry_price);
+    if(Number.isFinite(ep) && ep > 0) CHART_REF = ep;
+    const et = hit.entry_time_tr || hit.slot_start_tr || '';
+    if(et){
+      try{
+        const dt = new Date(et);
+        CHART_REF_TIME = isNaN(dt.getTime()) ? '' :
+          dt.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Istanbul'});
+      }catch(e){ CHART_REF_TIME = ''; }
+    }
+    if(!CHART_REF_TIME && hit.slot_label){
+      CHART_REF_TIME = String(hit.slot_label).split('-')[0] || '';
+    }
+  }catch(e){}
+}
 function renderWaiting(d){
   const wl = document.getElementById('waiting');
   const rows = d.waiting || [];
@@ -11766,8 +11856,10 @@ function renderWaiting(d){
       ? '<span class="wait-badge open">AÇIK</span>'
       : (w.is_top ? '<span class="wait-badge">TOP</span>' : '');
     const tier = w.tier_label ? w.tier_label : '';
-    return `<div class="wait-item ${cls}">
-      <div><div class="wait-name">${w.name || w.symbol}</div>
+    const name = (w.name || (w.symbol||'').replace('USDT','') || '').replace(/'/g, '');
+    const symFull = (w.symbol || (name + 'USDT')).replace(/'/g, '');
+    return `<div class="wait-item ${cls}" role="button" tabindex="0" onclick="openKriptoChart('${symFull}')" title="Grafik · ${name}">
+      <div><div class="wait-name">${name}</div>
       <div class="wait-meta">${tier ? tier+' · ' : ''}${w.algo || '—'} · $${fmtPx(w.price)}</div></div>
       <div class="wait-right">
         <span class="wait-score">${Number(w.score||0).toFixed(3)}</span>
@@ -11776,6 +11868,85 @@ function renderWaiting(d){
       </div>
     </div>`;
   }).join('');
+}
+async function loadKriptoChart(){
+  const title = document.getElementById('chart-title');
+  const sub = document.getElementById('chart-sub');
+  const meta = document.getElementById('chart-meta');
+  const box = document.getElementById('kf-chart');
+  if(!box) return;
+  await resolveChartRef();
+  if(title) title.textContent = CHART_SYM + 'USDT';
+  const refHint = (CHART_REF != null)
+    ? (' · REF $' + fmtPx(CHART_REF) + (CHART_REF_TIME ? (' @' + CHART_REF_TIME) : ''))
+    : '';
+  if(sub) sub.textContent = 'Binance Futures · ' + CHART_TF + ' mum' + refHint;
+  document.querySelectorAll('#chart-tf .tf-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-tf') === CHART_TF);
+  });
+  if(meta) meta.textContent = 'yükleniyor…';
+  try{
+    const lim = CHART_TF === '1m' ? 240 : 180;
+    const r = await fetch('/poly/api/klines/' + encodeURIComponent(CHART_SYM) + '?interval=' + encodeURIComponent(CHART_TF) + '&limit=' + lim, {cache:'no-store'});
+    const d = await r.json();
+    const raw = Array.isArray(d) ? d : (d.candles || []);
+    if(!raw.length){
+      if(meta) meta.textContent = 'mum yok' + (d.error ? (': '+d.error) : '');
+      return;
+    }
+    const candles = raw.map(k => ({
+      time: Math.floor(Number(k.t || k.time || k[0]) / (String(k.t||k.time||k[0]).length > 11 ? 1000 : 1)),
+      open: Number(k.o != null ? k.o : k.open != null ? k.open : k[1]),
+      high: Number(k.h != null ? k.h : k.high != null ? k.high : k[2]),
+      low: Number(k.l != null ? k.l : k.low != null ? k.low : k[3]),
+      close: Number(k.c != null ? k.c : k.close != null ? k.close : k[4]),
+    })).filter(x => x.time && x.close);
+    if(typeof LightweightCharts === 'undefined'){
+      if(meta) meta.textContent = 'chart kütüphanesi yok';
+      return;
+    }
+    if(!_kfChart){
+      _kfChart = LightweightCharts.createChart(box, {
+        layout: { background: { color: '#12121a' }, textColor: '#8b8b9a' },
+        grid: { vertLines: { color: 'rgba(255,255,255,.04)' }, horzLines: { color: 'rgba(255,255,255,.04)' } },
+        rightPriceScale: { borderVisible: false },
+        timeScale: { borderVisible: false },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        width: box.clientWidth,
+        height: box.clientHeight || 420,
+      });
+      _kfSeries = _kfChart.addCandlestickSeries({
+        upColor: '#39ff8e', downColor: '#ff5c7a',
+        borderUpColor: '#39ff8e', borderDownColor: '#ff5c7a',
+        wickUpColor: '#39ff8e', wickDownColor: '#ff5c7a',
+      });
+      window.addEventListener('resize', () => {
+        if(_kfChart && box) _kfChart.applyOptions({ width: box.clientWidth, height: box.clientHeight || 420 });
+      });
+    }
+    _kfSeries.setData(candles);
+    if(_kfRefLine){
+      try{ _kfSeries.removePriceLine(_kfRefLine); }catch(e){}
+      _kfRefLine = null;
+    }
+    if(CHART_REF != null && CHART_REF > 0){
+      _kfRefLine = _kfSeries.createPriceLine({
+        price: CHART_REF,
+        color: '#fbbf24',
+        lineWidth: 2,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: 'REF',
+      });
+    }
+    _kfChart.timeScale().fitContent();
+    const last = candles[candles.length-1];
+    let metaTxt = CHART_SYM + ' · son $' + fmtPx(last.close) + ' · ' + candles.length + ' mum · ' + CHART_TF;
+    if(CHART_REF != null) metaTxt += ' · REF $' + fmtPx(CHART_REF) + (CHART_REF_TIME ? (' ('+CHART_REF_TIME+')') : '');
+    if(meta) meta.textContent = metaTxt;
+  }catch(e){
+    if(meta) meta.textContent = 'hata: ' + e;
+  }
 }
 function renderCards(d){
   const cards = d.cards || [];
@@ -11832,12 +12003,19 @@ function renderCards(d){
     const stopLvl = Number(p.stop_level||0);
     const lockEq = p.lock_equity != null ? Number(p.lock_equity) : null;
     const atrUsd = p.atr_usd != null ? Number(p.atr_usd) : null;
+    const hardSl = p.hard_sl_usd != null ? Number(p.hard_sl_usd) : null;
     const lockLine = stopLvl >= 1
       ? `<div class="pos-entry">ATR Stop${stopLvl}${lockEq!=null?' · kilit $'+lockEq.toFixed(2):''}${atrUsd!=null?' · atr$ '+atrUsd.toFixed(2):''} · <b>runner</b></div>`
       : (atrUsd!=null ? `<div class="pos-entry">ATR kilit bekleniyor · atr$ ${atrUsd.toFixed(2)}</div>` : '');
-    return `<div class="pos-card ${dirClass}">
+    const slLine = hardSl != null
+      ? `<div class="pos-entry">Hard SL ${hardSl.toFixed(2)}$ · net zarar bu seviyede anında kapatır</div>`
+      : '';
+    const pName = (p.name || (p.symbol||'').replace('USDT','') || '').replace(/'/g,'');
+    const pSym = (p.symbol || (pName + 'USDT')).replace(/'/g,'');
+    const pRef = (p.entry_price != null && !isNaN(p.entry_price)) ? Number(p.entry_price) : '';
+    return `<div class="pos-card ${dirClass}" role="button" tabindex="0" onclick="openKriptoChart('${pSym}', ${pRef === '' ? 'null' : pRef})" style="cursor:pointer" title="Grafik · ${pName}">
       <div class="pos-top">
-        <div class="pos-name">${p.name || p.symbol}</div>
+        <div class="pos-name">${pName}</div>
         <div class="pos-dir ${dc}">${p.dir_tr || (up?'YÜKSELİR':'DÜŞER')}</div>
       </div>
       <div class="pos-price-row">
@@ -11854,10 +12032,12 @@ function renderCards(d){
       </div>
       ${feeLine}
       ${lockLine}
+      ${slLine}
       <div class="pos-risk-row">Risk: $${Number(p.pm_spent||p.margin_usd||15).toFixed(0)}
         <span class="tag">ST Live</span><span class="tag">${p.leverage||15}x</span>
         ${p.tier_label ? `<span class="tag">${p.tier_label}</span>` : ''}
         ${stopLvl>=1 ? `<span class="tag">Stop${stopLvl}</span>` : ''}
+        ${hardSl!=null ? `<span class="tag">SL ${hardSl.toFixed(0)}$</span>` : ''}
       </div>
       <div class="close-btn-wrap">
         <button class="close-btn" onclick="closeCr6('${p.symbol}', ${qty || 'null'}, this)">Pozisyonu Kapat</button>
@@ -12139,18 +12319,33 @@ function initKriptoViews(){
   const algo = document.getElementById('view-algo');
   const anal = document.getElementById('view-analiz');
   const det = document.getElementById('view-detail');
+  const graf = document.getElementById('view-grafik');
   const nOv = document.getElementById('nav-kripto-overview');
   const nGe = document.getElementById('nav-kripto-gecmis');
   const nAl = document.getElementById('nav-kripto-algo');
   const nAn = document.getElementById('nav-kripto-analiz');
-  [dash,gec,algo,anal,det].forEach(el => { if(el) el.style.display = 'none'; });
-  [nOv,nGe,nAl,nAn].forEach(el => { if(el) el.classList.remove('active'); });
+  const nGr = document.getElementById('nav-kripto-grafik');
+  [dash,gec,algo,anal,det,graf].forEach(el => { if(el) el.style.display = 'none'; });
+  [nOv,nGe,nAl,nAn,nGr].forEach(el => { if(el) el.classList.remove('active'); });
   if(DETAIL_KIND){
     if(det) det.style.display = 'block';
     if(DETAIL_KIND === 'algoritmalar' && nAl) nAl.classList.add('active');
     if(DETAIL_KIND === 'analizler' && nAn) nAn.classList.add('active');
     loadBookDetail();
     setInterval(loadBookDetail, 15000);
+  } else if(IS_GRAFIK){
+    if(graf) graf.style.display = 'block';
+    if(nGr) nGr.classList.add('active');
+    localStorage.setItem('kf_chart_sym', CHART_SYM);
+    document.querySelectorAll('#chart-tf .tf-btn').forEach(b => {
+      b.onclick = () => {
+        CHART_TF = b.getAttribute('data-tf') || '1m';
+        localStorage.setItem('kf_chart_tf', CHART_TF);
+        loadKriptoChart();
+      };
+    });
+    loadKriptoChart();
+    setInterval(loadKriptoChart, 20000);
   } else if(IS_GECMIS){
     if(gec) gec.style.display = 'block';
     if(nGe) nGe.classList.add('active');
@@ -12201,6 +12396,10 @@ def page_kripto_future():
 
 @app.route("/kripto/gecmis")
 @app.route("/kripto/gecmis/")
+@app.route("/kripto/grafik")
+@app.route("/kripto/grafik/")
+@app.route("/kripto/grafik/<symbol>")
+@app.route("/kripto/grafik/<symbol>/")
 @app.route("/kripto/algoritmalar")
 @app.route("/kripto/algoritmalar/")
 @app.route("/kripto/algoritmalar/<book_id>")
@@ -12209,7 +12408,7 @@ def page_kripto_future():
 @app.route("/kripto/analizler/")
 @app.route("/kripto/analizler/<book_id>")
 @app.route("/kripto/analizler/<book_id>/")
-def page_kripto_sub(book_id=None):
+def page_kripto_sub(book_id=None, symbol=None):
     if _auth_required():
         return _login_redirect()
     return KRIPTO_FUTURE_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
