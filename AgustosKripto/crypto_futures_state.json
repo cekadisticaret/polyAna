@@ -1,0 +1,65 @@
+{
+  "open_positions": [
+    {
+      "symbol": "INJUSDT",
+      "side": "SHORT",
+      "qty": 30.8,
+      "leverage": 15,
+      "margin_usd": 10.0,
+      "margin_type": "ISOLATED",
+      "entry_price": 4.8612997,
+      "notional": 149.728,
+      "entry_fee": 0.074869,
+      "entry_time_tr": "2026-08-01T22:05:23.086909+03:00",
+      "order_id": 13299033187,
+      "dry_run": false,
+      "testnet": false
+    },
+    {
+      "symbol": "NEARUSDT",
+      "side": "SHORT",
+      "qty": 90.0,
+      "leverage": 15,
+      "margin_usd": 10.0,
+      "margin_type": "ISOLATED",
+      "entry_price": 1.65972802,
+      "notional": 149.3755,
+      "entry_fee": 0.074655,
+      "entry_time_tr": "2026-08-01T22:05:27.130337+03:00",
+      "order_id": 34421436201,
+      "dry_run": false,
+      "testnet": false
+    },
+    {
+      "symbol": "DOTUSDT",
+      "side": "SHORT",
+      "qty": 194.8,
+      "leverage": 15,
+      "margin_usd": 10.0,
+      "margin_type": "ISOLATED",
+      "entry_price": 0.76997332,
+      "notional": 149.9908,
+      "entry_fee": 0.074969,
+      "entry_time_tr": "2026-08-01T22:05:31.195725+03:00",
+      "order_id": 33351494947,
+      "dry_run": false,
+      "testnet": false
+    },
+    {
+      "symbol": "LTCUSDT",
+      "side": "SHORT",
+      "qty": 3.411,
+      "leverage": 15,
+      "margin_usd": 10.0,
+      "margin_type": "ISOLATED",
+      "entry_price": 43.97,
+      "notional": 149.9817,
+      "entry_fee": 0.074974,
+      "entry_time_tr": "2026-08-01T22:05:33.685448+03:00",
+      "order_id": 43859056259,
+      "dry_run": false,
+      "testnet": false
+    }
+  ],
+  "updated_at_tr": "2026-08-01T22:05:34.172705+03:00"
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "symbol": "AVAXUSDT",
+    "side": "SHORT",
+    "signal": "DOWN",
+    "algo": "A10",
+    "score": 1,
+    "qty": 35.327367,
+    "leverage": 15,
+    "margin_usd": 15.0,
+    "entry_price": 6.369,
+    "notional": 225.0,
+    "entry_time_tr": "2026-08-01T19:05:53.691420+03:00",
+    "slot": "2026-08-01 19:00",
+    "virtual": true,
+    "exit_price": 6.355,
+    "exit_time_tr": "2026-08-01T20:02:09.024027+03:00",
+    "pnl": 0.4946,
+    "win": true,
+    "book": "A10 10. Analiz Dual"
+  }
+]

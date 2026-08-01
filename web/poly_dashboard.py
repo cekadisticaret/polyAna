@@ -14,6 +14,7 @@ from flask import Flask, jsonify, make_response, render_template_string, request
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
+_DIR_KRIPTO = os.path.join(os.path.dirname(__file__), "..", "AgustosKripto")
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _PANEL_STATS_ANALIZ = "analiz1"  # sağ panel: sembol WR + en etkili zaman
 _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
@@ -521,9 +522,9 @@ def get_pm_balance() -> float:
 # Gerçek PM trader'lar — sidebar kar donut (manuel dahil)
 # Palet: referans donut (mavi / cyan / lavanta / magenta)
 _PM_LIVE_PROFIT_SOURCES = [
-    ("analiz5", "A1 Live", "#4F7CFF"),
+    ("analiz5", "A1 Live", "#6D5EF7"),
     ("analiz2_live", "A2", "#A78BFA"),
-    ("manual", "Manuel", "#818CF8"),
+    ("manual", "Manuel", "#F59E0B"),
 ]
 
 _PM_PROFIT_BASELINE_FILE = os.path.join(_DIR_POLY, "pm_profit_baseline.json")
@@ -852,7 +853,7 @@ def get_pm_15m_quotes(only_names: set[str] | None = None) -> list[dict]:
 
     return out
 
-# Gerçek Polymarket işlem açan sistemler (Açık Pozisyonlar paneli)
+# Açık Pozisyonlar — yalnızca gerçek Polymarket emri olanlar
 _PM_POSITION_SOURCES = [
     ("analiz5", "A1 Live"),
     ("analiz2_live", "A2 Live"),
@@ -1040,7 +1041,7 @@ def _pm_quote_symbol_sets(positions: list) -> tuple[set[str], set[str]]:
     return hourly, m15
 
 def _position_visible(_key: str, pos: dict) -> bool:
-    """Yalnızca gerçek PM emri (token_id); sanal kotasyonları gösterme."""
+    """Yalnızca Polymarket'te gerçekten açık emir (token_id); sanal gösterme."""
     if pos.get("virtual") is True or pos.get("pm_dry_run") is True:
         return False
     if not pos.get("pm_token_id"):
@@ -1252,7 +1253,7 @@ def api_data():
         token_cents   = est["token_cents"]
         win_payout    = round(float(pm_size), 2) if pm_size else None
         win_profit    = round(float(pm_size) - float(pm_spent), 2) if pm_size and pm_spent else None
-        total_pos_value += close_val if close_val else pm_spent
+        total_pos_value += close_val if close_val else float(pm_spent or 0)
 
         enriched.append({
             "analiz":       pos.get("_analiz_label", pos["_analiz"]),
@@ -1261,12 +1262,12 @@ def api_data():
             "name":         sym.replace("USDT", ""),
             "dir":          pred,
             "dir_tr":       "YÜKSELİR" if pred == "UP" else "DÜŞER",
-            "entry":        round(entry_p, 4),
+            "entry":        round(entry_p, 4) if entry_p else None,
             "current":      round(current_p, 4) if current_p else None,
             "pct":          round(pct, 2),
             "delta":        delta_round,
             "winning":      winning,
-            "pm_spent":     round(pm_spent, 2),
+            "pm_spent":     round(float(pm_spent or 0), 2),
             "pm_size":      pm_size,
             "close_val":    close_val,
             "close_pnl":    close_pnl,
@@ -1645,34 +1646,75 @@ def api_heatmap_detail():
         "trades": trades,
     })
 
+def _is_15m_analiz_key(key: str) -> bool:
+    """15 dakikalık (veya 5m/15m PM) trader anahtarı mı?"""
+    k = (key or "").lower()
+    if k in _15M_PM_ANALYSES or k.startswith("15m_") or k.startswith("5m_"):
+        return True
+    if "15m" in k:
+        return True
+    return False
+
+
+def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) -> list[dict]:
+    """Her sembol için 1s analizler arasından en yüksek WR (kısa etiket: A1, A10…). 15m hariç."""
+    from collections import defaultdict
+    target = syms or list(_ACTIVE_SYMS)  # BTC, ETH, SOL
+    # Yalnızca 1 saatlik ana sanal analizler — 15m / A2#xx / live hariç
+    candidates = [
+        k for k in _OVERVIEW_ACTIVE_ORDER
+        if not k.startswith("a2_")
+        and k not in _LIVE_PM_ANALYSES
+        and k not in _REMOVED_ANALYSES
+        and not _is_15m_analiz_key(k)
+    ]
+    # sym -> best row
+    best: dict[str, dict] = {}
+    for key in candidates:
+        hist = _load_heatmap_history(key)
+        if not hist:
+            continue
+        buckets: dict[str, dict] = defaultdict(lambda: {"w": 0, "t": 0})
+        for t in hist:
+            sym = (t.get("symbol") or "").replace("USDT", "")
+            if sym not in target:
+                continue
+            buckets[sym]["t"] += 1
+            if t.get("win"):
+                buckets[sym]["w"] += 1
+        short = _OVERVIEW_SHORT_LABELS.get(key, _ANALYSIS_LABELS.get(key, key))
+        for sym, v in buckets.items():
+            if v["t"] < min_trades:
+                continue
+            wr = round(v["w"] / v["t"] * 100, 1)
+            prev = best.get(sym)
+            if prev is None or wr > prev["wr"] or (wr == prev["wr"] and v["t"] > prev["t"]):
+                best[sym] = {
+                    "sym": sym,
+                    "wr": wr,
+                    "w": v["w"],
+                    "t": v["t"],
+                    "analiz": key,
+                    "analiz_short": short,
+                    "analiz_label": _ANALYSIS_LABELS.get(key, key),
+                }
+    return [best[s] for s in target if s in best]
+
+
 @app.route("/poly/api/symbol_stats")
 def api_symbol_stats():
     if _auth_required(): return redirect("/poly/login")
-    from collections import defaultdict
     analiz_key = request.args.get("analiz", _PANEL_STATS_ANALIZ)
     if analiz_key not in _HEATMAP_ANALYSES:
         analiz_key = _PANEL_STATS_ANALIZ
     hist = _load_heatmap_history(analiz_key)
+    # Sembol kartları: her coin için en başarılı analiz (BTC/ETH/SOL)
+    sym_wr = _best_analiz_by_symbol(["BTC", "ETH", "SOL"], min_trades=10)
     if not hist:
         return jsonify({"analiz": analiz_key, "analiz_label": _ANALYSIS_LABELS.get(analiz_key, analiz_key),
-                        "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": [], "top_slots": [], "bottom_slots": []})
+                        "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": sym_wr, "top_slots": [], "bottom_slots": []})
 
-    # Sembol bazlı WR
-    sym_stat = defaultdict(lambda: {"w": 0, "t": 0})
-    for t in hist:
-        sym = t.get("symbol", "").replace("USDT", "")
-        sym_stat[sym]["t"] += 1
-        if t.get("win"):
-            sym_stat[sym]["w"] += 1
-    sym_wr = []
-    for sym in _allowed_syms_for(analiz_key):
-        v = sym_stat.get(sym, {"w": 0, "t": 0})
-        if not v["t"]:
-            continue
-        wr = round(v["w"] / v["t"] * 100, 1)
-        sym_wr.append({"sym": sym, "wr": wr, "w": v["w"], "t": v["t"]})
-    sym_wr.sort(key=lambda x: x["wr"], reverse=True)
-
+    # Panel analizine göre toplam WR (lime kart)
     total      = len(hist)
     total_wins = sum(1 for t in hist if t.get("win"))
     total_wr   = round(total_wins / total * 100, 1) if total else 0.0
@@ -1953,17 +1995,19 @@ def page_analizler():
 
 
 _SIDEBAR_PROFIT_CSS = """
-  /* pm-kar — concentric radial + list (Top customers stili) */
-  .sidebar-profit { margin:10px 0 4px; padding:16px 12px 12px; background:#14161a;
-    border:1px solid #22252b; border-radius:20px; box-sizing:border-box; }
+  /* pm-kar-donut — concentric radial bars */
+  .sidebar-profit { margin:10px 0 4px; padding:16px 12px 12px;
+    background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.06); border-radius:22px; box-sizing:border-box;
+    box-shadow:0 10px 28px rgba(0,0,0,.28); }
   .sidebar-profit .sp-title { font-size:13px; color:#fff; font-weight:700; letter-spacing:-.2px; margin-bottom:14px; }
   .sidebar-profit .sp-inner { display:flex; flex-direction:column; align-items:center; gap:12px; width:100%; }
-  .sidebar-profit .sp-chart { position:relative; width:148px; height:148px; flex-shrink:0; }
-  .sidebar-profit .sp-chart svg { width:148px; height:148px; display:block; }
-  .sidebar-profit .sp-center { position:absolute; top:0; left:0; width:148px; height:148px; z-index:2;
+  .sidebar-profit .sp-chart { position:relative; width:168px; height:168px; flex-shrink:0; }
+  .sidebar-profit .sp-chart svg { width:168px; height:168px; display:block; }
+  .sidebar-profit .sp-center { position:absolute; top:0; left:0; width:168px; height:168px; z-index:2;
     display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
-  .sidebar-profit .sp-total { font-size:22px; font-weight:800; color:#fff; line-height:1.05; letter-spacing:-.4px; margin-top:2px; }
-  .sidebar-profit .sp-sub { font-size:10px; color:#6b7280; text-align:center; }
+  .sidebar-profit .sp-total { font-size:34px; font-weight:800; color:#fff !important; line-height:1; letter-spacing:-1px; }
+  .sidebar-profit .sp-sub { display:none; }
   .sidebar-profit .sp-chips { width:100%; display:flex; flex-wrap:wrap; justify-content:center; gap:8px 12px; }
   .sidebar-profit .sp-chip { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:#9ca3af; font-weight:600; }
   .sidebar-profit .sp-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -1982,7 +2026,6 @@ _SIDEBAR_PROFIT_CSS = """
   .sidebar-profit .sp-row-name { font-size:12px; font-weight:700; color:#f3f4f6; line-height:1.2; }
   .sidebar-profit .sp-row-meta { font-size:10px; color:#6b7280; margin-top:2px; }
   .sidebar-profit .sp-row-val { font-size:12px; font-weight:800; flex-shrink:0; }
-  /* eski legend sınıfı — boş kalsın */
   .sidebar-profit .sp-legend { display:none; }
 """
 
@@ -1991,10 +2034,9 @@ _SIDEBAR_PROFIT_HTML = """
     <div class="sp-title">PM Kar</div>
     <div class="sp-inner">
       <div class="sp-chart">
-        <svg id="sp-donut" viewBox="0 0 148 148"></svg>
+        <svg id="sp-donut" viewBox="0 0 168 168"></svg>
         <div class="sp-center">
-          <div class="sp-sub">Toplam</div>
-          <div class="sp-total" id="sp-total">$—</div>
+          <div class="sp-total" id="sp-total">—</div>
         </div>
       </div>
       <div class="sp-chips" id="sp-chips"></div>
@@ -2011,44 +2053,56 @@ window._renderPmProfitTo = function(d, ids) {
   const svgEl = document.getElementById(ids.svg);
   if (!totalEl || !svgEl) return;
   const total = d.total || 0;
-  const items = (d.items || []).slice().sort((a, b) => (b.pnl || 0) - (a.pnl || 0));
-  const sign = total >= 0 ? '+' : '';
-  totalEl.textContent = sign + '$' + Math.abs(total).toFixed(0);
-  totalEl.style.color = total >= 0 ? '#4ade80' : '#f87171';
+  const items = (d.items || []).slice();
+  // Merkez: görseldeki gibi büyük düz sayı
+  totalEl.textContent = String(Math.round(Math.abs(total)));
+  totalEl.style.color = '#fff';
+  totalEl.title = (total >= 0 ? '+' : '-') + '$' + Math.abs(total).toFixed(2);
 
-  // Tek halka donut — abs(pnl) payı, boşluklu yuvarlak uçlar
-  const cx = 74, cy = 74, r = 52, sw = 16;
-  const circ = 2 * Math.PI * r;
-  const gapDeg = 10; // segmentler arası açısal boşluk
-  const gap = circ * (gapDeg / 360);
-  const track = '#1f2430';
-  let arcs = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+track+'" stroke-width="'+sw+'"/>';
-  const weights = items.map(i => Math.abs(i.pnl || 0));
-  const sumW = weights.reduce((a, b) => a + b, 0);
-  if (sumW > 0) {
-    const nSeg = items.filter((_, i) => weights[i] / sumW >= 0.01).length;
-    const usable = Math.max(0, circ - gap * Math.max(nSeg, 1));
-    let rot = -90;
-    items.forEach((item, idx) => {
-      const frac = weights[idx] / sumW;
-      if (frac < 0.01) return;
-      const segLen = Math.max(2, usable * frac);
-      arcs += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+item.color+'" stroke-width="'+sw+'" stroke-dasharray="'+segLen+' '+(circ-segLen)+'" stroke-linecap="round" transform="rotate('+rot+' '+cx+' '+cy+')"/>';
-      rot += (segLen + gap) / circ * 360;
-    });
-  }
+  // 3 konsantrik radial bar — dış→iç (en büyük |pnl| dışta)
+  const ranked = items.slice().sort((a, b) => Math.abs(b.pnl || 0) - Math.abs(a.pnl || 0));
+  while (ranked.length < 3) ranked.push({label:'—', pnl:0, color:'#6D5EF7'});
+  const top3 = ranked.slice(0, 3);
+  const palette = ['#6D5EF7', '#A78BFA', '#F59E0B'];
+  const rings = [
+    { r: 70, sw: 11 },
+    { r: 54, sw: 11 },
+    { r: 38, sw: 11 },
+  ];
+  const cx = 84, cy = 84;
+  const track = 'rgba(255,255,255,.08)';
+  const maxAbs = Math.max(...top3.map(i => Math.abs(i.pnl || 0)), 1);
+  let arcs = '';
+  top3.forEach((item, idx) => {
+    const { r, sw } = rings[idx];
+    const circ = 2 * Math.PI * r;
+    const color = item.color || palette[idx];
+    const abs = Math.abs(item.pnl || 0);
+    // Lider ~88%, diğerleri oransal; 0 ise sadece track
+    let pct = abs > 0 ? Math.max(0.12, Math.min(0.88, abs / maxAbs)) : 0;
+    const fill = circ * pct;
+    const gap = Math.max(0, circ - fill);
+    arcs += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+track+'" stroke-width="'+sw+'"/>';
+    if (fill > 0) {
+      arcs += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'"'
+        + ' stroke-dasharray="'+fill+' '+gap+'" stroke-linecap="round"'
+        + ' transform="rotate(-90 '+cx+' '+cy+')"/>';
+    }
+  });
+  svgEl.setAttribute('viewBox', '0 0 168 168');
   svgEl.innerHTML = arcs;
 
+  // Chip sırası = halka sırası (dış→iç)
   if (chipsEl) {
-    chipsEl.innerHTML = items.map(item =>
-      '<span class="sp-chip"><span class="sp-dot" style="background:'+item.color+'"></span>'+item.label+'</span>'
+    chipsEl.innerHTML = top3.map((item, idx) =>
+      '<span class="sp-chip"><span class="sp-dot" style="background:'+(item.color||palette[idx])+'"></span>'+(item.label||'—')+'</span>'
     ).join('');
   }
   if (listEl) {
     listEl.innerHTML = items.map(item => {
       const v = item.pnl || 0;
       const vs = (v >= 0 ? '+' : '-') + '$' + Math.abs(v).toFixed(0);
-      const vc = v >= 0 ? '#4ade80' : '#f87171';
+      const vc = v >= 0 ? '#39ff8e' : '#ff5c7a';
       const initials = (item.label || '?').replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase() || '?';
       const meta = (item.key === 'manual') ? 'Manuel PM' : 'Saatlik gerçek';
       return '<div class="sp-row">'
@@ -2113,7 +2167,456 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260801-15m-309-live"
+_DASH_UI_VER = "20260801-st-live-v2"
+
+_SORA_FONT_LINKS = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    '<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">'
+)
+
+# Kripto Future görsel dili — tüm ekranlara override olarak enjekte edilir (layout aynı kalır)
+_KF_THEME_CSS = r"""
+/* kf-theme */
+:root{
+  --bg:#07070b; --card:#12121a; --card2:#181822; --line:rgba(255,255,255,.06);
+  --txt:#f4f4f8; --muted:#8b8b9a; --green:#39ff8e; --red:#ff5c7a;
+  --accent:#c8f135; --orange:#f5a623; --vio:#a78bfa;
+}
+body{
+  color:var(--txt) !important;
+  font-family:'Sora',sans-serif !important;
+  background:
+    radial-gradient(900px 500px at 8% -12%, rgba(200,241,53,.08), transparent 55%),
+    radial-gradient(700px 420px at 92% 0%, rgba(167,139,250,.12), transparent 50%),
+    radial-gradient(600px 400px at 70% 110%, rgba(57,255,142,.05), transparent 45%),
+    var(--bg) !important;
+}
+.sidebar{
+  background:rgba(8,10,12,.92) !important;
+  backdrop-filter:blur(14px);
+  border-right:1px solid var(--line) !important;
+  height:100vh !important;
+  height:100dvh !important;
+  max-height:100dvh !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+.logo{letter-spacing:-.3px}
+.nav-label{
+  font-size:10px !important; letter-spacing:.12em !important;
+  color:rgba(200,241,53,.55) !important; margin-top:10px !important;
+}
+.nav-item{
+  border-radius:12px !important;
+  font-weight:600 !important;
+  transition:all .15s !important;
+}
+.nav-item:hover{background:rgba(255,255,255,.04) !important;color:#ccc !important}
+.nav-item.active{background:rgba(200,241,53,.1) !important;color:var(--accent) !important}
+.nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:var(--accent) !important}
+.sidebar-footer .dot,.live-dot,.dot{background:var(--green) !important}
+.card,.settings-card,.section-wrap,.rp-section,.chart-panel-inner,
+.portfolio-chart-wrap,.algo-bars-box,.stat-card,.top3-card,.pm-hourly-card,
+.group,.panel,.box,.quote-card,.history-card,.algo-card,.filter-bar,
+.sidebar-cash,.mini,.wait-panel,.hero-main{
+  background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02)) !important;
+  border:1px solid var(--line) !important;
+  box-shadow:0 12px 32px rgba(0,0,0,.22);
+  backdrop-filter:blur(12px);
+}
+.tab.active,.port-tab.active,.slot-tab.active,.hm-filter.active,.tab-px.active{
+  background:var(--accent) !important;color:#111 !important;border-color:var(--accent) !important;
+}
+.tab,.port-tab,.slot-tab,.hm-filter,.tab-px{
+  border-radius:12px !important;
+  border-color:var(--line) !important;
+  background:rgba(255,255,255,.04) !important;
+}
+.save-btn,.close-btn,button[type="submit"],.btn-primary,.open-btn{
+  background:var(--accent) !important;color:#111 !important;border:none !important;
+  border-radius:14px !important;font-weight:800 !important;
+}
+.save-btn:hover,.close-btn:hover,button[type="submit"]:hover{filter:brightness(1.08)}
+.setting-input,input[type="text"],input[type="password"],input[type="number"],select,textarea{
+  background:rgba(255,255,255,.04) !important;
+  border:1px solid var(--line) !important;
+  color:var(--txt) !important;
+  border-radius:12px !important;
+  font-family:'Sora',sans-serif !important;
+}
+.setting-input:focus,input:focus,select:focus,textarea:focus{
+  border-color:var(--accent) !important;
+  box-shadow:0 0 0 2px rgba(200,241,53,.2) !important;
+  outline:none !important;
+}
+.pnl-pos,.pos,.up,.stat-val.up,.stat-sub.pos,.trade-pnl.pos,.live-close-pnl.pos,
+.port-cur.up,.port-delta.up,.algo-bar-val.up,.dir-wr.good,.sig-wr.good{color:var(--green) !important}
+.pnl-neg,.neg,.down,.stat-val.down,.stat-sub.neg,.trade-pnl.neg,.live-close-pnl.neg,
+.port-cur.down,.port-delta.down,.algo-bar-val.down,.dir-wr.bad,.sig-wr.bad{color:var(--red) !important}
+.stat-val.green,.setting-val,.logo{color:var(--accent) !important}
+.logo span{color:#fff !important}
+.page-sub,.subtitle,.stat-label,.rp-title,.card-title,.card-desc,.card-key{color:var(--muted) !important}
+.pos-dir.up,.dir-verdict .dir-pill.UP,.sym-pill.good,.pm-hourly-pill.up{
+  background:rgba(57,255,142,.12) !important;color:var(--green) !important;border-color:rgba(57,255,142,.25) !important;
+}
+.pos-dir.down,.dir-verdict .dir-pill.DOWN,.sym-pill.bad,.pm-hourly-pill.down{
+  background:rgba(255,92,122,.12) !important;color:var(--red) !important;border-color:rgba(255,92,122,.25) !important;
+}
+.err{background:rgba(255,92,122,.12) !important;color:var(--red) !important;border:1px solid rgba(255,92,122,.25)}
+.quote-row.selected{background:rgba(200,241,53,.08) !important;outline:1px solid rgba(200,241,53,.25) !important}
+.quote-row:hover{background:rgba(255,255,255,.04) !important}
+.chart-panel{border-left-color:var(--line) !important}
+.ov-wallet{
+  background:linear-gradient(145deg,#6339f9 0%,#a21caf 45%,#c63f82 100%) !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+  box-shadow:0 18px 40px rgba(99,57,249,.35) !important;
+  color:#fff !important;
+}
+.ov-wallet.cash{
+  background:linear-gradient(145deg,#6d28d9 0%,#a21caf 48%,#db2777 100%) !important;
+  box-shadow:0 18px 40px rgba(109,40,217,.35) !important;
+}
+.ov-wallet-bal,.ov-wallet-lbl,.ov-wallet-tag,.ov-wallet-kpi,.ov-wallet-kpi b{color:#fff !important}
+.sym-lime.risk-lime{
+  background:linear-gradient(145deg,#dfff4f 0%, #c8f135 55%, #b8e020 100%) !important;
+  border:none !important; box-shadow:0 16px 36px rgba(200,241,53,.28) !important; color:#111 !important;
+}
+.sym-lime.risk-lime .sym-lime-title,
+.sym-lime.risk-lime .sym-lime-val,
+.sym-lime.risk-lime .sym-lime-meta .k,
+.sym-lime.risk-lime .sym-lime-meta .v{color:#111 !important}
+.sym-vio{
+  background:linear-gradient(145deg,#5b21b6 0%,#7c3aed 42%,#a21caf 100%) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:0 16px 36px rgba(91,33,182,.35) !important; color:#fff !important;
+}
+.sym-vio .sym-lime-title,.sym-vio .sym-lime-val,
+.sym-vio .sym-lime-meta .k,.sym-vio .sym-lime-meta .v{color:#fff !important}
+.az-vio{
+  border:1px solid rgba(255,255,255,.12) !important; color:#fff !important;
+}
+.az-vio.wr5{background:linear-gradient(145deg,#047857 0%,#10b981 45%,#34d399 100%) !important;box-shadow:0 16px 36px rgba(16,185,129,.35) !important}
+.az-vio.wr4{background:linear-gradient(145deg,#0f766e 0%,#14b8a6 45%,#2dd4bf 100%) !important;box-shadow:0 16px 36px rgba(20,184,166,.32) !important}
+.az-vio.wr3{background:linear-gradient(145deg,#5b21b6 0%,#7c3aed 42%,#a21caf 100%) !important;box-shadow:0 16px 36px rgba(91,33,182,.35) !important}
+.az-vio.wr2{background:linear-gradient(145deg,#b45309 0%,#d97706 45%,#f59e0b 100%) !important;box-shadow:0 16px 36px rgba(217,119,6,.35) !important}
+.az-vio.wr1{background:linear-gradient(145deg,#9f1239 0%,#e11d48 45%,#f43f5e 100%) !important;box-shadow:0 16px 36px rgba(225,29,72,.35) !important}
+.az-vio .az-title,.az-vio .az-val,.az-vio .az-meta .v{color:#fff !important}
+.az-vio .az-desc,.az-vio .az-meta .k{color:rgba(255,255,255,.7) !important}
+.az-vio .az-meta .v.pos{color:#39ff8e !important}
+.az-vio .az-meta .v.neg{color:#ff8fab !important}
+.az-chip .p.ok{color:#39ff8e !important}
+.az-chip .p.mid{color:#fde047 !important}
+/* Algoritma neo kartlar — KF glass override */
+.grid .card.algo-neo{
+  background:#070707 !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  box-shadow:0 14px 32px rgba(0,0,0,.5) !important;
+  backdrop-filter:none !important;
+  border-radius:28px !important;
+}
+.grid .card.algo-neo.tone-hi{
+  border-color:rgba(124,255,107,.35) !important;
+  box-shadow:0 0 28px rgba(124,255,107,.18), 0 14px 32px rgba(0,0,0,.45) !important;
+}
+.grid .card.algo-neo.tone-mid{
+  border-color:rgba(253,224,71,.28) !important;
+  box-shadow:0 0 24px rgba(253,224,71,.12), 0 14px 32px rgba(0,0,0,.45) !important;
+}
+.grid .card.algo-neo.tone-lo{
+  border-color:rgba(255,92,122,.28) !important;
+  box-shadow:0 0 24px rgba(255,92,122,.12), 0 14px 32px rgba(0,0,0,.45) !important;
+}
+.con-vio{
+  border:1px solid rgba(255,255,255,.12) !important; color:#fff !important;
+  background:linear-gradient(145deg,#5b21b6 0%,#7c3aed 42%,#a21caf 100%) !important;
+  box-shadow:0 16px 36px rgba(91,33,182,.35) !important;
+}
+.con-vio.wr5{background:linear-gradient(145deg,#047857 0%,#10b981 45%,#34d399 100%) !important;box-shadow:0 16px 36px rgba(16,185,129,.35) !important}
+.con-vio.wr4{background:linear-gradient(145deg,#0f766e 0%,#14b8a6 45%,#2dd4bf 100%) !important;box-shadow:0 16px 36px rgba(20,184,166,.32) !important}
+.con-vio.wr3{background:linear-gradient(145deg,#5b21b6 0%,#7c3aed 42%,#a21caf 100%) !important;box-shadow:0 16px 36px rgba(91,33,182,.35) !important}
+.con-vio.wr2{background:linear-gradient(145deg,#b45309 0%,#d97706 45%,#f59e0b 100%) !important;box-shadow:0 16px 36px rgba(217,119,6,.35) !important}
+.con-vio.wr1{background:linear-gradient(145deg,#9f1239 0%,#e11d48 45%,#f43f5e 100%) !important;box-shadow:0 16px 36px rgba(225,29,72,.35) !important}
+.con-vio .az-title,.con-vio .az-val,.con-vio .az-meta .v,.con-vio .con-forecast{color:#fff !important}
+.con-vio .az-desc,.con-vio .az-meta .k{color:rgba(255,255,255,.7) !important}
+/* ALGO1 — sarı kart (finans app dili) */
+#consensus-box-1.con-vio,
+#consensus-box-1.con-vio.wr5,
+#consensus-box-1.con-vio.wr4,
+#consensus-box-1.con-vio.wr3,
+#consensus-box-1.con-vio.wr2,
+#consensus-box-1.con-vio.wr1,
+.con-vio.con-yellow{
+  background:linear-gradient(145deg,#ffe600 0%,#f8e231 45%,#e8d21a 100%) !important;
+  border:1px solid rgba(0,0,0,.08) !important;
+  box-shadow:0 16px 36px rgba(248,226,49,.35) !important;
+  color:#111 !important;
+}
+#consensus-box-1 .az-title,
+#consensus-box-1 .az-val,
+#consensus-box-1 .az-meta .v,
+#consensus-box-1 .az-chip .n,
+#consensus-box-1 .az-chip .p,
+#consensus-box-1 .con-forecast,
+#consensus-box-1 .con-forecast b{color:#111 !important}
+#consensus-box-1 .az-desc,
+#consensus-box-1 .az-meta .k,
+#consensus-box-1 .az-chip .c{color:rgba(17,17,17,.65) !important}
+#consensus-box-1 .az-chip{
+  background:rgba(0,0,0,.08) !important; border-color:rgba(0,0,0,.1) !important;
+}
+#consensus-box-1 .az-chip .a{background:#111 !important; color:#fff !important}
+#consensus-box-1 .az-chip .a.up{background:#0a7a3e !important; color:#fff !important}
+#consensus-box-1 .az-chip .a.dn{background:#b91c1c !important; color:#fff !important}
+#consensus-box-1 .az-chip .p.ok{color:#0a7a3e !important}
+#consensus-box-1 .az-chip .p.mid{color:#92400e !important}
+#consensus-box-1 .con-forecast{
+  background:rgba(0,0,0,.1) !important; border-color:rgba(0,0,0,.12) !important;
+}
+#consensus-box-1 .con-forecast .up{color:#0a7a3e !important}
+#consensus-box-1 .con-forecast .dn{color:#b91c1c !important}
+#consensus-box-1 .con-forecast .neu{color:#92400e !important}
+#consensus-box-1 .az-ico{background:rgba(0,0,0,.12) !important}
+#consensus-box-1 .az-ico svg ellipse{fill:#111 !important}
+/* ALGO2 — bir tık koyu sarı */
+#consensus-box-2.con-vio,
+#consensus-box-2.con-vio.wr5,
+#consensus-box-2.con-vio.wr4,
+#consensus-box-2.con-vio.wr3,
+#consensus-box-2.con-vio.wr2,
+#consensus-box-2.con-vio.wr1,
+.con-vio.con-yellow-dark{
+  background:linear-gradient(145deg,#e6c200 0%,#d4b000 45%,#c4a000 100%) !important;
+  border:1px solid rgba(0,0,0,.1) !important;
+  box-shadow:0 16px 36px rgba(196,160,0,.35) !important;
+  color:#111 !important;
+}
+#consensus-box-2 .az-title,
+#consensus-box-2 .az-val,
+#consensus-box-2 .az-meta .v,
+#consensus-box-2 .az-chip .n,
+#consensus-box-2 .az-chip .p,
+#consensus-box-2 .con-forecast,
+#consensus-box-2 .con-forecast b{color:#111 !important}
+#consensus-box-2 .az-desc,
+#consensus-box-2 .az-meta .k,
+#consensus-box-2 .az-chip .c{color:rgba(17,17,17,.65) !important}
+#consensus-box-2 .az-chip{
+  background:rgba(0,0,0,.1) !important; border-color:rgba(0,0,0,.12) !important;
+}
+#consensus-box-2 .az-chip .a{background:#111 !important; color:#fff !important}
+#consensus-box-2 .az-chip .a.up{background:#0a7a3e !important; color:#fff !important}
+#consensus-box-2 .az-chip .a.dn{background:#b91c1c !important; color:#fff !important}
+#consensus-box-2 .az-chip .p.ok{color:#0a7a3e !important}
+#consensus-box-2 .az-chip .p.mid{color:#78350f !important}
+#consensus-box-2 .con-forecast{
+  background:rgba(0,0,0,.12) !important; border-color:rgba(0,0,0,.14) !important;
+}
+#consensus-box-2 .con-forecast .up{color:#0a7a3e !important}
+#consensus-box-2 .con-forecast .dn{color:#b91c1c !important}
+#consensus-box-2 .con-forecast .neu{color:#78350f !important}
+#consensus-box-2 .az-ico{background:rgba(0,0,0,.14) !important}
+#consensus-box-2 .az-ico svg ellipse{fill:#111 !important}
+/* Grafik / İşlemler — ALGO konsensüs mini kartlar */
+.algo-con-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:6px}
+.algo-con-card{
+  border-radius:14px; padding:8px 12px; color:#111 !important;
+  border:1px solid rgba(0,0,0,.08) !important;
+}
+.algo-con-card.yellow{
+  background:linear-gradient(145deg,#ffe600 0%,#f8e231 45%,#e8d21a 100%) !important;
+  box-shadow:0 8px 18px rgba(248,226,49,.28) !important;
+}
+.algo-con-card.yellow-dark{
+  background:linear-gradient(145deg,#e6c200 0%,#d4b000 45%,#c4a000 100%) !important;
+  box-shadow:0 8px 18px rgba(196,160,0,.28) !important;
+}
+.algo-con-card .acc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.algo-con-card .acc-title{font-size:11px;font-weight:800;color:#111 !important;line-height:1.2}
+.algo-con-card .acc-sub{font-size:9px;font-weight:600;color:rgba(17,17,17,.6) !important;margin-top:1px}
+.algo-con-card .acc-lead{font-size:16px;font-weight:800;letter-spacing:-.4px;color:#111 !important;line-height:1;white-space:nowrap}
+.algo-con-card .acc-detail{display:none !important}
+.analiz-dirs{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:6px}
+.analiz-dirs .ad-pill{
+  font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;
+  background:#141414;border:1px solid #2a2a2a;color:#aaa;
+}
+.analiz-dirs .ad-pill.up{background:#142814;color:#4ade80;border-color:#22c55e}
+.analiz-dirs .ad-pill.dn{background:#2a1414;color:#f87171;border-color:#ef4444}
+.algo-con-summary{
+  width:100%; margin-top:4px; font-size:11px; font-weight:700; color:#ccc;
+}
+.algo-con-summary .up{color:#4ade80 !important}
+.algo-con-summary .dn{color:#f87171 !important}
+.algo-con-summary .neu{color:#fbbf24 !important}
+@media(max-width:700px){.algo-con-row{grid-template-columns:1fr}}
+/* Mobil: sidebar tamamen gizli (kripto + KF) */
+@media(max-width:768px){
+  .sidebar{display:none !important}
+}
+"""
+
+
+_CEMBOT_MARK_SVG = (
+    '<svg viewBox="0 0 26 26" fill="none" aria-hidden="true">'
+    '<rect x="4" y="8" width="18" height="14" rx="5" fill="#111"/>'
+    '<circle cx="10.5" cy="14.5" r="2.2" fill="#c8f135"/>'
+    '<circle cx="15.5" cy="14.5" r="2.2" fill="#c8f135"/>'
+    '<rect x="9.5" y="18.2" width="7" height="1.6" rx=".8" fill="#c8f135" opacity=".75"/>'
+    '<rect x="11.5" y="3.5" width="3" height="5" rx="1.2" fill="#111"/>'
+    '<circle cx="13" cy="3.2" r="1.6" fill="#111"/>'
+    '</svg>'
+)
+
+# CemBOT marka CSS — Poly + /kripto (KF temasından bağımsız)
+_CEMBOT_BRAND_CSS = r"""
+/* cembot-brand */
+.cembot{
+  display:flex; align-items:center; gap:10px; text-decoration:none !important;
+  margin:0 0 18px; padding:10px 10px 12px; border-radius:16px;
+  background:linear-gradient(145deg, rgba(200,241,53,.12), rgba(57,255,142,.04));
+  border:1px solid rgba(200,241,53,.22);
+  box-shadow:0 10px 28px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
+  transition:transform .15s, border-color .15s, box-shadow .15s;
+  color:inherit !important;
+}
+.cembot:hover,.cembot:visited,.cembot:active,.cembot:focus{
+  text-decoration:none !important; color:inherit !important;
+  transform:translateY(-1px);
+  border-color:rgba(200,241,53,.4);
+  box-shadow:0 14px 32px rgba(200,241,53,.12), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.cembot-mark{
+  position:relative; width:40px; height:40px; border-radius:13px; flex-shrink:0;
+  background:linear-gradient(145deg,#dfff4f 0%,#c8f135 50%,#39ff8e 100%);
+  box-shadow:0 6px 16px rgba(200,241,53,.35);
+  display:grid; place-items:center;
+}
+.cembot-mark::after{
+  content:''; position:absolute; inset:-3px; border-radius:15px;
+  border:1px solid rgba(200,241,53,.35); opacity:.7; pointer-events:none;
+}
+.cembot-mark svg{display:block; width:26px; height:26px}
+.cembot-word{display:flex; flex-direction:column; line-height:1; min-width:0}
+.cembot-cem{
+  font-size:18px; font-weight:800; letter-spacing:-.6px; color:#fff !important;
+}
+.cembot-bot{
+  font-size:11px; font-weight:800; letter-spacing:.28em; color:#c8f135 !important;
+  margin-top:3px;
+}
+.cembot-clock{
+  display:block; margin-top:5px; font-size:11px; font-weight:700;
+  letter-spacing:.04em; color:rgba(255,255,255,.72) !important;
+  font-variant-numeric:tabular-nums;
+}
+.cembot-sm{
+  margin:0; padding:6px 10px; border-radius:12px; gap:8px;
+  background:linear-gradient(145deg, rgba(200,241,53,.1), transparent);
+}
+.cembot-sm .cembot-mark{width:32px;height:32px;border-radius:10px}
+.cembot-sm .cembot-mark svg{width:20px;height:20px}
+.cembot-sm .cembot-cem{font-size:15px}
+.cembot-sm .cembot-bot{font-size:9px;letter-spacing:.22em;margin-top:2px}
+.cembot-sm .cembot-clock{font-size:10px;margin-top:3px}
+"""
+
+_CEMBOT_BRAND_HTML = (
+    f'<a class="cembot" href="/poly" aria-label="CemBOT">'
+    f'<span class="cembot-mark">{_CEMBOT_MARK_SVG}</span>'
+    f'<span class="cembot-word">'
+    f'<span class="cembot-cem">Cem</span>'
+    f'<span class="cembot-bot">BOT</span>'
+    f'<span class="cembot-clock" data-cembot-clock>—:—:—</span>'
+    f'</span></a>'
+)
+
+_CEMBOT_KRIPTO_BRAND_HTML = (
+    f'<a class="cembot" href="/kripto" aria-label="Cem Kripto">'
+    f'<span class="cembot-mark">{_CEMBOT_MARK_SVG}</span>'
+    f'<span class="cembot-word">'
+    f'<span class="cembot-cem">cem</span>'
+    f'<span class="cembot-bot">KRIPTO</span>'
+    f'<span class="cembot-clock" data-cembot-clock>—:—:—</span>'
+    f'</span></a>'
+)
+
+_CEMBOT_MOBILE_HTML = (
+    f'<a class="cembot cembot-sm" href="/poly" aria-label="CemBOT">'
+    f'<span class="cembot-mark">{_CEMBOT_MARK_SVG}</span>'
+    f'<span class="cembot-word">'
+    f'<span class="cembot-cem">Cem</span>'
+    f'<span class="cembot-bot">BOT</span>'
+    f'<span class="cembot-clock" data-cembot-clock>—:—:—</span>'
+    f'</span></a>'
+)
+
+_CEMBOT_CLOCK_JS = (
+    '<script>(function(){'
+    'function tick(){'
+    'var els=document.querySelectorAll("[data-cembot-clock]");'
+    'if(!els.length)return;'
+    'var t="";'
+    'try{t=new Date().toLocaleTimeString("tr-TR",{'
+    'hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false,'
+    'timeZone:"Europe/Istanbul"});}'
+    'catch(e){var d=new Date();'
+    't=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")'
+    '+":"+String(d.getSeconds()).padStart(2,"0");}'
+    'els.forEach(function(el){el.textContent=t;});'
+    '}'
+    'tick();setInterval(tick,1000);'
+    '})();</script>'
+)
+
+
+def _patch_cembot_brand(html: str) -> str:
+    """Sidebar / mobil / login PolyMarket logosunu CemBOT markasına çevir."""
+    if not html:
+        return html
+    if 'class="cembot"' not in html:
+        html = html.replace(
+            '<div class="logo">Poly<span>Market</span></div>',
+            _CEMBOT_BRAND_HTML,
+        )
+        html = html.replace(
+            '<div class="logo">PolyMarket</div>',
+            _CEMBOT_BRAND_HTML,
+        )
+        html = html.replace(
+            '<div class="mobile-logo">PolyMarket</div>',
+            _CEMBOT_MOBILE_HTML,
+        )
+    if 'class="cembot"' in html and "/* cembot-brand */" not in html:
+        if "</style>" in html:
+            html = html.replace("</style>", _CEMBOT_BRAND_CSS + "\n</style>", 1)
+        elif "</head>" in html:
+            html = html.replace(
+                "</head>",
+                "<style>" + _CEMBOT_BRAND_CSS + "</style>\n</head>",
+                1,
+            )
+    if "data-cembot-clock" in html and "querySelectorAll(\"[data-cembot-clock]\")" not in html:
+        if "</body>" in html:
+            html = html.replace("</body>", _CEMBOT_CLOCK_JS + "\n</body>", 1)
+        elif "</html>" in html:
+            html = html.replace("</html>", _CEMBOT_CLOCK_JS + "\n</html>", 1)
+    return html
+
+
+def _patch_kf_theme(html: str) -> str:
+    """Yalnızca Kripto Future (/kripto) sayfasına KF görsel dilini uygula."""
+    if not html or "/* kf-theme */" in html:
+        return html
+    if "family=Sora" not in html:
+        if "<style>" in html:
+            html = html.replace("<style>", _SORA_FONT_LINKS + "\n<style>", 1)
+        elif "</head>" in html:
+            html = html.replace("</head>", _SORA_FONT_LINKS + "\n</head>", 1)
+    if "</style>" in html:
+        html = html.replace("</style>", _KF_THEME_CSS + "\n</style>", 1)
+    return html
 
 
 def _patch_cache_bust(html: str) -> str:
@@ -2154,10 +2657,13 @@ def _patch_nav_islemler(html: str) -> str:
 
 
 def _patch_nav_kripto_future(html: str) -> str:
-    """Overview altına Kripto Future menü linki ekle."""
-    if 'href="/poly/kripto-future"' in html or 'href="/kripto-future"' in html:
+    """Overview altına Kripto Future menü linki ekle → bursaapp.com/kripto."""
+    if 'href="/kripto"' in html or 'href="/poly/kripto-future"' in html or 'href="/kripto-future"' in html:
+        # Eski path varsa /kripto'ya çek
+        html = html.replace('href="/poly/kripto-future"', 'href="/kripto"')
+        html = html.replace('href="/kripto-future"', 'href="/kripto"')
         return html
-    link = '<a class="nav-item" href="/poly/kripto-future"><span class="nav-dot"></span>Kripto Future</a>\n  '
+    link = '<a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto Future</a>\n  '
     needles = [
         '<a class="nav-item active" id="nav-overview" onclick="showView(\'overview\')" href="#"><span class="nav-dot"></span>Overview</a>\n',
         '<a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>\n',
@@ -2230,10 +2736,26 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .dir-verdict .dir-pill.DOWN{background:#2a1414;color:#f87171;border-color:#ef4444}
 .dir-verdict .dir-pill.split,.dir-verdict .dir-pill.neutral{background:#1a1a1a;color:#888;border-color:#333}
 .dir-verdict .dir-hint{font-size:9px;color:#555;font-weight:600}
+.algo-con-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;margin-top:6px}
+.algo-con-card{border-radius:14px;padding:7px 11px;color:#111;border:1px solid rgba(0,0,0,.08)}
+.algo-con-card.yellow{background:linear-gradient(145deg,#ffe600 0%,#f8e231 45%,#e8d21a 100%);box-shadow:0 6px 16px rgba(248,226,49,.25)}
+.algo-con-card.yellow-dark{background:linear-gradient(145deg,#e6c200 0%,#d4b000 45%,#c4a000 100%);box-shadow:0 6px 16px rgba(196,160,0,.25)}
+.algo-con-card .acc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.algo-con-card .acc-title{font-size:11px;font-weight:800;color:#111;line-height:1.15}
+.algo-con-card .acc-sub{font-size:9px;font-weight:600;color:rgba(17,17,17,.6);margin-top:1px}
+.algo-con-card .acc-lead{font-size:15px;font-weight:800;letter-spacing:-.4px;color:#111;line-height:1;white-space:nowrap}
+.algo-con-card .acc-detail{display:none}
+.analiz-dirs{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:5px}
+.analiz-dirs .ad-pill{font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;background:#141414;border:1px solid #2a2a2a;color:#aaa}
+.analiz-dirs .ad-pill.up{background:#142814;color:#4ade80;border-color:#22c55e}
+.analiz-dirs .ad-pill.dn{background:#2a1414;color:#f87171;border-color:#ef4444}
+.algo-con-summary{width:100%;margin-top:4px;font-size:11px;font-weight:700;color:#ccc}
+.algo-con-summary .up{color:#4ade80}.algo-con-summary .dn{color:#f87171}.algo-con-summary .neu{color:#fbbf24}
+@media(max-width:700px){.algo-con-row{grid-template-columns:1fr}}
+#trade-chart{height:min(72vh,720px);min-height:480px;width:100%;flex:none}
 .dir-wr,.sig-wr{font-size:9px;font-weight:800;margin-left:5px;opacity:.95}
 .dir-wr.good,.sig-wr.good{color:#4ade80}
 .dir-wr.bad,.sig-wr.bad{color:#f87171}
-#trade-chart{height:min(68vh,640px);min-height:420px;width:100%;flex:none}
 .chart-empty{color:#555;font-size:13px;padding:40px 12px;text-align:center}
 .page-title{font-size:22px;font-weight:800;margin-bottom:6px}
 .page-sub{font-size:13px;color:#666;margin-bottom:24px}
@@ -3024,19 +3546,8 @@ function addYonTahminMarkers(markers, yt) {
 }
 
 function addSlotForecastMarkers(markers, yt) {
-  if (!yt || !yt.ok) return;
-  (yt.slot_marks || []).forEach(s => {
-    const is15 = s.tf === '15m';
-    markers.push({
-      time: s.time,
-      position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
-      color: is15
-        ? (s.dir === 'UP' ? '#22c55e' : '#ef4444')
-        : (s.dir === 'UP' ? '#2dd4bf' : '#f87171'),
-      shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
-      text: s.text || ((is15 ? '15' : '5') + (s.dir === 'UP' ? '↑' : '↓') + (s.prob || '') + '%'),
-    });
-  });
+  // 5m/15m tahmin etiketleri kapalı — grafiği daraltıyordu
+  return;
 }
 
 function applyYonTahminEma(yt) {
@@ -3132,20 +3643,44 @@ function _slotNowDir(d) {
   if (last < ref) return 'DOWN';
   return null;
 }
-function algoPanelPillHtml(panel, tag, acc, wrKey) {
+function _algoDirTr(dir){
+  if (dir === 'UP') return {arrow:'▲', short:'yukarı', label:'YUKARI', cls:'up'};
+  if (dir === 'DOWN') return {arrow:'▼', short:'aşağı', label:'AŞAĞI', cls:'dn'};
+  return {arrow:'=', short:'nötr', label:'NÖTR', cls:'neu'};
+}
+function algoPanelCardHtml(panel, tag, acc, wrKey, variant, sym) {
   if (!panel || panel.total == null) return '';
-  const tot = panel.total;
+  const tot = Number(panel.total) || 0;
   const dir = panel.direction;
+  const meta = _algoDirTr(dir);
+  const votes = dir === 'UP' ? (panel.up || 0)
+    : dir === 'DOWN' ? (panel.down || 0)
+    : Math.max(panel.up || 0, panel.down || 0);
+  const pct = tot ? Math.round(votes / tot * 100) : 0;
   const wr = fmtWr(acc, wrKey);
-  const tf = panel.timeframe && panel.timeframe !== '1h' ? (' · ' + panel.timeframe) : '';
-  const tip = panel.period_label ? (' title="' + String(panel.period_label).replace(/"/g, '&quot;') + '"') : '';
-  if (dir === 'UP') {
-    return '<span class="dir-pill UP"' + tip + '>' + tag + tf + ' ↑ YUKARI ' + panel.up + '/' + tot + wr + '</span>';
-  }
-  if (dir === 'DOWN') {
-    return '<span class="dir-pill DOWN"' + tip + '>' + tag + tf + ' ↓ AŞAĞI ' + panel.down + '/' + tot + wr + '</span>';
-  }
-  return '<span class="dir-pill neutral"' + tip + '>' + tag + tf + ' ↔ NÖTR ' + (panel.neutral || 0) + '/' + tot + wr + '</span>';
+  const tip = panel.period_label ? String(panel.period_label).replace(/"/g, '&quot;') : '';
+  const vCls = variant === 'yellow-dark' ? 'yellow-dark' : 'yellow';
+  return '<div class="algo-con-card ' + vCls + '"' + (tip ? (' title="' + tip + '"') : '') + '>' +
+    '<div class="acc-top">' +
+      '<div><div class="acc-title">' + tag + '</div>' +
+      '<div class="acc-sub">' + tot + ' oy' + wr + '</div></div>' +
+      '<div class="acc-lead">' + sym + ' ' + meta.arrow + ' ' + pct + '%</div>' +
+    '</div>' +
+    '<div class="acc-detail">' + tag + ' ' + meta.short + ' · ' + votes + '/' + tot + '</div>' +
+  '</div>';
+}
+function analizDirsHtml(dirs) {
+  if (!dirs) return '';
+  const order = [['a1','A1'],['a4','A4'],['a6','A6'],['st','ST']];
+  const pills = order.map(([k, tag]) => {
+    const d = dirs[k] || {};
+    const dir = d.dir;
+    const cls = dir === 'UP' ? 'up' : dir === 'DOWN' ? 'dn' : '';
+    const lbl = d.label || (tag + ' —');
+    const tip = k === 'st' ? ' title="Supertrend"' : '';
+    return '<span class="ad-pill ' + cls + '"' + tip + '>' + lbl + '</span>';
+  }).join('');
+  return pills ? ('<div class="analiz-dirs">' + pills + '</div>') : '';
 }
 function updateDirVerdict(d) {
   const el = document.getElementById('dir-verdict');
@@ -3197,16 +3732,8 @@ function updateDirVerdict(d) {
       : pred2 === 'split'
         ? ('TAHMİN2 ↔ BERABERE ' + t2up + '-' + t2dn + '/' + t2total)
         : 'TAHMİN2 · bekleniyor';
-  const ap = d && d.algo_panel;
-  const alg1 = ap && ap.v1 ? algoPanelPillHtml(ap.v1, 'ALG1', acc, 'alg1') : '';
-  const alg2 = ap && ap.v2 ? algoPanelPillHtml(ap.v2, 'ALG2', acc, 'alg2') : '';
-
-  el.innerHTML =
-    '<span class="dir-pill slot-now ' + nowCls + '">' + nowTxt + '</span>' +
-    '<span class="dir-pill ' + predCls + '">' + predTxt + fmtWr(acc, 'tahmin') + '</span>' +
-    (hint ? '<span class="dir-hint">' + hint + '</span>' : '') +
-    '<span class="dir-pill ' + pred2Cls + '">' + pred2Txt + fmtWr(acc, 'tahmin2') + '</span>' +
-    alg1 + alg2;
+  // ALGO1/ALGO2 kartları + özet kaldırıldı — sadece A1/A4/A6/ST
+  el.innerHTML = analizDirsHtml(d && d.analiz_dirs);
 }
 function refreshDirVerdictLive(livePrice) {
   const d = window._lastChartD;
@@ -3433,18 +3960,8 @@ function appendHourlySlotMarker(markers, ws, cur, tag, color) {
 }
 
 function appendSlotMarkers(markers, d, candles) {
-  const ws = d.window_start;
-  const hasWs = ws && candles.some(c => c.time === ws);
-  if (!hasWs) return;
-  const hc = d.hourly_current || {};
-  markers.push({
-    time: ws,
-    position: 'aboveBar',
-    color: '#fbbf24',
-    shape: 'arrowDown',
-    text: 'A1',
-  });
-  appendHourlySlotMarker(markers, ws, hc.a1, 'A1', '#a855f7');
+  // A1 mum etiketleri kapalı — grafiği daraltıyordu
+  return;
 }
 
 function hourlyPillHtml(hc, key, tag, cls) {
@@ -3537,27 +4054,19 @@ async function loadTradeChart() {
         lineWidth: 1,
         lineStyle: LightweightCharts.LineStyle.Dashed,
         axisLabelVisible: true,
-        title: tf === '1h' ? 'A1' : 'Ref',
+        title: 'Ref',
       });
     }
     const markers = [];
     const ov = tf !== '1h' && d.algo_overlay ? clipOverlayToCandles(d.algo_overlay, candles) : null;
     if (tf === '1h') {
-      appendSlotMarkers(markers, d, candles);
-      (d.hourly_signals || []).forEach(s => {
-        const ws = d.window_start;
-        if (s.time === ws && s.tag === 'A1') return;
-        markers.push(hourlyMarker(s));
-      });
       applyMotorEma(null);
       applyMultiConfirmEma(d.multi_confirm);
       applyYonTahminEma(d.yon_tahmin);
-      addSlotForecastMarkers(markers, d.yon_tahmin);
     } else {
       applyMotorEma(ov);
       applyMultiConfirmEma(d.multi_confirm);
       applyYonTahminEma(d.yon_tahmin);
-      addSlotForecastMarkers(markers, d.yon_tahmin);
     }
     _candleSeries.setMarkers(markers);
   } catch (e) {
@@ -3782,11 +4291,27 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .dir-wr,.sig-wr{font-size:10px;font-weight:800;margin-left:5px;opacity:.95}
 .dir-wr.good,.sig-wr.good{color:#4ade80}
 .dir-wr.bad,.sig-wr.bad{color:#f87171}
+.algo-con-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;margin-top:6px}
+.algo-con-card{border-radius:14px;padding:7px 11px;color:#111;border:1px solid rgba(0,0,0,.08)}
+.algo-con-card.yellow{background:linear-gradient(145deg,#ffe600 0%,#f8e231 45%,#e8d21a 100%);box-shadow:0 6px 16px rgba(248,226,49,.25)}
+.algo-con-card.yellow-dark{background:linear-gradient(145deg,#e6c200 0%,#d4b000 45%,#c4a000 100%);box-shadow:0 6px 16px rgba(196,160,0,.25)}
+.algo-con-card .acc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.algo-con-card .acc-title{font-size:11px;font-weight:800;color:#111;line-height:1.15}
+.algo-con-card .acc-sub{font-size:9px;font-weight:600;color:rgba(17,17,17,.6);margin-top:1px}
+.algo-con-card .acc-lead{font-size:15px;font-weight:800;letter-spacing:-.4px;color:#111;line-height:1;white-space:nowrap}
+.algo-con-card .acc-detail{display:none}
+.analiz-dirs{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:5px}
+.analiz-dirs .ad-pill{font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;background:#141414;border:1px solid #2a2a2a;color:#aaa}
+.analiz-dirs .ad-pill.up{background:#142814;color:#4ade80;border-color:#22c55e}
+.analiz-dirs .ad-pill.dn{background:#2a1414;color:#f87171;border-color:#ef4444}
+.algo-con-summary{width:100%;margin-top:4px;font-size:11px;font-weight:700;color:#ccc}
+.algo-con-summary .up{color:#4ade80}.algo-con-summary .dn{color:#f87171}.algo-con-summary .neu{color:#fbbf24}
+@media(max-width:700px){.algo-con-row{grid-template-columns:1fr}}
 .composite-wrap{margin-top:8px;border-top:1px solid #1a1a1a;padding-top:8px;flex-shrink:0}
 .composite-lbl{font-size:10px;color:#555;text-transform:uppercase;font-weight:700;margin-bottom:4px}
 #composite-chart{height:96px;width:100%}
 .chart-split{flex:1;display:flex;flex-direction:column;min-height:0}
-#trade-chart{flex:1;min-height:340px;width:100%}
+#trade-chart{flex:1;min-height:480px;width:100%}
 .grafik-mobile-bar{display:none;align-items:center;gap:10px;padding:10px 12px;background:#0a0a0a;border-bottom:1px solid #1a1a1a;flex-shrink:0}
 .gm-back{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:#141414;color:#c8f135;text-decoration:none;font-size:20px;font-weight:800;flex-shrink:0}
 .gm-title{flex:1;font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -4026,7 +4551,7 @@ function setPriceTf(px) { _priceTf = px; savePrefs(); resetAllCharts(); loadTrad
 
 function chartH() {
   if (document.body.classList.contains('grafik-mobile-focus')) return mobileChartH();
-  return Math.max(420, window.innerHeight - 180);
+  return Math.max(520, window.innerHeight - 150);
 }
 
 function isGrafikMobile() {
@@ -4251,19 +4776,8 @@ function addYonTahminMarkers(markers, yt) {
 }
 
 function addSlotForecastMarkers(markers, yt) {
-  if (!yt || !yt.ok) return;
-  (yt.slot_marks || []).forEach(s => {
-    const is15 = s.tf === '15m';
-    markers.push({
-      time: s.time,
-      position: s.dir === 'UP' ? 'belowBar' : 'aboveBar',
-      color: is15
-        ? (s.dir === 'UP' ? '#22c55e' : '#ef4444')
-        : (s.dir === 'UP' ? '#2dd4bf' : '#f87171'),
-      shape: s.dir === 'UP' ? 'arrowUp' : 'arrowDown',
-      text: s.text || ((is15 ? '15' : '5') + (s.dir === 'UP' ? '↑' : '↓') + (s.prob || '') + '%'),
-    });
-  });
+  // 5m/15m tahmin etiketleri kapalı — grafiği daraltıyordu
+  return;
 }
 
 function applyYonTahminEma(yt) {
@@ -4359,20 +4873,44 @@ function _slotNowDir(d) {
   if (last < ref) return 'DOWN';
   return null;
 }
-function algoPanelPillHtml(panel, tag, acc, wrKey) {
+function _algoDirTr(dir){
+  if (dir === 'UP') return {arrow:'▲', short:'yukarı', label:'YUKARI', cls:'up'};
+  if (dir === 'DOWN') return {arrow:'▼', short:'aşağı', label:'AŞAĞI', cls:'dn'};
+  return {arrow:'=', short:'nötr', label:'NÖTR', cls:'neu'};
+}
+function algoPanelCardHtml(panel, tag, acc, wrKey, variant, sym) {
   if (!panel || panel.total == null) return '';
-  const tot = panel.total;
+  const tot = Number(panel.total) || 0;
   const dir = panel.direction;
+  const meta = _algoDirTr(dir);
+  const votes = dir === 'UP' ? (panel.up || 0)
+    : dir === 'DOWN' ? (panel.down || 0)
+    : Math.max(panel.up || 0, panel.down || 0);
+  const pct = tot ? Math.round(votes / tot * 100) : 0;
   const wr = fmtWr(acc, wrKey);
-  const tf = panel.timeframe && panel.timeframe !== '1h' ? (' · ' + panel.timeframe) : '';
-  const tip = panel.period_label ? (' title="' + String(panel.period_label).replace(/"/g, '&quot;') + '"') : '';
-  if (dir === 'UP') {
-    return '<span class="dir-pill UP"' + tip + '>' + tag + tf + ' ↑ YUKARI ' + panel.up + '/' + tot + wr + '</span>';
-  }
-  if (dir === 'DOWN') {
-    return '<span class="dir-pill DOWN"' + tip + '>' + tag + tf + ' ↓ AŞAĞI ' + panel.down + '/' + tot + wr + '</span>';
-  }
-  return '<span class="dir-pill neutral"' + tip + '>' + tag + tf + ' ↔ NÖTR ' + (panel.neutral || 0) + '/' + tot + wr + '</span>';
+  const tip = panel.period_label ? String(panel.period_label).replace(/"/g, '&quot;') : '';
+  const vCls = variant === 'yellow-dark' ? 'yellow-dark' : 'yellow';
+  return '<div class="algo-con-card ' + vCls + '"' + (tip ? (' title="' + tip + '"') : '') + '>' +
+    '<div class="acc-top">' +
+      '<div><div class="acc-title">' + tag + '</div>' +
+      '<div class="acc-sub">' + tot + ' oy' + wr + '</div></div>' +
+      '<div class="acc-lead">' + sym + ' ' + meta.arrow + ' ' + pct + '%</div>' +
+    '</div>' +
+    '<div class="acc-detail">' + tag + ' ' + meta.short + ' · ' + votes + '/' + tot + '</div>' +
+  '</div>';
+}
+function analizDirsHtml(dirs) {
+  if (!dirs) return '';
+  const order = [['a1','A1'],['a4','A4'],['a6','A6'],['st','ST']];
+  const pills = order.map(([k, tag]) => {
+    const d = dirs[k] || {};
+    const dir = d.dir;
+    const cls = dir === 'UP' ? 'up' : dir === 'DOWN' ? 'dn' : '';
+    const lbl = d.label || (tag + ' —');
+    const tip = k === 'st' ? ' title="Supertrend"' : '';
+    return '<span class="ad-pill ' + cls + '"' + tip + '>' + lbl + '</span>';
+  }).join('');
+  return pills ? ('<div class="analiz-dirs">' + pills + '</div>') : '';
 }
 function updateDirVerdict(d) {
   const el = document.getElementById('dir-verdict');
@@ -4424,16 +4962,8 @@ function updateDirVerdict(d) {
       : pred2 === 'split'
         ? ('TAHMİN2 ↔ BERABERE ' + t2up + '-' + t2dn + '/' + t2total)
         : 'TAHMİN2 · bekleniyor';
-  const ap = d && d.algo_panel;
-  const alg1 = ap && ap.v1 ? algoPanelPillHtml(ap.v1, 'ALG1', acc, 'alg1') : '';
-  const alg2 = ap && ap.v2 ? algoPanelPillHtml(ap.v2, 'ALG2', acc, 'alg2') : '';
-
-  el.innerHTML =
-    '<span class="dir-pill slot-now ' + nowCls + '">' + nowTxt + '</span>' +
-    '<span class="dir-pill ' + predCls + '">' + predTxt + fmtWr(acc, 'tahmin') + '</span>' +
-    (hint ? '<span class="dir-hint">' + hint + '</span>' : '') +
-    '<span class="dir-pill ' + pred2Cls + '">' + pred2Txt + fmtWr(acc, 'tahmin2') + '</span>' +
-    alg1 + alg2;
+  // ALGO1/ALGO2 kartları + özet kaldırıldı — sadece A1/A4/A6/ST
+  el.innerHTML = analizDirsHtml(d && d.analiz_dirs);
 }
 function refreshDirVerdictLive(livePrice) {
   const d = window._lastChartD;
@@ -4619,18 +5149,8 @@ function addHourlyMarkers(markers, hourly, d) {
 }
 
 function appendSlotMarkers(markers, d, candles) {
-  const ws = d.window_start;
-  const hasWs = ws && candles.some(c => c.time === ws);
-  if (!hasWs) return;
-  const hc = d.hourly_current || {};
-  markers.push({
-    time: ws,
-    position: 'aboveBar',
-    color: '#fbbf24',
-    shape: 'arrowDown',
-    text: 'A1',
-  });
-  appendHourlySlotMarker(markers, ws, hc.a1, 'A1', '#a855f7');
+  // A1 mum etiketleri kapalı — grafiği daraltıyordu
+  return;
 }
 
 function patchLastCandle(price, dec) {
@@ -4725,7 +5245,6 @@ async function loadTradeChart() {
       if (_emaFastSeries) { _emaFastSeries.setData([]); _emaSlowSeries.setData([]); }
       applyMultiConfirmEma(d.multi_confirm);
       applyYonTahminEma(d.yon_tahmin);
-      addSlotForecastMarkers(markers, d.yon_tahmin);
     } else {
       if (_tf === '15m') renderFifteenBadges(d, ov);
       else updateMotorBadge(ov);
@@ -4735,7 +5254,6 @@ async function loadTradeChart() {
       }
       applyMultiConfirmEma(d.multi_confirm);
       applyYonTahminEma(d.yon_tahmin);
-      addSlotForecastMarkers(markers, d.yon_tahmin);
     }
     focusCandleWindow(d.candles);
     _candleSeries.setMarkers(markers);
@@ -4810,30 +5328,77 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .main{flex:1;padding:28px;max-width:1200px}
 h1{font-size:22px;font-weight:800;margin-bottom:6px}
 .subtitle{font-size:13px;color:#555;margin-bottom:24px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.card{background:#111;border:1px solid #1e1e1e;border-radius:16px;padding:20px;display:flex;gap:16px;align-items:center;transition:.2s}
-.card:hover{border-color:#2a2a2a;background:#151515}
-.donut-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
-.donut-wrap svg{transform:rotate(-90deg)}
-.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.donut-pct{font-size:16px;font-weight:800;line-height:1}
-.donut-lbl{font-size:9px;color:#555;margin-top:2px}
-.card-info{flex:1;min-width:0}
-.card-label{font-size:15px;font-weight:700;margin-bottom:2px}
-.card-desc{font-size:11px;color:#555;margin-bottom:10px}
-.card-row{display:flex;justify-content:space-between;margin-bottom:4px}
-.card-key{font-size:12px;color:#666}
-.card-val{font-size:12px;font-weight:600}
-.pnl-pos{color:#4ade80}
-.pnl-neg{color:#f87171}
-.pnl-neu{color:#888}
-.sym-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
-.sym-pill{font-size:10px;padding:2px 7px;border-radius:20px;background:#1a1a1a;color:#888}
-.sym-pill.good{background:#14291e;color:#4ade80}
-.sym-pill.ok{background:#1e1e14;color:#a3e635}
-.sym-pill.bad{background:#291414;color:#f87171}
-.rank-badge{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#c8f135;color:#000;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
-.card-wrap{position:relative}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+/* Analiz kartı — WR’ye göre ton (yüksek→yeşil, düşük→kırmızı) */
+.az-vio{
+  position:relative; overflow:hidden; border-radius:28px; padding:20px 18px 16px;
+  color:#fff; border:1px solid rgba(255,255,255,.12);
+  transition:transform .15s, box-shadow .15s;
+}
+.az-vio.wr5{ /* ≥60 */
+  background:linear-gradient(145deg,#047857 0%,#10b981 45%,#34d399 100%);
+  box-shadow:0 16px 36px rgba(16,185,129,.35);
+}
+.az-vio.wr4{ /* ≥55 */
+  background:linear-gradient(145deg,#0f766e 0%,#14b8a6 45%,#2dd4bf 100%);
+  box-shadow:0 16px 36px rgba(20,184,166,.32);
+}
+.az-vio.wr3{ /* ≥50 */
+  background:linear-gradient(145deg,#5b21b6 0%,#7c3aed 42%,#a21caf 100%);
+  box-shadow:0 16px 36px rgba(91,33,182,.35);
+}
+.az-vio.wr2{ /* ≥45 */
+  background:linear-gradient(145deg,#b45309 0%,#d97706 45%,#f59e0b 100%);
+  box-shadow:0 16px 36px rgba(217,119,6,.35);
+}
+.az-vio.wr1{ /* <45 */
+  background:linear-gradient(145deg,#9f1239 0%,#e11d48 45%,#f43f5e 100%);
+  box-shadow:0 16px 36px rgba(225,29,72,.35);
+}
+.az-vio:hover{ transform:translateY(-2px); filter:brightness(1.04); }
+.az-vio::before{
+  content:''; position:absolute; width:140px; height:140px; border-radius:50%;
+  background:rgba(255,255,255,.12); top:-40px; right:-30px; pointer-events:none;
+}
+.az-vio::after{
+  content:''; position:absolute; width:90px; height:90px; border-radius:50%;
+  background:rgba(255,255,255,.08); top:20px; right:20px; pointer-events:none;
+}
+.az-title{font-size:13px;font-weight:800;letter-spacing:-.2px;position:relative;z-index:1}
+.az-desc{font-size:11px;font-weight:600;opacity:.65;margin-top:3px;position:relative;z-index:1}
+.az-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;position:relative;z-index:1}
+.az-val{font-size:36px;font-weight:800;letter-spacing:-1.2px;line-height:1}
+.az-ico{
+  width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.16);
+  display:grid;place-items:center;flex-shrink:0;
+}
+.az-ico svg{display:block}
+.az-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;position:relative;z-index:1}
+.az-meta .k{font-size:10px;font-weight:600;opacity:.7}
+.az-meta .v{font-size:13px;font-weight:800;margin-top:3px;white-space:nowrap}
+.az-meta .v.pos{color:#39ff8e}
+.az-meta .v.neg{color:#ff8fab}
+.az-rank{
+  position:absolute; top:14px; right:14px; z-index:2;
+  font-size:11px; font-weight:800; color:#111; background:rgba(255,255,255,.92);
+  border-radius:999px; padding:3px 9px;
+}
+.az-syms{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+  margin-top:14px; position:relative; z-index:1;
+}
+.az-syms.cols-1{grid-template-columns:1fr}
+.az-syms.cols-2{grid-template-columns:1fr 1fr}
+.az-chip{
+  text-align:center; padding:10px 6px; border-radius:14px;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.14);
+}
+.az-chip .n{font-size:12px;color:#fff;font-weight:800;margin-bottom:2px}
+.az-chip .p{font-size:15px;font-weight:800;color:#fff;margin-top:4px}
+.az-chip .p.ok{color:#39ff8e}
+.az-chip .p.mid{color:#fde047}
+.az-chip .c{font-size:10px;color:rgba(255,255,255,.7);margin-top:2px}
+.az-chip.empty{opacity:.45}
 #loading{text-align:center;color:#555;padding:60px;font-size:14px}
 </style>
 </head>
@@ -4852,34 +5417,25 @@ h1{font-size:22px;font-weight:800;margin-bottom:6px}
   <div class="sidebar-footer"><span class="live-dot"></span>Canlı</div>
 </div>
 <div class="main">
-  <h1>📊 Analizler</h1>
+  <h1>Analizler</h1>
   <div class="subtitle" id="subtitle">Yükleniyor…</div>
   <div id="grid" class="grid"><div id="loading">Veriler yükleniyor…</div></div>
 </div>
 <script>
-function donutSVG(pct, color){
-  const r=28, cx=40, cy=40, circ=2*Math.PI*r;
-  const fill = circ*(pct/100);
-  const bg   = circ - fill;
-  return `<svg width="80" height="80" viewBox="0 0 80 80">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1e1e1e" stroke-width="9"/>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="9"
-      stroke-dasharray="${fill} ${bg}" stroke-linecap="round"/>
-  </svg>`;
-}
+const AZ_ICO = `<svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+  <ellipse cx="13" cy="8" rx="9" ry="3.2" fill="#fff" opacity=".9"/>
+  <ellipse cx="13" cy="13" rx="9" ry="3.2" fill="#fff" opacity=".55"/>
+  <ellipse cx="13" cy="18" rx="9" ry="3.2" fill="#fff" opacity=".3"/>
+</svg>`;
 
-function pctColor(wr){
-  if(wr>=60) return '#4ade80';
-  if(wr>=55) return '#a3e635';
-  if(wr>=50) return '#c8f135';
-  if(wr>=45) return '#fb923c';
-  return '#f87171';
-}
-
-function symClass(wr){
-  if(wr>=60) return 'good';
-  if(wr>=50) return 'ok';
-  return 'bad';
+function wrChipCls(wr){ return Number(wr) >= 55 ? 'ok' : 'mid'; }
+function wrToneCls(wr){
+  const w = Number(wr) || 0;
+  if (w >= 60) return 'wr5';
+  if (w >= 55) return 'wr4';
+  if (w >= 50) return 'wr3';
+  if (w >= 45) return 'wr2';
+  return 'wr1';
 }
 
 async function load(){
@@ -4889,48 +5445,49 @@ async function load(){
   const data = await r.json();
   if(data.error){ document.getElementById('loading').textContent = 'Oturum hatası: ' + data.error; return; }
   document.getElementById('subtitle').textContent =
-    `${data.length} sistem \u00b7 WR\u2019ye g\u00f6re s\u0131ral\u0131 \u00b7 Otomatik g\u00fcncellenir`;
+    `${data.length} sistem · WR’ye göre sıralı · Otomatik güncellenir`;
 
   const grid = document.getElementById('grid');
   grid.innerHTML = data.map((a, i) => {
-    const color  = pctColor(a.wr);
-    const pnlCls = a.pnl > 0 ? 'pnl-pos' : a.pnl < 0 ? 'pnl-neg' : 'pnl-neu';
+    const pnlCls = a.pnl > 0 ? 'pos' : a.pnl < 0 ? 'neg' : '';
     const pnlStr = (a.pnl >= 0 ? '+' : '') + '$' + Math.abs(a.pnl).toFixed(2);
-    const balStr = '$' + a.balance.toFixed(2);
-    const rank   = i < 3 ? ['🥇','🥈','🥉'][i] : '';
-    const symHtml = a.sym_stats.map(s =>
-      `<span class="sym-pill ${symClass(s.wr)}">${s.sym} %${s.wr}</span>`
-    ).join('');
+    const balStr = '$' + Number(a.balance).toFixed(2);
+    const wrStr  = a.total ? (a.wr + '%') : '—';
+    const tone   = wrToneCls(a.total ? a.wr : 0);
+    const rank   = i < 3 ? (i + 1) : '';
+    const syms = a.sym_stats || [];
+    const cols = syms.length >= 3 ? 3 : (syms.length === 2 ? 2 : 1);
+    const symHtml = syms.length
+      ? syms.map(s => `<div class="az-chip">
+          <div class="n">${s.sym}</div>
+          <div class="p ${wrChipCls(s.wr)}">${s.wr}%</div>
+          <div class="c">${s.w}/${s.t}</div>
+        </div>`).join('')
+      : `<div class="az-chip empty"><div class="n">—</div><div class="p mid">—</div><div class="c">veri yok</div></div>`;
 
-    return `<div class="card-wrap">
-      ${rank ? `<div class="rank-badge">${rank}</div>` : ''}
-      <div class="card">
-        <div class="donut-wrap">
-          ${donutSVG(a.wr, color)}
-          <div class="donut-center">
-            <div class="donut-pct" style="color:${color}">${a.total ? a.wr+'%' : '—'}</div>
-            <div class="donut-lbl">WR</div>
-          </div>
+    return `<div class="az-vio ${tone}">
+      ${rank ? `<div class="az-rank">#${rank}</div>` : ''}
+      <div class="az-title">${a.label}</div>
+      <div class="az-desc">${a.desc || ''}</div>
+      <div class="az-top">
+        <div class="az-val">${wrStr}</div>
+        <div class="az-ico">${AZ_ICO}</div>
+      </div>
+      <div class="az-meta">
+        <div>
+          <div class="k">Bakiye</div>
+          <div class="v">${balStr}</div>
         </div>
-        <div class="card-info">
-          <div class="card-label">${a.label}</div>
-          <div class="card-desc">${a.desc}</div>
-          <div class="card-row">
-            <span class="card-key">Bakiye</span>
-            <span class="card-val">${balStr}</span>
-          </div>
-          <div class="card-row">
-            <span class="card-key">P&L</span>
-            <span class="card-val ${pnlCls}">${pnlStr}</span>
-          </div>
-          <div class="card-row">
-            <span class="card-key">İşlem</span>
-            <span class="card-val">${a.wins}/${a.total}</span>
-          </div>
-          ${a.open ? `<div class="card-row"><span class="card-key">Açık</span><span class="card-val" style="color:#c8f135">${a.open} poz</span></div>` : ''}
-          <div class="sym-pills">${symHtml}</div>
+        <div>
+          <div class="k">P&amp;L</div>
+          <div class="v ${pnlCls}">${pnlStr}</div>
+        </div>
+        <div>
+          <div class="k">İşlem</div>
+          <div class="v">${a.wins}/${a.total}${a.open ? ` (+${a.open})` : ''}</div>
         </div>
       </div>
+      <div class="az-syms cols-${cols}">${symHtml}</div>
     </div>`;
   }).join('');
   }catch(e){
@@ -5163,7 +5720,7 @@ def api_stats():
     pending: list[dict] = []
     try:
         from pm_poly_history import get_open_pm_trades, get_recent_pm_trades
-        recent = get_recent_pm_trades(limit=20, slug_labels=slug_labels)
+        recent = get_recent_pm_trades(limit=10, slug_labels=slug_labels)
         pending = get_open_pm_trades(limit=10, slug_labels=slug_labels)
         pending, recent = _merge_pm_recent_trades(pending, recent)
     except Exception as e:
@@ -6250,6 +6807,63 @@ def _load_algo_panel_consensus(symbol: str, timeframe: str = "1h", window_start:
         return {"v1": None, "v2": None, "timeframe": timeframe}
 
 
+def _supertrend_dir_from_signals(symbol: str) -> str | None:
+    """algo_signals.json #3 Supertrend — sembol yönü."""
+    sym = (symbol or "").replace("USDT", "").upper()
+    path = "/tmp/algo_signals.json"
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        entry = (data.get("signals") or {}).get("3") or {}
+        d = entry.get(sym)
+        return d if d in ("UP", "DOWN") else None
+    except Exception:
+        return None
+
+
+def _slot_analiz_dirs(symbol: str) -> dict:
+    """Grafik için A1 / A4 / A6 / Supertrend — açık pozisyon, history veya algo sinyali."""
+    sym = (symbol or "").replace("USDT", "").upper()
+    hour_key = datetime.now(_TZ_TR).strftime("%Y-%m-%dT%H")
+    out: dict = {}
+    for key, tag in (("analiz1", "a1"), ("analiz4", "a4"), ("analiz6", "a6")):
+        label_tag = tag.upper()
+        direction = None
+        for p in _load_trader_open_positions(key):
+            ps = (p.get("symbol") or "").replace("USDT", "").upper()
+            if ps == sym:
+                direction = p.get("predicted_dir")
+                break
+        if direction not in ("UP", "DOWN"):
+            try:
+                hist = _load_trader_history(key) if os.path.exists(_trader_history_path(key)) else []
+            except Exception:
+                hist = []
+            for t in reversed(hist[-120:] if isinstance(hist, list) else []):
+                ts = (t.get("symbol") or "").replace("USDT", "").upper()
+                if ts != sym:
+                    continue
+                et = str(t.get("entry_time_tr") or "")
+                if et.startswith(hour_key):
+                    direction = t.get("predicted_dir")
+                    break
+        if direction in ("UP", "DOWN"):
+            out[tag] = {
+                "dir": direction,
+                "label": f"{label_tag} {'↑' if direction == 'UP' else '↓'}",
+            }
+        else:
+            out[tag] = {"dir": None, "label": f"{label_tag} —"}
+    st = _supertrend_dir_from_signals(sym)
+    if st in ("UP", "DOWN"):
+        out["st"] = {"dir": st, "label": f"ST {'↑' if st == 'UP' else '↓'}"}
+    else:
+        out["st"] = {"dir": None, "label": "ST —"}
+    return out
+
+
 def _snap_hourly_signals_to_chart(
     candles: list[dict],
     signals: list[dict],
@@ -6411,6 +7025,7 @@ def _trade_desk_chart(
         "yon_tahmin": None,
         "tahmin2": None,
         "algo_panel": _load_algo_panel_consensus(symbol, timeframe, ts_period),
+        "analiz_dirs": _slot_analiz_dirs(symbol),
     }
     try:
         from chart_signal_accuracy import get_signal_wr_bundle
@@ -6449,6 +7064,14 @@ def _trade_desk_chart(
                 )
                 result["hourly_signals"] = snapped
                 result["hourly_current"] = hc
+                # A1 canlı hesap varsa analiz_dirs'e yansıt
+                ad = result.get("analiz_dirs") or {}
+                if hc.get("a1") and hc["a1"].get("dir") and not (ad.get("a1") or {}).get("dir"):
+                    ad["a1"] = {
+                        "dir": hc["a1"]["dir"],
+                        "label": hc["a1"].get("label") or f"A1 {'↑' if hc['a1']['dir']=='UP' else '↓'}",
+                    }
+                    result["analiz_dirs"] = ad
             else:
                 result["hourly_signals"] = []
                 result["hourly_current"] = {}
@@ -6760,7 +7383,7 @@ def _build_algo_v2_panel_html() -> str:
             parts.append(f'<div class="section-title">{emoji} {cat}</div><div class="grid">')
             last_cat = cat
         parts.append(
-            f'<div class="card" data-algo="{num}" data-panel="2">'
+            f'<div class="card algo-neo" data-algo="{num}" data-panel="2">'
             f'<div class="card-top"><div class="card-num">{num}</div>'
             f'<div class="card-name">{name}</div></div>'
             f'<div class="card-signals" id="sigs-v2-{num}">'
@@ -6768,7 +7391,7 @@ def _build_algo_v2_panel_html() -> str:
             f'<div class="sig-loading sig-pill">ETH</div>'
             f'<div class="sig-loading sig-pill">SOL</div></div>'
             f'<div class="card-footer"><div class="mini-chart" id="chart-v2-{num}"></div>'
-            f'<div class="card-acc" id="acc-v2-{num}"><span class="acc-none pct-none">—</span></div>'
+            f'<div class="card-acc" id="acc-v2-{num}"><span class="acc-none">—</span></div>'
             f"</div></div>"
         )
     if last_cat is not None:
@@ -6814,7 +7437,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
                 padding:24px 16px; overflow-y:auto; z-index:5; }
 
   /* ── Üst başlık + consensus ── */
-  .top-bar { display:flex; align-items:flex-start; justify-content:flex-start; margin-bottom:24px; gap:24px; }
+  .top-bar { display:flex; flex-direction:column; align-items:stretch; margin-bottom:24px; gap:16px; }
   .page-title { font-size:22px; font-weight:800; }
   .page-sub   { font-size:13px; color:#666; margin-top:4px; }
 
@@ -6826,28 +7449,145 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   .algo-tab.active { background:#c8f135; color:#111; border-color:#c8f135; }
   .algo-tab-v2.active { background:#4ade80; color:#111; border-color:#4ade80; }
 
-  .consensus-box {
-    background:#111; border:1px solid #1e1e1e; border-radius:16px;
-    padding:14px 20px; min-width:280px; flex-shrink:0;
+  .consensus-row{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px; width:100%;
   }
-  .cb-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-  .cb-title  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#666; }
-  .cb-panel-badge { color:#c8f135; font-weight:800; margin-left:6px; text-transform:none; letter-spacing:0; }
-  .consensus-box.cb-v2 { border-color:#2a4a2a; }
-  .consensus-box.cb-v2 .cb-panel-badge { color:#4ade80; }
-  .cb-time   { font-size:11px; color:#444; }
-  .cb-rows   { display:flex; flex-direction:column; gap:8px; }
-  .cb-row    { display:flex; align-items:center; gap:10px; }
-  .cb-sym    { font-size:12px; font-weight:700; color:#fff; width:32px; }
-  .cb-bar-wrap { flex:1; background:#1a1a1a; border-radius:6px; height:8px; overflow:hidden; }
-  .cb-bar-up   { height:100%; background:#4ade80; border-radius:6px; transition:width .5s; }
-  .cb-bar-dn   { height:100%; background:#f87171; border-radius:6px; border-radius:0 6px 6px 0; }
-  .cb-label  { font-size:11px; font-weight:700; min-width:80px; text-align:right; }
-  .lbl-up    { color:#4ade80; }
-  .lbl-dn    { color:#f87171; }
-  .lbl-neu   { color:#666; }
-  .cb-detail { font-size:10px; color:#555; margin-top:2px; }
-  .cb-next   { font-size:10px; color:#444; margin-top:10px; text-align:right; }
+  /* Genel Konsensüs — sembol WR / az-vio stili */
+  .consensus-box.con-vio, .con-vio{
+    position:relative; overflow:hidden; border-radius:28px; padding:20px 18px 16px;
+    min-width:0; width:100%;
+    color:#fff; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(145deg,#5b21b6 0%,#7c3aed 42%,#a21caf 100%);
+    box-shadow:0 16px 36px rgba(91,33,182,.35);
+  }
+  .con-vio.wr5{background:linear-gradient(145deg,#047857 0%,#10b981 45%,#34d399 100%);box-shadow:0 16px 36px rgba(16,185,129,.35)}
+  .con-vio.wr4{background:linear-gradient(145deg,#0f766e 0%,#14b8a6 45%,#2dd4bf 100%);box-shadow:0 16px 36px rgba(20,184,166,.32)}
+  .con-vio.wr3{background:linear-gradient(145deg,#5b21b6 0%,#7c3aed 42%,#a21caf 100%);box-shadow:0 16px 36px rgba(91,33,182,.35)}
+  .con-vio.wr2{background:linear-gradient(145deg,#b45309 0%,#d97706 45%,#f59e0b 100%);box-shadow:0 16px 36px rgba(217,119,6,.35)}
+  .con-vio.wr1{background:linear-gradient(145deg,#9f1239 0%,#e11d48 45%,#f43f5e 100%);box-shadow:0 16px 36px rgba(225,29,72,.35)}
+  /* ALGO1 sarı ton */
+  #consensus-box-1.con-vio,
+  .con-vio.con-yellow{
+    background:linear-gradient(145deg,#ffe600 0%,#f8e231 45%,#e8d21a 100%);
+    border:1px solid rgba(0,0,0,.08); color:#111;
+    box-shadow:0 16px 36px rgba(248,226,49,.35);
+  }
+  #consensus-box-1.con-vio::before,
+  .con-vio.con-yellow::before{ background:rgba(0,0,0,.06); }
+  #consensus-box-1.con-vio::after,
+  .con-vio.con-yellow::after{ background:rgba(0,0,0,.04); }
+  #consensus-box-1 .az-title,
+  #consensus-box-1 .az-val,
+  #consensus-box-1 .az-meta .v{ color:#111; }
+  #consensus-box-1 .az-desc,
+  #consensus-box-1 .az-meta .k{ color:rgba(17,17,17,.65); opacity:1; }
+  #consensus-box-1 .az-ico{ background:rgba(0,0,0,.12); }
+  #consensus-box-1 .az-ico svg ellipse{ fill:#111; }
+  #consensus-box-1 .az-chip{
+    background:rgba(0,0,0,.08); border:1px solid rgba(0,0,0,.1);
+  }
+  #consensus-box-1 .az-chip .n{ color:#111; }
+  #consensus-box-1 .az-chip .a{ background:#111; color:#fff; }
+  #consensus-box-1 .az-chip .a.up{ background:#0a7a3e; color:#fff; }
+  #consensus-box-1 .az-chip .a.dn{ background:#b91c1c; color:#fff; }
+  #consensus-box-1 .az-chip .a.neu{ background:#333; color:#fff; }
+  #consensus-box-1 .az-chip .p{ color:#111; }
+  #consensus-box-1 .az-chip .p.ok{ color:#0a7a3e; }
+  #consensus-box-1 .az-chip .p.mid{ color:#92400e; }
+  #consensus-box-1 .az-chip .c{ color:rgba(17,17,17,.6); }
+  #consensus-box-1 .con-forecast{
+    background:rgba(0,0,0,.1); border:1px solid rgba(0,0,0,.12); color:#111;
+  }
+  #consensus-box-1 .con-forecast b{ color:#111; }
+  #consensus-box-1 .con-forecast .up{ color:#0a7a3e; }
+  #consensus-box-1 .con-forecast .dn{ color:#b91c1c; }
+  #consensus-box-1 .con-forecast .neu{ color:#92400e; }
+  /* ALGO2 — bir tık koyu sarı */
+  #consensus-box-2.con-vio,
+  .con-vio.con-yellow-dark{
+    background:linear-gradient(145deg,#e6c200 0%,#d4b000 45%,#c4a000 100%);
+    border:1px solid rgba(0,0,0,.1); color:#111;
+    box-shadow:0 16px 36px rgba(196,160,0,.35);
+  }
+  #consensus-box-2.con-vio::before,
+  .con-vio.con-yellow-dark::before{ background:rgba(0,0,0,.07); }
+  #consensus-box-2.con-vio::after,
+  .con-vio.con-yellow-dark::after{ background:rgba(0,0,0,.05); }
+  #consensus-box-2 .az-title,
+  #consensus-box-2 .az-val,
+  #consensus-box-2 .az-meta .v{ color:#111; }
+  #consensus-box-2 .az-desc,
+  #consensus-box-2 .az-meta .k{ color:rgba(17,17,17,.65); opacity:1; }
+  #consensus-box-2 .az-ico{ background:rgba(0,0,0,.14); }
+  #consensus-box-2 .az-ico svg ellipse{ fill:#111; }
+  #consensus-box-2 .az-chip{
+    background:rgba(0,0,0,.1); border:1px solid rgba(0,0,0,.12);
+  }
+  #consensus-box-2 .az-chip .n{ color:#111; }
+  #consensus-box-2 .az-chip .a{ background:#111; color:#fff; }
+  #consensus-box-2 .az-chip .a.up{ background:#0a7a3e; color:#fff; }
+  #consensus-box-2 .az-chip .a.dn{ background:#b91c1c; color:#fff; }
+  #consensus-box-2 .az-chip .a.neu{ background:#333; color:#fff; }
+  #consensus-box-2 .az-chip .p{ color:#111; }
+  #consensus-box-2 .az-chip .p.ok{ color:#0a7a3e; }
+  #consensus-box-2 .az-chip .p.mid{ color:#78350f; }
+  #consensus-box-2 .az-chip .c{ color:rgba(17,17,17,.6); }
+  #consensus-box-2 .con-forecast{
+    background:rgba(0,0,0,.12); border:1px solid rgba(0,0,0,.14); color:#111;
+  }
+  #consensus-box-2 .con-forecast b{ color:#111; }
+  #consensus-box-2 .con-forecast .up{ color:#0a7a3e; }
+  #consensus-box-2 .con-forecast .dn{ color:#b91c1c; }
+  #consensus-box-2 .con-forecast .neu{ color:#78350f; }
+  .con-vio::before{
+    content:''; position:absolute; width:140px; height:140px; border-radius:50%;
+    background:rgba(255,255,255,.12); top:-40px; right:-30px; pointer-events:none;
+  }
+  .con-vio::after{
+    content:''; position:absolute; width:90px; height:90px; border-radius:50%;
+    background:rgba(255,255,255,.08); top:20px; right:20px; pointer-events:none;
+  }
+  .con-vio .az-title{font-size:13px;font-weight:800;letter-spacing:-.2px;position:relative;z-index:1}
+  .con-vio .az-desc{font-size:11px;font-weight:600;opacity:.7;margin-top:3px;position:relative;z-index:1}
+  .con-vio .az-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;position:relative;z-index:1}
+  .con-vio .az-val{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1}
+  .con-vio .az-ico{
+    width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.16);
+    display:grid;place-items:center;flex-shrink:0;position:relative;z-index:1;
+  }
+  .con-vio .az-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;position:relative;z-index:1}
+  .con-vio .az-meta .k{font-size:10px;font-weight:600;opacity:.7}
+  .con-vio .az-meta .v{font-size:13px;font-weight:800;margin-top:3px}
+  .con-vio .az-syms{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+    margin-top:14px; position:relative; z-index:1;
+  }
+  .con-vio .az-chip{
+    text-align:center; padding:10px 6px; border-radius:14px;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.14);
+  }
+  .con-vio .az-chip .n{font-size:12px;color:#fff;font-weight:800}
+  .con-vio .az-chip .a{
+    display:inline-block; font-size:10px; font-weight:800; letter-spacing:.2px;
+    color:#111; background:rgba(255,255,255,.92); border-radius:999px; padding:2px 7px;
+    margin:4px 0 4px;
+  }
+  .con-vio .az-chip .a.up{background:#39ff8e}
+  .con-vio .az-chip .a.dn{background:#ff8fab}
+  .con-vio .az-chip .a.neu{background:rgba(255,255,255,.75)}
+  .con-vio .az-chip .p{font-size:15px;font-weight:800;color:#fff}
+  .con-vio .az-chip .p.ok{color:#39ff8e}
+  .con-vio .az-chip .p.mid{color:#fde047}
+  .con-vio .az-chip .c{font-size:10px;color:rgba(255,255,255,.7);margin-top:2px}
+  .con-forecast{
+    position:relative; z-index:1; margin-top:14px; padding:12px 12px;
+    border-radius:14px; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.12);
+    font-size:12px; font-weight:600; line-height:1.45; color:rgba(255,255,255,.92);
+  }
+  .con-forecast b{font-weight:800; color:#fff}
+  .con-forecast .up{color:#39ff8e}
+  .con-forecast .dn{color:#ff8fab}
+  .con-forecast .neu{color:#fde047}
 
   /* ── Kartlar ── */
   .section-title {
@@ -6859,57 +7599,106 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
   @media(max-width:700px){ .grid { grid-template-columns:1fr; } }
 
-  /* ── Kartlar — yeni kompakt tasarım ── */
-  .card {
-    background:#111; border:1px solid #1e1e1e; border-radius:16px;
-    padding:14px 14px 12px; transition:border-color .2s;
+  /* ── Kartlar — neon kutucuk (sleep-widget dil) ── */
+  .card.algo-neo, .grid .card {
+    position:relative;
+    background:#070707; border:1px solid rgba(255,255,255,.08); border-radius:28px;
+    padding:16px 14px 12px; transition:border-color .2s, box-shadow .2s, transform .15s;
     display:flex; flex-direction:column; gap:0;
+    box-shadow:0 14px 32px rgba(0,0,0,.45);
   }
-  .card:hover { border-color:#2e3a2e; }
+  .card.algo-neo:hover { transform:translateY(-2px); }
+  .card.algo-neo.tone-hi{
+    border-color:rgba(124,255,107,.35);
+    box-shadow:0 0 28px rgba(124,255,107,.18), 0 14px 32px rgba(0,0,0,.45);
+  }
+  .card.algo-neo.tone-mid{
+    border-color:rgba(253,224,71,.28);
+    box-shadow:0 0 24px rgba(253,224,71,.12), 0 14px 32px rgba(0,0,0,.45);
+  }
+  .card.algo-neo.tone-lo{
+    border-color:rgba(255,92,122,.28);
+    box-shadow:0 0 24px rgba(255,92,122,.12), 0 14px 32px rgba(0,0,0,.45);
+  }
 
-  /* Üst satır: numara + isim + başarı */
-  .card-top { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .card-top { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
   .card-num {
-    width:22px; height:22px; border-radius:6px; background:#1c1c1e; flex-shrink:0;
+    width:28px; height:28px; border-radius:10px; background:#121212; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    font-size:10px; font-weight:800; color:#c8f135;
+    font-size:11px; font-weight:800; color:#7cff6b;
+    border:1px solid rgba(124,255,107,.25);
+    box-shadow:0 0 12px rgba(124,255,107,.15);
   }
   .card-name {
     flex:1; font-size:13px; font-weight:700; color:#fff; line-height:1.3;
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
   }
 
-  /* Sinyal hap'ları */
-  .card-signals { display:flex; gap:5px; margin-bottom:10px; }
+  /* Sinyal — küçük glow kutucuklar */
+  .card-signals { display:flex; gap:6px; margin-bottom:12px; }
   .sig-pill {
-    flex:1; text-align:center; padding:6px 2px; border-radius:9px;
-    font-size:11px; font-weight:700; line-height:1.25; letter-spacing:.1px;
+    flex:1; text-align:center; padding:8px 4px; border-radius:12px;
+    font-size:10px; font-weight:800; line-height:1.25; letter-spacing:.1px;
+    background:#121212; border:1px solid rgba(255,255,255,.08); color:#777;
   }
-  .sig-up      { background:#0e2a12; color:#4ade80; }
-  .sig-down    { background:#2a0e0e; color:#f87171; }
-  .sig-neutral { background:#1c1c1e; color:#555; }
-  .sig-na      { background:#1c1c1e; color:#333; }
-  .sig-loading { background:#1c1c1e; color:#444; animation:shimmer 1.5s infinite; }
+  .sig-up{
+    background:#0b1a0d; color:#7cff6b; border-color:rgba(124,255,107,.45);
+    box-shadow:0 0 14px rgba(124,255,107,.35);
+  }
+  .sig-down{
+    background:#1a0b0d; color:#ff5c7a; border-color:rgba(255,92,122,.4);
+    box-shadow:0 0 14px rgba(255,92,122,.28);
+  }
+  .sig-neutral{ background:#121212; color:#666; border-color:rgba(255,255,255,.08); }
+  .sig-na{ background:#101010; color:#333; }
+  .sig-loading{ background:#121212; color:#444; animation:shimmer 1.5s infinite; }
   @keyframes shimmer { 0%,100%{opacity:.4} 50%{opacity:1} }
 
-  /* Alt kısım: mini bar chart + başarı rakamı */
-  .card-footer {
-    display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
-    min-height:34px;
+  /* Neon başarı barı (sleep-bar) */
+  .card-footer{
+    display:block; min-height:0; margin-top:2px;
   }
-  .mini-chart { display:flex; align-items:flex-end; gap:2px; flex:1; height:28px; }
-  .mini-bar { flex:1; border-radius:3px 3px 0 0; min-height:3px; transition:height .4s; }
-  .bar-win   { background:#4ade80; opacity:.8; }
-  .bar-loss  { background:#f87171; opacity:.8; }
-  .bar-empty { background:#1e1e1e; }
-  .card-acc { text-align:right; flex-shrink:0; }
-  .acc-pct   { font-size:18px; font-weight:800; line-height:1; }
-  .acc-cnt   { font-size:10px; color:#555; margin-top:3px; }
-  .acc-none  { font-size:11px; color:#333; }
-  .pct-good  { color:#c8f135; }
-  .pct-ok    { color:#fbbf24; }
-  .pct-bad   { color:#f87171; }
-  .pct-none  { color:#444; }
+  .mini-chart{ display:none; }
+  .card-acc{ display:block !important; width:100%; }
+  .neo-bar{
+    display:flex; align-items:center; gap:0; width:100%;
+    border-radius:999px; padding:4px 4px 4px 12px; min-height:36px;
+    background:linear-gradient(90deg,#5dff6a 0%, #7cff6b 55%, #a8ff7a 100%);
+    box-shadow:0 0 18px rgba(124,255,107,.35);
+    color:#111;
+  }
+  .neo-bar.tone-hi{
+    background:linear-gradient(90deg,#22c55e 0%, #7cff6b 55%, #bbf7d0 100%);
+    box-shadow:0 0 18px rgba(124,255,107,.4);
+  }
+  .neo-bar.tone-mid{
+    background:linear-gradient(90deg,#ca8a04 0%, #facc15 55%, #fde047 100%);
+    box-shadow:0 0 16px rgba(250,204,21,.35);
+  }
+  .neo-bar.tone-lo{
+    background:linear-gradient(90deg,#be123c 0%, #f43f5e 55%, #fb7185 100%);
+    box-shadow:0 0 16px rgba(244,63,94,.35);
+  }
+  .neo-bar.tone-none{
+    background:#1a1a1a; box-shadow:none; color:#666;
+  }
+  .neo-track{
+    flex:1; display:flex; align-items:center; gap:3px; min-width:0; padding-right:8px;
+  }
+  .neo-dash{
+    height:3px; flex:1; border-radius:2px; background:rgba(0,0,0,.28);
+  }
+  .neo-dash.on{ background:#111; height:5px; }
+  .neo-bubble{
+    flex-shrink:0; background:#111; color:#fff; border-radius:999px;
+    padding:7px 12px; font-size:12px; font-weight:800; letter-spacing:-.2px;
+    box-shadow:0 4px 12px rgba(0,0,0,.25);
+    white-space:nowrap;
+  }
+  .neo-bar.tone-none .neo-bubble{ background:#222; color:#777; }
+  .neo-bubble small{ font-size:10px; font-weight:600; opacity:.7; margin-left:4px; }
+  .acc-none  { font-size:11px; color:#555; }
+  .pct-good,.pct-ok,.pct-bad,.pct-none,.acc-pct,.acc-cnt{ display:none; }
 
   /* ── Sağ kolon: Performans sıralaması ── */
   .rank-box { background:#111; border:1px solid #1e1e1e; border-radius:16px; padding:16px 18px; }
@@ -6943,20 +7732,15 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   .sym-best-algo { font-size:11px; color:#aaa; white-space:nowrap; }
   .sym-best-stat { font-size:11px; color:#4ade80; font-weight:700; margin-left:4px; }
 
-  /* Kart başarı rozeti — tag'lerin altında, sinyal pillerin üstünde */
-  .card-acc  { display:flex; align-items:center; justify-content:space-between;
-               margin:8px 0 6px; min-height:18px; }
   .acc-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
   .acc-good  { background:#1a3a1a; color:#4ade80; }
   .acc-mid   { background:#2e2a1a; color:#fbbf24; }
   .acc-bad   { background:#3a1a1a; color:#f87171; }
-  .acc-none  { display:none; }
   .acc-rank  { font-size:11px; color:#555; }
 
   @media(max-width:860px){ .main-right { display:none; } }
   @media(max-width:900px){
-    .top-bar { flex-direction:column; }
-    .consensus-box { min-width:0; width:100%; }
+    .consensus-row { grid-template-columns:1fr; }
   }
   @media(max-width:768px){
     .main { margin-left:0; padding:20px 12px; }
@@ -6989,25 +7773,73 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="top-bar">
     <div>
       <div class="page-title">Algoritma Analizi</div>
-      <div class="page-sub" id="page-sub">36 algoritma — BTC / ETH / SOL — 1 saatlik (konsensüs: 34 oy, #13–14 hariç)</div>
+      <div class="page-sub" id="page-sub">ALGO1 (34 oy) + ALGO2 (17 oy) — BTC / ETH / SOL — 1 saatlik konsensüs</div>
       <div class="algo-tabs">
-        <button type="button" class="algo-tab active" id="algo-tab-1" data-tab="1">Analiz 1</button>
-        <button type="button" class="algo-tab algo-tab-v2" id="algo-tab-2" data-tab="2">Analiz 2 · Top 17</button>
+        <button type="button" class="algo-tab active" id="algo-tab-1" data-tab="1">ALGO1</button>
+        <button type="button" class="algo-tab algo-tab-v2" id="algo-tab-2" data-tab="2">ALGO2 · Top 17</button>
       </div>
       <div id="top-sym-algos" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
-    <!-- Consensus kutusu -->
-    <div class="consensus-box" id="consensus-box">
-      <div class="cb-header">
-        <span class="cb-title">Genel Konsensüs <span class="cb-panel-badge" id="cb-panel-badge"></span></span>
-        <span class="cb-time" id="cb-updated">Yükleniyor…</span>
+    <!-- ALGO1 + ALGO2 konsensüs yan yana -->
+    <div class="consensus-row">
+      <div class="consensus-box con-vio con-yellow" id="consensus-box-1">
+        <div class="az-title">ALGO1 · Genel Konsensüs</div>
+        <div class="az-desc" id="cb-updated-1">Yükleniyor…</div>
+        <div class="az-top">
+          <div class="az-val" id="cb-lead-1">—%</div>
+          <div class="az-ico" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+              <ellipse cx="13" cy="8" rx="9" ry="3.2" fill="#fff" opacity=".9"/>
+              <ellipse cx="13" cy="13" rx="9" ry="3.2" fill="#fff" opacity=".55"/>
+              <ellipse cx="13" cy="18" rx="9" ry="3.2" fill="#fff" opacity=".3"/>
+            </svg>
+          </div>
+        </div>
+        <div class="az-meta">
+          <div>
+            <div class="k">Panel</div>
+            <div class="v" id="cb-panel-badge-1">ALGO1</div>
+          </div>
+          <div>
+            <div class="k">Pencere</div>
+            <div class="v" id="cb-period-1">—</div>
+          </div>
+        </div>
+        <div class="az-syms" id="cb-rows-1">
+          <div class="az-chip empty"><div class="n">…</div></div>
+        </div>
+        <div class="con-forecast" id="cb-forecast-1">Saatlik tahmin yükleniyor…</div>
+        <div id="cb-total-1" style="display:none"></div>
       </div>
-      <div id="cb-period" style="font-size:11px;color:#555;margin-bottom:4px;"></div>
-      <div id="cb-total" style="font-size:11px;color:#888;margin-bottom:8px;"></div>
-      <div class="cb-rows" id="cb-rows">
-        <div class="sig-loading" style="height:32px;border-radius:8px;"></div>
+      <div class="consensus-box con-vio con-yellow-dark" id="consensus-box-2">
+        <div class="az-title">ALGO2 · Genel Konsensüs</div>
+        <div class="az-desc" id="cb-updated-2">Yükleniyor…</div>
+        <div class="az-top">
+          <div class="az-val" id="cb-lead-2">—%</div>
+          <div class="az-ico" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+              <ellipse cx="13" cy="8" rx="9" ry="3.2" fill="#fff" opacity=".9"/>
+              <ellipse cx="13" cy="13" rx="9" ry="3.2" fill="#fff" opacity=".55"/>
+              <ellipse cx="13" cy="18" rx="9" ry="3.2" fill="#fff" opacity=".3"/>
+            </svg>
+          </div>
+        </div>
+        <div class="az-meta">
+          <div>
+            <div class="k">Panel</div>
+            <div class="v" id="cb-panel-badge-2">ALGO2</div>
+          </div>
+          <div>
+            <div class="k">Pencere</div>
+            <div class="v" id="cb-period-2">—</div>
+          </div>
+        </div>
+        <div class="az-syms" id="cb-rows-2">
+          <div class="az-chip empty"><div class="n">…</div></div>
+        </div>
+        <div class="con-forecast" id="cb-forecast-2">Saatlik tahmin yükleniyor…</div>
+        <div id="cb-total-2" style="display:none"></div>
       </div>
-      <div class="cb-next" id="cb-next"></div>
     </div>
   </div>
 
@@ -7015,220 +7847,220 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <!-- TREND -->
   <div class="section-title">📈 Trend Takip</div>
   <div class="grid">
-    <div class="card" data-algo="1">
+    <div class="card algo-neo" data-algo="1">
       <div class="card-top"><div class="card-num">1</div><div class="card-name">EMA Crossover</div></div>
       <div class="card-signals" id="sigs-1"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-1"></div><div class="card-acc" id="acc-1"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-1"></div><div class="card-acc" id="acc-1"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="2">
+    <div class="card algo-neo" data-algo="2">
       <div class="card-top"><div class="card-num">2</div><div class="card-name">MACD + Divergence</div></div>
       <div class="card-signals" id="sigs-2"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-2"></div><div class="card-acc" id="acc-2"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-2"></div><div class="card-acc" id="acc-2"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="3">
+    <div class="card algo-neo" data-algo="3">
       <div class="card-top"><div class="card-num">3</div><div class="card-name">Supertrend</div></div>
       <div class="card-signals" id="sigs-3"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-3"></div><div class="card-acc" id="acc-3"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-3"></div><div class="card-acc" id="acc-3"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="4">
+    <div class="card algo-neo" data-algo="4">
       <div class="card-top"><div class="card-num">4</div><div class="card-name">Ichimoku Cloud</div></div>
       <div class="card-signals" id="sigs-4"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-4"></div><div class="card-acc" id="acc-4"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-4"></div><div class="card-acc" id="acc-4"><span class="acc-none">—</span></div></div>
     </div>
   </div>
 
   <!-- MOMENTUM -->
   <div class="section-title">⚡ Momentum / Osilatör</div>
   <div class="grid">
-    <div class="card" data-algo="5">
+    <div class="card algo-neo" data-algo="5">
       <div class="card-top"><div class="card-num">5</div><div class="card-name">RSI + Divergence</div></div>
       <div class="card-signals" id="sigs-5"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-5"></div><div class="card-acc" id="acc-5"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-5"></div><div class="card-acc" id="acc-5"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="6">
+    <div class="card algo-neo" data-algo="6">
       <div class="card-top"><div class="card-num">6</div><div class="card-name">Stochastic RSI</div></div>
       <div class="card-signals" id="sigs-6"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-6"></div><div class="card-acc" id="acc-6"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-6"></div><div class="card-acc" id="acc-6"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="7">
+    <div class="card algo-neo" data-algo="7">
       <div class="card-top"><div class="card-num">7</div><div class="card-name">Bollinger Bands</div></div>
       <div class="card-signals" id="sigs-7"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-7"></div><div class="card-acc" id="acc-7"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-7"></div><div class="card-acc" id="acc-7"><span class="acc-none">—</span></div></div>
     </div>
   </div>
 
   <!-- HACİM -->
   <div class="section-title">📊 Hacim Bazlı</div>
   <div class="grid">
-    <div class="card" data-algo="8">
+    <div class="card algo-neo" data-algo="8">
       <div class="card-top"><div class="card-num">8</div><div class="card-name">VWAP</div></div>
       <div class="card-signals" id="sigs-8"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-8"></div><div class="card-acc" id="acc-8"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-8"></div><div class="card-acc" id="acc-8"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="9">
+    <div class="card algo-neo" data-algo="9">
       <div class="card-top"><div class="card-num">9</div><div class="card-name">OBV</div></div>
       <div class="card-signals" id="sigs-9"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-9"></div><div class="card-acc" id="acc-9"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-9"></div><div class="card-acc" id="acc-9"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="10">
+    <div class="card algo-neo" data-algo="10">
       <div class="card-top"><div class="card-num">10</div><div class="card-name">Volume Profile (POC)</div></div>
       <div class="card-signals" id="sigs-10"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-10"></div><div class="card-acc" id="acc-10"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-10"></div><div class="card-acc" id="acc-10"><span class="acc-none">—</span></div></div>
     </div>
   </div>
 
   <!-- QUANT -->
   <div class="section-title">📐 Quant / İstatistiksel</div>
   <div class="grid">
-    <div class="card" data-algo="11">
+    <div class="card algo-neo" data-algo="11">
       <div class="card-top"><div class="card-num">11</div><div class="card-name">Mean Reversion</div></div>
       <div class="card-signals" id="sigs-11"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-11"></div><div class="card-acc" id="acc-11"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-11"></div><div class="card-acc" id="acc-11"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="12">
+    <div class="card algo-neo" data-algo="12">
       <div class="card-top"><div class="card-num">12</div><div class="card-name">Pairs Trading</div></div>
       <div class="card-signals" id="sigs-12"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-12"></div><div class="card-acc" id="acc-12"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-12"></div><div class="card-acc" id="acc-12"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="13">
+    <div class="card algo-neo" data-algo="13">
       <div class="card-top"><div class="card-num">13</div><div class="card-name">Grid Trading Bot</div></div>
       <div class="card-signals" id="sigs-13"><div class="sig-na sig-pill">SOL —</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-13"></div><div class="card-acc" id="acc-13"><span class="acc-none pct-none">Nötr</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-13"></div><div class="card-acc" id="acc-13"><span class="acc-none">Nötr</span></div></div>
     </div>
   </div>
 
   <!-- ML -->
   <div class="section-title">🤖 ML / Hibrit</div>
   <div class="grid">
-    <div class="card" data-algo="14">
+    <div class="card algo-neo" data-algo="14">
       <div class="card-top"><div class="card-num">14</div><div class="card-name">LSTM Zaman Serisi</div></div>
       <div class="card-signals" id="sigs-14"><div class="sig-na sig-pill" style="flex:3">— model yok —</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-14"></div><div class="card-acc" id="acc-14"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-14"></div><div class="card-acc" id="acc-14"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="15">
+    <div class="card algo-neo" data-algo="15">
       <div class="card-top"><div class="card-num">15</div><div class="card-name">Multi-TF Confluence</div></div>
       <div class="card-signals" id="sigs-15"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-15"></div><div class="card-acc" id="acc-15"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-15"></div><div class="card-acc" id="acc-15"><span class="acc-none">—</span></div></div>
     </div>
   </div>
 
   <!-- VOLATİLİTE -->
   <div class="section-title">💥 Volatilite / Breakout</div>
   <div class="grid">
-    <div class="card" data-algo="16">
+    <div class="card algo-neo" data-algo="16">
       <div class="card-top"><div class="card-num">16</div><div class="card-name">ATR Breakout</div></div>
       <div class="card-signals" id="sigs-16"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-16"></div><div class="card-acc" id="acc-16"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-16"></div><div class="card-acc" id="acc-16"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="17">
+    <div class="card algo-neo" data-algo="17">
       <div class="card-top"><div class="card-num">17</div><div class="card-name">Heikin Ashi Trend</div></div>
       <div class="card-signals" id="sigs-17"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-17"></div><div class="card-acc" id="acc-17"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-17"></div><div class="card-acc" id="acc-17"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="18">
+    <div class="card algo-neo" data-algo="18">
       <div class="card-top"><div class="card-num">18</div><div class="card-name">TEMA Crossover</div></div>
       <div class="card-signals" id="sigs-18"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-18"></div><div class="card-acc" id="acc-18"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-18"></div><div class="card-acc" id="acc-18"><span class="acc-none">—</span></div></div>
     </div>
   </div>
 
   <!-- PİYASA YAPISI -->
   <div class="section-title">🏗 Piyasa Yapısı</div>
   <div class="grid">
-    <div class="card" data-algo="19">
+    <div class="card algo-neo" data-algo="19">
       <div class="card-top"><div class="card-num">19</div><div class="card-name">ADX Market Regime</div></div>
       <div class="card-signals" id="sigs-19"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-19"></div><div class="card-acc" id="acc-19"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-19"></div><div class="card-acc" id="acc-19"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="20">
+    <div class="card algo-neo" data-algo="20">
       <div class="card-top"><div class="card-num">20</div><div class="card-name">Open Interest Div.</div></div>
       <div class="card-signals" id="sigs-20"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-20"></div><div class="card-acc" id="acc-20"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-20"></div><div class="card-acc" id="acc-20"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="21">
+    <div class="card algo-neo" data-algo="21">
       <div class="card-top"><div class="card-num">21</div><div class="card-name">Fear &amp; Greed</div></div>
       <div class="card-signals" id="sigs-21"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-21"></div><div class="card-acc" id="acc-21"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-21"></div><div class="card-acc" id="acc-21"><span class="acc-none">—</span></div></div>
     </div>
   </div>
 
   <!-- GELİŞMİŞ -->
   <div class="section-title">🔬 Gelişmiş Algoritmalar</div>
   <div class="grid">
-    <div class="card" data-algo="25">
+    <div class="card algo-neo" data-algo="25">
       <div class="card-top"><div class="card-num">25</div><div class="card-name">Parabolic SAR + ADX</div></div>
       <div class="card-signals" id="sigs-25"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-25"></div><div class="card-acc" id="acc-25"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-25"></div><div class="card-acc" id="acc-25"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="26">
+    <div class="card algo-neo" data-algo="26">
       <div class="card-top"><div class="card-num">26</div><div class="card-name">MACD Histogram Diverjansı</div></div>
       <div class="card-signals" id="sigs-26"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-26"></div><div class="card-acc" id="acc-26"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-26"></div><div class="card-acc" id="acc-26"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="27">
+    <div class="card algo-neo" data-algo="27">
       <div class="card-top"><div class="card-num">27</div><div class="card-name">Stochastic RSI (14) K/D</div></div>
       <div class="card-signals" id="sigs-27"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-27"></div><div class="card-acc" id="acc-27"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-27"></div><div class="card-acc" id="acc-27"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="28">
+    <div class="card algo-neo" data-algo="28">
       <div class="card-top"><div class="card-num">28</div><div class="card-name">Triple EMA (8-21-55)</div></div>
       <div class="card-signals" id="sigs-28"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-28"></div><div class="card-acc" id="acc-28"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-28"></div><div class="card-acc" id="acc-28"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="29">
+    <div class="card algo-neo" data-algo="29">
       <div class="card-top"><div class="card-num">29</div><div class="card-name">Hull Moving Average (HMA)</div></div>
       <div class="card-signals" id="sigs-29"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-29"></div><div class="card-acc" id="acc-29"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-29"></div><div class="card-acc" id="acc-29"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="30">
+    <div class="card algo-neo" data-algo="30">
       <div class="card-top"><div class="card-num">30</div><div class="card-name">Keltner Kanalı (20,2)</div></div>
       <div class="card-signals" id="sigs-30"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-30"></div><div class="card-acc" id="acc-30"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-30"></div><div class="card-acc" id="acc-30"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="31">
+    <div class="card algo-neo" data-algo="31">
       <div class="card-top"><div class="card-num">31</div><div class="card-name">Donchian Kanalı (20)</div></div>
       <div class="card-signals" id="sigs-31"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-31"></div><div class="card-acc" id="acc-31"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-31"></div><div class="card-acc" id="acc-31"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="32">
+    <div class="card algo-neo" data-algo="32">
       <div class="card-top"><div class="card-num">32</div><div class="card-name">VWAP + Hacim Profili</div></div>
       <div class="card-signals" id="sigs-32"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-32"></div><div class="card-acc" id="acc-32"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-32"></div><div class="card-acc" id="acc-32"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="33">
+    <div class="card algo-neo" data-algo="33">
       <div class="card-top"><div class="card-num">33</div><div class="card-name">Money Flow Index (MFI)</div></div>
       <div class="card-signals" id="sigs-33"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-33"></div><div class="card-acc" id="acc-33"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-33"></div><div class="card-acc" id="acc-33"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="34">
+    <div class="card algo-neo" data-algo="34">
       <div class="card-top"><div class="card-num">34</div><div class="card-name">Random Forest Classifier</div></div>
       <div class="card-signals" id="sigs-34"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-34"></div><div class="card-acc" id="acc-34"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-34"></div><div class="card-acc" id="acc-34"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="35">
+    <div class="card algo-neo" data-algo="35">
       <div class="card-top"><div class="card-num">35</div><div class="card-name">Markov Zinciri Modeli</div></div>
       <div class="card-signals" id="sigs-35"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-35"></div><div class="card-acc" id="acc-35"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-35"></div><div class="card-acc" id="acc-35"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="36">
+    <div class="card algo-neo" data-algo="36">
       <div class="card-top"><div class="card-num">36</div><div class="card-name">SuperTrend v2 (7,2.0)</div></div>
       <div class="card-signals" id="sigs-36"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-36"></div><div class="card-acc" id="acc-36"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-36"></div><div class="card-acc" id="acc-36"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="37">
+    <div class="card algo-neo" data-algo="37">
       <div class="card-top"><div class="card-num">37</div><div class="card-name">Ichimoku Cloud v2 (TK+Bulut)</div></div>
       <div class="card-signals" id="sigs-37"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-37"></div><div class="card-acc" id="acc-37"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-37"></div><div class="card-acc" id="acc-37"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="38">
+    <div class="card algo-neo" data-algo="38">
       <div class="card-top"><div class="card-num">38</div><div class="card-name">RSI Diverjansı (14) Katı</div></div>
       <div class="card-signals" id="sigs-38"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-38"></div><div class="card-acc" id="acc-38"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-38"></div><div class="card-acc" id="acc-38"><span class="acc-none">—</span></div></div>
     </div>
-    <div class="card" data-algo="39">
+    <div class="card algo-neo" data-algo="39">
       <div class="card-top"><div class="card-num">39</div><div class="card-name">H1 Profesyonel Kombinasyon</div></div>
       <div class="card-signals" id="sigs-39"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-39"></div><div class="card-acc" id="acc-39"><span class="acc-none pct-none">—</span></div></div>
+      <div class="card-footer"><div class="mini-chart" id="chart-39"></div><div class="card-acc" id="acc-39"><span class="acc-none">—</span></div></div>
     </div>
   </div>
 </div><!-- /algo-panel-1 -->
@@ -7238,13 +8070,13 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
 <!-- Sağ kolon -->
 <div class="main-right">
   <div class="rank-box">
-    <div class="rank-title">🏆 Algoritma Başarısı</div>
+    <div class="rank-title">🏆 Algoritma Başarısı <span style="opacity:.55;font-weight:600">Top 10</span></div>
     <div id="rank-list"><div class="rank-empty">İlk işlemler kapandıktan sonra burada görünecek</div></div>
   </div>
 
   <!-- Sembol bazlı breakdown -->
   <div class="rank-box" style="margin-top:14px">
-    <div class="rank-title" style="margin-bottom:10px">📊 Sembol Bazlı</div>
+    <div class="rank-title" style="margin-bottom:10px">📊 Sembol Bazlı <span style="opacity:.55;font-weight:600">Top 10</span></div>
     <!-- Filtre tabs -->
     <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">
       <button id="sym-tab-BTC" onclick="setSym('BTC')"
@@ -7298,49 +8130,130 @@ function renderSignals(data, prefix, ids){
   }
 }
 
-function renderConsensus(data, voteTotal, panelLabel){
+function _nowHM(){
+  try {
+    return new Date().toLocaleTimeString("tr-TR", {
+      hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Istanbul"
+    });
+  } catch (_) {
+    const d = new Date();
+    return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  }
+}
+function _settleEnd(periodEnd){
+  // PM settle :02 — 15:00 → 15:02
+  if(!periodEnd) return "";
+  const m = String(periodEnd).match(/^(\d{1,2}):(\d{2})$/);
+  if(!m) return periodEnd;
+  if(m[2] === "00") return String(m[1]).padStart(2,"0") + ":02";
+  return periodEnd;
+}
+function _wrToneCls(pct){
+  const w = Number(pct) || 0;
+  if (w >= 60) return "wr5";
+  if (w >= 55) return "wr4";
+  if (w >= 50) return "wr3";
+  if (w >= 45) return "wr2";
+  return "wr1";
+}
+function _domOf(c){
+  if(!c) return "NEUTRAL";
+  if(c.UP > c.DOWN) return "UP";
+  if(c.DOWN > c.UP) return "DOWN";
+  return "NEUTRAL";
+}
+function _domPct(c, tot){
+  const votes = Math.max(c.UP || 0, c.DOWN || 0);
+  return tot ? Math.round(votes / tot * 100) : 0;
+}
+
+function renderConsensus(data, voteTotal, panelLabel, suffix){
+  const sfx = suffix || "-1";
   const con = data && data.consensus ? data.consensus : null;
-  const rows = document.getElementById("cb-rows");
-  const upd  = document.getElementById("cb-updated");
-  const nxt  = document.getElementById("cb-next");
-  const per  = document.getElementById("cb-period");
-  const badge = document.getElementById("cb-panel-badge");
-  const defaultTot = voteTotal || 13;
-  if(badge) badge.textContent = panelLabel ? "· "+panelLabel : "";
+  const rows = document.getElementById("cb-rows" + sfx);
+  const upd  = document.getElementById("cb-updated" + sfx);
+  const per  = document.getElementById("cb-period" + sfx);
+  const badge = document.getElementById("cb-panel-badge" + sfx);
+  const leadEl = document.getElementById("cb-lead" + sfx);
+  const forecast = document.getElementById("cb-forecast" + sfx);
+  const box = document.getElementById("consensus-box" + sfx);
+  const defaultTot = voteTotal || 17;
+  if(badge) badge.textContent = panelLabel || "—";
+
   if(!con || !Object.keys(con).length){
-    if(rows) rows.innerHTML = '<div style="color:#666;font-size:12px;padding:8px 0">Sinyal verisi yok</div>';
-    if(upd) upd.textContent = "";
-    if(nxt) nxt.textContent = "";
-    if(per) per.textContent = "";
+    if(rows) rows.innerHTML = '<div class="az-chip empty"><div class="n">Veri yok</div></div>';
+    if(upd) upd.textContent = "Sinyal bekleniyor";
+    if(per) per.textContent = "—";
+    if(leadEl) leadEl.textContent = "—%";
+    if(forecast) forecast.textContent = "Saatlik tahmin için sinyal yok.";
+    if(box){
+      box.className = sfx === "-1"
+        ? "consensus-box con-vio con-yellow"
+        : "consensus-box con-vio con-yellow-dark";
+    }
     return;
   }
-  upd.textContent = data.updated ? "🕐 "+data.updated+" güncellendi" : "";
-  nxt.textContent = "";
-  if(per && data.period_start && data.period_end)
-    per.textContent = "📅 "+data.period_start+" → "+data.period_end+" analizi";
-  else if(per) per.textContent = "";
 
-  rows.innerHTML = SYMS.map(sym=>{
-    const c = con[sym] || {UP:0,DOWN:0,NEUTRAL:0,total:defaultTot};
+  const start = data.period_start || data.updated || "—";
+  const end = _settleEnd(data.period_end || "");
+  const windowTxt = end ? (start + "–" + end) : start;
+  if(per) per.textContent = windowTxt;
+  if(upd) upd.textContent = (data.updated ? data.updated + " güncellendi" : "Canlı") +
+    " · " + defaultTot + " algoritma";
+
+  let lead = null;
+  const chips = SYMS.map(sym => {
+    const c = con[sym] || {UP:0, DOWN:0, NEUTRAL:0, total:defaultTot};
     const tot = c.total || defaultTot;
-    const upPct  = Math.round(c.UP/tot*100);
-    const dnPct  = Math.round(c.DOWN/tot*100);
-    const dom    = c.UP > c.DOWN ? "UP" : c.DOWN > c.UP ? "DOWN" : "NEUTRAL";
-    const lbl    = dom==="UP" ? `<span class="cb-label lbl-up">${c.UP}/${tot} ▲ Artar</span>`
-                 : dom==="DOWN" ? `<span class="cb-label lbl-dn">${c.DOWN}/${tot} ▼ Düşer</span>`
-                 : `<span class="cb-label lbl-neu">= Nötr</span>`;
-    return `<div class="cb-row">
-      <span class="cb-sym">${sym}</span>
-      <div class="cb-bar-wrap">
-        <div style="display:flex;height:100%;">
-          <div class="cb-bar-up" style="width:${upPct}%"></div>
-          <div class="cb-bar-dn" style="width:${dnPct}%"></div>
-        </div>
-      </div>
-      ${lbl}
-    </div>
-    <div class="cb-detail">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▲${c.UP} ▼${c.DOWN} =${c.NEUTRAL}</div>`;
-  }).join("");
+    const dom = _domOf(c);
+    const pct = _domPct(c, tot);
+    const dirLbl = dom === "UP" ? "Artar" : dom === "DOWN" ? "Düşer" : "Nötr";
+    const dirCls = dom === "UP" ? "up" : dom === "DOWN" ? "dn" : "neu";
+    const wrCls = pct >= 55 ? "ok" : "mid";
+    const votes = dom === "UP" ? c.UP : dom === "DOWN" ? c.DOWN : Math.max(c.UP, c.DOWN);
+    if(!lead || votes > lead.votes || (votes === lead.votes && pct > lead.pct)){
+      lead = {sym, dom, pct, votes, tot, dirLbl, dirCls};
+    }
+    return `<div class="az-chip" title="▲${c.UP} ▼${c.DOWN} =${c.NEUTRAL}">
+      <div class="n">${sym}</div>
+      <div class="a ${dirCls}">${dirLbl}</div>
+      <div class="p ${wrCls}">${pct}%</div>
+      <div class="c">${votes}/${tot}</div>
+    </div>`;
+  });
+  if(rows) rows.innerHTML = chips.join("");
+
+  if(leadEl && lead){
+    const arrow = lead.dom === "UP" ? "▲" : lead.dom === "DOWN" ? "▼" : "=";
+    leadEl.textContent = lead.sym + " " + arrow + " " + lead.pct + "%";
+  }
+  if(box){
+    // ALGO1 açık sarı; ALGO2 bir tık koyu sarı
+    box.className = sfx === "-1"
+      ? "consensus-box con-vio con-yellow"
+      : "consensus-box con-vio con-yellow-dark";
+  }
+
+  if(forecast){
+    const now = _nowHM();
+    const parts = SYMS.map(sym => {
+      const c = con[sym] || {UP:0,DOWN:0,NEUTRAL:0,total:defaultTot};
+      const tot = c.total || defaultTot;
+      const dom = _domOf(c);
+      const pct = _domPct(c, tot);
+      const verb = dom === "UP" ? "yükselir" : dom === "DOWN" ? "düşer" : "nötr";
+      const cls = dom === "UP" ? "up" : dom === "DOWN" ? "dn" : "neu";
+      return `<b>${sym}</b> <span class="${cls}">${verb} %${pct}</span>`;
+    });
+    forecast.innerHTML =
+      `Şu an <b>${now}</b> · <b>${windowTxt}</b> arasında <b>${defaultTot}</b> algoritmaya göre ` +
+      parts.join(" · ") + ".";
+  }
+}
+
+function renderBothConsensus(){
+  renderConsensus(_signalsData, 34, "ALGO1 · 34 oy", "-1");
+  renderConsensus(_signalsDataV2, 17, "ALGO2 · 17 oy", "-2");
 }
 
 function renderRanking(acc, names, skipSet){
@@ -7355,7 +8268,8 @@ function renderRanking(acc, names, skipSet){
       correct: v.correct,
       wr: Math.round(v.correct / v.total * 100)
     }))
-    .sort((a,b) => b.wr - a.wr || b.total - a.total);
+    .sort((a,b) => b.wr - a.wr || b.total - a.total)
+    .slice(0, 10);
 
   if(!entries.length){
     el.innerHTML = '<div class="rank-empty">İlk işlemler kapandıktan sonra burada görünecek</div>';
@@ -7427,7 +8341,8 @@ function renderSymRanking(acc, sym, names, skipSet){
       correct: v.by_sym[sym].correct,
       wr: Math.round(v.by_sym[sym].correct / v.by_sym[sym].total * 100)
     }))
-    .sort((a,b) => b.wr - a.wr || b.total - a.total);
+    .sort((a,b) => b.wr - a.wr || b.total - a.total)
+    .slice(0, 10);
 
   if(!entries.length){
     el.innerHTML = '<div class="rank-empty">Henüz '+sym+' verisi yok</div>';
@@ -7486,6 +8401,13 @@ function renderTopSymAlgos(acc, names, skipSet){
   el.innerHTML = items.length ? items.join("") : '<span style="font-size:12px;color:#444">Veri birikmesi bekleniyor…</span>';
 }
 
+function _algoTone(wr){
+  if(wr == null || wr < 0) return "tone-none";
+  if(wr >= 0.55) return "tone-hi";
+  if(wr >= 0.45) return "tone-mid";
+  return "tone-lo";
+}
+
 function updateCardAccBadges(acc, prefix, maxN, skipSet){
   const skip = skipSet || new Set();
   for(let n=1; n<=maxN; n++){
@@ -7493,36 +8415,37 @@ function updateCardAccBadges(acc, prefix, maxN, skipSet){
     const accEl   = document.getElementById("acc-"+prefix+n);
     const chartEl = document.getElementById("chart-"+prefix+n);
     if(!accEl) continue;
+    const card = accEl.closest(".card");
+    if(card) card.classList.add("algo-neo");
 
     const data = acc[String(n)];
     if(!data || !data.total){
-      accEl.innerHTML = '<span class="acc-none pct-none">—</span>';
-      if(chartEl) chartEl.innerHTML = Array(6).fill('<div class="mini-bar bar-empty" style="height:100%"></div>').join('');
+      if(card) card.classList.remove("tone-hi","tone-mid","tone-lo");
+      accEl.innerHTML = `<div class="neo-bar tone-none">
+        <div class="neo-track">${Array(8).fill('<span class="neo-dash"></span>').join("")}</div>
+        <div class="neo-bubble">—</div>
+      </div>`;
+      if(chartEl) chartEl.innerHTML = "";
       continue;
     }
 
     const wr  = data.correct / data.total;
     const pct = Math.round(wr * 100);
-    const pctCls = wr >= 0.6 ? "pct-good" : wr >= 0.45 ? "pct-ok" : "pct-bad";
-    accEl.innerHTML = `<div class="acc-pct ${pctCls}">%${pct}</div><div class="acc-cnt">${data.correct}/${data.total} işlem</div>`;
-
-    // Mini bar chart — her bar 1 işlemi temsil eder (max 8 bar)
-    if(chartEl){
-      const total = Math.min(data.total, 8);
-      const wins  = Math.round(wr * total);
-      const maxH  = 24;
-      let bars = '';
-      for(let i=0; i<total; i++){
-        const isWin = i < wins;
-        const h = maxH * (0.3 + 0.7 * (i + 1) / total);
-        bars += `<div class="mini-bar ${isWin?'bar-win':'bar-loss'}" style="height:${h.toFixed(0)}px"></div>`;
-      }
-      // Boş yerler dolduralım
-      for(let i=total; i<6; i++){
-        bars += `<div class="mini-bar bar-empty" style="height:${(maxH*0.2).toFixed(0)}px"></div>`;
-      }
-      chartEl.innerHTML = bars;
+    const tone = _algoTone(wr);
+    if(card){
+      card.classList.remove("tone-hi","tone-mid","tone-lo");
+      if(tone !== "tone-none") card.classList.add(tone);
     }
+    const marks = Math.min(8, Math.max(3, Math.round(wr * 8)));
+    let dashes = "";
+    for(let i=0; i<8; i++){
+      dashes += `<span class="neo-dash${i < marks ? " on" : ""}"></span>`;
+    }
+    accEl.innerHTML = `<div class="neo-bar ${tone}">
+      <div class="neo-track">${dashes}</div>
+      <div class="neo-bubble">%${pct}<small>${data.correct}/${data.total}</small></div>
+    </div>`;
+    if(chartEl) chartEl.innerHTML = "";
   }
 }
 
@@ -7564,44 +8487,39 @@ function sortCardsByAccuracy(acc, panelId, skipSet){
 }
 
 function renderCbTotal(accData, tab){
-  const totEl = document.getElementById("cb-total");
+  const totEl = document.getElementById("cb-total-" + (tab === 2 ? "2" : "1"));
   if(!totEl) return;
   const vals = Object.values(accData || {}).filter(v => v && typeof v === "object");
   const maxTotal = vals.length ? Math.max(0, ...vals.map(x => x.total || 0)) : 0;
   if(maxTotal > 0){
     const hours = Math.round(maxTotal / 3);
-    totEl.textContent = `📊 ${maxTotal} ölçüm · ${hours} saatlik veri`;
+    totEl.textContent = `${maxTotal} ölçüm · ${hours} saatlik veri`;
   } else {
-    totEl.textContent = tab === 2
-      ? "📊 Analiz 2 — henüz kapanmış saat yok"
-      : "📊 Ölçüm birikiyor…";
+    totEl.textContent = tab === 2 ? "ALGO2 — henüz kapanmış saat yok" : "Ölçüm birikiyor…";
   }
 }
 
 function refreshActiveTabUI(){
   const sub = document.getElementById("page-sub");
-  const box = document.getElementById("consensus-box");
-  if(box) box.classList.toggle("cb-v2", _activeTab === 2);
+  if(sub) sub.textContent = "ALGO1 (34 oy) + ALGO2 (17 oy) — BTC / ETH / SOL — 1 saatlik konsensüs";
+  // Her iki konsensüs her zaman yan yana
+  renderBothConsensus();
+  renderCbTotal(_accData, 1);
+  renderCbTotal(_accDataV2, 2);
   if(_activeTab === 1){
-    if(sub) sub.textContent = "36 algoritma — BTC / ETH / SOL — 1 saatlik (konsensüs: 34 oy, #13–14 hariç)";
-    renderConsensus(_signalsData, 34, "Analiz 1 · 34 oy");
     renderSignals(_signalsData, "", null);
     renderRanking(_accData, ALGO_NAMES, REMOVED_ALGOS);
     renderSymRanking(_accData, _activeSym, ALGO_NAMES, REMOVED_ALGOS);
     updateCardAccBadges(_accData, "", 39, REMOVED_ALGOS);
     sortCardsByAccuracy(_accData, "algo-panel-1", REMOVED_ALGOS);
     renderTopSymAlgos(_accData, ALGO_NAMES, REMOVED_ALGOS);
-    renderCbTotal(_accData, 1);
   } else {
-    if(sub) sub.textContent = "17 kârlı algoritma (1Y backtest top 30) — BTC / ETH / SOL — 1 saatlik (konsensüs: 17 oy)";
-    renderConsensus(_signalsDataV2, 17, "Analiz 2 · 17 oy");
     renderSignals(_signalsDataV2, "v2-", V2_IDS);
     renderRanking(_accDataV2, ALGO_NAMES_V2);
     renderSymRanking(_accDataV2, _activeSym, ALGO_NAMES_V2);
     updateCardAccBadges(_accDataV2, "v2-", 17);
     sortCardsByAccuracy(_accDataV2, "algo-panel-2");
     renderTopSymAlgos(_accDataV2, ALGO_NAMES_V2);
-    renderCbTotal(_accDataV2, 2);
   }
 }
 
@@ -8502,34 +9420,48 @@ HTML = r"""<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8f135'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='900' fill='%230d0d0d'>P</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PolyMarket Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
+  :root{
+    --bg:#07070b; --card:#12121a; --card2:#181822; --line:rgba(255,255,255,.06);
+    --txt:#f4f4f8; --muted:#8b8b9a; --green:#39ff8e; --red:#ff5c7a;
+    --accent:#c8f135; --orange:#f5a623; --vio:#a78bfa;
+  }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#0d0d0d; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif; min-height:100vh; overflow-x:hidden; }
+  body {
+    color:var(--txt); font-family:'Sora',sans-serif; min-height:100vh; overflow-x:hidden;
+    background:
+      radial-gradient(900px 500px at 8% -12%, rgba(200,241,53,.08), transparent 55%),
+      radial-gradient(700px 420px at 92% 0%, rgba(167,139,250,.12), transparent 50%),
+      radial-gradient(600px 400px at 70% 110%, rgba(57,255,142,.05), transparent 45%),
+      var(--bg);
+  }
 
   /* ── Desktop layout ── */
   .app { display:flex; min-height:100vh; }
 
   /* Sol sidebar */
-  .sidebar { width:220px; min-height:100vh; background:#0a0f0a; padding:24px 16px;
+  .sidebar { width:220px; height:100vh; height:100dvh; max-height:100dvh; background:rgba(8,10,12,.92); backdrop-filter:blur(14px); padding:24px 16px;
              display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:10;
-             border-right:1px solid #1a2a1a; }
-  .logo { font-size:17px; font-weight:800; color:#c8f135; margin-bottom:32px; letter-spacing:-.3px; }
+             border-right:1px solid var(--line); overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
+  .logo { font-size:17px; font-weight:800; color:var(--accent); margin-bottom:32px; letter-spacing:-.3px; }
   .logo span { color:#fff; font-weight:400; }
   .nav-label { font-size:10px; color:#444; text-transform:uppercase; letter-spacing:.8px; margin:20px 0 8px; }
   .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px;
-              font-size:13px; font-weight:600; color:#555; cursor:pointer; margin-bottom:2px; text-decoration:none; }
-  .nav-item.active { background:#1c1c1e; color:#fff; }
-  .nav-item:hover { background:#1c1c1e; color:#aaa; }
+              font-size:13px; font-weight:600; color:#555; cursor:pointer; margin-bottom:2px; text-decoration:none; transition:all .15s; }
+  .nav-item.active { background:rgba(200,241,53,.1); color:var(--accent); }
+  .nav-item:hover { background:rgba(255,255,255,.04); color:#aaa; }
   .nav-dot { width:8px; height:8px; border-radius:50%; background:#333; flex-shrink:0; }
-  .nav-item.active .nav-dot { background:#c8f135; }
+  .nav-item.active .nav-dot { background:var(--accent); }
   .sidebar-footer { margin-top:auto; font-size:12px; color:#333; padding:8px 12px; cursor:pointer; }
   .sidebar-footer:hover { color:#555; }
 
   /* Ana içerik */
   .main { margin-left:220px; flex:1; padding:28px 24px 28px 28px; min-width:0; }
-  .right-panel { width:300px; min-height:100vh; background:#111; padding:24px 16px;
-                 position:fixed; top:0; right:0; bottom:0; overflow-y:auto; }
+  .right-panel { width:300px; min-height:100vh; background:rgba(10,10,14,.9); backdrop-filter:blur(12px); padding:24px 16px;
+                 position:fixed; top:0; right:0; bottom:0; overflow-y:auto; border-left:1px solid var(--line); }
 
   /* Overview 2-sütun grid */
   .overview-grid { display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start; }
@@ -8538,30 +9470,92 @@ HTML = r"""<!DOCTYPE html>
 
   /* Stats kartları */
   .stats-row { display:grid; gap:14px; margin-bottom:14px; }
-  .top-stats    { grid-template-columns:1fr 1fr; }
-  .bottom-stats { grid-template-columns:1fr 1fr; }
-  .stat-card { background:#1f1f1f; border-radius:16px; padding:16px 18px; }
-  .stat-label { font-size:11px; color:#555; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
-  .stat-val { font-size:24px; font-weight:700; letter-spacing:-.5px; }
-  .stat-val.green { color:#a3e635; font-size:32px; font-weight:800; }
-  .stat-val.bright-green { color:#4ade80; font-size:32px; font-weight:800; }
-  .stat-val.up { color:#4ade80; }
-  .stat-val.down { color:#f87171; }
-  .stat-sub { font-size:12px; color:#777; margin-top:4px; }
-  .stat-sub.pos { color:#4ade80; }
-  .stat-sub.neg { color:#f87171; }
-  .stat-systems { display:flex; flex-direction:column; gap:5px; margin-top:10px; padding-top:10px; border-top:1px solid #222; }
+  .top-stats {
+    grid-template-columns:minmax(0, 250px) minmax(0, 250px);
+    gap:12px; max-width:520px;
+  }
+  .bottom-stats { grid-template-columns:1fr; }
+  .stat-card {
+    background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    border:1px solid var(--line); border-radius:20px; padding:16px 18px;
+    box-shadow:0 12px 32px rgba(0,0,0,.25); backdrop-filter:blur(12px);
+  }
+  /* Gerçek PM — tek yatay kutu */
+  .pm-real-card { padding:18px 20px; }
+  .pm-real-top {
+    display:grid; grid-template-columns:1fr 1fr; gap:18px;
+    align-items:start;
+  }
+  .pm-real-col { min-width:0; }
+  .pm-real-col + .pm-real-col {
+    padding-left:18px; border-left:1px solid var(--line);
+  }
+  .pm-real-card .stat-systems { margin-top:12px; }
+  /* Portfolio / Cash — KF wallet kartları (bir tık dar) */
+  .ov-wallet{
+    padding:16px 16px; border-radius:24px; position:relative; overflow:hidden;
+    background:linear-gradient(145deg,#6339f9 0%,#a21caf 45%,#c63f82 100%);
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 18px 40px rgba(99,57,249,.35);
+    min-height:148px; display:flex; flex-direction:column; color:#fff;
+  }
+  .ov-wallet::before{
+    content:''; position:absolute; width:120px; height:120px; border-radius:50%;
+    background:rgba(255,255,255,.12); top:-28px; right:-18px; pointer-events:none;
+  }
+  .ov-wallet::after{
+    content:''; position:absolute; width:80px; height:80px; border-radius:50%;
+    background:rgba(255,255,255,.08); top:28px; right:36px; pointer-events:none;
+  }
+  .ov-wallet-top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
+  .ov-wallet-dots{display:flex;gap:6px}
+  .ov-wallet-dots i{
+    width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.2);
+    border:1px solid rgba(255,255,255,.28); display:block;
+  }
+  .ov-wallet-dots i:last-child{margin-left:-12px;background:rgba(255,255,255,.35)}
+  .ov-wallet-tag{font-size:11px;font-weight:800;letter-spacing:.6px;opacity:.88}
+  .ov-wallet-lbl{font-size:11px;font-weight:700;opacity:.82;margin-top:16px;position:relative;z-index:1}
+  .ov-wallet-bal{
+    font-size:26px;font-weight:800;letter-spacing:-1px;margin-top:4px;
+    position:relative;z-index:1;color:#fff !important;line-height:1.1;
+  }
+  .ov-wallet-row{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-top:auto;padding-top:16px;position:relative;z-index:1;gap:10px;
+  }
+  .ov-wallet-kpi{font-size:11px;font-weight:700;opacity:.85}
+  .ov-wallet-kpi b{display:block;font-size:16px;margin-top:2px;font-weight:800}
+  .ov-wbtn{
+    width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;
+    background:rgba(255,255,255,.18);color:#fff;font-size:15px;font-weight:700;
+  }
+  .ov-wbtn:hover{background:rgba(255,255,255,.3)}
+  .ov-wallet.cash{
+    background:linear-gradient(145deg,#6d28d9 0%,#a21caf 48%,#db2777 100%);
+    box-shadow:0 18px 40px rgba(109,40,217,.35);
+  }
+  .stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; font-weight:700; }
+  .stat-val { font-size:24px; font-weight:800; letter-spacing:-.5px; }
+  .stat-val.green { color:var(--accent); font-size:32px; font-weight:800; }
+  .stat-val.bright-green { color:var(--green); font-size:32px; font-weight:800; }
+  .stat-val.up { color:var(--green); }
+  .stat-val.down { color:var(--red); }
+  .stat-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+  .stat-sub.pos { color:var(--green); }
+  .stat-sub.neg { color:var(--red); }
+  .stat-systems { display:flex; flex-direction:column; gap:5px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
   .stat-sys-row { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11px; line-height:1.35; }
   .stat-sys-name { font-weight:700; color:#aaa; min-width:52px; }
   .stat-sys-wr { font-weight:800; min-width:38px; text-align:right; }
-  .stat-sys-wr.up { color:#4ade80; }
-  .stat-sys-wr.down { color:#f87171; }
+  .stat-sys-wr.up { color:var(--green); }
+  .stat-sys-wr.down { color:var(--red); }
   .stat-sys-detail { color:#555; flex:1; text-align:right; }
   .stat-sys-paused { color:#666; font-size:10px; }
 
   /* Top3 analiz kartları */
-  .top3-card { background:#111; border:1px solid #1e1e1e; border-radius:14px; padding:16px; display:flex; gap:12px; align-items:flex-start; }
-  .top3-divider { height:1px; background:#1e1e1e; margin:6px 0 7px; }
+  .top3-card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; display:flex; gap:12px; align-items:flex-start; }
+  .top3-divider { height:1px; background:var(--line); margin:6px 0 7px; }
   .top3-donut { position:relative; width:64px; height:64px; flex-shrink:0; }
   .top3-donut svg { transform:rotate(-90deg); }
   .top3-donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
@@ -8574,9 +9568,9 @@ HTML = r"""<!DOCTYPE html>
   .top3-val { font-size:11px; font-weight:600; }
   .top3-pills { display:flex; gap:3px; margin-top:6px; flex-wrap:wrap; }
   .top3-pill { font-size:9px; padding:1px 5px; border-radius:12px; background:#1a1a1a; color:#888; }
-  .top3-pill.good { background:#14291e; color:#4ade80; }
-  .top3-pill.ok   { background:#1e1e14; color:#a3e635; }
-  .top3-pill.bad  { background:#291414; color:#f87171; }
+  .top3-pill.good { background:rgba(57,255,142,.12); color:var(--green); }
+  .top3-pill.ok   { background:rgba(200,241,53,.1); color:var(--accent); }
+  .top3-pill.bad  { background:rgba(255,92,122,.12); color:var(--red); }
   @media(max-width:700px){ .top3-desktop-only { display:none !important; } }
 
   /* PM 1H kotasyon */
@@ -8584,17 +9578,17 @@ HTML = r"""<!DOCTYPE html>
   .pm-hourly-title { font-size:15px; font-weight:700; color:#fff; margin-bottom:10px; }
   .pm-hourly-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .pm-hourly-row.single { grid-template-columns:1fr; max-width:320px; }
-  .pm-hourly-card { background:#141414; border-radius:16px; padding:12px 14px; border:1px solid #1e1e1e; }
+  .pm-hourly-card { background:var(--card); border-radius:18px; padding:12px 14px; border:1px solid var(--line); }
   .pm-hourly-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
   .pm-hourly-sym { font-size:14px; font-weight:800; color:#fff; }
   .pm-hourly-et { font-size:10px; color:#666; font-weight:600; }
   .pm-hourly-prices { display:flex; gap:8px; }
   .pm-hourly-pill { flex:1; border-radius:10px; padding:8px 10px; text-align:center; }
-  .pm-hourly-pill.up { background:#14291e; }
-  .pm-hourly-pill.down { background:#291414; }
+  .pm-hourly-pill.up { background:rgba(57,255,142,.1); }
+  .pm-hourly-pill.down { background:rgba(255,92,122,.1); }
   .pm-hourly-lbl { font-size:9px; font-weight:700; letter-spacing:.4px; margin-bottom:2px; }
-  .pm-hourly-pill.up .pm-hourly-lbl { color:#4ade80; }
-  .pm-hourly-pill.down .pm-hourly-lbl { color:#f87171; }
+  .pm-hourly-pill.up .pm-hourly-lbl { color:var(--green); }
+  .pm-hourly-pill.down .pm-hourly-lbl { color:var(--red); }
   .pm-hourly-val { font-size:16px; font-weight:800; color:#fff; }
   .pm-hourly-bn { font-size:13px; font-weight:600; color:#aaa; margin-top:8px; display:flex; flex-wrap:wrap; gap:10px 14px; }
   .pm-hourly-bn span { white-space:nowrap; }
@@ -8606,16 +9600,18 @@ HTML = r"""<!DOCTYPE html>
   .mobile-profit-wrap { display:none; }
 
   /* pm-kar-donut — overview (mobil widget burada; patch sidebar için ayrı enjekte eder) */
-  .sidebar-profit { margin:10px 0 4px; padding:16px 12px 12px; background:#14161a;
-    border:1px solid #22252b; border-radius:20px; box-sizing:border-box; }
+  .sidebar-profit { margin:10px 0 4px; padding:16px 12px 12px;
+    background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    border:1px solid var(--line); border-radius:22px; box-sizing:border-box;
+    box-shadow:0 10px 28px rgba(0,0,0,.28); }
   .sidebar-profit .sp-title { font-size:13px; color:#fff; font-weight:700; letter-spacing:-.2px; margin-bottom:14px; }
   .sidebar-profit .sp-inner { display:flex; flex-direction:column; align-items:center; gap:12px; width:100%; }
-  .sidebar-profit .sp-chart { position:relative; width:148px; height:148px; flex-shrink:0; }
-  .sidebar-profit .sp-chart svg { width:148px; height:148px; display:block; }
-  .sidebar-profit .sp-center { position:absolute; top:0; left:0; width:148px; height:148px; z-index:2;
+  .sidebar-profit .sp-chart { position:relative; width:168px; height:168px; flex-shrink:0; }
+  .sidebar-profit .sp-chart svg { width:168px; height:168px; display:block; }
+  .sidebar-profit .sp-center { position:absolute; top:0; left:0; width:168px; height:168px; z-index:2;
     display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
-  .sidebar-profit .sp-total { font-size:22px; font-weight:800; color:#fff; line-height:1.05; letter-spacing:-.4px; margin-top:2px; }
-  .sidebar-profit .sp-sub { font-size:10px; color:#6b7280; text-align:center; }
+  .sidebar-profit .sp-total { font-size:34px; font-weight:800; color:#fff !important; line-height:1; letter-spacing:-1px; }
+  .sidebar-profit .sp-sub { display:none; }
   .sidebar-profit .sp-chips { width:100%; display:flex; flex-wrap:wrap; justify-content:center; gap:8px 12px; }
   .sidebar-profit .sp-chip { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:#9ca3af; font-weight:600; }
   .sidebar-profit .sp-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -8637,29 +9633,29 @@ HTML = r"""<!DOCTYPE html>
   .sidebar-profit .sp-legend { display:none; }
 
   /* Portföy grafiği + aktif algoritmalar */
-  .portfolio-chart-wrap { background:#141414; border-radius:20px; overflow:hidden; margin-bottom:8px; padding-bottom:10px; }
+  .portfolio-chart-wrap { background:var(--card); border:1px solid var(--line); border-radius:22px; overflow:hidden; margin-bottom:8px; padding-bottom:10px; }
   .portfolio-chart-head { display:flex; align-items:center; justify-content:space-between; padding:16px 18px 0; }
   .portfolio-chart-title { font-size:15px; font-weight:700; }
   .portfolio-chart-tabs { display:flex; gap:6px; }
   .port-tab { padding:5px 12px; border-radius:16px; font-size:12px; font-weight:700;
-              cursor:pointer; color:#888; border:none; background:#1a1a1a; transition:.2s; }
-  .port-tab.active { background:#c8f135; color:#111; }
+              cursor:pointer; color:#888; border:none; background:rgba(255,255,255,.05); transition:.2s; }
+  .port-tab.active { background:var(--accent); color:#111; }
   .slot-mode-tabs { display:flex; gap:6px; margin:8px 0 10px; }
   .slot-tab { flex:1; padding:6px 0; border-radius:10px; font-size:11px; font-weight:700;
-              background:#1c1c1e; color:#666; border:1px solid #252525; cursor:pointer; transition:.2s; }
-  .slot-tab.active { background:#c8f135; color:#111; border-color:#c8f135; }
-  .slot-tab.active.worst { background:#f87171; color:#111; border-color:#f87171; }
+              background:var(--card2); color:#666; border:1px solid var(--line); cursor:pointer; transition:.2s; }
+  .slot-tab.active { background:var(--accent); color:#111; border-color:var(--accent); }
+  .slot-tab.active.worst { background:var(--red); color:#111; border-color:var(--red); }
   .portfolio-chart-summary { padding:6px 18px 2px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
   .port-cur { font-size:24px; font-weight:800; color:#fff; letter-spacing:-.4px; }
-  .port-cur.up { color:#4ade80; }
-  .port-cur.down { color:#f87171; }
+  .port-cur.up { color:var(--green); }
+  .port-cur.down { color:var(--red); }
   .port-delta { font-size:12px; font-weight:700; }
-  .port-delta.up { color:#4ade80; }
-  .port-delta.down { color:#f87171; }
+  .port-delta.up { color:var(--green); }
+  .port-delta.down { color:var(--red); }
   .port-sub { font-size:11px; color:#666; }
   #portfolio-chart { height:210px; }
   .algo-bars-box {
-    background:#141414; border:1px solid #1e1e1e; border-radius:16px;
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
     padding:10px 8px 18px; margin-bottom:20px; overflow:visible;
   }
   .algo-bars-chart {
@@ -8680,23 +9676,23 @@ HTML = r"""<!DOCTYPE html>
     font-size:10px; font-weight:800; margin-bottom:5px;
     white-space:nowrap; line-height:1.2; flex-shrink:0; text-align:center;
   }
-  .algo-bar-val.up { color:#4ade80; }
-  .algo-bar-val.down { color:#f87171; }
+  .algo-bar-val.up { color:var(--green); }
+  .algo-bar-val.down { color:var(--red); }
   .algo-bar {
     display:block; width:22px; max-width:82%; min-width:8px;
     flex:0 0 auto; border-radius:999px; box-sizing:border-box;
   }
-  .algo-bar.up { background:#4ade80; }
-  .algo-bar.down { background:#f87171; }
-  .algo-bar.live.up { box-shadow:0 0 16px rgba(74,222,128,.45); }
-  .algo-bar.live.down { box-shadow:0 0 12px rgba(248,113,113,.35); }
+  .algo-bar.up { background:var(--green); }
+  .algo-bar.down { background:var(--red); }
+  .algo-bar.live.up { box-shadow:0 0 16px rgba(57,255,142,.45); }
+  .algo-bar.live.down { box-shadow:0 0 12px rgba(255,92,122,.35); }
   .algo-bar.paused { opacity:.45; }
   .algo-bar-label {
     font-size:9px; font-weight:700; color:#888; text-align:center;
     margin-top:10px; line-height:1.15; width:100%;
     white-space:nowrap; overflow:visible;
   }
-  .algo-bar-label.live { color:#c8f135; font-weight:800; }
+  .algo-bar-label.live { color:var(--accent); font-weight:800; }
   @media(max-width:700px){
     .algo-bars-box { padding:8px 4px 14px; }
     .algo-bars-chart { gap:2px; min-height:88px; padding:2px 0 8px; }
@@ -8706,97 +9702,161 @@ HTML = r"""<!DOCTYPE html>
   }
 
   /* Açık pozisyonlar */
-  .section-title { font-size:13px; font-weight:700; color:#888; text-transform:uppercase;
-                   letter-spacing:.5px; margin-bottom:14px; }
+  .section-title { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase;
+                   letter-spacing:.6px; margin-bottom:14px; }
   .positions { display:flex; flex-direction:column; gap:12px; }
-  .pos-card { background:#141414; border-radius:18px; padding:18px; border:2px solid #333; }
-  .pos-card.pos-clickable { cursor:pointer; transition:border-color .15s, background .15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-  .pos-card.pos-clickable:hover { background:#181818; }
-  .pos-card.pos-clickable.dir-up:hover { border-color:#6ee7a0; }
-  .pos-card.pos-clickable.dir-down:hover { border-color:#fca5a5; }
+  .pos-card {
+    background:var(--card2); border-radius:20px; padding:18px; border:1px solid var(--line);
+    box-shadow:0 10px 28px rgba(0,0,0,.22);
+  }
+  .pos-card.pos-clickable { cursor:pointer; transition:border-color .15s, background .15s, transform .15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  .pos-card.pos-clickable:hover { background:#1c1c28; transform:translateY(-1px); }
+  .pos-card.pos-clickable.dir-up:hover { border-color:rgba(57,255,142,.55); }
+  .pos-card.pos-clickable.dir-down:hover { border-color:rgba(255,92,122,.55); }
   .pos-card.pos-clickable .close-btn-wrap { cursor:default; }
-  .pos-card.dir-up   { border-color:#4ade80; }
-  .pos-card.dir-down { border-color:#f87171; }
+  .pos-card.dir-up   { border-color:rgba(57,255,142,.35); box-shadow:inset 0 0 0 1px rgba(57,255,142,.08); }
+  .pos-card.dir-down { border-color:rgba(255,92,122,.35); box-shadow:inset 0 0 0 1px rgba(255,92,122,.08); }
   .pos-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
   .pos-name { font-size:20px; font-weight:800; color:#fff; }
-  .pos-dir  { font-size:12px; font-weight:700; padding:4px 10px; border-radius:10px; }
-  .pos-dir.up   { background:#14532d; color:#4ade80; }
-  .pos-dir.down { background:#450a0a; color:#f87171; }
+  .pos-dir  { font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px; }
+  .pos-dir.up   { background:rgba(57,255,142,.12); color:var(--green); }
+  .pos-dir.down { background:rgba(255,92,122,.12); color:var(--red); }
   .pos-price-row { display:flex; align-items:baseline; gap:8px; margin:2px 0 6px; }
-  .pos-current { font-size:22px; font-weight:700; color:#fff; }
+  .pos-current { font-size:22px; font-weight:800; color:#fff; letter-spacing:-.4px; }
   .pos-win-icon { font-size:18px; font-weight:800; line-height:1; margin-left:2px; }
-  .pos-win-icon.ok { color:#4ade80; }
-  .pos-win-icon.bad { color:#f87171; }
-  .pos-pct { font-size:13px; font-weight:600; }
-  .pos-pct.pos { color:#4ade80; } .pos-pct.neg { color:#f87171; }
+  .pos-win-icon.ok { color:var(--green); }
+  .pos-win-icon.bad { color:var(--red); }
+  .pos-pct { font-size:13px; font-weight:700; }
+  .pos-pct.pos { color:var(--green); } .pos-pct.neg { color:var(--red); }
   .pos-entry { font-size:14px; font-weight:600; color:#e8e8e8; margin-bottom:6px; }
-  .pos-entry-lbl { color:#888; font-weight:500; }
+  .pos-entry-lbl { color:var(--muted); font-weight:500; }
   .pos-slot { font-size:13px; font-weight:600; color:#aaa; margin-bottom:10px; }
   .pos-slot-lbl { color:#666; font-weight:500; }
-  .pos-risk-row { font-size:13px; color:#888; font-weight:600; margin-top:8px; }
-  .pos-close-row { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-top:10px; padding:10px 12px; background:#0f120f; border-radius:10px; border:1px solid #1a2a1a; }
+  .pos-risk-row { font-size:13px; color:var(--muted); font-weight:600; margin-top:8px; }
+  .pos-close-row { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-top:10px; padding:12px; background:rgba(0,0,0,.25); border-radius:14px; border:1px solid var(--line); }
   .close-lbl { font-size:10px; color:#666; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
   .live-close-val { font-size:20px; font-weight:800; color:#fff; line-height:1; }
   .live-close-pnl { font-size:14px; font-weight:800; }
-  .live-close-pnl.pos { color:#4ade80; }
-  .live-close-pnl.neg { color:#f87171; }
+  .live-close-pnl.pos { color:var(--green); }
+  .live-close-pnl.neg { color:var(--red); }
   .close-token { font-size:11px; color:#555; margin-left:auto; font-weight:600; }
   .live-updated { font-size:10px; color:#444; width:100%; margin-top:2px; }
-  .pos-win-row { font-size:14px; color:#4ade80; font-weight:600; margin-top:6px; }
-  .pos-win-row .win-lbl { color:#888; font-weight:500; }
-  .pos-analiz-tag { display:inline-block; background:#2a2a2a; color:#ccc; font-size:11px;
-                    padding:2px 8px; border-radius:6px; margin-left:6px; font-weight:600; }
+  .pos-win-row { font-size:14px; color:var(--green); font-weight:600; margin-top:6px; }
+  .pos-win-row .win-lbl { color:var(--muted); font-weight:500; }
+  .pos-analiz-tag { display:inline-block; background:rgba(255,255,255,.06); color:#ccc; font-size:11px;
+                    padding:3px 8px; border-radius:8px; margin-left:6px; font-weight:700; }
   .close-btn-wrap { display:flex; justify-content:flex-end; margin-top:12px; }
-  .close-btn { background:#c8f135; border:none; color:#111; font-size:12px; font-weight:800;
-               padding:8px 18px; border-radius:12px; cursor:pointer; white-space:nowrap; transition:.2s; }
-  .close-btn:hover { background:#d4ff3a; }
+  .close-btn { background:var(--accent); border:none; color:#111; font-size:12px; font-weight:800;
+               padding:10px 18px; border-radius:14px; cursor:pointer; white-space:nowrap; transition:.2s; }
+  .close-btn:hover { filter:brightness(1.08); }
   .close-btn:disabled { background:#333; color:#666; cursor:not-allowed; opacity:.65; }
-  .close-btn:disabled:hover { background:#333; }
+  .close-btn:disabled:hover { background:#333; filter:none; }
   .close-btn.loading { opacity:.5; pointer-events:none; }
-  .empty { color:#333; font-size:14px; padding:32px 0; }
+  .empty { color:#555; font-size:14px; padding:32px 0; }
 
-  /* Toplam risk */
-  .risk-banner { background:#c8f135; border-radius:16px; padding:14px 18px;
-                 display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+  /* Toplam risk — lime kart (dış kutu yok) */
+  .sym-lime.risk-lime{
+    margin-bottom:14px; padding:14px 16px 12px; border-radius:22px;
+  }
+  .sym-lime.risk-lime .sym-lime-row{ margin-top:6px; }
+  .sym-lime.risk-lime .sym-lime-val{ font-size:30px; }
+  .sym-lime.risk-lime .sym-lime-ico{ width:36px; height:36px; border-radius:12px; }
+  .sym-lime.risk-lime .sym-lime-meta{ margin-top:10px; gap:10px; }
   /* Bölüm ayraçları */
-  .section-wrap { background:#1f1f1f; border-radius:20px; padding:20px; margin-bottom:24px; }
-  .risk-label { font-size:12px; font-weight:700; color:#111; }
-  .risk-val   { font-size:18px; font-weight:800; color:#111; }
+  .section-wrap { background:var(--card); border:1px solid var(--line); border-radius:24px; padding:20px; margin-bottom:24px;
+                  box-shadow:0 12px 32px rgba(0,0,0,.2); }
 
   /* Sağ panel */
-  .rp-section { background:#1f1f1f; border-radius:16px; padding:16px 14px; margin-bottom:14px; }
-  .rp-title { font-size:11px; font-weight:700; color:#666; text-transform:uppercase;
+  .rp-section { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 14px; margin-bottom:14px; }
+  .rp-title { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;
               letter-spacing:.6px; margin-bottom:12px; }
   .trade-item { display:flex; justify-content:space-between; align-items:center;
-                padding:10px 0; border-bottom:1px solid #1c1c1e; }
+                padding:10px 0; border-bottom:1px solid var(--line); }
   .trade-item:last-child { border:none; }
   .trade-left { display:flex; flex-direction:column; gap:3px; }
   .trade-sym { font-size:13px; font-weight:700; }
   .trade-meta { font-size:11px; color:#777; }
   .trade-pnl { font-size:14px; font-weight:800; }
-  .trade-pnl.pos { color:#4ade80; } .trade-pnl.neg { color:#f87171; }
+  .trade-pnl.pos { color:var(--green); } .trade-pnl.neg { color:var(--red); }
   .trade-item.pending { opacity:.92; }
-  .trade-item.pending .trade-pnl { color:#fbbf24; font-size:12px; font-weight:700; }
-  .trade-badge-pending { font-size:9px; color:#fbbf24; background:#2a2208; padding:1px 5px;
+  .trade-item.pending .trade-pnl { color:var(--orange); font-size:12px; font-weight:700; }
+  .trade-badge-pending { font-size:9px; color:var(--orange); background:rgba(245,166,35,.12); padding:1px 5px;
                          border-radius:4px; margin-left:4px; font-weight:700; vertical-align:1px; }
 
   .algo-item { display:flex; align-items:center; justify-content:space-between;
-               padding:8px 0; border-bottom:1px solid #1c1c1e; }
+               padding:8px 0; border-bottom:1px solid var(--line); }
   .algo-item:last-child { border:none; }
   .algo-name { font-size:12px; font-weight:600; color:#ccc; }
   .algo-wr   { font-size:12px; font-weight:700; }
-  .algo-wr-bar  { height:4px; background:#1c1c1e; border-radius:4px; margin:0 10px; flex:1; }
-  .algo-wr-bar-fill { height:100%; border-radius:4px; background:#c8f135; }
+  .algo-wr-bar  { height:4px; background:rgba(255,255,255,.06); border-radius:4px; margin:0 10px; flex:1; }
+  .algo-wr-bar-fill { height:100%; border-radius:4px; background:var(--accent); }
 
-  .dot { width:6px; height:6px; background:#4ade80; border-radius:50%; display:inline-block;
+  /* Ortak lime/vio kart iskeleti */
+  .sym-lime, .sym-vio{
+    position:relative; overflow:hidden; border-radius:28px; padding:20px 18px 18px;
+    margin-bottom:12px;
+  }
+  .sym-lime{
+    background:linear-gradient(145deg,#dfff4f 0%, #c8f135 55%, #b8e020 100%);
+    color:#111; box-shadow:0 16px 36px rgba(200,241,53,.28);
+  }
+  /* Sembol Başarı — mor/pembe (risk lime’dan ayrı) */
+  .sym-vio{
+    background:linear-gradient(145deg,#5b21b6 0%, #7c3aed 42%, #a21caf 100%);
+    color:#fff; border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 16px 36px rgba(91,33,182,.35); margin-bottom:14px;
+  }
+  .sym-lime::before, .sym-vio::before{
+    content:''; position:absolute; width:140px; height:140px; border-radius:50%;
+    background:rgba(0,0,0,.06); top:-40px; right:-30px; pointer-events:none;
+  }
+  .sym-vio::before{ background:rgba(255,255,255,.12); }
+  .sym-lime::after, .sym-vio::after{
+    content:''; position:absolute; width:90px; height:90px; border-radius:50%;
+    background:rgba(0,0,0,.05); top:20px; right:20px; pointer-events:none;
+  }
+  .sym-vio::after{ background:rgba(255,255,255,.08); }
+  .sym-lime-title{font-size:13px;font-weight:800;letter-spacing:-.2px;position:relative;z-index:1}
+  .sym-lime-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;position:relative;z-index:1}
+  .sym-lime-val{font-size:36px;font-weight:800;letter-spacing:-1.2px;line-height:1}
+  .sym-lime-ico{
+    width:42px;height:42px;border-radius:14px;background:rgba(0,0,0,.1);
+    display:grid;place-items:center;flex-shrink:0;
+  }
+  .sym-vio .sym-lime-ico{ background:rgba(255,255,255,.16); }
+  .sym-vio .sym-lime-ico svg ellipse{ fill:#fff; }
+  .sym-lime-ico svg{display:block}
+  .sym-lime-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;position:relative;z-index:1}
+  .sym-lime-meta .k{font-size:11px;font-weight:600;opacity:.7}
+  .sym-lime-meta .v{font-size:15px;font-weight:800;margin-top:3px}
+  .sym-wr-row{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+    margin-top:14px; position:relative; z-index:1;
+  }
+  .sym-wr-chip{
+    text-align:center; padding:10px 6px; border-radius:14px;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.14);
+  }
+  .sym-wr-chip .n{font-size:12px;color:#fff;font-weight:800;margin-bottom:2px}
+  .sym-wr-chip .a{
+    display:inline-block; font-size:10px; font-weight:800; letter-spacing:.3px;
+    color:#111; background:rgba(255,255,255,.92); border-radius:999px; padding:2px 7px;
+    margin:2px 0 5px;
+  }
+  .sym-wr-chip .p{font-size:16px;font-weight:800;color:#fff}
+  .sym-wr-chip .p.ok{color:#39ff8e}
+  .sym-wr-chip .p.mid{color:#fde047}
+  .sym-wr-chip .c{font-size:10px;color:rgba(255,255,255,.7);margin-top:2px}
+
+  .dot { width:6px; height:6px; background:var(--green); border-radius:50%; display:inline-block;
          margin-right:5px; animation:pulse 2s infinite; }
-  .updated-bar { font-size:11px; color:#333; margin-top:16px; }
+  .updated-bar { font-size:11px; color:#444; margin-top:16px; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
   /* Heatmap */
-  .hm-filter { background:#1a1a1a; border:none; color:#666; font-size:12px; font-weight:700;
+  .hm-filter { background:rgba(255,255,255,.05); border:none; color:#666; font-size:12px; font-weight:700;
                padding:6px 14px; border-radius:12px; cursor:pointer; transition:.2s; }
-  .hm-filter.active { background:#c8f135; color:#111; }
+  .hm-filter.active { background:var(--accent); color:#111; }
   .hm-table { border-collapse:separate; border-spacing:3px; width:100%; }
   .hm-table th { font-size:10px; color:#666; font-weight:600; padding:3px 2px; text-align:center; }
   .hm-table td { width:44px; height:44px; border-radius:7px; text-align:center; vertical-align:middle;
@@ -8813,7 +9873,11 @@ HTML = r"""<!DOCTYPE html>
     .main { margin-left:0; padding:16px; }
     .overview-grid { grid-template-columns:1fr; }
     .overview-right { display:none; }
-    .top-stats { grid-template-columns:1fr 1fr; }
+    .top-stats { grid-template-columns:1fr 1fr; max-width:none; gap:10px; }
+    .ov-wallet { min-height:132px; padding:14px; }
+    .ov-wallet-bal { font-size:22px; }
+    .pm-real-top { grid-template-columns:1fr; gap:14px; }
+    .pm-real-col + .pm-real-col { padding-left:0; border-left:none; padding-top:14px; border-top:1px solid var(--line); }
     .bottom-stats { display:none; }
     .stat-val { font-size:20px; }
     .stat-val.green { font-size:34px; }
@@ -8835,8 +9899,8 @@ HTML = r"""<!DOCTYPE html>
     }
     .mobile-profit-wrap .sidebar-profit .sp-chart,
     .mobile-profit-wrap .sidebar-profit .sp-chart svg,
-    .mobile-profit-wrap .sidebar-profit .sp-center { width:160px; height:160px; }
-    .mobile-profit-wrap .sidebar-profit .sp-total { font-size:24px; }
+    .mobile-profit-wrap .sidebar-profit .sp-center { width:168px; height:168px; }
+    .mobile-profit-wrap .sidebar-profit .sp-total { font-size:34px; color:#fff !important; }
     .mobile-profit-wrap .sidebar-profit .sp-row-name { font-size:13px; }
     .mobile-profit-wrap .sidebar-profit .sp-row-val { font-size:13px; }
     .chart-wrap { margin-top:0; }
@@ -8892,29 +9956,52 @@ HTML = r"""<!DOCTYPE html>
 
     <!-- SOL: stats + grafik -->
     <div class="overview-left">
-      <!-- Üst 2 kart: Portfolio + Cash -->
+      <!-- Üst 2 kart: Portfolio + Cash (KF wallet stili) -->
       <div class="stats-row top-stats">
-        <div class="stat-card">
-          <div class="stat-label">Portfolio</div>
-          <div class="stat-val green" id="portfolio">$—</div>
+        <div class="ov-wallet">
+          <div class="ov-wallet-top">
+            <div class="ov-wallet-dots"><i></i><i></i></div>
+            <span class="ov-wallet-tag">PORTFOLIO</span>
+          </div>
+          <div class="ov-wallet-lbl">Toplam portföy</div>
+          <div class="ov-wallet-bal" id="portfolio">$—</div>
+          <div class="ov-wallet-row">
+            <div class="ov-wallet-kpi">Güncelleme <b id="portfolio-updated-wallet">—</b></div>
+            <button type="button" class="ov-wbtn" title="Yenile" onclick="refresh()">↻</button>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Cash</div>
-          <div class="stat-val bright-green" id="cash">$—</div>
+        <div class="ov-wallet cash">
+          <div class="ov-wallet-top">
+            <div class="ov-wallet-dots"><i></i><i></i></div>
+            <span class="ov-wallet-tag">CASH</span>
+          </div>
+          <div class="ov-wallet-lbl">USDC bakiye</div>
+          <div class="ov-wallet-bal" id="cash">$—</div>
+          <div class="ov-wallet-row">
+            <div class="ov-wallet-kpi">Nakit <b>hazır</b></div>
+            <div style="display:flex;gap:8px">
+              <button type="button" class="ov-wbtn" title="Yenile" onclick="refresh()">↻</button>
+              <button type="button" class="ov-wbtn" title="Aşağı" onclick="document.getElementById('positions')?.scrollIntoView({behavior:'smooth'})">↓</button>
+            </div>
+          </div>
         </div>
       </div>
-      <!-- Alt 2 kart: WR + PnL -->
+      <!-- Gerçek PM: Kazanma + Kar tek yatay kutu -->
       <div class="stats-row bottom-stats">
-        <div class="stat-card">
-          <div class="stat-label">Gerçek PM · Kazanma</div>
-          <div class="stat-val" id="wr-stat">—</div>
-          <div class="stat-sub" id="wr-sub">—</div>
+        <div class="stat-card pm-real-card">
+          <div class="pm-real-top">
+            <div class="pm-real-col">
+              <div class="stat-label">Gerçek PM · Kazanma</div>
+              <div class="stat-val" id="wr-stat">—</div>
+              <div class="stat-sub" id="wr-sub">—</div>
+            </div>
+            <div class="pm-real-col">
+              <div class="stat-label">Gerçek PM · Kar</div>
+              <div class="stat-val" id="pnl-stat">—</div>
+              <div class="stat-sub" id="pnl-sub">—</div>
+            </div>
+          </div>
           <div class="stat-systems" id="wr-systems"></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Gerçek PM · Kar</div>
-          <div class="stat-val" id="pnl-stat">—</div>
-          <div class="stat-sub" id="pnl-sub">—</div>
         </div>
       </div>
 
@@ -8961,12 +10048,28 @@ HTML = r"""<!DOCTYPE html>
 
       <!-- Mobil pozisyonlar (desktop'ta gizli) -->
       <div class="mobile-positions">
-        <div class="risk-banner" style="margin-top:16px">
-          <div>
-            <span class="risk-label">Toplam Riskteki</span>
-            <div style="font-size:14px;font-weight:700;color:#3d4d00;margin-top:3px">Kazanılacak: <span id="total-towin-mob">$—</span></div>
+        <div class="sym-lime risk-lime" style="margin-top:16px">
+          <div class="sym-lime-title">Toplam Riskteki</div>
+          <div class="sym-lime-row">
+            <div class="sym-lime-val" id="total-risk-mob">$—</div>
+            <div class="sym-lime-ico" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+                <ellipse cx="13" cy="8" rx="9" ry="3.2" fill="#111" opacity=".85"/>
+                <ellipse cx="13" cy="13" rx="9" ry="3.2" fill="#111" opacity=".55"/>
+                <ellipse cx="13" cy="18" rx="9" ry="3.2" fill="#111" opacity=".35"/>
+              </svg>
+            </div>
           </div>
-          <span class="risk-val" id="total-risk-mob">$—</span>
+          <div class="sym-lime-meta">
+            <div>
+              <div class="k">Kazanılacak</div>
+              <div class="v" id="total-towin-mob">—</div>
+            </div>
+            <div>
+              <div class="k">Açık</div>
+              <div class="v" id="total-open-mob">0</div>
+            </div>
+          </div>
         </div>
         <div class="section-title" style="margin:16px 0 12px">Açık Pozisyonlar</div>
         <div class="positions" id="positions-mob">
@@ -8977,10 +10080,9 @@ HTML = r"""<!DOCTYPE html>
             <div class="sp-title">PM Kar</div>
             <div class="sp-inner">
               <div class="sp-chart">
-                <svg id="sp-mob-donut" viewBox="0 0 148 148"></svg>
+                <svg id="sp-mob-donut" viewBox="0 0 168 168"></svg>
                 <div class="sp-center">
-                  <div class="sp-sub">Toplam</div>
-                  <div class="sp-total" id="sp-mob-total">$—</div>
+                  <div class="sp-total" id="sp-mob-total">—</div>
                 </div>
               </div>
               <div class="sp-chips" id="sp-mob-chips"></div>
@@ -8998,12 +10100,28 @@ HTML = r"""<!DOCTYPE html>
 
     <!-- SAĞ: risk + açık pozisyonlar -->
     <div class="overview-right">
-      <div class="risk-banner">
-        <div>
-          <span class="risk-label">Toplam Riskteki</span>
-          <div style="font-size:14px;font-weight:700;color:#3d4d00;margin-top:3px">Kazanılacak: <span id="total-towin">$—</span></div>
+      <div class="sym-lime risk-lime">
+        <div class="sym-lime-title">Toplam Riskteki</div>
+        <div class="sym-lime-row">
+          <div class="sym-lime-val" id="total-risk">$—</div>
+          <div class="sym-lime-ico" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+              <ellipse cx="13" cy="8" rx="9" ry="3.2" fill="#111" opacity=".85"/>
+              <ellipse cx="13" cy="13" rx="9" ry="3.2" fill="#111" opacity=".55"/>
+              <ellipse cx="13" cy="18" rx="9" ry="3.2" fill="#111" opacity=".35"/>
+            </svg>
+          </div>
         </div>
-        <span class="risk-val" id="total-risk">$—</span>
+        <div class="sym-lime-meta">
+          <div>
+            <div class="k">Kazanılacak</div>
+            <div class="v" id="total-towin">—</div>
+          </div>
+          <div>
+            <div class="k">Açık</div>
+            <div class="v" id="total-open">0</div>
+          </div>
+        </div>
       </div>
       <div class="section-title" style="margin-bottom:12px">Açık Pozisyonlar</div>
       <div class="positions" id="positions">
@@ -9062,11 +10180,31 @@ HTML = r"""<!DOCTYPE html>
 
 <!-- Sağ Panel (desktop) -->
 <div class="right-panel">
-  <!-- Sembol WR -->
-  <div class="rp-section">
-    <div class="rp-title">Sembol Başarı Oranı <span id="sym-wr-label" style="font-size:11px;color:#999;font-weight:600;margin-left:4px"></span></div>
-    <div id="sym-wr" style="display:flex;gap:8px">
-      <div style="color:#666;font-size:13px">Yükleniyor...</div>
+  <!-- Sembol WR — tek mor kart (dış kutu yok) -->
+  <div class="sym-vio">
+    <div class="sym-lime-title">Sembol Başarı Oranı</div>
+    <div class="sym-lime-row">
+      <div class="sym-lime-val" id="sym-wr-total">—%</div>
+      <div class="sym-lime-ico" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <ellipse cx="13" cy="8" rx="9" ry="3.2" fill="#fff" opacity=".9"/>
+          <ellipse cx="13" cy="13" rx="9" ry="3.2" fill="#fff" opacity=".55"/>
+          <ellipse cx="13" cy="18" rx="9" ry="3.2" fill="#fff" opacity=".3"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sym-lime-meta">
+      <div>
+        <div class="k">Analiz</div>
+        <div class="v" id="sym-wr-analiz">—</div>
+      </div>
+      <div>
+        <div class="k">İşlem</div>
+        <div class="v" id="sym-wr-count">—</div>
+      </div>
+    </div>
+    <div id="sym-wr" class="sym-wr-row">
+      <div style="grid-column:1/-1;color:rgba(255,255,255,.65);font-size:12px;text-align:center;padding:8px 0">Yükleniyor...</div>
     </div>
   </div>
 
@@ -9428,17 +10566,22 @@ async function refresh() {
     }
     _panelAnaliz = ss.analiz || 'analiz1';
     const panelLbl = ss.analiz_label ? `· ${ss.analiz_label}` : '';
-    const totalStr = ss.total ? ` · ${ss.total} işlem` : '';
-    const symLbl = document.getElementById('sym-wr-label');
     const slotLbl = document.getElementById('top-slots-label');
-    if (symLbl) symLbl.textContent = panelLbl + totalStr;
     if (slotLbl) slotLbl.textContent = panelLbl;
+    const symTotal = document.getElementById('sym-wr-total');
+    const symAnaliz = document.getElementById('sym-wr-analiz');
+    const symCount = document.getElementById('sym-wr-count');
+    if (symTotal) symTotal.textContent = (ss.total_wr != null ? ss.total_wr : '—') + '%';
+    if (symAnaliz) symAnaliz.textContent = ss.analiz_label || '—';
+    if (symCount) symCount.textContent = ss.total != null ? String(ss.total) : '—';
 
     // Header stats
     document.getElementById('portfolio').textContent = d.portfolio >= 0 ? '$'+d.portfolio.toFixed(2) : '?';
     document.getElementById('cash').textContent      = d.cash >= 0 ? '$'+d.cash.toFixed(2) : '?';
     const updEl = document.getElementById('portfolio-updated');
     if (updEl) updEl.textContent = d.updated;
+    const updW = document.getElementById('portfolio-updated-wallet');
+    if (updW) updW.textContent = d.updated || '—';
 
     // PM kotasyon — yalnızca açık pozisyonun timeframe/sembolü
     function renderPmQuotes(el, quotes, timeKey) {
@@ -9545,17 +10688,24 @@ async function refresh() {
       }
     }
 
-    // Risk banner
+    // Risk lime kart (Sembol Başarı Oranı ile aynı yapı)
     const totalRisk = d.positions.reduce((acc, p) => acc + (p.pm_spent||0), 0);
-    document.getElementById('total-risk').textContent = '$' + totalRisk.toFixed(2);
+    const riskStr = '$' + totalRisk.toFixed(2);
+    const trEl = document.getElementById('total-risk');
+    if (trEl) trEl.textContent = riskStr;
     const trMob = document.getElementById('total-risk-mob');
-    if (trMob) trMob.textContent = '$' + totalRisk.toFixed(2);
+    if (trMob) trMob.textContent = riskStr;
     const totalToWin = d.positions.reduce((acc, p) => acc + (p.pm_size || 0), 0);
     const twVal = totalToWin > 0 ? '$' + totalToWin.toFixed(2) : '—';
     const twEl = document.getElementById('total-towin');
     if (twEl) twEl.textContent = twVal;
     const twMob = document.getElementById('total-towin-mob');
     if (twMob) twMob.textContent = twVal;
+    const openN = String((d.positions || []).length);
+    const toEl = document.getElementById('total-open');
+    if (toEl) toEl.textContent = openN;
+    const toMob = document.getElementById('total-open-mob');
+    if (toMob) toMob.textContent = openN;
 
     // Grafik tabları kaldırıldı — portföy grafiği ayrı yüklenir
 
@@ -9622,16 +10772,21 @@ async function refresh() {
     pc.innerHTML    = posHTML;
     if (pcMob) pcMob.innerHTML = posHTML;
 
-    // Sembol WR kartları
+    // Sembol chip'leri — mor kart içinde 3’lü (≥55 yeşil, <55 sarı)
     const symEl = document.getElementById('sym-wr');
-    if (symEl) symEl.innerHTML = (ss.sym_wr || []).map(sv => {
-      const color = sv.wr >= 55 ? '#4ade80' : sv.wr >= 50 ? '#a3e635' : '#f87171';
-      return `<div style="flex:1;background:#1c1c1e;border-radius:12px;padding:10px 8px;text-align:center;">
-        <div style="font-size:11px;color:#ccc;margin-bottom:4px;font-weight:700">${sv.sym}</div>
-        <div style="font-size:18px;font-weight:800;color:${color}">${sv.wr}%</div>
-        <div style="font-size:10px;color:#888">${sv.w}/${sv.t}</div>
-      </div>`;
-    }).join('') || '<div style="color:#666;font-size:13px">Veri yok</div>';
+    if (symEl) {
+      const rows = ss.sym_wr || [];
+      symEl.innerHTML = rows.length ? rows.map(sv => {
+        const wrCls = Number(sv.wr) >= 55 ? 'ok' : 'mid';
+        const algo = sv.analiz_short || sv.analiz_label || '—';
+        return `<div class="sym-wr-chip" title="${sv.analiz_label || algo}">
+          <div class="n">${sv.sym}</div>
+          <div class="a">${algo}</div>
+          <div class="p ${wrCls}">${sv.wr}%</div>
+          <div class="c">${sv.w}/${sv.t}</div>
+        </div>`;
+      }).join('') : '<div style="grid-column:1/-1;color:rgba(255,255,255,.65);font-size:12px;text-align:center;padding:8px 0">Veri yok</div>';
+    }
 
     // En etkili / en başarısız gün+saat top 3
     _slotCache.best = ss.top_slots || [];
@@ -9670,19 +10825,16 @@ async function refresh() {
     }
     const mergedRecent = [...(s.pending || []), ...(s.recent || [])]
       .sort((a, b) => String(b.time).localeCompare(String(a.time)))
-      .slice(0, 20);
+      .slice(0, 10);
     const rt = document.getElementById('recent-trades');
     const recentHTML = mergedRecent.map(tradeItemHTML).join('') || '<div style="color:#666;font-size:13px">Henüz işlem yok</div>';
     if (rt) rt.innerHTML = recentHTML;
     const rtMob = document.getElementById('recent-trades-mob');
-    if (rtMob) {
-      const mobRecent = mergedRecent.slice(0, 10);
-      rtMob.innerHTML = mobRecent.map(tradeItemHTML).join('') || '<div style="color:#666;font-size:13px">Henüz işlem yok</div>';
-    }
+    if (rtMob) rtMob.innerHTML = recentHTML;
 
-    // Algoritma performansı
+    // Algoritma performansı — WR’ye göre ilk 10
     const as = document.getElementById('algo-stats');
-    if (as) as.innerHTML = s.algo_stats.map(a => `
+    if (as) as.innerHTML = s.algo_stats.slice(0, 10).map(a => `
       <div class="algo-item">
         <div class="algo-name">${a.label}</div>
         <div class="algo-wr-bar"><div class="algo-wr-bar-fill" style="width:${a.wr}%"></div></div>
@@ -10125,8 +11277,17 @@ def algoritma():
 @app.route("/poly/")
 def dashboard():
     if _auth_required(): return redirect("/poly/login")
-    resp = make_response(render_template_string(HTML))
+    # HTML içinde Jinja {{ harita_heatmap_syms }} var — render edilmezse tüm Overview JS kırılır
+    tabs = _harita_tabs_filtered()
+    labels = {k: v for k, v in tabs}
+    hm_syms = {k: v for k, v in _HEATMAP_SYMS.items() if k in labels}
+    html = render_template_string(
+        HTML,
+        harita_heatmap_syms=json.dumps(hm_syms, ensure_ascii=False),
+    )
+    resp = make_response(html)
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
     return resp
 
 @app.route("/poly/grafik")
@@ -10154,74 +11315,1127 @@ KRIPTO_FUTURE_HTML = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kripto Future — PolyMarket</title>
+<title>Cem Kripto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
 <style>
+:root{
+  --bg:#07070b; --card:#12121a; --card2:#181822; --line:rgba(255,255,255,.06);
+  --txt:#f4f4f8; --muted:#8b8b9a; --green:#39ff8e; --red:#ff5c7a;
+  --accent:#c8f135; --orange:#f5a623; --vio:#a78bfa;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex}
-.sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+body{
+  min-height:100vh;display:flex;color:var(--txt);
+  font-family:'Sora',sans-serif;
+  background:
+    radial-gradient(900px 500px at 10% -10%, rgba(200,241,53,.08), transparent 55%),
+    radial-gradient(700px 400px at 90% 0%, rgba(167,139,250,.12), transparent 50%),
+    radial-gradient(600px 400px at 70% 100%, rgba(57,255,142,.06), transparent 45%),
+    var(--bg);
+}
+.sidebar{width:220px;background:rgba(8,10,12,.92);backdrop-filter:blur(12px);padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line)}
 .logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-.5px}
-.logo span{color:#c8f135}
+.logo span{color:var(--accent)}
 .nav-label{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin:16px 0 6px 12px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;cursor:pointer}
-.nav-item:hover{background:#111;color:#ccc}
-.nav-item.active{background:#1a2e1a;color:#c8f135}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:#888;text-decoration:none;font-size:13px;font-weight:600;transition:all .15s}
+.nav-item:hover{background:rgba(255,255,255,.04);color:#ccc}
+.nav-item.active{background:rgba(200,241,53,.1);color:var(--accent)}
 .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5}
-.nav-item.active .nav-dot{opacity:1;background:#c8f135}
+.nav-item.active .nav-dot{opacity:1;background:var(--accent)}
 .sidebar-footer{margin-top:auto;font-size:11px;color:#444;padding:12px;display:flex;align-items:center;gap:6px}
-.sidebar-footer .dot{width:6px;height:6px;border-radius:50%;background:#4ade80}
-.main{flex:1;padding:28px 32px;max-width:960px}
-.page-title{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.4px}
-.page-sub{font-size:13px;color:#666;margin:6px 0 24px}
-.card{background:#111;border:1px solid #1e1e1e;border-radius:14px;padding:22px 20px}
-.card h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:8px}
-.card p{font-size:13px;color:#777;line-height:1.5}
+.sidebar-footer .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.main{flex:1;padding:28px 28px 40px;max-width:none;width:100%;min-width:0}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.page-title{font-size:28px;font-weight:800;letter-spacing:-.6px}
+.page-sub{font-size:13px;color:var(--muted);margin-top:6px}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;margin-left:8px;vertical-align:middle}
+.badge.live{background:rgba(57,255,142,.12);color:var(--green);border:1px solid rgba(57,255,142,.25)}
+.badge.dry{background:rgba(245,166,35,.12);color:var(--orange);border:1px solid rgba(245,166,35,.3)}
+
+.hero{
+  display:grid;grid-template-columns:1.55fr .85fr;
+  gap:16px;margin-bottom:16px;max-width:none;width:100%;
+}
+.glass{
+  background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border:1px solid var(--line); border-radius:28px;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+  backdrop-filter:blur(18px);
+}
+.hero-tops{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-width:0}
+.hero-top-card{
+  padding:16px 16px 14px;position:relative;overflow:hidden;min-height:0;
+  display:flex;flex-direction:column;
+}
+.hero-top-card::after{
+  content:'';position:absolute;right:-36px;bottom:-50px;width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle, rgba(245,166,35,.28), transparent 70%);pointer-events:none;
+}
+.hero-top-card.t2::after{
+  background:radial-gradient(circle, rgba(167,139,250,.3), transparent 70%);
+}
+.hero-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;position:relative;z-index:1;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--muted)}
+.chip.rank{
+  font-size:10px;font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:999px;
+  background:rgba(200,241,53,.12);color:var(--accent);border:1px solid rgba(200,241,53,.25);
+}
+.coin-orb{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(145deg,#f5a623,#ff7a18);color:#111;font-weight:800;font-size:11px;
+  box-shadow:0 0 18px rgba(245,166,35,.35);flex-shrink:0;
+}
+.hero-price{font-size:clamp(22px,2.6vw,30px);font-weight:800;letter-spacing:-1px;line-height:1;position:relative;z-index:1}
+.hero-meta{display:flex;gap:10px;margin-top:10px;position:relative;z-index:1;flex-wrap:wrap}
+.ring{
+  width:52px;height:52px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:conic-gradient(var(--green) var(--p,40%), rgba(255,255,255,.08) 0);
+  position:relative;
+}
+.ring::before{content:'';position:absolute;inset:6px;border-radius:50%;background:#101018}
+.ring span{position:relative;z-index:1;font-size:10px;font-weight:800}
+.ring small{position:relative;z-index:1;font-size:7px;color:var(--muted);font-weight:600;margin-top:1px}
+.ring.down{background:conic-gradient(var(--red) var(--p,40%), rgba(255,255,255,.08) 0)}
+.hero-side{font-size:11px;color:var(--muted);margin-top:auto;padding-top:10px;position:relative;z-index:1}
+.hero-empty{opacity:.55;align-items:flex-start;justify-content:center;min-height:140px}
+
+.wallet{
+  padding:16px 18px;border-radius:24px;position:relative;overflow:hidden;
+  background:linear-gradient(145deg,#6d28d9 0%,#a21caf 45%,#db2777 100%);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 40px rgba(109,40,217,.35);
+  min-height:0;display:flex;flex-direction:column;
+}
+.wallet::before{
+  content:'';position:absolute;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.12);
+  top:-30px;right:-20px;
+}
+.wallet::after{
+  content:'';position:absolute;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.08);
+  top:30px;right:40px;
+}
+.wallet-top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
+.wallet-dots{display:flex;gap:6px}
+.wallet-dots i{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.25)}
+.wallet-dots i:last-child{margin-left:-14px;background:rgba(255,255,255,.35)}
+.wallet-lbl{font-size:11px;font-weight:700;opacity:.8;margin-top:14px;position:relative;z-index:1}
+.wallet-bal{font-size:30px;font-weight:800;letter-spacing:-1px;margin-top:4px;position:relative;z-index:1}
+.wallet-row{margin-top:14px !important}
+.wallet-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;position:relative;z-index:1;gap:10px}
+.wallet-kpi{font-size:12px;font-weight:700;opacity:.9}
+.wallet-kpi b{display:block;font-size:18px;margin-top:2px}
+.wallet-btns{display:flex;gap:8px}
+.wbtn{
+  width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.18);color:#fff;font-size:16px;font-weight:700;
+}
+.wbtn:hover{background:rgba(255,255,255,.28)}
+
+.panel{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.section{padding:20px;border-radius:24px;background:var(--card);border:1px solid var(--line);min-width:0}
+.section.wait-rail{position:sticky;top:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column}
+.section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;flex-shrink:0}
+.positions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.pos-card{
+  background:var(--card2);border-radius:20px;padding:18px;border:1px solid var(--line);
+  animation:fadeUp .35s ease both;
+}
+.pos-card.dir-up{border-color:rgba(57,255,142,.35);box-shadow:inset 0 0 0 1px rgba(57,255,142,.08)}
+.pos-card.dir-down{border-color:rgba(255,92,122,.35);box-shadow:inset 0 0 0 1px rgba(255,92,122,.08)}
+.pos-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.pos-name{font-size:20px;font-weight:800}
+.pos-dir{font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px}
+.pos-dir.up{background:rgba(57,255,142,.12);color:var(--green)}
+.pos-dir.down{background:rgba(255,92,122,.12);color:var(--red)}
+.pos-price-row{display:flex;align-items:baseline;gap:8px;margin:2px 0 6px}
+.pos-current{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.pos-pct{font-size:13px;font-weight:700}.pos-pct.pos{color:var(--green)}.pos-pct.neg{color:var(--red)}
+.pos-entry,.pos-slot{font-size:13px;color:var(--muted);margin-bottom:4px;font-weight:600}
+.pos-close-row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:12px;padding:12px;background:rgba(0,0,0,.25);border-radius:14px;border:1px solid var(--line)}
+.close-lbl{font-size:10px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.live-close-val{font-size:20px;font-weight:800}
+.live-close-pnl{font-size:14px;font-weight:800}.live-close-pnl.pos{color:var(--green)}.live-close-pnl.neg{color:var(--red)}
+.live-updated{font-size:10px;color:#555;width:100%;margin-top:2px}
+.pos-risk-row{font-size:12px;color:var(--muted);font-weight:600;margin-top:10px}
+.tag{display:inline-block;background:rgba(255,255,255,.06);color:#ccc;font-size:11px;padding:3px 8px;border-radius:8px;margin-left:6px;font-weight:700}
+.close-btn-wrap{display:flex;justify-content:flex-end;margin-top:12px}
+.close-btn{background:var(--accent);border:none;color:#111;font-size:12px;font-weight:800;padding:10px 18px;border-radius:14px;cursor:pointer}
+.close-btn:hover{filter:brightness(1.08)}.close-btn.loading{opacity:.5;pointer-events:none}
+
+.wait-list{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow:auto;padding-right:4px}
+.wait-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--card2);border:1px solid var(--line);border-radius:16px}
+.wait-item.top{border-color:rgba(200,241,53,.35);background:rgba(200,241,53,.05)}
+.wait-item.open{opacity:.5}
+.wait-name{font-size:14px;font-weight:800}
+.wait-meta{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+.wait-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.wait-score{font-size:12px;font-weight:700;color:#aaa}
+.wait-dir{font-size:10px;font-weight:800;padding:4px 8px;border-radius:999px}
+.wait-dir.up{background:rgba(57,255,142,.12);color:var(--green)}
+.wait-dir.down{background:rgba(255,92,122,.12);color:var(--red)}
+.wait-dir.neu{background:rgba(255,255,255,.06);color:#777}
+.wait-badge{font-size:10px;font-weight:800;padding:3px 7px;border-radius:8px;background:rgba(200,241,53,.12);color:var(--accent)}
+.wait-badge.open{color:#888;background:rgba(255,255,255,.06)}
+.empty{color:#555;font-size:13px;padding:28px 0;text-align:center}
+.positions .empty{grid-column:1/-1}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:1200px){
+  .panel{grid-template-columns:minmax(0,1fr) 300px}
+}
+@media(max-width:980px){
+  .hero{grid-template-columns:1fr}
+  .panel{grid-template-columns:1fr}
+  .section.wait-rail{position:static;max-height:none}
+  .positions{grid-template-columns:1fr}
+}
+.kf-mobile-top{display:contents}
+.kf-nav-toggle{display:none}
+.kf-nav-body{display:contents}
 @media(max-width:768px){
   body{flex-direction:column}
-  .sidebar{width:100%;height:auto;position:relative}
-  .main{padding:20px 16px}
+  /* Mobilde menü tamamen gizli */
+  .sidebar{display:none !important}
+  .main{padding:14px 12px 28px}
+  .hero-price{font-size:34px}
+  /* Mobil: önce toplam bakiye, sonra açık pozisyonlar */
+  #view-dash > .head{display:none}
+  #view-dash .hero{
+    display:flex;flex-direction:column;gap:14px;margin-bottom:14px;
+  }
+  #view-dash .hero-tops{grid-template-columns:1fr 1fr;gap:10px}
+  #view-dash .wallet{order:-1;min-height:168px}
+  #view-dash .hero-tops{order:0}
+  #view-dash .hero-price{font-size:22px}
+  #view-dash .wallet-bal{font-size:28px}
+  #view-dash .panel{display:flex;flex-direction:column;gap:14px}
+  #view-dash .panel > .section:first-child{order:0}
+  #view-dash .panel > .wait-rail{order:1}
 }
 </style>
 </head>
 <body>
-<div class="sidebar">
-  <div class="logo">Poly<span>Market</span></div>
-  <div class="nav-label">Ana Menü</div>
-  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
-  <a class="nav-item active" href="/poly/kripto-future"><span class="nav-dot"></span>Kripto Future</a>
-  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
-  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
-  <a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
-  <a class="nav-item" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
-  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
-  <div class="nav-label">Hesap</div>
-  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
-  <div class="sidebar-footer"><span class="dot"></span>Canlı</div>
-</div>
-<div class="main">
-  <div class="page-title">Kripto Future</div>
-  <div class="page-sub">Vadeli / futures paneli</div>
-  <div class="card">
-    <h3>Hazırlanıyor</h3>
-    <p>Bu sayfa yakında kripto futures içerikleri için kullanılacak. Menüden erişim aktif.</p>
+<div class="sidebar" id="kf-sidebar">
+  <div class="kf-mobile-top">
+    __KRIPTO_BRAND__
+    <button type="button" class="kf-nav-toggle" id="kf-nav-toggle" aria-label="Menü" aria-expanded="false">☰</button>
+  </div>
+  <div class="kf-nav-body" id="kf-nav-body">
+    <div class="nav-label">Ana Menü</div>
+    <a class="nav-item" id="nav-kripto-overview" href="/kripto"><span class="nav-dot"></span>Overview</a>
+    <a class="nav-item" id="nav-kripto-algo" href="/kripto/algoritmalar"><span class="nav-dot"></span>Algoritmalar</a>
+    <a class="nav-item" id="nav-kripto-analiz" href="/kripto/analizler"><span class="nav-dot"></span>Analizler</a>
+    <a class="nav-item" id="nav-kripto-gecmis" href="/kripto/gecmis"><span class="nav-dot"></span>Geçmiş işlemler</a>
+    <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geçiş yap</a>
+    <div class="sidebar-footer"><span class="dot"></span>Canlı</div>
   </div>
 </div>
+<div class="main">
+  <div id="view-dash">
+  <div class="head">
+    <div>
+      <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">…</span></div>
+      <div class="page-sub">Supertrend Live · alt önce · top-4 · $10 × 15x · ATR kâr kilidi</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-tops" id="hero-tops">
+      <div class="glass hero-top-card hero-empty"><div class="hero-side">TOP1 yükleniyor…</div></div>
+      <div class="glass hero-top-card t2 hero-empty"><div class="hero-side">TOP2 yükleniyor…</div></div>
+    </div>
+    <div class="wallet">
+      <div class="wallet-top">
+        <div class="wallet-dots"><i></i><i></i></div>
+        <span style="font-size:12px;font-weight:700;opacity:.85">FUTURES</span>
+      </div>
+      <div class="wallet-lbl">Toplam bakiye (Binance)</div>
+      <div class="wallet-bal" id="st-total">—</div>
+      <div class="wallet-row">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="wallet-kpi">Kullanılabilir <b id="st-usdt">—</b></div>
+          <div class="wallet-kpi">Net K/Z <b id="st-upnl">+$0.00</b></div>
+          <div class="wallet-kpi">Komisyon ≈ <b id="st-fee">$0.00</b></div>
+        </div>
+        <div class="wallet-btns">
+          <button class="wbtn" title="Yenile" onclick="refresh()">↻</button>
+          <button class="wbtn" title="Adaylar" onclick="document.getElementById('waiting').scrollIntoView({behavior:'smooth'})">↓</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section">
+      <div class="section-title">Açık Pozisyonlar · Supertrend Live</div>
+      <div class="positions" id="positions"><div class="empty">yükleniyor…</div></div>
+    </div>
+      <div class="section wait-rail">
+      <div class="section-title">İşlem Bekleyen</div>
+      <div class="wait-list" id="waiting"><div class="empty">yükleniyor…</div></div>
+    </div>
+  </div>
+  </div><!-- /view-dash -->
+
+  <div id="view-gecmis" style="display:none">
+    <div class="head">
+      <div>
+        <div class="page-title">Geçmiş işlemler</div>
+        <div class="page-sub">Supertrend Live kapanmış pozisyonlar</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="section">
+        <div class="section-title">Son işlemler</div>
+        <div id="hist-list"><div class="empty">yükleniyor…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-algo" style="display:none">
+    <div class="head">
+      <div>
+        <div class="page-title">Algoritmalar</div>
+        <div class="page-sub">ALGO2 Top-17 · sanal $300 · $15×15x · saatlik max 6</div>
+      </div>
+      <div class="chip" id="algo-sum">—</div>
+    </div>
+    <div class="panel" style="grid-template-columns:1fr">
+      <div class="section">
+        <div class="section-title">17 algoritma durumu</div>
+        <div id="algo-books"><div class="empty">yükleniyor…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-analiz" style="display:none">
+    <div class="head">
+      <div>
+        <div class="page-title">Analizler</div>
+        <div class="page-sub">A1 A2 A3 A8 A4 A10 Supertrend · sanal $300 · varsayılan $15×15x · ST $10×15x max 4</div>
+      </div>
+      <div class="chip" id="analiz-sum">—</div>
+    </div>
+    <div class="panel" style="grid-template-columns:1fr">
+      <div class="section">
+        <div class="section-title">Analiz defterleri</div>
+        <div id="analiz-books"><div class="empty">yükleniyor…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-detail" style="display:none">
+    <div class="head">
+      <div>
+        <a class="detail-back" id="detail-back" href="/kripto">← Geri</a>
+        <div class="page-title" id="detail-title">—</div>
+        <div class="page-sub" id="detail-sub">—</div>
+      </div>
+      <div class="chip" id="detail-sum">—</div>
+    </div>
+    <div class="panel" style="grid-template-columns:1fr">
+      <div class="section">
+        <div class="section-title" id="detail-sec-title">Açık Pozisyonlar</div>
+        <div class="positions" id="detail-positions"><div class="empty">yükleniyor…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.book-card{
+  background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+  display:block;color:inherit;text-decoration:none;cursor:pointer;
+  transition:border-color .15s, transform .15s, background .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.book-card:hover,.book-card:focus{
+  border-color:rgba(200,241,53,.4);transform:translateY(-1px);
+  background:rgba(255,255,255,.04);outline:none;
+}
+.book-card .bt{font-size:14px;font-weight:800}
+.book-card .bs{font-size:11px;color:var(--muted);margin-top:2px}
+.book-card .br{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;font-weight:700}
+.book-card .br b{font-size:16px}
+.book-card .pos{color:var(--green)}.book-card .neg{color:var(--red)}
+.book-opens{font-size:11px;color:var(--muted);margin-top:8px}
+.detail-back{
+  display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;
+  font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;
+}
+.detail-back:hover{filter:brightness(1.1)}
+</style>
+<script>
+const ICO_COLORS = ['#f5a623','#627eea','#14f195','#f3ba2f','#00aae4','#c2a633','#0033ad','#e84142','#2a5ada','#e6007a'];
+const PATH = location.pathname.replace(/\\/+$/,'');
+const _mAnaliz = PATH.match(/\\/kripto\\/analizler\\/([a-zA-Z0-9_]+)$/);
+const _mAlgo = PATH.match(/\\/kripto\\/algoritmalar\\/([a-zA-Z0-9_]+)$/);
+const DETAIL_KIND = _mAnaliz ? 'analizler' : (_mAlgo ? 'algoritmalar' : null);
+const DETAIL_ID = _mAnaliz ? _mAnaliz[1].toLowerCase() : (_mAlgo ? _mAlgo[1].replace(/^0+/, '') || '0' : null);
+const IS_GECMIS = PATH.endsWith('/gecmis');
+const IS_ALGO = PATH.endsWith('/algoritmalar');
+const IS_ANALIZ = PATH.endsWith('/analizler');
+function fmtPx(n){
+  if(n==null||isNaN(n)) return '—';
+  const a=Math.abs(n);
+  if(a>=1000) return n.toLocaleString('en-US',{maximumFractionDigits:1});
+  if(a>=1) return n.toFixed(2);
+  if(a>=0.01) return n.toFixed(4);
+  return n.toFixed(6);
+}
+function fmtMoney(n){
+  if(n==null||isNaN(n)) return '—';
+  return (n>=0?'+':'') + '$' + Number(n).toFixed(2);
+}
+function pickTopTwo(d){
+  const waiting = d.waiting || [];
+  let tops = waiting.filter(w => w.is_top);
+  if(tops.length < 2){
+    tops = waiting.filter(w => w.rank != null).slice().sort((a,b)=>(a.rank||99)-(b.rank||99));
+  }
+  if(tops.length < 2){
+    tops = waiting.filter(w => (w.signal==='UP'||w.signal==='DOWN') && Number(w.score||0)>0).slice(0,2);
+  }
+  if(tops.length < 2){
+    const opens = (d.cards||[]).map(c => ({
+      name: c.name, symbol: c.symbol, signal: c.side==='LONG'?'UP':c.side==='SHORT'?'DOWN':'NEUTRAL',
+      side: c.side, dir_tr: c.dir_tr, score: c.score, algo: c.algo||'Supertrend',
+      price: c.current != null ? c.current : c.price, is_open: true, tier_label: c.tier_label,
+    }));
+    for(const o of opens){
+      if(tops.length >= 2) break;
+      if(!tops.some(t => (t.symbol||t.name) === (o.symbol||o.name))) tops.push(o);
+    }
+  }
+  return [tops[0]||null, tops[1]||null];
+}
+function renderHeroCard(feat, rankLabel, openCount){
+  if(!feat){
+    return `<div class="glass hero-top-card ${rankLabel==='TOP2'?'t2':''} hero-empty">
+      <div class="hero-top"><span class="chip rank">${rankLabel}</span></div>
+      <div class="hero-side">Aday yok</div>
+    </div>`;
+  }
+  const name = feat.name || (feat.symbol||'').replace('USDT','') || '—';
+  const price = feat.current != null ? feat.current : feat.price;
+  const sig = feat.signal || (feat.side==='LONG'?'UP':feat.side==='SHORT'?'DOWN':'NEUTRAL');
+  const score = feat.score != null ? Number(feat.score) : 0;
+  const dirTxt = sig === 'UP' ? '▲ YÜKSELİR' : sig === 'DOWN' ? '▼ DÜŞER' : 'NÖTR';
+  const dirColor = sig === 'UP' ? 'var(--green)' : sig === 'DOWN' ? 'var(--red)' : 'var(--muted)';
+  const sp = Math.min(95, Math.max(12, score * (score > 5 ? 2 : 40)));
+  const ringCls = 'ring' + (sig === 'DOWN' ? ' down' : '');
+  const side = (feat.algo || 'Supertrend')
+    + (feat.is_open ? ' · AÇIK' : ' · sonraki :05 open');
+  const orb = (name||'?').slice(0,1);
+  return `<div class="glass hero-top-card ${rankLabel==='TOP2'?'t2':''}">
+    <div class="hero-top">
+      <div class="chip"><span class="coin-orb">${orb}</span> <span>${name}</span></div>
+      <span class="chip rank">${rankLabel}</span>
+    </div>
+    <div class="hero-top" style="margin-bottom:6px">
+      <div class="hero-price">${price != null ? '$ '+fmtPx(price) : '—'}</div>
+      <div class="chip" style="color:${dirColor}">${dirTxt}</div>
+    </div>
+    <div class="hero-meta">
+      <div class="${ringCls}" style="--p:${sp}%"><span>${score ? score.toFixed(2) : '—'}</span><small>skor</small></div>
+      <div class="ring ${openCount>0?'':'down'}" style="--p:${openCount>0?55:20}%"><span>${openCount}</span><small>açık</small></div>
+    </div>
+    <div class="hero-side">${side}${feat.tier_label ? ' · '+feat.tier_label : ''}</div>
+  </div>`;
+}
+function renderHero(d){
+  const el = document.getElementById('hero-tops');
+  if(!el) return;
+  const [t1, t2] = pickTopTwo(d);
+  const openN = d.open_count != null ? d.open_count : (d.cards||[]).length;
+  el.innerHTML = renderHeroCard(t1, 'TOP1', openN) + renderHeroCard(t2, 'TOP2', openN);
+}
+function renderWaiting(d){
+  const wl = document.getElementById('waiting');
+  const rows = d.waiting || [];
+  if(!rows.length){
+    wl.innerHTML = '<div class="empty">Aday yok — tarama bekleniyor</div>';
+    return;
+  }
+  wl.innerHTML = rows.map(w => {
+    const sig = w.signal || 'NEUTRAL';
+    const dc = sig === 'UP' ? 'up' : sig === 'DOWN' ? 'down' : 'neu';
+    const cls = (w.is_open ? 'open' : '') + (w.is_top && !w.is_open ? ' top' : '');
+    const badge = w.is_open
+      ? '<span class="wait-badge open">AÇIK</span>'
+      : (w.is_top ? '<span class="wait-badge">TOP</span>' : '');
+    const tier = w.tier_label ? w.tier_label : '';
+    return `<div class="wait-item ${cls}">
+      <div><div class="wait-name">${w.name || w.symbol}</div>
+      <div class="wait-meta">${tier ? tier+' · ' : ''}${w.algo || '—'} · $${fmtPx(w.price)}</div></div>
+      <div class="wait-right">
+        <span class="wait-score">${Number(w.score||0).toFixed(3)}</span>
+        <span class="wait-dir ${dc}">${w.dir_tr || 'NÖTR'}</span>
+        ${badge}
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderCards(d){
+  const cards = d.cards || [];
+  const avail = (d.usdt && d.usdt.available != null) ? d.usdt.available : null;
+  const wallet = (d.usdt && d.usdt.balance != null) ? d.usdt.balance : avail;
+  const upnl = d.total_unrealized_pnl;
+  // Anlık toplam ≈ cüzdan + açık pozisyon K/Z
+  const totalLive = (wallet != null)
+    ? (Number(wallet) + (upnl != null ? Number(upnl) : 0))
+    : null;
+  const fmtUsd = (n) => n != null
+    ? '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
+    : '—';
+  const totEl = document.getElementById('st-total');
+  if (totEl) totEl.textContent = fmtUsd(totalLive != null ? totalLive : wallet);
+  const avEl = document.getElementById('st-usdt');
+  if (avEl) avEl.textContent = fmtUsd(avail != null ? avail : wallet);
+  const upEl = document.getElementById('st-upnl');
+  upEl.textContent = upnl == null ? '—' : fmtMoney(upnl);
+  upEl.style.color = upnl > 0 ? '#fff' : upnl < 0 ? '#ffe4e6' : '#fff';
+  const feeEl = document.getElementById('st-fee');
+  if(feeEl){
+    const fee = d.total_commission_est;
+    feeEl.textContent = fee == null ? '—' : ('$' + Number(fee).toFixed(2));
+  }
+  const badge = document.getElementById('mode-badge');
+  if(d.dry_run){ badge.textContent='DRY-RUN'; badge.className='badge dry'; }
+  else { badge.textContent='CANLI'; badge.className='badge live'; }
+
+  renderHero(d);
+  renderWaiting(d);
+
+  const pc = document.getElementById('positions');
+  if(!cards.length){
+    pc.innerHTML = '<div class="empty">Açık Supertrend Live pozisyonu yok</div>';
+    return;
+  }
+  const ts = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  pc.innerHTML = cards.map(p => {
+    const up = (p.side || '') === 'LONG';
+    const dirClass = up ? 'dir-up' : 'dir-down';
+    const dc = up ? 'up' : 'down';
+    const delta = p.delta != null ? p.delta : ((p.current||0) - (p.entry_price||0));
+    const deltaStr = (delta>=0?'+':'') + '$' + fmtPx(Math.abs(delta));
+    const pnl = p.close_pnl != null ? p.close_pnl : p.unrealized_pnl;
+    const gross = p.close_pnl_gross != null ? p.close_pnl_gross : p.unrealized_pnl_gross;
+    const fee = p.commission_est != null ? Number(p.commission_est) : null;
+    const pnlCls = pnl >= 0 ? 'pos' : 'neg';
+    const cvColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    const qty = p.qty != null ? p.qty : '';
+    const feeLine = fee != null
+      ? `<div class="pos-entry">Brüt ${fmtMoney(gross)} · Komisyon −$${fee.toFixed(2)} · <b>Net ${fmtMoney(pnl)}</b></div>`
+      : '';
+    const stopLvl = Number(p.stop_level||0);
+    const lockEq = p.lock_equity != null ? Number(p.lock_equity) : null;
+    const atrUsd = p.atr_usd != null ? Number(p.atr_usd) : null;
+    const lockLine = stopLvl >= 1
+      ? `<div class="pos-entry">ATR Stop${stopLvl}${lockEq!=null?' · kilit $'+lockEq.toFixed(2):''}${atrUsd!=null?' · atr$ '+atrUsd.toFixed(2):''} · <b>runner</b></div>`
+      : (atrUsd!=null ? `<div class="pos-entry">ATR kilit bekleniyor · atr$ ${atrUsd.toFixed(2)}</div>` : '');
+    return `<div class="pos-card ${dirClass}">
+      <div class="pos-top">
+        <div class="pos-name">${p.name || p.symbol}</div>
+        <div class="pos-dir ${dc}">${p.dir_tr || (up?'YÜKSELİR':'DÜŞER')}</div>
+      </div>
+      <div class="pos-price-row">
+        <span class="pos-current">$${fmtPx(p.current)}</span>
+        <span class="pos-pct ${delta>=0?'pos':'neg'}">${deltaStr}</span>
+      </div>
+      <div class="pos-entry">Giriş · $${fmtPx(p.entry_price)}</div>
+      <div class="pos-slot">${stopLvl>=1?'ATR runner':'1s slot'} · ${p.slot_label || '—'}</div>
+      <div class="pos-close-row">
+        <span class="close-lbl">Net kapatma</span>
+        <span class="live-close-val" style="color:${cvColor}">$${Number(p.close_val!=null?p.close_val:0).toFixed(2)}</span>
+        <span class="live-close-pnl ${pnlCls}">${fmtMoney(pnl)}</span>
+        <span class="live-updated">${ts} güncellendi</span>
+      </div>
+      ${feeLine}
+      ${lockLine}
+      <div class="pos-risk-row">Risk: $${Number(p.pm_spent||p.margin_usd||15).toFixed(0)}
+        <span class="tag">ST Live</span><span class="tag">${p.leverage||15}x</span>
+        ${p.tier_label ? `<span class="tag">${p.tier_label}</span>` : ''}
+        ${stopLvl>=1 ? `<span class="tag">Stop${stopLvl}</span>` : ''}
+      </div>
+      <div class="close-btn-wrap">
+        <button class="close-btn" onclick="closeCr6('${p.symbol}', ${qty || 'null'}, this)">Pozisyonu Kapat</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function refresh(){
+  try{
+    const r = await fetch('/poly/api/crypto-futures/cr6', {cache:'no-store'});
+    const d = await r.json();
+    if(!d.ok && d.error){
+      document.getElementById('positions').innerHTML = '<div class="empty">hata: '+d.error+'</div>';
+      document.getElementById('waiting').innerHTML = '<div class="empty">hata</div>';
+      return;
+    }
+    renderCards(d);
+  }catch(e){
+    document.getElementById('positions').innerHTML = '<div class="empty">hata: '+e+'</div>';
+    document.getElementById('waiting').innerHTML = '<div class="empty">hata</div>';
+  }
+}
+async function closeCr6(symbol, qty, btn){
+  if(!confirm(symbol + ' Supertrend Live pozisyonunu kapat?')) return;
+  btn.classList.add('loading'); btn.textContent = 'Kapatılıyor…';
+  try{
+    const body = {symbol, strategy:'Supertrend'};
+    if(qty != null) body.qty = qty;
+    const r = await fetch('/poly/api/crypto-futures/close', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if(!d.ok){ alert(d.error || 'kapatma hatası'); btn.textContent='Pozisyonu Kapat'; btn.classList.remove('loading'); return; }
+    await refresh();
+  }catch(e){
+    alert(String(e));
+    btn.textContent='Pozisyonu Kapat'; btn.classList.remove('loading');
+  }
+}
+async function loadHistory(){
+  const el = document.getElementById('hist-list');
+  if(!el) return;
+  try{
+    const r = await fetch('/poly/api/crypto-futures/history', {cache:'no-store'});
+    const d = await r.json();
+    const rows = (d && d.trades) || [];
+    if(!rows.length){
+      el.innerHTML = '<div class="empty">Henüz kapanmış işlem yok</div>';
+      return;
+    }
+    const s = d.summary || {};
+    const head = (s.n != null)
+      ? `<div class="pos-card" style="margin-bottom:12px;border-color:rgba(200,241,53,.25)">
+          <div class="pos-entry"><b>Özet (net)</b> · ${s.n} işlem</div>
+          <div class="pos-entry">Brüt ${fmtMoney(s.pnl_gross)} · Komisyon −$${Number(s.commission||0).toFixed(2)} · <b>Net ${fmtMoney(s.pnl_net)}</b></div>
+        </div>`
+      : '';
+    el.innerHTML = head + rows.map(t => {
+      const up = (t.side||'') === 'LONG';
+      const pnl = t.pnl;
+      const gross = t.pnl_gross != null ? t.pnl_gross : pnl;
+      const fee = t.commission != null ? Number(t.commission) : null;
+      const pnlCls = pnl >= 0 ? 'pos' : 'neg';
+      const name = t.name || (t.symbol||'').replace('USDT','');
+      const feeLine = fee != null
+        ? `<div class="pos-entry">Brüt ${fmtMoney(gross)} · Komisyon −$${fee.toFixed(2)}</div>`
+        : '';
+      return `<div class="pos-card ${up?'dir-up':'dir-down'}" style="margin-bottom:10px">
+        <div class="pos-top">
+          <div class="pos-name">${name}</div>
+          <div class="pos-dir ${up?'up':'down'}">${t.side||'—'}</div>
+        </div>
+        <div class="pos-entry">Giriş · $${fmtPx(t.entry_price)} → Çıkış · $${fmtPx(t.exit_price)}</div>
+        <div class="pos-slot">${t.entry_time_tr || '—'} → ${t.exit_time_tr || '—'}</div>
+        ${feeLine}
+        <div class="pos-close-row">
+          <span class="close-lbl">Net PnL</span>
+          <span class="live-close-pnl ${pnlCls}">${fmtMoney(pnl)}</span>
+          <span class="tag">${t.algo||'Supertrend'}</span>
+          <span class="tag">${t.leverage||'—'}x</span>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML = '<div class="empty">hata: '+e+'</div>';
+  }
+}
+function fmtBookMoney(n){
+  if(n==null||isNaN(n)) return '—';
+  const s = '$' + Math.abs(Number(n)).toFixed(2);
+  return n >= 0 ? s : '-' + s;
+}
+function renderBooks(elId, sumId, d){
+  const el = document.getElementById(elId);
+  const sum = document.getElementById(sumId);
+  if(!el) return;
+  if(!d || !d.ok){
+    el.innerHTML = '<div class="empty">hata: '+(d&&d.error?d.error:'yüklenemedi')+'</div>';
+    return;
+  }
+  if(sum){
+    const pnl = d.total_pnl||0;
+    const feeSum = (d.books||[]).reduce((a,b)=>a+Number(b.total_commission||b.open_commission_est||0),0);
+    sum.textContent = 'Σ $' + Number(d.total_balance||0).toFixed(0)
+      + ' · Net P&L ' + (pnl>=0?'+':'') + Number(pnl).toFixed(1)
+      + (feeSum ? (' · kom. ≈$' + feeSum.toFixed(1)) : '')
+      + ' · açık ' + (d.total_open||0);
+  }
+  const books = (d.books || []).slice().sort((a, b) => {
+    const ea = Number(a.equity != null ? a.equity : (Number(a.balance||0) + Number(a.unrealized_pnl||0)));
+    const eb = Number(b.equity != null ? b.equity : (Number(b.balance||0) + Number(b.unrealized_pnl||0)));
+    if (eb !== ea) return eb - ea;
+    const pa = Number(a.total_pnl||0) + Number(a.unrealized_pnl||0);
+    const pb = Number(b.total_pnl||0) + Number(b.unrealized_pnl||0);
+    if (pb !== pa) return pb - pa;
+    const wa = a.wr != null ? Number(a.wr) : -1;
+    const wb = b.wr != null ? Number(b.wr) : -1;
+    return wb - wa;
+  });
+  if(!books.length){
+    el.innerHTML = '<div class="empty">defter yok</div>';
+    return;
+  }
+  const base = (elId === 'algo-books') ? '/kripto/algoritmalar' : '/kripto/analizler';
+  el.innerHTML = '<div class="book-grid">' + books.map(b => {
+    const pnl = Number(b.total_pnl||0);
+    const upnl = Number(b.unrealized_pnl||0);
+    const wr = b.wr != null ? ('WR ' + b.wr + '%') : 'WR —';
+    const title = b.name || b.label || b.id;
+    const sub = b.title || b.category || '';
+    const opens = (b.cards||[]).map(c => (c.name||'') + ' ' + (c.side||'')).join(' · ') || 'açık yok';
+    const href = base + '/' + encodeURIComponent(b.id);
+    return `<a class="book-card" href="${href}">
+      <div class="bt">${title}</div>
+      <div class="bs">${sub} · ${wr} · ${b.history_n||0} işlem</div>
+      <div class="br"><span>Bakiye</span><b>$${Number(b.balance||0).toFixed(2)}</b></div>
+      <div class="br"><span>Net P&L</span><b class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(2)}</b></div>
+      <div class="br"><span>Anlık net</span><b class="${upnl>=0?'pos':'neg'}">${upnl>=0?'+':''}${upnl.toFixed(2)}</b></div>
+      <div class="book-opens">${b.open_count||0} açık · ${opens}${b.total_commission||b.open_commission_est ? ' · kom. $'+Number(b.total_commission||b.open_commission_est).toFixed(2) : ''}</div>
+    </a>`;
+  }).join('') + '</div>';
+}
+function findBook(books, id){
+  const key = String(id||'').toLowerCase();
+  return (books||[]).find(b => {
+    const bid = String(b.id||'').toLowerCase();
+    const name = String(b.name||'').toLowerCase();
+    return bid === key || name === key || ('a'+bid) === key;
+  }) || null;
+}
+function renderBookDetail(book, kind){
+  const back = document.getElementById('detail-back');
+  const title = document.getElementById('detail-title');
+  const sub = document.getElementById('detail-sub');
+  const sum = document.getElementById('detail-sum');
+  const sec = document.getElementById('detail-sec-title');
+  const pc = document.getElementById('detail-positions');
+  if(!book){
+    if(title) title.textContent = 'Bulunamadı';
+    if(sub) sub.textContent = 'Bu defter yok veya henüz oluşmadı';
+    if(pc) pc.innerHTML = '<div class="empty">defter bulunamadı</div>';
+    if(back) back.href = kind === 'algoritmalar' ? '/kripto/algoritmalar' : '/kripto/analizler';
+    return;
+  }
+  const tag = book.name || book.label || book.id;
+  const pnl = Number(book.total_pnl||0);
+  const upnl = Number(book.unrealized_pnl||0);
+  const wr = book.wr != null ? (book.wr + '%') : '—';
+  if(back) back.href = kind === 'algoritmalar' ? '/kripto/algoritmalar' : '/kripto/analizler';
+  if(title) title.textContent = tag;
+  if(sub) sub.textContent = (book.title || book.category || 'Sanal futures')
+    + ' · WR ' + wr + ' · ' + (book.history_n||0) + ' işlem'
+    + ' · $' + Number(book.margin_usd != null ? book.margin_usd : 15)
+    + '×' + Number(book.leverage != null ? book.leverage : 15) + 'x'
+    + (book.max_opens != null ? (' · max ' + book.max_opens) : '');
+  const feeTot = Number(book.open_commission_est || 0);
+  if(sum) sum.textContent = 'Bakiye $' + Number(book.balance||0).toFixed(2)
+    + ' · Net P&L ' + (pnl>=0?'+':'') + pnl.toFixed(2)
+    + ' · anlık net ' + (upnl>=0?'+':'') + upnl.toFixed(2)
+    + (feeTot ? (' · kom. ≈$' + feeTot.toFixed(2)) : '');
+  if(sec) sec.textContent = 'Açık Pozisyonlar · ' + tag + ' (net)';
+  const cards = book.cards || [];
+  if(!cards.length){
+    pc.innerHTML = '<div class="empty">Açık pozisyon yok</div>';
+    return;
+  }
+  const ts = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  pc.innerHTML = cards.map(p => {
+    const up = (p.side || '') === 'LONG';
+    const dirClass = up ? 'dir-up' : 'dir-down';
+    const dc = up ? 'up' : 'down';
+    const delta = (p.current||0) - (p.entry_price||0);
+    const deltaStr = (delta>=0?'+':'') + '$' + fmtPx(Math.abs(delta));
+    const pnlP = p.unrealized_pnl != null ? Number(p.unrealized_pnl) : 0;
+    const gross = p.unrealized_pnl_gross != null ? Number(p.unrealized_pnl_gross) : pnlP;
+    const fee = p.commission_est != null ? Number(p.commission_est) : null;
+    const pnlCls = pnlP >= 0 ? 'pos' : 'neg';
+    const cvColor = pnlP >= 0 ? 'var(--green)' : 'var(--red)';
+    const margin = Number(p.margin_usd != null ? p.margin_usd : 15);
+    const closeVal = margin + pnlP;
+    const slot = p.slot_label || p.slot || '—';
+    const feeLine = fee != null
+      ? `<div class="pos-entry">Brüt ${fmtMoney(gross)} · Komisyon −$${fee.toFixed(2)} · <b>Net ${fmtMoney(pnlP)}</b></div>`
+      : '';
+    const stopLvl = Number(p.stop_level||0);
+    const lockEq = p.lock_equity != null ? Number(p.lock_equity) : null;
+    const atrUsd = p.atr_usd != null ? Number(p.atr_usd) : null;
+    const lockLine = stopLvl >= 1
+      ? `<div class="pos-entry">ATR Stop${stopLvl}${lockEq!=null?' · kilit $'+lockEq.toFixed(2):''}${atrUsd!=null?' · atr$ '+atrUsd.toFixed(2):''} · <b>runner</b></div>`
+      : (atrUsd!=null ? `<div class="pos-entry">ATR kilit bekleniyor · atr$ ${atrUsd.toFixed(2)}</div>` : '');
+    return `<div class="pos-card ${dirClass}">
+      <div class="pos-top">
+        <div class="pos-name">${p.name || (p.symbol||'').replace('USDT','')}</div>
+        <div class="pos-dir ${dc}">${p.dir_tr || (up?'YÜKSELİR':'DÜŞER')}</div>
+      </div>
+      <div class="pos-price-row">
+        <span class="pos-current">$${fmtPx(p.current)}</span>
+        <span class="pos-pct ${delta>=0?'pos':'neg'}">${deltaStr}</span>
+      </div>
+      <div class="pos-entry">Giriş · $${fmtPx(p.entry_price)}</div>
+      <div class="pos-slot">${stopLvl>=1?'ATR runner':'1s slot'} · ${slot}</div>
+      <div class="pos-close-row">
+        <span class="close-lbl">Net kapatma</span>
+        <span class="live-close-val" style="color:${cvColor}">$${closeVal.toFixed(2)}</span>
+        <span class="live-close-pnl ${pnlCls}">${fmtMoney(pnlP)}</span>
+        <span class="live-updated">${ts} güncellendi</span>
+      </div>
+      ${feeLine}
+      ${lockLine}
+      <div class="pos-risk-row">Risk: $${margin.toFixed(0)}
+        <span class="tag">${tag}</span>
+        <span class="tag">${p.leverage||15}x</span>
+        <span class="tag">sanal</span>
+        ${stopLvl>=1 ? `<span class="tag">Stop${stopLvl}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+async function loadBookDetail(){
+  if(!DETAIL_KIND || !DETAIL_ID) return;
+  const api = DETAIL_KIND === 'algoritmalar'
+    ? '/poly/api/kripto/algoritmalar'
+    : '/poly/api/kripto/analizler';
+  try{
+    const r = await fetch(api, {cache:'no-store'});
+    const d = await r.json();
+    if(!d || !d.ok){
+      renderBookDetail(null, DETAIL_KIND);
+      const pc = document.getElementById('detail-positions');
+      if(pc) pc.innerHTML = '<div class="empty">hata: '+(d&&d.error?d.error:'yüklenemedi')+'</div>';
+      return;
+    }
+    renderBookDetail(findBook(d.books, DETAIL_ID), DETAIL_KIND);
+  }catch(e){
+    const pc = document.getElementById('detail-positions');
+    if(pc) pc.innerHTML = '<div class="empty">hata: '+e+'</div>';
+  }
+}
+async function loadAlgoBooks(){
+  try{
+    const r = await fetch('/poly/api/kripto/algoritmalar', {cache:'no-store'});
+    renderBooks('algo-books','algo-sum', await r.json());
+  }catch(e){
+    document.getElementById('algo-books').innerHTML = '<div class="empty">hata: '+e+'</div>';
+  }
+}
+async function loadAnalizBooks(){
+  try{
+    const r = await fetch('/poly/api/kripto/analizler', {cache:'no-store'});
+    renderBooks('analiz-books','analiz-sum', await r.json());
+  }catch(e){
+    document.getElementById('analiz-books').innerHTML = '<div class="empty">hata: '+e+'</div>';
+  }
+}
+function initKriptoViews(){
+  const dash = document.getElementById('view-dash');
+  const gec = document.getElementById('view-gecmis');
+  const algo = document.getElementById('view-algo');
+  const anal = document.getElementById('view-analiz');
+  const det = document.getElementById('view-detail');
+  const nOv = document.getElementById('nav-kripto-overview');
+  const nGe = document.getElementById('nav-kripto-gecmis');
+  const nAl = document.getElementById('nav-kripto-algo');
+  const nAn = document.getElementById('nav-kripto-analiz');
+  [dash,gec,algo,anal,det].forEach(el => { if(el) el.style.display = 'none'; });
+  [nOv,nGe,nAl,nAn].forEach(el => { if(el) el.classList.remove('active'); });
+  if(DETAIL_KIND){
+    if(det) det.style.display = 'block';
+    if(DETAIL_KIND === 'algoritmalar' && nAl) nAl.classList.add('active');
+    if(DETAIL_KIND === 'analizler' && nAn) nAn.classList.add('active');
+    loadBookDetail();
+    setInterval(loadBookDetail, 15000);
+  } else if(IS_GECMIS){
+    if(gec) gec.style.display = 'block';
+    if(nGe) nGe.classList.add('active');
+    loadHistory();
+  } else if(IS_ALGO){
+    if(algo) algo.style.display = 'block';
+    if(nAl) nAl.classList.add('active');
+    loadAlgoBooks();
+    setInterval(loadAlgoBooks, 30000);
+  } else if(IS_ANALIZ){
+    if(anal) anal.style.display = 'block';
+    if(nAn) nAn.classList.add('active');
+    loadAnalizBooks();
+    setInterval(loadAnalizBooks, 30000);
+  } else {
+    if(dash) dash.style.display = 'block';
+    if(nOv) nOv.classList.add('active');
+    refresh();
+    setInterval(refresh, 6000);
+  }
+}
+initKriptoViews();
+(function(){
+  var btn = document.getElementById('kf-nav-toggle');
+  var side = document.getElementById('kf-sidebar');
+  if(!btn || !side) return;
+  btn.addEventListener('click', function(){
+    var open = side.classList.toggle('nav-open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.textContent = open ? '✕' : '☰';
+  });
+})();
+</script>
 </body>
 </html>
 """
+
+KRIPTO_FUTURE_HTML = KRIPTO_FUTURE_HTML.replace("__KRIPTO_BRAND__", _CEMBOT_KRIPTO_BRAND_HTML)
+
+
+@app.route("/kripto")
+@app.route("/kripto/")
+def page_kripto_future():
+    if _auth_required():
+        return _login_redirect()
+    return KRIPTO_FUTURE_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
+@app.route("/kripto/gecmis")
+@app.route("/kripto/gecmis/")
+@app.route("/kripto/algoritmalar")
+@app.route("/kripto/algoritmalar/")
+@app.route("/kripto/algoritmalar/<book_id>")
+@app.route("/kripto/algoritmalar/<book_id>/")
+@app.route("/kripto/analizler")
+@app.route("/kripto/analizler/")
+@app.route("/kripto/analizler/<book_id>")
+@app.route("/kripto/analizler/<book_id>/")
+def page_kripto_sub(book_id=None):
+    if _auth_required():
+        return _login_redirect()
+    return KRIPTO_FUTURE_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
 @app.route("/poly/kripto-future")
 @app.route("/poly/kripto-future/")
 @app.route("/kripto-future")
 @app.route("/kripto-future/")
-def page_kripto_future():
-    if request.path.rstrip("/") == "/kripto-future":
-        return redirect("/poly/kripto-future")
+def page_kripto_future_legacy():
+    return redirect("/kripto", code=301)
+
+
+
+@app.route("/poly/api/crypto-futures/status")
+def api_crypto_futures_status():
     if _auth_required():
-        return _login_redirect()
-    return KRIPTO_FUTURE_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_KRIPTO)
+    try:
+        from crypto_futures_trader import status
+        return jsonify({"ok": True, **status()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/crypto-futures/open", methods=["POST"])
+def api_crypto_futures_open():
+    """MARKET LONG/SHORT — varsayılan dry-run. Body: symbol, side, margin?, leverage?"""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_KRIPTO)
+    body = request.get_json(force=True) if request.is_json else {}
+    try:
+        from crypto_futures_trader import open_market
+        r = open_market(
+            body.get("symbol") or "",
+            body.get("side") or "",
+            margin_usd=body.get("margin"),
+            leverage=body.get("leverage"),
+            margin_type=body.get("margin_type"),
+        )
+        return jsonify({"ok": True, **r})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+
+
+@app.route("/poly/api/crypto-futures/cr6")
+def api_crypto_futures_cr6():
+    """Supertrend Live açık pozisyonlar + anlık K/Z (kutucuk poll)."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_KRIPTO)
+    try:
+        from crypto_futures_cr6 import cr6_status_block
+        return jsonify({"ok": True, **cr6_status_block()})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/crypto-futures/history")
+def api_crypto_futures_history():
+    """Supertrend Live kapanmış işlem geçmişi (yeniden eskiye)."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_KRIPTO)
+    try:
+        from crypto_futures_cr6 import load_history
+        hist = list(reversed(load_history() or []))
+        trades = []
+        for t in hist[:100]:
+            sym = (t.get("symbol") or "").upper()
+            trades.append({
+                "symbol": sym,
+                "name": sym.replace("USDT", "") if sym.endswith("USDT") else sym,
+                "side": t.get("side"),
+                "algo": t.get("algo") or t.get("strategy") or "Supertrend",
+                "leverage": t.get("leverage"),
+                "margin_usd": t.get("margin_usd"),
+                "entry_price": t.get("entry_price"),
+                "exit_price": t.get("exit_price"),
+                "entry_time_tr": t.get("entry_time_tr"),
+                "exit_time_tr": t.get("exit_time_tr"),
+                "pnl_gross": t.get("pnl_gross"),
+                "commission": t.get("commission"),
+                "entry_fee": t.get("entry_fee"),
+                "exit_fee": t.get("exit_fee"),
+                "pnl": t.get("pnl"),  # net (komisyon düşülmüş)
+            })
+        # Özet: net + komisyon toplamı
+        net_sum = round(sum(float(x.get("pnl") or 0) for x in trades), 4)
+        fee_sum = round(sum(float(x.get("commission") or 0) for x in trades), 4)
+        gross_sum = round(sum(
+            float(x.get("pnl_gross") if x.get("pnl_gross") is not None else (x.get("pnl") or 0))
+            for x in trades
+        ), 4)
+        return jsonify({
+            "ok": True,
+            "trades": trades,
+            "summary": {
+                "n": len(trades),
+                "pnl_gross": gross_sum,
+                "commission": fee_sum,
+                "pnl_net": net_sum,
+            },
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+_AGUSTOS_RUNNER_CACHE: dict = {}
+
+
+def _load_agustos_runner(rel_dir: str):
+    """Algoritmalar/runner.py veya Analizler/runner.py — bir kez yükle, cache'le."""
+    if rel_dir in _AGUSTOS_RUNNER_CACHE:
+        return _AGUSTOS_RUNNER_CACHE[rel_dir]
+    import importlib.util
+    path = os.path.join(_DIR_KRIPTO, rel_dir, "runner.py")
+    name = f"agustos_{rel_dir.lower()}_runner"
+    if _DIR_KRIPTO not in sys.path:
+        sys.path.insert(0, _DIR_KRIPTO)
+    sub = os.path.join(_DIR_KRIPTO, rel_dir)
+    if sub not in sys.path:
+        sys.path.insert(0, sub)
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(mod)
+    _AGUSTOS_RUNNER_CACHE[rel_dir] = mod
+    return mod
+
+
+def _agustos_status_or_snap(rel_dir: str, snap_key: str):
+    """Önce disk snapshot (ms), yoksa canlı build; prewarm arka planda taze tutar."""
+    if _DIR_KRIPTO not in sys.path:
+        sys.path.insert(0, _DIR_KRIPTO)
+    from virtual_book import read_snapshot  # noqa: WPS433
+    snap = read_snapshot(snap_key)
+    if snap is not None:
+        return snap
+    mod = _load_agustos_runner(rel_dir)
+    return mod.status_block(with_marks=True)
+
+
+@app.route("/poly/api/kripto/algoritmalar")
+def api_kripto_algoritmalar():
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    try:
+        return jsonify(_agustos_status_or_snap("Algoritmalar", "algoritmalar"))
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/kripto/analizler")
+def api_kripto_analizler():
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    try:
+        return jsonify(_agustos_status_or_snap("Analizler", "analizler"))
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+def _agustos_prewarm_loop():
+    """Her ~25 sn status snapshot yenile — sayfa açılışı Binance beklemesin."""
+    import time as _t
+    _t.sleep(3)
+    while True:
+        try:
+            for rel in ("Algoritmalar", "Analizler"):
+                mod = _load_agustos_runner(rel)
+                mod.refresh_status_block(with_marks=True)
+        except Exception as e:
+            print(f"[agustos prewarm] {e}", flush=True)
+        _t.sleep(25)
+
+
+import threading as _threading  # noqa: E402
+
+_threading.Thread(
+    target=_agustos_prewarm_loop, name="agustos-prewarm", daemon=True
+).start()
+
+
+@app.route("/poly/api/crypto-futures/close", methods=["POST"])
+def api_crypto_futures_close():
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_KRIPTO)
+    body = request.get_json(force=True) if request.is_json else {}
+    try:
+        from crypto_futures_trader import close_market
+        symbol = (body.get("symbol") or "").upper()
+        qty = body.get("qty")
+        if qty is not None:
+            qty = float(qty)
+        strategy = (body.get("strategy") or "").upper()
+        r = close_market(symbol, qty=qty)
+        # Supertrend Live (eski CR6 state) düş
+        if strategy in ("CR6", "Supertrend", "ST", "st") or body.get("cr6"):
+            try:
+                from crypto_futures_cr6 import load_state, save_state, load_history, save_history
+                from datetime import datetime
+                from zoneinfo import ZoneInfo
+                st = load_state()
+                opens = st.get("open_positions") or []
+                closed_pos = next((p for p in opens if p.get("symbol") == symbol), None)
+                st["open_positions"] = [p for p in opens if p.get("symbol") != symbol]
+                save_state(st)
+                if closed_pos:
+                    hist = load_history()
+                    hist.append({
+                        **closed_pos,
+                        "exit_price": r.get("mark_price"),
+                        "exit_time_tr": r.get("exit_time_tr") or datetime.now(ZoneInfo("Europe/Istanbul")).isoformat(),
+                        "pnl": r.get("pnl_est"),
+                        "manual_close": True,
+                    })
+                    save_history(hist)
+            except Exception as ce:
+                r["cr6_state_warn"] = str(ce)
+        return jsonify({"ok": True, **r})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
 
 
 @app.route("/harita")
@@ -10245,14 +12459,20 @@ def harita():
 for _html_name in (
     "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "AYARLAR_HTML",
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
+    "LOGIN_HTML",
 ):
-    globals()[_html_name] = _patch_cache_bust(
-        _patch_nav_kripto_future(
-            _patch_nav_islemler(
-                _patch_sidebar_profit(_patch_sidebar_cleanup(globals()[_html_name]))
-            )
-        )
-    )
+    _html = globals()[_html_name]
+    if _html_name == "KRIPTO_FUTURE_HTML":
+        # Kripto kendi menüsü — Poly nav / PM Kar enjekte etme
+        _html = _patch_cembot_brand(_html)
+        _html = _patch_kf_theme(_html)
+    elif _html_name != "LOGIN_HTML":
+        _html = _patch_sidebar_profit(_patch_sidebar_cleanup(_html))
+        _html = _patch_nav_kripto_future(_patch_nav_islemler(_html))
+        _html = _patch_cembot_brand(_html)
+    else:
+        _html = _patch_cembot_brand(_html)
+    globals()[_html_name] = _patch_cache_bust(_html)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)

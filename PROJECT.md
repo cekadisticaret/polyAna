@@ -17,7 +17,18 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/chart_hourly_signals.py` | Grafik overlay — 1. Analiz (A1) + 3. Freqtrade (A3) + Jesse A8 saatlik UP/DOWN okları. |
 | `temmuzPoly/a3a8_signal_mode.py` | A3/A8 sıkı (filtreli) vs gevşek mod (`a3a8_signal_strict`; sıkı=entry/kesişim veya momentum+RSI teyit) |
 | `temmuzPoly/chart_algo_panel.py` | Grafik ALG1/ALG2 — 5m/15m konsensüs + slot WR takibi (`update_wr` cron */5). |
-| `web/poly_dashboard.py` | Poly dashboard — Overview altında Kripto Future menü; grafik ALG1/2; port **5050**. |
+| `web/poly_dashboard.py` | Poly dashboard port **5050** — menüde Kripto Future → **bursaapp.com/kripto** (ayrı tasarım); API `/poly/api/crypto-futures/*`. |
+| `AgustosKripto/` | Kripto Future — CR6 canlı + sanal Algoritmalar/Analizler; `bursaapp.com/kripto` |
+| `AgustosKripto/virtual_book.py` | Sanal futures — net PnL + ATR kâr kilidi; cache + `/tmp/agustos_snap` |
+| `AgustosKripto/atr_profit_lock.py` | ATR trailing kâr kilidi — arm 1.7 / trail 1.0; saatlik close skip + trail stop |
+| `AgustosKripto/fee_utils.py` | Binance komisyon — estimate + userTrades; brüt→net |
+| `AgustosKripto/Algoritmalar/` | ALGO2 Top-17 klon — saatlik sanal open/close + `trail` |
+| `AgustosKripto/Analizler/` | A1–A10 + Supertrend(a6 $10×15x max4); ATR runner; A3/A8 venv |
+| `AgustosKripto/binance_futures_client.py` | Binance USD-M REST — emir, bakiye, commissionRate, userTrades |
+| `AgustosKripto/crypto_futures_trader.py` | Futures open/close + `dust` süpürme (|notional|≤$2); brüt/komisyon/net |
+| `AgustosKripto/crypto_futures_cr6.py` | **Supertrend Live** (cron yolu aynı) — top-4; $10×15x; ATR kilit; :02/:05 + `trail` */2 |
+| `AgustosKripto/cr6_tg_card.py` | Supertrend Live TG sarı kart (ALGO2 stili) — açılış/kapanış/ATR photo |
+| `AgustosKripto/crypto_futures_config.json` | Sembol allowlist + default $6 / 10x; `CRYPTO_FUTURES_LIVE` + CR6 canlı |
 | `temmuzPoly/analiz5_settings.json` | A1/A2/A10/A6 Live WR giriş tutarları (düşük/orta/yüksek) |
 | `temmuzPoly/pm_profit_baseline.json` | PM Kar başlangıç bakiyesi (varsayılan $314); Toplam Kar = nakit − baseline. |
 | `temmuzPoly/` | Poly trader'lar, algo motorları, backtest; dashboard port **5050**. |
@@ -48,15 +59,15 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/backtest_analiz1.py` | 1. Analiz 1Y walk-forward backtest (BTC+SOL, predict motoru) |
 | `temmuzPoly/backtest_analiz_suite.py` | 4/10. Analiz 1Y backtest ($1000, algo import — canlıya dokunmaz) |
 | `temmuzPoly/backtest_analiz3_8.py` | 3/8. Analiz 1Y backtest (BTC+SOL+ETH, $300, `--telegram`) |
-| `temmuzPoly/poly_trader_analiz4.py` | 4. Analiz sanal (BTC+ETH); TG ana bot; Cum 22–Paz 18 duraklama |
+| `temmuzPoly/poly_trader_analiz4.py` | 4. Analiz sanal (BTC+ETH); Cum 22:00–Pzt 08:00 open kapalı; TG ana bot |
 | `temmuzPoly/analiz15_signal.py` | 15. Analiz sinyal — BTC→A6 MACD, ETH→A8 Jesse, SOL→A2 predictor |
-| `temmuzPoly/poly_trader_analiz15.py` | 15. Analiz sanal (BTC+ETH+SOL); BTC→A6 · ETH→A8 sıkı · SOL→A2; TG A4 botu; $300 |
+| `temmuzPoly/poly_trader_analiz15.py` | 15. Analiz sanal (BTC+ETH+SOL); Cum 22:00–Pzt 08:00 open kapalı; TG A4 botu; $300 |
 | `temmuzPoly/backtest_algo_catalog.py` | 78 algo 1Y yön backtest (BTC+ETH+SOL 1h) → `backtest_algo_catalog_1y.json` |
 | `temmuzPoly/backtest_algo_catalog_notify.py` | Top-30 algo 1Y P&L özeti + Telegram (`--send`) |
 | `temmuzPoly/poly_trader_analiz5_midcheck.py` | A1 Live açık pozisyon :30 anlık değer + PM kotasyon görseli (TG) |
 | `temmuzPoly/poly_trader_analiz5.py` | **A1 Live** — A1 motoru BTC+SOL gerçek PM ($8–10–12 WR); en etkili 3 saatte +%50 giriş |
 | `temmuzPoly/poly_analiz_dual_core.py` | 10. Analiz çift konsensüs ortak motor (A1+A4; PM net kazanç ≥%50 filtresi) |
-| `temmuzPoly/poly_trader_analiz10.py` | 10. Analiz çift konsensüs sanal (BTC+SOL, $300; PM net kazanç ≥%50 yoksa giriş yok) |
+| `temmuzPoly/poly_trader_analiz10.py` | 10. Analiz çift konsensüs sanal (BTC+SOL, $300); Cum 22:00–Pzt 08:00 open kapalı |
 | `temmuzPoly/poly_trader_analiz10_live.py` | A10 Live gerçek PM BTC+SOL $8–12; PM net kazanç ≥%50 yoksa giriş yok |
 | `temmuzPoly/poly_trader_analiz6.py` | 6. Analiz sanal (BTC+SOL+ETH); TG=15. Analiz (A4 botu); A6 Live eşleme |
 | `temmuzPoly/poly_trader_analiz6_live.py` | A6 Live gerçek PM — sanal A6 adayları; PM net kazanç ≥%50; close :02; $8–12 WR |
@@ -64,7 +75,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/poly_trader_manual_state.json` | Manuel PM işlemleri state (dashboard açık pozisyon) |
 | `temmuzPoly/analiz32_5m_adapter.py` | 5M110Analiz → 5m sinyal adaptörü (algo bozulmaz) |
 | `temmuzPoly/analiz32_15m_adapter.py` | 5M110Analiz → 15m sinyal adaptörü (110 SOL) |
-| `temmuzPoly/poly_trader_5m_sol_110.py` | 15M 110 SOL — A32 **sanal** $8-10-12; Cum 22–Paz 18 duraklama |
+| `temmuzPoly/poly_trader_5m_sol_110.py` | 15M 110 SOL — A32 **sanal** $8-10-12; Cum 22:00–Pzt 08:00 open kapalı |
 | `temmuzPoly/analiz32_15m_signal_snapshot.py` | 110 15m sinyal snapshot kaydı |
 | `temmuzPoly/pm_balance_hourly.py` | PM portföy saatlik kayıt + 00:00 Telegram özeti + 3 saat peş peşe düşüş ALERT |
 | `temmuzPoly/poly_trader_5m_real_stats.py` | 15M 110 sanal saatlik Telegram özeti |
@@ -72,7 +83,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/algo_signals_v2.py` | 17 kârlı algo (Analiz 2 sekmesi); `/tmp/algo_signals_v2.json` + `algo_accuracy_v2.json` |
 | `temmuzPoly/poly_trader_a2.py` | A2 Top 17 sanal trader ($300, $8/$12/$16); `poly_trader_a2_XX_{state,history}.json` |
 | `temmuzPoly/poly_a2_algo_trader_core.py` | A2 sanal Top17 ($300); Cum 22:00–Pzt 08:00 open kapalı; #09/#16/#17 → eski ALFA kanalı |
-| `temmuzPoly/poly_15m_a2_algo_trader_core.py` | 15M A2 Top3 çekirdek (309 Squeeze · 316 Supertrend · 317 STv2; $300; stake $6/$8/$10; TG=110 botu) |
+| `temmuzPoly/poly_15m_a2_algo_trader_core.py` | 15M A2 Top3 çekirdek (309/316/317; $300; Cum 22–Pzt 08 open kapalı; TG=110 botu) |
 | `temmuzPoly/poly_trader_15m_a2.py` | 15M A2 Top3 runner (`*/15` open=close+open; BTC+ETH+SOL sanal; 309 sonrası live tetikler) |
 | `temmuzPoly/poly_trader_15m_309_live.py` | 15M 309 Live $3 — sanal 309 ile aynı sinyal/anda mirror; pencere yok; `PM_15M_309_REAL_ENABLED` |
 
@@ -90,11 +101,14 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_analiz2.py close/open` — 2. Analiz **SOL only** sanal ($300, $12-16-20 WR); open Cum 22:00–Paz 18:00 İST kapalı
 - `temmuzPoly/poly_trader_analiz2_live.py close/open` — 2. Analiz **canlı PM** SOL $6-7-8 WR (`PM_ANALIZ2_REAL_ENABLED`; :02/:05; hafta sonu dashboard anahtarı)
 - `temmuzPoly/poly_trader_analiz2.py weekly` — Cumartesi 21:00 haftalık 2 ısı haritası
-- `temmuzPoly/poly_trader_analiz4.py close/open` — 4. Analiz çoklu-algo **sanal** (BTC+ETH); Cum 22–Paz 18 kapalı
+- `temmuzPoly/poly_trader_analiz4.py close/open` — 4. Analiz çoklu-algo **sanal** (BTC+ETH); Cum 22:00–Pzt 08:00 open kapalı
 - `temmuzPoly/poly_trader_analiz4.py weekly` — Cumartesi 21:00 haftalık 4 ısı haritası
 - `temmuzPoly/poly_trader_analiz6.py close/open` — 6. Analiz sanal; **open** aynı adayda A6 Live gerçek PM dener (`PM_ANALIZ6_LIVE_ENABLED` + dashboard)
 - `temmuzPoly/poly_trader_analiz6_live.py close` — A6 Live kapanış :02; open sanal A6 open ile tetiklenir
-- `temmuzPoly/poly_trader_analiz15.py close/open` — **15. Analiz** BTC→A6 · ETH→A8 · SOL→A2 sanal ($300); Cum 22–Paz 18 kapalı
+- `AgustosKripto/crypto_futures_cr6.py close/open/trail` — **Supertrend Live**; top-4; $10×15x; ATR kâr kilidi
+- `AgustosKripto/Algoritmalar/runner.py close/open/trail` — ALGO2 Top-17 sanal $300 / $15×15x / max 6 + ATR trail
+- `AgustosKripto/Analizler/runner.py close/open/trail` — A1–A10 + Supertrend(a6 $10×15x max4) + ATR trail
+- `temmuzPoly/poly_trader_analiz15.py close/open` — **15. Analiz** BTC→A6 · ETH→A8 · SOL→A2 sanal ($300); Cum 22:00–Pzt 08:00 open kapalı
 - `temmuzPoly/poly_trader_analiz6.py weekly` — Cumartesi 21:00 haftalık 6 ısı haritası
 - `temmuzPoly/poly_trader_analiz15.py weekly` — Cumartesi 21:00 haftalık 15 ısı haritası
 - `temmuzPoly/poly_trader_analiz5.py close/open` — **A1 Live** BTC+SOL gerçek PM; hafta sonu dashboard anahtarı (Cum 22:00–Pzt 08:00)
@@ -102,7 +116,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/pm_weekend_sync.py close/open` — Cum **22:00** / Pzt **08:00** İST: A1 Live + A2 dashboard anahtarları (manuel override mümkün)
 - `temmuzPoly/poly_trader_analiz5_midcheck.py` — saat **:30** o saatin açık pozisyonu anlık değer + kotasyon görseli (TG)
 - `temmuzPoly/poly_trader_analiz5.py weekly` — Cumartesi 21:00 haftalık 5 ısı haritası
-- `temmuzPoly/poly_trader_analiz10.py close/open` — çift konsensüs **sanal**; Cum 22–Paz 18 kapalı
+- `temmuzPoly/poly_trader_analiz10.py close/open` — çift konsensüs **sanal**; Cum 22:00–Pzt 08:00 open kapalı
 - `temmuzPoly/poly_trader_analiz10_live.py` — **A10 Live** :02/:05 gerçek PM; Ayarlar anahtarı
 - `temmuzPoly/pm_balance_hourly.py` — saat başı PM portföy kaydı; **00:00 İST** Telegram bakiye özeti; 3 saat peş peşe düşüşte 🔴 ALERT
 - `temmuzPoly/poly_trader_5m_real_stats.py` — saat başı: 110 sanal PM Telegram özeti
