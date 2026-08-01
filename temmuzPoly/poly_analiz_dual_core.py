@@ -24,7 +24,7 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, predict_status, _fetch_klines
-from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, skip_if_weekend_pause
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields, pm_hourly_profit_entry_ok, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, resolve_slot_trade_amount, slot_amount_log, skip_if_weekend_pause
 
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
 CHAT_ID = "830754964"
@@ -50,6 +50,7 @@ class DualConfig:
     amount_mid: float = SANAL_TRADE_AMOUNT
     amount_strong: float = SANAL_TRADE_AMOUNT
     skip_detail_tg: bool = False
+    min_net_profit_ratio: float | None = None
 
 
 CONFIG_A10 = DualConfig(
@@ -64,6 +65,7 @@ CONFIG_A10 = DualConfig(
     amount_mid=SANAL_TRADE_AMOUNT,
     amount_strong=SANAL_TRADE_AMOUNT,
     skip_detail_tg=True,
+    min_net_profit_ratio=0.5,
 )
 
 
@@ -472,7 +474,9 @@ async def run_open(cfg: DualConfig) -> None:
 
     newly_opened = 0
     for sig in candidates:
-        amount = _trade_amount(history, sig["symbol"], cfg)
+        base = _trade_amount(history, sig["symbol"], cfg)
+        amount, hot_boost, cold_cut = resolve_slot_trade_amount(base, hour_tr, history)
+        slot_amount_log(cfg.label, hour_tr, base, amount, hot_boost, cold_cut)
         pos = {
             "symbol": sig["symbol"],
             "predicted_dir": sig["direction"],
@@ -482,6 +486,8 @@ async def run_open(cfg: DualConfig) -> None:
             "entry_dow": dow,
             "entry_is_weekend": is_weekend,
             "amount": amount,
+            "hot_hour_boost": hot_boost,
+            "cold_hour_cut": cold_cut,
             "conf_a": sig["conf_a"],
             "score_b": sig["score_b"],
             "votes": sig["votes"],
@@ -489,6 +495,12 @@ async def run_open(cfg: DualConfig) -> None:
             "virtual": True,
         }
         apply_pm_quote(pos, sig["symbol"], sig["direction"], amount, datetime.now(timezone.utc))
+        if cfg.min_net_profit_ratio is not None:
+            ok, skip_msg = pm_hourly_profit_entry_ok(pos, cfg.min_net_profit_ratio)
+            if not ok:
+                skip_details.append(f"⏸ <b>{sig['symbol'].replace('USDT', '')}</b> — {skip_msg}")
+                print(f"[{cfg.label}] {sig['symbol']} — {skip_msg}")
+                continue
         risk = pos.get("pm_spent", amount)
         if state.get("balance", cfg.initial_balance) < risk:
             skip_details.append(

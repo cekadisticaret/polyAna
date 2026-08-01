@@ -1,12 +1,10 @@
 {
-  "analiz5_paused": false,
+  "analiz5_paused": true,
   "analiz2_paused": true,
-  "m15_210_paused": true,
-  "a3a8_signal_strict": false,
-  "pm_partial_tp_enabled": true,
-  "pm_partial_tp_traders": ["210"],
-  "pm_partial_tp_profit_pct": 0.65,
-  "pm_partial_tp_sell_ratio": 0.75,
-  "updated_at_tr": "2026-07-27T12:16:36.612932+03:00",
-  "updated_by": "dashboard"
+  "analiz10_paused": true,
+  "analiz6_live_paused": true,
+  "a3a8_signal_strict": true,
+  "updated_at_tr": "2026-08-01T08:17:00.324771+03:00",
+  "updated_by": "manual_309_start",
+  "15m_309_live_paused": false
 }

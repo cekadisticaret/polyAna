@@ -1,0 +1,13 @@
+---
+description: Dashboard UI değişince otomatik hard refresh (cache bust)
+globs: web/poly_dashboard.py
+alwaysApply: false
+---
+
+# Dashboard cache bust
+
+`web/poly_dashboard.py` HTML/JS/UI değişince kullanıcıya hard refresh söyletme.
+
+1. `_DASH_UI_VER` değerini her UI değişikliğinde yükselt (benzersiz string)
+2. Dashboard process'i yeniden başlat: `pkill -f 'web/poly_dashboard.py'; nohup python3 /root/aiProject/web/poly_dashboard.py >> /tmp/poly_dashboard.log 2>&1 &`
+3. Kullanıcıya "Ctrl+Shift+R yap" deme — `_patch_cache_bust` sayfayı bir kez otomatik yeniler

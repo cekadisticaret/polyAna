@@ -36,11 +36,11 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pm_trader_helpers import apply_pm_quote, sanal_pnl, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, skip_if_weekend_pause
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, resolve_slot_trade_amount, slot_amount_log, skip_if_weekend_pause
 
-# ── Config ────────────────────────────────────────────────────
-BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "8630483764:AAFmAmG4nHAGb238wpavlWgMjJZDvIy4DzE")
-CHAT_ID   = os.getenv("TELEGRAM_ANALIZ4_CHAT_ID", os.getenv("TELEGRAM_CHAT", "830754964"))
+# ── Config (TG: ana bot — 15. Analiz ile yer değiştirdi) ──────
+BOT_TOKEN = os.getenv("TELEGRAM_TOKEN", "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA")
+CHAT_ID   = os.getenv("TELEGRAM_CHAT", "830754964")
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR         = os.path.dirname(os.path.abspath(__file__))
@@ -447,7 +447,9 @@ async def run_open() -> None:
     # Pozisyon aç
     for sig in results:
         if sig["predicted_dir"] and sig.get("open_ok"):
-            amount = symbol_wr_amount(history, sig["symbol"])
+            base = symbol_wr_amount(history, sig["symbol"])
+            amount, hot_boost, cold_cut = resolve_slot_trade_amount(base, hour_tr, history)
+            slot_amount_log("4. ANALİZ", hour_tr, base, amount, hot_boost, cold_cut)
             pos = {
                 "symbol":           sig["symbol"],
                 "predicted_dir":    sig["predicted_dir"],
@@ -458,6 +460,8 @@ async def run_open() -> None:
                 "entry_is_weekend": is_weekend,
                 "score":            sig["score"],
                 "amount":           amount,
+                "hot_hour_boost":   hot_boost,
+                "cold_hour_cut":    cold_cut,
                 "votes":            sig["votes"],
             }
             apply_pm_quote(pos, sig["symbol"], sig["predicted_dir"], amount, now)

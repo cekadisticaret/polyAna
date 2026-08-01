@@ -346,6 +346,33 @@ def _pm_fit_buy(size: float, price: float, min_shares: float = 5.0) -> tuple[flo
     return float(s), float(p)
 
 
+def _pm_budget_size(
+    amount_usd: float, price: float, min_shares: float = 0.0,
+) -> tuple[float, float, float] | None:
+    """Bütçe içi size — PM: maker(USDC) max 2dp, taker(shares) max 4dp."""
+    from decimal import Decimal, ROUND_DOWN
+
+    p = Decimal(str(round(float(price), 2)))
+    budget = Decimal(str(round(float(amount_usd), 2)))
+    if p <= 0 or budget < Decimal("0.01"):
+        return None
+    size = (budget / p).quantize(Decimal("0.0001"), rounding=ROUND_DOWN)
+    min_s = Decimal("0")
+    if min_shares and float(min_shares) > 0:
+        min_s = Decimal(str(round(float(min_shares), 4)))
+        if size < min_s and (min_s * p) <= budget:
+            size = min_s
+    for _ in range(30000):
+        if size <= 0:
+            return None
+        maker = (size * p).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+        if maker >= Decimal("0.01") and maker <= budget:
+            # taker 4dp, maker 2dp — API float sapmasın
+            return float(size), float(p), float(maker)
+        size -= Decimal("0.0001")
+    return None
+
+
 def _pm_best_ask(client, token_id: str, amount_usd: float) -> float | None:
     """Gerçek en düşük ask — calculate_market_price yetersiz kalabiliyor."""
     from py_clob_client_v2 import OrderType
@@ -400,13 +427,21 @@ def _pm_period_warmup(ts_5m: int) -> None:
 
 def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
                     neg_risk: bool = False, deadline: float | None = None,
-                    skip_payout_check: bool = False) -> dict | None:
-    """FAK limit buy — best ask + slippage; deadline'a kadar kısa aralıklarla dener."""
+                    skip_payout_check: bool = False,
+                    min_shares: float = 5.0,
+                    max_spent: float | None = None) -> dict | None:
+    """FAK limit buy — best ask + slippage; deadline'a kadar kısa aralıklarla dener.
+
+    max_spent: risk tavanı (örn. 3.0) — 5-share bump bu tavanı aşamaz; aşacaksa
+    tavan içi size kullanılır (veya deneme atlanır).
+    """
     from py_clob_client_v2 import OrderArgs, OrderType, PartialCreateOrderOptions
     from py_clob_client_v2.order_builder.constants import BUY
     from decimal import Decimal, ROUND_DOWN
 
     amount_usd = float(Decimal(str(amount_usd)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+    if max_spent is not None:
+        amount_usd = min(amount_usd, float(Decimal(str(max_spent)).quantize(Decimal("0.01"), rounding=ROUND_DOWN)))
     if _PM_DRY_RUN:
         client = _pm_get_client()
         price = _pm_best_ask(client, token_id, amount_usd) or 0.5
@@ -447,9 +482,34 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
             continue
 
         price = max(0.02, min(0.98, round(best + slips[slip_idx], 2)))
-        raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
-        size, price = _pm_fit_buy(max(5.0, raw_sz), price)
-        spent = round(size * price, 2)
+        # Risk tavanı: min share bütçeyi aşıyorsa tavan içi size
+        effective_min = float(min_shares)
+        if max_spent is not None and effective_min * price > amount_usd + 0.005:
+            print(
+                f"[{LABEL}] min {min_shares:g} share ~${effective_min * price:.2f} "
+                f"> tavan ${amount_usd:.2f} — tavan içi size (@{price:.2f})",
+                file=sys.stderr,
+            )
+            effective_min = 0.0
+
+        sized = _pm_budget_size(amount_usd, price, min_shares=effective_min)
+        if not sized:
+            # eski yol (büyük stake'ler)
+            raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+            if raw_sz < 0.01:
+                print(f"[{LABEL}] Size yok (@{price:.2f} / ${amount_usd:.2f})", file=sys.stderr)
+                continue
+            size, price = _pm_fit_buy(max(raw_sz, effective_min), price, min_shares=effective_min)
+            spent = round(size * price, 2)
+        else:
+            size, price, spent = sized
+
+        if max_spent is not None and spent > amount_usd + 0.01:
+            print(
+                f"[{LABEL}] Risk tavanı aşılamaz (@{price:.2f} → ${spent:.2f} > ${amount_usd:.2f})",
+                file=sys.stderr,
+            )
+            continue
 
         if not skip_payout_check and not _pm_payout_ok(spent, size):
             payout_rejected = True
@@ -462,6 +522,10 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
             continue
 
         try:
+            # PM API: size ≤4dp, price ≤2dp (maker=size*price ≤2dp)
+            size = float(Decimal(str(size)).quantize(Decimal("0.0001"), rounding=ROUND_DOWN))
+            price = float(Decimal(str(price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+            spent = float((Decimal(str(size)) * Decimal(str(price))).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
             args   = OrderArgs(token_id=token_id, price=price, size=size, side=BUY)
             signed = client.create_order(args, opts)
             resp   = client.post_order(signed, order_type=OrderType.FAK)
@@ -507,6 +571,13 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
                     )
                     last_err = f"partial_fill:{fill_spent}"
                     continue
+
+                if max_spent is not None and fill_spent > amount_usd + 0.05:
+                    print(
+                        f"[{LABEL}] Fill tavan üstü ${fill_spent:.2f} > ${amount_usd:.2f} "
+                        f"— kayıt yine de (FAK)",
+                        file=sys.stderr,
+                    )
 
                 print(
                     f"[{LABEL}] PM order OK: {fill_size} @ {fill_price} "

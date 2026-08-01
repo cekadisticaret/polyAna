@@ -38,10 +38,14 @@ from pm_trader_helpers import (
     pm_find_market,
     pm_log_hata,
     pm_stake_fields,
+    pm_realized_pnl,
     pm_tg_stake,
-    compute_top_slot_hours,
+    resolve_slot_trade_amount,
+    slot_amount_log,
     tg_send_pm_live,
     skip_if_weekend_pause,
+    pm_live_wr_amount,
+    pm_live_amount_range_str,
 )
 from pm_balance_guard import can_open_trade
 
@@ -110,13 +114,7 @@ def _pm_bal_line() -> str:
 
 
 def _trade_amount(history: list, symbol: str) -> float:
-    wins, total = get_symbol_stats(history, symbol)
-    rate = wins / total if total else None
-    if rate is not None and rate > 0.5:
-        return TRADE_AMOUNT_HIGH
-    if rate is not None and rate < 0.5:
-        return TRADE_AMOUNT_LOW
-    return TRADE_AMOUNT
+    return pm_live_wr_amount("a2", history, symbol, get_symbol_stats)
 
 
 def load_analiz2_signal_history() -> list:
@@ -163,6 +161,14 @@ def _try_pm_open(
         durum = "bulunamadı" if not pm else "kapalı"
         pm_log_hata(HATA_FILE, sym, "market_" + durum, f"et_hour={et_hour}")
         return None, "market"
+    from pm_trader_helpers import pm_sanal_quote, pm_hourly_profit_entry_ok, HOURLY_MIN_NET_PROFIT_RATIO
+    q = pm_sanal_quote(sym, direction, amount, now)
+    if q:
+        ok, skip_msg = pm_hourly_profit_entry_ok(q, HOURLY_MIN_NET_PROFIT_RATIO)
+        if not ok:
+            print(f"[{LABEL}] {sym} — {skip_msg}")
+            pm_log_hata(HATA_FILE, sym, "profit_low", skip_msg)
+            return None, "profit_low"
     token_id = pm["up_token"] if direction == "UP" else pm["down_token"]
     order = pm_place_order(
         token_id, amount, pm["tick_size"], pm["neg_risk"],
@@ -246,7 +252,6 @@ async def run_close() -> None:
         pm_spent = float(pos.get("pm_spent") or amount or 0)
         pm_size = float(pos.get("pm_size") or 0)
         if pm_source and pm_size > 0 and pm_spent > 0:
-            from pm_partial_takeprofit import pm_realized_pnl
             pnl = pm_realized_pnl(pos, win)
         else:
             pnl = round(pm_size - pm_spent, 2) if win and pm_size else round(-pm_spent, 2)
@@ -342,8 +347,6 @@ async def run_open() -> None:
 
     state = load_state()
     history = load_history()
-    signal_hist = load_analiz2_signal_history()
-    hot_hours = compute_top_slot_hours(signal_hist)
 
     if not can_open_trade(LABEL, tg_send):
         return
@@ -376,10 +379,8 @@ async def run_open() -> None:
             ),
         }
         base_amount = _trade_amount(history, sym)
-        amount = base_amount
-        if hour_tr in hot_hours:
-            amount = round(amount * 1.5, 2)
-            print(f"[{LABEL}] 🔥 etkili saat {hour_tr:02d}:00 — ${base_amount:.0f} → ${amount:.0f}")
+        amount, hot_boost, cold_cut = resolve_slot_trade_amount(base_amount, hour_tr, history)
+        slot_amount_log(LABEL, hour_tr, base_amount, amount, hot_boost, cold_cut)
         pos, err = _try_pm_open(
             state,
             sym=sym,
@@ -442,7 +443,7 @@ async def run_open() -> None:
     sep = "━" * 26
     tg_send(
         f"{sep}\n"
-        f"🆕 <b>{LABEL} — {saat} - {next_h}</b>  🔴 GERÇEK PM  ${TRADE_AMOUNT_LOW:.0f}–${TRADE_AMOUNT_HIGH:.0f}/işlem  {sess_tag}\n"
+        f"🆕 <b>{LABEL} — {saat} - {next_h}</b>  🔴 GERÇEK PM  {pm_live_amount_range_str('a2')}/işlem  {sess_tag}\n"
         + "\n".join(lines)
         + f"\n{sep}\n"
         f"{_pm_bal_line()}  |  📂 ${at_risk:.0f} riskte\n"

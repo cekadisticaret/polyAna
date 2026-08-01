@@ -25,9 +25,20 @@ _ENTRY_SANE = {
 _TRADER_STATE = {
     "analiz5": os.path.join(_DIR, "poly_trader_analiz5_state.json"),
     "analiz2_live": os.path.join(_DIR, "poly_trader_analiz2_live_state.json"),
-    "analiz8_live": os.path.join(_ROOT, "jesse/storage/analiz8_live_state.json"),
-    "5m_sol_210": os.path.join(_DIR, "poly_trader_5m_sol_210_state.json"),
+    "analiz6_live": os.path.join(_DIR, "poly_trader_analiz6_live_state.json"),
+    "analiz10_live": os.path.join(_DIR, "poly_trader_analiz10_live_state.json"),
+    "15m_309_live": os.path.join(_DIR, "poly_trader_15m_309_live_state.json"),
     "manual": os.path.join(_DIR, "poly_trader_manual_state.json"),
+}
+
+# Orphan atamasında izinli semboller (None = hepsi)
+_TRADER_SYMBOLS: dict[str, frozenset[str] | None] = {
+    "analiz5": frozenset({"BTCUSDT", "SOLUSDT"}),
+    "analiz2_live": frozenset({"SOLUSDT"}),
+    "analiz6_live": frozenset({"BTCUSDT", "SOLUSDT", "ETHUSDT"}),
+    "analiz10_live": frozenset({"BTCUSDT", "SOLUSDT"}),
+    "15m_309_live": frozenset({"BTCUSDT", "SOLUSDT", "ETHUSDT"}),
+    "manual": None,
 }
 
 _SYM_MAP = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT"}
@@ -204,18 +215,27 @@ def _round_to_pos(open_round: dict, acts: list[dict], sibling: dict | None) -> d
     return pos
 
 
+def _symbol_allowed(trader: str, symbol: str) -> bool:
+    allowed = _TRADER_SYMBOLS.get(trader)
+    if allowed is None:
+        return True
+    return symbol.upper() in allowed
+
+
 def sync_live_orphan_positions(
     *,
     trader_keys: tuple[str, ...] | None = None,
     max_age_hours: int = 6,
     activity_limit: int = 200,
 ) -> dict:
-    """Zincirde açık, state'te yok — aynı saat slotundaki bot'a yazar."""
+    """Zincirde açık, state'te yok — uygun bot state'ine yazar."""
     keys = trader_keys or tuple(k for k in _TRADER_STATE if k != "manual")
+    # Bilinen pozisyonlar TÜM live trader state'lerinden (çift yazmayı engelle)
+    all_states = {k: _load_state(p) for k, p in _TRADER_STATE.items()}
     paths = {k: _TRADER_STATE[k] for k in keys if k in _TRADER_STATE}
-    states = {k: _load_state(p) for k, p in paths.items()}
-    known = _known_keys(states)
-    known_tokens = _known_token_ids(states)
+    states = {k: all_states[k] for k in keys if k in all_states}
+    known = _known_keys(all_states)
+    known_tokens = _known_token_ids(all_states)
 
     acts = _fetch_activity(limit=activity_limit)
     _, open_rounds = _group_activity(acts)
@@ -233,8 +253,10 @@ def sync_live_orphan_positions(
         if act_ts < cutoff:
             continue
 
-        trader = _guess_trader(slug, states)
+        trader = _guess_trader(slug, all_states)
         if not trader or trader not in states:
+            continue
+        if not _symbol_allowed(trader, symbol):
             continue
 
         sibling = None

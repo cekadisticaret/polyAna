@@ -1,0 +1,28 @@
+[
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "binance_actual": "DOWN",
+    "win": true,
+    "pm_win": true,
+    "settle_source": "pm",
+    "entry_price": 73.34,
+    "exit_price": 73.01,
+    "entry_time_tr": "2026-07-31T21:05:07.113089+03:00",
+    "entry_hour_tr": 21,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "score": 0,
+    "amount": 8.0,
+    "pm_spent": 8.1,
+    "pm_size": 15.0,
+    "pm_entry_price": 0.54,
+    "pm_order_id": "0x21e58c98d24fc2acf5ca9104ea921764d8b63a479e0a7c7092b74f20039b8e1d",
+    "pm_slug": "solana-up-or-down-july-31-2026-2pm-et",
+    "pm_token_dir": "DOWN",
+    "exit_time_tr": "2026-07-31T22:02:00+03:00",
+    "pnl": 6.9,
+    "pm_live": true
+  }
+]

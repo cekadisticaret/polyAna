@@ -4,7 +4,7 @@
 
 Canlı trader / algo dosyalarına DOKUNULMAZ.
 Saatlik BTC+SOL+ETH · $300 başlangıç · :05 open / :00 close
-Skip: pm_system_control.json → a3a8_signal_strict (true=entry/kesişim, false=her saat)
+Skip: pm_system_control.json → a3a8_signal_strict (true=sıkı filtreli, false=her saat)
 
   python3 temmuzPoly/backtest_analiz3_8.py --all --telegram
   python3 temmuzPoly/backtest_analiz3_8.py --analiz 3 --start 2025-07-27
@@ -158,7 +158,7 @@ async def main() -> None:
     elif args.loose:
         strict_override = False
     mode = signal_mode_status() if strict_override is None else {
-        "a3a8_signal_mode_label": "sıkı (entry/kesişim)" if strict_override else "gevşek (her saat)",
+        "a3a8_signal_mode_label": "sıkı (filtreli)" if strict_override else "gevşek (her saat)",
     }
 
     y, m, d = map(int, args.start.split("-"))

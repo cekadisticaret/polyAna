@@ -35,6 +35,8 @@ from pm_trader_helpers import (
     pm_5m_close,
     pm_5m_history_extras,
     pm_sanal_tg_quote,
+    resolve_slot_trade_amount,
+    slot_amount_log,
     skip_if_weekend_pause,
 )
 
@@ -367,7 +369,9 @@ def run() -> None:
             continue
 
         direction = sig.direction
-        amount = _trade_amount(history)
+        base_amount = _trade_amount(history)
+        amount, hot_boost, cold_cut = resolve_slot_trade_amount(base_amount, now_tr.hour, history)
+        slot_amount_log(LABEL, now_tr.hour, base_amount, amount, hot_boost, cold_cut)
         balance = state["balance"]
 
         if not _PM_LIVE and balance < amount:

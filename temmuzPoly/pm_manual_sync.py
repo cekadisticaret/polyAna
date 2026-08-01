@@ -31,7 +31,6 @@ _ALL_TRADER_KEYS = (
     "analiz5",
     "analiz2_live",
     "5m_sol_110",
-    "5m_sol_210",
 )
 
 

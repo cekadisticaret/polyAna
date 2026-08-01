@@ -1,5 +1,5 @@
 """
-Grafik overlay — 5M110Analiz FeatureEngine (110/111/109 mantığı).
+Grafik overlay — 5M110Analiz FeatureEngine (110/111 mantığı).
 Pine Script değil; Python motorundan EMA, composite ve sinyal okları.
 """
 from __future__ import annotations
@@ -24,7 +24,6 @@ from predictor import predict_from_klines
 ALGO_META = {
     "110": {"label": "110", "default_gate": 15.0},
     "111": {"label": "a1", "default_gate": 15.0},
-    "109": {"label": "a2", "default_gate": 15.0},
 }
 
 

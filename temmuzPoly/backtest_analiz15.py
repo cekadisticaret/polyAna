@@ -32,8 +32,8 @@ from pm_trader_helpers import SANAL_INITIAL_BALANCE, symbol_wr_amount
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 LABEL = "15. ANALİZ"
 OUT_FILE = os.path.join(_DIR, "backtest_analiz15_1y.json")
-BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
-CHAT_ID = "830754964"
+BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "8630483764:AAFmAmG4nHAGb238wpavlWgMjJZDvIy4DzE")
+CHAT_ID = os.getenv("TELEGRAM_ANALIZ4_CHAT_ID", os.getenv("TELEGRAM_CHAT", "830754964"))
 
 
 def _history_as_dicts(history: list[Trade]) -> list[dict]:

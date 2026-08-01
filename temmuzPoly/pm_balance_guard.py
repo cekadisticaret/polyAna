@@ -13,19 +13,22 @@ _LABEL_GROUPS = {
     "A1 LIVE": "analiz5",
     "5. ANALİZ": "analiz5",  # geriye uyumluluk
     "2. ANALİZ LIVE": "analiz2",
-    "8. ANALİZ LIVE": "analiz8",
-    "15M 210 SOL": "m15_210",
+    "10. ANALİZ LIVE": "analiz10",
+    "6. ANALİZ LIVE": "analiz6_live",
+    "15M 309 LIVE": "15m_309_live",
 }
-_VALID_GROUPS = frozenset({"analiz5", "analiz2", "analiz8", "m15_210"})
-_WEEKEND_GROUPS = ("analiz5", "analiz2", "analiz8", "m15_210")
+_VALID_GROUPS = frozenset({"analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live"})
+# 15M 309 Live hafta sonu da çalışır — weekend cron bunu kapatmaz
+_WEEKEND_GROUPS = ("analiz5", "analiz2", "analiz10", "analiz6_live")
 
 
 def _load_control() -> dict:
     defaults = {
         "analiz5_paused": False,
         "analiz2_paused": False,
-        "analiz8_paused": True,  # yeni — güvenli başlangıç (dashboard'dan Aç)
-        "m15_210_paused": False,
+        "analiz10_paused": False,
+        "analiz6_live_paused": True,
+        "15m_309_live_paused": False,
         "a3a8_signal_strict": True,
         "updated_at_tr": "",
         "updated_by": "",
@@ -41,7 +44,6 @@ def _load_control() -> dict:
                 legacy = bool(data.get("pm_open_paused"))
                 data["analiz5_paused"] = legacy
                 data["analiz2_paused"] = legacy
-                data["m15_210_paused"] = legacy
             # hourly_paused → A1 Live + A2
             if "hourly_paused" in data and "analiz5_paused" not in data:
                 h = bool(data.get("hourly_paused"))
@@ -54,7 +56,8 @@ def _load_control() -> dict:
 
 
 def _save_control(data: dict) -> None:
-    for k in ("hourly_paused", "pm_open_paused"):
+    for k in ("hourly_paused", "pm_open_paused", "m15_210_paused", "pm_partial_tp_enabled",
+              "pm_partial_tp_traders", "pm_partial_tp_profit_pct", "pm_partial_tp_sell_ratio"):
         data.pop(k, None)
     with open(_PM_CONTROL_FILE, "w") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
@@ -78,28 +81,30 @@ def is_group_paused(group: str) -> bool:
 
 
 def is_pm_open_paused() -> bool:
-    """Geriye uyumluluk — hepsi kapalıysa True."""
-    c = _load_control()
-    return all(bool(c.get(f"{g}_paused")) for g in _WEEKEND_GROUPS)
+    """Geriye uyumluluk — tüm gruplar kapalıysa True."""
+    return all(is_group_paused(g) for g in _VALID_GROUPS)
 
 
 def get_pm_system_control() -> dict:
     c = _load_control()
     a5 = bool(c.get("analiz5_paused"))
     a2 = bool(c.get("analiz2_paused"))
-    a8 = bool(c.get("analiz8_paused", True))
-    m15 = bool(c.get("m15_210_paused"))
+    a10 = bool(c.get("analiz10_paused"))
+    a6l = bool(c.get("analiz6_live_paused", True))
+    m309 = bool(c.get("15m_309_live_paused", False))
     strict = bool(c.get("a3a8_signal_strict", True))
+    all_paused = a5 and a2 and a10 and a6l and m309
     return {
         "analiz5_paused": a5,
         "analiz2_paused": a2,
-        "analiz8_paused": a8,
-        "m15_210_paused": m15,
+        "analiz10_paused": a10,
+        "analiz6_live_paused": a6l,
+        "15m_309_live_paused": m309,
         "a3a8_signal_strict": strict,
         "a3a8_signal_mode": "strict" if strict else "loose",
-        "a3a8_signal_mode_label": "sıkı (entry/kesişim)" if strict else "gevşek (her saat)",
-        "hourly_paused": a5 and a2,
-        "pm_open_paused": a5 and a2 and a8 and m15,
+        "a3a8_signal_mode_label": "sıkı (filtreli)" if strict else "gevşek (her saat)",
+        "hourly_paused": all_paused,
+        "pm_open_paused": all_paused,
         "updated_at_tr": c.get("updated_at_tr") or "",
         "updated_by": c.get("updated_by") or "",
     }
@@ -141,7 +146,7 @@ def set_pm_open_paused(paused: bool, *, source: str = "dashboard") -> dict:
 
 
 def weekend_pause_all(*, source: str = "weekend_cron") -> dict:
-    """Cuma 22:00 — dashboard anahtarlarını kapat (A1 Live + A2 + A8 Live + 210)."""
+    """Cuma 22:00 — dashboard anahtarlarını kapat (A1 Live + A2)."""
     return set_pm_open_paused(True, source=source)
 
 

@@ -29,12 +29,9 @@ _HEATMAP_SYMS = {
     "analiz4":  ["BTC", "ETH"],
     "analiz5":  ["BTC", "SOL"],
     "analiz8":  ["BTC", "SOL", "ETH"],
-    "analiz8_live": ["BTC", "SOL", "ETH"],
     "analiz10": ["BTC", "SOL"],
     "5m_sol_110": ["SOL"],
-    "5m_sol_109": ["SOL"],
-    "5m_sol_210": ["SOL"],
-    "alfa":       ["BTC", "SOL"],
+    "15m_309_live": ["BTC", "ETH", "SOL"],
 }
 # Sıcaklık haritası sekmesinde birleşik gösterilecek ek history kaynakları
 _HEATMAP_MERGE: dict[str, list[str]] = {}
@@ -48,36 +45,49 @@ _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
         os.path.join(_ROOT, "jesse/storage/analiz8_jesse_history.json"),
         os.path.join(_ROOT, "jesse/storage/analiz8_jesse_state.json"),
     ),
-    "analiz8_live": (
-        os.path.join(_ROOT, "jesse/storage/analiz8_live_history.json"),
-        os.path.join(_ROOT, "jesse/storage/analiz8_live_state.json"),
-    ),
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
+# Algoritma performansı / harita / analizler — gerçek PM (Live) gösterilmez; sanal karşılığı kullanılır
+_LIVE_PM_ANALYSES = frozenset({
+    "analiz5",       # A1 Live → analiz1
+    "analiz2_live",  # A2 Live → analiz2
+    "analiz10_live", # A10 Live → analiz10
+    "analiz6_live",  # A6 Live → analiz6
+    "analiz8_live",  # A8 Live → analiz8
+    "15m_309_live",  # 15M 309 Live → 15m_309 sanal
+})
 # Algoritma performansı panelinde gösterilmez
-_ALGO_STATS_EXCLUDE = frozenset({"manual"})
+_ALGO_STATS_EXCLUDE = frozenset({"manual"}) | _LIVE_PM_ANALYSES
+_ALGO_STATS_MIN_TRADES = 5
+_ACTIVE_ALGOS_TOP_N = 15
 # Kaldırılmış trader'lar — diskte history kalsa bile listelenmez
 _REMOVED_ANALYSES = frozenset({
     "analiz7", "analiz9", "analiz13", "analiz21", "analiz23", "analiz31", "analiz32",
-    "5m_btc_107", "5m_sol_111",
+    "5m_btc_107", "5m_sol_111", "5m_sol_109", "analiz8_live",
+    "5m_sol_112", "5m_sol_113", "5m_sol_114", "cem", "5m_sol_210",
+    "alfa",
 })
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz8_live",
+    "analiz1", "analiz2", "analiz3", "analiz8",
     "analiz4", "analiz6", "analiz10", "analiz15",
-    "5m_sol_109", "5m_sol_110", "5m_sol_210",
+    "5m_sol_110",
 ]
-# Sıcaklık haritası sekmeleri — yalnızca bu liste (auto-discover yok)
+# Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz2_live", "analiz5", "analiz3", "analiz8", "analiz8_live",
-    "analiz4", "analiz6", "analiz10", "analiz15",
-    "alfa",
-    "5m_sol_109", "5m_sol_110", "5m_sol_210",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz10", "analiz15",
+    "analiz3", "analiz8",
+    "5m_sol_110",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz6", "analiz15", "analiz5", "analiz3", "analiz8", "analiz8_live",
-    "analiz10", "5m_sol_109", "5m_sol_110", "5m_sol_210",
+    "analiz2", "analiz1", "analiz4", "analiz6", "analiz15", "analiz3", "analiz8",
+    "analiz10", "5m_sol_110",
+]
+# Geçmiş sayfası — sanal + gerçek PM Live kayıtları
+_HISTORY_ORDER_GECMIS = [
+    "analiz5", "analiz2_live", "analiz10_live", "analiz6_live", "15m_309_live",
+    *_HISTORY_ORDER,
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
     "analiz1":    "1. Analiz",
@@ -88,42 +98,40 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz15":   "15. Analiz",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
-    "analiz8_live": "A8 Live",
     "analiz10":   "10. Analiz",
-    "5m_sol_109": "15M 109 SOL",
     "5m_sol_110": "15M 110 SOL",
-    "5m_sol_112": "15M 112 SOL",
-    "5m_sol_113": "15M 113 SOL",
-    "5m_sol_114": "15M 114 SOL",
-    "5m_sol_210": "15M 210 SOL",
-    "alfa":       "ALFA",
     "analiz2_live": "A2 Live",
+    "analiz10_live": "A10 Live",
+    "analiz6_live": "A6 Live",
+    "15m_309_live": "15M 309 Live",
 }
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
     "analiz1", "analiz2", "analiz4", "analiz6", "analiz10", "analiz15",
-    "analiz3", "analiz8", "alfa",
-    "5m_sol_109", "5m_sol_110", "5m_sol_112", "5m_sol_113", "5m_sol_114",
+    "analiz3", "analiz8",
+    "5m_sol_110",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
-    "analiz5": None, "analiz2_live": None, "analiz8_live": None, "5m_sol_210": None,
+    "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None,
+    "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz10": 300, "analiz15": 300,
-    "analiz3": 300, "analiz8": 300, "alfa": 300,
-    "5m_sol_109": 300, "5m_sol_110": 300, "5m_sol_112": 300,
-    "5m_sol_113": 300, "5m_sol_114": 300,
+    "analiz3": 300, "analiz8": 300,
+    "5m_sol_110": 300,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
     "analiz2_live": "analiz2_paused",
-    "analiz8_live": "analiz8_paused",
-    "5m_sol_210": "m15_210_paused",
+    "analiz10_live": "analiz10_paused",
+    "analiz6_live": "analiz6_live_paused",
+    "15m_309_live": "15m_309_live_paused",
 }
 _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz5": "A1 Live",
     "analiz2_live": "A2 Live",
-    "analiz8_live": "A8 Live",
-    "5m_sol_210": "210",
+    "analiz10_live": "A10 Live",
+    "analiz6_live": "A6 Live",
+    "15m_309_live": "309L",
     "analiz1": "A1",
     "analiz2": "A2",
     "analiz4": "A4",
@@ -132,15 +140,64 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
-    "alfa": "ALFA",
-    "5m_sol_109": "109",
     "5m_sol_110": "110",
-    "5m_sol_112": "112",
-    "5m_sol_113": "113",
-    "5m_sol_114": "114",
 }
 _PM_BALANCE_HOURLY_FILE = os.path.join(_DIR_POLY, "pm_balance_hourly.json")
 _OVERVIEW_CHART_BASE = 300
+
+# Analiz 2 — 17 kârlı algo sanal trader kayıtları
+try:
+    from algo_signals_v2 import ALGO_V2_META as _A2_META  # noqa: E402
+except ImportError:
+    _A2_META = []
+
+_A2_KEYS: list[str] = []
+for _num, _name, *_rest in _A2_META:
+    _a2k = f"a2_{_num:02d}"
+    _A2_KEYS.append(_a2k)
+    _HEATMAP_SYMS[_a2k] = ["BTC", "ETH", "SOL"]
+    _ANALYSIS_LABELS[_a2k] = f"A2#{_num:02d} {_name}"
+    _OVERVIEW_INIT_BAL[_a2k] = 300
+    _OVERVIEW_SHORT_LABELS[_a2k] = f"A2#{_num:02d}"
+
+_HEATMAP_ORDER.extend(_A2_KEYS)
+_OVERVIEW_ACTIVE_ORDER.extend(_A2_KEYS)
+_HISTORY_ORDER.extend(_A2_KEYS)
+_ANALYSIS_ORDER.extend(_A2_KEYS)
+
+# Analizler sayfası kayıtları (A2 dahil)
+_ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
+    ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
+    ("analiz2",    "2. Analiz (SOL)",       300,  "A1 motoru SOL only $10-15-20"),
+    ("analiz3",    "3. Analiz Freqtrade",   300,  "SampleStrategy TA sanal PM BTC+SOL+ETH"),
+    ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
+    ("analiz6",    "6. Analiz",             300,  "MACD Div #26 (BTC/SOL) · RSI Div #38 (ETH)"),
+    ("analiz15",   "15. Analiz",            300,  "BTC→A6 · ETH→A8 sıkı · SOL→A2"),
+    ("analiz8",    "8. Analiz Jesse",       300,  "GoldenCross EMA8/21 sanal PM BTC+SOL+ETH"),
+    ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
+    ("5m_sol_110", "15M 110 SOL",           300,  "5M110Analiz 15m SOL sanal $8-10-12"),
+]
+_ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
+for _num, _name, *_rest in _A2_META:
+    _a2k = f"a2_{_num:02d}"
+    _ANALIZLER_SYSTEMS.append((_a2k, f"A2#{_num:02d} {_name}", 300, f"Top17 algo · sanal $8-12-16"))
+
+# 15M A2 Top3 — Squeeze / Supertrend / SuperTrend v2 (1h A2'dan bağımsız)
+_M15_A2_SPECS = [
+    ("15m_309", "15M 309 Squeeze Mom", "309", "A2#09 Squeeze · 15m sanal $6-8-10"),
+    ("15m_316", "15M 316 Supertrend", "316", "A2#16 Supertrend · 15m sanal $6-8-10"),
+    ("15m_317", "15M 317 SuperTrend v2", "317", "A2#17 SuperTrend v2 · 15m sanal $6-8-10"),
+]
+for _mk, _mlbl, _mshort, _mdesc in _M15_A2_SPECS:
+    _HEATMAP_SYMS[_mk] = ["BTC", "ETH", "SOL"]
+    _ANALYSIS_LABELS[_mk] = _mlbl
+    _OVERVIEW_INIT_BAL[_mk] = 300
+    _OVERVIEW_SHORT_LABELS[_mk] = _mshort
+    _HEATMAP_ORDER.append(_mk)
+    _OVERVIEW_ACTIVE_ORDER.append(_mk)
+    _HISTORY_ORDER.append(_mk)
+    _ANALYSIS_ORDER.append(_mk)
+    _ANALIZLER_SYSTEMS.append((_mk, _mlbl, 300, _mdesc))
 
 
 def _discover_trader_keys() -> set[str]:
@@ -171,6 +228,38 @@ def _trader_state_path(key: str) -> str:
     if key in _CUSTOM_TRADER_FILES:
         return _CUSTOM_TRADER_FILES[key][1]
     return os.path.join(_DIR_POLY, f"poly_trader_{key}_state.json")
+
+
+def _load_trader_open_positions(key: str) -> list[dict]:
+    """State'teki açık pozisyonları harita/geçmiş için normalize eder."""
+    spath = _trader_state_path(key)
+    if not os.path.exists(spath):
+        return []
+    try:
+        with open(spath, encoding="utf-8") as f:
+            state = json.load(f)
+    except Exception:
+        return []
+    allowed = set(_allowed_syms_for(key))
+    out: list[dict] = []
+    for p in state.get("open_positions") or []:
+        sym = (p.get("symbol") or "").replace("USDT", "")
+        if sym and sym not in allowed:
+            continue
+        out.append({
+            "symbol": p.get("symbol"),
+            "predicted_dir": p.get("predicted_dir"),
+            "entry_hour_tr": p.get("entry_hour_tr"),
+            "entry_dow": p.get("entry_dow"),
+            "entry_price": p.get("entry_price"),
+            "entry_time_tr": p.get("entry_time_tr"),
+            "pm_spent": p.get("pm_spent") or p.get("amount"),
+            "amount": p.get("amount"),
+            "win": None,
+            "pnl": 0,
+            "open": True,
+        })
+    return out
 
 
 def _enrich_entry_time_fields(t: dict) -> dict:
@@ -225,19 +314,20 @@ def _auto_label(key: str) -> str:
     return key.replace("_", " ").title()
 
 
-def _build_system_list(order: list[str]) -> list[tuple[str, str]]:
+def _build_system_list(order: list[str], *, include_live: bool = False) -> list[tuple[str, str]]:
     on_disk = _discover_trader_keys()
     seen: set[str] = set()
     out: list[tuple[str, str]] = []
+    live_skip = frozenset() if include_live else _LIVE_PM_ANALYSES
     for key in order:
-        if key in _REMOVED_ANALYSES:
+        if key in _REMOVED_ANALYSES or key in live_skip:
             continue
         if not _trader_exists(key, on_disk) and key not in _ANALYSIS_LABELS:
             continue
         out.append((key, _ANALYSIS_LABELS.get(key, _auto_label(key))))
         seen.add(key)
     for key in sorted(on_disk - seen):
-        if key in _REMOVED_ANALYSES:
+        if key in _REMOVED_ANALYSES or key in live_skip:
             continue
         out.append((key, _ANALYSIS_LABELS.get(key, _auto_label(key))))
     return out
@@ -250,7 +340,7 @@ def _build_harita_tabs() -> list[tuple[str, str]]:
     out: list[tuple[str, str]] = []
     seen: set[str] = set()
     for key in _HEATMAP_ORDER:
-        if key in _REMOVED_ANALYSES:
+        if key in _REMOVED_ANALYSES or key in _LIVE_PM_ANALYSES:
             continue
         if not _trader_exists(key, on_disk) and key not in _ANALYSIS_LABELS:
             continue
@@ -295,7 +385,7 @@ def _load_heatmap_history(key: str) -> list:
 _ANALYSIS_SYSTEMS = _build_system_list(_ANALYSIS_ORDER)
 _HARITA_TAB_ANALYSES = _build_harita_tabs()
 _HEATMAP_ANALYSES = dict(_HARITA_TAB_ANALYSES)
-_HISTORY_SYSTEMS = _build_system_list(_HISTORY_ORDER)
+_HISTORY_SYSTEMS = _build_system_list(_HISTORY_ORDER_GECMIS, include_live=True)
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _BINANCE  = "https://fapi.binance.com"
 _PM_GAMMA = "https://gamma-api.polymarket.com"
@@ -432,9 +522,7 @@ def get_pm_balance() -> float:
 # Palet: referans donut (mavi / cyan / lavanta / magenta)
 _PM_LIVE_PROFIT_SOURCES = [
     ("analiz5", "A1 Live", "#4F7CFF"),
-    ("5m_sol_210", "210", "#5BC0EB"),
     ("analiz2_live", "A2", "#A78BFA"),
-    ("analiz8_live", "A8", "#E879F9"),
     ("manual", "Manuel", "#818CF8"),
 ]
 
@@ -526,6 +614,105 @@ def get_pm_profit_breakdown() -> dict:
         "open_value": open_val,
         "equity": equity,
         "source": source,
+    }
+
+
+_LIVE_OVERVIEW_SYSTEMS = [
+    ("analiz5", "A1 Live", "analiz5_paused"),
+    ("analiz2_live", "A2 Live", "analiz2_paused"),
+    ("analiz10_live", "A10 Live", "analiz10_paused"),
+    ("analiz6_live", "A6 Live", "analiz6_live_paused"),
+    ("15m_309_live", "15M 309 Live", "15m_309_live_paused"),
+]
+
+
+def _live_system_closed_stats(key: str, label: str) -> dict:
+    """Tek gerçek PM trader — kapanmış işlem WR."""
+    wins = losses = 0
+    pnl = 0.0
+    for t in _load_trader_history(key):
+        row = _format_local_pm_trade(t, label)
+        if not row:
+            continue
+        if row.get("win"):
+            wins += 1
+        else:
+            losses += 1
+        pnl += float(row.get("pnl") or 0)
+    total = wins + losses
+    return {
+        "closed_trades": total,
+        "wins": wins,
+        "losses": losses,
+        "wr": round(wins / total * 100, 1) if total else None,
+        "pnl": round(pnl, 2),
+    }
+
+
+def _live_system_open_stats(key: str) -> tuple[int, int]:
+    """(açık pozisyon, şu an kazanan yönde)."""
+    open_n = winning = 0
+    for pos in load_state(key).get("open_positions", []):
+        if not _position_visible(key, pos):
+            continue
+        open_n += 1
+        sym = pos.get("symbol")
+        entry = float(pos.get("entry_price") or 0)
+        pred = pos.get("predicted_dir") or pos.get("pm_token_dir") or ""
+        if not sym or not entry or pred not in ("UP", "DOWN"):
+            continue
+        try:
+            cur = get_price(sym)
+            if cur is None:
+                continue
+            actual = "UP" if float(cur) >= entry else "DOWN"
+            if actual == pred:
+                winning += 1
+        except Exception:
+            pass
+    return open_n, winning
+
+
+def _real_pm_overview_stats() -> dict:
+    """Overview üst kartlar — gerçek PM (cüzdan kar + kapanmış live işlem WR)."""
+    by_slug = _local_pm_closed_by_slug()
+    trades = list(by_slug.values())
+    total = len(trades)
+    wins = sum(1 for t in trades if t.get("win"))
+    losses = total - wins
+    wr = round(wins / total * 100, 1) if total else 0.0
+    profit = get_pm_profit_breakdown()
+
+    sys.path.insert(0, _DIR_POLY)
+    try:
+        from pm_balance_guard import get_pm_system_control
+        ctrl = get_pm_system_control()
+    except Exception:
+        ctrl = {}
+
+    systems = []
+    for key, label, pause_key in _LIVE_OVERVIEW_SYSTEMS:
+        closed = _live_system_closed_stats(key, label)
+        open_n, open_win = _live_system_open_stats(key)
+        systems.append({
+            "key": key,
+            "label": label,
+            "paused": bool(ctrl.get(pause_key)),
+            "open": open_n,
+            "open_winning": open_win,
+            **closed,
+        })
+
+    return {
+        "total_pnl": profit["total"],
+        "baseline": profit["baseline"],
+        "cash": profit["cash"],
+        "source": profit["source"],
+        "closed_trades": total,
+        "wins": wins,
+        "losses": losses,
+        "wr": wr,
+        "systems": systems,
     }
 
 
@@ -669,13 +856,14 @@ def get_pm_15m_quotes(only_names: set[str] | None = None) -> list[dict]:
 _PM_POSITION_SOURCES = [
     ("analiz5", "A1 Live"),
     ("analiz2_live", "A2 Live"),
-    ("analiz8_live", "A8 Live"),
+    ("analiz10_live", "A10 Live"),
+    ("analiz6_live", "A6 Live"),
+    ("15m_309_live", "15M 309 Live"),
     ("manual", "Manuel"),
     ("5m_sol_110", "15M 110 SOL"),
-    ("5m_sol_210", "15M 210 SOL"),
 ]
-_HOURLY_PM_ANALYSES = frozenset({"analiz5", "analiz2_live", "analiz8_live", "manual"})
-_15M_PM_ANALYSES = frozenset({"5m_sol_110", "5m_sol_210"})
+_HOURLY_PM_ANALYSES = frozenset({"analiz5", "analiz2_live", "analiz10_live", "analiz6_live", "manual"})
+_15M_PM_ANALYSES = frozenset({"5m_sol_110", "15m_309_live"})
 
 
 def _manual_timeframe(pos: dict) -> str:
@@ -761,6 +949,15 @@ def _is_15m_analiz_pos(analiz_key: str, pos: dict) -> bool:
     if analiz_key in _15M_PM_ANALYSES:
         return True
     return analiz_key == "manual" and _manual_timeframe(pos) == "15m"
+
+
+def _position_chart_tf(analiz_key: str, pos: dict) -> str:
+    """Grafik sayfası market sekmesi — 5m / 15m / 1h."""
+    if _is_15m_analiz_pos(analiz_key, pos):
+        return "15m"
+    if analiz_key == "manual" and _manual_timeframe(pos) == "5m":
+        return "5m"
+    return "1h"
 
 
 def _position_slot_range(pos: dict, analiz_key: str) -> str | None:
@@ -1079,6 +1276,7 @@ def api_data():
             "entry_time":   pos.get("entry_time_tr", ""),
             "slot_range":   _position_slot_range(pos, pos["_analiz"]),
             "is_15m":       _is_15m_analiz_pos(pos["_analiz"], pos),
+            "chart_tf":     _position_chart_tf(pos["_analiz"], pos),
             "pm_slug":      pos.get("pm_slug", ""),
             "pm_order_id":  pos.get("pm_order_id", ""),
             "pos_id":       _manual_pos_id(pos) if pos["_analiz"] == "manual" else "",
@@ -1163,9 +1361,73 @@ def _filter_hist_for(key: str, hist: list) -> list:
     return [t for t in hist if t.get("symbol", "").replace("USDT", "") in allowed]
 
 
-def _harita_tabs_html() -> str:
+def _system_trade_count(key: str, *, heatmap: bool = False) -> int:
+    if heatmap:
+        return len(_load_heatmap_history(key))
+    return len(_load_trader_history(key))
+
+
+def _default_heatmap_analiz() -> str:
+    tabs = _harita_tabs_filtered()
+    return tabs[0][0] if tabs else "analiz1"
+
+
+def _resolve_heatmap_analiz(analiz_key: str) -> str:
+    if analiz_key in _HEATMAP_ANALYSES:
+        return analiz_key
+    return _default_heatmap_analiz()
+
+
+def _filter_systems_min_trades(
+    systems: list[tuple[str, str]],
+    *,
+    heatmap: bool = False,
+) -> list[tuple[str, str]]:
+    out: list[tuple[str, str]] = []
+    for key, label in systems:
+        if key in _REMOVED_ANALYSES or key in _LIVE_PM_ANALYSES:
+            continue
+        if _system_trade_count(key, heatmap=heatmap) >= _ALGO_STATS_MIN_TRADES:
+            out.append((key, label))
+    return out
+
+
+def _harita_tabs_filtered() -> list[tuple[str, str]]:
+    return _filter_systems_min_trades(_HARITA_TAB_ANALYSES, heatmap=True)
+
+
+_HEATMAP_110_STRONG_MIN = 3
+_HEATMAP_110_SLOT_TOP_N = 5
+
+
+def _heatmap_slot_insights(cells: list, *, min_trades: int = _HEATMAP_110_STRONG_MIN, n: int = _HEATMAP_110_SLOT_TOP_N) -> dict:
+    """≥min_trades hücrelerden en iyi/kötü n slot (110 harita sekmesi)."""
+    strong = [c for c in cells if c.get("t", 0) >= min_trades]
+    if not strong:
+        return {"min_trades": min_trades, "strong_count": 0, "best": [], "worst": []}
+
+    def _sort_key(c):
+        return (c.get("wr", 0), c.get("t", 0))
+
+    best = sorted(strong, key=_sort_key, reverse=True)[:n]
+    worst = sorted(strong, key=_sort_key)[:n]
+    fmt = lambda c: {
+        "dow": c["dow"], "day": c["day"], "hour": c["hour"],
+        "wr": c["wr"], "w": c["w"], "t": c["t"],
+        "label": f'{c["day"]} {c["hour"]:02d}:00',
+    }
+    return {
+        "min_trades": min_trades,
+        "strong_count": len(strong),
+        "best": [fmt(c) for c in best],
+        "worst": [fmt(c) for c in worst],
+    }
+
+
+def _harita_tabs_html(tabs: list[tuple[str, str]] | None = None) -> str:
+    tabs = tabs if tabs is not None else _harita_tabs_filtered()
     parts = []
-    for i, (key, label) in enumerate(_HARITA_TAB_ANALYSES):
+    for i, (key, label) in enumerate(tabs):
         active = " active" if i == 0 else ""
         parts.append(
             f'<button class="hm-analiz-tab{active}" '
@@ -1243,17 +1505,18 @@ def api_heatmap():
     if _auth_required(): return redirect("/poly/login")
     from collections import defaultdict
     sym_filter  = request.args.get("sym", "ALL").upper()
-    analiz_key  = request.args.get("analiz", "analiz5")
-    if analiz_key not in _HEATMAP_ANALYSES:
-        analiz_key = "analiz5"
+    analiz_key  = request.args.get("analiz", _default_heatmap_analiz())
+    analiz_key = _resolve_heatmap_analiz(analiz_key)
     allowed_syms = _HEATMAP_SYMS.get(analiz_key, _ACTIVE_SYMS)
     if sym_filter != "ALL" and sym_filter not in allowed_syms:
         sym_filter = "ALL"
     hist = _load_heatmap_history(analiz_key)
-    if not hist:
-        return jsonify({"cells": []})
+    open_pos = _load_trader_open_positions(analiz_key)
+    if not hist and not open_pos:
+        return jsonify({"cells": [], "summary": {"total": 0, "wins": 0, "losses": 0, "wr": 0, "pnl": 0, "spent": 0, "open": 0},
+                        "sym_breakdown": [], "allowed_syms": allowed_syms})
     days_tr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
-    grid = defaultdict(lambda: {"w": 0, "t": 0})
+    grid = defaultdict(lambda: {"w": 0, "t": 0, "o": 0})
     for t in hist:
         if sym_filter != "ALL" and t.get("symbol", "").replace("USDT", "") != sym_filter:
             continue
@@ -1264,10 +1527,19 @@ def api_heatmap():
         grid[(dow, hour)]["t"] += 1
         if t.get("win"):
             grid[(dow, hour)]["w"] += 1
+    for p in open_pos:
+        if sym_filter != "ALL" and p.get("symbol", "").replace("USDT", "") != sym_filter:
+            continue
+        dow = p.get("entry_dow")
+        hour = p.get("entry_hour_tr")
+        if dow is None or hour is None:
+            continue
+        grid[(dow, hour)]["o"] += 1
     cells = []
     for (dow, hour), v in grid.items():
         wr = round(v["w"] / v["t"] * 100, 1) if v["t"] else 0
-        cells.append({"dow": dow, "day": days_tr[dow], "hour": hour, "w": v["w"], "t": v["t"], "wr": wr})
+        cells.append({"dow": dow, "day": days_tr[dow], "hour": hour, "w": v["w"], "t": v["t"],
+                      "open": v["o"], "wr": wr})
 
     # Özet istatistikler
     total   = len(hist_f := [t for t in hist if sym_filter == "ALL" or t.get("symbol","").replace("USDT","") == sym_filter])
@@ -1275,6 +1547,7 @@ def api_heatmap():
     pnl     = round(sum(t.get("pnl", 0) for t in hist_f), 2)
     spent   = round(sum(t.get("pm_spent") or t.get("amount", 0) for t in hist_f), 2)
     wr_all  = round(wins / total * 100, 1) if total else 0
+    open_n  = len([p for p in open_pos if sym_filter == "ALL" or p.get("symbol", "").replace("USDT", "") == sym_filter])
 
     # Sembol kırılımı (ALL modunda)
     sym_breakdown = []
@@ -1287,13 +1560,17 @@ def api_heatmap():
             swr  = round(sw/len(sub)*100,1) if sub else 0
             sym_breakdown.append({"sym":s,"t":len(sub),"w":sw,"wr":swr,"pnl":spnl,"spent":ssp})
 
-    return jsonify({
+    payload = {
         "cells": cells,
         "summary": {"total": total, "wins": wins, "losses": total-wins,
-                    "wr": wr_all, "pnl": pnl, "spent": spent},
+                    "wr": wr_all, "pnl": pnl, "spent": spent, "open": open_n},
         "sym_breakdown": sym_breakdown,
         "allowed_syms": allowed_syms,
-    })
+    }
+    if analiz_key == "5m_sol_110":
+        payload["slot_insights"] = _heatmap_slot_insights(cells)
+        payload["strong_min_trades"] = _HEATMAP_110_STRONG_MIN
+    return jsonify(payload)
 
 @app.route("/poly/api/heatmap/detail")
 def api_heatmap_detail():
@@ -1307,14 +1584,14 @@ def api_heatmap_detail():
     except ValueError:
         return jsonify({"error": "bad params"}), 400
 
-    analiz_key = request.args.get("analiz", "analiz5")
-    if analiz_key not in _HEATMAP_ANALYSES:
-        analiz_key = "analiz5"
+    analiz_key = request.args.get("analiz", _default_heatmap_analiz())
+    analiz_key = _resolve_heatmap_analiz(analiz_key)
     allowed_syms = _HEATMAP_SYMS.get(analiz_key, _ACTIVE_SYMS)
     if sym != "ALL" and sym not in allowed_syms:
         sym = "ALL"
     hist = _load_heatmap_history(analiz_key)
-    if not hist:
+    open_pos = _load_trader_open_positions(analiz_key)
+    if not hist and not open_pos:
         return jsonify({"trades": []})
 
     trades = []
@@ -1335,6 +1612,24 @@ def api_heatmap_detail():
             "entry": t.get("entry_price", 0),
             "exit":  t.get("exit_price", 0),
             "time":  (t.get("entry_time_tr") or "")[:16].replace("T", " "),
+        })
+    for p in open_pos:
+        if p.get("entry_hour_tr") != hour:
+            continue
+        if dow is not None and p.get("entry_dow") != dow:
+            continue
+        s = p.get("symbol", "").replace("USDT", "")
+        if sym != "ALL" and s != sym:
+            continue
+        trades.append({
+            "sym":   s,
+            "dir":   p.get("predicted_dir", ""),
+            "win":   None,
+            "spent": round(p.get("pm_spent") or p.get("amount", 0), 2),
+            "pnl":   0,
+            "entry": p.get("entry_price", 0),
+            "exit":  None,
+            "time":  (p.get("entry_time_tr") or "")[:16].replace("T", " "),
         })
 
     total  = len(trades)
@@ -1360,7 +1655,7 @@ def api_symbol_stats():
     hist = _load_heatmap_history(analiz_key)
     if not hist:
         return jsonify({"analiz": analiz_key, "analiz_label": _ANALYSIS_LABELS.get(analiz_key, analiz_key),
-                        "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": [], "top_slots": []})
+                        "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": [], "top_slots": [], "bottom_slots": []})
 
     # Sembol bazlı WR
     sym_stat = defaultdict(lambda: {"w": 0, "t": 0})
@@ -1398,25 +1693,38 @@ def api_symbol_stats():
         if t.get("win"):
             hour_day[hour][dow]["w"] += 1
 
-    top_slots = []
+    all_slots = []
     for h, day_data in hour_day.items():
         good_days = [(d, v) for d, v in day_data.items() if v["t"] >= 1 and v["w"] / v["t"] > 0.5]
+        bad_days = [(d, v) for d, v in day_data.items() if v["t"] >= 1 and v["w"] / v["t"] <= 0.5]
         all_w = sum(v["w"] for v in day_data.values())
         all_t = sum(v["t"] for v in day_data.values())
-        if not good_days or all_t < 3:
+        if all_t < 3:
             continue
         wr = round(all_w / all_t * 100, 1)
-        day_names = [days_tr[d] for d, _ in sorted(good_days)]
-        top_slots.append({
+        all_slots.append({
             "hour":      f"{h:02d}:00",
             "hour_int":  h,
             "good_days": len(good_days),
-            "day_names": day_names,
+            "bad_days":  len(bad_days),
+            "good_day_names": [days_tr[d] for d, _ in sorted(good_days)],
+            "bad_day_names":  [days_tr[d] for d, _ in sorted(bad_days)],
             "wr":        wr,
             "w":         all_w,
             "t":         all_t,
         })
-    top_slots.sort(key=lambda x: (x["good_days"], x["wr"]), reverse=True)
+
+    top_slots = []
+    for s in sorted(
+        [x for x in all_slots if x["good_days"]],
+        key=lambda x: (x["good_days"], x["wr"]),
+        reverse=True,
+    )[:3]:
+        top_slots.append({**s, "day_names": s["good_day_names"]})
+
+    bottom_slots = []
+    for s in sorted(all_slots, key=lambda x: (x["wr"], -x["good_days"]))[:3]:
+        bottom_slots.append({**s, "day_names": s["bad_day_names"]})
     label = _ANALYSIS_LABELS.get(analiz_key, analiz_key)
     return jsonify({
         "analiz": analiz_key,
@@ -1425,49 +1733,40 @@ def api_symbol_stats():
         "total_wins": total_wins,
         "total_wr": total_wr,
         "sym_wr": sym_wr,
-        "top_slots": top_slots[:3],
+        "top_slots": top_slots,
+        "bottom_slots": bottom_slots,
     })
 
 @app.route("/poly/api/analizler")
 def api_analizler():
     if _auth_required(): return jsonify({"error": "unauthorized"}), 401
-    _SYSTEMS = [
-        ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
-        ("analiz2",    "2. Analiz (SOL)",       300,  "A1 motoru SOL only $10-15-20"),
-        ("analiz3",    "3. Analiz Freqtrade",   300,  "SampleStrategy TA sanal PM BTC+SOL+ETH"),
-        ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
-        ("analiz6",    "6. Analiz",             300,  "MACD Div #26 (BTC/SOL) · RSI Div #38 (ETH)"),
-        ("analiz15",   "15. Analiz",            300,  "BTC→A6 · ETH→A8 sıkı · SOL→A2"),
-        ("analiz5",    "A1 Live",             None, "A1 Motoru Gerçek PM $8–12–16 WR"),
-        ("analiz8",    "8. Analiz Jesse",       300,  "GoldenCross EMA8/21 sanal PM BTC+SOL+ETH"),
-        ("analiz8_live", "A8 Live",           None, "Jesse A8 gerçek PM $4–5–6 WR BTC+SOL+ETH"),
-        ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
-        ("5m_sol_109",  "15M 109 SOL",           300,  "110 clone 7/24 sanal $8-10-12"),
-        ("5m_sol_110",  "15M 110 SOL",           300,  "5M110Analiz 15m SOL sanal $8-10-12"),
-        ("5m_sol_210",  "15M 210 SOL",           300,  "110 snapshot gerçek PM $4-5-6"),
-    ]
     results = []
-    for key, label, init_bal, desc in _SYSTEMS:
+    for key, label, init_bal, desc in _ANALIZLER_SYSTEMS:
+        if key in _REMOVED_ANALYSES or key in _LIVE_PM_ANALYSES:
+            continue
         hpath = _trader_history_path(key)
         spath = _trader_state_path(key)
-        if not os.path.exists(hpath):
+        if not os.path.exists(hpath) and not os.path.exists(spath):
             continue
         try:
-            hist  = _load_trader_history(key)
-            state = json.load(open(spath)) if os.path.exists(spath) else {}
+            hist  = _load_trader_history(key) if os.path.exists(hpath) else []
+            state = json.load(open(spath, encoding="utf-8")) if os.path.exists(spath) else {}
         except Exception:
             continue
         total = len(hist)
+        if total < _ALGO_STATS_MIN_TRADES:
+            continue
         wins  = sum(1 for t in hist if t.get("win"))
         wr    = round(wins / total * 100, 1) if total else 0
-        bal   = state.get("balance", 0)
-        # P&L = bakiye - başlangıç (reset sonrası kayıtları da doğru yansıtır)
+        bal   = state.get("balance", init_bal or 0)
         pnl   = round(bal - init_bal, 2) if init_bal else round(sum(t.get("pnl", 0) for t in hist), 2)
         allowed = _allowed_syms_for(key)
         open_cnt = len([
             p for p in state.get("open_positions", [])
             if p.get("symbol", "").replace("USDT", "") in allowed
         ])
+        if total == 0 and open_cnt == 0 and not os.path.exists(spath):
+            continue
         # Sembol bazlı
         sym_stats = {}
         for t in hist:
@@ -1492,7 +1791,7 @@ def api_analizler():
             "total": total, "wins": wins, "wr": wr, "pnl": pnl,
             "open": open_cnt, "sym_stats": sym_list,
         })
-    results.sort(key=lambda x: (x["wr"], x["total"]), reverse=True)
+    results.sort(key=lambda x: (x["wr"], x["total"], x["open"]), reverse=True)
     return jsonify(results)
 
 
@@ -1587,7 +1886,7 @@ def api_active_algos():
     recent_n = 14
     results = []
     for key in _OVERVIEW_ACTIVE_ORDER:
-        if key in _REMOVED_ANALYSES:
+        if key in _REMOVED_ANALYSES or key in _LIVE_PM_ANALYSES:
             continue
         hpath = _trader_history_path(key)
         if not os.path.exists(hpath):
@@ -1600,6 +1899,8 @@ def api_active_algos():
             continue
         init_bal = _OVERVIEW_INIT_BAL.get(key, 300)
         total = len(hist)
+        if total < _ALGO_STATS_MIN_TRADES:
+            continue
         wins = sum(1 for t in hist if t.get("win"))
         wr = round(wins / total * 100, 1) if total else 0
         bal = round(float(state.get("balance") or 0), 2)
@@ -1641,7 +1942,8 @@ def api_active_algos():
             "paused": paused,
             "real_pm": real_pm,
         })
-    return jsonify(results)
+    results.sort(key=lambda x: float(x.get("chart_balance") or x.get("balance") or 0), reverse=True)
+    return jsonify(results[:_ACTIVE_ALGOS_TOP_N])
 
 
 @app.route("/analizler")
@@ -1748,7 +2050,7 @@ window._renderPmProfitTo = function(d, ids) {
       const vs = (v >= 0 ? '+' : '-') + '$' + Math.abs(v).toFixed(0);
       const vc = v >= 0 ? '#4ade80' : '#f87171';
       const initials = (item.label || '?').replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase() || '?';
-      const meta = (item.key === 'manual') ? 'Manuel PM' : (item.key === '5m_sol_210' ? '15M gerçek' : 'Saatlik gerçek');
+      const meta = (item.key === 'manual') ? 'Manuel PM' : 'Saatlik gerçek';
       return '<div class="sp-row">'
         + '<div class="sp-avatar" style="background:'+item.color+'">'+initials+'</div>'
         + '<div class="sp-row-main"><div class="sp-row-name">'+item.label+'</div><div class="sp-row-meta">'+meta+'</div></div>'
@@ -1811,7 +2113,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260728-a8-btc-456"
+_DASH_UI_VER = "20260801-15m-309-live"
 
 
 def _patch_cache_bust(html: str) -> str:
@@ -1848,6 +2150,22 @@ def _patch_nav_islemler(html: str) -> str:
     ):
         if needle in html:
             return html.replace(needle, link_block + needle, 1)
+    return html
+
+
+def _patch_nav_kripto_future(html: str) -> str:
+    """Overview altına Kripto Future menü linki ekle."""
+    if 'href="/poly/kripto-future"' in html or 'href="/kripto-future"' in html:
+        return html
+    link = '<a class="nav-item" href="/poly/kripto-future"><span class="nav-dot"></span>Kripto Future</a>\n  '
+    needles = [
+        '<a class="nav-item active" id="nav-overview" onclick="showView(\'overview\')" href="#"><span class="nav-dot"></span>Overview</a>\n',
+        '<a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>\n',
+        '<a class="nav-item active" href="/poly"><span class="nav-dot"></span>Overview</a>\n',
+    ]
+    for needle in needles:
+        if needle in html:
+            return html.replace(needle, needle + '  ' + link, 1)
     return html
 
 
@@ -1896,7 +2214,7 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .sig-pill.a1{background:#2a1a3a;color:#c084fc;border:1px solid #6b21a8}
 .sig-pill.a3{background:#0f2a24;color:#2dd4bf;border:1px solid #0d9488}
 .sig-pill.a8{background:#0c2340;color:#38bdf8;border:1px solid #0369a1}
-.sig-pill.alfa{background:#2a1f0a;color:#fbbf24;border:1px solid #f59e0b}
+.sig-pill.a1{background:#1a1028;color:#c084fc;border:1px solid #a855f7}
 .sig-pill.a112{background:#0c2340;color:#38bdf8;border:1px solid #0369a1}
 .sig-pill.a113{background:#0f2a24;color:#2dd4bf;border:1px solid #0d9488}
 .sig-pill.m110{background:#1a2410;color:#c8f135;border:1px solid #4d7c0f}
@@ -1912,6 +2230,9 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .dir-verdict .dir-pill.DOWN{background:#2a1414;color:#f87171;border-color:#ef4444}
 .dir-verdict .dir-pill.split,.dir-verdict .dir-pill.neutral{background:#1a1a1a;color:#888;border-color:#333}
 .dir-verdict .dir-hint{font-size:9px;color:#555;font-weight:600}
+.dir-wr,.sig-wr{font-size:9px;font-weight:800;margin-left:5px;opacity:.95}
+.dir-wr.good,.sig-wr.good{color:#4ade80}
+.dir-wr.bad,.sig-wr.bad{color:#f87171}
 #trade-chart{height:min(68vh,640px);min-height:420px;width:100%;flex:none}
 .chart-empty{color:#555;font-size:13px;padding:40px 12px;text-align:center}
 .page-title{font-size:22px;font-weight:800;margin-bottom:6px}
@@ -2588,7 +2909,7 @@ function clipOverlayToCandles(ov, candles) {
 
 function motorSlotDir(ov, ws) {
   if (!ov || !ov.ok) return null;
-  const cur = ov.current;
+  const cur = ov.slot_open || ov.current;
   if (cur && (cur.direction === 'UP' || cur.direction === 'DOWN')) {
     return cur.direction;
   }
@@ -2619,13 +2940,49 @@ function multiConfirmTip(cur) {
     + ' Sev:' + (cur.level_ok ? 'OK' : '-') + ' Mom:' + (cur.momentum_ok ? 'OK' : '-');
 }
 
-function multiConfirmPillHtml(mc) {
-  if (!mc || !mc.ok || !mc.current) return '<span class="sig-pill mc">MC —</span>';
-  const cur = mc.current;
-  const dir = cur.direction;
+function fmtWr(acc, key) {
+  if (!acc) return '';
+  const e = acc[key];
+  if (!e || e.wr == null) return '';
+  const cls = e.wr >= 50 ? 'good' : 'bad';
+  return '<span class="dir-wr ' + cls + '" title="' + (e.total || 0) + ' saatlik ölçüm">WR ' + e.wr + '%</span>';
+}
+function fmtWrPart(acc, tag) {
+  if (!acc || !acc.tahmin2_parts) return '';
+  const e = acc.tahmin2_parts[tag];
+  if (!e || e.wr == null) return '';
+  const cls = e.wr >= 50 ? 'good' : 'bad';
+  return ' WR' + e.wr + '%';
+}
+
+function mcInferredDir(cur) {
+  if (!cur) return null;
+  if (cur.direction === 'UP' || cur.direction === 'DOWN') return cur.direction;
+  const lbl = (cur.label || '').toLowerCase();
+  if (lbl.startsWith('long') || lbl.startsWith('bull')) return 'UP';
+  if (lbl.startsWith('short') || lbl.startsWith('bear')) return 'DOWN';
+  const b = Number(cur.bull_score || 0), e = Number(cur.bear_score || 0);
+  if (b > e) return 'UP';
+  if (e > b) return 'DOWN';
+  return null;
+}
+function mcDisplayLabel(cur) {
+  if (!cur) return '—';
+  const dir = mcInferredDir(cur);
+  const base = cur.label || '—';
+  if (dir === 'UP') return '↑ YUKARI · ' + base;
+  if (dir === 'DOWN') return '↓ AŞAĞI · ' + base;
+  return base;
+}
+
+function multiConfirmPillHtml(mc, acc) {
+  if (!mc || !mc.ok) return '<span class="sig-pill mc">MC —</span>';
+  const cur = _sigCur(mc);
+  if (!cur) return '<span class="sig-pill mc">MC —</span>';
+  const dir = mcInferredDir(cur);
   const cls = dir === 'UP' ? 'mc up' : (dir === 'DOWN' ? 'mc down' : 'mc');
   const tip = multiConfirmTip(cur).replace(/"/g, '&quot;');
-  return '<span class="sig-pill ' + cls + '" title="' + tip + '">MC · ' + (cur.label || '—') + '</span>';
+  return '<span class="sig-pill ' + cls + '" title="' + tip + '">MC · ' + mcDisplayLabel(cur) + fmtWr(acc, 'mc') + '</span>';
 }
 
 function multiConfirmMarker(s) {
@@ -2648,16 +3005,17 @@ function applyMultiConfirmEma(mc) {
   if (_mcEmaSeries) _mcEmaSeries.setData([]);
 }
 
-function yonTahminPillHtml(yt) {
-  if (!yt || !yt.ok || !yt.current) return '<span class="sig-pill yt">YT —</span>';
-  const cur = yt.current;
+function yonTahminPillHtml(yt, acc) {
+  if (!yt || !yt.ok) return '<span class="sig-pill yt">YT —</span>';
+  const cur = _sigCur(yt);
+  if (!cur) return '<span class="sig-pill yt">YT —</span>';
   const dir = cur.direction;
   const cls = dir === 'UP' ? 'yt up' : (dir === 'DOWN' ? 'yt down' : 'yt');
   const st = yt.stats;
   const tip = st
-    ? ('Başarı ' + (st.overall_pct || 0) + '% (' + (st.correct || 0) + '/' + (st.total || 0) + ' · N=' + (st.eval_bars || 5) + ')')
+    ? ('Grafik backtest ' + (st.overall_pct || 0) + '% (' + (st.correct || 0) + '/' + (st.total || 0) + ')')
     : '';
-  return '<span class="sig-pill ' + cls + '" title="' + tip.replace(/"/g, '&quot;') + '">YT · ' + (cur.label || '—') + '</span>';
+  return '<span class="sig-pill ' + cls + '" title="' + tip.replace(/"/g, '&quot;') + '">YT · ' + (cur.label || '—') + fmtWr(acc, 'yt') + '</span>';
 }
 
 function addYonTahminMarkers(markers, yt) {
@@ -2687,15 +3045,71 @@ function applyYonTahminEma(yt) {
   if (_ytEmaMidSeries) _ytEmaMidSeries.setData([]);
 }
 
+function _slotFreezeKey(sym, tf, d) {
+  const period = d.ts_period != null ? d.ts_period : (d.window_start || 0);
+  return String(sym || d.symbol || '') + '|' + String(tf || d.timeframe || _tf) + '|' + String(period);
+}
+function _bundleForFreeze(bundle) {
+  if (!bundle || !bundle.ok) return bundle;
+  const cur = bundle.slot_open || bundle.current;
+  if (!cur) return bundle;
+  const out = JSON.parse(JSON.stringify(bundle));
+  out.current = JSON.parse(JSON.stringify(cur));
+  return out;
+}
+function _t2ForFreeze(t2) {
+  if (!t2 || !t2.ok) return t2;
+  const out = JSON.parse(JSON.stringify(t2));
+  if (t2.slot_open_votes) out.votes = JSON.parse(JSON.stringify(t2.slot_open_votes));
+  if (t2.slot_open) out.current = JSON.parse(JSON.stringify(t2.slot_open));
+  return out;
+}
+function _ovForFreeze(ov) {
+  if (!ov || !ov.ok) return ov;
+  const out = JSON.parse(JSON.stringify(ov));
+  if (ov.slot_open) out.current = JSON.parse(JSON.stringify(ov.slot_open));
+  return out;
+}
+function applySlotFrozenVerdict(d, tf, sym) {
+  sym = sym || d.symbol || (typeof selectedSymbol === 'function' ? selectedSymbol() : '');
+  const key = _slotFreezeKey(sym, tf, d);
+  const ssKey = 'poly_slot_verdict_' + key;
+  try {
+    const saved = sessionStorage.getItem(ssKey);
+    if (saved) {
+      const frozen = JSON.parse(saved);
+      return Object.assign({}, d, {
+        multi_confirm: frozen.multi_confirm || d.multi_confirm,
+        yon_tahmin: frozen.yon_tahmin || d.yon_tahmin,
+        tahmin2: frozen.tahmin2 || d.tahmin2,
+        algo_overlay: frozen.algo_overlay != null ? frozen.algo_overlay : d.algo_overlay,
+        hourly_current: frozen.hourly_current || d.hourly_current,
+      });
+    }
+  } catch (e) {}
+  const snap = {
+    multi_confirm: _bundleForFreeze(d.multi_confirm),
+    yon_tahmin: _bundleForFreeze(d.yon_tahmin),
+    tahmin2: _t2ForFreeze(d.tahmin2),
+    algo_overlay: _ovForFreeze(d.algo_overlay),
+    hourly_current: d.hourly_current ? JSON.parse(JSON.stringify(d.hourly_current)) : null,
+  };
+  try { sessionStorage.setItem(ssKey, JSON.stringify(snap)); } catch (e) {}
+  return Object.assign({}, d, snap);
+}
+function _sigCur(bundle) {
+  if (!bundle) return null;
+  return bundle.slot_open || bundle.current || null;
+}
 function _vote110(ov) {
-  const cur = ov && ov.ok ? ov.current : null;
+  const cur = ov && ov.ok ? (ov.slot_open || ov.current) : null;
   if (!cur) return null;
   if (cur.direction === 'UP' || cur.direction === 'DOWN') return cur.direction;
   if (cur.guide_dir === 'UP' || cur.guide_dir === 'DOWN') return cur.guide_dir;
   return null;
 }
 function _voteMc(mc) {
-  const cur = mc && mc.ok ? mc.current : null;
+  const cur = _sigCur(mc && mc.ok ? mc : null);
   if (!cur) return null;
   if (cur.direction === 'UP' || cur.direction === 'DOWN') return cur.direction;
   const b = Number(cur.bull_score || 0), e = Number(cur.bear_score || 0);
@@ -2704,7 +3118,8 @@ function _voteMc(mc) {
   return null;
 }
 function _voteYt(yt) {
-  const d = yt && yt.ok && yt.current ? yt.current.direction : null;
+  const cur = _sigCur(yt && yt.ok ? yt : null);
+  const d = cur ? cur.direction : null;
   return (d === 'UP' || d === 'DOWN') ? d : null;
 }
 function _slotNowDir(d) {
@@ -2717,22 +3132,33 @@ function _slotNowDir(d) {
   if (last < ref) return 'DOWN';
   return null;
 }
+function algoPanelPillHtml(panel, tag, acc, wrKey) {
+  if (!panel || panel.total == null) return '';
+  const tot = panel.total;
+  const dir = panel.direction;
+  const wr = fmtWr(acc, wrKey);
+  const tf = panel.timeframe && panel.timeframe !== '1h' ? (' · ' + panel.timeframe) : '';
+  const tip = panel.period_label ? (' title="' + String(panel.period_label).replace(/"/g, '&quot;') + '"') : '';
+  if (dir === 'UP') {
+    return '<span class="dir-pill UP"' + tip + '>' + tag + tf + ' ↑ YUKARI ' + panel.up + '/' + tot + wr + '</span>';
+  }
+  if (dir === 'DOWN') {
+    return '<span class="dir-pill DOWN"' + tip + '>' + tag + tf + ' ↓ AŞAĞI ' + panel.down + '/' + tot + wr + '</span>';
+  }
+  return '<span class="dir-pill neutral"' + tip + '>' + tag + tf + ' ↔ NÖTR ' + (panel.neutral || 0) + '/' + tot + wr + '</span>';
+}
 function updateDirVerdict(d) {
   const el = document.getElementById('dir-verdict');
   if (!el) return;
   window._lastChartD = d;
+  const acc = d && d.signal_accuracy;
   const now = _slotNowDir(d);
   const votes = [];
   const parts = [];
   const v110 = _vote110(d && d.algo_overlay);
   const vMc = _voteMc(d && d.multi_confirm);
   const vYt = _voteYt(d && d.yon_tahmin);
-  const fc = (d && d.fifteen_current) || {};
-  const v112 = (fc.a112 && (fc.a112.dir === 'UP' || fc.a112.dir === 'DOWN')) ? fc.a112.dir : null;
-  const v113 = (fc.a113 && (fc.a113.dir === 'UP' || fc.a113.dir === 'DOWN')) ? fc.a113.dir : null;
   if (v110) { votes.push(v110); parts.push('110'); }
-  if (v112) { votes.push(v112); parts.push('112'); }
-  if (v113) { votes.push(v113); parts.push('113'); }
   if (vMc) { votes.push(vMc); parts.push('MC'); }
   if (vYt) { votes.push(vYt); parts.push('YT'); }
   const upN = votes.filter(v => v === 'UP').length;
@@ -2755,7 +3181,7 @@ function updateDirVerdict(d) {
 
   // TAHMİN2 — LM + ST + ADX + LZ + CVD (payda her zaman 5)
   const t2 = d && d.tahmin2;
-  const t2votes = (t2 && t2.ok && t2.votes) ? t2.votes : [];
+  const t2votes = (t2 && t2.ok && t2.slot_open_votes) ? t2.slot_open_votes : ((t2 && t2.ok && t2.votes) ? t2.votes : []);
   const t2total = t2votes.length || 5;
   const t2up = t2votes.filter(v => v.dir === 'UP').length;
   const t2dn = t2votes.filter(v => v.dir === 'DOWN').length;
@@ -2771,28 +3197,34 @@ function updateDirVerdict(d) {
       : pred2 === 'split'
         ? ('TAHMİN2 ↔ BERABERE ' + t2up + '-' + t2dn + '/' + t2total)
         : 'TAHMİN2 · bekleniyor';
-  const hint2 = t2votes.length
-    ? t2votes.map(v => v.tag + ':' + (v.dir === 'UP' ? '↑' : v.dir === 'DOWN' ? '↓' : '·')).join(' ')
-    : '';
+  const ap = d && d.algo_panel;
+  const alg1 = ap && ap.v1 ? algoPanelPillHtml(ap.v1, 'ALG1', acc, 'alg1') : '';
+  const alg2 = ap && ap.v2 ? algoPanelPillHtml(ap.v2, 'ALG2', acc, 'alg2') : '';
 
   el.innerHTML =
-    '<span class="dir-pill ' + nowCls + '">' + nowTxt + '</span>' +
-    '<span class="dir-pill ' + predCls + '">' + predTxt + '</span>' +
+    '<span class="dir-pill slot-now ' + nowCls + '">' + nowTxt + '</span>' +
+    '<span class="dir-pill ' + predCls + '">' + predTxt + fmtWr(acc, 'tahmin') + '</span>' +
     (hint ? '<span class="dir-hint">' + hint + '</span>' : '') +
-    '<span class="dir-pill ' + pred2Cls + '">' + pred2Txt + '</span>' +
-    (hint2 ? '<span class="dir-hint">' + hint2 + '</span>' : '');
+    '<span class="dir-pill ' + pred2Cls + '">' + pred2Txt + fmtWr(acc, 'tahmin2') + '</span>' +
+    alg1 + alg2;
 }
 function refreshDirVerdictLive(livePrice) {
   const d = window._lastChartD;
   if (!d || livePrice == null) return;
-  const copy = Object.assign({}, d);
-  if (copy.candles && copy.candles.length) {
-    const candles = copy.candles.slice();
-    const last = Object.assign({}, candles[candles.length - 1], { close: Number(livePrice) });
-    candles[candles.length - 1] = last;
-    copy.candles = candles;
-  }
-  updateDirVerdict(copy);
+  const el = document.getElementById('dir-verdict');
+  if (!el) return;
+  const ref = Number(d.ref_price);
+  if (!(ref > 0)) return;
+  const last = Number(livePrice);
+  let now = null;
+  if (last > ref) now = 'UP';
+  else if (last < ref) now = 'DOWN';
+  const nowCls = now || 'neutral';
+  const nowTxt = now === 'UP' ? 'ŞİMDİ ↑ YUKARI kazanıyor' : now === 'DOWN' ? 'ŞİMDİ ↓ AŞAĞI kazanıyor' : 'ŞİMDİ · Ref eşit';
+  const pill = el.querySelector('.dir-pill.slot-now');
+  if (!pill) return;
+  pill.className = 'dir-pill slot-now ' + nowCls;
+  pill.textContent = nowTxt;
 }
 
 function applyMotorEma(ov) {
@@ -2809,25 +3241,26 @@ function applyMotorEma(ov) {
 function updateChartGuideLegend(d, tf) {
   const el = document.getElementById('chart-signals');
   if (!el) return;
+  const acc = d && d.signal_accuracy;
   let html = '';
   if (tf === '1h') {
     updateHourlyLegend(d.hourly_current);
     html = el.innerHTML;
-    html += multiConfirmPillHtml(d.multi_confirm) + yonTahminPillHtml(d.yon_tahmin);
+    html += multiConfirmPillHtml(d.multi_confirm, acc) + yonTahminPillHtml(d.yon_tahmin, acc);
     el.innerHTML = html;
     return;
   }
   if (tf === '15m') {
     updateFifteenMotorLegend(d);
     html = el.innerHTML;
-    html += multiConfirmPillHtml(d.multi_confirm) + yonTahminPillHtml(d.yon_tahmin);
+    html += multiConfirmPillHtml(d.multi_confirm, acc) + yonTahminPillHtml(d.yon_tahmin, acc);
     el.innerHTML = html;
     return;
   }
   const ov = d.algo_overlay;
-  const cur = ov && ov.ok ? ov.current : null;
+  const cur = ov && ov.ok ? (ov.slot_open || ov.current) : null;
   const dir = cur && cur.direction;
-  const mcYt = multiConfirmPillHtml(d && d.multi_confirm) + yonTahminPillHtml(d && d.yon_tahmin);
+  const mcYt = multiConfirmPillHtml(d && d.multi_confirm, acc) + yonTahminPillHtml(d && d.yon_tahmin, acc);
   if (dir === 'UP' || dir === 'DOWN') {
     el.innerHTML = '<span class="sig-pill m110">110 · ' + dir + '</span>'
       + (cur.label ? ' <span style="color:#666;font-size:9px">' + cur.label + '</span>' : '')
@@ -2846,7 +3279,7 @@ function updateFifteenMotorLegend(d) {
   if (!el) return;
   let html = '';
   const ov = d.algo_overlay;
-  const cur = ov && ov.ok ? ov.current : null;
+  const cur = ov && ov.ok ? (ov.slot_open || ov.current) : null;
   const dir = cur && cur.direction;
   if (dir === 'UP' || dir === 'DOWN') {
     html += '<span class="sig-pill m110">110 · ' + dir + '</span>';
@@ -2855,9 +3288,6 @@ function updateFifteenMotorLegend(d) {
   } else {
     html += '<span class="sig-pill m110">110 · —</span>';
   }
-  const fc = d.fifteen_current || {};
-  html += hourlyPillHtml(fc, 'a112', '112', 'a112');
-  html += hourlyPillHtml(fc, 'a113', '113', 'a113');
   el.innerHTML = html;
 }
 
@@ -2977,7 +3407,6 @@ function deskChartUrl(tf, sym) {
 function hourlyTagColor(tag) {
   if (tag === 'A1') return '#a855f7';
   if (tag === 'A3') return '#2dd4bf';
-  if (tag === 'ALFA') return '#f59e0b';
   return '#38bdf8';
 }
 
@@ -3016,9 +3445,6 @@ function appendSlotMarkers(markers, d, candles) {
     text: 'A1',
   });
   appendHourlySlotMarker(markers, ws, hc.a1, 'A1', '#a855f7');
-  appendHourlySlotMarker(markers, ws, hc.a3, 'A3', '#2dd4bf');
-  appendHourlySlotMarker(markers, ws, hc.a8, 'A8', '#38bdf8');
-  appendHourlySlotMarker(markers, ws, hc.alfa, 'ALFA', '#f59e0b');
 }
 
 function hourlyPillHtml(hc, key, tag, cls) {
@@ -3033,12 +3459,8 @@ function hourlyPillHtml(hc, key, tag, cls) {
 function updateHourlyLegend(hc) {
   const el = document.getElementById('chart-signals');
   if (!el) return;
-  if (!hc || (!hc.a1 && !hc.a3 && !hc.a8 && !hc.alfa)) { el.innerHTML = ''; return; }
-  el.innerHTML =
-    hourlyPillHtml(hc, 'a1', 'A1', 'a1') +
-    hourlyPillHtml(hc, 'a3', 'A3', 'a3') +
-    hourlyPillHtml(hc, 'a8', 'A8', 'a8') +
-    hourlyPillHtml(hc, 'alfa', 'ALFA', 'alfa');
+  if (!hc || !hc.a1) { el.innerHTML = ''; return; }
+  el.innerHTML = hourlyPillHtml(hc, 'a1', 'A1', 'a1');
 }
 
 async function loadTradeChart() {
@@ -3060,7 +3482,7 @@ async function loadTradeChart() {
     if (!r.ok) throw new Error('chart HTTP ' + r.status);
     const raw = await r.json();
     if (raw && raw.error) throw new Error(raw.error);
-    const d = prepareChartPayload(raw);
+    const d = applySlotFrozenVerdict(prepareChartPayload(raw), tf, sym);
     if (reqId !== _chartReq) return;
     if (tf !== _tf || px !== _priceTf || sym !== selectedSymbol()) return;
     const dec = d.dec != null ? d.dec : 2;
@@ -3071,8 +3493,8 @@ async function loadTradeChart() {
     document.getElementById('chart-meta').textContent =
       (d.slot_label ? d.slot_label + ' İST · ' : '') + slotLbl + ' slot · '
       +       (tf === '1h'
-        ? 'A1+A3+A8+ALFA saatlik · A3/A8 ' + (d.a3a8_signal_mode_label || 'sıkı') + ' · MC teyit'
-        : tf === '15m' ? '110+112+113 · MC teyit' : '110 motor · MC teyit')
+        ? 'A1 saatlik · MC teyit · slot sabit'
+        : tf === '15m' ? '110 · MC teyit · slot sabit' : '110 motor · MC teyit · slot sabit')
       + ' · ' + pxLbl + ' mum';
     updateChartGuideLegend(d, tf);
     updateDirVerdict(d);
@@ -3124,7 +3546,7 @@ async function loadTradeChart() {
       appendSlotMarkers(markers, d, candles);
       (d.hourly_signals || []).forEach(s => {
         const ws = d.window_start;
-        if (s.time === ws && (s.tag === 'A1' || s.tag === 'A3' || s.tag === 'A8' || s.tag === 'ALFA')) return;
+        if (s.time === ws && s.tag === 'A1') return;
         markers.push(hourlyMarker(s));
       });
       applyMotorEma(null);
@@ -3283,7 +3705,7 @@ GRAFIK_HTML = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Grafik — A1+A3+A8 — PolyMarket</title>
+<title>Grafik — A1 — PolyMarket</title>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
 <style>
@@ -3339,8 +3761,6 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .algo-badge.a3.down{background:#2a1418;color:#5eead4;border:1px solid #0d9488}
 .algo-badge.a8.up{background:#142814;color:#4ade80;border:1px solid #2a4a2a}
 .algo-badge.a8.down{background:#2a1414;color:#f87171;border:1px solid #5a2a2a}
-.algo-badge.alfa.up{background:#2a1f0a;color:#fbbf24;border:1px solid #f59e0b}
-.algo-badge.alfa.down{background:#2a1410;color:#fb923c;border:1px solid #f59e0b}
 .algo-badge.a112.up{background:#0c2340;color:#38bdf8;border:1px solid #0369a1}
 .algo-badge.a112.down{background:#2a1414;color:#f87171;border:1px solid #0369a1}
 .algo-badge.a113.up{background:#0f2a24;color:#2dd4bf;border:1px solid #0d9488}
@@ -3359,15 +3779,52 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .dir-verdict .dir-pill.DOWN{background:#2a1414;color:#f87171;border-color:#ef4444}
 .dir-verdict .dir-pill.split,.dir-verdict .dir-pill.neutral{background:#1a1a1a;color:#888;border-color:#333}
 .dir-verdict .dir-hint{font-size:10px;color:#555;font-weight:600}
+.dir-wr,.sig-wr{font-size:10px;font-weight:800;margin-left:5px;opacity:.95}
+.dir-wr.good,.sig-wr.good{color:#4ade80}
+.dir-wr.bad,.sig-wr.bad{color:#f87171}
 .composite-wrap{margin-top:8px;border-top:1px solid #1a1a1a;padding-top:8px;flex-shrink:0}
 .composite-lbl{font-size:10px;color:#555;text-transform:uppercase;font-weight:700;margin-bottom:4px}
 #composite-chart{height:96px;width:100%}
 .chart-split{flex:1;display:flex;flex-direction:column;min-height:0}
 #trade-chart{flex:1;min-height:340px;width:100%}
+.grafik-mobile-bar{display:none;align-items:center;gap:10px;padding:10px 12px;background:#0a0a0a;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.gm-back{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:#141414;color:#c8f135;text-decoration:none;font-size:20px;font-weight:800;flex-shrink:0}
+.gm-title{flex:1;font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gm-cash{font-size:12px;font-weight:700;color:#9ae66e;white-space:nowrap;flex-shrink:0}
+@media(max-width:768px){
+  html.grafik-mobile-focus,html.grafik-mobile-focus body{height:100%;overflow:hidden;overscroll-behavior:none}
+  body.grafik-mobile-focus{display:flex;flex-direction:column;height:100dvh;max-height:100dvh;overflow:hidden}
+  body.grafik-mobile-focus .sidebar{display:none!important}
+  body.grafik-mobile-focus .grafik-mobile-bar{display:flex}
+  body.grafik-mobile-focus .chart-full{flex:1;min-height:0;height:auto;padding:0;display:flex;flex-direction:column;overflow:hidden}
+  body.grafik-mobile-focus .chart-toolbar{flex-shrink:0;padding:8px 10px 6px;gap:6px;margin:0}
+  body.grafik-mobile-focus .chart-toolbar .tabs{gap:4px}
+  body.grafik-mobile-focus .chart-toolbar .tab{padding:6px 10px;font-size:11px;border-radius:10px}
+  body.grafik-mobile-focus .chart-toolbar .tab-px{padding:5px 10px;font-size:11px;min-width:36px}
+  body.grafik-mobile-focus .chart-panel-full{flex:1;min-height:0;border:none;border-radius:0;padding:6px 10px 10px;display:flex;flex-direction:column;overflow:hidden}
+  body.grafik-mobile-focus .chart-head{order:3;flex-shrink:0;margin-bottom:0}
+  body.grafik-mobile-focus .chart-head .chart-title,
+  body.grafik-mobile-focus .chart-head .chart-meta,
+  body.grafik-mobile-focus .chart-head-right .chart-ref{display:none}
+  body.grafik-mobile-focus .chart-head-right{align-items:flex-end}
+  body.grafik-mobile-focus .live-clock{font-size:11px}
+  body.grafik-mobile-focus .spot-inline{order:1;flex-shrink:0;margin-bottom:6px;font-size:12px;gap:8px}
+  body.grafik-mobile-focus .spot-val{font-size:14px}
+  body.grafik-mobile-focus .chart-split{order:2;flex:1;min-height:0;display:flex;flex-direction:column}
+  body.grafik-mobile-focus #trade-chart{flex:1;min-height:220px;height:100%!important;width:100%}
+  body.grafik-mobile-focus .algo-badges{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  body.grafik-mobile-focus .algo-badge{font-size:11px;padding:4px 8px;flex-shrink:0}
+  body.grafik-mobile-focus .dir-verdict{margin-top:4px}
+}
 @media(max-width:768px){body{flex-direction:column;overflow:auto}.sidebar{width:100%;height:auto}.chart-full{height:auto;padding:16px}}
 </style>
 </head>
 <body>
+<div class="grafik-mobile-bar">
+  <a href="/poly" class="gm-back" aria-label="Overview">←</a>
+  <div class="gm-title" id="gm-mobile-title">Grafik</div>
+  <div class="gm-cash" id="gm-mobile-cash">—</div>
+</div>
 <div class="sidebar">
   <div class="logo">Poly<span>Market</span></div>
   <div class="sidebar-cash" id="cash">USDC …</div>
@@ -3507,11 +3964,36 @@ const _chartLoc = {
 
 function loadPrefs() {
   try {
-    if (sessionStorage.getItem('desk_sym')) _sym = sessionStorage.getItem('desk_sym');
-    if (sessionStorage.getItem('desk_tf')) _tf = sessionStorage.getItem('desk_tf');
+    const params = new URLSearchParams(window.location.search);
+    const urlSym = params.get('sym');
+    const urlTf = params.get('tf');
+    if (urlSym && /^(BTC|ETH|SOL)USDT$/.test(urlSym)) _sym = urlSym;
+    else if (sessionStorage.getItem('desk_sym')) _sym = sessionStorage.getItem('desk_sym');
+    if (urlTf === '5m' || urlTf === '15m' || urlTf === '1h') _tf = urlTf;
+    else if (sessionStorage.getItem('desk_tf')) _tf = sessionStorage.getItem('desk_tf');
     const px = sessionStorage.getItem('desk_price_tf');
     if (px === '1m' || px === '5m' || px === '15m' || px === '1h') _priceTf = px;
+    if (params.get('focus') === '1' || window.matchMedia('(max-width:768px)').matches) {
+      document.documentElement.classList.add('grafik-mobile-focus');
+      document.body.classList.add('grafik-mobile-focus');
+    }
   } catch (e) {}
+}
+function tfShortLabel(tf) {
+  return tf === '5m' ? '5dk' : tf === '15m' ? '15dk' : '1saat';
+}
+function syncMobileChrome(name, tf) {
+  const t = document.getElementById('gm-mobile-title');
+  if (t) t.textContent = (name || 'Grafik') + ' · ' + tfShortLabel(tf || _tf);
+}
+function mobileChartH() {
+  const panel = document.querySelector('.chart-panel-full');
+  const split = document.getElementById('trade-chart');
+  if (!panel || !split) return Math.max(280, window.innerHeight - 200);
+  const panelRect = panel.getBoundingClientRect();
+  const splitTop = split.getBoundingClientRect().top;
+  const bottomPad = 12;
+  return Math.max(240, window.innerHeight - splitTop - bottomPad);
 }
 function savePrefs() {
   try {
@@ -3521,6 +4003,7 @@ function savePrefs() {
   } catch (e) {}
 }
 loadPrefs();
+syncMobileChrome(selectedSymbol().replace('USDT',''), _tf);
 function selectedSymbol() { return _sym; }
 
 function syncTabs() {
@@ -3537,20 +4020,33 @@ function syncTabs() {
   document.getElementById('tab-px-1h').classList.toggle('active', _priceTf === '1h');
 }
 
-function setSym(sym) { _sym = sym; savePrefs(); resetAllCharts(); refreshSpot(); loadTradeChart(); syncTabs(); }
-function setTf(tf) { _tf = tf; savePrefs(); resetAllCharts(); refreshSpot(); loadTradeChart(); syncTabs(); }
+function setSym(sym) { _sym = sym; savePrefs(); resetAllCharts(); refreshSpot(); loadTradeChart(); syncTabs(); syncMobileChrome(sym.replace('USDT',''), _tf); }
+function setTf(tf) { _tf = tf; savePrefs(); resetAllCharts(); refreshSpot(); loadTradeChart(); syncTabs(); syncMobileChrome(selectedSymbol().replace('USDT',''), tf); }
 function setPriceTf(px) { _priceTf = px; savePrefs(); resetAllCharts(); loadTradeChart(); syncTabs(); }
 
 function chartH() {
+  if (document.body.classList.contains('grafik-mobile-focus')) return mobileChartH();
   return Math.max(420, window.innerHeight - 180);
 }
 
+function isGrafikMobile() {
+  return document.body.classList.contains('grafik-mobile-focus');
+}
+
 function candleLimitForView() {
-  // 5m / 15m / 1h market görünümleri aynı mum yoğunluğu (1h gibi çok mum)
-  if (_priceTf === '1h') return 48;
-  if (_priceTf === '15m') return 48;
-  if (_priceTf === '5m') return 48;
-  return 120;  // 1m
+  const mob = isGrafikMobile();
+  if (_priceTf === '1h') return mob ? 20 : 48;
+  if (_priceTf === '15m') return mob ? 18 : 48;
+  if (_priceTf === '5m') return mob ? 16 : 48;
+  return mob ? 48 : 120;  // 1m
+}
+
+function visibleCandleCount() {
+  if (!isGrafikMobile()) return null;
+  if (_priceTf === '1h') return 10;
+  if (_priceTf === '15m') return 14;
+  if (_priceTf === '5m') return 12;
+  return 32;  // 1m
 }
 
 function priceBarSeconds() {
@@ -3564,7 +4060,10 @@ function calcTightScale(candles, refPrice) {
   if (!candles.length) return null;
   let lo = Math.min(...candles.map(c => c.low)), hi = Math.max(...candles.map(c => c.high));
   if (refPrice != null) { lo = Math.min(lo, refPrice); hi = Math.max(hi, refPrice); }
-  const span = Math.max(hi - lo, 0.0001), pad = Math.max(span * 0.06, span * 0.015);
+  const span = Math.max(hi - lo, 0.0001);
+  const padMult = isGrafikMobile() ? 0.11 : 0.06;
+  const padMin = isGrafikMobile() ? 0.028 : 0.015;
+  const pad = Math.max(span * padMult, span * padMin);
   return { lo: lo - pad, hi: hi + pad };
 }
 function applyChartPriceScale(candles, refPrice) {
@@ -3577,15 +4076,30 @@ function fitBarDensity(count) {
   const c = document.getElementById('trade-chart');
   if (!c || !count) return 3;
   const w = Math.max(200, c.clientWidth - 52);
+  if (isGrafikMobile()) {
+    const vis = visibleCandleCount() || count;
+    const n = Math.min(count, vis);
+    return Math.max(5, Math.min(14, Math.floor((w / n) * 0.92)));
+  }
   return Math.max(2, Math.min(7, Math.floor((w / count) * 0.82)));
 }
 
 function focusCandleWindow(candles) {
   if (!_chart || !candles || candles.length < 2) return;
   const barSec = priceBarSeconds();
+  const last = candles[candles.length - 1].time;
+  if (isGrafikMobile()) {
+    const show = Math.min(candles.length, visibleCandleCount() || candles.length);
+    const fromIdx = Math.max(0, candles.length - show);
+    _chart.timeScale().setVisibleRange({
+      from: candles[fromIdx].time - barSec,
+      to: last + barSec * 6,
+    });
+    return;
+  }
   _chart.timeScale().setVisibleRange({
     from: candles[0].time - barSec * 2,
-    to: candles[candles.length - 1].time + barSec * 20,
+    to: last + barSec * 20,
   });
 }
 
@@ -3630,7 +4144,7 @@ function clipOverlayToCandles(ov, candles) {
 
 function motorSlotDir(ov, ws) {
   if (!ov || !ov.ok) return null;
-  const cur = ov.current;
+  const cur = ov.slot_open || ov.current;
   if (cur && (cur.direction === 'UP' || cur.direction === 'DOWN')) {
     return cur.direction;
   }
@@ -3655,31 +4169,47 @@ function addMotorMarkers(markers, ov, skipTime) {
   return;
 }
 
+function fmtWr(acc, key) {
+  if (!acc) return '';
+  const e = acc[key];
+  if (!e || e.wr == null) return '';
+  const cls = e.wr >= 50 ? 'good' : 'bad';
+  return '<span class="sig-wr ' + cls + '" title="' + (e.total || 0) + ' saatlik ölçüm">WR ' + e.wr + '%</span>';
+}
+function fmtWrPart(acc, tag) {
+  if (!acc || !acc.tahmin2_parts) return '';
+  const e = acc.tahmin2_parts[tag];
+  if (!e || e.wr == null) return '';
+  return ' WR' + e.wr + '%';
+}
+
 function multiConfirmTip(cur) {
   if (!cur) return '';
   return 'Form:' + (cur.pattern || '-') + ' Vol:' + (cur.volume_ok ? 'OK' : '-')
     + ' Sev:' + (cur.level_ok ? 'OK' : '-') + ' Mom:' + (cur.momentum_ok ? 'OK' : '-');
 }
 
-function multiConfirmBadgeHtml(mc) {
-  if (!mc || !mc.ok || !mc.current) return '<span class="algo-badge neutral mc">MC —</span>';
-  const cur = mc.current;
-  const dir = cur.direction;
+function multiConfirmBadgeHtml(mc, acc) {
+  if (!mc || !mc.ok) return '<span class="algo-badge neutral mc">MC —</span>';
+  const cur = _sigCur(mc);
+  if (!cur) return '<span class="algo-badge neutral mc">MC —</span>';
+  const dir = mcInferredDir(cur);
   const cls = dir === 'UP' ? 'mc up' : (dir === 'DOWN' ? 'mc down' : 'mc neutral');
   const tip = multiConfirmTip(cur).replace(/"/g, '&quot;');
-  return '<span class="algo-badge ' + cls + '" title="' + tip + '">MC · ' + (cur.label || '—') + '</span>';
+  return '<span class="algo-badge ' + cls + '" title="' + tip + '">MC · ' + mcDisplayLabel(cur) + fmtWr(acc, 'mc') + '</span>';
 }
 
-function yonTahminBadgeHtml(yt) {
-  if (!yt || !yt.ok || !yt.current) return '<span class="algo-badge neutral yt">YT —</span>';
-  const cur = yt.current;
+function yonTahminBadgeHtml(yt, acc) {
+  if (!yt || !yt.ok) return '<span class="algo-badge neutral yt">YT —</span>';
+  const cur = _sigCur(yt);
+  if (!cur) return '<span class="algo-badge neutral yt">YT —</span>';
   const dir = cur.direction;
   const cls = dir === 'UP' ? 'yt up' : (dir === 'DOWN' ? 'yt down' : 'yt neutral');
   const st = yt.stats;
   const tip = st
-    ? ('Başarı ' + (st.overall_pct || 0) + '% (' + (st.correct || 0) + '/' + (st.total || 0) + ' · N=' + (st.eval_bars || 5) + ')')
+    ? ('Grafik backtest ' + (st.overall_pct || 0) + '% (' + (st.correct || 0) + '/' + (st.total || 0) + ')')
     : '';
-  return '<span class="algo-badge ' + cls + '" title="' + tip.replace(/"/g, '&quot;') + '">YT · ' + (cur.label || '—') + '</span>';
+  return '<span class="algo-badge ' + cls + '" title="' + tip.replace(/"/g, '&quot;') + '">YT · ' + (cur.label || '—') + fmtWr(acc, 'yt') + '</span>';
 }
 
 function multiConfirmMarker(s) {
@@ -3702,16 +4232,17 @@ function applyMultiConfirmEma(mc) {
   if (_mcEmaSeries) _mcEmaSeries.setData([]);
 }
 
-function yonTahminPillHtml(yt) {
-  if (!yt || !yt.ok || !yt.current) return '<span class="sig-pill yt">YT —</span>';
-  const cur = yt.current;
+function yonTahminPillHtml(yt, acc) {
+  if (!yt || !yt.ok) return '<span class="sig-pill yt">YT —</span>';
+  const cur = _sigCur(yt);
+  if (!cur) return '<span class="sig-pill yt">YT —</span>';
   const dir = cur.direction;
   const cls = dir === 'UP' ? 'yt up' : (dir === 'DOWN' ? 'yt down' : 'yt');
   const st = yt.stats;
   const tip = st
-    ? ('Başarı ' + (st.overall_pct || 0) + '% (' + (st.correct || 0) + '/' + (st.total || 0) + ' · N=' + (st.eval_bars || 5) + ')')
+    ? ('Grafik backtest ' + (st.overall_pct || 0) + '% (' + (st.correct || 0) + '/' + (st.total || 0) + ')')
     : '';
-  return '<span class="sig-pill ' + cls + '" title="' + tip.replace(/"/g, '&quot;') + '">YT · ' + (cur.label || '—') + '</span>';
+  return '<span class="sig-pill ' + cls + '" title="' + tip.replace(/"/g, '&quot;') + '">YT · ' + (cur.label || '—') + fmtWr(acc, 'yt') + '</span>';
 }
 
 function addYonTahminMarkers(markers, yt) {
@@ -3741,15 +4272,71 @@ function applyYonTahminEma(yt) {
   if (_ytEmaMidSeries) _ytEmaMidSeries.setData([]);
 }
 
+function _slotFreezeKey(sym, tf, d) {
+  const period = d.ts_period != null ? d.ts_period : (d.window_start || 0);
+  return String(sym || d.symbol || '') + '|' + String(tf || d.timeframe || _tf) + '|' + String(period);
+}
+function _bundleForFreeze(bundle) {
+  if (!bundle || !bundle.ok) return bundle;
+  const cur = bundle.slot_open || bundle.current;
+  if (!cur) return bundle;
+  const out = JSON.parse(JSON.stringify(bundle));
+  out.current = JSON.parse(JSON.stringify(cur));
+  return out;
+}
+function _t2ForFreeze(t2) {
+  if (!t2 || !t2.ok) return t2;
+  const out = JSON.parse(JSON.stringify(t2));
+  if (t2.slot_open_votes) out.votes = JSON.parse(JSON.stringify(t2.slot_open_votes));
+  if (t2.slot_open) out.current = JSON.parse(JSON.stringify(t2.slot_open));
+  return out;
+}
+function _ovForFreeze(ov) {
+  if (!ov || !ov.ok) return ov;
+  const out = JSON.parse(JSON.stringify(ov));
+  if (ov.slot_open) out.current = JSON.parse(JSON.stringify(ov.slot_open));
+  return out;
+}
+function applySlotFrozenVerdict(d, tf, sym) {
+  sym = sym || d.symbol || (typeof selectedSymbol === 'function' ? selectedSymbol() : '');
+  const key = _slotFreezeKey(sym, tf, d);
+  const ssKey = 'poly_slot_verdict_' + key;
+  try {
+    const saved = sessionStorage.getItem(ssKey);
+    if (saved) {
+      const frozen = JSON.parse(saved);
+      return Object.assign({}, d, {
+        multi_confirm: frozen.multi_confirm || d.multi_confirm,
+        yon_tahmin: frozen.yon_tahmin || d.yon_tahmin,
+        tahmin2: frozen.tahmin2 || d.tahmin2,
+        algo_overlay: frozen.algo_overlay != null ? frozen.algo_overlay : d.algo_overlay,
+        hourly_current: frozen.hourly_current || d.hourly_current,
+      });
+    }
+  } catch (e) {}
+  const snap = {
+    multi_confirm: _bundleForFreeze(d.multi_confirm),
+    yon_tahmin: _bundleForFreeze(d.yon_tahmin),
+    tahmin2: _t2ForFreeze(d.tahmin2),
+    algo_overlay: _ovForFreeze(d.algo_overlay),
+    hourly_current: d.hourly_current ? JSON.parse(JSON.stringify(d.hourly_current)) : null,
+  };
+  try { sessionStorage.setItem(ssKey, JSON.stringify(snap)); } catch (e) {}
+  return Object.assign({}, d, snap);
+}
+function _sigCur(bundle) {
+  if (!bundle) return null;
+  return bundle.slot_open || bundle.current || null;
+}
 function _vote110(ov) {
-  const cur = ov && ov.ok ? ov.current : null;
+  const cur = ov && ov.ok ? (ov.slot_open || ov.current) : null;
   if (!cur) return null;
   if (cur.direction === 'UP' || cur.direction === 'DOWN') return cur.direction;
   if (cur.guide_dir === 'UP' || cur.guide_dir === 'DOWN') return cur.guide_dir;
   return null;
 }
 function _voteMc(mc) {
-  const cur = mc && mc.ok ? mc.current : null;
+  const cur = _sigCur(mc && mc.ok ? mc : null);
   if (!cur) return null;
   if (cur.direction === 'UP' || cur.direction === 'DOWN') return cur.direction;
   const b = Number(cur.bull_score || 0), e = Number(cur.bear_score || 0);
@@ -3758,7 +4345,8 @@ function _voteMc(mc) {
   return null;
 }
 function _voteYt(yt) {
-  const d = yt && yt.ok && yt.current ? yt.current.direction : null;
+  const cur = _sigCur(yt && yt.ok ? yt : null);
+  const d = cur ? cur.direction : null;
   return (d === 'UP' || d === 'DOWN') ? d : null;
 }
 function _slotNowDir(d) {
@@ -3771,22 +4359,33 @@ function _slotNowDir(d) {
   if (last < ref) return 'DOWN';
   return null;
 }
+function algoPanelPillHtml(panel, tag, acc, wrKey) {
+  if (!panel || panel.total == null) return '';
+  const tot = panel.total;
+  const dir = panel.direction;
+  const wr = fmtWr(acc, wrKey);
+  const tf = panel.timeframe && panel.timeframe !== '1h' ? (' · ' + panel.timeframe) : '';
+  const tip = panel.period_label ? (' title="' + String(panel.period_label).replace(/"/g, '&quot;') + '"') : '';
+  if (dir === 'UP') {
+    return '<span class="dir-pill UP"' + tip + '>' + tag + tf + ' ↑ YUKARI ' + panel.up + '/' + tot + wr + '</span>';
+  }
+  if (dir === 'DOWN') {
+    return '<span class="dir-pill DOWN"' + tip + '>' + tag + tf + ' ↓ AŞAĞI ' + panel.down + '/' + tot + wr + '</span>';
+  }
+  return '<span class="dir-pill neutral"' + tip + '>' + tag + tf + ' ↔ NÖTR ' + (panel.neutral || 0) + '/' + tot + wr + '</span>';
+}
 function updateDirVerdict(d) {
   const el = document.getElementById('dir-verdict');
   if (!el) return;
   window._lastChartD = d;
+  const acc = d && d.signal_accuracy;
   const now = _slotNowDir(d);
   const votes = [];
   const parts = [];
   const v110 = _vote110(d && d.algo_overlay);
   const vMc = _voteMc(d && d.multi_confirm);
   const vYt = _voteYt(d && d.yon_tahmin);
-  const fc = (d && d.fifteen_current) || {};
-  const v112 = (fc.a112 && (fc.a112.dir === 'UP' || fc.a112.dir === 'DOWN')) ? fc.a112.dir : null;
-  const v113 = (fc.a113 && (fc.a113.dir === 'UP' || fc.a113.dir === 'DOWN')) ? fc.a113.dir : null;
   if (v110) { votes.push(v110); parts.push('110'); }
-  if (v112) { votes.push(v112); parts.push('112'); }
-  if (v113) { votes.push(v113); parts.push('113'); }
   if (vMc) { votes.push(vMc); parts.push('MC'); }
   if (vYt) { votes.push(vYt); parts.push('YT'); }
   const upN = votes.filter(v => v === 'UP').length;
@@ -3809,7 +4408,7 @@ function updateDirVerdict(d) {
 
   // TAHMİN2 — LM + ST + ADX + LZ + CVD (payda her zaman 5)
   const t2 = d && d.tahmin2;
-  const t2votes = (t2 && t2.ok && t2.votes) ? t2.votes : [];
+  const t2votes = (t2 && t2.ok && t2.slot_open_votes) ? t2.slot_open_votes : ((t2 && t2.ok && t2.votes) ? t2.votes : []);
   const t2total = t2votes.length || 5;
   const t2up = t2votes.filter(v => v.dir === 'UP').length;
   const t2dn = t2votes.filter(v => v.dir === 'DOWN').length;
@@ -3825,28 +4424,34 @@ function updateDirVerdict(d) {
       : pred2 === 'split'
         ? ('TAHMİN2 ↔ BERABERE ' + t2up + '-' + t2dn + '/' + t2total)
         : 'TAHMİN2 · bekleniyor';
-  const hint2 = t2votes.length
-    ? t2votes.map(v => v.tag + ':' + (v.dir === 'UP' ? '↑' : v.dir === 'DOWN' ? '↓' : '·')).join(' ')
-    : '';
+  const ap = d && d.algo_panel;
+  const alg1 = ap && ap.v1 ? algoPanelPillHtml(ap.v1, 'ALG1', acc, 'alg1') : '';
+  const alg2 = ap && ap.v2 ? algoPanelPillHtml(ap.v2, 'ALG2', acc, 'alg2') : '';
 
   el.innerHTML =
-    '<span class="dir-pill ' + nowCls + '">' + nowTxt + '</span>' +
-    '<span class="dir-pill ' + predCls + '">' + predTxt + '</span>' +
+    '<span class="dir-pill slot-now ' + nowCls + '">' + nowTxt + '</span>' +
+    '<span class="dir-pill ' + predCls + '">' + predTxt + fmtWr(acc, 'tahmin') + '</span>' +
     (hint ? '<span class="dir-hint">' + hint + '</span>' : '') +
-    '<span class="dir-pill ' + pred2Cls + '">' + pred2Txt + '</span>' +
-    (hint2 ? '<span class="dir-hint">' + hint2 + '</span>' : '');
+    '<span class="dir-pill ' + pred2Cls + '">' + pred2Txt + fmtWr(acc, 'tahmin2') + '</span>' +
+    alg1 + alg2;
 }
 function refreshDirVerdictLive(livePrice) {
   const d = window._lastChartD;
   if (!d || livePrice == null) return;
-  const copy = Object.assign({}, d);
-  if (copy.candles && copy.candles.length) {
-    const candles = copy.candles.slice();
-    const last = Object.assign({}, candles[candles.length - 1], { close: Number(livePrice) });
-    candles[candles.length - 1] = last;
-    copy.candles = candles;
-  }
-  updateDirVerdict(copy);
+  const el = document.getElementById('dir-verdict');
+  if (!el) return;
+  const ref = Number(d.ref_price);
+  if (!(ref > 0)) return;
+  const last = Number(livePrice);
+  let now = null;
+  if (last > ref) now = 'UP';
+  else if (last < ref) now = 'DOWN';
+  const nowCls = now || 'neutral';
+  const nowTxt = now === 'UP' ? 'ŞİMDİ ↑ YUKARI kazanıyor' : now === 'DOWN' ? 'ŞİMDİ ↓ AŞAĞI kazanıyor' : 'ŞİMDİ · Ref eşit';
+  const pill = el.querySelector('.dir-pill.slot-now');
+  if (!pill) return;
+  pill.className = 'dir-pill slot-now ' + nowCls;
+  pill.textContent = nowTxt;
 }
 
 function ensureTradeChart() {
@@ -3909,34 +4514,38 @@ function ensureTradeChart() {
 function renderHourlyBadges(hc) {
   const el = document.getElementById('algo-badges');
   if (!el) return;
-  el.innerHTML = multiConfirmBadgeHtml(window._lastMultiConfirm) + yonTahminBadgeHtml(window._lastYonTahmin);
+  const acc = window._lastChartD && window._lastChartD.signal_accuracy;
+  el.innerHTML = multiConfirmBadgeHtml(window._lastMultiConfirm, acc) + yonTahminBadgeHtml(window._lastYonTahmin, acc);
 }
 
 function updateMotorBadge(ov) {
   const el = document.getElementById('algo-badges');
   if (!el) return;
-  if (!ov || !ov.ok || !ov.current) {
-    el.innerHTML = '<span class="algo-badge neutral m110">110 · —</span>' + multiConfirmBadgeHtml(window._lastMultiConfirm) + yonTahminBadgeHtml(window._lastYonTahmin);
+  const acc = window._lastChartD && window._lastChartD.signal_accuracy;
+  const mcYt = multiConfirmBadgeHtml(window._lastMultiConfirm, acc) + yonTahminBadgeHtml(window._lastYonTahmin, acc);
+  if (!ov || !ov.ok) {
+    el.innerHTML = '<span class="algo-badge neutral m110">110 · —</span>' + mcYt;
     return;
   }
-  const cur = ov.current;
+  const cur = ov.slot_open || ov.current;
   const dir = cur.direction;
   if (dir === 'UP' || dir === 'DOWN') {
     const cls = dir === 'UP' ? 'up' : 'down';
-    el.innerHTML = '<span class="algo-badge m110 ' + cls + '">110 · ' + dir + '</span>' + multiConfirmBadgeHtml(window._lastMultiConfirm) + yonTahminBadgeHtml(window._lastYonTahmin);
+    el.innerHTML = '<span class="algo-badge m110 ' + cls + '">110 · ' + dir + '</span>' + mcYt;
     return;
   }
-  el.innerHTML = '<span class="algo-badge neutral m110">110 · ' + (cur.label || '—') + '</span>' + multiConfirmBadgeHtml(window._lastMultiConfirm) + yonTahminBadgeHtml(window._lastYonTahmin);
+  el.innerHTML = '<span class="algo-badge neutral m110">110 · ' + (cur.label || '—') + '</span>' + mcYt;
 }
 
 function renderFifteenBadges(d, ov) {
   const el = document.getElementById('algo-badges');
   if (!el) return;
+  const acc = d && d.signal_accuracy;
   let html = '';
-  if (!ov || !ov.ok || !ov.current) {
+  if (!ov || !ov.ok) {
     html += '<span class="algo-badge neutral m110">110 · —</span>';
   } else {
-    const cur = ov.current;
+    const cur = ov.slot_open || ov.current;
     const dir = cur.direction;
     if (dir === 'UP' || dir === 'DOWN') {
       html += '<span class="algo-badge m110 ' + (dir === 'UP' ? 'up' : 'down') + '">110 · ' + dir + '</span>';
@@ -3944,17 +4553,7 @@ function renderFifteenBadges(d, ov) {
       html += '<span class="algo-badge neutral m110">110 · ' + (cur.label || '—') + '</span>';
     }
   }
-  const fc = d.fifteen_current || {};
-  [{ key: 'a112', tag: '112', cls: 'a112' }, { key: 'a113', tag: '113', cls: 'a113' }].forEach(({ key, tag, cls }) => {
-    const cur = fc[key];
-    if (!cur || !cur.dir) {
-      html += '<span class="algo-badge neutral ' + cls + '">' + (cur && cur.label ? cur.label : tag + ' —') + '</span>';
-      return;
-    }
-    const up = cur.dir === 'UP';
-    html += '<span class="algo-badge ' + cls + ' ' + (up ? 'up' : 'down') + '">' + (cur.label || tag) + '</span>';
-  });
-  html += multiConfirmBadgeHtml(d.multi_confirm) + yonTahminBadgeHtml(d.yon_tahmin);
+  html += multiConfirmBadgeHtml(d.multi_confirm, acc) + yonTahminBadgeHtml(d.yon_tahmin, acc);
   el.innerHTML = html;
 }
 
@@ -3986,7 +4585,6 @@ function addFifteenMarkers(markers, signals, ws) {
 function hourlyTagColor(tag) {
   if (tag === 'A1') return '#a855f7';
   if (tag === 'A3') return '#2dd4bf';
-  if (tag === 'ALFA') return '#f59e0b';
   return '#38bdf8';
 }
 
@@ -4016,9 +4614,6 @@ function addHourlyMarkers(markers, hourly, d) {
   const ws = d && d.window_start;
   (hourly || []).forEach(s => {
     if (s.tag === 'A1' && ws && s.time === ws) return;
-    if (s.tag === 'A3' && ws && s.time === ws) return;
-    if (s.tag === 'A8' && ws && s.time === ws) return;
-    if (s.tag === 'ALFA' && ws && s.time === ws) return;
     markers.push(hourlyMarker(s));
   });
 }
@@ -4036,9 +4631,6 @@ function appendSlotMarkers(markers, d, candles) {
     text: 'A1',
   });
   appendHourlySlotMarker(markers, ws, hc.a1, 'A1', '#a855f7');
-  appendHourlySlotMarker(markers, ws, hc.a3, 'A3', '#2dd4bf');
-  appendHourlySlotMarker(markers, ws, hc.a8, 'A8', '#38bdf8');
-  appendHourlySlotMarker(markers, ws, hc.alfa, 'ALFA', '#f59e0b');
 }
 
 function patchLastCandle(price, dec) {
@@ -4087,15 +4679,16 @@ async function loadTradeChart() {
   if (!ensureTradeChart()) return;
   try {
     const r = await fetch(chartUrl(), { cache: 'no-store' });
-    const d = prepareChartPayload(await r.json());
+    const d = applySlotFrozenVerdict(prepareChartPayload(await r.json()), tf, sym);
     window._lastMultiConfirm = d.multi_confirm;
     window._lastYonTahmin = d.yon_tahmin;
     if (reqId !== _chartReq || tf !== _tf || sym !== selectedSymbol()) return;
     const dec = d.dec != null ? d.dec : 2;
     const pxLbl = d.price_tf === '1h' ? '1h' : (d.price_tf === '15m' ? '15m' : (d.price_tf === '5m' ? '5m' : '1m'));
     document.getElementById('chart-title').textContent = (d.name || sym.replace('USDT','')) + ' · ' + pxLbl;
+    syncMobileChrome(d.name || sym.replace('USDT',''), _tf);
     document.getElementById('chart-meta').textContent =
-      (_tf === '1h' ? 'A1 + A3 + A8 + ALFA saatlik · A3/A8 ' + (d.a3a8_signal_mode_label || 'sıkı') + ' · MC teyit' : _tf === '15m' ? '110 + 112 + 113 · MC teyit' : '110 motor · MC teyit') + ' · ' + pxLbl + ' mum · ' + (d.slot_label || '') + ' İST';
+      (_tf === '1h' ? 'A1 saatlik · MC teyit · slot sabit' : _tf === '15m' ? '110 · MC teyit · slot sabit' : '110 motor · MC teyit · slot sabit') + ' · ' + pxLbl + ' mum · ' + (d.slot_label || '') + ' İST';
     updateDirVerdict(d);
     document.getElementById('chart-ref-lbl').textContent = d.ref_price != null ? '$' + Number(d.ref_price).toFixed(dec) : '—';
     if (_priceLine) { _candleSeries.removePriceLine(_priceLine); _priceLine = null; }
@@ -4105,13 +4698,19 @@ async function loadTradeChart() {
       return;
     }
     _lastCandles = d.candles.slice();
-    applyChartPriceScale(d.candles, d.ref_price);
+    const scaleCandles = isGrafikMobile()
+      ? d.candles.slice(Math.max(0, d.candles.length - (visibleCandleCount() || d.candles.length)))
+      : d.candles;
+    applyChartPriceScale(scaleCandles, d.ref_price);
     _candleSeries.setData(d.candles);
     if (_volumeSeries) _volumeSeries.setData(volumeHistogramData(d.candles));
     applyChartVolumeLayout();
     const barSp = fitBarDensity(d.candles.length);
     _chart.applyOptions({ width: document.getElementById('trade-chart').clientWidth, height: chartH() });
-    _chart.timeScale().applyOptions({ barSpacing: barSp, minBarSpacing: 1, fixRightEdge: false, rightOffset: 12 });
+    _chart.timeScale().applyOptions({
+      barSpacing: barSp, minBarSpacing: 1, fixRightEdge: false,
+      rightOffset: isGrafikMobile() ? 4 : 12,
+    });
     if (d.ref_price != null) {
       _priceLine = _candleSeries.createPriceLine({
         price: d.ref_price, color: '#fbbf24', lineWidth: 1,
@@ -4148,13 +4747,20 @@ async function refreshCash() {
     const r = await fetch('/poly/api/trade-desk', { cache: 'no-store' });
     const d = await r.json();
     if (r.ok && d.cash != null) {
+      const cashTxt = 'USDC $' + (d.cash >= 0 ? d.cash.toFixed(2) : '?');
       const el = document.getElementById('cash');
-      if (el) el.textContent = 'USDC $' + (d.cash >= 0 ? d.cash.toFixed(2) : '?');
+      if (el) el.textContent = cashTxt;
+      const mob = document.getElementById('gm-mobile-cash');
+      if (mob) mob.textContent = d.cash >= 0 ? '$' + d.cash.toFixed(0) : '—';
     }
   } catch (e) {}
 }
 
 syncTabs(); refreshCash(); refreshSpot(); loadTradeChart();
+if (document.body.classList.contains('grafik-mobile-focus')) {
+  window.scrollTo(0, 0);
+  setTimeout(() => { if (_chart) _chart.applyOptions({ height: mobileChartH() }); }, 120);
+}
 setInterval(refreshCash, 10000);
 setInterval(refreshSpot, 3000);
 setInterval(loadTradeChart, 5000);
@@ -4528,6 +5134,8 @@ def api_stats():
         if not hist and not os.path.exists(_trader_history_path(key)):
             continue
         total = len(hist)
+        if total < _ALGO_STATS_MIN_TRADES:
+            continue
         wins  = sum(1 for t in hist if t.get("win"))
         pnl   = sum(t.get("pnl", 0) for t in hist)
         wr    = round(wins / total * 100, 1) if total else 0
@@ -4583,7 +5191,12 @@ def api_stats():
         pending = []
 
     algo_stats.sort(key=lambda x: x["wr"], reverse=True)
-    return jsonify({"algo_stats": algo_stats, "recent": recent, "pending": pending})
+    return jsonify({
+        "algo_stats": algo_stats,
+        "recent": recent,
+        "pending": pending,
+        "real_pm": _real_pm_overview_stats(),
+    })
 
 
 @app.route("/poly/api/pm-profit")
@@ -4620,15 +5233,20 @@ def api_pm_system_post():
         state = set_a3a8_signal_strict(bool(body["a3a8_signal_strict"]), source="dashboard")
         return jsonify({"ok": True, **state})
     group = body.get("group")
-    if group in ("analiz5", "analiz2", "analiz8", "m15_210", "hourly"):
+    if group in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "hourly"):
         if group == "hourly":
             if "paused" in body:
                 paused = bool(body["paused"])
             else:
                 cur = get_pm_system_control()
-                paused = not (cur["analiz5_paused"] and cur["analiz2_paused"])
-            set_group_paused("analiz5", paused, source="dashboard")
-            state = set_group_paused("analiz2", paused, source="dashboard")
+                paused = not (
+                    cur["analiz5_paused"] and cur["analiz2_paused"]
+                    and cur["analiz10_paused"] and cur["analiz6_live_paused"]
+                    and cur["15m_309_live_paused"]
+                )
+            for g in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live"):
+                set_group_paused(g, paused, source="dashboard")
+            state = get_pm_system_control()
         elif "paused" in body:
             state = set_group_paused(group, bool(body["paused"]), source="dashboard")
         else:
@@ -4964,6 +5582,46 @@ def _pm_try_worthless_reconcile(pos: dict) -> dict | None:
     }
 
 
+def _pm_try_settled_reconcile(pos: dict) -> dict | None:
+    """Zincirde token yok — PM market çözülmüşse kazanç/kayıp doğru yaz."""
+    slug = pos.get("pm_slug") or ""
+    if not slug:
+        return None
+    sys.path.insert(0, _DIR_POLY)
+    try:
+        from pm_trader_helpers import pm_fetch_resolution
+        res = pm_fetch_resolution(slug)
+    except Exception:
+        return None
+    if not res or not res.get("closed"):
+        return None
+    token_dir = (pos.get("pm_token_dir") or pos.get("predicted_dir") or "").upper()
+    up_won = bool(res.get("up_won"))
+    win = (token_dir == "UP" and up_won) or (token_dir == "DOWN" and not up_won)
+    size = float(pos.get("pm_size") or 0)
+    if win:
+        return {
+            "ok": True,
+            "reconciled": True,
+            "worthless": False,
+            "received": size,
+            "size": size,
+            "price": 1.0,
+            "status": "settled_win",
+            "pm_resolved": True,
+        }
+    return {
+        "ok": True,
+        "reconciled": True,
+        "worthless": True,
+        "received": 0.0,
+        "size": size,
+        "price": 0.0,
+        "status": "settled_loss",
+        "pm_resolved": True,
+    }
+
+
 def _short_pm_error(err: str) -> str:
     """UI için kısa Türkçe hata."""
     sys.path.insert(0, _DIR_POLY)
@@ -4978,7 +5636,6 @@ def _short_pm_error(err: str) -> str:
 _PM_TG_LABELS = {
     "analiz5": "A1 LIVE",
     "analiz2_live": "2. ANALİZ LIVE",
-    "analiz8_live": "8. ANALİZ LIVE",
     "manual": "MANUEL PM",
 }
 
@@ -5482,6 +6139,117 @@ def _snap_overlay_signals_to_chart(candles: list[dict], signals: list[dict]) -> 
     return out
 
 
+def _candles_through_slot_open(candles: list[dict], window_start: int) -> list[dict]:
+    """Slot açılış mumuna kadar (dahil) — tahminler slot boyunca sabit kalır."""
+    if not candles:
+        return []
+    for i, c in enumerate(candles):
+        if int(c["time"]) >= window_start:
+            return candles[: i + 1]
+    return candles
+
+
+def _algo_overlay_slot_open(overlay: dict, window_start: int) -> dict | None:
+    if not overlay or not overlay.get("ok"):
+        return None
+    comp_s = (overlay.get("overlays") or {}).get("composite") or []
+    trend_s = (overlay.get("overlays") or {}).get("trend") or []
+    if not comp_s:
+        return None
+    best_i = -1
+    best_t = -1
+    for i, pt in enumerate(comp_s):
+        t = int(pt["time"])
+        if t <= window_start and t >= best_t:
+            best_t = t
+            best_i = i
+    if best_i < 0:
+        return None
+    comp_val = float(comp_s[best_i]["value"])
+    tr_val = float(trend_s[best_i]["value"]) if best_i < len(trend_s) else 0.0
+    algo = overlay.get("algo") or "110"
+    gate = float((overlay.get("params") or {}).get("gate") or 15.0)
+    direction = None
+    if algo == "111":
+        if comp_val >= gate and tr_val > 0:
+            direction = "UP"
+        elif comp_val <= -gate and tr_val < 0:
+            direction = "DOWN"
+    else:
+        if comp_val >= gate:
+            direction = "UP"
+        elif comp_val <= -gate:
+            direction = "DOWN"
+    up_pct = int(round(max(0.0, min(100.0, abs(comp_val)))))
+    if direction == "UP":
+        lbl = f"YUKARI {up_pct}%"
+    elif direction == "DOWN":
+        lbl = f"AŞAĞI {up_pct}%"
+    elif comp_val > 0:
+        lbl = f"YUKARI {up_pct}%"
+    elif comp_val < 0:
+        lbl = f"AŞAĞI {up_pct}%"
+    else:
+        lbl = "NÖTR"
+    guide_dir = direction
+    if guide_dir is None:
+        guide_dir = "UP" if comp_val > 0 else ("DOWN" if comp_val < 0 else None)
+    cur = dict(overlay.get("current") or {})
+    cur.update({
+        "composite": round(comp_val, 1),
+        "trend": round(tr_val, 1),
+        "direction": direction,
+        "guide_dir": guide_dir,
+        "label": lbl,
+    })
+    return cur
+
+
+def _attach_slot_open_signals(result: dict, candles: list[dict], window_start: int, dec: int) -> None:
+    slot_c = _candles_through_slot_open(candles, window_start)
+    if len(slot_c) < 55:
+        return
+    ref = result.get("ref_price")
+    try:
+        from chart_multi_confirm_signals import compute_multi_confirm_signals
+        mc = compute_multi_confirm_signals(slot_c, dec=dec)
+        if mc.get("ok") and result.get("multi_confirm"):
+            result["multi_confirm"]["slot_open"] = mc.get("current")
+    except Exception:
+        pass
+    try:
+        from chart_yon_tahmin_signals import compute_yon_tahmin_signals
+        yt = compute_yon_tahmin_signals(slot_c, dec=dec)
+        if yt.get("ok") and result.get("yon_tahmin"):
+            result["yon_tahmin"]["slot_open"] = yt.get("current")
+    except Exception:
+        pass
+    try:
+        from chart_tahmin2_signals import compute_tahmin2_signals
+        t2 = compute_tahmin2_signals(slot_c, ref_price=ref, dec=dec)
+        if t2.get("ok") and result.get("tahmin2"):
+            result["tahmin2"]["slot_open"] = t2.get("current")
+            result["tahmin2"]["slot_open_votes"] = t2.get("votes")
+    except Exception:
+        pass
+    ov = result.get("algo_overlay")
+    if ov and ov.get("ok"):
+        so = _algo_overlay_slot_open(ov, window_start)
+        if so:
+            ov["slot_open"] = so
+
+
+def _load_algo_panel_consensus(symbol: str, timeframe: str = "1h", window_start: int | None = None) -> dict:
+    """ALG1 + ALG2 — 1h dosya; 5m/15m canlı konsensüs."""
+    try:
+        sys.path.insert(0, _DIR_POLY)
+        from chart_algo_panel import load_algo_panel
+        return load_algo_panel(symbol, timeframe, window_start)
+    except Exception:
+        sym = symbol.replace("USDT", "")
+        return {"v1": None, "v2": None, "timeframe": timeframe}
+
+
 def _snap_hourly_signals_to_chart(
     candles: list[dict],
     signals: list[dict],
@@ -5512,55 +6280,8 @@ def _snap_hourly_signals_to_chart(
         out.append({**s, "time": st})
 
     if window_start and window_start in time_set and hourly_current:
-        for tag, hk in (("A1", "a1"), ("A3", "a3"), ("A8", "a8"), ("ALFA", "alfa")):
+        for tag, hk in (("A1", "a1"),):
             cur = hourly_current.get(hk)
-            if not cur or not cur.get("dir"):
-                continue
-            key = (window_start, tag, cur["dir"])
-            if key in seen:
-                continue
-            seen.add(key)
-            out.append({
-                "time": window_start,
-                "dir": cur["dir"],
-                "tag": tag,
-                "live": True,
-            })
-    return out
-
-
-def _snap_fifteen_signals_to_chart(
-    candles: list[dict],
-    signals: list[dict],
-    fifteen_current: dict,
-    window_start: int | None,
-) -> list[dict]:
-    """15m 112/113 oklarını mum zamanına hizala."""
-    if not candles:
-        return []
-    times = [int(c["time"]) for c in candles]
-    time_set = set(times)
-
-    def _snap(t: int) -> int | None:
-        best = min(times, key=lambda x: abs(x - t))
-        return best if abs(best - t) <= 900 else None
-
-    out: list[dict] = []
-    seen: set[tuple] = set()
-    for s in signals:
-        raw_t = int(s["time"])
-        st = raw_t if raw_t in time_set else _snap(raw_t)
-        if st is None:
-            continue
-        key = (st, s.get("tag"), s.get("dir"))
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append({**s, "time": st})
-
-    if window_start and window_start in time_set and fifteen_current:
-        for tag, hk in (("112", "a112"), ("113", "a113")):
-            cur = fifteen_current.get(hk)
             if not cur or not cur.get("dir"):
                 continue
             key = (window_start, tag, cur["dir"])
@@ -5602,7 +6323,7 @@ def _trade_desk_chart(
     elif timeframe == "15m":
         ts_period, slot_label = _trade_desk_period_15m()
         window_secs = 900
-        limit_1m = 60
+        limit_1m = 90
         limit_5m = 24
         limit_15m = 60
         limit_1h = 24
@@ -5611,7 +6332,7 @@ def _trade_desk_chart(
         ts_period = int(hour_start.timestamp())
         slot_label = spot.get("slot_label") or hour_start.strftime("%H:%M")
         window_secs = 3600
-        limit_1m = 90
+        limit_1m = 120
         limit_5m = 24
         limit_15m = 48
         limit_1h = 48
@@ -5634,6 +6355,12 @@ def _trade_desk_chart(
         out["live_price"] = spot.get("live_price")
         out["ref_price"] = spot.get("ref_price")
         out["now"] = int(now_f)
+        out["algo_panel"] = _load_algo_panel_consensus(symbol, timeframe, ts_period)
+        try:
+            from chart_signal_accuracy import get_signal_wr_bundle
+            out["signal_accuracy"] = get_signal_wr_bundle(symbol, timeframe)
+        except Exception:
+            out["signal_accuracy"] = {}
         if out.get("candles") and spot.get("live_price") is not None:
             last = dict(out["candles"][-1])
             lp = round(float(spot["live_price"]), dec)
@@ -5683,7 +6410,13 @@ def _trade_desk_chart(
         "multi_confirm": None,
         "yon_tahmin": None,
         "tahmin2": None,
+        "algo_panel": _load_algo_panel_consensus(symbol, timeframe, ts_period),
     }
+    try:
+        from chart_signal_accuracy import get_signal_wr_bundle
+        result["signal_accuracy"] = get_signal_wr_bundle(symbol, timeframe)
+    except Exception:
+        result["signal_accuracy"] = {}
     if algo_key not in ("", "off", "none", "0"):
         try:
             sys.path.insert(0, _DIR_POLY)
@@ -5706,29 +6439,16 @@ def _trade_desk_chart(
             hs = compute_hourly_chart_signals(symbol, t0, t1)
             if hs.get("ok"):
                 hc = hs.get("current") or {}
-                if timeframe == "1h":
-                    try:
-                        from alfa_signal import chart_current_from_hourly
-                        hc = {**hc, "alfa": chart_current_from_hourly(hc, symbol)}
-                    except Exception:
-                        pass
+                hc = {k: v for k, v in hc.items() if k not in ("a3", "a8")}
+                raw_signals = [s for s in (hs.get("signals") or []) if s.get("tag") not in ("A3", "A8")]
                 snapped = _snap_hourly_signals_to_chart(
                     candles,
-                    hs.get("signals") or [],
+                    raw_signals,
                     hc,
                     ts_period,
                 )
                 result["hourly_signals"] = snapped
                 result["hourly_current"] = hc
-                try:
-                    from pm_balance_guard import get_pm_system_control
-                    result.update({
-                        k: get_pm_system_control()[k]
-                        for k in ("a3a8_signal_strict", "a3a8_signal_mode", "a3a8_signal_mode_label")
-                        if k in get_pm_system_control()
-                    })
-                except Exception:
-                    pass
             else:
                 result["hourly_signals"] = []
                 result["hourly_current"] = {}
@@ -5738,27 +6458,6 @@ def _trade_desk_chart(
     if candles and timeframe in ("5m", "15m", "1h"):
         t0, t1 = candles[0]["time"], candles[-1]["time"]
         try:
-            from chart_15m_a3a8_signals import compute_15m_chart_signals
-            fs = compute_15m_chart_signals(symbol, t0, t1)
-            if fs.get("ok"):
-                fc = fs.get("current") or {}
-                snapped = _snap_fifteen_signals_to_chart(
-                    candles,
-                    fs.get("signals") or [],
-                    fc,
-                    ts_period if timeframe == "15m" else None,
-                )
-                result["fifteen_signals"] = snapped
-                result["fifteen_current"] = fc
-            else:
-                result["fifteen_signals"] = []
-                result["fifteen_current"] = {}
-        except Exception:
-            result["fifteen_signals"] = []
-            result["fifteen_current"] = {}
-    if candles:
-        try:
-            sys.path.insert(0, _DIR_POLY)
             from chart_multi_confirm_signals import compute_multi_confirm_signals
             result["multi_confirm"] = compute_multi_confirm_signals(candles, dec=dec)
         except Exception as e:
@@ -5775,6 +6474,8 @@ def _trade_desk_chart(
             )
         except Exception as e:
             result["tahmin2"] = {"ok": False, "error": str(e), "votes": []}
+    if candles:
+        _attach_slot_open_signals(result, candles, ts_period, dec)
     _trade_chart_cache[cache_key] = (now_f, result)
     if len(_trade_chart_cache) > 48:
         cutoff = now_f - 120
@@ -5965,10 +6666,16 @@ def api_close(analiz, symbol):
 
         if chain_sz >= 0 and chain_sz <= 0.01:
             pre_est = _estimate_close_value(pos)
-            sell_result = _pm_try_worthless_reconcile(pos) or {
-                "ok": True, "reconciled": True, "worthless": True,
-                "received": 0.0, "size": pm_size, "price": 0.0, "status": "already_closed",
-            }
+            # Önce PM settle (kazanç dahil), sonra worthless; asla kör kayıp yazma
+            sell_result = (
+                _pm_try_settled_reconcile(pos)
+                or _pm_try_worthless_reconcile(pos)
+                or {
+                    "ok": True, "reconciled": True, "worthless": False,
+                    "received": 0.0, "size": pm_size, "price": 0.0,
+                    "status": "already_closed",
+                }
+            )
         else:
             if chain_sz > 0:
                 pm_size = chain_sz
@@ -5982,7 +6689,11 @@ def api_close(analiz, symbol):
                 token_dir=pos.get("pm_token_dir") or pos.get("predicted_dir", ""),
             )
             if not sell_result.get("ok"):
-                sell_result = _pm_try_worthless_reconcile(pos) or sell_result
+                sell_result = (
+                    _pm_try_settled_reconcile(pos)
+                    or _pm_try_worthless_reconcile(pos)
+                    or sell_result
+                )
 
         if not sell_result.get("ok"):
             return jsonify({
@@ -6011,6 +6722,63 @@ def api_close(analiz, symbol):
         return jsonify({"ok": False, "error": str(e)}), 500
 
 # ── HTML ──────────────────────────────────────────────────────
+
+_ALGO_V2_DEFS = [
+    (1, "SMC", "Liquidity Sweep Proxy"),
+    (2, "Momentum", "RSI Diverjansı (14) Katı"),
+    (3, "Momentum", "Stochastic RSI"),
+    (4, "Momentum", "Schaff Trend Cycle"),
+    (5, "İstatistik", "Mean Reversion (Z-Score)"),
+    (6, "İstatistik", "Z-Score Mean Reversion"),
+    (7, "İstatistik", "Hurst Proxy (trend/MR)"),
+    (8, "Momentum", "Williams %R"),
+    (9, "Volatilite", "Squeeze Momentum (BB+KC)"),
+    (10, "Price Action", "Fibonacci Retracement"),
+    (11, "Range", "Range Trading S/R Bounce"),
+    (12, "Momentum", "Stochastic RSI (14) K/D"),
+    (13, "Volatilite", "Bollinger Bands + Squeeze"),
+    (14, "Momentum", "CCI"),
+    (15, "Pairs", "Pairs Trading"),
+    (16, "Trend", "Supertrend"),
+    (17, "Trend", "SuperTrend v2 (7,2.0)"),
+]
+
+_CAT_EMOJI = {
+    "SMC": "🎯", "Momentum": "⚡", "İstatistik": "📐", "Volatilite": "💥",
+    "Price Action": "📊", "Range": "↔️", "Pairs": "🔗", "Trend": "📈",
+}
+
+
+def _build_algo_v2_panel_html() -> str:
+    parts = ['<div id="algo-panel-2" style="display:none">']
+    last_cat = None
+    for num, cat, name in _ALGO_V2_DEFS:
+        if cat != last_cat:
+            if last_cat is not None:
+                parts.append("</div>")
+            emoji = _CAT_EMOJI.get(cat, "•")
+            parts.append(f'<div class="section-title">{emoji} {cat}</div><div class="grid">')
+            last_cat = cat
+        parts.append(
+            f'<div class="card" data-algo="{num}" data-panel="2">'
+            f'<div class="card-top"><div class="card-num">{num}</div>'
+            f'<div class="card-name">{name}</div></div>'
+            f'<div class="card-signals" id="sigs-v2-{num}">'
+            f'<div class="sig-loading sig-pill">BTC</div>'
+            f'<div class="sig-loading sig-pill">ETH</div>'
+            f'<div class="sig-loading sig-pill">SOL</div></div>'
+            f'<div class="card-footer"><div class="mini-chart" id="chart-v2-{num}"></div>'
+            f'<div class="card-acc" id="acc-v2-{num}"><span class="acc-none pct-none">—</span></div>'
+            f"</div></div>"
+        )
+    if last_cat is not None:
+        parts.append("</div>")
+    parts.append("</div>")
+    return "\n".join(parts)
+
+
+_ALGO_V2_PANEL_HTML = _build_algo_v2_panel_html()
+
 ALGORITMA_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -6050,12 +6818,23 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   .page-title { font-size:22px; font-weight:800; }
   .page-sub   { font-size:13px; color:#666; margin-top:4px; }
 
+  .algo-tabs { display:flex; gap:8px; margin-top:14px; }
+  .algo-tab {
+    padding:8px 18px; border-radius:12px; border:1px solid #2a2a2a;
+    background:#141414; color:#888; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .algo-tab.active { background:#c8f135; color:#111; border-color:#c8f135; }
+  .algo-tab-v2.active { background:#4ade80; color:#111; border-color:#4ade80; }
+
   .consensus-box {
     background:#111; border:1px solid #1e1e1e; border-radius:16px;
     padding:14px 20px; min-width:280px; flex-shrink:0;
   }
   .cb-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
   .cb-title  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#666; }
+  .cb-panel-badge { color:#c8f135; font-weight:800; margin-left:6px; text-transform:none; letter-spacing:0; }
+  .consensus-box.cb-v2 { border-color:#2a4a2a; }
+  .consensus-box.cb-v2 .cb-panel-badge { color:#4ade80; }
   .cb-time   { font-size:11px; color:#444; }
   .cb-rows   { display:flex; flex-direction:column; gap:8px; }
   .cb-row    { display:flex; align-items:center; gap:10px; }
@@ -6210,13 +6989,17 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="top-bar">
     <div>
       <div class="page-title">Algoritma Analizi</div>
-      <div class="page-sub">39 algoritma — BTC / ETH / SOL — 1 saatlik (konsensüs: 37 oy, #13–14 hariç)</div>
+      <div class="page-sub" id="page-sub">36 algoritma — BTC / ETH / SOL — 1 saatlik (konsensüs: 34 oy, #13–14 hariç)</div>
+      <div class="algo-tabs">
+        <button type="button" class="algo-tab active" id="algo-tab-1" data-tab="1">Analiz 1</button>
+        <button type="button" class="algo-tab algo-tab-v2" id="algo-tab-2" data-tab="2">Analiz 2 · Top 17</button>
+      </div>
       <div id="top-sym-algos" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
     <!-- Consensus kutusu -->
-    <div class="consensus-box">
+    <div class="consensus-box" id="consensus-box">
       <div class="cb-header">
-        <span class="cb-title">Genel Konsensüs</span>
+        <span class="cb-title">Genel Konsensüs <span class="cb-panel-badge" id="cb-panel-badge"></span></span>
         <span class="cb-time" id="cb-updated">Yükleniyor…</span>
       </div>
       <div id="cb-period" style="font-size:11px;color:#555;margin-bottom:4px;"></div>
@@ -6228,6 +7011,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
     </div>
   </div>
 
+  <div id="algo-panel-1">
   <!-- TREND -->
   <div class="section-title">📈 Trend Takip</div>
   <div class="grid">
@@ -6368,24 +7152,9 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- ANALİZ SİSTEMLERİ -->
-  <div class="section-title">🤝 Aktif Sistem Algoritmaları</div>
+  <!-- GELİŞMİŞ -->
+  <div class="section-title">🔬 Gelişmiş Algoritmalar</div>
   <div class="grid">
-    <div class="card" data-algo="22">
-      <div class="card-top"><div class="card-num">22</div><div class="card-name">Analiz-1 (RSI+MACD+EMA)</div></div>
-      <div class="card-signals" id="sigs-22"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-22"></div><div class="card-acc" id="acc-22"><span class="acc-none pct-none">—</span></div></div>
-    </div>
-    <div class="card" data-algo="23">
-      <div class="card-top"><div class="card-num">23</div><div class="card-name">Analiz-9 (Trend+MR+OF+Fund)</div></div>
-      <div class="card-signals" id="sigs-23"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-23"></div><div class="card-acc" id="acc-23"><span class="acc-none pct-none">—</span></div></div>
-    </div>
-    <div class="card" data-algo="24">
-      <div class="card-top"><div class="card-num">24</div><div class="card-name">Analiz-10 (A1+A9 Konsensüs)</div></div>
-      <div class="card-signals" id="sigs-24"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
-      <div class="card-footer"><div class="mini-chart" id="chart-24"></div><div class="card-acc" id="acc-24"><span class="acc-none pct-none">—</span></div></div>
-    </div>
     <div class="card" data-algo="25">
       <div class="card-top"><div class="card-num">25</div><div class="card-name">Parabolic SAR + ADX</div></div>
       <div class="card-signals" id="sigs-25"><div class="sig-loading sig-pill">BTC</div><div class="sig-loading sig-pill">ETH</div><div class="sig-loading sig-pill">SOL</div></div>
@@ -6462,7 +7231,8 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
       <div class="card-footer"><div class="mini-chart" id="chart-39"></div><div class="card-acc" id="acc-39"><span class="acc-none pct-none">—</span></div></div>
     </div>
   </div>
-
+</div><!-- /algo-panel-1 -->
+<!-- ALGO_V2_INSERT -->
 </div><!-- /main-left -->
 
 <!-- Sağ kolon -->
@@ -6497,6 +7267,11 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
 
 <script>
 const SYMS = ["BTC","ETH","SOL"];
+let _activeTab = 1;
+let _accData = {};
+let _accDataV2 = {};
+let _signalsData = {};
+let _signalsDataV2 = {};
 
 function pillClass(sig){
   if(sig==="UP")      return "sig-up";
@@ -6511,12 +7286,11 @@ function pillLabel(sym, sig){
   return sym+" —";
 }
 
-function renderSignals(data){
+function renderSignals(data, prefix, ids){
   const sigs = data.signals || {};
-  // 13,14 sabit (yön yok); diğerleri güncellenir
-  const dynamic = [1,2,3,4,5,6,7,8,9,10,11,12,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39];
-  for(const n of dynamic){
-    const el = document.getElementById("sigs-"+n);
+  const list = ids || [1,2,3,4,5,6,7,8,9,10,11,12,15,16,17,18,19,20,21,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39];
+  for(const n of list){
+    const el = document.getElementById("sigs-"+prefix+n);
     if(!el) continue;
     const entry = sigs[String(n)];
     if(!entry){ el.innerHTML = '<div class="sig-na sig-pill">Veri yok</div>'; continue; }
@@ -6524,20 +7298,31 @@ function renderSignals(data){
   }
 }
 
-function renderConsensus(data){
-  const con = data.consensus || {};
+function renderConsensus(data, voteTotal, panelLabel){
+  const con = data && data.consensus ? data.consensus : null;
   const rows = document.getElementById("cb-rows");
   const upd  = document.getElementById("cb-updated");
   const nxt  = document.getElementById("cb-next");
   const per  = document.getElementById("cb-period");
+  const badge = document.getElementById("cb-panel-badge");
+  const defaultTot = voteTotal || 13;
+  if(badge) badge.textContent = panelLabel ? "· "+panelLabel : "";
+  if(!con || !Object.keys(con).length){
+    if(rows) rows.innerHTML = '<div style="color:#666;font-size:12px;padding:8px 0">Sinyal verisi yok</div>';
+    if(upd) upd.textContent = "";
+    if(nxt) nxt.textContent = "";
+    if(per) per.textContent = "";
+    return;
+  }
   upd.textContent = data.updated ? "🕐 "+data.updated+" güncellendi" : "";
   nxt.textContent = "";
   if(per && data.period_start && data.period_end)
     per.textContent = "📅 "+data.period_start+" → "+data.period_end+" analizi";
+  else if(per) per.textContent = "";
 
   rows.innerHTML = SYMS.map(sym=>{
-    const c = con[sym] || {UP:0,DOWN:0,NEUTRAL:0,total:13};
-    const tot = c.total || 13;
+    const c = con[sym] || {UP:0,DOWN:0,NEUTRAL:0,total:defaultTot};
+    const tot = c.total || defaultTot;
     const upPct  = Math.round(c.UP/tot*100);
     const dnPct  = Math.round(c.DOWN/tot*100);
     const dom    = c.UP > c.DOWN ? "UP" : c.DOWN > c.UP ? "DOWN" : "NEUTRAL";
@@ -6558,13 +7343,14 @@ function renderConsensus(data){
   }).join("");
 }
 
-function renderRanking(acc){
+function renderRanking(acc, names, skipSet){
   const el = document.getElementById("rank-list");
+  const skip = skipSet || new Set();
   const entries = Object.entries(acc)
-    .filter(([k,v]) => v.total > 0)
+    .filter(([k,v]) => !skip.has(k) && v.total > 0)
     .map(([k,v]) => ({
       num: k,
-      name: ALGO_NAMES[k] || "Algo "+k,
+      name: names[k] || "Algo "+k,
       total: v.total,
       correct: v.correct,
       wr: Math.round(v.correct / v.total * 100)
@@ -6592,7 +7378,6 @@ function renderRanking(acc){
   }).join("");
 }
 
-let _accData = {};
 let _activeSym = "BTC";
 
 function setSym(sym){
@@ -6603,7 +7388,11 @@ function setSym(sym){
     btn.style.background = s===sym ? "#c8f135" : "#1c1c1e";
     btn.style.color       = s===sym ? "#0d0d0d" : "#555";
   });
-  renderSymRanking(_accData, sym);
+  if(_activeTab === 2){
+    renderSymRanking(_accDataV2, sym, ALGO_NAMES_V2);
+  } else {
+    renderSymRanking(_accData, sym, ALGO_NAMES, REMOVED_ALGOS);
+  }
 }
 
 const ALGO_NAMES = {
@@ -6611,22 +7400,29 @@ const ALGO_NAMES = {
   "6":"Stochastic RSI","7":"Bollinger Bands","8":"VWAP","9":"OBV","10":"Volume Profile",
   "11":"Mean Reversion","12":"Pairs Trading","13":"Grid Bot","14":"LSTM","15":"Multi-TF",
   "16":"ATR Breakout","17":"Heikin Ashi","18":"TEMA Crossover","19":"ADX Regime",
-  "20":"OI Divergence","21":"Fear & Greed","22":"Analiz-1","23":"Analiz-9","24":"Analiz-10",
+  "20":"OI Divergence","21":"Fear & Greed",
   "25":"Parabolic SAR+ADX","26":"MACD Hist. Div","27":"Stoch RSI K/D","28":"Triple EMA",
   "29":"Hull MA","30":"Keltner Kanal","31":"Donchian Kanal","32":"VWAP+Vol Profile",
   "33":"Money Flow (MFI)","34":"Random Forest","35":"Markov Zinciri","36":"SuperTrend v2",
   "37":"Ichimoku v2","38":"RSI Div (Katı)","39":"H1 Kombinasyon"
 };
-// Sembol bazlı sıralamada gösterilmez (basit algo #22 ≠ gerçek 1. Analiz trader)
-const SYM_RANK_EXCLUDE = new Set(["22"]);
+const ALGO_NAMES_V2 = {
+  "1":"Liquidity Sweep","2":"RSI Div (Katı)","3":"Stoch RSI","4":"Schaff Trend",
+  "5":"Mean Reversion","6":"Z-Score MR","7":"Hurst Proxy","8":"Williams %R",
+  "9":"Squeeze Mom.","10":"Fib Retrace","11":"Range S/R","12":"Stoch RSI K/D",
+  "13":"BB Squeeze","14":"CCI","15":"Pairs","16":"Supertrend","17":"SuperTrend v2"
+};
+const REMOVED_ALGOS = new Set(["22","23","24"]);
+const V2_IDS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17];
 
-function renderSymRanking(acc, sym){
+function renderSymRanking(acc, sym, names, skipSet){
   const el = document.getElementById("sym-rank-list");
   if(!el) return;
+  const skip = skipSet || new Set();
   const entries = Object.entries(acc)
-    .filter(([k,v]) => !SYM_RANK_EXCLUDE.has(k) && v.by_sym && v.by_sym[sym] && v.by_sym[sym].total > 0)
+    .filter(([k,v]) => !skip.has(k) && v.by_sym && v.by_sym[sym] && v.by_sym[sym].total > 0)
     .map(([k,v]) => ({
-      name: ALGO_NAMES[k] || "Algo "+k,
+      name: names[k] || "Algo "+k,
       total: v.by_sym[sym].total,
       correct: v.by_sym[sym].correct,
       wr: Math.round(v.by_sym[sym].correct / v.by_sym[sym].total * 100)
@@ -6651,10 +7447,10 @@ function renderSymRanking(acc, sym){
   }).join("");
 }
 
-function renderTopSymAlgos(acc){
+function renderTopSymAlgos(acc, names, skipSet){
   const el = document.getElementById("top-sym-algos");
   if(!el) return;
-  const SYMS = ["BTC","ETH","SOL"];
+  const skip = skipSet || new Set();
   const MIN_TRADES = 1;
   const items = [];
 
@@ -6662,7 +7458,7 @@ function renderTopSymAlgos(acc){
     let best = null, bestWr = -1, bestStat = "", bestSym = false;
 
     for(const [num, data] of Object.entries(acc)){
-      if(SYM_RANK_EXCLUDE.has(num)) continue;
+      if(skip.has(num)) continue;
       // Önce sembol-bazlı bak
       const sd = data.by_sym && data.by_sym[sym];
       if(sd && sd.total >= MIN_TRADES){
@@ -6683,17 +7479,19 @@ function renderTopSymAlgos(acc){
       const pct = Math.round(bestWr * 100);
       items.push(`<div class="sym-best">
         <span class="sym-best-sym">${sym}</span>
-        <span><span class="sym-best-algo">${ALGO_NAMES[best] || "Algo "+best}</span><span class="sym-best-stat">%${pct} · ${bestStat}</span></span>
+        <span><span class="sym-best-algo">${names[best] || "Algo "+best}</span><span class="sym-best-stat">%${pct} · ${bestStat}</span></span>
       </div>`);
     }
   }
   el.innerHTML = items.length ? items.join("") : '<span style="font-size:12px;color:#444">Veri birikmesi bekleniyor…</span>';
 }
 
-function updateCardAccBadges(acc){
-  for(let n=1; n<=24; n++){
-    const accEl   = document.getElementById("acc-"+n);
-    const chartEl = document.getElementById("chart-"+n);
+function updateCardAccBadges(acc, prefix, maxN, skipSet){
+  const skip = skipSet || new Set();
+  for(let n=1; n<=maxN; n++){
+    if(skip.has(String(n))) continue;
+    const accEl   = document.getElementById("acc-"+prefix+n);
+    const chartEl = document.getElementById("chart-"+prefix+n);
     if(!accEl) continue;
 
     const data = acc[String(n)];
@@ -6728,82 +7526,137 @@ function updateCardAccBadges(acc){
   }
 }
 
-function sortCardsByAccuracy(acc){
-  // Tüm kartları topla
-  const allCards = Array.from(document.querySelectorAll('.main-left .card'));
+function sortCardsByAccuracy(acc, panelId, skipSet){
+  const panel = document.getElementById(panelId);
+  if(!panel) return;
+  const skip = skipSet || new Set();
+  const allCards = Array.from(panel.querySelectorAll('.card'));
   if(!allCards.length) return;
 
-  // Başarı oranını hesapla
   const wr = n => {
+    if(skip.has(String(n))) return -1;
     const d = acc[String(n)];
     if(!d || !d.total) return -1;
     return d.correct / d.total;
   };
 
-  // Sırala: başarısı olanlar önce (desc), sonra veri olmayanlar
   allCards.sort((a, b) => {
     const na = parseInt(a.dataset.algo), nb = parseInt(b.dataset.algo);
     const wa = wr(na), wb = wr(nb);
-    if(wa < 0 && wb < 0) return na - nb; // her ikisi de veri yok → numara sırasıyla
+    if(wa < 0 && wb < 0) return na - nb;
     if(wa < 0) return 1;
     if(wb < 0) return -1;
     return wb - wa;
   });
 
-  // Mevcut section-title ve grid'leri kaldır, tek grid oluştur
-  const mainLeft = document.querySelector('.main-left');
-  mainLeft.querySelectorAll('.section-title').forEach(el => el.remove());
-  mainLeft.querySelectorAll('.grid').forEach(el => el.remove());
+  panel.querySelectorAll('.section-title').forEach(el => el.remove());
+  panel.querySelectorAll('.grid').forEach(el => el.remove());
 
   const secEl = document.createElement('div');
   secEl.className = 'section-title';
   secEl.innerHTML = '🏆 Başarı Sıralaması';
-  mainLeft.appendChild(secEl);
+  panel.appendChild(secEl);
 
   const grid = document.createElement('div');
   grid.className = 'grid';
   allCards.forEach(c => grid.appendChild(c));
-  mainLeft.appendChild(grid);
+  panel.appendChild(grid);
 }
+
+function renderCbTotal(accData, tab){
+  const totEl = document.getElementById("cb-total");
+  if(!totEl) return;
+  const vals = Object.values(accData || {}).filter(v => v && typeof v === "object");
+  const maxTotal = vals.length ? Math.max(0, ...vals.map(x => x.total || 0)) : 0;
+  if(maxTotal > 0){
+    const hours = Math.round(maxTotal / 3);
+    totEl.textContent = `📊 ${maxTotal} ölçüm · ${hours} saatlik veri`;
+  } else {
+    totEl.textContent = tab === 2
+      ? "📊 Analiz 2 — henüz kapanmış saat yok"
+      : "📊 Ölçüm birikiyor…";
+  }
+}
+
+function refreshActiveTabUI(){
+  const sub = document.getElementById("page-sub");
+  const box = document.getElementById("consensus-box");
+  if(box) box.classList.toggle("cb-v2", _activeTab === 2);
+  if(_activeTab === 1){
+    if(sub) sub.textContent = "36 algoritma — BTC / ETH / SOL — 1 saatlik (konsensüs: 34 oy, #13–14 hariç)";
+    renderConsensus(_signalsData, 34, "Analiz 1 · 34 oy");
+    renderSignals(_signalsData, "", null);
+    renderRanking(_accData, ALGO_NAMES, REMOVED_ALGOS);
+    renderSymRanking(_accData, _activeSym, ALGO_NAMES, REMOVED_ALGOS);
+    updateCardAccBadges(_accData, "", 39, REMOVED_ALGOS);
+    sortCardsByAccuracy(_accData, "algo-panel-1", REMOVED_ALGOS);
+    renderTopSymAlgos(_accData, ALGO_NAMES, REMOVED_ALGOS);
+    renderCbTotal(_accData, 1);
+  } else {
+    if(sub) sub.textContent = "17 kârlı algoritma (1Y backtest top 30) — BTC / ETH / SOL — 1 saatlik (konsensüs: 17 oy)";
+    renderConsensus(_signalsDataV2, 17, "Analiz 2 · 17 oy");
+    renderSignals(_signalsDataV2, "v2-", V2_IDS);
+    renderRanking(_accDataV2, ALGO_NAMES_V2);
+    renderSymRanking(_accDataV2, _activeSym, ALGO_NAMES_V2);
+    updateCardAccBadges(_accDataV2, "v2-", 17);
+    sortCardsByAccuracy(_accDataV2, "algo-panel-2");
+    renderTopSymAlgos(_accDataV2, ALGO_NAMES_V2);
+    renderCbTotal(_accDataV2, 2);
+  }
+}
+
+function switchAlgoTab(tab){
+  _activeTab = tab;
+  try { sessionStorage.setItem("algo_active_tab", String(tab)); } catch (_) {}
+  const p1 = document.getElementById("algo-panel-1");
+  const p2 = document.getElementById("algo-panel-2");
+  if(p1) p1.style.display = tab === 1 ? "" : "none";
+  if(p2) p2.style.display = tab === 2 ? "" : "none";
+  document.getElementById("algo-tab-1").classList.toggle("active", tab === 1);
+  document.getElementById("algo-tab-2").classList.toggle("active", tab === 2);
+  refreshActiveTabUI();
+}
+
+document.getElementById("algo-tab-1").addEventListener("click", () => switchAlgoTab(1));
+document.getElementById("algo-tab-2").addEventListener("click", () => switchAlgoTab(2));
 
 async function loadAccuracy(){
   try{
-    const r = await fetch("/poly/api/algo_accuracy");
-    const d = await r.json();
-    _accData = d;
-    renderRanking(d);
-    renderSymRanking(d, _activeSym);
-    updateCardAccBadges(d);
-    sortCardsByAccuracy(d);
-    renderTopSymAlgos(d);
-    // Toplam işlem sayısı (en yüksek totalli algo baz alınır)
-    const totEl = document.getElementById("cb-total");
-    if(totEl){
-      const maxTotal = Math.max(...Object.values(d).map(x => x.total || 0));
-      if(maxTotal > 0){
-        const hours = Math.round(maxTotal / 3);
-        totEl.textContent = `📊 ${maxTotal} ölçüm · ${hours} saatlik veri`;
-      }
-    }
+    const [r1, r2] = await Promise.all([
+      fetch("/poly/api/algo_accuracy"),
+      fetch("/poly/api/algo_accuracy_v2")
+    ]);
+    _accData = await r1.json();
+    _accDataV2 = await r2.json();
+    refreshActiveTabUI();
   }catch(e){ console.error(e); }
 }
 
 async function load(){
   try{
-    const r = await fetch("/poly/api/algo_signals");
-    const d = await r.json();
-    renderConsensus(d);
-    renderSignals(d);
+    const [r1, r2] = await Promise.all([
+      fetch("/poly/api/algo_signals"),
+      fetch("/poly/api/algo_signals_v2")
+    ]);
+    _signalsData = await r1.json();
+    _signalsDataV2 = await r2.json();
+    refreshActiveTabUI();
   }catch(e){ console.error(e); }
 }
 load();
 loadAccuracy();
+try {
+  const saved = parseInt(sessionStorage.getItem("algo_active_tab") || "1", 10);
+  if(saved === 2) switchAlgoTab(2);
+} catch (_) {}
 // Her 5 dakikada yenile
 setInterval(load, 5*60*1000);
 setInterval(loadAccuracy, 10*60*1000);
 </script>
 </body>
 </html>"""
+
+ALGORITMA_HTML = ALGORITMA_HTML.replace("<!-- ALGO_V2_INSERT -->", _ALGO_V2_PANEL_HTML)
 
 AYARLAR_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
@@ -6851,6 +7704,13 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
                    padding:8px 10px; outline:none; transition:.2s; }
   .setting-input:focus { border-color:#c8f135; }
   .setting-val   { font-size:20px; font-weight:800; color:#c8f135; min-width:60px; text-align:right; }
+  .setting-section-label { font-size:11px; font-weight:700; color:#666; text-transform:uppercase;
+                           letter-spacing:.4px; padding:16px 0 8px; border-top:1px solid #222; margin-top:4px; }
+  .amount-triple { display:flex; align-items:flex-end; gap:8px; }
+  .amount-triple .amt-cell { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .amount-triple .amt-lbl { font-size:9px; color:#555; font-weight:700; text-transform:uppercase; }
+  .amount-triple .setting-input { width:58px; font-size:14px; padding:7px 4px; }
+  .amount-triple .setting-unit { min-width:10px; margin-bottom:8px; }
 
   .save-btn { background:#c8f135; border:none; color:#111; font-size:14px; font-weight:800;
               padding:14px 32px; border-radius:14px; cursor:pointer; transition:.2s;
@@ -6950,19 +7810,26 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
         </div>
         <button type="button" class="pm-system-btn" id="pm-system-btn-analiz2" onclick="togglePmSystem('analiz2')">Kapat</button>
       </div>
-      <div class="pm-system-bar" id="pm-system-bar-analiz8">
+      <div class="pm-system-bar" id="pm-system-bar-analiz10">
         <div>
-          <div class="pm-system-status" id="pm-system-status-analiz8">⏸ A8 Live kapalı</div>
-          <div class="pm-system-sub" id="pm-system-sub-analiz8">Gerçek PM yeni işlem açmaz (sanal A8 devam) · Pzt 08:00 otomatik açılır</div>
+          <div class="pm-system-status" id="pm-system-status-analiz10">✅ A10 Live açılış aktif</div>
+          <div class="pm-system-sub" id="pm-system-sub-analiz10">Saatlik BTC+SOL · çift konsensüs · kapanış :02 · Cum 22:00 otomatik kapanır</div>
         </div>
-        <button type="button" class="pm-system-btn paused" id="pm-system-btn-analiz8" onclick="togglePmSystem('analiz8')">Aç</button>
+        <button type="button" class="pm-system-btn" id="pm-system-btn-analiz10" onclick="togglePmSystem('analiz10')">Kapat</button>
       </div>
-      <div class="pm-system-bar" id="pm-system-bar-210">
+      <div class="pm-system-bar paused" id="pm-system-bar-analiz6_live">
         <div>
-          <div class="pm-system-status" id="pm-system-status-210">✅ 210 açılış aktif</div>
-          <div class="pm-system-sub" id="pm-system-sub-210">15M yeni işlem açabilir · Cum 22:00 otomatik kapanır</div>
+          <div class="pm-system-status" id="pm-system-status-analiz6_live">⏸ A6 Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-analiz6_live">Saatlik BTC+SOL+ETH · sanal A6 devam · varsayılan kapalı</div>
         </div>
-        <button type="button" class="pm-system-btn" id="pm-system-btn-210" onclick="togglePmSystem('m15_210')">Kapat</button>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-analiz6_live" onclick="togglePmSystem('analiz6_live')">Aç</button>
+      </div>
+      <div class="pm-system-bar" id="pm-system-bar-15m_309_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-15m_309_live">✅ 15M 309 Live açılış aktif</div>
+          <div class="pm-system-sub" id="pm-system-sub-15m_309_live">15dk BTC+ETH+SOL · $3 sabit · sanal 309 devam · Cum 22:00 otomatik kapanır</div>
+        </div>
+        <button type="button" class="pm-system-btn" id="pm-system-btn-15m_309_live" onclick="togglePmSystem('15m_309_live')">Kapat</button>
       </div>
     </div>
   </div>
@@ -6972,34 +7839,49 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
 
     <div class="setting-row">
       <div class="setting-left">
-        <div class="setting-label">A9 + A1 Live Aynı Yön</div>
-        <div class="setting-desc">İki sistem hemfikir olduğunda açılan işlem miktarı</div>
+        <div class="setting-label">A1 Live</div>
+        <div class="setting-desc">Saatlik BTC+SOL · sembol WR düşük / orta / yüksek</div>
       </div>
-      <div class="setting-right">
-        <span class="setting-unit">$</span>
-        <input class="setting-input" id="amount_agree" type="number" step="0.5" min="1" max="100">
-      </div>
-    </div>
-
-    <div class="setting-row">
-      <div class="setting-left">
-        <div class="setting-label">A9 Sessiz — A1 Live Var</div>
-        <div class="setting-desc">Sadece A1 Live sinyal ürettiğinde açılan işlem miktarı</div>
-      </div>
-      <div class="setting-right">
-        <span class="setting-unit">$</span>
-        <input class="setting-input" id="amount_a5_only" type="number" step="0.5" min="1" max="100">
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a1_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a1_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a1_amount_high" type="number" step="0.5" min="1" max="100"></div>
       </div>
     </div>
 
     <div class="setting-row">
       <div class="setting-left">
-        <div class="setting-label">A9 Var — A1 Live Sessiz</div>
-        <div class="setting-desc">Sadece A9 sinyal ürettiğinde açılan işlem miktarı</div>
+        <div class="setting-label">A2 Live</div>
+        <div class="setting-desc">Saatlik SOL · sembol WR düşük / orta / yüksek</div>
       </div>
-      <div class="setting-right">
-        <span class="setting-unit">$</span>
-        <input class="setting-input" id="amount_a9_only" type="number" step="0.5" min="1" max="100">
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A10 Live</div>
+        <div class="setting-desc">Saatlik BTC+SOL · çift konsensüs · WR giriş</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a10_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a10_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a10_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A6 Live</div>
+        <div class="setting-desc">Saatlik BTC+SOL+ETH · sembol WR düşük / orta / yüksek</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6_amount_high" type="number" step="0.5" min="1" max="100"></div>
       </div>
     </div>
   </div>
@@ -7036,7 +7918,7 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
 
 <script>
 async function togglePmSystem(group) {
-  const btn = document.getElementById('pm-system-btn-' + (group === 'm15_210' ? '210' : group));
+  const btn = document.getElementById('pm-system-btn-' + group);
   if (!btn || btn.disabled) return;
   btn.disabled = true;
   const prev = btn.textContent;
@@ -7074,19 +7956,26 @@ const _PM_SYSTEM_ROWS = {
     subOn: 'Gerçek PM · saatlik SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
     subOff: 'Gerçek PM yeni işlem açmaz (sanal A2 devam) · Pzt 08:00 otomatik açılır',
   },
-  analiz8: {
-    bar: 'pm-system-bar-analiz8', btn: 'pm-system-btn-analiz8',
-    status: 'pm-system-status-analiz8', sub: 'pm-system-sub-analiz8',
-    active: '✅ A8 Live açılış aktif', paused: '⏸ A8 Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · $4/5/6 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A8 devam) · Pzt 08:00 otomatik açılır',
+  analiz10: {
+    bar: 'pm-system-bar-analiz10', btn: 'pm-system-btn-analiz10',
+    status: 'pm-system-status-analiz10', sub: 'pm-system-sub-analiz10',
+    active: '✅ A10 Live açılış aktif', paused: '⏸ A10 Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+SOL · çift konsensüs · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A10 devam) · Pzt 08:00 otomatik açılır',
   },
-  m15_210: {
-    bar: 'pm-system-bar-210', btn: 'pm-system-btn-210',
-    status: 'pm-system-status-210', sub: 'pm-system-sub-210',
-    active: '✅ 210 açılış aktif', paused: '⏸ 210 kapalı',
-    subOn: 'Gerçek PM 15M · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM 15M açmaz (110 sanal devam) · Pzt 08:00 otomatik açılır',
+  analiz6_live: {
+    bar: 'pm-system-bar-analiz6_live', btn: 'pm-system-btn-analiz6_live',
+    status: 'pm-system-status-analiz6_live', sub: 'pm-system-sub-analiz6_live',
+    active: '✅ A6 Live açılış aktif', paused: '⏸ A6 Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · sanal A6 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A6 devam) · Aç ile işlem başlar',
+  },
+  '15m_309_live': {
+    bar: 'pm-system-bar-15m_309_live', btn: 'pm-system-btn-15m_309_live',
+    status: 'pm-system-status-15m_309_live', sub: 'pm-system-sub-15m_309_live',
+    active: '✅ 15M 309 Live açılış aktif', paused: '⏸ 15M 309 Live kapalı',
+    subOn: 'Gerçek PM · 15dk BTC+ETH+SOL · $3 sabit · sanal 309 devam · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal 309 devam) · Pzt 08:00 otomatik açılır',
   },
 };
 
@@ -7115,8 +8004,9 @@ function updatePmSystemUI(d) {
   if (!d) return;
   _pmSystemRow('analiz5', !!d.analiz5_paused, d.updated_at_tr);
   _pmSystemRow('analiz2', !!d.analiz2_paused, d.updated_at_tr);
-  _pmSystemRow('analiz8', !!d.analiz8_paused, d.updated_at_tr);
-  _pmSystemRow('m15_210', !!d.m15_210_paused, d.updated_at_tr);
+  _pmSystemRow('analiz10', !!d.analiz10_paused, d.updated_at_tr);
+  _pmSystemRow('analiz6_live', !!d.analiz6_live_paused, d.updated_at_tr);
+  _pmSystemRow('15m_309_live', !!d['15m_309_live_paused'], d.updated_at_tr);
 }
 
 async function loadPmSystem() {
@@ -7130,12 +8020,20 @@ async function loadPmSystem() {
   }
 }
 
+const _SETTINGS_KEYS = [
+  'a1_amount_low', 'a1_amount_mid', 'a1_amount_high',
+  'a2_amount_low', 'a2_amount_mid', 'a2_amount_high',
+  'a10_amount_low', 'a10_amount_mid', 'a10_amount_high',
+  'a6_amount_low', 'a6_amount_mid', 'a6_amount_high',
+];
+
 async function load() {
   const r = await fetch('/poly/api/settings');
   const d = await r.json();
-  document.getElementById('amount_agree').value   = d.amount_agree;
-  document.getElementById('amount_a5_only').value = d.amount_a5_only;
-  document.getElementById('amount_a9_only').value = d.amount_a9_only;
+  for (const k of _SETTINGS_KEYS) {
+    const el = document.getElementById(k);
+    if (el && d[k] != null) el.value = d[k];
+  }
   loadPmSystem();
   loadPmTransfer();
 }
@@ -7184,11 +8082,11 @@ async function pmWithdraw() {
 async function save() {
   const btn = document.getElementById('save-btn');
   btn.classList.add('loading'); btn.textContent = 'Kaydediliyor...';
-  const body = {
-    amount_agree:    parseFloat(document.getElementById('amount_agree').value),
-    amount_a5_only:  parseFloat(document.getElementById('amount_a5_only').value),
-    amount_a9_only:  parseFloat(document.getElementById('amount_a9_only').value),
-  };
+  const body = {};
+  for (const k of _SETTINGS_KEYS) {
+    const el = document.getElementById(k);
+    if (el) body[k] = parseFloat(el.value);
+  }
   const r = await fetch('/poly/api/settings', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify(body),
@@ -7256,6 +8154,12 @@ HARITA_HTML = r"""<!DOCTYPE html>
   .hm-table th { font-size:10px; color:#666; font-weight:600; padding:3px 2px; text-align:center; }
   .hm-table td { width:44px; height:44px; border-radius:7px; text-align:center; vertical-align:middle;
                  font-size:10px; font-weight:700; cursor:default; position:relative; }
+  .hm-table td.hm-strong { box-shadow: 0 0 0 2px #c8f135, 0 0 8px rgba(200,241,53,.35); }
+  .hm-table td.hm-strong:hover { box-shadow: 0 0 0 2px #eaff6a, 0 0 12px rgba(200,241,53,.5); }
+  .hm-slot-card { background:#111; border:1px solid #1f1f1f; border-radius:10px; padding:10px 12px;
+                  display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .hm-slot-card.clickable { cursor:pointer; }
+  .hm-slot-card.clickable:hover { border-color:#c8f135; }
   .hm-table td:hover::after { content:attr(data-tip); position:absolute; bottom:110%; left:50%;
     transform:translateX(-50%); background:#222; color:#fff; padding:5px 10px; border-radius:8px;
     font-size:11px; white-space:nowrap; pointer-events:none; z-index:99; border:1px solid #333; }
@@ -7299,6 +8203,8 @@ HARITA_HTML = r"""<!DOCTYPE html>
     <div id="hm-breakdown"></div>
   </div>
 
+  <div id="hm-slots-110" style="display:none;margin-bottom:16px"></div>
+
   <div class="section-wrap" style="overflow-x:auto;padding:20px 16px">
     <div id="heatmap-grid" style="min-width:700px"></div>
   </div>
@@ -7307,10 +8213,11 @@ HARITA_HTML = r"""<!DOCTYPE html>
     <span>Kazanma oranı:</span>
     <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#166534;border-radius:3px;display:inline-block"></span>≥70%</span>
     <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#14532d;border-radius:3px;display:inline-block"></span>55–70%</span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#365314;border-radius:3px;display:inline-block"></span>50–55%</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#1e3a8a;border-radius:3px;display:inline-block"></span>Açık poz</span>
     <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#78350f;border-radius:3px;display:inline-block"></span>40–50%</span>
     <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#450a0a;border-radius:3px;display:inline-block"></span>&lt;40%</span>
     <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#1a1a1a;border-radius:3px;display:inline-block;border:1px solid #333"></span>Veri yok</span>
+    <span id="hm-legend-strong" style="display:none;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#14532d;border-radius:3px;display:inline-block;box-shadow:0 0 0 2px #c8f135"></span>≥3 işlem (110)</span>
   </div>
 </div>
 </div>
@@ -7331,10 +8238,57 @@ HARITA_HTML = r"""<!DOCTYPE html>
 <script>
 const _ANALIZ_LABELS = {{ harita_labels|safe }};
 const _HEATMAP_SYMS_MAP = {{ harita_heatmap_syms|safe }};
-let _data = null, _sym = 'ALL', _analiz = '{{ harita_default_analiz }}';
+const _HM_110_KEY = '5m_sol_110';
+const _HM_STRONG_MIN = 3;
+let _data = null, _sym = 'ALL', _analiz = '{{ harita_default_analiz }}', _slotInsights = null;
 
-function hmColor(wr,t){ if(!t)return'#1a1a1a'; if(wr>=70)return'#166534'; if(wr>=55)return'#14532d'; if(wr>=50)return'#365314'; if(wr>=40)return'#78350f'; return'#450a0a'; }
-function hmTxt(wr,t){ if(!t)return'#333'; if(wr>=55)return'#4ade80'; if(wr>=50)return'#c8f135'; if(wr>=40)return'#fbbf24'; return'#f87171'; }
+function hmColor(wr,t,o){ if(o&&!t)return'#1e3a8a'; if(!t&&!o)return'#1a1a1a'; if(wr>=70)return'#166534'; if(wr>=55)return'#14532d'; if(wr>=50)return'#365314'; if(wr>=40)return'#78350f'; return'#450a0a'; }
+function hmTxt(wr,t,o){ if(o&&!t)return'#93c5fd'; if(!t&&!o)return'#333'; if(wr>=55)return'#4ade80'; if(wr>=50)return'#c8f135'; if(wr>=40)return'#fbbf24'; return'#f87171'; }
+function isHm110Strong(t){ return _analiz === _HM_110_KEY && t >= _HM_STRONG_MIN; }
+
+function renderSlotInsights(insights) {
+  const el = document.getElementById('hm-slots-110');
+  const legend = document.getElementById('hm-legend-strong');
+  const is110 = _analiz === _HM_110_KEY;
+  if (legend) legend.style.display = is110 ? 'inline-flex' : 'none';
+  if (!el) return;
+  if (!is110 || !insights || !insights.strong_count) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  _slotInsights = insights;
+  const medals = ['🥇','🥈','🥉','4.','5.'];
+  const row = (sl, i, worst) => {
+    const wrColor = worst
+      ? (sl.wr < 40 ? '#f87171' : sl.wr < 50 ? '#fbbf24' : '#ca8a04')
+      : (sl.wr >= 70 ? '#4ade80' : sl.wr >= 55 ? '#a3e635' : '#c8f135');
+    return `<div class="hm-slot-card clickable" onclick="openPopup(${sl.dow},${sl.hour})">
+      <div>
+        <div style="font-size:12px;font-weight:800">${medals[i] || (i+1)+'.'} ${sl.label}</div>
+        <div style="font-size:10px;color:#666;margin-top:2px">${sl.w}K / ${sl.t} işlem</div>
+      </div>
+      <div style="font-size:15px;font-weight:800;color:${wrColor}">${sl.wr}%</div>
+    </div>`;
+  };
+  el.style.display = 'block';
+  el.innerHTML = `<div class="section-wrap" style="margin:0;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:13px;font-weight:700;color:#aaa">110 — güvenilir slotlar (≥${insights.min_trades} işlem · ${insights.strong_count} hücre)</div>
+      <div style="font-size:11px;color:#555">Sarı çerçeve = ≥${insights.min_trades} işlem</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div>
+        <div style="font-size:11px;color:#4ade80;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">En iyi 5 slot</div>
+        <div style="display:flex;flex-direction:column;gap:6px">${(insights.best||[]).map((s,i)=>row(s,i,false)).join('') || '<div style="color:#555;font-size:12px">Veri yok</div>'}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#f87171;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">En kötü 5 slot</div>
+        <div style="display:flex;flex-direction:column;gap:6px">${(insights.worst||[]).map((s,i)=>row(s,i,true)).join('') || '<div style="color:#555;font-size:12px">Veri yok</div>'}</div>
+      </div>
+    </div>
+  </div>`;
+}
 
 async function load() {
   try {
@@ -7343,16 +8297,20 @@ async function load() {
     if (!d || !Array.isArray(d.cells)) {
       _data = [];
       renderSummary({total:0,wins:0,losses:0,wr:0,pnl:0,spent:0}, []);
+      renderSlotInsights(null);
       renderGrid([]);
       return;
     }
     _data = d.cells;
     renderSummary(d.summary || {total:0,wins:0,losses:0,wr:0,pnl:0,spent:0}, d.sym_breakdown || []);
+    renderSlotInsights(d.slot_insights || null);
     renderGrid(_data);
     const lbl = _ANALIZ_LABELS[_analiz] || _analiz;
-    document.getElementById('hm-subtitle').textContent = `${lbl} — gün × saat kazanma oranı (${d.summary?.total || 0} işlem, ${d.cells.length} dolu hücre)`;
+    const openN = d.summary?.open || 0;
+    document.getElementById('hm-subtitle').textContent = `${lbl} — gün × saat (${d.summary?.total || 0} kapalı${openN ? ', '+openN+' açık' : ''}, ${d.cells.length} hücre)`;
   } catch (e) {
     console.error('harita load', e);
+    renderSlotInsights(null);
     renderGrid([]);
   }
 }
@@ -7360,7 +8318,7 @@ async function load() {
 function setAnaliz(btn, key) {
   document.querySelectorAll('.hm-analiz-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  _analiz = key; _data = null;
+  _analiz = key; _data = null; _slotInsights = null;
   updateHmSymFilters();
   load();
 }
@@ -7396,7 +8354,7 @@ function renderSummary(s, bd) {
         <div>
           <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Toplam İşlem</div>
           <div style="font-size:22px;font-weight:800;line-height:1">${s.total}</div>
-          <div style="font-size:11px;color:#666;margin-top:2px">${s.wins}K / ${s.losses}K</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${s.wins}K / ${s.losses}K${s.open ? ' · '+s.open+' açık' : ''}</div>
         </div>
         <div style="border-top:1px solid #2a2a2a;padding-top:14px">
           <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Kazanma Oranı</div>
@@ -7447,11 +8405,13 @@ function renderGrid(cells) {
   days.forEach((day,dow)=>{
     h+=`<tr><td class="hm-day">${day}</td>`;
     hours.forEach(hr=>{
-      const c=lk[`${dow}_${hr}`]; const wr=c?c.wr:0; const t=c?c.t:0;
-      const tip=t?`${day} ${hr.toString().padStart(2,'0')}:00 — ${wr}% (${c.w}/${t})`:'Veri yok';
-      const txt=t?`${wr}%<br><span style="font-size:8px;opacity:.7">${t}</span>`:'';
-      const clickable = t ? `onclick="openPopup(${dow},${hr})" style="cursor:pointer;` : 'style="';
-      h+=`<td ${clickable}background:${hmColor(wr,t)};color:${hmTxt(wr,t)};border:2px solid #0d0d0d" data-tip="${tip}">${txt}</td>`;
+      const c=lk[`${dow}_${hr}`]; const wr=c?c.wr:0; const t=c?c.t:0; const o=c?(c.open||0):0;
+      const strong = isHm110Strong(t);
+      const tip=t?`${day} ${hr.toString().padStart(2,'0')}:00 — ${wr}% (${c.w}/${t})${strong?' · ≥3 işlem':''}`:o?`${day} ${hr.toString().padStart(2,'0')}:00 — ${o} açık poz`: 'Veri yok';
+      const txt=t?`${wr}%<br><span style="font-size:8px;opacity:.7">${t}${o?('+'+o):''}</span>`:(o?`⏳<br><span style="font-size:8px;opacity:.7">${o}</span>`:'');
+      const clickable = (t || o) ? `onclick="openPopup(${dow},${hr})" style="cursor:pointer;` : 'style="';
+      const strongCls = strong ? ' class="hm-strong"' : '';
+      h+=`<td${strongCls} ${clickable}background:${hmColor(wr,t,o)};color:${hmTxt(wr,t,o)};border:2px solid #0d0d0d" data-tip="${tip}">${txt}</td>`;
     });
     h+='</tr>';
   });
@@ -7575,24 +8535,6 @@ HTML = r"""<!DOCTYPE html>
   .overview-grid { display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start; }
   .overview-left  { min-width:0; }
   .overview-right { min-width:0; }
-  .pm-system-wrap { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
-  .pm-system-bar {
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:12px 14px; border-radius:14px;
-    background:#132013; border:1px solid #2a3a2a;
-  }
-  .pm-system-bar.paused { background:#2a1414; border-color:#5a2a2a; }
-  .pm-system-status { font-size:13px; font-weight:600; color:#9ae66e; line-height:1.35; }
-  .pm-system-bar.paused .pm-system-status { color:#fca5a5; }
-  .pm-system-sub { font-size:11px; color:#666; margin-top:3px; font-weight:500; }
-  .pm-system-btn {
-    flex-shrink:0; border:none; border-radius:10px; padding:9px 14px;
-    font-size:12px; font-weight:800; cursor:pointer; color:#0d0d0d;
-    background:#c8f135; transition:opacity .15s; white-space:nowrap;
-  }
-  .pm-system-btn:hover { opacity:.9; }
-  .pm-system-btn.paused { background:#f87171; color:#fff; }
-  .pm-system-btn:disabled { opacity:.55; cursor:wait; }
 
   /* Stats kartları */
   .stats-row { display:grid; gap:14px; margin-bottom:14px; }
@@ -7608,6 +8550,14 @@ HTML = r"""<!DOCTYPE html>
   .stat-sub { font-size:12px; color:#777; margin-top:4px; }
   .stat-sub.pos { color:#4ade80; }
   .stat-sub.neg { color:#f87171; }
+  .stat-systems { display:flex; flex-direction:column; gap:5px; margin-top:10px; padding-top:10px; border-top:1px solid #222; }
+  .stat-sys-row { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11px; line-height:1.35; }
+  .stat-sys-name { font-weight:700; color:#aaa; min-width:52px; }
+  .stat-sys-wr { font-weight:800; min-width:38px; text-align:right; }
+  .stat-sys-wr.up { color:#4ade80; }
+  .stat-sys-wr.down { color:#f87171; }
+  .stat-sys-detail { color:#555; flex:1; text-align:right; }
+  .stat-sys-paused { color:#666; font-size:10px; }
 
   /* Top3 analiz kartları */
   .top3-card { background:#111; border:1px solid #1e1e1e; border-radius:14px; padding:16px; display:flex; gap:12px; align-items:flex-start; }
@@ -7694,6 +8644,11 @@ HTML = r"""<!DOCTYPE html>
   .port-tab { padding:5px 12px; border-radius:16px; font-size:12px; font-weight:700;
               cursor:pointer; color:#888; border:none; background:#1a1a1a; transition:.2s; }
   .port-tab.active { background:#c8f135; color:#111; }
+  .slot-mode-tabs { display:flex; gap:6px; margin:8px 0 10px; }
+  .slot-tab { flex:1; padding:6px 0; border-radius:10px; font-size:11px; font-weight:700;
+              background:#1c1c1e; color:#666; border:1px solid #252525; cursor:pointer; transition:.2s; }
+  .slot-tab.active { background:#c8f135; color:#111; border-color:#c8f135; }
+  .slot-tab.active.worst { background:#f87171; color:#111; border-color:#f87171; }
   .portfolio-chart-summary { padding:6px 18px 2px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
   .port-cur { font-size:24px; font-weight:800; color:#fff; letter-spacing:-.4px; }
   .port-cur.up { color:#4ade80; }
@@ -7705,29 +8660,31 @@ HTML = r"""<!DOCTYPE html>
   #portfolio-chart { height:210px; }
   .algo-bars-box {
     background:#141414; border:1px solid #1e1e1e; border-radius:16px;
-    padding:14px 12px 12px; margin-bottom:20px; overflow-x:auto;
+    padding:10px 8px 18px; margin-bottom:20px; overflow:visible;
   }
   .algo-bars-chart {
-    display:flex; align-items:flex-end; justify-content:flex-start;
-    gap:6px; min-width:min-content; padding:0 4px;
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:6px; width:100%; min-height:118px;
+    padding:4px 2px 10px; overflow:visible;
     border-bottom:1px solid #333;
   }
   .algo-bar-col {
-    flex:1 1 0; min-width:34px; max-width:50px;
-    display:flex; flex-direction:column; align-items:center;
+    flex:1 1 0; min-width:0;
+    display:flex; flex-direction:column; align-items:center; overflow:visible;
   }
-  .algo-bar-stack {
-    width:100%; height:148px;
-    display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+  .algo-bar-unit {
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+    overflow:visible;
   }
   .algo-bar-val {
-    font-size:10px; font-weight:800; margin-bottom:5px; white-space:nowrap; line-height:1;
+    font-size:10px; font-weight:800; margin-bottom:5px;
+    white-space:nowrap; line-height:1.2; flex-shrink:0; text-align:center;
   }
   .algo-bar-val.up { color:#4ade80; }
   .algo-bar-val.down { color:#f87171; }
   .algo-bar {
-    display:block; width:24px; flex:0 0 auto;
-    border-radius:999px; box-sizing:border-box;
+    display:block; width:22px; max-width:82%; min-width:8px;
+    flex:0 0 auto; border-radius:999px; box-sizing:border-box;
   }
   .algo-bar.up { background:#4ade80; }
   .algo-bar.down { background:#f87171; }
@@ -7736,16 +8693,16 @@ HTML = r"""<!DOCTYPE html>
   .algo-bar.paused { opacity:.45; }
   .algo-bar-label {
     font-size:9px; font-weight:700; color:#888; text-align:center;
-    margin-top:8px; line-height:1.15; width:100%;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    margin-top:10px; line-height:1.15; width:100%;
+    white-space:nowrap; overflow:visible;
   }
   .algo-bar-label.live { color:#c8f135; font-weight:800; }
   @media(max-width:700px){
-    .algo-bar-stack { height:120px; }
-    .algo-bar-col { min-width:26px; max-width:38px; }
-    .algo-bar { width:18px; }
-    .algo-bar-val { font-size:9px; }
-    .algo-bar-label { font-size:8px; }
+    .algo-bars-box { padding:8px 4px 14px; }
+    .algo-bars-chart { gap:2px; min-height:88px; padding:2px 0 8px; }
+    .algo-bar-val { font-size:9px; margin-bottom:4px; }
+    .algo-bar { width:16px; max-width:90%; min-width:5px; }
+    .algo-bar-label { font-size:8px; margin-top:8px; letter-spacing:-0.2px; }
   }
 
   /* Açık pozisyonlar */
@@ -7753,6 +8710,11 @@ HTML = r"""<!DOCTYPE html>
                    letter-spacing:.5px; margin-bottom:14px; }
   .positions { display:flex; flex-direction:column; gap:12px; }
   .pos-card { background:#141414; border-radius:18px; padding:18px; border:2px solid #333; }
+  .pos-card.pos-clickable { cursor:pointer; transition:border-color .15s, background .15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+  .pos-card.pos-clickable:hover { background:#181818; }
+  .pos-card.pos-clickable.dir-up:hover { border-color:#6ee7a0; }
+  .pos-card.pos-clickable.dir-down:hover { border-color:#fca5a5; }
+  .pos-card.pos-clickable .close-btn-wrap { cursor:default; }
   .pos-card.dir-up   { border-color:#4ade80; }
   .pos-card.dir-down { border-color:#f87171; }
   .pos-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
@@ -7944,13 +8906,15 @@ HTML = r"""<!DOCTYPE html>
       <!-- Alt 2 kart: WR + PnL -->
       <div class="stats-row bottom-stats">
         <div class="stat-card">
-          <div class="stat-label">Kazanma Oranı</div>
+          <div class="stat-label">Gerçek PM · Kazanma</div>
           <div class="stat-val" id="wr-stat">—</div>
           <div class="stat-sub" id="wr-sub">—</div>
+          <div class="stat-systems" id="wr-systems"></div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Toplam P&amp;L</div>
+          <div class="stat-label">Gerçek PM · Kar</div>
           <div class="stat-val" id="pnl-stat">—</div>
+          <div class="stat-sub" id="pnl-sub">—</div>
         </div>
       </div>
 
@@ -8109,6 +9073,10 @@ HTML = r"""<!DOCTYPE html>
   <!-- En iyi gün/saat -->
   <div class="rp-section">
     <div class="rp-title">En Etkili Zaman <span id="top-slots-label" style="font-size:10px;color:#666;font-weight:600"></span></div>
+    <div class="slot-mode-tabs" id="slot-mode-tabs">
+      <button type="button" class="slot-tab active" data-mode="best">Başarılı</button>
+      <button type="button" class="slot-tab" data-mode="worst">Başarısız</button>
+    </div>
     <div id="top-slots">
       <div style="color:#666;font-size:13px">Yükleniyor...</div>
     </div>
@@ -8147,7 +9115,88 @@ HTML = r"""<!DOCTYPE html>
 
 <script>
 let portfolioChart = null, portfolioSeriesUp = null, portfolioSeriesDown = null, portfolioInterval = '1h';
+const _PORT_CHART_TZ = 'Europe/Istanbul';
+function utcToIstPortTime(utcSec) {
+  if (utcSec == null) return utcSec;
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: _PORT_CHART_TZ,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).formatToParts(new Date(utcSec * 1000));
+  const g = (t) => parseInt(parts.find(p => p.type === t).value, 10);
+  return Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute'), g('second')) / 1000;
+}
+const _portChartLoc = {
+  locale: 'tr-TR',
+  timeFormatter: (t) => {
+    const p = new Intl.DateTimeFormat('tr-TR', {
+      timeZone: 'UTC',
+      day: '2-digit', month: 'short', year: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(new Date(t * 1000));
+    const pick = (ty) => (p.find(x => x.type === ty) || {}).value || '';
+    return pick('day') + ' ' + pick('month') + " '" + pick('year') + ' ' + pick('hour') + ':' + pick('minute');
+  },
+};
 let _panelAnaliz = 'analiz1';
+let _slotMode = 'best';
+let _slotCache = { best: [], worst: [] };
+
+function renderTopSlots() {
+  const slotEl = document.getElementById('top-slots');
+  if (!slotEl) return;
+  const slots = _slotCache[_slotMode] || [];
+  const isWorst = _slotMode === 'worst';
+  if (!slots.length) {
+    slotEl.innerHTML = '<div style="color:#666;font-size:13px">Veri yok</div>';
+    return;
+  }
+  slotEl.innerHTML = slots.map((sl, i) => {
+    const medals  = ['🥇','🥈','🥉'];
+    const barW    = Math.round(sl.wr);
+    const hour    = sl.hour_int;
+    const wrColor = isWorst
+      ? (sl.wr < 40 ? '#f87171' : sl.wr < 50 ? '#fbbf24' : '#ca8a04')
+      : (sl.wr >= 80 ? '#4ade80' : sl.wr >= 60 ? '#a3e635' : '#c8f135');
+    const hoverClr = isWorst ? '#f87171' : '#c8f135';
+    const dayTags = (sl.day_names || []).map(d =>
+      `<span style="background:#1c1c1e;color:#aaa;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600">${d}</span>`
+    ).join(' ');
+    const dayCount = isWorst ? (sl.bad_days ?? 0) : (sl.good_days ?? 0);
+    const dayCountStr = dayCount > 1
+      ? `<span style="color:${isWorst ? '#f87171' : '#c8f135'};font-weight:700">${dayCount} farklı gün</span>`
+      : `<span style="color:#666">1 gün</span>`;
+    return `<div onclick="openSlotPopup(-1,${hour})"
+      style="padding:8px 10px;margin-bottom:6px;background:#111;border-radius:10px;
+             cursor:pointer;transition:.15s;border:1px solid #1f1f1f"
+      onmouseover="this.style.borderColor='${hoverClr}'" onmouseout="this.style.borderColor='#1f1f1f'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:800">${medals[i]} ${sl.hour}</span>
+        <span style="font-size:13px;font-weight:800;color:${wrColor}">${sl.wr}%</span>
+      </div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:5px">${dayTags}</div>
+      <div style="height:2px;background:#1c1c1e;border-radius:4px;margin-bottom:5px">
+        <div style="height:100%;width:${barW}%;background:${wrColor};border-radius:4px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:10px;color:#666">${sl.w}K / ${sl.t} işlem · ${dayCountStr}</span>
+        <span style="font-size:10px;color:#444;background:#1c1c1e;padding:1px 6px;border-radius:5px">detay →</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('slot-mode-tabs')?.addEventListener('click', e => {
+  const btn = e.target.closest('.slot-tab');
+  if (!btn) return;
+  _slotMode = btn.dataset.mode || 'best';
+  document.querySelectorAll('.slot-tab').forEach(b => {
+    const active = b === btn;
+    b.classList.toggle('active', active);
+    b.classList.toggle('worst', active && _slotMode === 'worst');
+  });
+  renderTopSlots();
+});
 
 function _portCrossPoint(a, b, baseline) {
   if (b.value === a.value) return { time: b.time, value: baseline };
@@ -8182,6 +9231,7 @@ function initPortfolioChart(container) {
     layout: { background:{color:'#141414'}, textColor:'#666' },
     grid: { vertLines:{color:'#1c1c1e'}, horzLines:{color:'#1c1c1e'} },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    localization: _portChartLoc,
     timeScale: { borderColor:'#1c1c1e', timeVisible:true, secondsVisible:false },
     rightPriceScale: { borderColor:'#1c1c1e' },
   });
@@ -8211,7 +9261,7 @@ async function loadPortfolioChart() {
     if (!r.ok) return;
     const d = await r.json();
     const baseline = Number(d.baseline) || 314;
-    const pts = (d.points || []).map(p => ({ time: p.time, value: p.portfolio }));
+    const pts = (d.points || []).map(p => ({ time: utcToIstPortTime(p.time), value: p.portfolio }));
     if (!pts.length) return;
     const split = _splitPortfolioAtBaseline(pts, baseline);
     portfolioSeriesUp.setData(split.up);
@@ -8262,13 +9312,13 @@ async function loadActiveAlgos() {
       return;
     }
     const BASE = 300;
-    const BAR_MAX = 148;
+    const mob = window.matchMedia('(max-width:700px)').matches;
+    const BAR_MAX = mob ? 68 : 100;
     const vals = data.map(a => Number(a.chart_balance ?? a.balance) || 0);
     const scaleMax = Math.max(...vals, BASE);
     const bars = data.map(a => {
       const bal = Number(a.chart_balance ?? a.balance) || 0;
-      const pnl = Number(a.pnl) || 0;
-      const barH = bal > 0 ? Math.max(Math.round((bal / scaleMax) * BAR_MAX), 6) : 4;
+      const barH = bal > 0 ? Math.max(Math.round((bal / scaleMax) * BAR_MAX), 5) : 4;
       const isUp = bal >= BASE;
       const barCls = 'algo-bar ' + (isUp ? 'up' : 'down')
         + (a.real_pm ? ' live' : '')
@@ -8277,10 +9327,11 @@ async function loadActiveAlgos() {
       const labelCls = 'algo-bar-label' + (a.real_pm ? ' live' : '');
       const pauseTip = a.paused ? ' · duraklatıldı' : '';
       const tip = `${a.label}${pauseTip}\n$${bal.toFixed(2)} · WR ${a.wr}%`;
+      const valTxt = bal < 0 ? '-$' + Math.abs(Math.round(bal)) : '$' + bal.toFixed(0);
       return `<div class="algo-bar-col">
-        <div class="algo-bar-stack">
-          <div class="${valCls}">$${bal.toFixed(0)}</div>
-          <div class="${barCls}" style="height:${barH}px;width:24px" title="${tip}"></div>
+        <div class="algo-bar-unit">
+          <div class="${valCls}">${valTxt}</div>
+          <div class="${barCls}" style="height:${barH}px" title="${tip}"></div>
         </div>
         <div class="${labelCls}">${a.short_label || a.label}</div>
       </div>`;
@@ -8293,6 +9344,21 @@ loadPortfolioChart();
 loadActiveAlgos();
 setInterval(loadPortfolioChart, 60000);
 setInterval(loadActiveAlgos, 60000);
+
+function openPosChartFromCard(el) {
+  if (!el || !el.dataset) return;
+  const sym = el.dataset.sym;
+  const tf = el.dataset.tf || '1h';
+  if (!sym) return;
+  try {
+    sessionStorage.setItem('desk_sym', sym);
+    sessionStorage.setItem('desk_tf', tf);
+    sessionStorage.setItem('desk_price_tf', '1m');
+  } catch (e) {}
+  const mob = window.matchMedia('(max-width:768px)').matches;
+  const q = 'sym=' + encodeURIComponent(sym) + '&tf=' + encodeURIComponent(tf) + (mob ? '&focus=1' : '');
+  window.location.href = '/poly/grafik?' + q;
+}
 
 async function closePosition(analiz, symbol, btn, orderId) {
   if (btn.disabled || btn.classList.contains('loading')) return;
@@ -8337,87 +9403,6 @@ async function closePosition(analiz, symbol, btn, orderId) {
   }
 }
 
-async function togglePmSystem(group) {
-  const btn = document.getElementById('pm-system-btn-' + (group === 'm15_210' ? '210' : group));
-  if (!btn || btn.disabled) return;
-  btn.disabled = true;
-  const prev = btn.textContent;
-  btn.textContent = '…';
-  try {
-    const r = await fetch('/poly/api/pm-system', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ group, toggle: true }),
-    });
-    const d = await r.json();
-    if (!d.ok) throw new Error(d.error || 'Hata');
-    updatePmSystemUI(d);
-  } catch (e) {
-    btn.textContent = prev;
-    alert('Sistem anahtarı: ' + e.message);
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-const _PM_SYSTEM_ROWS = {
-  analiz5: {
-    bar: 'pm-system-bar-analiz5', btn: 'pm-system-btn-analiz5',
-    status: 'pm-system-status-analiz5', sub: 'pm-system-sub-analiz5',
-    active: '✅ A1 Live açılış aktif', paused: '⏸ A1 Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A1 devam) · Pzt 08:00 otomatik açılır',
-  },
-  analiz2: {
-    bar: 'pm-system-bar-analiz2', btn: 'pm-system-btn-analiz2',
-    status: 'pm-system-status-analiz2', sub: 'pm-system-sub-analiz2',
-    active: '✅ A2 açılış aktif', paused: '⏸ A2 kapalı',
-    subOn: 'Gerçek PM · saatlik SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2 devam) · Pzt 08:00 otomatik açılır',
-  },
-  analiz8: {
-    bar: 'pm-system-bar-analiz8', btn: 'pm-system-btn-analiz8',
-    status: 'pm-system-status-analiz8', sub: 'pm-system-sub-analiz8',
-    active: '✅ A8 Live açılış aktif', paused: '⏸ A8 Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · $4/5/6 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A8 devam) · Pzt 08:00 otomatik açılır',
-  },
-  m15_210: {
-    bar: 'pm-system-bar-210', btn: 'pm-system-btn-210',
-    status: 'pm-system-status-210', sub: 'pm-system-sub-210',
-    active: '✅ 210 açılış aktif', paused: '⏸ 210 kapalı',
-    subOn: 'Gerçek PM 15M · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM 15M açmaz (110 sanal devam) · Pzt 08:00 otomatik açılır',
-  },
-};
-
-function _pmSystemRow(group, paused, updatedAt) {
-  const cfg = _PM_SYSTEM_ROWS[group];
-  if (!cfg) return;
-  const bar = document.getElementById(cfg.bar);
-  const btn = document.getElementById(cfg.btn);
-  const status = document.getElementById(cfg.status);
-  const sub = document.getElementById(cfg.sub);
-  if (!bar || !btn || !status) return;
-  bar.classList.toggle('paused', !!paused);
-  btn.classList.toggle('paused', !!paused);
-  status.textContent = paused ? cfg.paused : cfg.active;
-  sub.textContent = paused ? cfg.subOff : cfg.subOn;
-  btn.textContent = paused ? 'Aç' : 'Kapat';
-  if (sub && updatedAt) {
-    const t = String(updatedAt).slice(11, 16);
-    if (t) sub.textContent += ' · ' + t;
-  }
-}
-
-function updatePmSystemUI(d) {
-  if (!d) return;
-  _pmSystemRow('analiz5', !!d.analiz5_paused, d.updated_at_tr);
-  _pmSystemRow('analiz2', !!d.analiz2_paused, d.updated_at_tr);
-  _pmSystemRow('analiz8', !!d.analiz8_paused, d.updated_at_tr);
-  _pmSystemRow('m15_210', !!d.m15_210_paused, d.updated_at_tr);
-}
-
 async function refresh() {
   try {
     const [rd, rs, rss] = await Promise.all([
@@ -8454,7 +9439,6 @@ async function refresh() {
     document.getElementById('cash').textContent      = d.cash >= 0 ? '$'+d.cash.toFixed(2) : '?';
     const updEl = document.getElementById('portfolio-updated');
     if (updEl) updEl.textContent = d.updated;
-    updatePmSystemUI(d);
 
     // PM kotasyon — yalnızca açık pozisyonun timeframe/sembolü
     function renderPmQuotes(el, quotes, timeKey) {
@@ -8505,16 +9489,60 @@ async function refresh() {
     renderPmQuotes(document.getElementById('pm-hourly'), d.pm_hourly, 'hour_et');
     renderPmQuotes(document.getElementById('pm-15m'), d.pm_15m, 'period_lbl');
 
-    // WR & PnL — 1. Analiz
-    const a1 = s.algo_stats.find(a => a.key === 'analiz1');
-    if (a1) {
-      const wrEl = document.getElementById('wr-stat');
-      wrEl.textContent = a1.wr + '%';
-      wrEl.className = 'stat-val ' + (a1.wr >= 50 ? 'up' : 'down');
-      document.getElementById('wr-sub').textContent = a1.wins + 'W / ' + (a1.total - a1.wins) + 'L · ' + a1.total + ' işlem';
-      const pnlEl = document.getElementById('pnl-stat');
-      pnlEl.textContent = (a1.pnl >= 0 ? '+' : '') + '$' + a1.pnl.toFixed(2);
-      pnlEl.className = 'stat-val ' + (a1.pnl >= 0 ? 'up' : 'down');
+    // WR & PnL — gerçek PM
+    const rpm = s.real_pm;
+    const wrEl = document.getElementById('wr-stat');
+    const wrSub = document.getElementById('wr-sub');
+    const pnlEl = document.getElementById('pnl-stat');
+    const pnlSub = document.getElementById('pnl-sub');
+    if (rpm && wrEl) {
+      if (rpm.closed_trades > 0) {
+        wrEl.textContent = rpm.wr + '%';
+        wrEl.className = 'stat-val ' + (rpm.wr >= 50 ? 'up' : 'down');
+        if (wrSub) wrSub.textContent = rpm.wins + 'W / ' + rpm.losses + 'L · ' + rpm.closed_trades + ' gerçek işlem (tümü)';
+      } else {
+        wrEl.textContent = '—';
+        wrEl.className = 'stat-val';
+        if (wrSub) wrSub.textContent = 'Henüz kapanmış gerçek işlem yok';
+      }
+      const sysEl = document.getElementById('wr-systems');
+      if (sysEl && Array.isArray(rpm.systems)) {
+        sysEl.innerHTML = rpm.systems.map(s => {
+          const wrCls = s.closed_trades && s.wr != null ? (s.wr >= 50 ? 'up' : 'down') : '';
+          const wrTxt = s.closed_trades && s.wr != null ? s.wr + '%' : '—';
+          let det = s.closed_trades ? `${s.wins}W/${s.closed_trades}` : '0 işlem';
+          if (s.open > 0) {
+            det += ` · ⏳ ${s.open_winning}/${s.open} kazanıyor`;
+          }
+          if (s.pnl != null && s.closed_trades) {
+            det += ` · ${s.pnl >= 0 ? '+' : ''}$${Number(s.pnl).toFixed(0)}`;
+          }
+          const pauseBadge = s.paused
+            ? `<span class="stat-sys-paused">⏸ kapalı</span>`
+            : '';
+          return `<div class="stat-sys-row"><span class="stat-sys-name">${s.label}</span>`
+            + `<span class="stat-sys-wr ${wrCls}">${wrTxt}</span>`
+            + `<span class="stat-sys-detail">${det}</span>`
+            + pauseBadge
+            + `</div>`;
+        }).join('');
+      }
+    }
+    if (rpm && pnlEl) {
+      const tp = rpm.total_pnl;
+      if (tp != null && !Number.isNaN(tp)) {
+        pnlEl.textContent = (tp >= 0 ? '+' : '') + '$' + Number(tp).toFixed(2);
+        pnlEl.className = 'stat-val ' + (tp >= 0 ? 'up' : 'down');
+        if (pnlSub) {
+          const base = rpm.baseline != null ? '$' + Number(rpm.baseline).toFixed(0) : '—';
+          const cash = rpm.cash != null ? '$' + Number(rpm.cash).toFixed(2) : '—';
+          pnlSub.textContent = 'Nakit ' + cash + ' − baseline ' + base;
+        }
+      } else {
+        pnlEl.textContent = '—';
+        pnlEl.className = 'stat-val';
+        if (pnlSub) pnlSub.textContent = 'PM bakiye okunamadı';
+      }
     }
 
     // Risk banner
@@ -8562,7 +9590,9 @@ async function refresh() {
           : p.winning === false
             ? '<span class="pos-win-icon bad" title="Yön ters">✕</span>'
             : '';
-        return `<div class="pos-card ${dirClass}" data-live="${p.analiz_key}:${p.name}" data-spent="${p.pm_spent}">
+        return `<div class="pos-card pos-clickable ${dirClass}" data-live="${p.analiz_key}:${p.name}" data-spent="${p.pm_spent}"
+          data-sym="${p.symbol}" data-tf="${p.chart_tf || (p.is_15m ? '15m' : '1h')}"
+          onclick="openPosChartFromCard(this)" title="Grafik sayfasında aç">
           <div class="pos-top">
             <div class="pos-name">${p.name}</div>
             <div class="pos-dir ${dc}">${p.dir_tr}</div>
@@ -8585,7 +9615,7 @@ async function refresh() {
           </div>
           ${winStr}
           ${p.closable ? `<div class="close-btn-wrap">
-            <button class="close-btn" onclick="closePosition('${p.analiz_key}', '${p.symbol}', this, '${p.pos_id || p.pm_order_id || ''}')">Pozisyonu Kapat</button>
+            <button class="close-btn" onclick="event.stopPropagation(); closePosition('${p.analiz_key}', '${p.symbol}', this, '${p.pos_id || p.pm_order_id || ''}')">Pozisyonu Kapat</button>
           </div>` : ''}
         </div>`;
       }).join('');
@@ -8603,37 +9633,10 @@ async function refresh() {
       </div>`;
     }).join('') || '<div style="color:#666;font-size:13px">Veri yok</div>';
 
-    // En etkili gün+saat top 3
-    const slotEl = document.getElementById('top-slots');
-    if (slotEl) slotEl.innerHTML = (ss.top_slots || []).map((sl, i) => {
-      const medals  = ['🥇','🥈','🥉'];
-      const barW    = Math.round(sl.wr);
-      const hour    = sl.hour_int;
-      const wrColor = sl.wr >= 80 ? '#4ade80' : sl.wr >= 60 ? '#a3e635' : '#c8f135';
-      const dayTags = (sl.day_names || []).map(d =>
-        `<span style="background:#1c1c1e;color:#aaa;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600">${d}</span>`
-      ).join(' ');
-      const dayCountStr = sl.good_days > 1
-        ? `<span style="color:#c8f135;font-weight:700">${sl.good_days} farklı gün</span>`
-        : `<span style="color:#666">1 gün</span>`;
-      return `<div onclick="openSlotPopup(-1,${hour})"
-        style="padding:8px 10px;margin-bottom:6px;background:#111;border-radius:10px;
-               cursor:pointer;transition:.15s;border:1px solid #1f1f1f"
-        onmouseover="this.style.borderColor='#c8f135'" onmouseout="this.style.borderColor='#1f1f1f'">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:12px;font-weight:800">${medals[i]} ${sl.hour}</span>
-          <span style="font-size:13px;font-weight:800;color:${wrColor}">${sl.wr}%</span>
-        </div>
-        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:5px">${dayTags}</div>
-        <div style="height:2px;background:#1c1c1e;border-radius:4px;margin-bottom:5px">
-          <div style="height:100%;width:${barW}%;background:${wrColor};border-radius:4px"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:10px;color:#666">${sl.w}K / ${sl.t} işlem · ${dayCountStr}</span>
-          <span style="font-size:10px;color:#444;background:#1c1c1e;padding:1px 6px;border-radius:5px">detay →</span>
-        </div>
-      </div>`;
-    }).join('') || '<div style="color:#666;font-size:13px">Veri yok</div>';
+    // En etkili / en başarısız gün+saat top 3
+    _slotCache.best = ss.top_slots || [];
+    _slotCache.worst = ss.bottom_slots || [];
+    renderTopSlots();
 
     // Son işlemler (sağ panel + mobil) — bekleyen + kapanmış, zamana göre
     function fmtTradeTime(raw) {
@@ -8868,7 +9871,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz8_live:'A8 Live',analiz4:'4. Analiz',analiz6:'6. Analiz',analiz15:'15. Analiz',analiz10:'10. Analiz',alfa:'ALFA','5m_sol_109':'15M 109 SOL','5m_sol_110':'15M 110 SOL','5m_sol_210':'15M 210 SOL'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz4:'4. Analiz',analiz6:'6. Analiz',analiz15:'15. Analiz',analiz10:'10. Analiz','5m_sol_110':'15M 110 SOL'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {
@@ -8995,15 +9998,20 @@ function renderHeatmap(cells) {
 </html>"""
 
 _SETTINGS_FILE = os.path.join(_DIR_POLY, "analiz5_settings.json")
-_SETTINGS_LABELS = {
-    "amount_agree":    {"label": "A9 + A1 Live aynı yön", "unit": "$", "min": 1, "max": 100, "step": 0.5},
-    "amount_a5_only":  {"label": "A9 sessiz, A1 Live var", "unit": "$", "min": 1, "max": 100, "step": 0.5},
-    "amount_a9_only":  {"label": "A9 var, A1 Live sessiz", "unit": "$", "min": 1, "max": 100, "step": 0.5},
-}
+_AMT_META = {"unit": "$", "min": 1, "max": 100, "step": 0.5}
+_SETTINGS_LABELS = {}
+for _pfx, _lbl in (("a1", "A1 Live"), ("a2", "A2 Live"), ("a10", "A10 Live"), ("a6", "A6 Live")):
+    for _tier, _tier_lbl in (("low", "düşük"), ("mid", "orta"), ("high", "yüksek")):
+        _SETTINGS_LABELS[f"{_pfx}_amount_{_tier}"] = {
+            "label": f"{_lbl} {_tier_lbl} WR giriş", **_AMT_META,
+        }
 
 def _read_settings() -> dict:
     defaults = {
-        "amount_agree": 15.0, "amount_a5_only": 8.0, "amount_a9_only": 6.0,
+        "a1_amount_low": 8.0, "a1_amount_mid": 10.0, "a1_amount_high": 12.0,
+        "a2_amount_low": 6.0, "a2_amount_mid": 7.0, "a2_amount_high": 8.0,
+        "a10_amount_low": 8.0, "a10_amount_mid": 10.0, "a10_amount_high": 12.0,
+        "a6_amount_low": 8.0, "a6_amount_mid": 10.0, "a6_amount_high": 12.0,
     }
     if os.path.exists(_SETTINGS_FILE):
         with open(_SETTINGS_FILE) as f:
@@ -9034,10 +10042,39 @@ def api_algo_signals():
         data["consensus"].pop("HYPE", None)
     return jsonify(data)
 
+@app.route("/poly/api/algo_signals_v2")
+def api_algo_signals_v2():
+    if _auth_required(): return jsonify({"error": "unauthorized"}), 401
+    path = "/tmp/algo_signals_v2.json"
+    if not os.path.exists(path):
+        return jsonify({"error": "no data", "signals": {}, "consensus": {}})
+    with open(path) as f:
+        data = json.load(f)
+    for sym in _DISABLED_SYMS:
+        if isinstance(data.get("consensus"), dict):
+            data["consensus"].pop(sym, None)
+    for entry in (data.get("signals") or {}).values():
+        if isinstance(entry, dict):
+            for sym in _DISABLED_SYMS:
+                entry.pop(sym, None)
+            entry.pop("HYPE", None)
+    if isinstance(data.get("consensus"), dict):
+        data["consensus"].pop("HYPE", None)
+    return jsonify(data)
+
 @app.route("/poly/api/algo_accuracy")
 def api_algo_accuracy():
     if _auth_required(): return jsonify({"error": "unauthorized"}), 401
     path = os.path.join(_DIR_POLY, "algo_accuracy.json")
+    if not os.path.exists(path):
+        return jsonify({})
+    with open(path) as f:
+        return jsonify(json.load(f))
+
+@app.route("/poly/api/algo_accuracy_v2")
+def api_algo_accuracy_v2():
+    if _auth_required(): return jsonify({"error": "unauthorized"}), 401
+    path = os.path.join(_DIR_POLY, "algo_accuracy_v2.json")
     if not os.path.exists(path):
         return jsonify({})
     with open(path) as f:
@@ -9112,25 +10149,110 @@ def page_islemler():
     return ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
 
 
+KRIPTO_FUTURE_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kripto Future — PolyMarket</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex}
+.sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-.5px}
+.logo span{color:#c8f135}
+.nav-label{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin:16px 0 6px 12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;cursor:pointer}
+.nav-item:hover{background:#111;color:#ccc}
+.nav-item.active{background:#1a2e1a;color:#c8f135}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5}
+.nav-item.active .nav-dot{opacity:1;background:#c8f135}
+.sidebar-footer{margin-top:auto;font-size:11px;color:#444;padding:12px;display:flex;align-items:center;gap:6px}
+.sidebar-footer .dot{width:6px;height:6px;border-radius:50%;background:#4ade80}
+.main{flex:1;padding:28px 32px;max-width:960px}
+.page-title{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.4px}
+.page-sub{font-size:13px;color:#666;margin:6px 0 24px}
+.card{background:#111;border:1px solid #1e1e1e;border-radius:14px;padding:22px 20px}
+.card h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:8px}
+.card p{font-size:13px;color:#777;line-height:1.5}
+@media(max-width:768px){
+  body{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:relative}
+  .main{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo">Poly<span>Market</span></div>
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item active" href="/poly/kripto-future"><span class="nav-dot"></span>Kripto Future</a>
+  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
+  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
+  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
+  <div class="nav-label">Hesap</div>
+  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
+  <div class="sidebar-footer"><span class="dot"></span>Canlı</div>
+</div>
+<div class="main">
+  <div class="page-title">Kripto Future</div>
+  <div class="page-sub">Vadeli / futures paneli</div>
+  <div class="card">
+    <h3>Hazırlanıyor</h3>
+    <p>Bu sayfa yakında kripto futures içerikleri için kullanılacak. Menüden erişim aktif.</p>
+  </div>
+</div>
+</body>
+</html>
+"""
+
+
+@app.route("/poly/kripto-future")
+@app.route("/poly/kripto-future/")
+@app.route("/kripto-future")
+@app.route("/kripto-future/")
+def page_kripto_future():
+    if request.path.rstrip("/") == "/kripto-future":
+        return redirect("/poly/kripto-future")
+    if _auth_required():
+        return _login_redirect()
+    return KRIPTO_FUTURE_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
 @app.route("/harita")
 @app.route("/harita/")
 def harita():
     if _auth_required(): return redirect("/poly/login")
-    labels = {k: v for k, v in _HARITA_TAB_ANALYSES}
-    hm_syms = {k: v for k, v in _HEATMAP_SYMS.items() if k in _HEATMAP_ANALYSES}
-    default_key = _HARITA_TAB_ANALYSES[0][0] if _HARITA_TAB_ANALYSES else "analiz5"
+    tabs = _harita_tabs_filtered()
+    labels = {k: v for k, v in tabs}
+    hm_syms = {k: v for k, v in _HEATMAP_SYMS.items() if k in labels}
+    default_key = tabs[0][0] if tabs else "analiz1"
     default_label = labels.get(default_key, "Analiz")
     return render_template_string(
         HARITA_HTML,
-        harita_tabs=_harita_tabs_html(),
+        harita_tabs=_harita_tabs_html(tabs),
         harita_labels=json.dumps(labels, ensure_ascii=False),
         harita_heatmap_syms=json.dumps(hm_syms, ensure_ascii=False),
         harita_default_analiz=default_key,
         harita_default_label=default_label,
     )
 
-for _html_name in ("ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "AYARLAR_HTML", "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML"):
-    globals()[_html_name] = _patch_cache_bust(_patch_nav_islemler(_patch_sidebar_profit(_patch_sidebar_cleanup(globals()[_html_name]))))
+for _html_name in (
+    "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "AYARLAR_HTML",
+    "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
+):
+    globals()[_html_name] = _patch_cache_bust(
+        _patch_nav_kripto_future(
+            _patch_nav_islemler(
+                _patch_sidebar_profit(_patch_sidebar_cleanup(globals()[_html_name]))
+            )
+        )
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)

@@ -14,7 +14,7 @@ def main() -> None:
     mode = sys.argv[1] if len(sys.argv) > 1 else "status"
     if mode == "close":
         state = weekend_pause_all()
-        print("[PM WEEKEND] Cuma 22:00 — sistemler kapatildi (A1 Live + A2 + A8 Live + 210)")
+        print("[PM WEEKEND] Cuma 22:00 — sistemler kapatildi (A1 + A2 + A10 + A6 Live)")
     elif mode == "open":
         state = weekend_resume_all()
         print("[PM WEEKEND] Pazartesi 08:00 — sistemler acildi")
@@ -28,8 +28,8 @@ def main() -> None:
     print(
         f"  analiz5={state['analiz5_paused']} "
         f"analiz2={state['analiz2_paused']} "
-        f"analiz8={state.get('analiz8_paused')} "
-        f"210={state['m15_210_paused']} "
+        f"analiz10={state.get('analiz10_paused')} "
+        f"analiz6_live={state.get('analiz6_live_paused')} "
         f"by={state.get('updated_by')}"
     )
 

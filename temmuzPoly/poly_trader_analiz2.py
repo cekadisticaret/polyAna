@@ -26,10 +26,11 @@ from dataclasses import dataclass
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines, _rsi, _macd, _ema
 from pm_trader_helpers import (
-    apply_pm_quote, sanal_pnl, symbol_wr_amount,
+    apply_pm_quote, sanal_pnl, symbol_wr_amount, pm_hourly_profit_entry_ok,
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT,
     SANAL_TRADE_AMOUNT_HIGH, SANAL_TRADE_AMOUNT_LOW,
     pm_tg_stake, pm_stake_fields, pm_resolve_pnl,
+    resolve_slot_trade_amount, slot_amount_log,
     skip_if_weekend_pause,
 )
 
@@ -359,7 +360,9 @@ async def run_open() -> None:
             continue
 
         name = sym.replace("USDT", "")
-        dyn_amount = symbol_wr_amount(history, sym)
+        base_amount = symbol_wr_amount(history, sym)
+        dyn_amount, hot_boost, cold_cut = resolve_slot_trade_amount(base_amount, hour_tr, history)
+        slot_amount_log("2. ANALİZ", hour_tr, base_amount, dyn_amount, hot_boost, cold_cut)
 
         try:
             klines = await _fetch_klines(sym, "1h", 3)
@@ -377,6 +380,8 @@ async def run_open() -> None:
             "entry_dow":        dow,
             "entry_is_weekend": is_weekend,
             "amount":           dyn_amount,
+            "hot_hour_boost":   hot_boost,
+            "cold_hour_cut":    cold_cut,
             "signal_mode":      sig_mode,
             "us_market_open":   us_open,
             "ind_rsi_vote":     "UP" if pred_obj.rsi < 50 else "DOWN",
@@ -387,6 +392,11 @@ async def run_open() -> None:
                                  else "NEUTRAL"),
         }
         apply_pm_quote(pos, sym, pred_obj.predicted_dir, dyn_amount, now)
+        ok, skip_msg = pm_hourly_profit_entry_ok(pos)
+        if not ok:
+            print(f"[2. ANALİZ open] {sym} — {skip_msg}")
+            skipped.append(f"⏸ <b>{name}</b> — {skip_msg}")
+            continue
         stake = _stake(pos)
         if state["balance"] < stake:
             print(f"[2. ANALİZ open] {sym} — yetersiz bakiye ${state['balance']:.2f} < ${stake:.0f}")

@@ -2,7 +2,7 @@
 A1 LIVE — Analiz 1 Motoru (Gerçek Polymarket)
 
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
-Sabit $8–12–16/işlem (WR'ye göre), BTC+SOL.
+Sabit $8–10–12/işlem (WR'ye göre), BTC+SOL.
 
 Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 08:00 açılır; manuel override mümkün).
 Modlar: close (:02 — PM sonucu için) / open (:05) / weekly / stats
@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
-from pm_trader_helpers import sanal_pnl, pm_tg_stake, compute_top_slot_hours, skip_if_weekend_pause
+from pm_trader_helpers import sanal_pnl, pm_realized_pnl, pm_tg_stake, resolve_slot_trade_amount, slot_amount_log, skip_if_weekend_pause, pm_live_wr_amount, pm_live_amount_range_str
 
 # .env yükle
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -48,8 +48,8 @@ WEEKLY_IMG   = "/tmp/poly_analiz5_weekly_heatmap.png"
 
 INITIAL_BALANCE = 300.0
 SYMBOLS            = ["BTCUSDT", "SOLUSDT"]
-TRADE_AMOUNT       = 12.0  # genel WR veri yok veya tam %50
-TRADE_AMOUNT_HIGH  = 16.0  # sembol genel WR > %50
+TRADE_AMOUNT       = 10.0  # genel WR veri yok veya tam %50
+TRADE_AMOUNT_HIGH  = 12.0  # sembol genel WR > %50
 TRADE_AMOUNT_LOW   = 8.0   # sembol genel WR < %50
 MIN_STAT_COUNT  = 10
 
@@ -408,14 +408,8 @@ def get_symbol_stats(history: list, symbol: str) -> tuple[int, int]:
 
 
 def _trade_amount(history: list, symbol: str) -> float:
-    """Sembol genel WR'ye göre tutar (Analiz 1 ile aynı mantık, ölçekli)."""
-    wins, total = get_symbol_stats(history, symbol)
-    rate = wins / total if total else None
-    if rate is not None and rate > 0.5:
-        return TRADE_AMOUNT_HIGH
-    if rate is not None and rate < 0.5:
-        return TRADE_AMOUNT_LOW
-    return TRADE_AMOUNT
+    """Sembol genel WR'ye göre tutar — dashboard Ayarlar (a1_amount_*)."""
+    return pm_live_wr_amount("a1", history, symbol, get_symbol_stats)
 
 
 def _vote_ok(vote: int, actual: str) -> bool | None:
@@ -647,7 +641,6 @@ async def run_close() -> None:
         pm_spent = float(pos.get("pm_spent") or amount or 0)
         pm_size = float(pos.get("pm_size") or 0)
         if pm_source and pm_size > 0 and pm_spent > 0:
-            from pm_partial_takeprofit import pm_realized_pnl
             pnl_line = pm_realized_pnl(pos, win)
         else:
             pnl_line = sanal_pnl(pos, win)
@@ -822,14 +815,11 @@ async def run_open() -> None:
     _market_skip    = []
     _order_fail     = []
     _newly_opened   = 0
-    hot_hours = compute_top_slot_hours(history)
     for sig in results:
         if sig["predicted_dir"]:
-            amount = _trade_amount(history, sig["symbol"])
-            if hour_tr in hot_hours:
-                base = amount
-                amount = round(amount * 1.5, 2)
-                print(f"[A1 LIVE] 🔥 etkili saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f}")
+            base = _trade_amount(history, sig["symbol"])
+            amount, hot_boost, cold_cut = resolve_slot_trade_amount(base, hour_tr, history)
+            slot_amount_log("A1 LIVE", hour_tr, base, amount, hot_boost, cold_cut)
             pos, err = _try_pm_open(
                 state, sig, hour_tr=hour_tr, dow=dow, is_weekend=is_weekend,
                 now_tr=now_tr, now=now, amount=amount,
@@ -1071,7 +1061,7 @@ def run_stats() -> None:
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${state['balance']:.2f}",
-        f"İşlem: BTC+SOL  ${TRADE_AMOUNT_LOW:.0f}–${TRADE_AMOUNT_HIGH:.0f}/işlem WR'ye göre (Analiz 1 motoru)",
+        f"İşlem: BTC+SOL  {pm_live_amount_range_str('a1')}/işlem WR'ye göre (Analiz 1 motoru)",
         f"\n🔬 <b>Algoritma İsabet Oranı</b>", *_ind_stats_lines(history),
     ]
 

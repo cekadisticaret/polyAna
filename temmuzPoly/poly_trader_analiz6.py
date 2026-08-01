@@ -13,7 +13,8 @@ Algoritma:
   ETH       → RSI Divergence (#38)
 Sanal bütçe: $300, işlem $12/$16/$20 (sembol WR — 1. Analiz mantığı).
 NEUTRAL sinyalde işlem yok.
-Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open/preview atlanır; close açık pozisyon varsa çalışır).
+Hafta sonu duraklama: Cuma 22:00 – Pazartesi 08:00 İST (open/close/preview atlanır).
+Sanal open → aynı adaylar için A6 Live gerçek PM (`PM_ANALIZ6_LIVE_ENABLED` + dashboard anahtarı).
 """
 import asyncio
 import json
@@ -24,6 +25,16 @@ import urllib.parse
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
+# .env yükle (15. Analiz TG anahtarları)
+_ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+if os.path.exists(_ENV_FILE):
+    with open(_ENV_FILE) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import _fetch_klines
 from algo_signals import (
@@ -32,15 +43,16 @@ from algo_signals import (
     rsi_divergence_strict,
 )
 from pm_trader_helpers import (
-    apply_pm_quote, apply_cold_hour_cut, apply_hot_hour_boost, sanal_pnl,
-    symbol_wr_amount,
+    apply_pm_quote, resolve_slot_trade_amount, slot_amount_log, sanal_pnl,
+    symbol_wr_amount, pm_hourly_profit_entry_ok, pm_tg_stake,
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
     SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause,
 )
 
 # ── Config ────────────────────────────────────────────────────
-BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
-CHAT_ID   = "830754964"
+# TG: 15. Analiz ile aynı kanal (A4 botu)
+BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "8630483764:AAFmAmG4nHAGb238wpavlWgMjJZDvIy4DzE")
+CHAT_ID   = os.getenv("TELEGRAM_ANALIZ4_CHAT_ID", os.getenv("TELEGRAM_CHAT", "830754964"))
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR          = os.path.dirname(os.path.abspath(__file__))
@@ -65,11 +77,9 @@ _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cum
 
 
 def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float, bool, bool]:
-    """WR tutarı → etkili saat +%50 → 12:00 yarı."""
+    """WR tutarı → etkili saat +%40 / zayıf saat -%30."""
     base = symbol_wr_amount(history, sym)
-    amount, hot_boost = apply_hot_hour_boost(base, hour_tr, history)
-    amount, cold_cut = apply_cold_hour_cut(amount, hour_tr)
-    return amount, hot_boost, cold_cut
+    return resolve_slot_trade_amount(base, hour_tr, history)
 
 
 def _algo_for_symbol(symbol: str) -> tuple:
@@ -312,12 +322,13 @@ async def run_open() -> None:
         candidates.append({"sym": sym, "direction": direction, "price": price, "algo_name": algo_name})
 
     # Tüm sinyaller için pozisyon aç
+    live_candidates = []
+    opened = []
     for c in candidates:
         sym         = c["sym"]
         direction   = c["direction"]
         dyn_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
-        if hot_boost:
-            print(f"[{LABEL}] 🔥 etkili saat {hour_tr:02d}:00 — ${symbol_wr_amount(history, sym):.0f} → ${dyn_amount:.0f}")
+        slot_amount_log(LABEL, hour_tr, symbol_wr_amount(history, sym), dyn_amount, hot_boost, cold_cut)
         try:
             klines = await _fetch_klines(sym, "1h", 3)
             entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else c["price"]
@@ -338,13 +349,29 @@ async def run_open() -> None:
             "algo_name":        c.get("algo_name", ALGO_NAME),
         }
         apply_pm_quote(pos, sym, direction, dyn_amount, now)
+        ok, skip_msg = pm_hourly_profit_entry_ok(pos)
+        if not ok:
+            print(f"[{LABEL} open] {sym} — {skip_msg}")
+            continue
         state["open_positions"].append(pos)
+        live_candidates.append(c)
+        opened.append({**c, "entry_price": entry_price, "pos": pos,
+                       "dyn_amount": dyn_amount, "hot_boost": hot_boost, "cold_cut": cold_cut})
 
     save_state(state)
 
+    if live_candidates:
+        try:
+            from poly_trader_analiz6_live import open_live_for_sanal_candidates
+            n_live = await open_live_for_sanal_candidates(live_candidates, now_tr, now)
+            if n_live:
+                print(f"[{LABEL} open] A6 Live — {n_live} gerçek PM eşlendi")
+        except Exception as e:
+            print(f"[{LABEL} open] A6 Live eşleme hatası: {e}")
+
     next_h = f"{(hour_tr + 1) % 24:02d}:00"
     lines  = []
-    for c in candidates:
+    for c in opened:
         sym      = c["sym"]
         direction = c["direction"]
         name     = sym.replace("USDT", "")
@@ -352,19 +379,17 @@ async def run_open() -> None:
         dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins, sym_total = get_symbol_stats(history, sym)
-        pos_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
-        try:
-            klines = await _fetch_klines(sym, "1h", 3)
-            entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else c["price"]
-        except Exception:
-            entry_price = c["price"]
+        entry_price = c["entry_price"]
         tags = f"  📊 {c.get('algo_name', ALGO_NAME)}"
-        if hot_boost:
+        if c["hot_boost"]:
             tags += "  🔥+%50"
-        if cold_cut:
+        if c["cold_cut"]:
             tags += "  ⚠️12:00 yarı"
+        pm_line = pm_tg_stake(c["pos"])
+        pm_detail = f"   {pm_line}\n" if pm_line else f"   💵 ${c['dyn_amount']:.0f}\n"
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  giriş:{entry_price:.2f}  💵{pos_amount:.0f}${tags}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  giriş:{entry_price:.2f}{tags}\n"
+            f"{pm_detail}"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )

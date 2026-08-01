@@ -27,7 +27,7 @@ def _pm_order_not_ready(err: str | None) -> bool:
         "please retry" in low and ("425" in low or "not ready" in low)
     )
 
-# Gerçek PM trader'lar — A1 Live / 210 / A2 Live aynı Telegram kanalı
+# Gerçek PM trader'lar — A1 Live / A2 Live aynı Telegram kanalı
 PM_LIVE_TG_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
 PM_LIVE_TG_CHAT = "830754964"
 
@@ -52,7 +52,7 @@ def tg_send_pm_live(text: str, *, label: str = "PM") -> bool:
 
 
 def in_weekend_pause_tr(now_tr: datetime) -> bool:
-    """Cuma 22:00 – Pazartesi 08:00 İST arası yeni işlem açılmaz (A1/A2/210 gerçek PM)."""
+    """Cuma 22:00 – Pazartesi 08:00 İST arası yeni işlem açılmaz (A1/A2 gerçek PM)."""
     dow = now_tr.weekday()  # 0=Pzt … 4=Cum 5=Cmt 6=Paz
     h = now_tr.hour
     if dow == 4 and h >= 22:
@@ -66,14 +66,25 @@ def in_weekend_pause_tr(now_tr: datetime) -> bool:
     return False
 
 
+_SANAL_WEEKEND_LABELS = frozenset({"6. ANALİZ", "A2"})
+
+
 def skip_if_weekend_pause(label: str, mode: str, now_tr: datetime | None = None) -> bool:
-    """Hafta sonu duraklamasında True — yalnızca gerçek PM (dashboard grubu) trader'ları."""
+    """Hafta sonu duraklamasında True — gerçek PM + seçili sanal trader'lar.
+
+    Close modu atlanmaz: Cum 21:05 açılıp 22:02'de kapanması gereken
+    pozisyonlar settle edilebilsin. Yalnızca yeni open durur.
+    """
+    if mode == "close":
+        return False
     try:
         from pm_balance_guard import is_live_pm_label
-        if not is_live_pm_label(label):
+        applies = is_live_pm_label(label) or label in _SANAL_WEEKEND_LABELS
+        if not applies:
             return False
     except Exception:
-        pass
+        if label not in _SANAL_WEEKEND_LABELS:
+            return False
     if now_tr is None:
         now_tr = datetime.now(_TZ_TR)
     elif now_tr.tzinfo is None:
@@ -108,6 +119,57 @@ def symbol_wr_amount(history: list, symbol: str) -> float:
     if rate < 0.5:
         return SANAL_TRADE_AMOUNT_LOW
     return SANAL_TRADE_AMOUNT
+
+
+_PM_LIVE_SETTINGS_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "analiz5_settings.json"
+)
+_PM_LIVE_AMOUNT_DEFAULTS: dict[str, tuple[float, float, float]] = {
+    "a1": (8.0, 10.0, 12.0),
+    "a2": (6.0, 7.0, 8.0),
+    "a10": (8.0, 10.0, 12.0),
+    "a6": (8.0, 10.0, 12.0),
+}
+
+
+def load_pm_live_amounts(system: str) -> tuple[float, float, float]:
+    """Dashboard analiz5_settings.json → (low, mid, high) gerçek PM giriş tutarları."""
+    defaults = _PM_LIVE_AMOUNT_DEFAULTS.get(system, (8.0, 10.0, 12.0))
+    if not os.path.exists(_PM_LIVE_SETTINGS_FILE):
+        return defaults
+    try:
+        with open(_PM_LIVE_SETTINGS_FILE) as f:
+            data = json.load(f)
+        low = float(data.get(f"{system}_amount_low", defaults[0]))
+        mid = float(data.get(f"{system}_amount_mid", defaults[1]))
+        high = float(data.get(f"{system}_amount_high", defaults[2]))
+        return low, mid, high
+    except Exception:
+        return defaults
+
+
+def pm_live_amount_range_str(system: str) -> str:
+    low, _, high = load_pm_live_amounts(system)
+    return f"${low:.0f}–${high:.0f}"
+
+
+def pm_live_wr_amount(
+    system: str,
+    history: list,
+    symbol: str,
+    get_symbol_stats,
+) -> float:
+    """Gerçek PM — sembol WR'ye göre düşük/orta/yüksek tutar (dashboard ayarlı)."""
+    low, mid, high = load_pm_live_amounts(system)
+    wins, total = get_symbol_stats(history, symbol)
+    if not total:
+        return mid
+    rate = wins / total
+    if rate > 0.5:
+        return high
+    if rate < 0.5:
+        return low
+    return mid
 
 
 def pm_get_client():
@@ -519,6 +581,37 @@ def apply_pm_quote(pos: dict, symbol: str, direction: str, amount: float, now: d
     return pos
 
 
+# Saatlik sanal (A1/A2/A6/A10): net kazanç >= stake'in bu oranı yoksa işlem açılmaz
+HOURLY_MIN_NET_PROFIT_RATIO = 0.5
+
+
+def pm_net_profit(pos: dict) -> float:
+    spent, size, _ = pm_stake_fields(pos)
+    if spent <= 0 or size <= 0:
+        return 0.0
+    return round(size - spent, 2)
+
+
+def pm_hourly_profit_entry_ok(
+    pos: dict,
+    min_ratio: float = HOURLY_MIN_NET_PROFIT_RATIO,
+) -> tuple[bool, str]:
+    """PM kotasyonunda net kazanç (to_win − spent) >= stake × min_ratio ise True."""
+    spent, size, ep = pm_stake_fields(pos)
+    if spent <= 0 or size <= 0:
+        return True, ""
+    net = round(size - spent, 2)
+    need = round(spent * min_ratio, 2)
+    if net >= need:
+        return True, ""
+    need_pct = int(round(min_ratio * 100))
+    got_pct = int(round(net / spent * 100)) if spent else 0
+    return (
+        False,
+        f"PM kazanç düşük: +${net:.2f} (%{got_pct}) < %{need_pct} (+${need:.2f} gerekli, @{ep:.2f})",
+    )
+
+
 def pm_stake_fields(pos: dict) -> tuple[float, float, float]:
     """(harcama, to_win/pm_size, token_fiyat) — giriş kotasyonundan."""
     spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
@@ -588,6 +681,19 @@ def sanal_pnl(pos: dict, win: bool) -> float:
     if not win:
         return round(-spent, 2) if spent > 0 else 0.0
     return 0.0
+
+
+def pm_realized_pnl(pos: dict, win: bool) -> float:
+    """Kısmi kar al sonrası nihai P&L (eski 210 pozisyonları için geriye uyum)."""
+    partial = float(pos.get("pm_partial_received") or 0)
+    spent_orig = float(
+        pos.get("pm_spent_original") or pos.get("pm_spent") or pos.get("amount") or 0
+    )
+    _, size, _ = pm_stake_fields(pos)
+    if partial > 0 and spent_orig > 0:
+        remainder = size if win else 0.0
+        return round(partial + remainder - spent_orig, 2)
+    return sanal_pnl(pos, win)
 
 
 def sanal_debit_on_open(state: dict, pos: dict) -> float:
@@ -705,11 +811,7 @@ def pm_5m_history_extras(pos: dict) -> dict:
 
 def pm_5m_close(pos: dict, win: bool) -> tuple[float, float]:
     """(pnl, payout) — girişte kaydedilen PM kotasyonuna göre."""
-    try:
-        from pm_partial_takeprofit import pm_realized_pnl
-        pnl = pm_realized_pnl(pos, win)
-    except Exception:
-        pnl = sanal_pnl(pos, win)
+    pnl = pm_realized_pnl(pos, win)
     _, size, _ = pm_stake_fields(pos)
     payout = size if win else 0.0
     return pnl, payout
@@ -766,21 +868,18 @@ def pm_5m_fetch_resolution(slug: str, min_decisive: float = 0.99) -> dict | None
 
 pm_fetch_resolution = pm_5m_fetch_resolution  # 1h saatlik marketler de aynı format
 
-# Dashboard "En Etkili Zaman" ile aynı mantık — top 3 saatte canlı giriş %50 artış
-HOT_HOUR_BOOST = 1.5
+# Dashboard "En Etkili Zaman" ile aynı mantık — top 3 saat +%40, bottom 3 saat -%30
+HOT_HOUR_BOOST = 1.4
 HOT_HOUR_MIN_TRADES = 3
-# En başarısız saatler — giriş tutarı yarıya
-COLD_HOUR_CUT = 0.5
-COLD_HOURS = frozenset({12})
+COLD_HOUR_CUT = 0.7
+SLOT_TOP_N = 3
 
 
-def compute_top_slot_hours(
+def _hour_slot_candidates(
     history: list,
     *,
     min_trades: int = HOT_HOUR_MIN_TRADES,
-    top_n: int = 3,
-) -> frozenset[int]:
-    """Birden fazla günde tutarlı başarılı saatler (dashboard top_slots ile uyumlu)."""
+) -> list[tuple[int, int, float]]:
     hour_day: dict[int, dict[int, dict[str, int]]] = {}
     for t in history:
         dow = t.get("entry_dow")
@@ -792,7 +891,7 @@ def compute_top_slot_hours(
         if t.get("win"):
             hour_day[hour][dow]["w"] += 1
 
-    slots: list[tuple[int, int, float]] = []
+    out: list[tuple[int, int, float]] = []
     for h, day_data in hour_day.items():
         good_days = [
             v for v in day_data.values()
@@ -800,12 +899,62 @@ def compute_top_slot_hours(
         ]
         all_w = sum(v["w"] for v in day_data.values())
         all_t = sum(v["t"] for v in day_data.values())
-        if not good_days or all_t < min_trades:
+        if all_t < min_trades:
             continue
         wr = all_w / all_t * 100 if all_t else 0.0
-        slots.append((h, len(good_days), wr))
+        out.append((h, len(good_days), wr))
+    return out
+
+
+def compute_top_slot_hours(
+    history: list,
+    *,
+    min_trades: int = HOT_HOUR_MIN_TRADES,
+    top_n: int = SLOT_TOP_N,
+) -> frozenset[int]:
+    """Birden fazla günde tutarlı başarılı saatler (dashboard top_slots ile uyumlu)."""
+    slots = [
+        (h, good_days, wr)
+        for h, good_days, wr in _hour_slot_candidates(history, min_trades=min_trades)
+        if good_days >= 1
+    ]
     slots.sort(key=lambda x: (x[1], x[2]), reverse=True)
     return frozenset(h for h, _, _ in slots[:top_n])
+
+
+def compute_bottom_slot_hours(
+    history: list,
+    *,
+    min_trades: int = HOT_HOUR_MIN_TRADES,
+    top_n: int = SLOT_TOP_N,
+) -> frozenset[int]:
+    """En düşük WR'li saatler (dashboard bottom_slots ile uyumlu)."""
+    slots = list(_hour_slot_candidates(history, min_trades=min_trades))
+    slots.sort(key=lambda x: (x[2], -x[1]))
+    return frozenset(h for h, _, _ in slots[:top_n])
+
+
+def resolve_slot_trade_amount(
+    base_amount: float,
+    hour_tr: int,
+    history: list,
+    *,
+    boost: float = HOT_HOUR_BOOST,
+    cut: float = COLD_HOUR_CUT,
+) -> tuple[float, bool, bool]:
+    """Top 3 saatte +%40, bottom 3 saatte -%30 (hot öncelikli)."""
+    if hour_tr in compute_top_slot_hours(history):
+        return round(base_amount * boost, 2), True, False
+    if hour_tr in compute_bottom_slot_hours(history):
+        return round(base_amount * cut, 2), False, True
+    return base_amount, False, False
+
+
+def slot_amount_log(label: str, hour_tr: int, base: float, amount: float, hot_boost: bool, cold_cut: bool) -> None:
+    if hot_boost:
+        print(f"[{label}] 🔥 etkili saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f} (+40%)")
+    elif cold_cut:
+        print(f"[{label}] ❄️ zayıf saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f} (-30%)")
 
 
 def apply_hot_hour_boost(
@@ -814,7 +963,7 @@ def apply_hot_hour_boost(
     history: list,
     boost: float = HOT_HOUR_BOOST,
 ) -> tuple[float, bool]:
-    """En etkili saatlerde giriş tutarını artır (varsayılan +%50)."""
+    """En etkili saatlerde giriş tutarını artır (varsayılan +%40)."""
     if hour_tr in compute_top_slot_hours(history):
         return round(base_amount * boost, 2), True
     return base_amount, False
@@ -823,12 +972,14 @@ def apply_hot_hour_boost(
 def apply_cold_hour_cut(
     base_amount: float,
     hour_tr: int,
+    history: list,
     *,
     cut: float = COLD_HOUR_CUT,
-    cold_hours: frozenset[int] = COLD_HOURS,
 ) -> tuple[float, bool]:
-    """En başarısız saatlerde giriş tutarını düşür (varsayılan %50)."""
-    if hour_tr in cold_hours:
+    """En başarısız saatlerde giriş tutarını düşür (varsayılan -%30)."""
+    if hour_tr in compute_top_slot_hours(history):
+        return base_amount, False
+    if hour_tr in compute_bottom_slot_hours(history):
         return round(base_amount * cut, 2), True
     return base_amount, False
 

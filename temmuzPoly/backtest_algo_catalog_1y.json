@@ -1,0 +1,858 @@
+{
+  "period_days": 365,
+  "period_start": "2025-07-30",
+  "period_end": "2026-07-30",
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT"
+  ],
+  "algos_tested": 78,
+  "min_trades": 80,
+  "top": [
+    {
+      "id": 71,
+      "name": "Liquidity Sweep Proxy",
+      "category": "SMC",
+      "correct": 2194,
+      "total": 4139,
+      "wr": 53.01
+    },
+    {
+      "id": 38,
+      "name": "RSI Diverjansı (14) Katı",
+      "category": "Momentum",
+      "correct": 3270,
+      "total": 6225,
+      "wr": 52.53
+    },
+    {
+      "id": 6,
+      "name": "Stochastic RSI",
+      "category": "Momentum",
+      "correct": 13776,
+      "total": 26280,
+      "wr": 52.42
+    },
+    {
+      "id": 75,
+      "name": "Schaff Trend Cycle",
+      "category": "Momentum",
+      "correct": 13776,
+      "total": 26280,
+      "wr": 52.42
+    },
+    {
+      "id": 11,
+      "name": "Mean Reversion (Z-Score)",
+      "category": "İstatistik",
+      "correct": 10748,
+      "total": 20531,
+      "wr": 52.35
+    },
+    {
+      "id": 81,
+      "name": "Z-Score Mean Reversion",
+      "category": "İstatistik",
+      "correct": 10748,
+      "total": 20531,
+      "wr": 52.35
+    },
+    {
+      "id": 80,
+      "name": "Hurst Proxy (trend/MR)",
+      "category": "İstatistik",
+      "correct": 10747,
+      "total": 20541,
+      "wr": 52.32
+    },
+    {
+      "id": 40,
+      "name": "Williams %R",
+      "category": "Momentum",
+      "correct": 13637,
+      "total": 26280,
+      "wr": 51.89
+    },
+    {
+      "id": 62,
+      "name": "Squeeze Momentum (BB+KC)",
+      "category": "Volatilite",
+      "correct": 9211,
+      "total": 17809,
+      "wr": 51.72
+    },
+    {
+      "id": 52,
+      "name": "Fibonacci Retracement",
+      "category": "Price Action",
+      "correct": 13514,
+      "total": 26280,
+      "wr": 51.42
+    },
+    {
+      "id": 67,
+      "name": "Range Trading S/R Bounce",
+      "category": "Range",
+      "correct": 13513,
+      "total": 26280,
+      "wr": 51.42
+    },
+    {
+      "id": 27,
+      "name": "Stochastic RSI (14) K/D",
+      "category": "Momentum",
+      "correct": 13426,
+      "total": 26280,
+      "wr": 51.09
+    },
+    {
+      "id": 7,
+      "name": "Bollinger Bands + Squeeze",
+      "category": "Volatilite",
+      "correct": 13408,
+      "total": 26280,
+      "wr": 51.02
+    },
+    {
+      "id": 41,
+      "name": "CCI",
+      "category": "Momentum",
+      "correct": 13360,
+      "total": 26280,
+      "wr": 50.84
+    },
+    {
+      "id": 12,
+      "name": "Pairs Trading",
+      "category": "Pairs",
+      "correct": 4550,
+      "total": 8960,
+      "wr": 50.78
+    },
+    {
+      "id": 3,
+      "name": "Supertrend",
+      "category": "Trend",
+      "correct": 13175,
+      "total": 26280,
+      "wr": 50.13
+    },
+    {
+      "id": 36,
+      "name": "SuperTrend v2 (7,2.0)",
+      "category": "Trend",
+      "correct": 13175,
+      "total": 26280,
+      "wr": 50.13
+    },
+    {
+      "id": 33,
+      "name": "Money Flow Index (MFI)",
+      "category": "Hacim",
+      "correct": 10683,
+      "total": 21481,
+      "wr": 49.73
+    },
+    {
+      "id": 5,
+      "name": "RSI + Divergence",
+      "category": "Momentum",
+      "correct": 8997,
+      "total": 18153,
+      "wr": 49.56
+    },
+    {
+      "id": 44,
+      "name": "TRIX",
+      "category": "Momentum",
+      "correct": 12994,
+      "total": 26280,
+      "wr": 49.44
+    },
+    {
+      "id": 43,
+      "name": "Aroon Indicator",
+      "category": "Trend",
+      "correct": 12963,
+      "total": 26280,
+      "wr": 49.33
+    },
+    {
+      "id": 76,
+      "name": "True Strength Index (TSI)",
+      "category": "Momentum",
+      "correct": 12941,
+      "total": 26280,
+      "wr": 49.24
+    },
+    {
+      "id": 54,
+      "name": "PPO",
+      "category": "Momentum",
+      "correct": 12925,
+      "total": 26280,
+      "wr": 49.18
+    },
+    {
+      "id": 56,
+      "name": "Linear Regression Slope",
+      "category": "Trend",
+      "correct": 12922,
+      "total": 26280,
+      "wr": 49.17
+    },
+    {
+      "id": 46,
+      "name": "Awesome Oscillator",
+      "category": "Momentum",
+      "correct": 12911,
+      "total": 26280,
+      "wr": 49.13
+    },
+    {
+      "id": 4,
+      "name": "Ichimoku Cloud",
+      "category": "Trend",
+      "correct": 12796,
+      "total": 26062,
+      "wr": 49.1
+    },
+    {
+      "id": 15,
+      "name": "Multi-Timeframe Confluence",
+      "category": "Multi-TF",
+      "correct": 10373,
+      "total": 21132,
+      "wr": 49.09
+    },
+    {
+      "id": 58,
+      "name": "CVD Proxy",
+      "category": "Order Flow",
+      "correct": 12898,
+      "total": 26280,
+      "wr": 49.08
+    },
+    {
+      "id": 50,
+      "name": "Choppiness Index",
+      "category": "Volatilite",
+      "correct": 7593,
+      "total": 15471,
+      "wr": 49.08
+    },
+    {
+      "id": 37,
+      "name": "Ichimoku Cloud v2 (TK+Bulut)",
+      "category": "Trend",
+      "correct": 12890,
+      "total": 26280,
+      "wr": 49.05
+    }
+  ],
+  "all_ranked": [
+    {
+      "id": 71,
+      "name": "Liquidity Sweep Proxy",
+      "category": "SMC",
+      "correct": 2194,
+      "total": 4139,
+      "wr": 53.01
+    },
+    {
+      "id": 38,
+      "name": "RSI Diverjansı (14) Katı",
+      "category": "Momentum",
+      "correct": 3270,
+      "total": 6225,
+      "wr": 52.53
+    },
+    {
+      "id": 6,
+      "name": "Stochastic RSI",
+      "category": "Momentum",
+      "correct": 13776,
+      "total": 26280,
+      "wr": 52.42
+    },
+    {
+      "id": 75,
+      "name": "Schaff Trend Cycle",
+      "category": "Momentum",
+      "correct": 13776,
+      "total": 26280,
+      "wr": 52.42
+    },
+    {
+      "id": 11,
+      "name": "Mean Reversion (Z-Score)",
+      "category": "İstatistik",
+      "correct": 10748,
+      "total": 20531,
+      "wr": 52.35
+    },
+    {
+      "id": 81,
+      "name": "Z-Score Mean Reversion",
+      "category": "İstatistik",
+      "correct": 10748,
+      "total": 20531,
+      "wr": 52.35
+    },
+    {
+      "id": 80,
+      "name": "Hurst Proxy (trend/MR)",
+      "category": "İstatistik",
+      "correct": 10747,
+      "total": 20541,
+      "wr": 52.32
+    },
+    {
+      "id": 40,
+      "name": "Williams %R",
+      "category": "Momentum",
+      "correct": 13637,
+      "total": 26280,
+      "wr": 51.89
+    },
+    {
+      "id": 62,
+      "name": "Squeeze Momentum (BB+KC)",
+      "category": "Volatilite",
+      "correct": 9211,
+      "total": 17809,
+      "wr": 51.72
+    },
+    {
+      "id": 52,
+      "name": "Fibonacci Retracement",
+      "category": "Price Action",
+      "correct": 13514,
+      "total": 26280,
+      "wr": 51.42
+    },
+    {
+      "id": 67,
+      "name": "Range Trading S/R Bounce",
+      "category": "Range",
+      "correct": 13513,
+      "total": 26280,
+      "wr": 51.42
+    },
+    {
+      "id": 27,
+      "name": "Stochastic RSI (14) K/D",
+      "category": "Momentum",
+      "correct": 13426,
+      "total": 26280,
+      "wr": 51.09
+    },
+    {
+      "id": 7,
+      "name": "Bollinger Bands + Squeeze",
+      "category": "Volatilite",
+      "correct": 13408,
+      "total": 26280,
+      "wr": 51.02
+    },
+    {
+      "id": 41,
+      "name": "CCI",
+      "category": "Momentum",
+      "correct": 13360,
+      "total": 26280,
+      "wr": 50.84
+    },
+    {
+      "id": 12,
+      "name": "Pairs Trading",
+      "category": "Pairs",
+      "correct": 4550,
+      "total": 8960,
+      "wr": 50.78
+    },
+    {
+      "id": 3,
+      "name": "Supertrend",
+      "category": "Trend",
+      "correct": 13175,
+      "total": 26280,
+      "wr": 50.13
+    },
+    {
+      "id": 36,
+      "name": "SuperTrend v2 (7,2.0)",
+      "category": "Trend",
+      "correct": 13175,
+      "total": 26280,
+      "wr": 50.13
+    },
+    {
+      "id": 33,
+      "name": "Money Flow Index (MFI)",
+      "category": "Hacim",
+      "correct": 10683,
+      "total": 21481,
+      "wr": 49.73
+    },
+    {
+      "id": 5,
+      "name": "RSI + Divergence",
+      "category": "Momentum",
+      "correct": 8997,
+      "total": 18153,
+      "wr": 49.56
+    },
+    {
+      "id": 44,
+      "name": "TRIX",
+      "category": "Momentum",
+      "correct": 12994,
+      "total": 26280,
+      "wr": 49.44
+    },
+    {
+      "id": 43,
+      "name": "Aroon Indicator",
+      "category": "Trend",
+      "correct": 12963,
+      "total": 26280,
+      "wr": 49.33
+    },
+    {
+      "id": 76,
+      "name": "True Strength Index (TSI)",
+      "category": "Momentum",
+      "correct": 12941,
+      "total": 26280,
+      "wr": 49.24
+    },
+    {
+      "id": 54,
+      "name": "PPO",
+      "category": "Momentum",
+      "correct": 12925,
+      "total": 26280,
+      "wr": 49.18
+    },
+    {
+      "id": 56,
+      "name": "Linear Regression Slope",
+      "category": "Trend",
+      "correct": 12922,
+      "total": 26280,
+      "wr": 49.17
+    },
+    {
+      "id": 46,
+      "name": "Awesome Oscillator",
+      "category": "Momentum",
+      "correct": 12911,
+      "total": 26280,
+      "wr": 49.13
+    },
+    {
+      "id": 4,
+      "name": "Ichimoku Cloud",
+      "category": "Trend",
+      "correct": 12796,
+      "total": 26062,
+      "wr": 49.1
+    },
+    {
+      "id": 15,
+      "name": "Multi-Timeframe Confluence",
+      "category": "Multi-TF",
+      "correct": 10373,
+      "total": 21132,
+      "wr": 49.09
+    },
+    {
+      "id": 58,
+      "name": "CVD Proxy",
+      "category": "Order Flow",
+      "correct": 12898,
+      "total": 26280,
+      "wr": 49.08
+    },
+    {
+      "id": 50,
+      "name": "Choppiness Index",
+      "category": "Volatilite",
+      "correct": 7593,
+      "total": 15471,
+      "wr": 49.08
+    },
+    {
+      "id": 37,
+      "name": "Ichimoku Cloud v2 (TK+Bulut)",
+      "category": "Trend",
+      "correct": 12890,
+      "total": 26280,
+      "wr": 49.05
+    },
+    {
+      "id": 72,
+      "name": "Wyckoff Proxy",
+      "category": "Price Action",
+      "correct": 7661,
+      "total": 15630,
+      "wr": 49.01
+    },
+    {
+      "id": 73,
+      "name": "GMMA",
+      "category": "Trend",
+      "correct": 12853,
+      "total": 26280,
+      "wr": 48.91
+    },
+    {
+      "id": 1,
+      "name": "EMA Crossover (9/21/50/200)",
+      "category": "Trend",
+      "correct": 7509,
+      "total": 15353,
+      "wr": 48.91
+    },
+    {
+      "id": 28,
+      "name": "Triple EMA (8-21-55)",
+      "category": "Trend",
+      "correct": 12844,
+      "total": 26280,
+      "wr": 48.87
+    },
+    {
+      "id": 39,
+      "name": "H1 Profesyonel Kombinasyon",
+      "category": "Kombinasyon",
+      "correct": 8586,
+      "total": 17569,
+      "wr": 48.87
+    },
+    {
+      "id": 26,
+      "name": "MACD Histogram Diverjansı",
+      "category": "Momentum",
+      "correct": 7878,
+      "total": 16135,
+      "wr": 48.83
+    },
+    {
+      "id": 18,
+      "name": "TEMA Crossover (9/21)",
+      "category": "Trend",
+      "correct": 12827,
+      "total": 26280,
+      "wr": 48.81
+    },
+    {
+      "id": 77,
+      "name": "Know Sure Thing (KST)",
+      "category": "Momentum",
+      "correct": 12824,
+      "total": 26280,
+      "wr": 48.8
+    },
+    {
+      "id": 19,
+      "name": "ADX Market Regime",
+      "category": "Regime",
+      "correct": 9153,
+      "total": 18758,
+      "wr": 48.8
+    },
+    {
+      "id": 42,
+      "name": "Chaikin Money Flow",
+      "category": "Hacim",
+      "correct": 12818,
+      "total": 26280,
+      "wr": 48.77
+    },
+    {
+      "id": 9,
+      "name": "OBV",
+      "category": "Hacim",
+      "correct": 12793,
+      "total": 26280,
+      "wr": 48.68
+    },
+    {
+      "id": 35,
+      "name": "Markov Zinciri Modeli",
+      "category": "İstatistik",
+      "correct": 9905,
+      "total": 20351,
+      "wr": 48.67
+    },
+    {
+      "id": 83,
+      "name": "EMA+MACD+MFI Combo",
+      "category": "Kombinasyon",
+      "correct": 8239,
+      "total": 16953,
+      "wr": 48.6
+    },
+    {
+      "id": 49,
+      "name": "Elder Force Index",
+      "category": "Hacim",
+      "correct": 12765,
+      "total": 26280,
+      "wr": 48.57
+    },
+    {
+      "id": 60,
+      "name": "Engulfing Pattern",
+      "category": "Price Action",
+      "correct": 802,
+      "total": 1653,
+      "wr": 48.52
+    },
+    {
+      "id": 2,
+      "name": "MACD Histogram + Divergence",
+      "category": "Momentum",
+      "correct": 12742,
+      "total": 26280,
+      "wr": 48.49
+    },
+    {
+      "id": 53,
+      "name": "ROC Momentum",
+      "category": "Momentum",
+      "correct": 12733,
+      "total": 26280,
+      "wr": 48.45
+    },
+    {
+      "id": 55,
+      "name": "KAMA",
+      "category": "Trend",
+      "correct": 12721,
+      "total": 26280,
+      "wr": 48.41
+    },
+    {
+      "id": 68,
+      "name": "Volume Spike Momentum",
+      "category": "Hacim",
+      "correct": 1806,
+      "total": 3731,
+      "wr": 48.41
+    },
+    {
+      "id": 45,
+      "name": "Ultimate Oscillator",
+      "category": "Momentum",
+      "correct": 12719,
+      "total": 26280,
+      "wr": 48.4
+    },
+    {
+      "id": 10,
+      "name": "Volume Profile (POC)",
+      "category": "Hacim",
+      "correct": 6803,
+      "total": 14073,
+      "wr": 48.34
+    },
+    {
+      "id": 64,
+      "name": "Ease of Movement",
+      "category": "Hacim",
+      "correct": 12691,
+      "total": 26280,
+      "wr": 48.29
+    },
+    {
+      "id": 48,
+      "name": "Vortex Indicator",
+      "category": "Trend",
+      "correct": 11177,
+      "total": 23145,
+      "wr": 48.29
+    },
+    {
+      "id": 47,
+      "name": "Coppock Curve",
+      "category": "Momentum",
+      "correct": 12689,
+      "total": 26280,
+      "wr": 48.28
+    },
+    {
+      "id": 74,
+      "name": "McGinley Dynamic",
+      "category": "Trend",
+      "correct": 12684,
+      "total": 26280,
+      "wr": 48.26
+    },
+    {
+      "id": 29,
+      "name": "Hull Moving Average (HMA)",
+      "category": "Trend",
+      "correct": 12666,
+      "total": 26280,
+      "wr": 48.2
+    },
+    {
+      "id": 32,
+      "name": "VWAP + Hacim Profili",
+      "category": "Hacim",
+      "correct": 11993,
+      "total": 24885,
+      "wr": 48.19
+    },
+    {
+      "id": 66,
+      "name": "Breakout + Retest",
+      "category": "Breakout",
+      "correct": 905,
+      "total": 1878,
+      "wr": 48.19
+    },
+    {
+      "id": 8,
+      "name": "VWAP",
+      "category": "Hacim",
+      "correct": 11750,
+      "total": 24421,
+      "wr": 48.11
+    },
+    {
+      "id": 63,
+      "name": "Accumulation/Distribution",
+      "category": "Hacim",
+      "correct": 12640,
+      "total": 26280,
+      "wr": 48.1
+    },
+    {
+      "id": 30,
+      "name": "Keltner Kanalı (20,2)",
+      "category": "Volatilite",
+      "correct": 12639,
+      "total": 26280,
+      "wr": 48.09
+    },
+    {
+      "id": 79,
+      "name": "Alligator Indicator",
+      "category": "Trend",
+      "correct": 10990,
+      "total": 22873,
+      "wr": 48.05
+    },
+    {
+      "id": 25,
+      "name": "Parabolic SAR + ADX",
+      "category": "Trend",
+      "correct": 9005,
+      "total": 18758,
+      "wr": 48.01
+    },
+    {
+      "id": 51,
+      "name": "Pivot Points",
+      "category": "Price Action",
+      "correct": 12604,
+      "total": 26280,
+      "wr": 47.96
+    },
+    {
+      "id": 31,
+      "name": "Donchian Kanalı (20)",
+      "category": "Breakout",
+      "correct": 10179,
+      "total": 21320,
+      "wr": 47.74
+    },
+    {
+      "id": 65,
+      "name": "Price Channel (Donchian)",
+      "category": "Breakout",
+      "correct": 10179,
+      "total": 21320,
+      "wr": 47.74
+    },
+    {
+      "id": 16,
+      "name": "ATR Momentum Breakout",
+      "category": "Breakout",
+      "correct": 10038,
+      "total": 21063,
+      "wr": 47.66
+    },
+    {
+      "id": 17,
+      "name": "Heikin Ashi Trend Filter",
+      "category": "Trend",
+      "correct": 12448,
+      "total": 26280,
+      "wr": 47.37
+    },
+    {
+      "id": 82,
+      "name": "Markov Chain Simple",
+      "category": "İstatistik",
+      "correct": 2519,
+      "total": 5324,
+      "wr": 47.31
+    },
+    {
+      "id": 34,
+      "name": "Random Forest Classifier",
+      "category": "ML",
+      "correct": 3306,
+      "total": 7015,
+      "wr": 47.13
+    },
+    {
+      "id": 69,
+      "name": "Fair Value Gap Proxy",
+      "category": "SMC",
+      "correct": 2228,
+      "total": 4732,
+      "wr": 47.08
+    },
+    {
+      "id": 59,
+      "name": "Higher High / Higher Low",
+      "category": "Price Action",
+      "correct": 5505,
+      "total": 11747,
+      "wr": 46.86
+    },
+    {
+      "id": 70,
+      "name": "Order Block Proxy",
+      "category": "SMC",
+      "correct": 3706,
+      "total": 8012,
+      "wr": 46.26
+    },
+    {
+      "id": 57,
+      "name": "Taker Buy Ratio",
+      "category": "Order Flow",
+      "correct": 171,
+      "total": 371,
+      "wr": 46.09
+    },
+    {
+      "id": 61,
+      "name": "Inside Bar Breakout",
+      "category": "Price Action",
+      "correct": 1130,
+      "total": 2549,
+      "wr": 44.33
+    }
+  ],
+  "insufficient_data": [],
+  "note": "On-chain/sosyal/haber (#20 OI canlı, #21 F&G canlı) OHLCV proxy veya atlandı."
+}

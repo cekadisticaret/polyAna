@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-algo_signals.py — 39 algoritma için BTC/ETH/SOL saatlik sinyal üretici
-(24 teknik + Analiz-1/9/10 + 15 yeni algoritma)
+algo_signals.py — 36 algoritma için BTC/ETH/SOL saatlik sinyal üretici
+(21 teknik + 15 gelişmiş algoritma)
 Her :05'te cron ile çalışır, /tmp/algo_signals.json'a kaydeder
 """
 import json, requests, datetime, math, os
@@ -679,76 +679,6 @@ def h1_combination(kl):
     return "NEUTRAL"
 
 
-# ── Analiz-1/9/10 sistemleri (22-24) ─────────────────────────────────
-
-def fetch_funding_rate(pair):
-    """Binance Futures anlık funding rate"""
-    try:
-        r = requests.get(f"{FUTURES}/fapi/v1/premiumIndex",
-                         params={"symbol": pair}, timeout=6)
-        return float(r.json().get("lastFundingRate", 0))
-    except Exception:
-        return 0.0
-
-def analiz1_system(kl):
-    """Analiz-1 sistemi: RSI + MACD + EMA çoğunluk oyu (3 indikatör)"""
-    c = [k["c"] for k in kl]
-    # RSI oyu
-    rv = _rsi(c, 14)
-    rsi_val = next((x for x in reversed(rv) if x is not None), 50)
-    rsi_v = +1 if rsi_val < 50 else -1
-    # MACD oyu
-    e12, e26 = _ema(c, 12), _ema(c, 26)
-    ml = [e12[i] - e26[i] if e12[i] and e26[i] else None for i in range(len(c))]
-    valid = [x for x in ml if x is not None]
-    sl = _ema(valid, 9) if len(valid) >= 9 else [None]
-    macd_v = +1 if (sl[-1] and valid[-1] > sl[-1]) else -1
-    # EMA oyu (9 vs 21)
-    e9, e21 = _ema(c, 9), _ema(c, 21)
-    ema_v = +1 if (e9[-1] and e21[-1] and e9[-1] > e21[-1]) else -1
-    # Çoğunluk
-    score = rsi_v + macd_v + ema_v
-    if score >= 2: return "UP"
-    if score <= -2: return "DOWN"
-    return "NEUTRAL"
-
-def analiz9_system(kl, funding_rate=0.0):
-    """Analiz-9 sistemi: Trend(EMA20/50) + MR(RSI+BB) + Orderflow(CVD) + Funding (4 oy)"""
-    c = [k["c"] for k in kl]
-    # --- Trend oyu: EMA20 vs EMA50 ---
-    e20, e50 = _ema(c, 20), _ema(c, 50)
-    trend_v = +1 if (e20[-1] and e50[-1] and e20[-1] > e50[-1]) else -1
-    # --- MR oyu: RSI + BB ---
-    rv = _rsi(c, 14)
-    rsi_val = next((x for x in reversed(rv) if x is not None), 50)
-    rsi_v = +1 if rsi_val <= 35 else -1 if rsi_val >= 65 else 0
-    if len(c) >= 20:
-        std20, m20 = _std(c[-20:])
-        upper, lower = m20 + 2*std20, m20 - 2*std20
-        bb_v = +1 if c[-1] < lower else -1 if c[-1] > upper else 0
-    else:
-        bb_v = 0
-    mr_v = max(-1, min(1, rsi_v + bb_v))
-    # --- Orderflow oyu: CVD yaklaşımı ---
-    window = kl[-20:]
-    cvd = sum((k["c"] - k["o"]) / k["o"] * k["v"] for k in window if k["o"] > 0)
-    norm = max(abs(cvd), 1e-9)
-    cvd_n = cvd / norm
-    of_v = +1 if cvd_n > 0.1 else -1 if cvd_n < -0.1 else 0
-    # --- Funding oyu ---
-    fund_v = -1 if funding_rate > 0.0001 else +1 if funding_rate < -0.0001 else 0
-    score = trend_v + mr_v + of_v + fund_v
-    if score >= 2: return "UP"
-    if score <= -2: return "DOWN"
-    return "NEUTRAL"
-
-def analiz10_system(kl, funding_rate=0.0):
-    """Analiz-10 sistemi: A1 + A9 ikisi de aynı yönü söylüyorsa sinyal"""
-    s1 = analiz1_system(kl)
-    s9 = analiz9_system(kl, funding_rate)
-    if s1 == s9 and s1 != "NEUTRAL": return s1
-    return "NEUTRAL"
-
 # ── Ana fonksiyon ─────────────────────────────────────────────────────
 
 ALGO_META = [
@@ -773,9 +703,6 @@ ALGO_META = [
     (19, "ADX Market Regime"),
     (20, "Open Interest Divergence"),
     (21, "Fear & Greed Momentum"),
-    (22, "Analiz-1 Sistemi (RSI+MACD+EMA)"),
-    (23, "Analiz-9 Sistemi (Trend+MR+OF+Fund)"),
-    (24, "Analiz-10 Sistemi (A1+A9 Konsensüs)"),
     (25, "Parabolic SAR + ADX"),
     (26, "MACD Histogram Diverjansı"),
     (27, "Stochastic RSI (14) K/D"),
@@ -796,19 +723,24 @@ ALGO_META = [
 SKIP = {13, 14}   # Yön tahmini yok
 
 
-def _build_all_signals() -> tuple[dict, dict, dict]:
-    """39 algo sinyalleri + sembol konsensüsü."""
-    kl_1h, kl_4h = {}, {}
+def _build_all_signals(
+    interval: str = "1h",
+    htf_interval: str = "4h",
+    limit: int = 200,
+    htf_limit: int = 100,
+) -> tuple[dict, dict, dict]:
+    """36 algo sinyalleri + sembol konsensüsü (interval: 5m / 15m / 1h)."""
+    kl_primary, kl_htf = {}, {}
     for sym, pair in SYMBOLS.items():
         try:
-            kl_1h[sym] = fetch_klines(pair, "1h", 200)
-            kl_4h[sym] = fetch_klines(pair, "4h", 100)
+            kl_primary[sym] = fetch_klines(pair, interval, limit)
+            kl_htf[sym] = fetch_klines(pair, htf_interval, htf_limit)
         except Exception as e:
             print(f"Fetch error {sym}: {e}")
-            kl_1h[sym] = []
-            kl_4h[sym] = []
+            kl_primary[sym] = []
+            kl_htf[sym] = []
 
-    pairs_sig = pairs_trading(kl_1h)
+    pairs_sig = pairs_trading(kl_primary)
     fg_signal = fetch_fear_greed()
 
     oi_cache = {}
@@ -818,15 +750,8 @@ def _build_all_signals() -> tuple[dict, dict, dict]:
         except Exception:
             oi_cache[sym] = []
 
-    funding_cache = {}
-    for sym, pair in SYMBOLS.items():
-        try:
-            funding_cache[sym] = fetch_funding_rate(pair)
-        except Exception:
-            funding_cache[sym] = 0.0
-
     def _oi_for(sym):
-        kl = kl_1h.get(sym, [])
+        kl = kl_primary.get(sym, [])
         oi = oi_cache.get(sym, [])
         if len(oi) < 5 or len(kl) < 5:
             return "NEUTRAL"
@@ -867,42 +792,18 @@ def _build_all_signals() -> tuple[dict, dict, dict]:
             entry.update(pairs_sig)
         elif num == 15:
             for sym in SYMBOLS:
-                if kl_1h.get(sym) and kl_4h.get(sym):
-                    entry[sym] = multi_tf(kl_1h[sym], kl_4h[sym])
+                if kl_primary.get(sym) and kl_htf.get(sym):
+                    entry[sym] = multi_tf(kl_primary[sym], kl_htf[sym])
         elif num == 20:
             for sym in SYMBOLS:
                 entry[sym] = _oi_for(sym)
         elif num == 21:
             for sym in SYMBOLS:
                 entry[sym] = fg_signal
-        elif num == 22:
-            for sym in SYMBOLS:
-                kl = kl_1h.get(sym, [])
-                if kl:
-                    try:
-                        entry[sym] = analiz1_system(kl)
-                    except Exception as e:
-                        print(f"Algo 22 {sym} error: {e}")
-        elif num == 23:
-            for sym in SYMBOLS:
-                kl = kl_1h.get(sym, [])
-                if kl:
-                    try:
-                        entry[sym] = analiz9_system(kl, funding_cache.get(sym, 0.0))
-                    except Exception as e:
-                        print(f"Algo 23 {sym} error: {e}")
-        elif num == 24:
-            for sym in SYMBOLS:
-                kl = kl_1h.get(sym, [])
-                if kl:
-                    try:
-                        entry[sym] = analiz10_system(kl, funding_cache.get(sym, 0.0))
-                    except Exception as e:
-                        print(f"Algo 24 {sym} error: {e}")
         elif num in SIMPLE_FN:
             fn = SIMPLE_FN[num]
             for sym in SYMBOLS:
-                kl = kl_1h.get(sym, [])
+                kl = kl_primary.get(sym, [])
                 if kl:
                     try:
                         entry[sym] = fn(kl)
@@ -918,11 +819,11 @@ def _build_all_signals() -> tuple[dict, dict, dict]:
         consensus[sym] = {
             "UP": up, "DOWN": down, "NEUTRAL": len(active) - up - down, "total": len(active),
         }
-    return signals, consensus, kl_1h
+    return signals, consensus, kl_primary
 
 
 def collect_btc_algo_votes() -> list[dict]:
-    """39 algo → BTC yön oyları."""
+    """36 algo → BTC yön oyları."""
     signals, _, _ = _build_all_signals()
     return [
         {
@@ -982,13 +883,29 @@ def run():
                 with open(ACCURACY_FILE, "w") as f:
                     json.dump(acc, f, indent=2, ensure_ascii=False)
                 print(f"[{now.strftime('%H:%M')}] algo_accuracy.json güncellendi")
+        if prev_data and prev_data.get("consensus"):
+            from chart_signal_accuracy import update_consensus_accuracy
+            update_consensus_accuracy(
+                prev_data["consensus"],
+                {sym: kl_1h.get(sym, []) for sym in SYMBOLS},
+                ACCURACY_FILE,
+                name="Analiz 1 Konsensüs",
+            )
     except Exception as e:
         print(f"[{now.strftime('%H:%M')}] accuracy güncelleme hatası: {e}")
+
+    try:
+        from chart_signal_accuracy import ensure_backfill, update_hourly
+        if not os.path.isfile(os.path.join(_DIR, "chart_signal_accuracy.json")):
+            ensure_backfill(150)
+        update_hourly()
+    except Exception as e:
+        print(f"[{now.strftime('%H:%M')}] chart_signal_accuracy: {e}")
 
     # Mevcut sinyalleri önce prev'e yaz, sonra out'a
     try:
         with open(PREV_FILE, "w") as f:
-            json.dump({"signals": signals}, f, indent=2, ensure_ascii=False)
+            json.dump({"signals": signals, "consensus": consensus}, f, indent=2, ensure_ascii=False)
     except Exception:
         pass
 

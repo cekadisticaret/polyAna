@@ -1,8 +1,9 @@
-"""A3 / A8 sinyal modu — sıkı (entry/kesişim) vs gevşek (her saat yön).
+"""A3 / A8 sinyal modu — sıkı (filtreli) vs gevşek (her saat yön).
 
 Anahtar: pm_system_control.json → "a3a8_signal_strict"
-  true  — A3: long_bias/short_bias · A8: EMA8/21 kesişim (Analiz 1 gibi skip)
-  false — eski davranış: A3 skor oylaması · A8 EMA pozisyonu
+  true  — sıkı (filtreli): A3 entry bias veya 3/3 momentum + RSI teyit;
+          A8 EMA kesişim veya geniş spread + RSI teyit (~%25–35 bar, saf sıkı ~%0–5)
+  false — gevşek: A3 skor oylaması · A8 EMA pozisyonu (her saat yön)
 
 Geri almak: false yap veya dashboard POST {"a3a8_signal_strict": false}
 """
@@ -23,6 +24,12 @@ _JESSE_FAST = 8
 _JESSE_SLOW = 21
 _A3_BUY_RSI = 30
 _A3_SHORT_RSI = 70
+# Sıkı mod fallback — oylama 3/3 + RSI teyit (saat başına ~0.7–1 işlem / 3 sembol)
+_A3_FILTER_RSI_UP = 63
+_A3_FILTER_RSI_DN = 37
+_A8_FILTER_SPREAD = 0.0028  # EMA8–21 aralığı ≥ %0.28
+_A8_FILTER_RSI_UP = 63
+_A8_FILTER_RSI_DN = 37
 
 
 def _load_control() -> dict:
@@ -62,7 +69,7 @@ def signal_mode_status() -> dict:
     return {
         CONTROL_KEY: strict,
         "a3a8_signal_mode": "strict" if strict else "loose",
-        "a3a8_signal_mode_label": "sıkı (entry/kesişim)" if strict else "gevşek (her saat)",
+        "a3a8_signal_mode_label": "sıkı (filtreli)" if strict else "gevşek (her saat)",
     }
 
 
@@ -224,13 +231,60 @@ def a8_direction_loose(klines: list[dict]) -> str | None:
     return None
 
 
+def a3_direction_filtered(klines: list[dict]) -> str | None:
+    """Entry bias veya 3/3 momentum + RSI teyit — saf sıkıdan daha sık, gevşekten seyrek."""
+    entry = a3_direction_strict(klines)
+    if entry:
+        return entry
+    if len(klines) < 30:
+        return None
+    closes = np.array([k["close"] for k in klines], dtype=np.float64)
+    _, rsi = _rsi_last_two(closes)
+    tema = _ema_last(closes, 9)
+    tema_prev = _ema_last(closes[:-1], 9) if len(closes) > 1 else tema
+    macd_bull = _macd_hist_last(closes) > 0
+    score = (1 if rsi >= 50 else -1) + (1 if tema > tema_prev else -1) + (1 if macd_bull else -1)
+    if score == 3 and rsi >= _A3_FILTER_RSI_UP:
+        return "UP"
+    if score == -3 and rsi <= _A3_FILTER_RSI_DN:
+        return "DOWN"
+    return None
+
+
+def a8_direction_filtered(klines: list[dict]) -> str | None:
+    """EMA kesişim veya geniş spread + RSI teyit."""
+    cross = a8_direction_strict(klines)
+    if cross:
+        return cross
+    if len(klines) < _JESSE_SLOW + 5:
+        return None
+    closes = np.array([k["close"] for k in klines], dtype=np.float64)
+    price = float(closes[-1])
+    if price <= 0:
+        return None
+    ema_fast = _ema_last(closes, _JESSE_FAST)
+    ema_slow = _ema_last(closes, _JESSE_SLOW)
+    if abs(ema_fast - ema_slow) / price < _A8_FILTER_SPREAD:
+        return None
+    _, rsi = _rsi_last_two(closes)
+    if ema_fast > ema_slow and rsi >= _A8_FILTER_RSI_UP:
+        return "UP"
+    if ema_fast < ema_slow and rsi <= _A8_FILTER_RSI_DN:
+        return "DOWN"
+    return None
+
+
 def a3_direction(klines: list[dict], *, strict: bool | None = None) -> str | None:
     if strict is None:
         strict = is_a3a8_strict()
-    return a3_direction_strict(klines) if strict else a3_direction_loose(klines)
+    if strict:
+        return a3_direction_filtered(klines)
+    return a3_direction_loose(klines)
 
 
 def a8_direction(klines: list[dict], *, strict: bool | None = None) -> str | None:
     if strict is None:
         strict = is_a3a8_strict()
-    return a8_direction_strict(klines) if strict else a8_direction_loose(klines)
+    if strict:
+        return a8_direction_filtered(klines)
+    return a8_direction_loose(klines)

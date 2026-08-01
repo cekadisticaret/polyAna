@@ -24,10 +24,11 @@ from zoneinfo import ZoneInfo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
 from pm_trader_helpers import (
-    apply_pm_quote, apply_cold_hour_cut, apply_hot_hour_boost, sanal_pnl,
+    apply_pm_quote, resolve_slot_trade_amount, slot_amount_log, sanal_pnl,
     trades_for_exit_day, format_daily_history_tg, symbol_wr_amount,
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
-    SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause,
+    SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause, pm_hourly_profit_entry_ok,
+    pm_tg_stake,
 )
 
 # ── Config ────────────────────────────────────────────────────
@@ -50,11 +51,9 @@ _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cum
 
 
 def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float, bool, bool]:
-    """WR tutarı → etkili saat +%50 → 12:00 yarı."""
+    """WR tutarı → etkili saat +%40 / zayıf saat -%30."""
     base = symbol_wr_amount(history, sym)
-    amount, hot_boost = apply_hot_hour_boost(base, hour_tr, history)
-    amount, cold_cut = apply_cold_hour_cut(amount, hour_tr)
-    return amount, hot_boost, cold_cut
+    return resolve_slot_trade_amount(base, hour_tr, history)
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -278,15 +277,13 @@ async def run_open() -> None:
             continue
         candidates.append({"sym": sym, "pred_obj": pred_obj})
 
-    # Tüm sinyaller için pozisyon aç
+    opened = []
     for c in candidates:
         sym         = c["sym"]
         pred_obj    = c["pred_obj"]
         ind_ema_raw = pred_obj.trend.upper()
         dyn_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
-        if hot_boost:
-            print(f"[1. ANALİZ] 🔥 etkili saat {hour_tr:02d}:00 — ${symbol_wr_amount(history, sym):.0f} → ${dyn_amount:.0f}")
-        # Saatin başındaki fiyat (son kapanan 1h mumu) = Polymarket "Price to Beat"
+        slot_amount_log("1. ANALİZ", hour_tr, symbol_wr_amount(history, sym), dyn_amount, hot_boost, cold_cut)
         try:
             klines = await _fetch_klines(sym, "1h", 3)
             entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else pred_obj.current_price
@@ -311,13 +308,19 @@ async def run_open() -> None:
                                  else "NEUTRAL"),
         }
         apply_pm_quote(pos, sym, pred_obj.predicted_dir, dyn_amount, now)
+        ok, skip_msg = pm_hourly_profit_entry_ok(pos)
+        if not ok:
+            print(f"[1. ANALİZ open] {sym} — {skip_msg}")
+            continue
         state["open_positions"].append(pos)
+        opened.append({"sym": sym, "pred_obj": pred_obj, "entry_price": entry_price, "pos": pos,
+                       "hot_boost": hot_boost, "cold_cut": cold_cut, "dyn_amount": dyn_amount})
 
     save_state(state)
 
     next_h = f"{(hour_tr + 1) % 24:02d}:00"
     lines  = []
-    for c in candidates:
+    for c in opened:
         sym      = c["sym"]
         pred_obj = c["pred_obj"]
         name     = sym.replace("USDT", "")
@@ -326,14 +329,17 @@ async def run_open() -> None:
         dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins, sym_total = get_symbol_stats(history, sym)
-        pos_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
+        entry_price = c["entry_price"]
         tags = ""
-        if hot_boost:
+        if c["hot_boost"]:
             tags += "  🔥+%50"
-        if cold_cut:
+        if c["cold_cut"]:
             tags += "  ⚠️12:00 yarı"
+        pm_line = pm_tg_stake(c["pos"])
+        pm_detail = f"   {pm_line}\n" if pm_line else f"   💵 ${c['dyn_amount']:.0f}\n"
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{entry_price:.2f}  💵{pos_amount:.0f}${tags}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{entry_price:.2f}{tags}\n"
+            f"{pm_detail}"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )

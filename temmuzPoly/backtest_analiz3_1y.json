@@ -1,0 +1,998 @@
+{
+  "label": "3. ANALİZ FREQTRADE",
+  "symbols": [
+    "BTCUSDT",
+    "SOLUSDT",
+    "ETHUSDT"
+  ],
+  "period": "2025-07-29 → 2026-06-29",
+  "initial_balance": 300.0,
+  "final_balance": 408.0,
+  "total_pnl": 108.0,
+  "trades": 59,
+  "wins": 33,
+  "losses": 26,
+  "win_rate_pct": 55.9,
+  "max_drawdown_pct": 41.3,
+  "skipped_signals": 26257,
+  "monthly_pnl": {
+    "2025-07": -16.0,
+    "2025-08": -32.0,
+    "2025-09": -8.0,
+    "2025-10": 12.0,
+    "2025-11": -12.0,
+    "2025-12": 20.0,
+    "2026-01": -48.0,
+    "2026-02": 0.0,
+    "2026-03": 8.0,
+    "2026-04": 0.0,
+    "2026-05": 124.0,
+    "2026-06": 60.0
+  },
+  "by_symbol": {
+    "SOLUSDT": {
+      "trades": 17,
+      "wins": 9,
+      "win_rate_pct": 52.9,
+      "pnl": 8.0
+    },
+    "BTCUSDT": {
+      "trades": 20,
+      "wins": 14,
+      "win_rate_pct": 70.0,
+      "pnl": 136.0
+    },
+    "ETHUSDT": {
+      "trades": 22,
+      "wins": 10,
+      "win_rate_pct": 45.5,
+      "pnl": -36.0
+    }
+  },
+  "trade_list": [
+    {
+      "entry_time": "2025-07-29T07:05:00+03:00",
+      "exit_time": "2025-07-29T08:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 184.27,
+      "exit_price": 183.32,
+      "amount": 16.0,
+      "pnl": -16.0,
+      "balance_after": 284.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-08-01T15:05:00+03:00",
+      "exit_time": "2025-08-01T16:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 115246.6,
+      "exit_price": 115674.9,
+      "amount": 16.0,
+      "pnl": 16.0,
+      "balance_after": 300.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-08-01T18:05:00+03:00",
+      "exit_time": "2025-08-01T19:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 169.31,
+      "exit_price": 168.5,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 288.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-08-18T16:05:00+03:00",
+      "exit_time": "2025-08-18T17:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 115475.0,
+      "exit_price": 114790.8,
+      "amount": 20.0,
+      "pnl": -20.0,
+      "balance_after": 268.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-08-29T16:05:00+03:00",
+      "exit_time": "2025-08-29T17:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 4405.29,
+      "exit_price": 4329.67,
+      "amount": 16.0,
+      "pnl": -16.0,
+      "balance_after": 252.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-09-22T17:05:00+03:00",
+      "exit_time": "2025-09-22T18:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 113087.1,
+      "exit_price": 112892.0,
+      "amount": 16.0,
+      "pnl": -16.0,
+      "balance_after": 236.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-09-23T00:05:00+03:00",
+      "exit_time": "2025-09-23T01:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 112732.1,
+      "exit_price": 112922.9,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 248.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-09-23T00:05:00+03:00",
+      "exit_time": "2025-09-23T01:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 4179.78,
+      "exit_price": 4195.94,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 260.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-09-25T18:05:00+03:00",
+      "exit_time": "2025-09-25T19:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 4012.01,
+      "exit_price": 4001.0,
+      "amount": 16.0,
+      "pnl": -16.0,
+      "balance_after": 244.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-10-12T07:05:00+03:00",
+      "exit_time": "2025-10-12T08:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 176.79,
+      "exit_price": 179.71,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 256.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-11-04T15:05:00+03:00",
+      "exit_time": "2025-11-04T16:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 3527.78,
+      "exit_price": 3509.56,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 244.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-11-05T06:05:00+03:00",
+      "exit_time": "2025-11-05T07:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 3323.88,
+      "exit_price": 3333.44,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 256.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-11-12T05:05:00+03:00",
+      "exit_time": "2025-11-12T06:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 3445.82,
+      "exit_price": 3425.94,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 244.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-12-02T01:05:00+03:00",
+      "exit_time": "2025-12-02T02:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 126.0,
+      "exit_price": 126.74,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 256.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-12-02T01:05:00+03:00",
+      "exit_time": "2025-12-02T02:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 2790.68,
+      "exit_price": 2795.65,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 268.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-12-07T19:05:00+03:00",
+      "exit_time": "2025-12-07T20:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 131.93,
+      "exit_price": 131.89,
+      "amount": 16.0,
+      "pnl": -16.0,
+      "balance_after": 252.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-12-07T19:05:00+03:00",
+      "exit_time": "2025-12-07T20:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 3025.82,
+      "exit_price": 3038.51,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 264.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-12-15T05:05:00+03:00",
+      "exit_time": "2025-12-15T06:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 89189.1,
+      "exit_price": 89269.5,
+      "amount": 16.0,
+      "pnl": 16.0,
+      "balance_after": 280.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2025-12-16T10:05:00+03:00",
+      "exit_time": "2025-12-16T11:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 2944.47,
+      "exit_price": 2922.62,
+      "amount": 16.0,
+      "pnl": -16.0,
+      "balance_after": 264.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-01-19T12:05:00+03:00",
+      "exit_time": "2026-01-19T13:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 93200.3,
+      "exit_price": 93000.0,
+      "amount": 20.0,
+      "pnl": -20.0,
+      "balance_after": 244.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-01-19T20:05:00+03:00",
+      "exit_time": "2026-01-19T21:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 134.39,
+      "exit_price": 134.21,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 232.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-01-21T04:05:00+03:00",
+      "exit_time": "2026-01-21T05:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 127.23,
+      "exit_price": 127.29,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 244.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-01-21T07:05:00+03:00",
+      "exit_time": "2026-01-21T08:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 89396.0,
+      "exit_price": 89400.4,
+      "amount": 16.0,
+      "pnl": 16.0,
+      "balance_after": 260.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-01-21T07:05:00+03:00",
+      "exit_time": "2026-01-21T08:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 2980.27,
+      "exit_price": 2977.83,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 248.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-01-21T18:05:00+03:00",
+      "exit_time": "2026-01-21T19:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 2979.29,
+      "exit_price": 3001.22,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 260.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-01-26T05:05:00+03:00",
+      "exit_time": "2026-01-26T06:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 87661.8,
+      "exit_price": 87514.8,
+      "amount": 20.0,
+      "pnl": -20.0,
+      "balance_after": 240.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-01-26T05:05:00+03:00",
+      "exit_time": "2026-01-26T06:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 122.31,
+      "exit_price": 121.97,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 228.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-01-30T11:05:00+03:00",
+      "exit_time": "2026-01-30T12:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 115.71,
+      "exit_price": 115.31,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 216.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-02-01T03:05:00+03:00",
+      "exit_time": "2026-02-01T04:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 105.45,
+      "exit_price": 105.55,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 228.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-02-01T04:05:00+03:00",
+      "exit_time": "2026-02-01T05:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 2450.8,
+      "exit_price": 2443.3,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 216.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-02-01T06:05:00+03:00",
+      "exit_time": "2026-02-01T07:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 2451.14,
+      "exit_price": 2444.17,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 204.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-02-01T13:05:00+03:00",
+      "exit_time": "2026-02-01T14:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 2431.0,
+      "exit_price": 2379.61,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 192.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-02-06T05:05:00+03:00",
+      "exit_time": "2026-02-06T06:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 65666.0,
+      "exit_price": 64955.6,
+      "amount": 16.0,
+      "pnl": -16.0,
+      "balance_after": 176.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-02-23T10:05:00+03:00",
+      "exit_time": "2026-02-23T11:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 65717.7,
+      "exit_price": 65915.8,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 188.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-02-24T18:05:00+03:00",
+      "exit_time": "2026-02-24T19:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 63422.0,
+      "exit_price": 63933.4,
+      "amount": 16.0,
+      "pnl": 16.0,
+      "balance_after": 204.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-02-24T18:05:00+03:00",
+      "exit_time": "2026-02-24T19:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 1833.68,
+      "exit_price": 1846.37,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 216.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-03-08T09:05:00+03:00",
+      "exit_time": "2026-03-08T10:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 67115.4,
+      "exit_price": 67134.3,
+      "amount": 20.0,
+      "pnl": 20.0,
+      "balance_after": 236.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-03-27T00:05:00+03:00",
+      "exit_time": "2026-03-27T01:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 68973.8,
+      "exit_price": 68885.8,
+      "amount": 20.0,
+      "pnl": -20.0,
+      "balance_after": 216.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-03-28T03:05:00+03:00",
+      "exit_time": "2026-03-28T04:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 66364.2,
+      "exit_price": 66389.9,
+      "amount": 20.0,
+      "pnl": 20.0,
+      "balance_after": 236.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-03-28T03:05:00+03:00",
+      "exit_time": "2026-03-28T04:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 83.03,
+      "exit_price": 82.78,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 224.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-04-02T18:05:00+03:00",
+      "exit_time": "2026-04-02T19:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 79.02,
+      "exit_price": 79.01,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 212.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-04-19T15:05:00+03:00",
+      "exit_time": "2026-04-19T16:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 85.54,
+      "exit_price": 85.74,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 224.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-16T21:05:00+03:00",
+      "exit_time": "2026-05-16T22:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 86.75,
+      "exit_price": 86.75,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 236.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-17T07:05:00+03:00",
+      "exit_time": "2026-05-17T08:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 86.46,
+      "exit_price": 86.8,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 248.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-18T15:05:00+03:00",
+      "exit_time": "2026-05-18T16:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 77255.0,
+      "exit_price": 77599.9,
+      "amount": 20.0,
+      "pnl": 20.0,
+      "balance_after": 268.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-18T15:05:00+03:00",
+      "exit_time": "2026-05-18T16:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 84.93,
+      "exit_price": 85.52,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 280.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-18T15:05:00+03:00",
+      "exit_time": "2026-05-18T16:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 2132.98,
+      "exit_price": 2149.99,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 292.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-23T17:05:00+03:00",
+      "exit_time": "2026-05-23T18:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 75180.7,
+      "exit_price": 75500.4,
+      "amount": 20.0,
+      "pnl": 20.0,
+      "balance_after": 312.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-23T17:05:00+03:00",
+      "exit_time": "2026-05-23T18:00:00+03:00",
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 83.15,
+      "exit_price": 84.07,
+      "amount": 16.0,
+      "pnl": 16.0,
+      "balance_after": 328.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-23T17:05:00+03:00",
+      "exit_time": "2026-05-23T18:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 2043.96,
+      "exit_price": 2060.64,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 340.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-28T18:05:00+03:00",
+      "exit_time": "2026-05-28T19:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 1992.69,
+      "exit_price": 1989.69,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 328.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-05-28T20:05:00+03:00",
+      "exit_time": "2026-05-28T21:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 73415.0,
+      "exit_price": 73518.2,
+      "amount": 20.0,
+      "pnl": 20.0,
+      "balance_after": 348.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-06-03T09:05:00+03:00",
+      "exit_time": "2026-06-03T10:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 1872.66,
+      "exit_price": 1871.02,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 336.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-06-04T01:05:00+03:00",
+      "exit_time": "2026-06-04T02:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "DOWN",
+      "win": false,
+      "entry_price": 1849.64,
+      "exit_price": 1828.45,
+      "amount": 12.0,
+      "pnl": -12.0,
+      "balance_after": 324.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-06-22T04:05:00+03:00",
+      "exit_time": "2026-06-22T05:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 63867.2,
+      "exit_price": 64574.5,
+      "amount": 20.0,
+      "pnl": 20.0,
+      "balance_after": 344.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-06-23T23:05:00+03:00",
+      "exit_time": "2026-06-24T00:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 1661.96,
+      "exit_price": 1663.4,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 356.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-06-25T00:05:00+03:00",
+      "exit_time": "2026-06-25T01:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 60926.5,
+      "exit_price": 61073.6,
+      "amount": 20.0,
+      "pnl": 20.0,
+      "balance_after": 376.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-06-25T00:05:00+03:00",
+      "exit_time": "2026-06-25T01:00:00+03:00",
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 1613.0,
+      "exit_price": 1620.44,
+      "amount": 12.0,
+      "pnl": 12.0,
+      "balance_after": 388.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    },
+    {
+      "entry_time": "2026-06-29T03:05:00+03:00",
+      "exit_time": "2026-06-29T04:00:00+03:00",
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "actual_dir": "UP",
+      "win": true,
+      "entry_price": 59550.2,
+      "exit_price": 59637.3,
+      "amount": 20.0,
+      "pnl": 20.0,
+      "balance_after": 408.0,
+      "extra": {
+        "engine": "A3 Freqtrade"
+      }
+    }
+  ]
+}
