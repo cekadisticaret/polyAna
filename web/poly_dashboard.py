@@ -2178,7 +2178,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260801-kripto-grafik-1m-ref"
+_DASH_UI_VER = "20260801-kripto-grafik-coins"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -11482,10 +11482,37 @@ body{
 .wait-item.open{opacity:.85}
 .chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px;min-height:360px}
 #kf-chart{width:100%;height:min(62vh,520px)}
-.tf-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.tf-row{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
 .tf-btn{border:1px solid var(--line);background:var(--card2);color:var(--muted);font:inherit;font-size:12px;font-weight:800;padding:8px 12px;border-radius:999px;cursor:pointer}
 .tf-btn.active{background:rgba(200,241,53,.14);border-color:rgba(200,241,53,.45);color:var(--accent)}
 .chart-meta{font-size:12px;color:var(--muted);font-weight:600;margin-top:8px}
+.chart-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px;align-items:stretch}
+.chart-coins{
+  background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px;
+  display:flex;flex-direction:column;min-height:0;max-height:calc(62vh + 120px);
+}
+.chart-coins .section-title{margin-bottom:10px}
+.chart-coin-list{display:flex;flex-direction:column;gap:6px;overflow:auto;flex:1;min-height:0;padding-right:2px}
+.chart-coin{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--card2);
+  cursor:pointer;transition:border-color .15s,background .15s;
+}
+.chart-coin:hover{border-color:rgba(200,241,53,.35);background:rgba(200,241,53,.06)}
+.chart-coin.active{border-color:rgba(200,241,53,.55);background:rgba(200,241,53,.1)}
+.chart-coin .cn{font-size:13px;font-weight:800}
+.chart-coin .cm{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px}
+.chart-coin .cr{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.chart-coin .cs{font-size:11px;font-weight:700;color:#aaa}
+.chart-main{min-width:0}
+@media(max-width:900px){
+  .chart-layout{grid-template-columns:1fr}
+  .chart-coins{max-height:none}
+  .chart-coin-list{
+    flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:8px;padding-bottom:4px;
+  }
+  .chart-coin{min-width:132px;flex-shrink:0}
+}
 .wait-name{font-size:14px;font-weight:800}
 .wait-meta{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
 .wait-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -11605,16 +11632,24 @@ body{
         <div class="page-sub" id="chart-sub">Binance Futures · seçilen coin</div>
       </div>
     </div>
-    <div class="tf-row" id="chart-tf">
-      <button type="button" class="tf-btn active" data-tf="1m">1m</button>
-      <button type="button" class="tf-btn" data-tf="5m">5m</button>
-      <button type="button" class="tf-btn" data-tf="15m">15m</button>
-      <button type="button" class="tf-btn" data-tf="1h">1h</button>
-      <button type="button" class="tf-btn" data-tf="4h">4h</button>
-    </div>
-    <div class="chart-wrap">
-      <div id="kf-chart"></div>
-      <div class="chart-meta" id="chart-meta">—</div>
+    <div class="chart-layout">
+      <aside class="chart-coins">
+        <div class="section-title">Coinler</div>
+        <div class="chart-coin-list" id="chart-coin-list"><div class="empty">yükleniyor…</div></div>
+      </aside>
+      <div class="chart-main">
+        <div class="tf-row" id="chart-tf">
+          <button type="button" class="tf-btn active" data-tf="1m">1m</button>
+          <button type="button" class="tf-btn" data-tf="5m">5m</button>
+          <button type="button" class="tf-btn" data-tf="15m">15m</button>
+          <button type="button" class="tf-btn" data-tf="1h">1h</button>
+          <button type="button" class="tf-btn" data-tf="4h">4h</button>
+        </div>
+        <div class="chart-wrap">
+          <div id="kf-chart"></div>
+          <div class="chart-meta" id="chart-meta">—</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -11732,6 +11767,8 @@ let CHART_REF_TIME = '';
 let _kfChart = null;
 let _kfSeries = null;
 let _kfRefLine = null;
+let _chartStatus = null;
+let _chartStatusAt = 0;
 function fmtPx(n){
   if(n==null||isNaN(n)) return '—';
   const a=Math.abs(n);
@@ -11816,30 +11853,123 @@ function openKriptoChart(sym, ref){
   if(Number.isFinite(r) && r > 0) url += '?ref=' + encodeURIComponent(String(r));
   location.href = url;
 }
-async function resolveChartRef(){
-  if(CHART_REF != null && CHART_REF > 0 && CHART_REF_TIME) return;
+function selectChartCoin(sym, ref){
+  const name = String(sym || '').toUpperCase().replace(/USDT$/,'');
+  if(!name || name === CHART_SYM) return;
+  CHART_SYM = name;
+  localStorage.setItem('kf_chart_sym', name);
+  const r = Number(ref);
+  CHART_REF = (Number.isFinite(r) && r > 0) ? r : null;
+  CHART_REF_TIME = '';
+  let url = '/kripto/grafik/' + encodeURIComponent(name);
+  if(CHART_REF != null) url += '?ref=' + encodeURIComponent(String(CHART_REF));
+  try{ history.replaceState(null, '', url); }catch(e){}
+  highlightChartCoin();
+  loadKriptoChart();
+}
+async function fetchChartStatus(force){
+  const now = Date.now();
+  if(!force && _chartStatus && (now - _chartStatusAt) < 8000) return _chartStatus;
   try{
     const r = await fetch('/poly/api/crypto-futures/cr6', {cache:'no-store'});
     const d = await r.json();
-    const want = (CHART_SYM + 'USDT').toUpperCase();
-    const cards = d.cards || d.open_positions || [];
-    const hit = cards.find(c => String(c.symbol||'').toUpperCase() === want
-      || String(c.name||'').toUpperCase() === CHART_SYM);
-    if(!hit) return;
-    const ep = Number(hit.entry_price);
-    if(Number.isFinite(ep) && ep > 0) CHART_REF = ep;
-    const et = hit.entry_time_tr || hit.slot_start_tr || '';
-    if(et){
-      try{
-        const dt = new Date(et);
-        CHART_REF_TIME = isNaN(dt.getTime()) ? '' :
-          dt.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Istanbul'});
-      }catch(e){ CHART_REF_TIME = ''; }
+    _chartStatus = d;
+    _chartStatusAt = now;
+    return d;
+  }catch(e){
+    return _chartStatus;
+  }
+}
+function applyRefFromStatus(d){
+  if(!d) return;
+  const want = (CHART_SYM + 'USDT').toUpperCase();
+  const cards = d.cards || d.open_positions || [];
+  const hit = cards.find(c => String(c.symbol||'').toUpperCase() === want
+    || String(c.name||'').toUpperCase() === CHART_SYM);
+  if(!hit){
+    if(CHART_REF == null){ CHART_REF_TIME = ''; }
+    return;
+  }
+  const ep = Number(hit.entry_price);
+  if(Number.isFinite(ep) && ep > 0) CHART_REF = ep;
+  const et = hit.entry_time_tr || hit.slot_start_tr || '';
+  if(et){
+    try{
+      const dt = new Date(et);
+      CHART_REF_TIME = isNaN(dt.getTime()) ? '' :
+        dt.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Istanbul'});
+    }catch(e){ CHART_REF_TIME = ''; }
+  }
+  if(!CHART_REF_TIME && hit.slot_label){
+    CHART_REF_TIME = String(hit.slot_label).split('-')[0] || '';
+  }
+}
+async function resolveChartRef(){
+  const d = await fetchChartStatus(false);
+  applyRefFromStatus(d);
+}
+function highlightChartCoin(){
+  document.querySelectorAll('#chart-coin-list .chart-coin').forEach(el => {
+    el.classList.toggle('active', (el.getAttribute('data-sym') || '') === CHART_SYM);
+  });
+}
+function renderChartCoinList(d){
+  const box = document.getElementById('chart-coin-list');
+  if(!box) return;
+  const rows = (d && d.waiting) ? d.waiting.slice() : [];
+  const cards = (d && d.cards) ? d.cards : [];
+  // Açık pozisyonlar listede yoksa başa ekle
+  for(const c of cards){
+    const sym = String(c.symbol || '');
+    if(!sym) continue;
+    if(rows.some(w => String(w.symbol||'') === sym)) continue;
+    rows.unshift({
+      symbol: sym,
+      name: c.name || sym.replace('USDT',''),
+      signal: c.side === 'LONG' ? 'UP' : c.side === 'SHORT' ? 'DOWN' : 'NEUTRAL',
+      dir_tr: c.dir_tr,
+      score: c.score,
+      price: c.current != null ? c.current : c.entry_price,
+      entry_price: c.entry_price,
+      is_open: true,
+      is_top: false,
+      tier_label: c.tier_label,
+    });
+  }
+  if(!rows.length){
+    box.innerHTML = '<div class="empty">Coin yok</div>';
+    return;
+  }
+  box.innerHTML = rows.map(w => {
+    const name = (w.name || (w.symbol||'').replace('USDT','') || '').replace(/'/g,'');
+    const symFull = (w.symbol || (name + 'USDT')).replace(/'/g,'');
+    const active = name === CHART_SYM ? ' active' : '';
+    const badge = w.is_open
+      ? '<span class="wait-badge open">AÇIK</span>'
+      : (w.is_top ? '<span class="wait-badge">TOP</span>' : '');
+    let ref = (w.entry_price != null && !isNaN(w.entry_price)) ? Number(w.entry_price) : null;
+    if((ref == null || !(ref > 0)) && w.is_open){
+      const oc = cards.find(c => String(c.symbol||'') === symFull);
+      if(oc && oc.entry_price != null) ref = Number(oc.entry_price);
     }
-    if(!CHART_REF_TIME && hit.slot_label){
-      CHART_REF_TIME = String(hit.slot_label).split('-')[0] || '';
-    }
-  }catch(e){}
+    const refArg = (ref != null && !isNaN(ref) && ref > 0) ? ref : 'null';
+    const dc = (w.signal === 'UP') ? 'up' : (w.signal === 'DOWN') ? 'down' : 'neu';
+    return `<div class="chart-coin${active}" data-sym="${name}" role="button" tabindex="0"
+      onclick="selectChartCoin('${symFull}', ${refArg})" title="${name}">
+      <div><div class="cn">${name}</div>
+      <div class="cm">${w.tier_label ? w.tier_label+' · ' : ''}$${fmtPx(w.price)}</div></div>
+      <div class="cr">
+        <span class="cs">${Number(w.score||0).toFixed(2)}</span>
+        <span class="wait-dir ${dc}">${w.dir_tr || 'NÖTR'}</span>
+        ${badge}
+      </div>
+    </div>`;
+  }).join('');
+}
+async function loadChartCoinList(){
+  const d = await fetchChartStatus(true);
+  if(d) renderChartCoinList(d);
+  highlightChartCoin();
 }
 function renderWaiting(d){
   const wl = document.getElementById('waiting');
@@ -11939,7 +12069,9 @@ async function loadKriptoChart(){
         title: 'REF',
       });
     }
+    try{ _kfChart.applyOptions({ width: box.clientWidth, height: box.clientHeight || 420 }); }catch(e){}
     _kfChart.timeScale().fitContent();
+    highlightChartCoin();
     const last = candles[candles.length-1];
     let metaTxt = CHART_SYM + ' · son $' + fmtPx(last.close) + ' · ' + candles.length + ' mum · ' + CHART_TF;
     if(CHART_REF != null) metaTxt += ' · REF $' + fmtPx(CHART_REF) + (CHART_REF_TIME ? (' ('+CHART_REF_TIME+')') : '');
@@ -12344,8 +12476,9 @@ function initKriptoViews(){
         loadKriptoChart();
       };
     });
+    loadChartCoinList();
     loadKriptoChart();
-    setInterval(loadKriptoChart, 20000);
+    setInterval(() => { loadChartCoinList(); loadKriptoChart(); }, 20000);
   } else if(IS_GECMIS){
     if(gec) gec.style.display = 'block';
     if(nGe) nGe.classList.add('active');
