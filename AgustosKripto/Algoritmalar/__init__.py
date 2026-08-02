@@ -1,1 +1,1 @@
-# AgustosKripto Algoritmalar — ALGO2 Top-17 sanal futures
+# AgustosKripto Algoritmalar — ALGO2 Top-17 + ALGO1 (Poly) sanal futures

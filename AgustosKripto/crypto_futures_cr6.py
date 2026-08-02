@@ -648,32 +648,62 @@ def run_trail() -> dict:
 
 
 def run_open() -> dict:
+    """Saatlik open — ATR runner açıkken de boş kota kadar yeni coin açar.
+
+    Aynı sembol tekrarlanmaz; toplam ≤ top_n (dashboard Max).
+    """
     if not _trading_allowed():
         why = "paused" if is_live_paused() else "disabled"
         print(f"[{LABEL}] open atlandı — {why} (Binance Live kapalı / env)")
         return {"ok": False, "skipped": why}
 
     state = load_state()
-    if state.get("open_positions"):
-        print(f"[{LABEL}] open: hâlâ {len(state['open_positions'])} açık — önce close")
-        return {"ok": False, "skipped": "already_open", "open": state["open_positions"]}
+    existing = list(state.get("open_positions") or [])
+    held_syms = {
+        str(p.get("symbol") or "").upper()
+        for p in existing
+        if p.get("symbol")
+    }
+    start, end = _slot_bounds()
+    slot_key = start.strftime("%Y-%m-%d %H:00")
+    if state.get("last_open_slot") == slot_key:
+        print(f"[{LABEL}] open: aynı slot {slot_key} — atlandı (held={len(existing)})")
+        return {
+            "ok": False,
+            "skipped": "same_slot",
+            "open": existing,
+            "held": len(existing),
+        }
 
     top_n = get_top_n()
+    slots_left = max(0, top_n - len(existing))
+    if slots_left <= 0:
+        print(f"[{LABEL}] open: kota dolu held={len(existing)}/{top_n}")
+        return {
+            "ok": False,
+            "skipped": "max_open",
+            "open": existing,
+            "held": len(existing),
+            "top_n": top_n,
+        }
+
     rows = asyncio.run(_scan_all())
     ranked = _pick_top(rows, n=max(top_n + 4, top_n))  # min-lot skip için ekstra aday
     print(
-        f"[{LABEL}] top_n={top_n} scan={len(rows)} "
+        f"[{LABEL}] top_n={top_n} held={len(existing)} slots_left={slots_left} "
+        f"scan={len(rows)} "
         f"ranked={[(r['symbol'], r['signal'], r['score']) for r in ranked]}"
     )
 
-    start, end = _slot_bounds()
     opened = []
     errors = []
 
     for cand in ranked:
-        if len(opened) >= top_n:
+        if len(opened) >= slots_left:
             break
         sym = cand["symbol"]
+        if str(sym).upper() in held_syms:
+            continue  # ATR runner / mevcut açık
         side = "LONG" if cand["signal"] == "UP" else "SHORT"
         est = estimate_qty(sym, MARGIN_USD, LEVERAGE)
         if not est.get("ok"):
@@ -687,7 +717,7 @@ def run_open() -> dict:
                 margin_usd=MARGIN_USD,
                 leverage=LEVERAGE,
                 margin_type="ISOLATED",
-                skip_max_positions=True,  # kota ST TOP_N; paylaşılan state engellemesin
+                skip_max_positions=True,  # kota ST top_n; paylaşılan state engellemesin
             )
             entry = float((r.get("order") or {}).get("avgPrice") or r.get("mark_price") or 0)
             if entry <= 0:
@@ -723,15 +753,18 @@ def run_open() -> dict:
                 price=entry,
             )
             opened.append(pos)
+            held_syms.add(str(sym).upper())
             print(
                 f"[{LABEL}] OPEN {side} {sym} qty={pos['qty']} "
-                f"tier={pos['tier_label']} score={cand['score']} dry={r.get('dry_run')}"
+                f"tier={pos['tier_label']} score={cand['score']} "
+                f"dry={r.get('dry_run')} (held={len(existing)} +new={len(opened)}/{slots_left})"
             )
         except Exception as e:
             print(f"[{LABEL}] OPEN hata {sym}: {e}")
             errors.append({"symbol": sym, "error": str(e)})
 
-    state["open_positions"] = opened
+    state["open_positions"] = existing + opened
+    state["last_open_slot"] = slot_key
     state["last_scan"] = [
         {
             "symbol": r["symbol"],
@@ -752,8 +785,11 @@ def run_open() -> dict:
     return {
         "ok": True,
         "opened": opened,
+        "held": len(existing),
+        "open_count": len(existing) + len(opened),
         "errors": errors,
         "scan_count": len(rows),
+        "top_n": top_n,
         "dry_run": _is_dry(load_config()),
     }
 

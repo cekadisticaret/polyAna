@@ -1,0 +1,15 @@
+# aiProject auditd rules (unlink/write on critical sources)
+# Yükle: bash /root/aiProject/ops/install_file_watch.sh
+-w /root/aiProject/web/poly_dashboard.py -p wa -k aiproject_del
+-w /root/aiProject/PROJECT.md -p wa -k aiproject_del
+-w /root/aiProject/.cursor/rules/cron-and-ops.mdc -p wa -k aiproject_del
+-w /root/aiProject/AgustosKripto/virtual_book.py -p wa -k aiproject_del
+-w /root/aiProject/AgustosKripto/crypto_futures_cr6.py -p wa -k aiproject_del
+-w /root/aiProject/AgustosKripto/crypto_futures_trader.py -p wa -k aiproject_del
+-w /root/aiProject/AgustosKripto/binance_futures_client.py -p wa -k aiproject_del
+-w /root/aiProject/AgustosKripto/Algoritmalar/runner.py -p wa -k aiproject_del
+-w /root/aiProject/AgustosKripto/Algoritmalar/catalog.py -p wa -k aiproject_del
+-w /root/aiProject/AgustosKripto/Analizler/runner.py -p wa -k aiproject_del
+-w /root/aiProject/temmuzPoly/pm_balance_guard.py -p wa -k aiproject_del
+-w /root/aiProject/temmuzPoly/pm_orphan_sync.py -p wa -k aiproject_del
+-w /root/aiProject/temmuzPoly/pm_trader_helpers.py -p wa -k aiproject_del

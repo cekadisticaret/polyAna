@@ -1,0 +1,16 @@
+[Unit]
+Description=aiProject critical source file watcher (inotify)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/aiProject
+ExecStart=/usr/bin/python3 /root/aiProject/scripts/watch_critical_files.py
+Restart=always
+RestartSec=3
+# Script zaten /tmp/aiproject_file_watch.log yazar
+StandardOutput=null
+StandardError=append:/tmp/aiproject_file_watch.err
+
+[Install]
+WantedBy=multi-user.target

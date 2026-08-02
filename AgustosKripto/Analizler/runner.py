@@ -19,6 +19,7 @@ sys.path.insert(0, _AGUSTOS)
 sys.path.insert(0, _DIR)
 
 from virtual_book import (  # noqa: E402
+    DEPOSIT,
     LEVERAGE,
     MARGIN_USD,
     MAX_OPENS_PER_HOUR,
@@ -26,10 +27,13 @@ from virtual_book import (  # noqa: E402
     cached_status,
     close_all_positions,
     fetch_all_klines,
+    in_weekend_pause_tr,
     load_state,
     open_signals,
     refresh_status,
+    reset_book,
     trail_positions,
+    write_snapshot,
 )
 from signals import (  # noqa: E402
     ANALIZ_META,
@@ -109,7 +113,17 @@ def _pick_supertrend(cands: list[dict], max_n: int = 4) -> list[dict]:
     return picked
 
 
+def _skip_weekend(cmd: str) -> dict | None:
+    if not in_weekend_pause_tr():
+        return None
+    print(f"[Analizler] hafta sonu — {cmd} skip (Cum 22:00 – Pzt 08:00 İST)")
+    return {"ok": True, "skipped": "weekend_pause", "cmd": cmd, "results": []}
+
+
 def run_close() -> dict:
+    skipped = _skip_weekend("close")
+    if skipped:
+        return skipped
     scan_syms = list(dict.fromkeys(SYMBOLS + ST_SYMBOLS))
     kl = fetch_all_klines(scan_syms, limit=80)
     results = []
@@ -121,6 +135,9 @@ def run_close() -> dict:
 
 
 def run_trail() -> dict:
+    skipped = _skip_weekend("trail")
+    if skipped:
+        return skipped
     open_syms: set[str] = set()
     for m in ANALIZ_META:
         sp, _hp = _paths(m["id"])
@@ -138,6 +155,9 @@ def run_trail() -> dict:
 
 
 def run_open() -> dict:
+    skipped = _skip_weekend("open")
+    if skipped:
+        return skipped
     scan_syms = list(dict.fromkeys(SYMBOLS + ST_SYMBOLS))
     kl = fetch_all_klines(scan_syms, limit=80)
     # A3/A8 sistem python'da talib/jesse yok — freqtrade/jesse .venv üzerinden
@@ -241,10 +261,36 @@ def refresh_status_block(*, with_marks: bool = True) -> dict:
     return refresh_status("analizler", lambda: _build_status(with_marks=with_marks))
 
 
+def run_reset(*, balance: float = DEPOSIT) -> dict:
+    """Tüm analiz defterlerini kapat + bakiyeyi $300'e çek."""
+    results = []
+    for m in ANALIZ_META:
+        sp, _hp = _paths(m["id"])
+        st = reset_book(sp, balance=balance)
+        results.append({
+            "id": m["id"],
+            "name": m["name"],
+            "balance": st.get("balance"),
+            "open_count": 0,
+        })
+    out = {
+        "ok": True,
+        "kind": "analizler",
+        "reset_balance": float(balance),
+        "count": len(results),
+        "results": results,
+    }
+    try:
+        write_snapshot("analizler", refresh_status_block(with_marks=False))
+    except Exception:
+        pass
+    print(f"[Analizler] reset → ${balance:.0f} × {len(results)} defter")
+    return out
+
 
 def main() -> None:
     p = argparse.ArgumentParser(description="AgustosKripto Analizler sanal runner")
-    p.add_argument("cmd", choices=["open", "close", "trail", "status"])
+    p.add_argument("cmd", choices=["open", "close", "trail", "status", "reset"])
     args = p.parse_args()
     if args.cmd == "open":
         r = run_open()
@@ -252,6 +298,8 @@ def main() -> None:
         r = run_close()
     elif args.cmd == "trail":
         r = run_trail()
+    elif args.cmd == "reset":
+        r = run_reset()
     else:
         r = status_block()
     print(json.dumps(r, indent=2, ensure_ascii=False, default=str))

@@ -18,11 +18,14 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/a3a8_signal_mode.py` | A3/A8 sıkı (filtreli) vs gevşek mod (`a3a8_signal_strict`; sıkı=entry/kesişim veya momentum+RSI teyit) |
 | `temmuzPoly/chart_algo_panel.py` | Grafik ALG1/ALG2 — 5m/15m konsensüs + slot WR takibi (`update_wr` cron */5). |
 | `web/poly_dashboard.py` | Poly dashboard port **5050** — menüde Kripto Future → **bursaapp.com/kripto**; `/kripto/grafik/<coin>` mum grafiği; API `/poly/api/crypto-futures/*`. |
+| `scripts/watch_critical_files.py` | Kritik kaynak inotify izleyici — silinmede `ops/incidents/` olay kaydı |
+| `ops/CRITICAL_FILE_RESTORE.md` | 2026-08-02 kaynak silinme / geri yükleme zaman çizelgesi |
+| `ops/incidents/` | Silinme/eksik olay JSON+txt (process, git D, audit) |
 | `AgustosKripto/` | Kripto Future — CR6 canlı + sanal Algoritmalar/Analizler; `bursaapp.com/kripto` |
 | `AgustosKripto/virtual_book.py` | Sanal futures — net PnL + ATR kâr kilidi; cache + `/tmp/agustos_snap` |
 | `AgustosKripto/atr_profit_lock.py` | ATR trailing kâr kilidi — arm 1.7 / trail 1.0; saatlik close skip + trail stop |
 | `AgustosKripto/fee_utils.py` | Binance komisyon — estimate + userTrades; brüt→net |
-| `AgustosKripto/Algoritmalar/` | ALGO2 Top-17 klon — saatlik sanal open/close + `trail` |
+| `AgustosKripto/Algoritmalar/` | ALGO2 Top-17 + ALGO1 (Poly 34) sanal $300; hafta sonu skip; `reset` |
 | `AgustosKripto/Analizler/` | A1–A10 + A6(Supertrend $10×15x max4); ATR runner; A3/A8 venv |
 | `AgustosKripto/binance_futures_client.py` | Binance USD-M REST — emir, bakiye, commissionRate, userTrades |
 | `AgustosKripto/crypto_futures_trader.py` | Futures open/close + `dust` süpürme (|notional|≤$2); brüt/komisyon/net |
@@ -107,7 +110,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_analiz6.py close/open` — 6. Analiz sanal; **open** aynı adayda A6 Live gerçek PM dener (`PM_ANALIZ6_LIVE_ENABLED` + dashboard)
 - `temmuzPoly/poly_trader_analiz6_live.py close` — A6 Live kapanış :02; open sanal A6 open ile tetiklenir
 - `AgustosKripto/crypto_futures_cr6.py close/open/trail` — **Supertrend Live**; top-4; $10×15x; ATR kâr kilidi
-- `AgustosKripto/Algoritmalar/runner.py close/open/trail` — ALGO2 Top-17 sanal $300 / $15×15x / max 6 + ATR trail
+- `AgustosKripto/Algoritmalar/runner.py close/open/trail/reset` — ALGO2+ALGO1 sanal $300; Cum 22:00–Pzt 08:00 İST skip
 - `AgustosKripto/Analizler/runner.py close/open/trail` — A1–A10 + A6(Supertrend $10×15x max4) + ATR trail
 - `temmuzPoly/poly_trader_analiz15.py close/open` — **15. Analiz** BTC→A6 · ETH→A8 · SOL→A2 sanal ($300); Cum 22:00–Pzt 08:00 open kapalı
 - `temmuzPoly/poly_trader_analiz6.py weekly` — Cumartesi 21:00 haftalık 6 ısı haritası

@@ -2178,7 +2178,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260802-top-n-input"
+_DASH_UI_VER = "20260802-algo1-books"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -11723,7 +11723,7 @@ body{
     <div class="head">
       <div>
         <div class="page-title">Algoritmalar</div>
-        <div class="page-sub">ALGO2 Top-17 · sanal $300 · $15×15x · saatlik max 6</div>
+        <div class="page-sub">ALGO2 Top-17 + ALGO1 (Poly) · sanal $300 · $15×15x · max 6 · Pzt 08:00</div>
       </div>
       <div class="chip" id="algo-sum">—</div>
     </div>
@@ -12455,7 +12455,9 @@ function findBook(books, id){
   return (books||[]).find(b => {
     const bid = String(b.id||'').toLowerCase();
     const name = String(b.name||'').toLowerCase();
-    return bid === key || name === key || ('a'+bid) === key;
+    const num = String(b.algo_num != null ? b.algo_num : '');
+    return bid === key || name === key || ('a'+bid) === key
+      || (num && num === key) || (bid.replace(/^a1_0*/, '') === key.replace(/^a1_0*/, ''));
   }) || null;
 }
 function renderBookDetail(book, kind){

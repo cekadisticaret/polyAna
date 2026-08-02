@@ -66,8 +66,10 @@ alwaysApply: true
 - Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk).
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **08:00** İST — Live **open** atlanır; **close** çalışır. **Sanal 15M** (110 + A2 309/316/317) + A2 Top17 + A4 + A6 + A10 + A15: aynı pencerede open kapalı; Pzt **08:00**’de devam. Dashboard Live anahtarı ayrıca açılışı kesebilir.
+- **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **08:00** İST — `open` / `close` / `trail` atlanır (kod içi). Binance Supertrend Live ayrı (dashboard Live toggle).
 - **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **08:00** İST (`0 19 * * 5` / `0 5 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis). Public: `bursaapp.com/poly` · Kripto Future: `bursaapp.com/kripto`.
+- **Kaynak silinme izleme:** `aiproject-file-watch.service` → log `/tmp/aiproject_file_watch.log`; olaylar `ops/incidents/`. Geri yükleme: `ops/CRITICAL_FILE_RESTORE.md` (**09:17 / 09:23 / 13:25 İST**, 2026-08-02). audit: `ausearch -k aiproject_del -ts recent -i`
 
 ## Log Takibi
 ```bash
@@ -87,6 +89,7 @@ tail -f /tmp/agustos_algoritmalar.log
 tail -f /tmp/agustos_algoritmalar_trail.log
 tail -f /tmp/agustos_analizler.log
 tail -f /tmp/agustos_analizler_trail.log
+tail -f /tmp/aiproject_file_watch.log
 tail -f /tmp/backup.log
 tail -f /tmp/crypto_news_monitor.log
 tail -f /tmp/poly_analiz3_freqtrade.log

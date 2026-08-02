@@ -92,6 +92,23 @@ def now_tr_iso() -> str:
     return now_tr().isoformat()
 
 
+def in_weekend_pause_tr(now: datetime | None = None) -> bool:
+    """Cum 22:00 – Pzt 08:00 İST — sanal Algoritma/Analiz open/close/trail yok."""
+    n = now or now_tr()
+    if n.tzinfo is None:
+        n = n.replace(tzinfo=_TZ)
+    else:
+        n = n.astimezone(_TZ)
+    dow, h = n.weekday(), n.hour  # Mon=0 … Fri=4 Sat=5 Sun=6
+    if dow == 4 and h >= 22:
+        return True
+    if dow in (5, 6):
+        return True
+    if dow == 0 and h < 8:
+        return True
+    return False
+
+
 def new_state() -> dict:
     return {
         "balance": DEPOSIT,
@@ -102,6 +119,32 @@ def new_state() -> dict:
         "updated_at_tr": "",
         "last_open_slot": "",
     }
+
+
+def reset_book(
+    state_path: str,
+    *,
+    balance: float = DEPOSIT,
+    clear_history_path: str | None = None,
+) -> dict:
+    """Açık pozisyonları düş, bakiyeyi deposit'e çek (sanal reset)."""
+    st = new_state()
+    bal = float(balance)
+    st["balance"] = bal
+    st["deposit"] = bal
+    st["open_positions"] = []
+    st["total_pnl"] = 0.0
+    st["total_commission"] = 0.0
+    st["last_open_slot"] = ""
+    save_state(state_path, st)
+    if clear_history_path:
+        save_json(clear_history_path, [])
+    # status cache invalid
+    try:
+        _STATUS_CACHE.clear()
+    except Exception:
+        pass
+    return st
 
 
 def load_json(path: str, default):
@@ -470,6 +513,8 @@ def open_signals(
     """candidates: [{symbol, side LONG|SHORT, signal, algo?, score?}, ...]
 
     Entry = son kapanmış 1h mum close (slot açılışı).
+    ATR runner açıkken de yeni saatte boş kota kadar ek open yapılır
+    (aynı sembol tekrarlanmaz; toplam ≤ max_opens).
     margin/leverage/max_opens verilmezse global varsayılan ($15×15x / max 6).
     """
     m = MARGIN_USD if margin_usd is None else float(margin_usd)
@@ -478,25 +523,44 @@ def open_signals(
     notional = m * lev
 
     state = load_state(state_path)
-    if state.get("open_positions"):
+    existing = list(state.get("open_positions") or [])
+    held_syms = {
+        str(p.get("symbol") or "").upper()
+        for p in existing
+        if p.get("symbol")
+    }
+
+    slot = slot_label()
+    # Bu saat için open zaten koştuysa tekrar ekleme
+    if state.get("last_open_slot") == slot:
         return {
             "ok": False,
-            "skipped": "already_open",
-            "open": len(state["open_positions"]),
+            "skipped": "same_slot",
+            "open": len(existing),
             "balance": state["balance"],
         }
 
-    slot = slot_label()
-    if state.get("last_open_slot") == slot and state.get("open_positions"):
-        return {"ok": False, "skipped": "same_slot", "balance": state["balance"]}
+    slots_left = max(0, max_n - len(existing))
+    if slots_left <= 0:
+        return {
+            "ok": False,
+            "skipped": "max_open",
+            "open": len(existing),
+            "max_opens": max_n,
+            "balance": state["balance"],
+        }
 
     cache = kl_cache or {}
     opened = []
-    for cand in candidates[:max_n]:
+    for cand in candidates:
+        if len(opened) >= slots_left:
+            break
         sym = (cand.get("symbol") or "").upper()
         side = cand.get("side")
-        if side not in ("LONG", "SHORT"):
+        if not sym or side not in ("LONG", "SHORT"):
             continue
+        if sym in held_syms:
+            continue  # ATR runner / mevcut açık — aynı coin tekrar yok
         kl = cache.get(sym)
         if not kl:
             try:
@@ -541,18 +605,32 @@ def open_signals(
             price=entry,
         )
         opened.append(pos)
+        held_syms.add(sym)
         print(
             f"[{label}] open {sym} {side} @{entry} qty={qty} "
-            f"margin=${m}x{lev} fee≈${entry_fee:.4f}"
+            f"margin=${m}x{lev} fee≈${entry_fee:.4f} "
+            f"(held={len(existing)} +new={len(opened)}/{slots_left})"
         )
 
-    state["open_positions"] = opened
+    if not opened:
+        return {
+            "ok": True,
+            "opened": 0,
+            "positions": [],
+            "held": len(existing),
+            "balance": state["balance"],
+            "skipped": "no_candidates" if candidates else "empty",
+        }
+
+    state["open_positions"] = existing + opened
     state["last_open_slot"] = slot
     save_state(state_path, state)
     return {
         "ok": True,
         "opened": len(opened),
         "positions": opened,
+        "held": len(existing),
+        "open": len(existing) + len(opened),
         "balance": state["balance"],
     }
 
