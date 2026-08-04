@@ -997,13 +997,19 @@ def refresh_scan(force: bool = False, ttl_sec: int = 60) -> list[dict]:
     return state["last_scan"]
 
 
-def _reconcile_opens_with_binance(opens: list[dict], chain_map: dict, *, dry: bool) -> tuple[list[dict], list[dict]]:
+def _reconcile_opens_with_binance(
+    opens: list[dict], chain_map: dict, *, dry: bool, client=None,
+) -> tuple[list[dict], list[dict]]:
     """Yerel açıklar vs Binance: zincirde yoksa (manuel kapatma) state'ten düş.
 
+    Gerçek para riski: toplu get_positions() anlık gecikme/eventual-consistency
+    yüzünden bir sembolü kaçırabilir. Düşürmeden önce o sembolü TEK TEK tekrar
+    sorgulayıp gerçekten kapalı olduğunu doğrula (aksi halde canlı pozisyon
+    ATR/hard SL korumasından habersizce çıkar).
     dry_run kayıtları / global dry modda dokunulmaz.
     """
     kept: list[dict] = []
-    orphaned: list[dict] = []
+    candidates: list[dict] = []
     for p in opens:
         if dry or p.get("dry_run"):
             kept.append(p)
@@ -1012,7 +1018,29 @@ def _reconcile_opens_with_binance(opens: list[dict], chain_map: dict, *, dry: bo
         if sym and sym in chain_map:
             kept.append(p)
         else:
-            orphaned.append(p)
+            candidates.append(p)
+
+    orphaned: list[dict] = []
+    if candidates and client is not None:
+        for p in candidates:
+            sym = (p.get("symbol") or "").upper()
+            confirmed_gone = False
+            try:
+                recheck = get_positions(client, sym)
+                confirmed_gone = not any(
+                    (r.get("symbol") or "").upper() == sym for r in recheck
+                )
+            except Exception as e:
+                print(f"[{LABEL}] reconcile recheck {sym}: {e}")
+                confirmed_gone = False  # şüpheli — düşürme, koru
+            if confirmed_gone:
+                orphaned.append(p)
+            else:
+                print(f"[{LABEL}] reconcile: {sym} tekrar sorguda hâlâ açık — korunuyor")
+                kept.append(p)
+    elif candidates:
+        # client yok — tek okumaya güvenme, koru
+        kept.extend(candidates)
     return kept, orphaned
 
 
@@ -1057,7 +1085,7 @@ def cr6_status_block(*, refresh: bool = True) -> dict:
             for p in get_positions(c):
                 chain_map[p["symbol"]] = p
             # Canlı: Binance'te kapanmışları state'ten temizle
-            opens, orphaned = _reconcile_opens_with_binance(opens, chain_map, dry=dry)
+            opens, orphaned = _reconcile_opens_with_binance(opens, chain_map, dry=dry, client=c)
             if orphaned:
                 _drop_orphaned_opens(orphaned)
                 state = load_state()
