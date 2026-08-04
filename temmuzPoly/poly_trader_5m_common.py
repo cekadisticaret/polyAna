@@ -365,10 +365,11 @@ def _pm_budget_size(
     for _ in range(30000):
         if size <= 0:
             return None
-        maker = (size * p).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
-        if maker >= Decimal("0.01") and maker <= budget:
-            # taker 4dp, maker 2dp — API float sapmasın
-            return float(size), float(p), float(maker)
+        maker = size * p
+        # Tam cent olmali — client ham size*price gonderir
+        if maker == maker.quantize(Decimal("0.01"), rounding=ROUND_DOWN):
+            if maker >= Decimal("0.01") and maker <= budget:
+                return float(size), float(p), float(maker)
         size -= Decimal("0.0001")
     return None
 
@@ -522,10 +523,22 @@ def _pm_place_order(token_id: str, amount_usd: float, tick_size: str = "0.01",
             continue
 
         try:
-            # PM API: size ≤4dp, price ≤2dp (maker=size*price ≤2dp)
-            size = float(Decimal(str(size)).quantize(Decimal("0.0001"), rounding=ROUND_DOWN))
-            price = float(Decimal(str(price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
-            spent = float((Decimal(str(size)) * Decimal(str(price))).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+            # PM API: size ≤4dp, price ≤2dp, maker=size*price tam 2dp
+            p_dec = Decimal(str(price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+            s_dec = Decimal(str(size)).quantize(Decimal("0.0001"), rounding=ROUND_DOWN)
+            for _ in range(20000):
+                if s_dec <= 0:
+                    break
+                m_dec = s_dec * p_dec
+                if m_dec == m_dec.quantize(Decimal("0.01"), rounding=ROUND_DOWN) and m_dec >= Decimal("0.01"):
+                    break
+                s_dec -= Decimal("0.0001")
+            else:
+                print(f"[{LABEL}] Size/price cent uyumsuz (@{float(p_dec):.2f})", file=sys.stderr)
+                continue
+            size = float(s_dec)
+            price = float(p_dec)
+            spent = float(s_dec * p_dec)
             args   = OrderArgs(token_id=token_id, price=price, size=size, side=BUY)
             signed = client.create_order(args, opts)
             resp   = client.post_order(signed, order_type=OrderType.FAK)

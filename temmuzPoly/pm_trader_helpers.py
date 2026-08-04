@@ -19,6 +19,30 @@ PM_DRY_RUN = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 PM_ORDER_ATTEMPTS = 3
 PM_ORDER_NOT_READY_ATTEMPTS = 8  # "order manager not ready" → 10sn × 8 ≈ 70sn
 PM_ORDER_RETRY_SEC = 10
+# Manuel trade-desk: kısa retry (UI ~1 dk bekletmesin)
+PM_ORDER_INTERACTIVE_ATTEMPTS = 3
+PM_ORDER_INTERACTIVE_NOT_READY = 3
+PM_ORDER_INTERACTIVE_RETRY_SEC = 2
+
+_PM_CLIENT = None
+_PM_CLIENT_TS = 0.0
+_PM_CLIENT_TTL_SEC = 300.0  # API key yeniden türetmeyi kes
+_PM_CLIENT_LOCK = None
+
+
+def _pm_client_lock():
+    global _PM_CLIENT_LOCK
+    if _PM_CLIENT_LOCK is None:
+        import threading
+        _PM_CLIENT_LOCK = threading.Lock()
+    return _PM_CLIENT_LOCK
+
+
+def pm_invalidate_client() -> None:
+    global _PM_CLIENT, _PM_CLIENT_TS
+    with _pm_client_lock():
+        _PM_CLIENT = None
+        _PM_CLIENT_TS = 0.0
 
 
 def _pm_order_not_ready(err: str | None) -> bool:
@@ -51,8 +75,11 @@ def tg_send_pm_live(text: str, *, label: str = "PM") -> bool:
         return False
 
 
-def in_weekend_pause_tr(now_tr: datetime) -> bool:
-    """Cuma 22:00 – Pazartesi 08:00 İST arası yeni işlem açılmaz (A1/A2 gerçek PM)."""
+def in_weekend_pause_tr(now_tr: datetime, *, resume_hour: int = 8) -> bool:
+    """Cuma 22:00 – Pazartesi resume_hour İST arası yeni işlem açılmaz.
+
+    Varsayılan resume_hour=8. A1/A2/A10 için 12 kullanılır.
+    """
     dow = now_tr.weekday()  # 0=Pzt … 4=Cum 5=Cmt 6=Paz
     h = now_tr.hour
     if dow == 4 and h >= 22:
@@ -61,13 +88,22 @@ def in_weekend_pause_tr(now_tr: datetime) -> bool:
         return True
     if dow == 6:
         return True
-    if dow == 0 and h < 8:
+    if dow == 0 and h < resume_hour:
         return True
     return False
 
 
+# A1 Live / A2 Live / A10 Live — Cum 22:00 → Pzt 12:00
+_WEEKEND_RESUME_12_LABELS = frozenset({
+    "A1 LIVE",
+    "5. ANALİZ",  # A1 legacy label
+    "2. ANALİZ LIVE",
+    "10. ANALİZ LIVE",
+})
+
+
 _SANAL_WEEKEND_LABELS = frozenset({
-    "4. ANALİZ", "6. ANALİZ", "10. ANALİZ", "15. ANALİZ", "A2",
+    "1. ANALİZ", "2. ANALİZ", "4. ANALİZ", "6. ANALİZ", "10. ANALİZ", "15. ANALİZ", "A2",
     "15M 110 SOL",
     "15M 309 Squeeze Mom",
     "15M 316 Supertrend",
@@ -89,11 +125,15 @@ def _weekend_pause_applies(label: str) -> bool:
         return False
 
 
-def skip_if_weekend_pause(label: str, mode: str, now_tr: datetime | None = None) -> bool:
+def skip_if_weekend_pause(
+    label: str,
+    mode: str,
+    now_tr: datetime | None = None,
+    history: list | None = None,
+) -> bool:
     """Hafta sonu duraklamasında True — gerçek PM + seçili sanal trader'lar.
 
-    Close modu atlanmaz: Cum 21:05 açılıp 22:02'de kapanması gereken
-    pozisyonlar settle edilebilsin. Yalnızca yeni open durur.
+    Close modu atlanmaz. Open'da history + güçlü slot (WR>%85) varsa hafta sonu geçer.
     """
     if mode == "close":
         return False
@@ -105,10 +145,18 @@ def skip_if_weekend_pause(label: str, mode: str, now_tr: datetime | None = None)
         now_tr = now_tr.replace(tzinfo=_TZ_TR)
     else:
         now_tr = now_tr.astimezone(_TZ_TR)
-    if in_weekend_pause_tr(now_tr):
+    resume_hour = 12 if (label or "").upper() in {x.upper() for x in _WEEKEND_RESUME_12_LABELS} else 8
+    if in_weekend_pause_tr(now_tr, resume_hour=resume_hour):
+        if mode == "open" and history is not None and is_slot_force_hot(history, now_tr.hour):
+            print(
+                f"[{label} {mode}] {now_tr.strftime('%H:%M')} İST — "
+                f"hafta sonu ama güçlü slot (WR>%{SLOT_FORCE_WR:.0f}) → açılış serbest"
+            )
+            return False
+        end = f"Pzt {resume_hour:02d}:00"
         print(
             f"[{label} {mode}] {now_tr.strftime('%H:%M')} İST — "
-            f"hafta sonu duraklama (Cum 22:00 – Pzt 08:00), işlem yok"
+            f"hafta sonu duraklama (Cum 22:00 – {end}), işlem yok"
         )
         return True
     return False
@@ -143,6 +191,10 @@ _PM_LIVE_AMOUNT_DEFAULTS: dict[str, tuple[float, float, float]] = {
     "a2": (6.0, 7.0, 8.0),
     "a10": (8.0, 10.0, 12.0),
     "a6": (8.0, 10.0, 12.0),
+    "a2_16": (8.0, 12.0, 16.0),
+    "a2_02": (4.0, 5.0, 6.0),
+    "a2_08": (4.0, 5.0, 6.0),
+    "a15": (12.0, 16.0, 20.0),
 }
 
 
@@ -186,25 +238,41 @@ def pm_live_wr_amount(
     return mid
 
 
-def pm_get_client():
+def pm_get_client(*, force: bool = False):
+    """Clob client — API key türetmeyi TTL boyunca cache'le (her emirde ~sn kaybı olmasın)."""
+    global _PM_CLIENT, _PM_CLIENT_TS
     from py_clob_client_v2 import ClobClient
-    pk     = os.getenv("POLY_PRIVATE_KEY", "")
+    pk = os.getenv("POLY_PRIVATE_KEY", "")
     funder = os.getenv("POLY_FUNDER", "")
+    now = time.time()
+    with _pm_client_lock():
+        if (
+            not force
+            and _PM_CLIENT is not None
+            and (now - _PM_CLIENT_TS) < _PM_CLIENT_TTL_SEC
+        ):
+            return _PM_CLIENT
+    last_err = None
     for attempt in range(3):
         try:
-            temp  = ClobClient(host=_PM_CLOB_HOST, chain_id=137, key=pk)
+            temp = ClobClient(host=_PM_CLOB_HOST, chain_id=137, key=pk)
             creds = temp.create_or_derive_api_key()
             if creds is None:
-                time.sleep(2)
+                time.sleep(0.5)
                 continue
-            return ClobClient(
+            client = ClobClient(
                 host=_PM_CLOB_HOST, chain_id=137, key=pk,
                 creds=creds, signature_type=1, funder=funder,
             )
+            with _pm_client_lock():
+                _PM_CLIENT = client
+                _PM_CLIENT_TS = time.time()
+            return client
         except Exception as e:
+            last_err = e
             print(f"[PM] Client init ({attempt+1}/3): {e}", file=sys.stderr)
-            time.sleep(2)
-    raise RuntimeError("Polymarket client oluşturulamadı")
+            time.sleep(0.5)
+    raise RuntimeError(f"Polymarket client oluşturulamadı: {last_err}")
 
 
 def pm_get_balance() -> float:
@@ -417,7 +485,8 @@ def pm_clob_error_tr(err: str | Exception) -> str:
 def pm_place_order(
     token_id: str, amount_usd: float, tick_size: str = "0.01",
     neg_risk: bool = False, *, label: str = "PM", hata_file: str | None = None,
-    max_attempts: int = PM_ORDER_ATTEMPTS,
+    max_attempts: int | None = None,
+    interactive: bool = False,
 ) -> dict | None:
     global _PM_LAST_ORDER_ERROR
     last_err: str | None = None
@@ -426,6 +495,16 @@ def pm_place_order(
     last_price = 0.0
     last_spent = 0.0
     attempt = 0
+    if max_attempts is None:
+        max_attempts = (
+            PM_ORDER_INTERACTIVE_ATTEMPTS if interactive else PM_ORDER_ATTEMPTS
+        )
+    not_ready_cap = (
+        PM_ORDER_INTERACTIVE_NOT_READY if interactive else PM_ORDER_NOT_READY_ATTEMPTS
+    )
+    retry_sec = (
+        PM_ORDER_INTERACTIVE_RETRY_SEC if interactive else PM_ORDER_RETRY_SEC
+    )
     limit = max(1, int(max_attempts))
 
     while attempt < limit:
@@ -462,6 +541,9 @@ def pm_place_order(
                 f"[{label}] Order hatası ({attempt}/{limit}): {e}",
                 file=sys.stderr,
             )
+            low = last_err.lower()
+            if "unauthorized" in low or "invalid api" in low or "api key" in low:
+                pm_invalidate_client()
 
         recovered = _pm_recover_filled_order(
             token_id, shares_before, last_size, last_price, last_spent, label=label,
@@ -471,16 +553,16 @@ def pm_place_order(
             return recovered
 
         if _pm_order_not_ready(last_err):
-            limit = max(limit, PM_ORDER_NOT_READY_ATTEMPTS)
+            limit = max(limit, not_ready_cap)
 
         if attempt < limit:
             print(
-                f"[{label}] {PM_ORDER_RETRY_SEC}s beklenip tekrar denenecek"
+                f"[{label}] {retry_sec}s beklenip tekrar denenecek"
                 + (" (PM not ready)" if _pm_order_not_ready(last_err) else "")
                 + "…",
                 file=sys.stderr,
             )
-            time.sleep(PM_ORDER_RETRY_SEC)
+            time.sleep(retry_sec)
 
     if hata_file and last_err:
         pm_log_hata(hata_file, token_id[:20], "order_basarisiz", last_err)
@@ -969,6 +1051,88 @@ def slot_amount_log(label: str, hour_tr: int, base: float, amount: float, hot_bo
         print(f"[{label}] 🔥 etkili saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f} (+40%)")
     elif cold_cut:
         print(f"[{label}] ❄️ zayıf saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f} (-30%)")
+
+
+
+# ── Güçlü / soğuk saat (En Etkili Zaman) ──
+# WR>%85 → sabit $25 (sanal + Live A1/A2/A6/A10). Soğuk saat → open skip.
+SLOT_FORCE_WR = 85.0
+SLOT_FORCE_AMOUNT = 25.0
+SLOT_COLD_BAD_DAYS = 3
+SLOT_COLD_LOSSES = 4
+
+
+def hour_slot_detail(history: list, hour_tr: int, *, min_trades: int = 1) -> dict | None:
+    day_data: dict[int, dict[str, int]] = {}
+    for tr in history or []:
+        if tr.get("entry_hour_tr") != hour_tr:
+            continue
+        dow = tr.get("entry_dow")
+        if dow is None:
+            continue
+        day_data.setdefault(dow, {"w": 0, "t": 0})
+        day_data[dow]["t"] += 1
+        if tr.get("win"):
+            day_data[dow]["w"] += 1
+    if not day_data:
+        return None
+    all_w = sum(v["w"] for v in day_data.values())
+    all_t = sum(v["t"] for v in day_data.values())
+    if all_t < min_trades:
+        return None
+    good_days = sum(1 for v in day_data.values() if v["t"] >= 1 and v["w"] / v["t"] > 0.5)
+    bad_days = sum(1 for v in day_data.values() if v["t"] >= 1 and v["w"] / v["t"] <= 0.5)
+    return {
+        "hour": hour_tr,
+        "w": all_w,
+        "t": all_t,
+        "losses": all_t - all_w,
+        "wr": round(all_w / all_t * 100, 1) if all_t else 0.0,
+        "good_days": good_days,
+        "bad_days": bad_days,
+    }
+
+
+def is_slot_force_hot(history: list, hour_tr: int) -> bool:
+    d = hour_slot_detail(history, hour_tr, min_trades=HOT_HOUR_MIN_TRADES)
+    return bool(d and d["wr"] > SLOT_FORCE_WR)
+
+
+def is_slot_cold_block(history: list, hour_tr: int) -> tuple[bool, str]:
+    d = hour_slot_detail(history, hour_tr, min_trades=1)
+    if not d:
+        return False, ""
+    if d["bad_days"] >= SLOT_COLD_BAD_DAYS:
+        return True, (
+            f"soğuk saat {hour_tr:02d}:00 — {d['bad_days']} başarısız gün "
+            f"(WR %{d['wr']:.0f}, {d['w']}/{d['t']})"
+        )
+    if d["losses"] >= SLOT_COLD_LOSSES:
+        return True, (
+            f"soğuk saat {hour_tr:02d}:00 — {d['losses']} kayıp "
+            f"(WR %{d['wr']:.0f}, {d['w']}/{d['t']})"
+        )
+    return False, ""
+
+
+def resolve_open_slot_gates(
+    history: list,
+    hour_tr: int,
+    base_amount: float,
+) -> tuple[bool, float, bool, bool, str]:
+    """(skip, amount, force_hot, cold_cut, note)."""
+    blocked, reason = is_slot_cold_block(history, hour_tr)
+    if blocked:
+        return True, base_amount, False, False, reason
+    if is_slot_force_hot(history, hour_tr):
+        d = hour_slot_detail(history, hour_tr, min_trades=HOT_HOUR_MIN_TRADES) or {}
+        note = (
+            f"güçlü saat {hour_tr:02d}:00 WR %{d.get('wr', 0):.0f} "
+            f"({d.get('w', 0)}/{d.get('t', 0)}) → ${SLOT_FORCE_AMOUNT:.0f}"
+        )
+        return False, float(SLOT_FORCE_AMOUNT), True, False, note
+    amount, hot_boost, cold_cut = resolve_slot_trade_amount(base_amount, hour_tr, history)
+    return False, amount, hot_boost, cold_cut, ""
 
 
 def apply_hot_hour_boost(

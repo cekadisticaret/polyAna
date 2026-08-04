@@ -20,7 +20,7 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz10_live.py open` (`PM_ANALIZ10_REAL_ENABLED`) | `/tmp/poly_trader_analiz10_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_live.py close` | `/tmp/poly_trader_analiz6_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py close` | `/tmp/crypto_futures_cr6.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py open` (Supertrend Live) | `/tmp/crypto_futures_cr6.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py open` (A1#21 Fear & Greed Live) | `/tmp/crypto_futures_cr6.log` |
 | `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py trail` | `/tmp/crypto_futures_cr6_trail.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Algoritmalar/runner.py close` | `/tmp/agustos_algoritmalar.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Algoritmalar/runner.py open` | `/tmp/agustos_algoritmalar.log` |
@@ -33,6 +33,7 @@ alwaysApply: true
 | `30 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz5_midcheck.py` | `/tmp/poly_trader_analiz5_midcheck.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/pm_balance_hourly.py` | `/tmp/pm_balance_hourly.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_real_stats.py` | `/tmp/poly_5m_real_stats.log` |
+| `* * * * *` | `temmuzPoly/poly_trader_manual.py close` (manuel PM slot settle) | `/tmp/poly_trader_manual.log` |
 | `*/15 * * * *` | `poly_trader_5m_sol_110.py open` (+1 sn gecikme) | `/tmp/poly_5m_sol_110.log` |
 | `*/15 * * * *` | `poly_trader_15m_a2.py open` (309/316/317 sanal; 309 Live $3 aynı sinyal/anda) | `/tmp/poly_trader_15m_a2.log` |
 | `0 0 * * 0` | `poly_trader_5m_sol_110.py weekly` | `/tmp/poly_5m_sol_110.log` |
@@ -43,6 +44,10 @@ alwaysApply: true
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py close` | `/tmp/poly_trader_a2.log` |
 | `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py open` | `/tmp/poly_trader_a2.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py weekly` | `/tmp/poly_trader_a2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py close` | `/tmp/poly_trader_a2_02_live.log` |
+| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py open` | `/tmp/poly_trader_a2_02_live.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_08_live.py close` | `/tmp/poly_trader_a2_08_live.log` |
+| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_08_live.py open` | `/tmp/poly_trader_a2_08_live.log` |
 | `*/30 * * * *` | `cd /root/aiProject/crypto-news-monitor && ./run_once.sh` | `/tmp/crypto_news_monitor.log` |
 | `2 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh close` | `/tmp/poly_analiz3_freqtrade.log` |
 | `5 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh open` | `/tmp/poly_analiz3_freqtrade.log` |
@@ -50,6 +55,8 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh open` | `/tmp/poly_analiz8_jesse.log` |
 | `0 19 * * 5` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py close` | `/tmp/pm_weekend_sync.log` |
 | `0 5 * * 1` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py open` | `/tmp/pm_weekend_sync.log` |
+| `0 21 * * *` | `temmuzPoly/weekly_slot_heatmap_all.py send` (00:00 İST — A15/A4 TG) | `/tmp/weekly_slot_heatmap_all.log` |
+| `15 * * * *` | `temmuzPoly/slot_data_archive.py` (saatlik slot arşivi) | `/tmp/slot_data_archive.log` |
 
 ## Pasif / Kaldırılmış
 | Zamanlama | Durum |
@@ -66,13 +73,14 @@ alwaysApply: true
 - Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk).
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **08:00** İST — Live **open** atlanır; **close** çalışır. **Sanal 15M** (110 + A2 309/316/317) + A2 Top17 + A4 + A6 + A10 + A15: aynı pencerede open kapalı; Pzt **08:00**’de devam. Dashboard Live anahtarı ayrıca açılışı kesebilir.
-- **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **08:00** İST — `open` / `close` / `trail` atlanır (kod içi). Binance Supertrend Live ayrı (dashboard Live toggle).
+- **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **08:00** İST — `open` / `close` / `trail` atlanır (kod içi). Algoritmalar aktif open: **A2#05/#06/#07 + A1#11 $7×20x**; diğer defterler yalnızca close/trail. Binance A1#21 Fear & Greed Live ayrı (dashboard Live toggle).
 - **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **08:00** İST (`0 19 * * 5` / `0 5 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis). Public: `bursaapp.com/poly` · Kripto Future: `bursaapp.com/kripto`.
 - **Kaynak silinme izleme:** `aiproject-file-watch.service` → log `/tmp/aiproject_file_watch.log`; olaylar `ops/incidents/`. Geri yükleme: `ops/CRITICAL_FILE_RESTORE.md` (**09:17 / 09:23 / 13:25 İST**, 2026-08-02). audit: `ausearch -k aiproject_del -ts recent -i`
 
 ## Log Takibi
 ```bash
+tail -f /tmp/poly_trader_manual.log
 tail -f /tmp/bist_visual.log
 tail -f /tmp/bist_signal_hunter.log
 tail -f /tmp/poly_trader_analiz1.log
@@ -83,6 +91,8 @@ tail -f /tmp/algo_signals.log
 tail -f /tmp/algo_signals_v2.log
 tail -f /tmp/chart_algo_panel_wr.log
 tail -f /tmp/poly_trader_a2.log
+tail -f /tmp/poly_trader_a2_02_live.log
+tail -f /tmp/poly_trader_a2_08_live.log
 tail -f /tmp/crypto_futures_cr6.log
 tail -f /tmp/crypto_futures_cr6_trail.log
 tail -f /tmp/agustos_algoritmalar.log
@@ -94,4 +104,6 @@ tail -f /tmp/backup.log
 tail -f /tmp/crypto_news_monitor.log
 tail -f /tmp/poly_analiz3_freqtrade.log
 tail -f /tmp/poly_analiz8_jesse.log
+tail -f /tmp/weekly_slot_heatmap_all.log
+tail -f /tmp/slot_data_archive.log
 ```

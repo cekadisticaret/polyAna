@@ -5,6 +5,9 @@ import json
 import os
 import re
 import sys
+import time
+import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -33,6 +36,9 @@ _HEATMAP_SYMS = {
     "analiz10": ["BTC", "SOL"],
     "5m_sol_110": ["SOL"],
     "15m_309_live": ["BTC", "ETH", "SOL"],
+    "a2_16_live": ["BTC", "ETH", "SOL"],
+    "a2_02_live": ["BTC", "ETH", "SOL"],
+    "a2_08_live": ["BTC", "ETH", "SOL"],
 }
 # Sıcaklık haritası sekmesinde birleşik gösterilecek ek history kaynakları
 _HEATMAP_MERGE: dict[str, list[str]] = {}
@@ -56,6 +62,10 @@ _LIVE_PM_ANALYSES = frozenset({
     "analiz6_live",  # A6 Live → analiz6
     "analiz8_live",  # A8 Live → analiz8
     "15m_309_live",  # 15M 309 Live → 15m_309 sanal
+    "a2_16_live",    # A2#16 Live → a2_16 sanal
+    "a2_02_live",    # A2#02 Live → a2_02 sanal
+    "a2_08_live",    # A2#08 Live → a2_08 sanal
+    "analiz15_live", # A15 Live → analiz15 sanal
 })
 # Algoritma performansı panelinde gösterilmez
 _ALGO_STATS_EXCLUDE = frozenset({"manual"}) | _LIVE_PM_ANALYSES
@@ -88,6 +98,7 @@ _HISTORY_ORDER = [
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
 _HISTORY_ORDER_GECMIS = [
     "analiz5", "analiz2_live", "analiz10_live", "analiz6_live", "15m_309_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live",
     *_HISTORY_ORDER,
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
@@ -105,6 +116,10 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz10_live": "A10 Live",
     "analiz6_live": "A6 Live",
     "15m_309_live": "15M 309 Live",
+    "a2_16_live": "A2#16 Supertrend Live",
+    "a2_02_live": "A2#02 RSI Div Live",
+    "a2_08_live": "A2#08 Williams Live",
+    "analiz15_live": "A15 Live",
 }
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
@@ -114,7 +129,7 @@ _OVERVIEW_ACTIVE_ORDER = [
     "5m_sol_110",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
-    "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None,
+    "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "analiz15_live": None,
     "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz10": 300, "analiz15": 300,
     "analiz3": 300, "analiz8": 300,
@@ -126,6 +141,10 @@ _PM_PAUSE_KEYS = {
     "analiz10_live": "analiz10_paused",
     "analiz6_live": "analiz6_live_paused",
     "15m_309_live": "15m_309_live_paused",
+    "a2_16_live": "a2_16_live_paused",
+    "a2_02_live": "a2_02_live_paused",
+    "a2_08_live": "a2_08_live_paused",
+    "analiz15_live": "analiz15_live_paused",
 }
 _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz5": "A1 Live",
@@ -133,6 +152,10 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz10_live": "A10 Live",
     "analiz6_live": "A6 Live",
     "15m_309_live": "309L",
+    "a2_16_live": "A2#16L",
+    "a2_02_live": "A2#02L",
+    "a2_08_live": "A2#08L",
+    "analiz15_live": "A15L",
     "analiz1": "A1",
     "analiz2": "A2",
     "analiz4": "A4",
@@ -498,9 +521,16 @@ def _save_trader_history(key: str, history: list) -> None:
         json.dump(history, f, ensure_ascii=False, indent=2)
 
 _PM_BAL_CACHE: dict = {"ts": 0.0, "val": -1.0}
-_PM_BAL_CACHE_TTL = 20.0  # sn — CLOB api-key spam / yavaş /poly/api/data önlemi
+_PM_BAL_CACHE_TTL = 45.0  # sn — overview poll'da CLOB'u her seferinde vurma
 _PM_ORPHAN_SYNC_CACHE: dict = {"ts": 0.0}
-_PM_ORPHAN_SYNC_TTL = 60.0
+_PM_ORPHAN_SYNC_TTL = 120.0
+_POS_LIST_CACHE: dict = {"ts": 0.0, "rows": None}
+_POS_LIST_CACHE_TTL = 3.0
+_MANUAL_SETTLE_CACHE: dict = {"ts": 0.0}
+_MANUAL_SETTLE_TTL = 8.0
+_PM_HOURLY_Q_CACHE: dict = {"ts": 0.0, "key": None, "rows": None}
+_PM_15M_Q_CACHE: dict = {"ts": 0.0, "key": None, "rows": None}
+_PM_QUOTE_CACHE_TTL = 15.0
 
 
 def get_pm_balance() -> float:
@@ -510,10 +540,15 @@ def get_pm_balance() -> float:
         return float(_PM_BAL_CACHE["val"])
     try:
         sys.path.insert(0, _DIR_POLY)
-        from poly_trader_analiz5 import _pm_get_balance
-        val = float(_pm_get_balance())
+        # Ortak cache'li client — analiz5 her seferinde api-key türetmesin
+        from pm_trader_helpers import pm_get_balance
+        val = float(pm_get_balance())
     except Exception:
-        val = -1.0
+        try:
+            from poly_trader_analiz5 import _pm_get_balance
+            val = float(_pm_get_balance())
+        except Exception:
+            val = -1.0
     _PM_BAL_CACHE["ts"] = now
     _PM_BAL_CACHE["val"] = val
     return val
@@ -624,6 +659,10 @@ _LIVE_OVERVIEW_SYSTEMS = [
     ("analiz10_live", "A10 Live", "analiz10_paused"),
     ("analiz6_live", "A6 Live", "analiz6_live_paused"),
     ("15m_309_live", "15M 309 Live", "15m_309_live_paused"),
+    ("a2_16_live", "A2#16 Supertrend Live", "a2_16_live_paused"),
+    ("a2_02_live", "A2#02 RSI Div Live", "a2_02_live_paused"),
+    ("a2_08_live", "A2#08 Williams Live", "a2_08_live_paused"),
+    ("analiz15_live", "A15 Live", "analiz15_live_paused"),
 ]
 
 
@@ -739,9 +778,19 @@ def get_pm_token_price(pm_slug: str, token_dir: str) -> float | None:
 def get_pm_hourly_quotes(only_names: set[str] | None = None) -> list[dict]:
     """Aktif 1h PM marketleri — BTC/SOL UP/DOWN anlık fiyat (A1 Live ile aynı slug)."""
     from datetime import timedelta
+    import time as _time
 
     if only_names is not None and not only_names:
         return []
+
+    cache_key = tuple(sorted(only_names)) if only_names is not None else ("*",)
+    now = _time.time()
+    if (
+        _PM_HOURLY_Q_CACHE.get("rows") is not None
+        and _PM_HOURLY_Q_CACHE.get("key") == cache_key
+        and now - float(_PM_HOURLY_Q_CACHE.get("ts") or 0) < _PM_QUOTE_CACHE_TTL
+    ):
+        return list(_PM_HOURLY_Q_CACHE["rows"])
 
     try:
         sys.path.insert(0, _DIR_POLY)
@@ -792,7 +841,10 @@ def get_pm_hourly_quotes(only_names: set[str] | None = None) -> list[dict]:
         })
         out.append(row)
 
-    return out
+    _PM_HOURLY_Q_CACHE["ts"] = now
+    _PM_HOURLY_Q_CACHE["key"] = cache_key
+    _PM_HOURLY_Q_CACHE["rows"] = out
+    return list(out)
 
 
 def get_pm_15m_quotes(only_names: set[str] | None = None) -> list[dict]:
@@ -801,6 +853,15 @@ def get_pm_15m_quotes(only_names: set[str] | None = None) -> list[dict]:
 
     if only_names is not None and not only_names:
         return []
+
+    cache_key = tuple(sorted(only_names)) if only_names is not None else ("*",)
+    now_f = time.time()
+    if (
+        _PM_15M_Q_CACHE.get("rows") is not None
+        and _PM_15M_Q_CACHE.get("key") == cache_key
+        and now_f - float(_PM_15M_Q_CACHE.get("ts") or 0) < _PM_QUOTE_CACHE_TTL
+    ):
+        return list(_PM_15M_Q_CACHE["rows"])
 
     try:
         sys.path.insert(0, _DIR_POLY)
@@ -851,7 +912,10 @@ def get_pm_15m_quotes(only_names: set[str] | None = None) -> list[dict]:
         })
         out.append(row)
 
-    return out
+    _PM_15M_Q_CACHE["ts"] = now_f
+    _PM_15M_Q_CACHE["key"] = cache_key
+    _PM_15M_Q_CACHE["rows"] = out
+    return list(out)
 
 # Açık Pozisyonlar — yalnızca gerçek Polymarket emri olanlar
 _PM_POSITION_SOURCES = [
@@ -860,10 +924,17 @@ _PM_POSITION_SOURCES = [
     ("analiz10_live", "A10 Live"),
     ("analiz6_live", "A6 Live"),
     ("15m_309_live", "15M 309 Live"),
+    ("a2_16_live", "A2#16 Supertrend Live"),
+    ("a2_02_live", "A2#02 RSI Div Live"),
+    ("a2_08_live", "A2#08 Williams Live"),
+    ("analiz15_live", "A15 Live"),
     ("manual", "Manuel"),
     ("5m_sol_110", "15M 110 SOL"),
 ]
-_HOURLY_PM_ANALYSES = frozenset({"analiz5", "analiz2_live", "analiz10_live", "analiz6_live", "manual"})
+_HOURLY_PM_ANALYSES = frozenset({
+    "analiz5", "analiz2_live", "analiz10_live", "analiz6_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live", "manual",
+})
 _15M_PM_ANALYSES = frozenset({"5m_sol_110", "15m_309_live"})
 
 
@@ -928,6 +999,20 @@ def _manual_pos_id(pos: dict) -> str:
     slug = pos.get("pm_slug") or ""
     et = pos.get("entry_time_tr") or ""
     return f"{slug}:{et}"
+
+
+def _pos_live_key(analiz_key: str, pos: dict, *, name: str | None = None) -> str:
+    """Kart live-patch anahtarı — aynı sembolde UP/DOWN / çoklu manuel ayrışsın."""
+    sym = pos.get("symbol") or ""
+    nm = name or str(sym).replace("USDT", "")
+    pred = pos.get("predicted_dir") or pos.get("pm_token_dir") or pos.get("dir") or ""
+    if analiz_key == "manual":
+        uid = _manual_pos_id(pos)
+    else:
+        uid = str(pos.get("pm_order_id") or "")
+    if not uid:
+        uid = f"{pred}:{pos.get('entry_time_tr') or ''}:{pos.get('pm_spent') or ''}"
+    return f"{analiz_key}:{nm}:{pred}:{uid}"
 
 
 def _manual_pos_match(
@@ -1153,10 +1238,57 @@ def _merge_pm_recent_trades(pending: list[dict], recent: list[dict]) -> tuple[li
     pending_out.sort(key=lambda x: str(x.get("time") or ""), reverse=True)
     return pending_out[:10], recent_out[:20]
 
+def _manual_slot_ended(pos: dict, now_ts: float | None = None) -> bool:
+    ts = int(pos.get("ts_period") or 0)
+    if not ts:
+        return False
+    tf = pos.get("timeframe") or ""
+    if not tf:
+        try:
+            from pm_manual_sync import _desk_timeframe
+            tf = _desk_timeframe(pos.get("pm_slug") or "") or "1h"
+        except Exception:
+            tf = "1h"
+    dur = 300 if tf == "5m" else 900 if tf == "15m" else 3600
+    now = time.time() if now_ts is None else float(now_ts)
+    return now >= ts + dur
+
+
+def _maybe_settle_manual_positions() -> None:
+    """Bitmiş manuel slotları dashboard poll'unda da kapat (cron beklemesin)."""
+    now = time.time()
+    if now - float(_MANUAL_SETTLE_CACHE.get("ts") or 0) < _MANUAL_SETTLE_TTL:
+        return
+    try:
+        st = load_state("manual")
+        opens = st.get("open_positions") or []
+        if not any(_manual_slot_ended(p, now) for p in opens):
+            _MANUAL_SETTLE_CACHE["ts"] = now
+            return
+        sys.path.insert(0, _DIR_POLY)
+        from poly_trader_manual import run_close
+        out = run_close(force=False)
+        _MANUAL_SETTLE_CACHE["ts"] = now
+        if out.get("closed"):
+            _POS_LIST_CACHE["ts"] = 0.0
+            _POS_LIST_CACHE["rows"] = None
+            print(f"[dashboard] manuel settle: {out.get('closed')} kapandı", flush=True)
+    except Exception as exc:
+        _MANUAL_SETTLE_CACHE["ts"] = now
+        print(f"[dashboard] manuel settle: {exc}", flush=True)
+
+
 def collect_positions() -> list:
     """Gerçek Polymarket açık pozisyonları (tüm aktif PM trader'lar)."""
-    import time as _time
-    now = _time.time()
+    now = time.time()
+    _maybe_settle_manual_positions()
+    cached = _POS_LIST_CACHE.get("rows")
+    if (
+        cached is not None
+        and now - float(_POS_LIST_CACHE.get("ts") or 0) < _POS_LIST_CACHE_TTL
+    ):
+        return list(cached)
+
     if now - float(_PM_ORPHAN_SYNC_CACHE.get("ts") or 0) >= _PM_ORPHAN_SYNC_TTL:
         try:
             sys.path.insert(0, _DIR_POLY)
@@ -1173,7 +1305,9 @@ def collect_positions() -> list:
             if not _position_visible(key, pos):
                 continue
             positions.append({**pos, "_analiz": key, "_analiz_label": label})
-    return positions
+    _POS_LIST_CACHE["ts"] = now
+    _POS_LIST_CACHE["rows"] = positions
+    return list(positions)
 
 def _auth_required():
     return session.get("logged_in") is not True
@@ -1213,6 +1347,8 @@ def logout():
 def api_data():
     if _auth_required():
         return jsonify({"error": "unauthorized"}), 401
+    from concurrent.futures import ThreadPoolExecutor
+
     positions = collect_positions()
     symbols   = list({p["symbol"] for p in positions})
 
@@ -1232,7 +1368,6 @@ def api_data():
         pred     = pos.get("predicted_dir", "")
         pm_spent = pos.get("pm_spent", 0)
         pm_size  = pos.get("pm_size", 0)
-        token_dir = pos.get("pm_token_dir", pred)
 
         # Anlık yön
         if current_p and entry_p:
@@ -1246,14 +1381,11 @@ def api_data():
         name = sym.replace("USDT", "")
         delta_round = round(delta, 1 if name == "BTC" else 2) if delta is not None else None
 
-        # Polymarket'tan anlık token fiyatı → kapama değeri
-        est = _estimate_close_value(pos)
-        close_val     = est["close_val"]
-        close_pnl     = est["close_pnl"]
-        token_cents   = est["token_cents"]
+        # Anlık kapatma: /positions-live (~1sn) doldurur — burada Gamma/CLOB bekleme
+        spent_f = float(pm_spent or 0)
         win_payout    = round(float(pm_size), 2) if pm_size else None
-        win_profit    = round(float(pm_size) - float(pm_spent), 2) if pm_size and pm_spent else None
-        total_pos_value += close_val if close_val else float(pm_spent or 0)
+        win_profit    = round(float(pm_size) - spent_f, 2) if pm_size and spent_f else None
+        total_pos_value += spent_f
 
         enriched.append({
             "analiz":       pos.get("_analiz_label", pos["_analiz"]),
@@ -1267,11 +1399,11 @@ def api_data():
             "pct":          round(pct, 2),
             "delta":        delta_round,
             "winning":      winning,
-            "pm_spent":     round(float(pm_spent or 0), 2),
+            "pm_spent":     round(spent_f, 2),
             "pm_size":      pm_size,
-            "close_val":    close_val,
-            "close_pnl":    close_pnl,
-            "token_cents":  token_cents,
+            "close_val":    None,
+            "close_pnl":    None,
+            "token_cents":  None,
             "win_payout":   win_payout,
             "win_profit":   win_profit,
             "entry_time":   pos.get("entry_time_tr", ""),
@@ -1280,17 +1412,22 @@ def api_data():
             "chart_tf":     _position_chart_tf(pos["_analiz"], pos),
             "pm_slug":      pos.get("pm_slug", ""),
             "pm_order_id":  pos.get("pm_order_id", ""),
-            "pos_id":       _manual_pos_id(pos) if pos["_analiz"] == "manual" else "",
+            "pos_id":       _manual_pos_id(pos) if pos["_analiz"] == "manual" else (pos.get("pm_order_id") or ""),
+            "live_key":     _pos_live_key(pos["_analiz"], pos, name=name),
             "closable":     bool(pos.get("pm_token_id") and pm_size),
         })
 
-    cash      = get_pm_balance()
-    portfolio = round(cash + total_pos_value, 2) if cash >= 0 else -1
-
     hourly_syms, m15_syms = _pm_quote_symbol_sets(positions)
 
-    pm_hourly = get_pm_hourly_quotes(hourly_syms)
-    pm_15m = get_pm_15m_quotes(m15_syms)
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        f_cash = pool.submit(get_pm_balance)
+        f_h = pool.submit(get_pm_hourly_quotes, hourly_syms)
+        f_15 = pool.submit(get_pm_15m_quotes, m15_syms)
+        cash = f_cash.result()
+        pm_hourly = f_h.result()
+        pm_15m = f_15.result()
+
+    portfolio = round(cash + total_pos_value, 2) if cash >= 0 else -1
     _attach_live_position_to_quotes(pm_hourly, enriched, _HOURLY_PM_ANALYSES)
     _attach_live_position_to_quotes(pm_15m, enriched, _15M_PM_ANALYSES)
 
@@ -1310,11 +1447,12 @@ def api_data():
 
 @app.route("/poly/api/positions-live")
 def api_positions_live():
-    """Açık pozisyonlar — anlık kapatma (CLOB bid, hafif endpoint)."""
+    """Açık pozisyonlar — anlık kapatma (CLOB bid VWAP, sık poll)."""
     if _auth_required():
         return jsonify({"error": "unauthorized"}), 401
-    out = []
-    for pos in collect_positions():
+    positions = collect_positions()
+
+    def _one(pos: dict) -> dict:
         sym = pos["symbol"]
         try:
             current_p = get_price(sym)
@@ -1329,14 +1467,30 @@ def api_positions_live():
             winning = actual == pred
             delta = current_p - entry_p
         name = sym.replace("USDT", "")
-        out.append({
+        return {
             "analiz_key": pos["_analiz"],
             "name": name,
+            "dir": pred,
+            "pos_id": _manual_pos_id(pos) if pos["_analiz"] == "manual" else (pos.get("pm_order_id") or ""),
+            "pm_order_id": pos.get("pm_order_id") or "",
+            "live_key": _pos_live_key(pos["_analiz"], pos, name=name),
             "current": round(current_p, 4) if current_p else None,
             "delta": round(delta, 1 if name == "BTC" else 2) if delta is not None else None,
             "winning": winning,
             **est,
-        })
+        }
+
+    out = []
+    if len(positions) <= 1:
+        out = [_one(p) for p in positions]
+    else:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        with ThreadPoolExecutor(max_workers=min(8, len(positions))) as pool:
+            futs = {pool.submit(_one, p): i for i, p in enumerate(positions)}
+            ordered: list[dict | None] = [None] * len(positions)
+            for fut in as_completed(futs):
+                ordered[futs[fut]] = fut.result()
+            out = [x for x in ordered if x is not None]
     return jsonify({
         "positions": out,
         "updated": datetime.now(_TZ_TR).strftime("%H:%M:%S"),
@@ -1667,18 +1821,138 @@ def _is_15m_analiz_key(key: str) -> bool:
     return False
 
 
-def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) -> list[dict]:
-    """Her sembol için 1s analizler arasından en yüksek WR (kısa etiket: A1, A10…). 15m hariç."""
-    from collections import defaultdict
-    target = syms or list(_ACTIVE_SYMS)  # BTC, ETH, SOL
-    # Yalnızca 1 saatlik ana sanal analizler — 15m / A2#xx / live hariç
-    candidates = [
+def _hourly_analiz_candidates() -> list[str]:
+    """1 saatlik sanal analizler (15m / live / A2# hariç)."""
+    return [
         k for k in _OVERVIEW_ACTIVE_ORDER
         if not k.startswith("a2_")
         and k not in _LIVE_PM_ANALYSES
         and k not in _REMOVED_ANALYSES
         and not _is_15m_analiz_key(k)
     ]
+
+
+def _best_hourly_analiz(min_trades: int = 30) -> dict | None:
+    """1s analizler arasından en yüksek genel WR (yeterli işlem şartı)."""
+    best: dict | None = None
+    for key in _hourly_analiz_candidates():
+        hist = _load_heatmap_history(key)
+        if not hist:
+            continue
+        total = len(hist)
+        if total < min_trades:
+            continue
+        wins = sum(1 for tr in hist if tr.get("win"))
+        wr = round(wins / total * 100, 1)
+        row = {
+            "analiz": key,
+            "analiz_label": _ANALYSIS_LABELS.get(key, key),
+            "analiz_short": _OVERVIEW_SHORT_LABELS.get(key, _ANALYSIS_LABELS.get(key, key)),
+            "total": total,
+            "total_wins": wins,
+            "total_wr": wr,
+        }
+        if (
+            best is None
+            or wr > best["total_wr"]
+            or (wr == best["total_wr"] and total > best["total"])
+        ):
+            best = row
+    return best
+
+
+
+def _hour_slots_for_history(hist: list, *, min_trades: int = 3) -> list[dict]:
+    """Tek analiz history → saat slot listesi (gün tutarlılığı ile)."""
+    days_tr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
+    hour_day: dict = {}
+    for tr in hist:
+        dow = tr.get("entry_dow")
+        hour = tr.get("entry_hour_tr")
+        if dow is None or hour is None:
+            continue
+        hour_day.setdefault(hour, {}).setdefault(dow, {"w": 0, "t": 0})
+        hour_day[hour][dow]["t"] += 1
+        if tr.get("win"):
+            hour_day[hour][dow]["w"] += 1
+    slots = []
+    for h, day_data in hour_day.items():
+        good_days = [(d, v) for d, v in day_data.items() if v["t"] >= 1 and v["w"] / v["t"] > 0.5]
+        bad_days = [(d, v) for d, v in day_data.items() if v["t"] >= 1 and v["w"] / v["t"] <= 0.5]
+        all_w = sum(v["w"] for v in day_data.values())
+        all_t = sum(v["t"] for v in day_data.values())
+        if all_t < min_trades:
+            continue
+        wr = round(all_w / all_t * 100, 1)
+        slots.append({
+            "hour": f"{h:02d}:00",
+            "hour_int": h,
+            "good_days": len(good_days),
+            "bad_days": len(bad_days),
+            "good_day_names": [days_tr[d] for d, _ in sorted(good_days)],
+            "bad_day_names": [days_tr[d] for d, _ in sorted(bad_days)],
+            "wr": wr,
+            "w": all_w,
+            "t": all_t,
+        })
+    return slots
+
+
+def _best_hour_slots_across_analyses(*, top_n: int = 3, min_trades: int = 3) -> tuple[list[dict], list[dict]]:
+    """Tüm 1s analizlerde saat slotlarını tara; her saat için en iyi/kötü analizi seç, top/bottom N döndür."""
+    # hour -> best / worst row (analiz dahil)
+    best_by_hour: dict[int, dict] = {}
+    worst_by_hour: dict[int, dict] = {}
+    for key in _hourly_analiz_candidates():
+        hist = _load_heatmap_history(key)
+        if not hist:
+            continue
+        short = _OVERVIEW_SHORT_LABELS.get(key, _ANALYSIS_LABELS.get(key, key))
+        label = _ANALYSIS_LABELS.get(key, key)
+        for sl in _hour_slots_for_history(hist, min_trades=min_trades):
+            row = {
+                **sl,
+                "analiz": key,
+                "analiz_short": short,
+                "analiz_label": label,
+                "day_names": sl["good_day_names"],
+            }
+            h = sl["hour_int"]
+            prev_b = best_by_hour.get(h)
+            if (
+                prev_b is None
+                or sl["wr"] > prev_b["wr"]
+                or (sl["wr"] == prev_b["wr"] and sl["t"] > prev_b["t"])
+            ):
+                best_by_hour[h] = {**row, "day_names": sl["good_day_names"]}
+            prev_w = worst_by_hour.get(h)
+            if (
+                prev_w is None
+                or sl["wr"] < prev_w["wr"]
+                or (sl["wr"] == prev_w["wr"] and sl["t"] > prev_w["t"])
+            ):
+                worst_by_hour[h] = {
+                    **row,
+                    "day_names": sl["bad_day_names"],
+                }
+    top_slots = sorted(
+        best_by_hour.values(),
+        key=lambda x: (x["wr"], x["good_days"], x["t"]),
+        reverse=True,
+    )[:top_n]
+    bottom_slots = sorted(
+        worst_by_hour.values(),
+        key=lambda x: (x["wr"], -x["bad_days"], -x["t"]),
+    )[:top_n]
+    return top_slots, bottom_slots
+
+
+def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) -> list[dict]:
+    """Her sembol için 1s analizler arasından en yüksek WR (kısa etiket: A1, A10…). 15m hariç."""
+    from collections import defaultdict
+    target = syms or list(_ACTIVE_SYMS)  # BTC, ETH, SOL
+    # Yalnızca 1 saatlik ana sanal analizler — 15m / A2#xx / live hariç
+    candidates = _hourly_analiz_candidates()
     # sym -> best row
     best: dict[str, dict] = {}
     for key in candidates:
@@ -1715,80 +1989,164 @@ def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) 
 @app.route("/poly/api/symbol_stats")
 def api_symbol_stats():
     if _auth_required(): return redirect("/poly/login")
-    analiz_key = request.args.get("analiz", _PANEL_STATS_ANALIZ)
-    if analiz_key not in _HEATMAP_ANALYSES:
+    # Sabit panel yerine: 1s en başarılı analiz (WR) — refresh ile güncellenir
+    forced = request.args.get("analiz")
+    best = _best_hourly_analiz(min_trades=30)
+    if forced and forced in _HEATMAP_ANALYSES:
+        analiz_key = forced
+    elif best:
+        analiz_key = best["analiz"]
+    else:
         analiz_key = _PANEL_STATS_ANALIZ
     hist = _load_heatmap_history(analiz_key)
-    # Sembol kartları: her coin için en başarılı analiz (BTC/ETH/SOL)
+    # Sembol kartları: her coin için en başarılı 1s analiz (BTC/ETH/SOL)
     sym_wr = _best_analiz_by_symbol(["BTC", "ETH", "SOL"], min_trades=10)
     if not hist:
-        return jsonify({"analiz": analiz_key, "analiz_label": _ANALYSIS_LABELS.get(analiz_key, analiz_key),
-                        "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": sym_wr, "top_slots": [], "bottom_slots": []})
+        label = _ANALYSIS_LABELS.get(analiz_key, analiz_key)
+        top_slots, bottom_slots = _best_hour_slots_across_analyses(top_n=3, min_trades=3)
+        return jsonify({"analiz": analiz_key, "analiz_label": label,
+                        "analiz_short": _OVERVIEW_SHORT_LABELS.get(analiz_key, label),
+                        "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": sym_wr,
+                        "top_slots": top_slots, "bottom_slots": bottom_slots, "dynamic_best": True})
 
-    # Panel analizine göre toplam WR (lime kart)
-    total      = len(hist)
-    total_wins = sum(1 for t in hist if t.get("win"))
-    total_wr   = round(total_wins / total * 100, 1) if total else 0.0
+    # En başarılı 1s analizin toplam WR (mor kart başlığı)
+    if best and analiz_key == best["analiz"] and not forced:
+        total = best["total"]
+        total_wins = best["total_wins"]
+        total_wr = best["total_wr"]
+    else:
+        total      = len(hist)
+        total_wins = sum(1 for t in hist if t.get("win"))
+        total_wr   = round(total_wins / total * 100, 1) if total else 0.0
 
-    # Saat bazlı, birden fazla günde tutarlı başarı — multi-day consistency
-    days_tr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
-    hour_day: dict = {}
-    for t in hist:
-        dow  = t.get("entry_dow")
-        hour = t.get("entry_hour_tr")
-        if dow is None or hour is None:
-            continue
-        if hour not in hour_day:
-            hour_day[hour] = {}
-        if dow not in hour_day[hour]:
-            hour_day[hour][dow] = {"w": 0, "t": 0}
-        hour_day[hour][dow]["t"] += 1
-        if t.get("win"):
-            hour_day[hour][dow]["w"] += 1
-
-    all_slots = []
-    for h, day_data in hour_day.items():
-        good_days = [(d, v) for d, v in day_data.items() if v["t"] >= 1 and v["w"] / v["t"] > 0.5]
-        bad_days = [(d, v) for d, v in day_data.items() if v["t"] >= 1 and v["w"] / v["t"] <= 0.5]
-        all_w = sum(v["w"] for v in day_data.values())
-        all_t = sum(v["t"] for v in day_data.values())
-        if all_t < 3:
-            continue
-        wr = round(all_w / all_t * 100, 1)
-        all_slots.append({
-            "hour":      f"{h:02d}:00",
-            "hour_int":  h,
-            "good_days": len(good_days),
-            "bad_days":  len(bad_days),
-            "good_day_names": [days_tr[d] for d, _ in sorted(good_days)],
-            "bad_day_names":  [days_tr[d] for d, _ in sorted(bad_days)],
-            "wr":        wr,
-            "w":         all_w,
-            "t":         all_t,
-        })
-
-    top_slots = []
-    for s in sorted(
-        [x for x in all_slots if x["good_days"]],
-        key=lambda x: (x["good_days"], x["wr"]),
-        reverse=True,
-    )[:3]:
-        top_slots.append({**s, "day_names": s["good_day_names"]})
-
-    bottom_slots = []
-    for s in sorted(all_slots, key=lambda x: (x["wr"], -x["good_days"]))[:3]:
-        bottom_slots.append({**s, "day_names": s["bad_day_names"]})
+    # En etkili / zayıf saatler — TÜM 1s analizlerde tarama (saat başına en iyi/kötü analiz)
+    top_slots, bottom_slots = _best_hour_slots_across_analyses(top_n=3, min_trades=3)
     label = _ANALYSIS_LABELS.get(analiz_key, analiz_key)
     return jsonify({
         "analiz": analiz_key,
         "analiz_label": label,
+        "analiz_short": _OVERVIEW_SHORT_LABELS.get(analiz_key, label),
         "total": total,
         "total_wins": total_wins,
         "total_wr": total_wr,
         "sym_wr": sym_wr,
         "top_slots": top_slots,
         "bottom_slots": bottom_slots,
+        "dynamic_best": True,
     })
+
+def _build_a2_poly_books() -> dict:
+    """Poly sanal A2 Top-17 defterleri — bakiyeye göre sıralı (iyi → kötü)."""
+    books = []
+    for key in _A2_KEYS:
+        init_bal = float(_OVERVIEW_INIT_BAL.get(key, 300) or 300)
+        label = _ANALYSIS_LABELS.get(key, key)
+        short = _OVERVIEW_SHORT_LABELS.get(key, key)
+        hpath = _trader_history_path(key)
+        spath = _trader_state_path(key)
+        if not os.path.exists(hpath) and not os.path.exists(spath):
+            continue
+        try:
+            hist = _load_trader_history(key) if os.path.exists(hpath) else []
+            state = json.load(open(spath, encoding="utf-8")) if os.path.exists(spath) else {}
+        except Exception:
+            continue
+        bal = round(float(state.get("balance") or init_bal), 2)
+        total = len(hist)
+        wins = sum(1 for t in hist if t.get("win"))
+        wr = round(wins / total * 100, 1) if total else None
+        pnl = round(bal - init_bal, 2)
+        allowed = set(_allowed_syms_for(key))
+        cards = []
+        for p in state.get("open_positions") or []:
+            sym_raw = (p.get("symbol") or "")
+            sym = sym_raw.replace("USDT", "")
+            if sym and allowed and sym not in allowed:
+                continue
+            up = str(p.get("predicted_dir") or p.get("pm_token_dir") or "").upper() in ("UP", "LONG")
+            spent = float(p.get("pm_spent") or p.get("amount") or 0)
+            size = float(p.get("pm_size") or p.get("to_win") or 0)
+            cards.append({
+                "name": sym or sym_raw or "?",
+                "symbol": sym_raw,
+                "side": "LONG" if up else "SHORT",
+                "dir_tr": "YÜKSELİR" if up else "DÜŞER",
+                "entry_price": p.get("entry_price"),
+                "current": p.get("entry_price"),
+                "pm_entry_price": p.get("pm_entry_price"),
+                "pm_spent": spent,
+                "pm_size": size,
+                "to_win": p.get("to_win") or size,
+                "amount": p.get("amount") or spent,
+                "margin_usd": spent,
+                "unrealized_pnl": 0.0,
+                "slot_label": p.get("pm_title") or p.get("pm_slug") or "",
+                "entry_time_tr": p.get("entry_time_tr"),
+                "algo_name": p.get("algo_name"),
+            })
+        # Poly sanal: PnL close'ta yazılır — açıkken anlık net 0
+        upnl = 0.0
+        num = None
+        m = re.match(r"^a2_(\d+)$", key)
+        if m:
+            num = int(m.group(1))
+        title = label
+        if short and short != label:
+            # "A2#16 Supertrend" → name A2#16, title Supertrend…
+            name = short
+            rest = label[len(short):].strip() if label.startswith(short) else label
+            title = rest or label
+        else:
+            name = label
+        books.append({
+            "id": key,
+            "key": key,
+            "algo_num": num,
+            "name": name,
+            "label": label,
+            "title": title,
+            "category": "Poly sanal · A2 Top-17",
+            "panel": "poly_a2",
+            "balance": bal,
+            "init_bal": init_bal,
+            "equity": bal,
+            "total_pnl": pnl,
+            "unrealized_pnl": upnl,
+            "wr": wr,
+            "history_n": total,
+            "wins": wins,
+            "open_count": len(cards),
+            "cards": cards,
+            "margin_usd": 16,
+            "leverage": 1,
+        })
+    books.sort(key=lambda b: (
+        float(b.get("balance") or 0),
+        float(b.get("total_pnl") or 0),
+        float(b.get("wr") or -1),
+    ), reverse=True)
+    return {
+        "ok": True,
+        "panel_filter": "poly_a2",
+        "books": books,
+        "count": len(books),
+        "total_balance": round(sum(float(b.get("balance") or 0) for b in books), 2),
+        "total_pnl": round(sum(float(b.get("total_pnl") or 0) for b in books), 2),
+        "total_open": sum(int(b.get("open_count") or 0) for b in books),
+        "total_trades": sum(int(b.get("history_n") or 0) for b in books),
+    }
+
+
+@app.route("/poly/api/a2-algoritmalar")
+def api_a2_algoritmalar():
+    """Poly sanal A2 Top-17 — Algoritma işlemler ekranı."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    try:
+        return jsonify(_build_a2_poly_books())
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 
 @app.route("/poly/api/analizler")
 def api_analizler():
@@ -2178,7 +2536,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260802-algo1-books"
+_DASH_UI_VER = "20260804-a2-02-08-live"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -2679,6 +3037,21 @@ def _patch_nav_kripto_future(html: str) -> str:
         '<a class="nav-item active" id="nav-overview" onclick="showView(\'overview\')" href="#"><span class="nav-dot"></span>Overview</a>\n',
         '<a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>\n',
         '<a class="nav-item active" href="/poly"><span class="nav-dot"></span>Overview</a>\n',
+    ]
+    for needle in needles:
+        if needle in html:
+            return html.replace(needle, needle + '  ' + link, 1)
+    return html
+
+
+def _patch_nav_algo_islemler(html: str) -> str:
+    """Algoritma altına Algoritma işlemler (ALGO2) menü linki."""
+    if 'href="/algoritma-islemler"' in html:
+        return html
+    link = '<a class="nav-item" href="/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>\n  '
+    needles = [
+        '<a class="nav-item active" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>\n',
+        '<a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>\n',
     ]
     for needle in needles:
         if needle in html:
@@ -3192,11 +3565,7 @@ function updatePreview() {
     el.innerHTML = '<div class="profit">—</div><div class="sub">Kazanırsan net</div>';
     return;
   }
-  const q = selectedQuote();
-  const quotePrice = q ? (_dir === 'UP' ? q.up : q.down) : null;
-  if (quotePrice != null) {
-    renderPreviewPlan(el, buyPlanLocal(amount, quotePrice), amount);
-  }
+  // Gamma mid ile yerel to-win gösterme (CLOB ask'tan şişik kalıyordu)
   clearTimeout(window._estTimer);
   const seq = ++_estSeq;
   window._estTimer = setTimeout(async () => {
@@ -3216,11 +3585,16 @@ function updatePreview() {
       if (seq !== _estSeq) return;
       const d = await r.json();
       if (seq !== _estSeq) return;
-      renderPreviewPlan(el, d.plan, reqAmount);
+      if (d.ok && d.plan) {
+        renderPreviewPlan(el, d.plan, reqAmount);
+      } else {
+        el.className = 'payout-preview';
+        el.innerHTML = '<div class="profit">—</div><div class="sub">' + (d.error || 'Kotasyon yok') + '</div>';
+      }
     } catch (e) {
       console.error(e);
     }
-  }, 280);
+  }, 120);
 }
 
 function applySpot(q) {
@@ -4124,17 +4498,51 @@ async function loadDesk() {
     _selectedIdx = idx;
     renderQuotes(quotes);
     saveDeskPrefs();
-    const needPreview = !_deskInit || idxBefore !== _selectedIdx || symBefore !== selectedSymbol();
+    const needSpot = !_deskInit || idxBefore !== _selectedIdx || symBefore !== selectedSymbol();
     _deskInit = true;
-    if (needPreview) {
-      refreshSpot();
-      updatePreview();
-    }
+    if (needSpot) refreshSpot();
+    updatePreview();
     loadTradeChart();
   } catch (e) {
     console.error(e);
     document.getElementById('quotes').innerHTML = '<div class="empty" style="color:#f87171">Yüklenemedi: ' + e.message + '</div>';
   }
+}
+
+function _mergeQuotePrices(oldList, fresh) {
+  const bySym = {};
+  (oldList || []).forEach(q => { bySym[q.symbol] = Object.assign({}, q); });
+  (fresh || []).forEach(q => {
+    const prev = bySym[q.symbol] || {};
+    bySym[q.symbol] = Object.assign({}, prev, q);
+  });
+  const order = (fresh && fresh.length) ? fresh.map(q => q.symbol) : Object.keys(bySym);
+  return order.map(s => bySym[s]).filter(Boolean);
+}
+
+async function refreshQuotesLive() {
+  if (document.hidden || window._deskQuoteBusy) return;
+  window._deskQuoteBusy = true;
+  try {
+    const tf = _tf;
+    const want = selectedSymbol();
+    const r = await fetch('/poly/api/trade-desk/quotes?timeframe=' + encodeURIComponent(tf), {cache: 'no-store'});
+    if (!r.ok) return;
+    const d = await r.json();
+    if (tf !== _tf) return;
+    const fresh = d.quotes || [];
+    if (_tf === '5m') _quotes5 = _mergeQuotePrices(_quotes5, fresh);
+    else if (_tf === '1h') _quotes1h = _mergeQuotePrices(_quotes1h, fresh);
+    else _quotes15 = _mergeQuotePrices(_quotes15, fresh);
+    const quotes = quoteList();
+    let idx = quotes.findIndex(q => q.symbol === want);
+    if (idx < 0) idx = _selectedIdx;
+    if (idx >= quotes.length) idx = 0;
+    _selectedIdx = Math.max(0, idx);
+    renderQuotes(quotes);
+    updatePreview();
+  } catch (e) { console.error(e); }
+  finally { window._deskQuoteBusy = false; }
 }
 
 async function parseJsonResp(r) {
@@ -4150,25 +4558,19 @@ async function openTrade() {
   const btn = document.getElementById('open-btn');
   const amount = parseFloat(document.getElementById('amount').value);
   if (!amount || amount < 1) { showMsg('Min $1', false); return; }
+  // Sunucu zaten min-5-pay kontrolü yapıyor; estimate turu ~çift API beklemesini kaldır
+  const q = selectedQuote();
+  const quotePrice = q ? (_dir === 'UP' ? q.up : q.down) : null;
+  if (quotePrice != null) {
+    const plan = buyPlanLocal(amount, quotePrice);
+    if (plan && !plan.allowed) {
+      showMsg('❌ Min ~$' + plan.min_amount.toFixed(2) + ' gerekir (5 pay kuralı)', false);
+      return;
+    }
+  }
   btn.disabled = true;
   showMsg('Emir gönderiliyor…', true);
   try {
-    const estR = await fetch('/poly/api/trade-desk/estimate', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        timeframe: _tf,
-        symbol: selectedSymbol(),
-        direction: _dir,
-        amount: amount,
-      }),
-    });
-    const estD = await parseJsonResp(estR);
-    if (estD.plan && !estD.plan.allowed) {
-      showMsg('❌ Min ~$' + estD.plan.min_amount.toFixed(2) + ' gerekir (5 pay kuralı)', false);
-      btn.disabled = false;
-      return;
-    }
     const r = await fetch('/poly/api/trade-desk/open', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -4195,10 +4597,14 @@ async function openTrade() {
 loadDeskPrefs();
 loadDesk();
 refreshCash();
-setInterval(loadDesk, 15000);
+setInterval(loadDesk, 30000);
+setInterval(refreshQuotesLive, 1000);
 setInterval(refreshCash, 10000);
-setInterval(refreshSpot, 10000);
+setInterval(refreshSpot, 1500);
 setInterval(loadTradeChart, 5000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) { refreshQuotesLive(); refreshSpot(); }
+});
 
 function tickLiveClock() {
   const el = document.getElementById('live-clock');
@@ -5801,7 +6207,7 @@ def api_pm_system_post():
         state = set_a3a8_signal_strict(bool(body["a3a8_signal_strict"]), source="dashboard")
         return jsonify({"ok": True, **state})
     group = body.get("group")
-    if group in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "hourly"):
+    if group in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live", "hourly"):
         if group == "hourly":
             if "paused" in body:
                 paused = bool(body["paused"])
@@ -5810,9 +6216,11 @@ def api_pm_system_post():
                 paused = not (
                     cur["analiz5_paused"] and cur["analiz2_paused"]
                     and cur["analiz10_paused"] and cur["analiz6_live_paused"]
-                    and cur["15m_309_live_paused"]
+                    and cur["15m_309_live_paused"] and cur.get("a2_16_live_paused", True)
+                    and cur.get("a2_02_live_paused", True) and cur.get("a2_08_live_paused", True)
+                    and cur.get("analiz15_live_paused", True)
                 )
-            for g in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live"):
+            for g in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live"):
                 set_group_paused(g, paused, source="dashboard")
             state = get_pm_system_control()
         elif "paused" in body:
@@ -5908,43 +6316,221 @@ def _pm_conditional_shares(token_id: str) -> float:
         return -1.0
 
 
+_PM_CLOB = "https://clob.polymarket.com"
+_PM_BOOK_CACHE: dict[str, dict] = {}
+_PM_BOOK_CACHE_TTL = 0.8  # anlık kapatma poll'u için kısa TTL
+
+
+def _pm_book_bids(book) -> list[dict]:
+    """Orderbook bids — dict veya SDK objesi."""
+    if book is None:
+        return []
+    raw = book.get("bids") if isinstance(book, dict) else getattr(book, "bids", None)
+    if not raw:
+        return []
+    out = []
+    for b in raw:
+        if isinstance(b, dict):
+            p, s = b.get("price"), b.get("size")
+        else:
+            p, s = getattr(b, "price", None), getattr(b, "size", None)
+        try:
+            pf, sf = float(p), float(s)
+        except (TypeError, ValueError):
+            continue
+        if pf > 0 and sf > 0:
+            out.append({"price": pf, "size": sf})
+    out.sort(key=lambda x: x["price"], reverse=True)
+    return out
+
+
+def _pm_book_asks(book) -> list[dict]:
+    """Orderbook asks — alım için ucuzdan pahalıya."""
+    if book is None:
+        return []
+    raw = book.get("asks") if isinstance(book, dict) else getattr(book, "asks", None)
+    if not raw:
+        return []
+    out = []
+    for a in raw:
+        if isinstance(a, dict):
+            p, s = a.get("price"), a.get("size")
+        else:
+            p, s = getattr(a, "price", None), getattr(a, "size", None)
+        try:
+            pf, sf = float(p), float(s)
+        except (TypeError, ValueError):
+            continue
+        if pf > 0 and sf > 0:
+            out.append({"price": pf, "size": sf})
+    out.sort(key=lambda x: x["price"])
+    return out
+
+
+def _pm_fetch_public_book(token_id: str) -> tuple[str, dict | None]:
+    """Public CLOB book. Dönüş: ('ok', book) | ('empty', {}) | ('gone', None) | ('err', None)."""
+    if not token_id:
+        return "err", None
+    tid = str(token_id)
+    now = time.time()
+    hit = _PM_BOOK_CACHE.get(tid)
+    if hit and now - float(hit.get("ts") or 0) < _PM_BOOK_CACHE_TTL:
+        return hit["status"], hit.get("book")
+    status, book = "err", None
+    try:
+        url = f"{_PM_CLOB}/book?token_id={urllib.parse.quote(tid, safe='')}"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=2.5) as r:
+            book = json.load(r)
+        if _pm_book_bids(book) or _pm_book_asks(book):
+            status = "ok"
+        else:
+            status = "empty"
+            book = book if isinstance(book, dict) else {}
+    except urllib.error.HTTPError as e:
+        if e.code in (404, 410):
+            status, book = "gone", None
+        else:
+            status, book = "err", None
+    except Exception:
+        status, book = "err", None
+    _PM_BOOK_CACHE[tid] = {"ts": now, "status": status, "book": book}
+    # cache şişmesin
+    if len(_PM_BOOK_CACHE) > 80:
+        oldest = sorted(_PM_BOOK_CACHE.items(), key=lambda kv: kv[1].get("ts") or 0)[:40]
+        for k, _ in oldest:
+            _PM_BOOK_CACHE.pop(k, None)
+    return status, book
+
+
+def _pm_ask_buy_avg_price(asks: list[dict], amount_usd: float) -> float | None:
+    """$ budget ile ask VWAP (alım fiyatı)."""
+    rem = float(amount_usd or 0)
+    if rem <= 0 or not asks:
+        return None
+    got = 0.0
+    cost = 0.0
+    for a in asks:
+        p = float(a["price"])
+        avail = float(a["size"])
+        if p <= 0 or avail <= 0:
+            continue
+        take = min(rem / p, avail)
+        take = (take * 100) // 1 / 100  # 0.01 floor
+        if take < 0.01:
+            continue
+        c = take * p
+        got += take
+        cost += c
+        rem -= c
+        if rem < 0.01:
+            break
+    if got < 0.01 or cost <= 0:
+        return None
+    return max(0.02, min(0.98, round(cost / got, 2)))
+
+
+def _pm_executable_buy_price(token_id: str, amount_usd: float, fallback: float) -> float:
+    """Önizleme/açılış — CLOB ask VWAP, yoksa fallback (Gamma)."""
+    fb = max(0.02, min(0.98, round(float(fallback or 0.5), 2)))
+    if not token_id:
+        return fb
+    status, book = _pm_fetch_public_book(token_id)
+    if status == "ok":
+        avg = _pm_ask_buy_avg_price(_pm_book_asks(book), amount_usd)
+        if avg is not None:
+            return avg
+    return fb
+
+
+def _pm_bid_vwap_proceeds(bids: list[dict], size: float) -> tuple[float, float | None]:
+    """Bid derinliğine göre satış getirisi. Bid yoksa (0, 0)."""
+    size = float(size or 0)
+    if size <= 0:
+        return 0.0, None
+    if not bids:
+        return 0.0, 0.0
+    rem = size
+    proceeds = 0.0
+    for b in bids:
+        take = min(rem, float(b["size"]))
+        proceeds += take * float(b["price"])
+        rem -= take
+        if rem <= 1e-9:
+            break
+    avg = (proceeds / size) if size else 0.0
+    return round(proceeds, 2), round(avg, 4)
+
+
+def _pm_gamma_sell_price(pm_slug: str, token_dir: str) -> float | None:
+    """Gamma outcome fiyatı — 0 da geçerli (resolve kaybeden)."""
+    if not pm_slug or not token_dir:
+        return None
+    gp = get_pm_token_price(pm_slug, token_dir)
+    if gp is None:
+        return None
+    gp = float(gp)
+    if gp <= 0:
+        return 0.0
+    if gp >= 1:
+        return 0.99
+    return max(0.01, min(0.99, round(gp - 0.01, 2)))
+
+
 def _pm_best_bid(client, token_id: str) -> float | None:
-    """Satış için en yüksek bid — orderbook yoksa None."""
+    """Satış için en yüksek bid — önce public book, sonra SDK."""
+    status, book = _pm_fetch_public_book(token_id)
+    if status == "ok":
+        bids = _pm_book_bids(book)
+        if bids:
+            return float(bids[0]["price"])
+    if status in ("empty", "gone"):
+        return None
     try:
         book = client.get_order_book(token_id)
-        bids = book.get("bids") or []
+        bids = _pm_book_bids(book)
         if bids:
-            return max(float(b["price"]) for b in bids)
+            return float(bids[0]["price"])
     except Exception:
         pass
     return None
 
 
 def _pm_sell_price(client, token_id: str, size: float, pm_slug: str = "", token_dir: str = "") -> float:
-    """Satış fiyatı: orderbook bid → market price → gamma fiyat."""
+    """Satış fiyatı: orderbook bid → gamma (0 dahil) → market price. Sahte 0.50 yok."""
     from py_clob_client_v2 import OrderType
+
+    status, book = _pm_fetch_public_book(token_id)
+    if status == "ok":
+        bids = _pm_book_bids(book)
+        if bids:
+            return max(0.01, min(0.99, round(float(bids[0]["price"]), 2)))
+    if status == "empty":
+        return 0.0
+    if status == "gone":
+        gp = _pm_gamma_sell_price(pm_slug, token_dir)
+        return 0.0 if gp is None else gp
 
     bid = _pm_best_bid(client, token_id)
     if bid and bid > 0:
-        return max(0.02, min(0.98, round(bid, 2)))
+        return max(0.01, min(0.99, round(bid, 2)))
+
+    gp = _pm_gamma_sell_price(pm_slug, token_dir)
+    if gp is not None:
+        return gp
 
     try:
         p = float(client.calculate_market_price(token_id, "SELL", size, OrderType.FAK))
         if p > 0:
-            return max(0.02, min(0.98, round(p, 2)))
+            return max(0.01, min(0.99, round(p, 2)))
     except Exception:
         pass
 
-    if pm_slug and token_dir:
-        gp = get_pm_token_price(pm_slug, token_dir)
-        if gp and gp > 0:
-            return max(0.02, min(0.98, round(gp - 0.01, 2)))
-
-    return 0.50
+    return 0.0
 
 
 def _pm_sell_ladder_prices(client, token_id: str, size: float, pm_slug: str = "", token_dir: str = "") -> list[float]:
-    """FAK satış için azalan fiyat listesi (gamma → bid → piyasa)."""
+    """FAK satış için azalan fiyat listesi (bid → piyasa → gamma)."""
     from py_clob_client_v2 import OrderType
 
     candidates: list[float] = []
@@ -5957,25 +6543,24 @@ def _pm_sell_ladder_prices(client, token_id: str, size: float, pm_slug: str = ""
             candidates.append(mp)
     except Exception:
         pass
-    if pm_slug and token_dir:
-        gp = get_pm_token_price(pm_slug, token_dir)
-        if gp and gp > 0:
-            candidates.append(gp - 0.01)
+    gp = _pm_gamma_sell_price(pm_slug, token_dir)
+    if gp is not None and gp > 0:
+        candidates.append(gp)
 
-    start = max(candidates) if candidates else 0.50
-    start = max(0.02, min(0.98, round(start, 2)))
+    start = max(candidates) if candidates else 0.01
+    start = max(0.01, min(0.99, round(start, 2)))
     prices: list[float] = []
     p = start
-    while p >= 0.02 and len(prices) < 20:
+    while p >= 0.01 and len(prices) < 20:
         prices.append(round(p, 2))
         p = round(p - 0.03, 2)
-    if 0.02 not in prices:
-        prices.append(0.02)
+    if 0.01 not in prices:
+        prices.append(0.01)
     return prices
 
 
 def _estimate_close_value(pos: dict) -> dict:
-    """Anlık kapatma tahmini — önce Gamma (hızlı), CLOB opsiyonel."""
+    """Anlık kapatma — CLOB bid VWAP; book yoksa Gamma (0 dahil); sahte mid yok."""
     pm_size = float(pos.get("pm_size") or 0)
     pm_spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
     if not pm_size:
@@ -5983,24 +6568,46 @@ def _estimate_close_value(pos: dict) -> dict:
     token_id = pos.get("pm_token_id")
     slug = pos.get("pm_slug", "")
     token_dir = pos.get("pm_token_dir") or pos.get("predicted_dir", "")
+
+    close_val = None
     sell_price = None
-    # Dashboard poll'unda CLOB api-key hataları /poly/api/data'yı kilitliyordu → Gamma önce
-    gp = get_pm_token_price(slug, token_dir) if slug else None
-    if gp and gp > 0:
-        sell_price = max(0.02, round(gp - 0.01, 2))
-    if not sell_price and token_id:
+
+    if token_id:
+        status, book = _pm_fetch_public_book(token_id)
+        if status == "ok":
+            bids = _pm_book_bids(book)
+            close_val, avg = _pm_bid_vwap_proceeds(bids, pm_size)
+            sell_price = avg if avg is not None else 0.0
+        elif status == "empty":
+            # Bid yok = şu an satılamaz; Gamma mid (ör. 11¢) gerçekçi değil
+            close_val, sell_price = 0.0, 0.0
+        elif status == "gone":
+            # Market kapandı — Gamma resolve (0/1)
+            gp = _pm_gamma_sell_price(slug, token_dir)
+            if gp is not None:
+                sell_price = gp
+                close_val = round(pm_size * gp, 2)
+
+    if close_val is None and slug and token_dir:
+        gp = _pm_gamma_sell_price(slug, token_dir)
+        if gp is not None:
+            sell_price = gp
+            close_val = round(pm_size * gp, 2)
+
+    if close_val is None and token_id:
         try:
             client = _pm_get_clob_client()
             sell_price = _pm_sell_price(client, token_id, pm_size, slug, token_dir)
+            close_val = round(pm_size * float(sell_price), 2)
         except Exception:
             pass
-    if not sell_price:
+
+    if close_val is None:
         return {"close_val": None, "close_pnl": None, "token_cents": None}
-    close_val = round(pm_size * sell_price, 2)
     return {
-        "close_val": close_val,
-        "close_pnl": round(close_val - pm_spent, 2),
-        "token_cents": round(sell_price * 100, 1),
+        "close_val": round(float(close_val), 2),
+        "close_pnl": round(float(close_val) - pm_spent, 2),
+        "token_cents": round(float(sell_price or 0) * 100, 1),
     }
 
 
@@ -6414,15 +7021,14 @@ def _trade_desk_period_15m() -> tuple[int, str]:
     return ts, f"{lbl}-{end}"
 
 
-def _trade_desk_quote_5m(symbol: str) -> dict | None:
+def _trade_desk_quote_5m(symbol: str, *, include_spot: bool = True) -> dict | None:
     sys.path.insert(0, _DIR_POLY)
     import poly_trader_5m_common as pm_common
     ts, slot = _trade_desk_period_5m()
     m = pm_common._pm_find_5m_market(ts, symbol)
     if not m:
         return None
-    spot = _trade_desk_spot(symbol, "5m")
-    return {
+    row = {
         "timeframe": "5m",
         "symbol": symbol,
         "name": symbol.replace("USDT", ""),
@@ -6433,19 +7039,20 @@ def _trade_desk_quote_5m(symbol: str) -> dict | None:
         "closed": bool(m.get("closed")),
         "up": round(float(m.get("up_price", 0.5)), 3),
         "down": round(float(m.get("down_price", 0.5)), 3),
-        **spot,
     }
+    if include_spot:
+        row.update(_trade_desk_spot(symbol, "5m"))
+    return row
 
 
-def _trade_desk_quote_15m(symbol: str) -> dict | None:
+def _trade_desk_quote_15m(symbol: str, *, include_spot: bool = True) -> dict | None:
     sys.path.insert(0, _DIR_POLY)
     import poly_trader_5m_common as pm_common
     ts, slot = _trade_desk_period_15m()
     m = pm_common._pm_find_15m_market(ts, symbol)
     if not m:
         return None
-    spot = _trade_desk_spot(symbol, "15m")
-    return {
+    row = {
         "timeframe": "15m",
         "symbol": symbol,
         "name": symbol.replace("USDT", ""),
@@ -6456,11 +7063,13 @@ def _trade_desk_quote_15m(symbol: str) -> dict | None:
         "closed": bool(m.get("closed")),
         "up": round(float(m.get("up_price", 0.5)), 3),
         "down": round(float(m.get("down_price", 0.5)), 3),
-        **spot,
     }
+    if include_spot:
+        row.update(_trade_desk_spot(symbol, "15m"))
+    return row
 
 
-def _trade_desk_quote_1h(symbol: str) -> dict | None:
+def _trade_desk_quote_1h(symbol: str, *, include_spot: bool = True) -> dict | None:
     from datetime import timedelta
     sys.path.insert(0, _DIR_POLY)
     from pm_trader_helpers import pm_find_market
@@ -6474,8 +7083,7 @@ def _trade_desk_quote_1h(symbol: str) -> dict | None:
     down = float(op[1]) if len(op) >= 2 else 0.5
     h = datetime.now(_TZ_TR).hour
     hour_start = datetime.now(_TZ_TR).replace(minute=0, second=0, microsecond=0)
-    spot = _trade_desk_spot(symbol, "1h")
-    return {
+    row = {
         "timeframe": "1h",
         "symbol": symbol,
         "name": symbol.replace("USDT", ""),
@@ -6486,8 +7094,25 @@ def _trade_desk_quote_1h(symbol: str) -> dict | None:
         "closed": bool(m.get("closed")),
         "up": round(up, 3),
         "down": round(down, 3),
-        **spot,
     }
+    if include_spot:
+        row.update(_trade_desk_spot(symbol, "1h"))
+    return row
+
+
+def _trade_desk_quotes_for_tf(timeframe: str, *, include_spot: bool = False) -> list[dict]:
+    """Tek TF kotasyonları — sık poll için hafif (spot opsiyonel)."""
+    from concurrent.futures import ThreadPoolExecutor
+    tf = timeframe if timeframe in ("5m", "15m", "1h") else "15m"
+    syms = _trade_desk_short_syms(tf)
+    fn = {
+        "5m": _trade_desk_quote_5m,
+        "15m": _trade_desk_quote_15m,
+        "1h": _trade_desk_quote_1h,
+    }[tf]
+    with ThreadPoolExecutor(max_workers=min(4, len(syms))) as pool:
+        rows = list(pool.map(lambda s: fn(s, include_spot=include_spot), syms))
+    return [q for q in rows if q]
 
 
 def _pm_buy_plan(amount: float, price: float) -> dict:
@@ -6575,7 +7200,8 @@ def _trade_desk_open(timeframe: str, symbol: str, direction: str, amount: float)
     up_p, down_p = _pm_market_prices(pm)
     quote_p = up_p if direction == "UP" else down_p
     token_id = pm["up_token"] if direction == "UP" else pm["down_token"]
-    live_p = _trade_desk_live_price(token_id, amount, quote_p)
+    # Canlı ask VWAP — Gamma mid ile to-win şişmesin
+    live_p = _pm_executable_buy_price(token_id, amount, quote_p)
     plan = _pm_buy_plan(amount, live_p)
     if not plan["allowed"]:
         return {
@@ -6589,7 +7215,7 @@ def _trade_desk_open(timeframe: str, symbol: str, direction: str, amount: float)
 
     order = pm_place_order(
         token_id, amount, pm.get("tick_size", "0.01"), pm.get("neg_risk", False),
-        label="MANUEL PM",
+        label="MANUEL PM", interactive=True,
     )
     if not order:
         return {"ok": False, "error": pm_last_order_error()}
@@ -6652,8 +7278,14 @@ def _trade_desk_open(timeframe: str, symbol: str, direction: str, amount: float)
     return {
         "ok": True,
         "position": pos,
+        "plan": {
+            "price": order.get("price"),
+            "size": order["size"],
+            "spent": spent,
+            "profit": round(float(order["size"]) - spent, 2),
+        },
         "message": f"{pos['symbol'].replace('USDT', '')} {'YÜKSELİR' if direction == 'UP' else 'DÜŞER'} "
-                   f"${spent:.2f} @{order.get('price', 0):.2f}{note}",
+                   f"${spent:.2f} @{order.get('price', 0):.2f} → ${float(order['size']):.2f} to win{note}",
     }
 
 
@@ -7191,18 +7823,38 @@ def api_trade_desk_estimate():
     up_p, down_p = _pm_market_prices(pm)
     quote_p = up_p if direction == "UP" else down_p
     token_id = pm["up_token"] if direction == "UP" else pm["down_token"]
-    live_p = _trade_desk_live_price(token_id, max(amount, 1.0), quote_p)
+    # Ask VWAP = gerçek alım; Gamma mid to-win'i şişiriyordu
+    live_p = _pm_executable_buy_price(token_id, amount, quote_p)
     plan = _pm_buy_plan(amount, live_p)
-    return jsonify({"ok": True, "plan": plan})
+    return jsonify({"ok": True, "plan": plan, "quote": live_p, "gamma": quote_p})
+
+
+@app.route("/poly/api/trade-desk/quotes")
+def api_trade_desk_quotes():
+    """Tek TF UP/DOWN fiyatları — payout preview için sık poll."""
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    tf = str(request.args.get("timeframe") or "15m")
+    if tf not in ("5m", "15m", "1h"):
+        tf = "15m"
+    quotes = _trade_desk_quotes_for_tf(tf, include_spot=False)
+    return jsonify({
+        "timeframe": tf,
+        "quotes": quotes,
+        "updated": datetime.now(_TZ_TR).strftime("%H:%M:%S"),
+    })
 
 
 @app.route("/poly/api/trade-desk")
 def api_trade_desk():
     if _auth_required():
         return jsonify({"error": "unauthorized"}), 401
-    q5 = [_trade_desk_quote_5m(s) for s in _TRADE_DESK_5M_SYMS]
-    q15 = [_trade_desk_quote_15m(s) for s in _TRADE_DESK_15M_SYMS]
-    q1h = [_trade_desk_quote_1h(s) for s in _TRADE_DESK_1H_SYMS]
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        f5 = pool.submit(lambda: _trade_desk_quotes_for_tf("5m", include_spot=True))
+        f15 = pool.submit(lambda: _trade_desk_quotes_for_tf("15m", include_spot=True))
+        f1h = pool.submit(lambda: _trade_desk_quotes_for_tf("1h", include_spot=True))
+        q5, q15, q1h = f5.result(), f15.result(), f1h.result()
     manual = load_state("manual")
     open_pos = []
     for p in manual.get("open_positions", []):
@@ -7223,10 +7875,11 @@ def api_trade_desk():
         })
     return jsonify({
         "cash": round(get_pm_balance(), 2),
-        "quotes_5m": [q for q in q5 if q],
-        "quotes_15m": [q for q in q15 if q],
-        "quotes_1h": [q for q in q1h if q],
+        "quotes_5m": q5,
+        "quotes_15m": q15,
+        "quotes_1h": q1h,
         "open_positions": open_pos,
+        "updated": datetime.now(_TZ_TR).strftime("%H:%M:%S"),
     })
 
 
@@ -8753,6 +9406,34 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
         </div>
         <button type="button" class="pm-system-btn paused" id="pm-system-btn-analiz6_live" onclick="togglePmSystem('analiz6_live')">Aç</button>
       </div>
+      <div class="pm-system-bar paused" id="pm-system-bar-a2_16_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-a2_16_live">⏸ A2#16 Supertrend Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-a2_16_live">Saatlik BTC+ETH+SOL · Supertrend · sanal A2#16 devam · varsayılan kapalı</div>
+        </div>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-a2_16_live" onclick="togglePmSystem('a2_16_live')">Aç</button>
+      </div>
+      <div class="pm-system-bar" id="pm-system-bar-a2_02_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-a2_02_live">✅ A2#02 RSI Div Live açılış aktif</div>
+          <div class="pm-system-sub" id="pm-system-sub-a2_02_live">Saatlik BTC+ETH+SOL · $4–6 · sanal A2#02 devam</div>
+        </div>
+        <button type="button" class="pm-system-btn" id="pm-system-btn-a2_02_live" onclick="togglePmSystem('a2_02_live')">Kapat</button>
+      </div>
+      <div class="pm-system-bar" id="pm-system-bar-a2_08_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-a2_08_live">✅ A2#08 Williams Live açılış aktif</div>
+          <div class="pm-system-sub" id="pm-system-sub-a2_08_live">Saatlik BTC+ETH+SOL · $4–6 · sanal A2#08 devam</div>
+        </div>
+        <button type="button" class="pm-system-btn" id="pm-system-btn-a2_08_live" onclick="togglePmSystem('a2_08_live')">Kapat</button>
+      </div>
+      <div class="pm-system-bar paused" id="pm-system-bar-analiz15_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-analiz15_live">⏸ A15 Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-analiz15_live">Saatlik BTC+ETH+SOL · BTC→A6 ETH→A8 SOL→A2 · sanal A15 devam · varsayılan kapalı</div>
+        </div>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-analiz15_live" onclick="togglePmSystem('analiz15_live')">Aç</button>
+      </div>
       <div class="pm-system-bar" id="pm-system-bar-15m_309_live">
         <div>
           <div class="pm-system-status" id="pm-system-status-15m_309_live">✅ 15M 309 Live açılış aktif</div>
@@ -8811,6 +9492,54 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
         <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6_amount_low" type="number" step="0.5" min="1" max="100"></div>
         <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6_amount_mid" type="number" step="0.5" min="1" max="100"></div>
         <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A2#16 Supertrend Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · Supertrend · sembol WR düşük / orta / yüksek</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_16_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_16_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_16_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A2#02 RSI Div Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · $4–5–6 · sembol WR</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_02_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_02_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_02_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A2#08 Williams Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · $4–5–6 · sembol WR</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_08_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_08_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_08_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A15 Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · BTC→A6 ETH→A8 SOL→A2 · sembol WR düşük / orta / yüksek</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a15_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a15_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a15_amount_high" type="number" step="0.5" min="1" max="100"></div>
       </div>
     </div>
   </div>
@@ -8876,21 +9605,21 @@ const _PM_SYSTEM_ROWS = {
     status: 'pm-system-status-analiz5', sub: 'pm-system-sub-analiz5',
     active: '✅ A1 Live açılış aktif', paused: '⏸ A1 Live kapalı',
     subOn: 'Gerçek PM · saatlik BTC+SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A1 devam) · Pzt 08:00 otomatik açılır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A1 devam) · Pzt 12:00 otomatik açılır',
   },
   analiz2: {
     bar: 'pm-system-bar-analiz2', btn: 'pm-system-btn-analiz2',
     status: 'pm-system-status-analiz2', sub: 'pm-system-sub-analiz2',
     active: '✅ A2 açılış aktif', paused: '⏸ A2 kapalı',
     subOn: 'Gerçek PM · saatlik SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2 devam) · Pzt 08:00 otomatik açılır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2 devam) · Pzt 12:00 otomatik açılır',
   },
   analiz10: {
     bar: 'pm-system-bar-analiz10', btn: 'pm-system-btn-analiz10',
     status: 'pm-system-status-analiz10', sub: 'pm-system-sub-analiz10',
     active: '✅ A10 Live açılış aktif', paused: '⏸ A10 Live kapalı',
     subOn: 'Gerçek PM · saatlik BTC+SOL · çift konsensüs · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A10 devam) · Pzt 08:00 otomatik açılır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A10 devam) · Pzt 12:00 otomatik açılır',
   },
   analiz6_live: {
     bar: 'pm-system-bar-analiz6_live', btn: 'pm-system-btn-analiz6_live',
@@ -8898,6 +9627,34 @@ const _PM_SYSTEM_ROWS = {
     active: '✅ A6 Live açılış aktif', paused: '⏸ A6 Live kapalı',
     subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · sanal A6 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
     subOff: 'Gerçek PM yeni işlem açmaz (sanal A6 devam) · Aç ile işlem başlar',
+  },
+  a2_16_live: {
+    bar: 'pm-system-bar-a2_16_live', btn: 'pm-system-btn-a2_16_live',
+    status: 'pm-system-status-a2_16_live', sub: 'pm-system-sub-a2_16_live',
+    active: '✅ A2#16 Supertrend Live açılış aktif', paused: '⏸ A2#16 Supertrend Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · Supertrend · sanal A2#16 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#16 devam) · Aç ile işlem başlar',
+  },
+  a2_02_live: {
+    bar: 'pm-system-bar-a2_02_live', btn: 'pm-system-btn-a2_02_live',
+    status: 'pm-system-status-a2_02_live', sub: 'pm-system-sub-a2_02_live',
+    active: '✅ A2#02 RSI Div Live açılış aktif', paused: '⏸ A2#02 RSI Div Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#02 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#02 devam) · Aç ile işlem başlar',
+  },
+  a2_08_live: {
+    bar: 'pm-system-bar-a2_08_live', btn: 'pm-system-btn-a2_08_live',
+    status: 'pm-system-status-a2_08_live', sub: 'pm-system-sub-a2_08_live',
+    active: '✅ A2#08 Williams Live açılış aktif', paused: '⏸ A2#08 Williams Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#08 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#08 devam) · Aç ile işlem başlar',
+  },
+  analiz15_live: {
+    bar: 'pm-system-bar-analiz15_live', btn: 'pm-system-btn-analiz15_live',
+    status: 'pm-system-status-analiz15_live', sub: 'pm-system-sub-analiz15_live',
+    active: '✅ A15 Live açılış aktif', paused: '⏸ A15 Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · BTC→A6 ETH→A8 SOL→A2 · sanal A15 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A15 devam) · Aç ile işlem başlar',
   },
   '15m_309_live': {
     bar: 'pm-system-bar-15m_309_live', btn: 'pm-system-btn-15m_309_live',
@@ -8935,6 +9692,10 @@ function updatePmSystemUI(d) {
   _pmSystemRow('analiz2', !!d.analiz2_paused, d.updated_at_tr);
   _pmSystemRow('analiz10', !!d.analiz10_paused, d.updated_at_tr);
   _pmSystemRow('analiz6_live', !!d.analiz6_live_paused, d.updated_at_tr);
+  _pmSystemRow('a2_16_live', !!d.a2_16_live_paused, d.updated_at_tr);
+  _pmSystemRow('a2_02_live', !!d.a2_02_live_paused, d.updated_at_tr);
+  _pmSystemRow('a2_08_live', !!d.a2_08_live_paused, d.updated_at_tr);
+  _pmSystemRow('analiz15_live', !!d.analiz15_live_paused, d.updated_at_tr);
   _pmSystemRow('15m_309_live', !!d['15m_309_live_paused'], d.updated_at_tr);
 }
 
@@ -8954,6 +9715,10 @@ const _SETTINGS_KEYS = [
   'a2_amount_low', 'a2_amount_mid', 'a2_amount_high',
   'a10_amount_low', 'a10_amount_mid', 'a10_amount_high',
   'a6_amount_low', 'a6_amount_mid', 'a6_amount_high',
+  'a2_16_amount_low', 'a2_16_amount_mid', 'a2_16_amount_high',
+  'a2_02_amount_low', 'a2_02_amount_mid', 'a2_02_amount_high',
+  'a2_08_amount_low', 'a2_08_amount_mid', 'a2_08_amount_high',
+  'a15_amount_low', 'a15_amount_mid', 'a15_amount_high',
 ];
 
 async function load() {
@@ -10193,7 +10958,7 @@ HTML = r"""<!DOCTYPE html>
 <div class="right-panel">
   <!-- Sembol WR — tek mor kart (dış kutu yok) -->
   <div class="sym-vio">
-    <div class="sym-lime-title">Sembol Başarı Oranı</div>
+    <div class="sym-lime-title">Sembol Başarı Oranı <span style="font-size:10px;font-weight:600;opacity:.75">· 1s en iyi</span></div>
     <div class="sym-lime-row">
       <div class="sym-lime-val" id="sym-wr-total">—%</div>
       <div class="sym-lime-ico" aria-hidden="true">
@@ -10221,7 +10986,7 @@ HTML = r"""<!DOCTYPE html>
 
   <!-- En iyi gün/saat -->
   <div class="rp-section">
-    <div class="rp-title">En Etkili Zaman <span id="top-slots-label" style="font-size:10px;color:#666;font-weight:600"></span></div>
+    <div class="rp-title">En Etkili Zaman <span id="top-slots-label" style="font-size:10px;color:#666;font-weight:600">· tüm 1s analizler</span></div>
     <div class="slot-mode-tabs" id="slot-mode-tabs">
       <button type="button" class="slot-tab active" data-mode="best">Başarılı</button>
       <button type="button" class="slot-tab" data-mode="worst">Başarısız</button>
@@ -10304,6 +11069,11 @@ function renderTopSlots() {
     const medals  = ['🥇','🥈','🥉'];
     const barW    = Math.round(sl.wr);
     const hour    = sl.hour_int;
+    const aKey    = JSON.stringify(sl.analiz || _panelAnaliz || 'analiz1');
+    const aShort  = sl.analiz_short || '';
+    const aBadge  = aShort
+      ? `<span style="background:#fff;color:#111;font-size:9px;font-weight:800;padding:1px 6px;border-radius:999px;margin-left:6px;letter-spacing:.2px">${aShort}</span>`
+      : '';
     const wrColor = isWorst
       ? (sl.wr < 40 ? '#f87171' : sl.wr < 50 ? '#fbbf24' : '#ca8a04')
       : (sl.wr >= 80 ? '#4ade80' : sl.wr >= 60 ? '#a3e635' : '#c8f135');
@@ -10315,12 +11085,12 @@ function renderTopSlots() {
     const dayCountStr = dayCount > 1
       ? `<span style="color:${isWorst ? '#f87171' : '#c8f135'};font-weight:700">${dayCount} farklı gün</span>`
       : `<span style="color:#666">1 gün</span>`;
-    return `<div onclick="openSlotPopup(-1,${hour})"
+    return `<div onclick='openSlotPopup(-1,${hour},${aKey})'
       style="padding:8px 10px;margin-bottom:6px;background:#111;border-radius:10px;
              cursor:pointer;transition:.15s;border:1px solid #1f1f1f"
       onmouseover="this.style.borderColor='${hoverClr}'" onmouseout="this.style.borderColor='#1f1f1f'">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-size:12px;font-weight:800">${medals[i]} ${sl.hour}</span>
+        <span style="font-size:12px;font-weight:800;display:inline-flex;align-items:center">${medals[i]} ${sl.hour}${aBadge}</span>
         <span style="font-size:13px;font-weight:800;color:${wrColor}">${sl.wr}%</span>
       </div>
       <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:5px">${dayTags}</div>
@@ -10554,37 +11324,21 @@ async function closePosition(analiz, symbol, btn, orderId) {
 
 async function refresh() {
   try {
-    const [rd, rs, rss] = await Promise.all([
-      fetch('/poly/api/data', {cache: 'no-store'}),
-      fetch('/poly/api/stats', {cache: 'no-store'}),
-      fetch('/poly/api/symbol_stats', {cache: 'no-store'}),
-    ]);
-    if (rd.status === 401 || rs.status === 401 || rss.status === 401) {
+    const pData = fetch('/poly/api/data', {cache: 'no-store'});
+    const pStats = fetch('/poly/api/stats', {cache: 'no-store'});
+    const pSym = fetch('/poly/api/symbol_stats', {cache: 'no-store'});
+
+    // Önce data — kartlar hemen dolsun; stats/symbol_stats arkadan
+    const rd = await pData;
+    if (rd.status === 401) {
       window.location.href = '/poly/login?next=/poly';
       return;
     }
-    if (!rd.ok || !rs.ok || !rss.ok) {
-      throw new Error('API HTTP ' + rd.status + '/' + rs.status + '/' + rss.status);
-    }
-    const d  = await rd.json();
-    const s  = await rs.json();
-    const ss = await rss.json();
+    if (!rd.ok) throw new Error('API HTTP ' + rd.status);
+    const d = await rd.json();
     if (!d || d.error || !Array.isArray(d.positions)) {
       throw new Error((d && d.error) || 'data parse');
     }
-    if (!s || !Array.isArray(s.algo_stats)) {
-      throw new Error('stats parse');
-    }
-    _panelAnaliz = ss.analiz || 'analiz1';
-    const panelLbl = ss.analiz_label ? `· ${ss.analiz_label}` : '';
-    const slotLbl = document.getElementById('top-slots-label');
-    if (slotLbl) slotLbl.textContent = panelLbl;
-    const symTotal = document.getElementById('sym-wr-total');
-    const symAnaliz = document.getElementById('sym-wr-analiz');
-    const symCount = document.getElementById('sym-wr-count');
-    if (symTotal) symTotal.textContent = (ss.total_wr != null ? ss.total_wr : '—') + '%';
-    if (symAnaliz) symAnaliz.textContent = ss.analiz_label || '—';
-    if (symCount) symCount.textContent = ss.total != null ? String(ss.total) : '—';
 
     // Header stats
     document.getElementById('portfolio').textContent = d.portfolio >= 0 ? '$'+d.portfolio.toFixed(2) : '?';
@@ -10643,6 +11397,110 @@ async function refresh() {
     renderPmQuotes(document.getElementById('pm-hourly'), d.pm_hourly, 'hour_et');
     renderPmQuotes(document.getElementById('pm-15m'), d.pm_15m, 'period_lbl');
 
+    // Risk lime kart — data gelir gelmez (stats beklenmez)
+    const totalRisk = d.positions.reduce((acc, p) => acc + (p.pm_spent||0), 0);
+    const riskStr = '$' + totalRisk.toFixed(2);
+    const trEl = document.getElementById('total-risk');
+    if (trEl) trEl.textContent = riskStr;
+    const trMob = document.getElementById('total-risk-mob');
+    if (trMob) trMob.textContent = riskStr;
+    const totalToWin = d.positions.reduce((acc, p) => acc + (p.pm_size || 0), 0);
+    const twVal = totalToWin > 0 ? '$' + totalToWin.toFixed(2) : '—';
+    const twEl = document.getElementById('total-towin');
+    if (twEl) twEl.textContent = twVal;
+    const twMob = document.getElementById('total-towin-mob');
+    if (twMob) twMob.textContent = twVal;
+    const openN = String((d.positions || []).length);
+    const toEl = document.getElementById('total-open');
+    if (toEl) toEl.textContent = openN;
+    const toMob = document.getElementById('total-open-mob');
+    if (toMob) toMob.textContent = openN;
+
+    // Pozisyonlar — stats'tan önce boya
+    const pc    = document.getElementById('positions');
+    const pcMob = document.getElementById('positions-mob');
+    const posHTML = !d.positions.length
+      ? '<div class="empty">Şu an açık pozisyon yok</div>'
+      : d.positions.map(p => {
+        const dirClass = p.dir==='UP' ? 'dir-up' : 'dir-down';
+        const dc = p.dir==='UP'?'up':'down';
+        const dec = p.name === 'BTC' ? 1 : 2;
+        const deltaStr = p.delta != null
+          ? (p.delta >= 0 ? '+' : '-') + '$' + Math.abs(p.delta).toFixed(dec)
+          : '';
+        const deltaUp = p.delta != null && p.delta >= 0;
+        const slotStr = p.slot_range
+          ? `<div class="pos-slot"><span class="pos-slot-lbl">${p.is_15m ? '15dk slot:' : 'Saat slot:'}</span> ${p.slot_range} İST</div>`
+          : (p.entry_time ? `<div class="pos-slot"><span class="pos-slot-lbl">Saat:</span> ${p.entry_time.substring(11,16)} İST</div>` : '');
+        const cvColor = p.close_val !== null && p.close_val !== undefined ? (parseFloat(p.close_val)>=parseFloat(p.pm_spent)?'#4ade80':'#f87171') : '#555';
+        const pnlClass = p.close_pnl != null ? (p.close_pnl >= 0 ? 'pos' : 'neg') : '';
+        const pnlStr = p.close_pnl != null
+          ? `<span class="live-close-pnl ${pnlClass}">${p.close_pnl >= 0 ? '+' : '-'}$${Math.abs(p.close_pnl).toFixed(2)}</span>`
+          : '';
+        const winStr = p.win_payout != null
+          ? `<div class="pos-win-row"><span class="win-lbl">Kazanırsa:</span> $${p.win_payout.toFixed(2)}`
+            + (p.win_profit != null ? ` <span style="opacity:.85">(${p.win_profit >= 0 ? '+' : ''}$${p.win_profit.toFixed(2)})</span>` : '')
+            + '</div>'
+          : '';
+        const winIcon = p.current == null ? '' : p.winning === true
+          ? '<span class="pos-win-icon ok" title="Yön tutuyor">✓</span>'
+          : p.winning === false
+            ? '<span class="pos-win-icon bad" title="Yön ters">✕</span>'
+            : '';
+        return `<div class="pos-card pos-clickable ${dirClass}" data-live="${p.live_key || (p.analiz_key + ':' + p.name + ':' + (p.dir || '') + ':' + (p.pos_id || p.pm_order_id || ''))}" data-spent="${p.pm_spent}"
+          data-sym="${p.symbol}" data-tf="${p.chart_tf || (p.is_15m ? '15m' : '1h')}"
+          onclick="openPosChartFromCard(this)" title="Grafik sayfasında aç">
+          <div class="pos-top">
+            <div class="pos-name">${p.name}</div>
+            <div class="pos-dir ${dc}">${p.dir_tr}</div>
+          </div>
+          <div class="pos-price-row">
+            <span class="pos-current">${p.current?'$'+p.current:''}${winIcon}</span>
+            <span class="pos-pct ${deltaUp?'pos':'neg'}">${p.current?deltaStr:''}</span>
+          </div>
+          <div class="pos-entry"><span class="pos-entry-lbl">Giriş:</span> $${p.entry}</div>
+          ${slotStr}
+          <div class="pos-close-row">
+            <span class="close-lbl">Anlık kapatma</span>
+            <span class="live-close-val" style="color:${cvColor}">${p.close_val != null ? '$'+p.close_val.toFixed(2) : '—'}</span>
+            ${pnlStr}
+            ${p.token_cents != null ? `<span class="close-token">@${p.token_cents}¢</span>` : ''}
+            <span class="live-updated"></span>
+          </div>
+          <div class="pos-risk-row">Risk: $${p.pm_spent}
+            <span class="pos-analiz-tag">${p.analiz}</span>
+          </div>
+          ${winStr}
+          ${p.closable ? `<div class="close-btn-wrap">
+            <button class="close-btn" onclick="event.stopPropagation(); closePosition('${p.analiz_key}', '${p.symbol}', this, '${p.pos_id || p.pm_order_id || ''}')">Pozisyonu Kapat</button>
+          </div>` : ''}
+        </div>`;
+      }).join('');
+    pc.innerHTML    = posHTML;
+    if (pcMob) pcMob.innerHTML = posHTML;
+    refreshPositionsLive();
+
+    // Stats / sembol WR — arkadan
+    const [rs, rss] = await Promise.all([pStats, pSym]);
+    if (rs.status === 401 || rss.status === 401) {
+      window.location.href = '/poly/login?next=/poly';
+      return;
+    }
+    if (!rs.ok || !rss.ok) throw new Error('API HTTP stats');
+    const s = await rs.json();
+    const ss = await rss.json();
+    if (!s || !Array.isArray(s.algo_stats)) throw new Error('stats parse');
+    _panelAnaliz = ss.analiz || 'analiz1';
+    const slotLbl = document.getElementById('top-slots-label');
+    if (slotLbl) slotLbl.textContent = '· tüm 1s analizler';
+    const symTotal = document.getElementById('sym-wr-total');
+    const symAnaliz = document.getElementById('sym-wr-analiz');
+    const symCount = document.getElementById('sym-wr-count');
+    if (symTotal) symTotal.textContent = (ss.total_wr != null ? ss.total_wr : '—') + '%';
+    if (symAnaliz) symAnaliz.textContent = ss.analiz_short || ss.analiz_label || '—';
+    if (symCount) symCount.textContent = ss.total != null ? String(ss.total) : '—';
+    if (symAnaliz && ss.analiz_label) symAnaliz.title = ss.analiz_label;
+
     // WR & PnL — gerçek PM
     const rpm = s.real_pm;
     const wrEl = document.getElementById('wr-stat');
@@ -10698,90 +11556,6 @@ async function refresh() {
         if (pnlSub) pnlSub.textContent = 'PM bakiye okunamadı';
       }
     }
-
-    // Risk lime kart (Sembol Başarı Oranı ile aynı yapı)
-    const totalRisk = d.positions.reduce((acc, p) => acc + (p.pm_spent||0), 0);
-    const riskStr = '$' + totalRisk.toFixed(2);
-    const trEl = document.getElementById('total-risk');
-    if (trEl) trEl.textContent = riskStr;
-    const trMob = document.getElementById('total-risk-mob');
-    if (trMob) trMob.textContent = riskStr;
-    const totalToWin = d.positions.reduce((acc, p) => acc + (p.pm_size || 0), 0);
-    const twVal = totalToWin > 0 ? '$' + totalToWin.toFixed(2) : '—';
-    const twEl = document.getElementById('total-towin');
-    if (twEl) twEl.textContent = twVal;
-    const twMob = document.getElementById('total-towin-mob');
-    if (twMob) twMob.textContent = twVal;
-    const openN = String((d.positions || []).length);
-    const toEl = document.getElementById('total-open');
-    if (toEl) toEl.textContent = openN;
-    const toMob = document.getElementById('total-open-mob');
-    if (toMob) toMob.textContent = openN;
-
-    // Grafik tabları kaldırıldı — portföy grafiği ayrı yüklenir
-
-    // Pozisyonlar
-    const pc    = document.getElementById('positions');
-    const pcMob = document.getElementById('positions-mob');
-    const posHTML = !d.positions.length
-      ? '<div class="empty">Şu an açık pozisyon yok</div>'
-      : d.positions.map(p => {
-        const dirClass = p.dir==='UP' ? 'dir-up' : 'dir-down';
-        const dc = p.dir==='UP'?'up':'down';
-        const dec = p.name === 'BTC' ? 1 : 2;
-        const deltaStr = p.delta != null
-          ? (p.delta >= 0 ? '+' : '-') + '$' + Math.abs(p.delta).toFixed(dec)
-          : '';
-        const deltaUp = p.delta != null && p.delta >= 0;
-        const slotStr = p.slot_range
-          ? `<div class="pos-slot"><span class="pos-slot-lbl">${p.is_15m ? '15dk slot:' : 'Saat slot:'}</span> ${p.slot_range} İST</div>`
-          : (p.entry_time ? `<div class="pos-slot"><span class="pos-slot-lbl">Saat:</span> ${p.entry_time.substring(11,16)} İST</div>` : '');
-        const cvColor = p.close_val !== null ? (parseFloat(p.close_val)>=parseFloat(p.pm_spent)?'#4ade80':'#f87171') : '#555';
-        const pnlClass = p.close_pnl != null ? (p.close_pnl >= 0 ? 'pos' : 'neg') : '';
-        const pnlStr = p.close_pnl != null
-          ? `<span class="live-close-pnl ${pnlClass}">${p.close_pnl >= 0 ? '+' : '-'}$${Math.abs(p.close_pnl).toFixed(2)}</span>`
-          : '';
-        const winStr = p.win_payout != null
-          ? `<div class="pos-win-row"><span class="win-lbl">Kazanırsa:</span> $${p.win_payout.toFixed(2)}`
-            + (p.win_profit != null ? ` <span style="opacity:.85">(${p.win_profit >= 0 ? '+' : ''}$${p.win_profit.toFixed(2)})</span>` : '')
-            + '</div>'
-          : '';
-        const winIcon = p.current == null ? '' : p.winning === true
-          ? '<span class="pos-win-icon ok" title="Yön tutuyor">✓</span>'
-          : p.winning === false
-            ? '<span class="pos-win-icon bad" title="Yön ters">✕</span>'
-            : '';
-        return `<div class="pos-card pos-clickable ${dirClass}" data-live="${p.analiz_key}:${p.name}" data-spent="${p.pm_spent}"
-          data-sym="${p.symbol}" data-tf="${p.chart_tf || (p.is_15m ? '15m' : '1h')}"
-          onclick="openPosChartFromCard(this)" title="Grafik sayfasında aç">
-          <div class="pos-top">
-            <div class="pos-name">${p.name}</div>
-            <div class="pos-dir ${dc}">${p.dir_tr}</div>
-          </div>
-          <div class="pos-price-row">
-            <span class="pos-current">${p.current?'$'+p.current:''}${winIcon}</span>
-            <span class="pos-pct ${deltaUp?'pos':'neg'}">${p.current?deltaStr:''}</span>
-          </div>
-          <div class="pos-entry"><span class="pos-entry-lbl">Giriş:</span> $${p.entry}</div>
-          ${slotStr}
-          <div class="pos-close-row">
-            <span class="close-lbl">Anlık kapatma</span>
-            <span class="live-close-val" style="color:${cvColor}">${p.close_val != null ? '$'+p.close_val.toFixed(2) : '—'}</span>
-            ${pnlStr}
-            ${p.token_cents != null ? `<span class="close-token">@${p.token_cents}¢</span>` : ''}
-            <span class="live-updated" data-live-ts="${p.analiz_key}:${p.name}"></span>
-          </div>
-          <div class="pos-risk-row">Risk: $${p.pm_spent}
-            <span class="pos-analiz-tag">${p.analiz}</span>
-          </div>
-          ${winStr}
-          ${p.closable ? `<div class="close-btn-wrap">
-            <button class="close-btn" onclick="event.stopPropagation(); closePosition('${p.analiz_key}', '${p.symbol}', this, '${p.pos_id || p.pm_order_id || ''}')">Pozisyonu Kapat</button>
-          </div>` : ''}
-        </div>`;
-      }).join('');
-    pc.innerHTML    = posHTML;
-    if (pcMob) pcMob.innerHTML = posHTML;
 
     // Sembol chip'leri — mor kart içinde 3’lü (≥55 yeşil, <55 sarı)
     const symEl = document.getElementById('sym-wr');
@@ -10869,8 +11643,12 @@ function top3DonutSVG(pct, color){
 }
 function patchPositionsLive(items, updated) {
   items.forEach(p => {
-    const key = `${p.analiz_key}:${p.name}`;
-    document.querySelectorAll(`[data-live="${key}"]`).forEach(card => {
+    const key = p.live_key || (
+      p.analiz_key + ':' + p.name + ':' + (p.dir || '') + ':' + (p.pos_id || p.pm_order_id || '')
+    );
+    // CSS.escape yoksa tırnak kaçışı
+    const sel = '[data-live="' + String(key).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"]';
+    document.querySelectorAll(sel).forEach(card => {
       const dec = p.name === 'BTC' ? 1 : 2;
       const cv = card.querySelector('.live-close-val');
       const cp = card.querySelector('.live-close-pnl');
@@ -10903,18 +11681,25 @@ function patchPositionsLive(items, updated) {
 }
 
 async function refreshPositionsLive() {
+  if (window._posLiveBusy) return;
+  if (document.hidden) return;
+  window._posLiveBusy = true;
   try {
     const r = await fetch('/poly/api/positions-live', {cache: 'no-store'});
     if (!r.ok) return;
     const d = await r.json();
     patchPositionsLive(d.positions || [], d.updated);
   } catch (e) { console.error('positions-live', e); }
+  finally { window._posLiveBusy = false; }
 }
 
 refresh();
 setInterval(refresh, 10000);
-setInterval(refreshPositionsLive, 5000);
+setInterval(refreshPositionsLive, 1000);
 refreshPositionsLive();
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshPositionsLive();
+});
 window.addEventListener('resize', () => {
   if (chartInstance) chartInstance.applyOptions({width: document.getElementById('chart').clientWidth});
 });
@@ -10922,11 +11707,12 @@ window.addEventListener('resize', () => {
 // ── Slot Popup ──────────────────────────────────────────
 const _dayNames = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
 
-async function openSlotPopup(dow, hour) {
+async function openSlotPopup(dow, hour, analizKey) {
   const overlay = document.getElementById('slot-overlay');
   const popup   = document.getElementById('slot-popup');
   overlay.style.display = 'block';
   popup.style.display   = 'block';
+  const ak = analizKey || _panelAnaliz || 'analiz1';
   const title = dow >= 0
     ? `${_dayNames[dow]} ${String(hour).padStart(2,'0')}:00`
     : `${String(hour).padStart(2,'0')}:00 — Tüm Günler`;
@@ -10934,8 +11720,8 @@ async function openSlotPopup(dow, hour) {
   document.getElementById('slot-body').innerHTML = '<div style="color:#555;text-align:center;padding:24px">Yükleniyor...</div>';
 
   const url = dow >= 0
-    ? `/poly/api/heatmap/detail?dow=${dow}&hour=${hour}&sym=ALL&analiz=${_panelAnaliz}`
-    : `/poly/api/heatmap/detail?hour=${hour}&sym=ALL&analiz=${_panelAnaliz}`;
+    ? `/poly/api/heatmap/detail?dow=${dow}&hour=${hour}&sym=ALL&analiz=${encodeURIComponent(ak)}`
+    : `/poly/api/heatmap/detail?hour=${hour}&sym=ALL&analiz=${encodeURIComponent(ak)}`;
   const r = await fetch(url);
   const d = await r.json();
 
@@ -11163,7 +11949,7 @@ function renderHeatmap(cells) {
 _SETTINGS_FILE = os.path.join(_DIR_POLY, "analiz5_settings.json")
 _AMT_META = {"unit": "$", "min": 1, "max": 100, "step": 0.5}
 _SETTINGS_LABELS = {}
-for _pfx, _lbl in (("a1", "A1 Live"), ("a2", "A2 Live"), ("a10", "A10 Live"), ("a6", "A6 Live")):
+for _pfx, _lbl in (("a1", "A1 Live"), ("a2", "A2 Live"), ("a10", "A10 Live"), ("a6", "A6 Live"), ("a2_16", "A2#16 Supertrend Live"), ("a2_02", "A2#02 RSI Div Live"), ("a2_08", "A2#08 Williams Live"), ("a15", "A15 Live")):
     for _tier, _tier_lbl in (("low", "düşük"), ("mid", "orta"), ("high", "yüksek")):
         _SETTINGS_LABELS[f"{_pfx}_amount_{_tier}"] = {
             "label": f"{_lbl} {_tier_lbl} WR giriş", **_AMT_META,
@@ -11175,6 +11961,10 @@ def _read_settings() -> dict:
         "a2_amount_low": 6.0, "a2_amount_mid": 7.0, "a2_amount_high": 8.0,
         "a10_amount_low": 8.0, "a10_amount_mid": 10.0, "a10_amount_high": 12.0,
         "a6_amount_low": 8.0, "a6_amount_mid": 10.0, "a6_amount_high": 12.0,
+        "a2_16_amount_low": 8.0, "a2_16_amount_mid": 12.0, "a2_16_amount_high": 16.0,
+        "a2_02_amount_low": 4.0, "a2_02_amount_mid": 5.0, "a2_02_amount_high": 6.0,
+        "a2_08_amount_low": 4.0, "a2_08_amount_mid": 5.0, "a2_08_amount_high": 6.0,
+        "a15_amount_low": 12.0, "a15_amount_mid": 16.0, "a15_amount_high": 20.0,
     }
     if os.path.exists(_SETTINGS_FILE):
         with open(_SETTINGS_FILE) as f:
@@ -11283,6 +12073,291 @@ def ayarlar():
 def algoritma():
     if _auth_required(): return redirect("/poly/login")
     return render_template_string(ALGORITMA_HTML)
+
+
+ALGORITMA_ISLEMLER_HTML = r"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Algoritma işlemler — A2 Top 17 Poly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070b; --card:#12121a; --card2:#181822; --line:rgba(255,255,255,.06);
+  --txt:#f4f4f8; --muted:#8b8b9a; --green:#39ff8e; --red:#ff5c7a;
+  --accent:#c8f135;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;display:flex;color:var(--txt);
+  font-family:'Sora',system-ui,sans-serif;
+  background:
+    radial-gradient(900px 500px at 10% -10%, rgba(200,241,53,.08), transparent 55%),
+    radial-gradient(700px 400px at 90% 0%, rgba(167,139,250,.12), transparent 50%),
+    var(--bg);
+}
+.sidebar{width:220px;background:rgba(8,10,12,.92);backdrop-filter:blur(12px);padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line)}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-.5px}
+.logo span{color:var(--accent)}
+.nav-label{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin:16px 0 6px 12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:#888;text-decoration:none;font-size:13px;font-weight:600;transition:all .15s}
+.nav-item:hover{background:rgba(255,255,255,.04);color:#ccc}
+.nav-item.active{background:rgba(200,241,53,.1);color:var(--accent)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0}
+.nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:var(--accent)}
+.sidebar-footer{margin-top:auto;font-size:11px;color:#555;padding:12px;display:flex;align-items:center;gap:6px}
+.sidebar-footer .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.main{flex:1;padding:24px 28px;min-width:0;max-width:1400px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.page-title{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.page-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:12px;font-weight:700;white-space:nowrap}
+.section{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+.section-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.book-card{
+  background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+  display:block;color:inherit;text-decoration:none;cursor:pointer;
+  transition:border-color .15s, transform .15s, background .15s;
+}
+.book-card:hover{border-color:rgba(200,241,53,.4);transform:translateY(-1px);background:rgba(255,255,255,.04)}
+.book-card .bt{font-size:14px;font-weight:800}
+.book-card .bs{font-size:11px;color:var(--muted);margin-top:2px}
+.book-card .br{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;font-weight:700}
+.book-card .br b{font-size:16px}
+.book-card .pos{color:var(--green)}.book-card .neg{color:var(--red)}
+.book-opens{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.45}
+.positions{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.pos-card{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.pos-card.dir-up{border-color:rgba(57,255,142,.25)}
+.pos-card.dir-down{border-color:rgba(255,92,122,.25)}
+.pos-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pos-name{font-size:16px;font-weight:800}
+.pos-dir{font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px}
+.pos-dir.up{background:rgba(57,255,142,.12);color:var(--green)}
+.pos-dir.down{background:rgba(255,92,122,.12);color:var(--red)}
+.pos-current{font-size:22px;font-weight:800;margin:8px 0 2px}
+.pos-pct{font-size:12px;font-weight:700}
+.pos-pct.pos{color:var(--green)}.pos-pct.neg{color:var(--red)}
+.pos-entry,.pos-slot{font-size:11px;color:var(--muted);margin-top:4px}
+.pos-close-row{margin-top:10px;padding:10px 12px;background:rgba(0,0,0,.25);border-radius:12px;border:1px solid var(--line)}
+.live-close-val{font-size:18px;font-weight:800}
+.empty{color:#555;font-size:13px;padding:12px 0}
+.detail-back{display:inline-flex;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--accent);text-decoration:none}
+@media(max-width:860px){
+  body{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:relative;border-right:none;border-bottom:1px solid var(--line)}
+  .main{padding:16px}
+}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo">Cem<span>BOT</span></div>
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto Future</a>
+  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
+  <a class="nav-item active" href="/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
+  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
+  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
+  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
+  <div class="sidebar-footer"><span class="dot"></span>A2 Poly sanal</div>
+</div>
+<div class="main">
+  <div id="view-list">
+    <div class="head">
+      <div>
+        <div class="page-title">Algoritma işlemler</div>
+        <div class="page-sub">A2 Top-17 · Poly sanal $300 · $8–12–16 · BTC+ETH+SOL · :02/:06</div>
+      </div>
+      <div class="chip" id="sum-chip">—</div>
+    </div>
+    <div class="section">
+      <div class="section-title">17 algoritma durumu · en iyi → en kötü</div>
+      <div id="algo-books"><div class="empty">yükleniyor…</div></div>
+    </div>
+  </div>
+  <div id="view-detail" style="display:none">
+    <div class="head">
+      <div>
+        <a class="detail-back" href="/algoritma-islemler">← 17 algoritma</a>
+        <div class="page-title" id="detail-title">—</div>
+        <div class="page-sub" id="detail-sub">—</div>
+      </div>
+      <div class="chip" id="detail-sum">—</div>
+    </div>
+    <div class="section">
+      <div class="section-title" id="detail-sec-title">Açık Pozisyonlar</div>
+      <div class="positions" id="detail-positions"><div class="empty">yükleniyor…</div></div>
+    </div>
+  </div>
+</div>
+<script>
+const PATH = location.pathname.replace(/\/+$/,'');
+const m = PATH.match(/\/algoritma-islemler\/([a-zA-Z0-9_]+)$/);
+const DETAIL_ID = m ? m[1] : null;
+function fmtPx(n){
+  if(n==null||isNaN(n)) return '—';
+  const a=Math.abs(n);
+  if(a>=1000) return n.toLocaleString('en-US',{maximumFractionDigits:1});
+  if(a>=1) return n.toFixed(2);
+  if(a>=0.01) return n.toFixed(4);
+  return n.toFixed(6);
+}
+function fmtMoney(n){
+  if(n==null||isNaN(n)) return '—';
+  return (n>=0?'+':'') + '$' + Number(n).toFixed(2);
+}
+function posCard(p){
+  const up = (p.side || '') === 'LONG';
+  const dirClass = up ? 'dir-up' : 'dir-down';
+  const dc = up ? 'up' : 'down';
+  const spent = Number(p.pm_spent != null ? p.pm_spent : (p.amount || 0));
+  const toWin = Number(p.to_win != null ? p.to_win : (p.pm_size || 0));
+  const slot = p.slot_label || p.slot || '—';
+  const pmEp = p.pm_entry_price != null ? Number(p.pm_entry_price).toFixed(3) : '—';
+  return `<div class="pos-card ${dirClass}">
+    <div class="pos-top">
+      <div class="pos-name">${p.name || (p.symbol||'').replace('USDT','')}</div>
+      <span class="pos-dir ${dc}">${p.dir_tr || (up ? 'YÜKSELİR' : 'DÜŞER')}</span>
+    </div>
+    <div class="pos-current">$${spent.toFixed(2)}</div>
+    <div class="pos-pct">stake · PM @ ${pmEp}</div>
+    <div class="pos-entry">Spot giriş: $${fmtPx(p.entry_price)}</div>
+    <div class="pos-slot">${slot}</div>
+    <div class="pos-close-row">
+      <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">KAZANIRSA / SETTLE :02</div>
+      <span class="live-close-val" style="color:var(--green)">$${toWin.toFixed(2)}</span>
+      <span class="pos-pct pos" style="margin-left:8px">+$${(toWin-spent).toFixed(2)}</span>
+    </div>
+  </div>`;
+}
+function renderBooks(books){
+  const el = document.getElementById('algo-books');
+  const sorted = (books||[]).slice().sort((a,b)=>{
+    const ba = Number(a.balance||0), bb = Number(b.balance||0);
+    if (bb !== ba) return bb - ba;
+    const pa = Number(a.total_pnl||0), pb = Number(b.total_pnl||0);
+    if (pb !== pa) return pb - pa;
+    return Number(b.wr||-1) - Number(a.wr||-1);
+  });
+  if(!sorted.length){
+    el.innerHTML = '<div class="empty">defter yok</div>';
+    return;
+  }
+  el.innerHTML = '<div class="book-grid">' + sorted.map(b => {
+    const pnl = Number(b.total_pnl||0);
+    const upnl = Number(b.unrealized_pnl||0);
+    const histN = Number(b.history_n||0);
+    const wr = b.wr != null ? ('WR ' + b.wr + '%') : 'WR —';
+    const title = b.name || b.label || b.id;
+    const sub = b.title || b.category || '';
+    const opens = (b.cards||[]).map(c => (c.name||'') + ' ' + (c.side==='LONG'?'UP':'DOWN')).join(' · ') || 'açık yok';
+    const href = '/algoritma-islemler/' + encodeURIComponent(b.id);
+    return `<a class="book-card" href="${href}">
+      <div class="bt">${title}</div>
+      <div class="bs">${sub} · ${wr} · ${histN} işlem</div>
+      <div class="br"><span>Bakiye</span><b>$${Number(b.balance||0).toFixed(2)}</b></div>
+      <div class="br"><span>Net P&L</span><b class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(2)}</b></div>
+      <div class="br"><span>Anlık net</span><b class="${upnl>=0?'pos':'neg'}">${upnl>=0?'+':''}${upnl.toFixed(2)}</b></div>
+      <div class="book-opens">${b.open_count||0} açık · ${opens}</div>
+    </a>`;
+  }).join('') + '</div>';
+}
+function findBook(books, id){
+  const key = String(id||'').toLowerCase();
+  return (books||[]).find(b => {
+    const bid = String(b.id||'').toLowerCase();
+    const num = String(b.algo_num != null ? b.algo_num : '');
+    return bid === key || (num && num === key) || ('a2_'+num.padStart(2,'0')) === key;
+  }) || null;
+}
+function renderDetail(book){
+  document.getElementById('view-list').style.display = 'none';
+  document.getElementById('view-detail').style.display = 'block';
+  const title = document.getElementById('detail-title');
+  const sub = document.getElementById('detail-sub');
+  const sum = document.getElementById('detail-sum');
+  const sec = document.getElementById('detail-sec-title');
+  const pc = document.getElementById('detail-positions');
+  if(!book){
+    title.textContent = 'Bulunamadı';
+    sub.textContent = 'Bu A2 Poly defteri yok';
+    pc.innerHTML = '<div class="empty">defter bulunamadı</div>';
+    return;
+  }
+  const pnl = Number(book.total_pnl||0);
+  title.textContent = (book.name || book.label || book.id)
+    + (book.title && book.title !== book.name ? (' · ' + book.title) : '');
+  sub.textContent = 'Poly sanal'
+    + ' · WR ' + (book.wr != null ? book.wr + '%' : '—')
+    + ' · ' + (book.history_n||0) + ' işlem'
+    + ' · Bakiye $' + Number(book.balance||0).toFixed(2);
+  sum.textContent = 'Net P&L ' + (pnl>=0?'+':'') + pnl.toFixed(2)
+    + ' · açık ' + (book.open_count||0);
+  sec.textContent = 'Açık Pozisyonlar · ' + (book.name || book.id);
+  const cards = book.cards || [];
+  if(!cards.length){
+    pc.innerHTML = '<div class="empty">Açık pozisyon yok</div>';
+    return;
+  }
+  pc.innerHTML = cards.map(posCard).join('');
+}
+async function load(){
+  try{
+    const r = await fetch('/poly/api/a2-algoritmalar', {cache:'no-store'});
+    const d = await r.json();
+    if(!d || !d.ok){
+      document.getElementById('algo-books').innerHTML = '<div class="empty">hata: '+(d&&d.error?d.error:'yüklenemedi')+'</div>';
+      return;
+    }
+    const books = d.books || [];
+    const pnl = d.total_pnl||0;
+    const histSum = d.total_trades != null ? d.total_trades
+      : books.reduce((a,b)=>a+Number(b.history_n||0),0);
+    document.getElementById('sum-chip').textContent =
+      'Σ $' + Number(d.total_balance||0).toFixed(0)
+      + ' · Net P&L ' + (pnl>=0?'+':'') + Number(pnl).toFixed(1)
+      + ' · ' + histSum + ' işlem'
+      + ' · açık ' + (d.total_open||0);
+    if(DETAIL_ID){
+      renderDetail(findBook(books, DETAIL_ID));
+    } else {
+      renderBooks(books);
+    }
+  } catch(e){
+    console.error(e);
+    document.getElementById('algo-books').innerHTML = '<div class="empty">yükleme hatası</div>';
+  }
+}
+load();
+setInterval(load, 15000);
+</script>
+</body>
+</html>
+"""
+
+
+@app.route("/algoritma-islemler")
+@app.route("/algoritma-islemler/")
+def page_algoritma_islemler():
+    if _auth_required():
+        return redirect("/poly/login")
+    return ALGORITMA_ISLEMLER_HTML, 200, {"Cache-Control": "no-store"}
+
+
+@app.route("/algoritma-islemler/<book_id>")
+def page_algoritma_islemler_detail(book_id):
+    if _auth_required():
+        return redirect("/poly/login")
+    return ALGORITMA_ISLEMLER_HTML, 200, {"Cache-Control": "no-store"}
+
 
 @app.route("/poly")
 @app.route("/poly/")
@@ -11618,7 +12693,7 @@ body{
   <div class="live-bar" id="live-bar">
     <div class="live-bar-txt">
       <b id="live-bar-title">Binance Live</b>
-      <span id="live-bar-sub">Supertrend emirleri açık · sanal etkilenmez</span>
+      <span id="live-bar-sub">A1#21 Fear & Greed emirleri · sanal etkilenmez</span>
     </div>
     <div class="live-bar-actions">
       <div class="topn-box" title="Saatlik max açık pozisyon">
@@ -11633,7 +12708,7 @@ body{
   <div class="head">
     <div>
       <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">…</span></div>
-      <div class="page-sub" id="page-sub">Supertrend Live · alt önce · top-4 · $10 × 15x · ATR kâr kilidi</div>
+      <div class="page-sub" id="page-sub">A1#21 Fear & Greed Live · majors önce · top-6 · $10 × 15x · ATR kâr kilidi</div>
     </div>
   </div>
 
@@ -11665,7 +12740,7 @@ body{
 
   <div class="panel">
     <div class="section">
-      <div class="section-title">Açık Pozisyonlar · Supertrend Live</div>
+      <div class="section-title">Açık Pozisyonlar · A1#21 Fear & Greed Live</div>
       <div class="positions" id="positions"><div class="empty">yükleniyor…</div></div>
     </div>
       <div class="section wait-rail">
@@ -11708,7 +12783,7 @@ body{
     <div class="head">
       <div>
         <div class="page-title">Geçmiş işlemler</div>
-        <div class="page-sub">Supertrend Live kapanmış pozisyonlar</div>
+        <div class="page-sub">A1#21 Fear & Greed Live kapanmış pozisyonlar</div>
       </div>
     </div>
     <div class="panel">
@@ -11723,7 +12798,7 @@ body{
     <div class="head">
       <div>
         <div class="page-title">Algoritmalar</div>
-        <div class="page-sub">ALGO2 Top-17 + ALGO1 (Poly) · sanal $300 · $15×15x · max 6 · Pzt 08:00</div>
+        <div class="page-sub">Aktif open: A2#05/#06/#07 + A1#11 · $7×20x max6 · diğerleri close/trail · Pzt 08:00</div>
       </div>
       <div class="chip" id="algo-sum">—</div>
     </div>
@@ -12166,7 +13241,7 @@ function renderCards(d){
 
   const pc = document.getElementById('positions');
   if(!cards.length){
-    pc.innerHTML = '<div class="empty">Açık Supertrend Live pozisyonu yok</div>';
+    pc.innerHTML = '<div class="empty">Açık A1#21 Fear & Greed Live pozisyonu yok</div>';
     return;
   }
   const ts = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
@@ -12219,7 +13294,7 @@ function renderCards(d){
       ${lockLine}
       ${slLine}
       <div class="pos-risk-row">Risk: $${Number(p.pm_spent||p.margin_usd||15).toFixed(0)}
-        <span class="tag">ST Live</span><span class="tag">${p.leverage||15}x</span>
+        <span class="tag">FG Live</span><span class="tag">${p.leverage||15}x</span>
         ${p.tier_label ? `<span class="tag">${p.tier_label}</span>` : ''}
         ${stopLvl>=1 ? `<span class="tag">Stop${stopLvl}</span>` : ''}
         ${hardSl!=null ? `<span class="tag">SL ${hardSl.toFixed(0)}$</span>` : ''}
@@ -12245,15 +13320,15 @@ function renderLiveBar(d){
   if(title) title.textContent = dashPaused ? 'Binance Live KAPALI' : 'Binance Live AÇIK';
   if(sub){
     if(!envOn) sub.textContent = 'Env kapalı (CRYPTO_FUTURES_CR6_ENABLED)';
-    else if(dashPaused) sub.textContent = 'Emir yok · Algoritma/Analiz sanal devam · max ' + topN;
-    else sub.textContent = 'Supertrend aktif · max ' + topN + ' poz · sanal etkilenmez';
+    else if(dashPaused) sub.textContent = 'Yeni açılış yok · açıklar :02/ATR/hard SL ile kapanır · max ' + topN;
+    else sub.textContent = 'A1#21 Fear & Greed aktif · max ' + topN + ' poz · sanal etkilenmez';
   }
   if(topIn && document.activeElement !== topIn){
     topIn.min = d.top_n_min != null ? d.top_n_min : 1;
     topIn.max = d.top_n_max != null ? d.top_n_max : 10;
     topIn.value = String(topN);
   }
-  if(pageSub) pageSub.textContent = 'Supertrend Live · alt önce · top-' + topN + ' · $10 × 15x · ATR kâr kilidi';
+  if(pageSub) pageSub.textContent = 'A1#21 Fear & Greed Live · majors önce · top-' + topN + ' · $10 × 15x · ATR kâr kilidi';
   btn.textContent = dashPaused ? 'Aç' : 'Kapat';
   btn.disabled = !envOn ? true : false;
 }
@@ -12283,7 +13358,7 @@ async function saveTopN(){
     if(!d.ok){ alert(d.error || 'max poz kaydedilemedi'); return; }
     if(d.top_n != null) el.value = String(d.top_n);
     const pageSub = document.getElementById('page-sub');
-    if(pageSub) pageSub.textContent = 'Supertrend Live · alt önce · top-' + (d.top_n || v) + ' · $10 × 15x · ATR kâr kilidi';
+    if(pageSub) pageSub.textContent = 'A1#21 Fear & Greed Live · majors önce · top-' + (d.top_n || v) + ' · $10 × 15x · ATR kâr kilidi';
     const sub = document.getElementById('live-bar-sub');
     if(sub && sub.textContent){
       // refresh alt yazı için hafif poll
@@ -12296,8 +13371,8 @@ async function toggleBinanceLive(){
   const bar = document.getElementById('live-bar');
   const pausing = !(bar && bar.classList.contains('paused'));
   const msg = pausing
-    ? 'Binance Live kapatılsın mı? Yeni open/close/trail durur. Sanal Algoritma/Analiz devam eder.'
-    : 'Binance Live açılsın mı? Supertrend emirleri tekrar çalışır.';
+    ? 'Binance Live kapatılsın mı? Yeni açılış durur; mevcut pozisyonlar :02 / ATR / hard SL ile kapanmaya devam eder. Sanal Algoritma/Analiz etkilenmez.'
+    : 'Binance Live açılsın mı? A1#21 Fear & Greed emirleri tekrar çalışır.';
   if(!confirm(msg)) return;
   if(btn){ btn.disabled = true; btn.textContent = '…'; }
   try{
@@ -12330,7 +13405,7 @@ async function refresh(){
   }
 }
 async function closeCr6(symbol, qty, btn){
-  if(!confirm(symbol + ' Supertrend Live pozisyonunu kapat?')) return;
+  if(!confirm(symbol + ' A1#21 Fear & Greed Live pozisyonunu kapat?')) return;
   btn.classList.add('loading'); btn.textContent = 'Kapatılıyor…';
   try{
     const body = {symbol, strategy:'Supertrend'};
@@ -12440,9 +13515,15 @@ function renderBooks(elId, sumId, d){
     const sub = b.title || b.category || '';
     const opens = (b.cards||[]).map(c => (c.name||'') + ' ' + (c.side||'')).join(' · ') || 'açık yok';
     const href = base + '/' + encodeURIComponent(b.id);
-    return `<a class="book-card" href="${href}">
-      <div class="bt">${title}</div>
-      <div class="bs">${sub} · ${wr} · ${b.history_n||0} işlem</div>
+    const active = !!b.open_active;
+    const m = Number(b.margin_usd != null ? b.margin_usd : 15);
+    const lev = Number(b.leverage != null ? b.leverage : 15);
+    const sizeTag = active
+      ? (` · <span style="color:var(--accent)">AKTİF $${m.toFixed(0)}×${lev}x</span>`)
+      : (` · $${m.toFixed(0)}×${lev}x · open kapalı`);
+    return `<a class="book-card" href="${href}" style="${active?'border-color:rgba(200,241,53,.35)':''}">
+      <div class="bt">${title}${active?' · ▶':''}</div>
+      <div class="bs">${sub} · ${wr} · ${b.history_n||0} işlem${sizeTag}</div>
       <div class="br"><span>Bakiye</span><b>$${Number(b.balance||0).toFixed(2)}</b></div>
       <div class="br"><span>Net P&L</span><b class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(2)}</b></div>
       <div class="br"><span>Anlık net</span><b class="${upnl>=0?'pos':'neg'}">${upnl>=0?'+':''}${upnl.toFixed(2)}</b></div>
@@ -12730,7 +13811,7 @@ def api_crypto_futures_open():
 
 @app.route("/poly/api/crypto-futures/cr6")
 def api_crypto_futures_cr6():
-    """Supertrend Live açık pozisyonlar + anlık K/Z (kutucuk poll)."""
+    """A1#21 Fear & Greed Live açık pozisyonlar + anlık K/Z (kutucuk poll)."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     sys.path.insert(0, _DIR_KRIPTO)
@@ -12743,7 +13824,7 @@ def api_crypto_futures_cr6():
 
 @app.route("/poly/api/crypto-futures/live-control", methods=["GET", "POST"])
 def api_crypto_futures_live_control():
-    """Binance Supertrend Live aç/kapa — sanal kitaplar etkilenmez."""
+    """Binance A1#21 Fear & Greed Live aç/kapa — sanal kitaplar etkilenmez."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     sys.path.insert(0, _DIR_KRIPTO)
@@ -12797,7 +13878,7 @@ def api_crypto_futures_live_control():
 
 @app.route("/poly/api/crypto-futures/history")
 def api_crypto_futures_history():
-    """Supertrend Live kapanmış işlem geçmişi (yeniden eskiye)."""
+    """A1#21 Fear & Greed Live kapanmış işlem geçmişi (yeniden eskiye)."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     sys.path.insert(0, _DIR_KRIPTO)
@@ -12885,7 +13966,20 @@ def api_kripto_algoritmalar():
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     try:
-        return jsonify(_agustos_status_or_snap("Algoritmalar", "algoritmalar"))
+        data = _agustos_status_or_snap("Algoritmalar", "algoritmalar")
+        panel = (request.args.get("panel") or "").strip().lower()
+        if panel in ("v2", "algo2", "a2") and isinstance(data, dict) and data.get("ok"):
+            books = [b for b in (data.get("books") or []) if (b.get("panel") or "") == "v2"]
+            data = dict(data)
+            data["books"] = books
+            data["count"] = len(books)
+            data["count_v2"] = len(books)
+            data["count_v1"] = 0
+            data["total_balance"] = round(sum(float(b.get("balance") or 0) for b in books), 2)
+            data["total_pnl"] = round(sum(float(b.get("total_pnl") or 0) for b in books), 2)
+            data["total_open"] = sum(int(b.get("open_count") or 0) for b in books)
+            data["panel_filter"] = "v2"
+        return jsonify(data)
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -12935,7 +14029,7 @@ def api_crypto_futures_close():
             qty = float(qty)
         strategy = (body.get("strategy") or "").upper()
         r = close_market(symbol, qty=qty)
-        # Supertrend Live (eski CR6 state) düş
+        # A1#21 Fear & Greed Live (eski CR6 state) düş
         if strategy in ("CR6", "Supertrend", "ST", "st") or body.get("cr6"):
             try:
                 from crypto_futures_cr6 import load_state, save_state, load_history, save_history
@@ -12982,7 +14076,7 @@ def harita():
     )
 
 for _html_name in (
-    "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "AYARLAR_HTML",
+    "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "ALGORITMA_ISLEMLER_HTML", "AYARLAR_HTML",
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
     "LOGIN_HTML",
 ):
@@ -12991,9 +14085,13 @@ for _html_name in (
         # Kripto kendi menüsü — Poly nav / PM Kar enjekte etme
         _html = _patch_cembot_brand(_html)
         _html = _patch_kf_theme(_html)
+    elif _html_name == "ALGORITMA_ISLEMLER_HTML":
+        # Kendi Poly menüsü + KF görünüm
+        _html = _patch_cembot_brand(_html)
+        _html = _patch_kf_theme(_html)
     elif _html_name != "LOGIN_HTML":
         _html = _patch_sidebar_profit(_patch_sidebar_cleanup(_html))
-        _html = _patch_nav_kripto_future(_patch_nav_islemler(_html))
+        _html = _patch_nav_algo_islemler(_patch_nav_kripto_future(_patch_nav_islemler(_html)))
         _html = _patch_cembot_brand(_html)
     else:
         _html = _patch_cembot_brand(_html)

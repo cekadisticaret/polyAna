@@ -16,10 +16,20 @@ _LABEL_GROUPS = {
     "10. ANALİZ LIVE": "analiz10",
     "6. ANALİZ LIVE": "analiz6_live",
     "15M 309 LIVE": "15m_309_live",
+    "A2#16 Supertrend Live": "a2_16_live",
+    "A2#02 RSI Div Live": "a2_02_live",
+    "A2#08 Williams Live": "a2_08_live",
+    "15. ANALİZ LIVE": "analiz15_live",
 }
-_VALID_GROUPS = frozenset({"analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live"})
+_VALID_GROUPS = frozenset({
+    "analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live",
+})
 # 15M 309 Live hafta sonu da çalışır — weekend cron bunu kapatmaz
-_WEEKEND_GROUPS = ("analiz5", "analiz2", "analiz10", "analiz6_live")
+_WEEKEND_GROUPS = (
+    "analiz5", "analiz2", "analiz10", "analiz6_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live",
+)
 
 
 def _load_control() -> dict:
@@ -29,6 +39,10 @@ def _load_control() -> dict:
         "analiz10_paused": False,
         "analiz6_live_paused": True,
         "15m_309_live_paused": False,
+        "a2_16_live_paused": True,
+        "a2_02_live_paused": True,
+        "a2_08_live_paused": True,
+        "analiz15_live_paused": True,
         "a3a8_signal_strict": True,
         "updated_at_tr": "",
         "updated_by": "",
@@ -64,7 +78,13 @@ def _save_control(data: dict) -> None:
 
 
 def _label_group(label: str) -> str | None:
-    return _LABEL_GROUPS.get(label)
+    if label in _LABEL_GROUPS:
+        return _LABEL_GROUPS[label]
+    up = (label or "").upper()
+    for k, v in _LABEL_GROUPS.items():
+        if k.upper() == up:
+            return v
+    return None
 
 
 def is_live_pm_label(label: str) -> bool:
@@ -92,14 +112,22 @@ def get_pm_system_control() -> dict:
     a10 = bool(c.get("analiz10_paused"))
     a6l = bool(c.get("analiz6_live_paused", True))
     m309 = bool(c.get("15m_309_live_paused", False))
+    a2_16l = bool(c.get("a2_16_live_paused", True))
+    a2_02l = bool(c.get("a2_02_live_paused", True))
+    a2_08l = bool(c.get("a2_08_live_paused", True))
+    a15l = bool(c.get("analiz15_live_paused", True))
     strict = bool(c.get("a3a8_signal_strict", True))
-    all_paused = a5 and a2 and a10 and a6l and m309
+    all_paused = a5 and a2 and a10 and a6l and m309 and a2_16l and a2_02l and a2_08l and a15l
     return {
         "analiz5_paused": a5,
         "analiz2_paused": a2,
         "analiz10_paused": a10,
         "analiz6_live_paused": a6l,
         "15m_309_live_paused": m309,
+        "a2_16_live_paused": a2_16l,
+        "a2_02_live_paused": a2_02l,
+        "a2_08_live_paused": a2_08l,
+        "analiz15_live_paused": a15l,
         "a3a8_signal_strict": strict,
         "a3a8_signal_mode": "strict" if strict else "loose",
         "a3a8_signal_mode_label": "sıkı (filtreli)" if strict else "gevşek (her saat)",
@@ -145,13 +173,39 @@ def set_pm_open_paused(paused: bool, *, source: str = "dashboard") -> dict:
     return get_pm_system_control()
 
 
+_WEEKEND_EARLY_GROUPS = ("analiz6_live", "a2_16_live", "analiz15_live")  # Pzt 08:00
+_WEEKEND_LATE_GROUPS = ("analiz5", "analiz2", "analiz10")  # A1/A2/A10 — Pzt 12:00
+
+
 def weekend_pause_all(*, source: str = "weekend_cron") -> dict:
-    """Cuma 22:00 — dashboard anahtarlarını kapat (A1 Live + A2)."""
+    """Cuma 22:00 — dashboard anahtarlarını kapat (A1+A2+A10 + diğerleri)."""
     return set_pm_open_paused(True, source=source)
 
 
+def weekend_resume_early(*, source: str = "weekend_cron") -> dict:
+    """Pazartesi 08:00 — A1/A2/A10 hariç weekend gruplarını aç."""
+    data = _load_control()
+    for g in _WEEKEND_EARLY_GROUPS:
+        data[f"{g}_paused"] = False
+    data["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
+    data["updated_by"] = source
+    _save_control(data)
+    return get_pm_system_control()
+
+
+def weekend_resume_a1a2a10(*, source: str = "weekend_cron") -> dict:
+    """Pazartesi 12:00 — A1 Live + A2 Live + A10 Live aç."""
+    data = _load_control()
+    for g in _WEEKEND_LATE_GROUPS:
+        data[f"{g}_paused"] = False
+    data["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
+    data["updated_by"] = source
+    _save_control(data)
+    return get_pm_system_control()
+
+
 def weekend_resume_all(*, source: str = "weekend_cron") -> dict:
-    """Pazartesi 08:00 — dashboard anahtarlarını aç."""
+    """Tüm weekend gruplarını aç (manuel / geriye uyumluluk)."""
     return set_pm_open_paused(False, source=source)
 
 
