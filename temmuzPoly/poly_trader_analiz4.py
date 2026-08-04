@@ -36,7 +36,7 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pm_trader_helpers import apply_pm_quote, sanal_pnl, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, resolve_slot_trade_amount, slot_amount_log, skip_if_weekend_pause
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, symbol_wr_amount, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, resolve_slot_trade_amount, slot_amount_log, skip_if_weekend_pause, resolve_open_slot_gates
 
 # ── Config (TG: ana bot — 15. Analiz ile yer değiştirdi) ──────
 BOT_TOKEN = os.getenv("TELEGRAM_TOKEN", "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA")
@@ -427,8 +427,6 @@ async def run_close() -> None:
 async def run_open() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
-    if skip_if_weekend_pause("4. ANALİZ", "open", now_tr):
-        return
     hour_tr    = now_tr.hour
     dow        = now_tr.weekday()
     is_weekend = dow >= 5
@@ -436,6 +434,12 @@ async def run_open() -> None:
 
     state   = load_state()
     history = load_history()
+    if skip_if_weekend_pause("4. ANALİZ", "open", now_tr, history=history):
+        return
+    cold_skip, _, _, _, cold_note = resolve_open_slot_gates(history, hour_tr, 0)
+    if cold_skip:
+        print(f"[4. ANALİZ open] {saat} — {cold_note} · işlem yok")
+        return
 
     results = []
     for sym in SYMBOLS:
@@ -448,8 +452,13 @@ async def run_open() -> None:
     for sig in results:
         if sig["predicted_dir"] and sig.get("open_ok"):
             base = symbol_wr_amount(history, sig["symbol"])
-            amount, hot_boost, cold_cut = resolve_slot_trade_amount(base, hour_tr, history)
-            slot_amount_log("4. ANALİZ", hour_tr, base, amount, hot_boost, cold_cut)
+            _sk, amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
+                history, hour_tr, base
+            )
+            if gate_note and hot_boost:
+                print(f"[4. ANALİZ open] 🔥 {gate_note}")
+            else:
+                slot_amount_log("4. ANALİZ", hour_tr, base, amount, hot_boost, cold_cut)
             pos = {
                 "symbol":           sig["symbol"],
                 "predicted_dir":    sig["predicted_dir"],

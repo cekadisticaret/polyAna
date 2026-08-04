@@ -27,7 +27,7 @@ from pm_trader_helpers import (
     apply_pm_quote, resolve_slot_trade_amount, slot_amount_log, sanal_pnl,
     trades_for_exit_day, format_daily_history_tg, symbol_wr_amount,
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
-    SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause, pm_hourly_profit_entry_ok,
+    SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause, resolve_open_slot_gates, pm_hourly_profit_entry_ok,
     pm_tg_stake,
 )
 
@@ -257,9 +257,6 @@ async def run_open() -> None:
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
 
-    if skip_if_weekend_pause("1. ANALİZ", "open", now_tr):
-        return
-
     hour_tr    = now_tr.hour
     dow        = now_tr.weekday()
     is_weekend = dow >= 5
@@ -268,6 +265,13 @@ async def run_open() -> None:
 
     state   = load_state()
     history = load_history()
+
+    if skip_if_weekend_pause("1. ANALİZ", "open", now_tr, history=history):
+        return
+    cold_skip, _, _, _, cold_note = resolve_open_slot_gates(history, hour_tr, 0)
+    if cold_skip:
+        print(f"[1. ANALİZ open] {saat} — {cold_note} · işlem yok")
+        return
 
     # Tüm sembolleri tahmin et
     candidates = []
@@ -282,8 +286,14 @@ async def run_open() -> None:
         sym         = c["sym"]
         pred_obj    = c["pred_obj"]
         ind_ema_raw = pred_obj.trend.upper()
-        dyn_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
-        slot_amount_log("1. ANALİZ", hour_tr, symbol_wr_amount(history, sym), dyn_amount, hot_boost, cold_cut)
+        base_amt = symbol_wr_amount(history, sym)
+        _sk, dyn_amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
+            history, hour_tr, base_amt
+        )
+        if gate_note and hot_boost:
+            print(f"[1. ANALİZ open] 🔥 {gate_note}")
+        else:
+            slot_amount_log("1. ANALİZ", hour_tr, base_amt, dyn_amount, hot_boost, cold_cut)
         try:
             klines = await _fetch_klines(sym, "1h", 3)
             entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else pred_obj.current_price

@@ -4,37 +4,37 @@
       "mc": null,
       "yt": "UP",
       "tahmin": "UP",
-      "tahmin2": "UP",
+      "tahmin2": "DOWN",
       "parts": {
-        "LM": null,
-        "ST": "UP",
-        "ADX": "UP",
-        "LZ": null,
-        "CVD": "UP"
+        "LM": "DOWN",
+        "ST": "DOWN",
+        "ADX": "DOWN",
+        "LZ": "UP",
+        "CVD": "DOWN"
       }
     },
     "ETH": {
+      "mc": "UP",
+      "yt": "DOWN",
+      "tahmin": null,
+      "tahmin2": "DOWN",
+      "parts": {
+        "LM": "DOWN",
+        "ST": null,
+        "ADX": "DOWN",
+        "LZ": "UP",
+        "CVD": "DOWN"
+      }
+    },
+    "SOL": {
       "mc": "UP",
       "yt": "UP",
       "tahmin": "UP",
       "tahmin2": "DOWN",
       "parts": {
-        "LM": null,
-        "ST": "UP",
-        "ADX": null,
-        "LZ": "DOWN",
-        "CVD": "DOWN"
-      }
-    },
-    "SOL": {
-      "mc": null,
-      "yt": "UP",
-      "tahmin": "UP",
-      "tahmin2": "UP",
-      "parts": {
-        "LM": null,
-        "ST": null,
-        "ADX": "UP",
+        "LM": "DOWN",
+        "ST": "DOWN",
+        "ADX": "DOWN",
         "LZ": "UP",
         "CVD": "DOWN"
       }

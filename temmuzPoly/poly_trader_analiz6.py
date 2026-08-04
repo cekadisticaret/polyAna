@@ -46,7 +46,7 @@ from pm_trader_helpers import (
     apply_pm_quote, resolve_slot_trade_amount, slot_amount_log, sanal_pnl,
     symbol_wr_amount, pm_hourly_profit_entry_ok, pm_tg_stake,
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
-    SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause,
+    SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause, resolve_open_slot_gates,
 )
 
 # ── Config ────────────────────────────────────────────────────
@@ -299,9 +299,6 @@ async def run_open() -> None:
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
 
-    if skip_if_weekend_pause(LABEL, "open", now_tr):
-        return
-
     hour_tr    = now_tr.hour
     dow        = now_tr.weekday()
     is_weekend = dow >= 5
@@ -310,6 +307,13 @@ async def run_open() -> None:
 
     state   = load_state()
     history = load_history()
+
+    if skip_if_weekend_pause(LABEL, "open", now_tr, history=history):
+        return
+    cold_skip, _, _, _, cold_note = resolve_open_slot_gates(history, hour_tr, 0)
+    if cold_skip:
+        print(f"[{LABEL} open] {saat} — {cold_note} · işlem yok")
+        return
 
     # Sembol bazlı sinyal
     candidates = []
@@ -327,8 +331,14 @@ async def run_open() -> None:
     for c in candidates:
         sym         = c["sym"]
         direction   = c["direction"]
-        dyn_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
-        slot_amount_log(LABEL, hour_tr, symbol_wr_amount(history, sym), dyn_amount, hot_boost, cold_cut)
+        base_amt = symbol_wr_amount(history, sym)
+        _sk, dyn_amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
+            history, hour_tr, base_amt
+        )
+        if gate_note and hot_boost:
+            print(f"[{LABEL} open] 🔥 {gate_note}")
+        else:
+            slot_amount_log(LABEL, hour_tr, base_amt, dyn_amount, hot_boost, cold_cut)
         try:
             klines = await _fetch_klines(sym, "1h", 3)
             entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else c["price"]

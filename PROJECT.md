@@ -30,9 +30,9 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `AgustosKripto/Analizler/` | A1–A10 + A6(Supertrend $10×15x max4); ATR runner; A3/A8 venv |
 | `AgustosKripto/binance_futures_client.py` | Binance USD-M REST — emir, bakiye, commissionRate, userTrades |
 | `AgustosKripto/crypto_futures_trader.py` | Futures open/close + `dust` süpürme (|notional|≤$2); brüt/komisyon/net |
-| `AgustosKripto/crypto_futures_cr6.py` | **A1#21 Fear & Greed Live** — 18 coin (BTC/ETH dahil); top-N majors önce; $10×15x; ATR/hard SL; pause = sadece yeni open |
+| `AgustosKripto/crypto_futures_cr6.py` | **Algoritmalar Live** (gerçek Binance) — Hurst+A1#11 MR+Z-Score MR+Mean Reversion çoğunluk oyu; 18 coin; top-N majors önce; $7×20x; ATR/hard SL; pause = sadece yeni open |
 | `AgustosKripto/crypto_futures_live_control.json` | Binance Live — `live_paused` (yeni açılış) + `top_n` (1–10); sanal Algoritma/Analiz etkilenmez |
-| `AgustosKripto/cr6_tg_card.py` | A1#21 Fear & Greed Live TG sarı kart (ALGO2 stili) — açılış/kapanış/ATR photo |
+| `AgustosKripto/cr6_tg_card.py` | Algoritmalar Live TG sarı kart (ALGO2 stili) — açılış/kapanış/ATR photo |
 | `AgustosKripto/crypto_futures_config.json` | Sembol allowlist + default $6 / 10x; `CRYPTO_FUTURES_LIVE` + CR6 canlı |
 | `temmuzPoly/analiz5_settings.json` | A1/A2/A10/A6 Live WR giriş tutarları (düşük/orta/yüksek) |
 | `temmuzPoly/pm_profit_baseline.json` | PM Kar başlangıç bakiyesi (varsayılan $314); Toplam Kar = nakit − baseline. |
@@ -114,8 +114,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_analiz4.py weekly` — Cumartesi 21:00 haftalık 4 ısı haritası
 - `temmuzPoly/poly_trader_analiz6.py close/open` — 6. Analiz sanal; **open** aynı adayda A6 Live gerçek PM dener (`PM_ANALIZ6_LIVE_ENABLED` + dashboard)
 - `temmuzPoly/poly_trader_analiz6_live.py close` — A6 Live kapanış :02; open sanal A6 open ile tetiklenir
-- `AgustosKripto/crypto_futures_cr6.py close/open/trail` — **A1#21 Fear & Greed Live**; top-6 majors önce; $10×15x; ATR kâr kilidi
-- `AgustosKripto/Algoritmalar/runner.py close/open/trail/reset` — sanal $300; aktif open A2#05/#06/#07+A1#11 $7×20x; Cum 22:00–Pzt 08:00 İST skip
+- `AgustosKripto/crypto_futures_cr6.py close/open/trail` — **Algoritmalar Live** (gerçek Binance); Hurst+A1#11 MR+Z-Score MR+MR çoğunluk oyu; top-4 majors önce; $7×20x; ATR kâr kilidi
+- `AgustosKripto/Algoritmalar/runner.py close/open/trail/reset` — sanal $300; aktif open A2#05/#06/#07 + A1#11 $7×20x; Cum 22:00–Pzt 08:00 İST skip
 - `AgustosKripto/Analizler/runner.py close/open/trail` — A1–A10 + A6(Supertrend $10×15x max4) + ATR trail
 - `temmuzPoly/poly_trader_analiz15.py close/open` — **15. Analiz** BTC→A6 · ETH→A8 · SOL→A2 sanal ($300); Cum 22:00–Pzt 08:00 open kapalı
 - `temmuzPoly/poly_trader_analiz6.py weekly` — Cumartesi 21:00 haftalık 6 ısı haritası

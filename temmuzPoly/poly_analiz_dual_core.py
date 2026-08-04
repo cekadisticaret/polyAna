@@ -24,7 +24,7 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, predict_status, _fetch_klines
-from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields, pm_hourly_profit_entry_ok, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, resolve_slot_trade_amount, slot_amount_log, skip_if_weekend_pause
+from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields, pm_hourly_profit_entry_ok, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, resolve_slot_trade_amount, slot_amount_log, skip_if_weekend_pause, resolve_open_slot_gates
 
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
 CHAT_ID = "830754964"
@@ -449,8 +449,6 @@ async def run_close(cfg: DualConfig) -> None:
 
 async def run_open(cfg: DualConfig) -> None:
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    if skip_if_weekend_pause(cfg.label, "open", now_tr):
-        return
     hour_tr = now_tr.hour
     dow = now_tr.weekday()
     is_weekend = dow >= 5
@@ -460,6 +458,12 @@ async def run_open(cfg: DualConfig) -> None:
 
     state = load_state(cfg)
     history = load_history(cfg)
+    if skip_if_weekend_pause(cfg.label, "open", now_tr, history=history):
+        return
+    cold_skip, _, _, _, cold_note = resolve_open_slot_gates(history, hour_tr, 0)
+    if cold_skip:
+        print(f"[{cfg.label} open] {saat} — {cold_note} · işlem yok")
+        return
     candidates = []
     skip_details: list[str] = []
 
@@ -475,8 +479,13 @@ async def run_open(cfg: DualConfig) -> None:
     newly_opened = 0
     for sig in candidates:
         base = _trade_amount(history, sig["symbol"], cfg)
-        amount, hot_boost, cold_cut = resolve_slot_trade_amount(base, hour_tr, history)
-        slot_amount_log(cfg.label, hour_tr, base, amount, hot_boost, cold_cut)
+        _sk, amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
+            history, hour_tr, base
+        )
+        if gate_note and hot_boost:
+            print(f"[{cfg.label} open] 🔥 {gate_note}")
+        else:
+            slot_amount_log(cfg.label, hour_tr, base, amount, hot_boost, cold_cut)
         pos = {
             "symbol": sig["symbol"],
             "predicted_dir": sig["direction"],

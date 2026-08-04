@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Supertrend Live — Binance Futures (eski CR6 cron/dosya yolu korunur).
+"""Algoritmalar Live — Binance Futures (eski CR6 cron/dosya yolu korunur).
 
-Saatlik: Supertrend skor → top-4 alt (BTC/ETH yok, SOL son) → $10×15x.
+Saatlik: Hurst Proxy + A1#11 Mean Reversion + Z-Score Mean Reversion +
+Mean Reversion (Z-Score) sinyalleri (çoğunluk oyu) → majors önce top-N → $7×20x.
 ATR kâr kilidi + :02/:05 + trail */2.
+Fear & Greed sinyali kaldırıldı — artık bu 4 algoritmanın birleşik oyu kullanılır.
 
 CLI:
   python3 crypto_futures_cr6.py close
@@ -27,6 +29,7 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(_DIR)
 sys.path.insert(0, _DIR)
 sys.path.insert(0, os.path.join(_DIR, "Analizler"))
+sys.path.insert(0, os.path.join(_DIR, "Algoritmalar"))  # catalog (algo sinyalleri)
 sys.path.insert(0, os.path.join(_ROOT, "temmuzPoly"))  # algo_signals
 
 _ENV_FILE = os.path.join(_ROOT, ".env")
@@ -39,6 +42,7 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 from algo_signals import fetch_klines as _algo_fetch_klines  # noqa: E402
+from catalog import ALL_BOOKS, signal_for_book  # noqa: E402
 from atr_profit_lock import (  # noqa: E402
     atr_from_klines,
     init_lock_fields,
@@ -64,46 +68,44 @@ from crypto_futures_trader import (  # noqa: E402
     _client,
     _is_dry,
 )
-from signals import supertrend_scored  # noqa: E402
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 STATE_FILE = os.path.join(_DIR, "crypto_futures_cr6_state.json")
 HISTORY_FILE = os.path.join(_DIR, "crypto_futures_cr6_history.json")
 CONTROL_FILE = os.path.join(_DIR, "crypto_futures_live_control.json")
-LABEL = "Supertrend"
-STRATEGY = "Supertrend"
-ALGO_NAME = "Supertrend"
-MARGIN_USD = 10.0
-LEVERAGE = 15
+LABEL = "Algoritmalar Live"
+STRATEGY = "Algoritmalar Live (4)"
+ALGO_NAME = "Hurst+A1#11 MR+Z-Score MR+Mean Reversion"
+MARGIN_USD = 7.0
+LEVERAGE = 20
 TOP_N_DEFAULT = 4
 TOP_N_MIN = 1
 TOP_N_MAX = 10
 TOP_N = TOP_N_DEFAULT  # varsayılan; runtime get_top_n()
 # Anlık net zarar ≥ teminatın bu oranı → saatlik/ATR beklemeden market kapat
-HARD_SL_FRAC = 0.5  # $10 → -$5
+HARD_SL_FRAC = 0.5  # $7 → -$3.5
 
-# Sanal Supertrend (a6) ile aynı evren — BTC/ETH yok; SOL yavaş
-ST_SYMBOLS = [
-    "INJUSDT", "TIAUSDT", "ARBUSDT", "OPUSDT", "1000PEPEUSDT",
+# Canlıya geçen 4 algoritma — Algoritmalar/catalog.py ile aynı anahtarlar
+LIVE_ALGO_KEYS = ("algo_05", "algo_06", "algo_07", "algo1_11")
+LIVE_BOOKS = [b for b in ALL_BOOKS if b.get("book_key") in LIVE_ALGO_KEYS]
+
+# Sanal Algoritmalar ile aynı evren (virtual_book.SYMBOLS) — BTC/ETH dahil
+FG_SYMBOLS = [
+    "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
     "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT",
-    "LTCUSDT", "NEARUSDT", "SUIUSDT", "APTUSDT",
-    "BNBUSDT", "XRPUSDT",
-    "SOLUSDT",
+    "LTCUSDT", "NEARUSDT", "SUIUSDT", "APTUSDT", "ARBUSDT",
+    "OPUSDT", "INJUSDT", "TIAUSDT",
 ]
-ST_SLOW = frozenset({"SOLUSDT"})
-TIER_MOMENTUM = [
-    "INJUSDT", "TIAUSDT", "ARBUSDT", "OPUSDT", "1000PEPEUSDT",
-]
-TIER_ALT_VOLUME = [
-    "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT",
-    "LTCUSDT", "TRXUSDT", "SUIUSDT", "APTUSDT", "NEARUSDT",
-    "BNBUSDT", "XRPUSDT",
-]
-TIER_MAJOR = ["SOLUSDT"]  # yalnızca yavaş doldurma
+# pick_candidates ile aynı majors önceliği
+FG_MAJORS = frozenset({
+    "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
+})
+# Geriye uyum alias
+ST_SYMBOLS = FG_SYMBOLS
+ST_SLOW = frozenset()
 _TIER_RANK = {
-    **{s: 1 for s in TIER_MOMENTUM},
-    **{s: 2 for s in TIER_ALT_VOLUME},
-    **{s: 3 for s in TIER_MAJOR},
+    **{s: 1 for s in FG_MAJORS},
+    **{s: 2 for s in FG_SYMBOLS if s not in FG_MAJORS},
 }
 
 BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "")
@@ -175,21 +177,32 @@ def toggle_live_paused(*, source: str = "dashboard") -> dict:
     return set_live_paused(not is_live_paused(), source=source)
 
 
-def _trading_allowed() -> bool:
-    """Env + dashboard pause — false ise Binance open/close/trail yok."""
+def _manage_allowed() -> bool:
+    """Env açıkken mevcut pozisyonları yönet (close/trail/hard SL).
+    Dashboard 'Kapat' sadece yeni açılışı keser — açıklar saat/ATR gelince kapanır."""
+    return _env_enabled()
+
+
+def _opens_allowed() -> bool:
+    """Yeni açık: env ∧ dashboard Live açık."""
     return _env_enabled() and not is_live_paused()
 
 
+def _trading_allowed() -> bool:
+    """Geriye uyum — yeni açılış izni (pause = yeni emir yok)."""
+    return _opens_allowed()
+
+
 def _enabled() -> bool:
-    """Geriye uyum: işlem yapılabilir mi (env ∧ !paused)."""
-    return _trading_allowed()
+    """Geriye uyum: yeni açılış yapılabilir mi (env ∧ !paused)."""
+    return _opens_allowed()
 
 
 def _symbols() -> list[str]:
-    """Allowlist ∩ Supertrend evreni."""
+    """Allowlist ∩ Algoritmalar Live evreni."""
     cfg = load_config()
     allow = {s.upper() for s in (cfg.get("symbols") or [])}
-    return [s for s in ST_SYMBOLS if s in allow] or list(ST_SYMBOLS)
+    return [s for s in FG_SYMBOLS if s in allow] or list(FG_SYMBOLS)
 
 
 def _tier(symbol: str) -> int:
@@ -199,11 +212,9 @@ def _tier(symbol: str) -> int:
 def _tier_label(symbol: str) -> str:
     t = _tier(symbol)
     if t == 1:
-        return "momentum"
+        return "major"
     if t == 2:
-        return "alt-hacim"
-    if t == 3:
-        return "slow"
+        return "alt"
     return "other"
 
 
@@ -263,14 +274,14 @@ def _tg_photo(png: bytes, caption: str = "") -> None:
 
 
 def _tg_open_card(opened: list[dict]) -> None:
-    """ALGO2 tarzı sarı kart — Supertrend canlı açılış."""
+    """ALGO2 tarzı sarı kart — Algoritmalar Live canlı açılış."""
     try:
         png = render_open_card(
             opened,
             margin_usd=MARGIN_USD,
             leverage=LEVERAGE,
-            title="Supertrend · Futures Açılış",
-            panel=f"ST Live · {len(opened)} işlem",
+            title="Algoritmalar Live · Futures Açılış",
+            panel=f"Algo4 Live · {len(opened)} işlem",
         )
         bits = []
         for p in opened:
@@ -278,7 +289,7 @@ def _tg_open_card(opened: list[dict]) -> None:
             arrow = "▲" if p.get("side") == "LONG" else "▼"
             bits.append(f"{nm} {arrow}")
         cap = (
-            f"Supertrend açılış ({len(opened)}) ${MARGIN_USD:.0f}×{LEVERAGE}x — "
+            f"Algoritmalar Live açılış ({len(opened)}) ${MARGIN_USD:.0f}×{LEVERAGE}x — "
             + " · ".join(bits)
         )
         _tg_photo(png, cap)
@@ -302,21 +313,41 @@ def _tg_event_card(title: str, hero: str, rows: list[str], footer: str = "") -> 
         _tg(f"{title}\n{hero}\n" + "\n".join(rows))
 
 
-def score_symbol(symbol: str, kl: list) -> dict:
-    sig, score = supertrend_scored(kl)
-    price = float(kl[-1]["c"]) if kl else None
+def _combine_votes(votes: list[tuple[str, str]]) -> tuple[str, int, list[str]]:
+    """4 algo oyu → tek yön. Çakışma (UP=DOWN) varsa NEUTRAL (güvenlik)."""
+    if not votes:
+        return "NEUTRAL", 0, []
+    up = [k for k, s in votes if s == "UP"]
+    down = [k for k, s in votes if s == "DOWN"]
+    if len(up) > len(down) and up:
+        return "UP", len(up), up
+    if len(down) > len(up) and down:
+        return "DOWN", len(down), down
+    return "NEUTRAL", 0, []
+
+
+def score_symbol(symbol: str, price: float | None, *, votes: list[tuple[str, str]]) -> dict:
+    """4 algoritmanın (Hurst/A1#11/Z-Score MR/Mean Reversion) çoğunluk oyu."""
+    sig, agree, contributors = _combine_votes(votes)
+    sym = symbol.upper()
+    if sig == "NEUTRAL":
+        score = 0.0
+    else:
+        base = 2.0 if sym in FG_MAJORS else 1.0
+        score = base + max(0, agree - 1) * 0.5
     return {
-        "symbol": symbol,
+        "symbol": sym,
         "signal": sig,
-        "score": round(float(score), 6),
-        "algo": ALGO_NAME,
+        "score": score,
+        "algo": "+".join(contributors) if contributors else ALGO_NAME,
         "price": price,
-        "slow": symbol.upper() in ST_SLOW,
+        "slow": False,
+        "contributors": contributors,
     }
 
 
 async def _scan_all() -> list[dict]:
-    out = []
+    kl_by_symbol: dict[str, list] = {}
     for sym in _symbols():
         try:
             kl = await asyncio.to_thread(_algo_fetch_klines, sym, "1h", 80)
@@ -325,7 +356,25 @@ async def _scan_all() -> list[dict]:
             continue
         if len(kl) < 30:
             continue
-        out.append(score_symbol(sym, kl))
+        kl_by_symbol[sym] = kl
+
+    book_signals: dict[str, dict[str, str]] = {}
+    for book in LIVE_BOOKS:
+        try:
+            book_signals[book["book_key"]] = signal_for_book(book, kl_by_symbol)
+        except Exception as e:
+            print(f"[{LABEL}] {book['book_key']} sinyal: {e}")
+            book_signals[book["book_key"]] = {}
+
+    out = []
+    for sym, kl in kl_by_symbol.items():
+        price = float(kl[-1]["c"])
+        votes = [
+            (book["book_key"], (book_signals.get(book["book_key"]) or {}).get(sym) or "NEUTRAL")
+            for book in LIVE_BOOKS
+        ]
+        votes = [(k, s) for k, s in votes if s in ("UP", "DOWN")]
+        out.append(score_symbol(sym, price, votes=votes))
     return out
 
 
@@ -337,17 +386,14 @@ def _slot_bounds(now: datetime | None = None) -> tuple[datetime, datetime]:
 
 
 def _pick_top(candidates: list[dict], n: int = TOP_N) -> list[dict]:
-    """Supertrend: hızlı alt/momentum skor önce; SOL son; BTC/ETH yok."""
+    """4 algo birleşik oyu: majors önce (score 2), sonra alts — sanal pick_candidates ile aynı."""
     active = [
         c for c in candidates
         if c.get("signal") in ("UP", "DOWN") and float(c.get("score") or 0) > 0
     ]
-    fast = [c for c in active if not c.get("slow") and (c.get("symbol") or "") not in ST_SLOW]
-    slow = [c for c in active if c.get("slow") or (c.get("symbol") or "") in ST_SLOW]
-    fast.sort(key=lambda x: (-float(x.get("score") or 0), x.get("symbol") or ""))
-    slow.sort(key=lambda x: (-float(x.get("score") or 0), x.get("symbol") or ""))
+    active.sort(key=lambda x: (-float(x.get("score") or 0), x.get("symbol") or ""))
     picked: list[dict] = []
-    for c in fast + slow:
+    for c in active:
         if len(picked) >= n:
             break
         if any(p.get("symbol") == c.get("symbol") for p in picked):
@@ -441,11 +487,15 @@ def _close_one(pos: dict, *, reason: str) -> dict:
 
 
 def run_close() -> dict:
-    """Saatlik :02 — ATR runner (kâr + stop_level>=1) hold; diğerleri kapat."""
-    if not _trading_allowed():
-        why = "paused" if is_live_paused() else "disabled"
-        print(f"[{LABEL}] close atlandı — {why} (Binance Live kapalı)")
-        return {"ok": False, "skipped": why, "closed": [], "held": []}
+    """Saatlik :02 — ATR runner (kâr + stop_level>=1) hold; diğerleri kapat.
+
+    Dashboard pause olsa bile çalışır (sadece yeni open durur).
+    """
+    if not _manage_allowed():
+        print(f"[{LABEL}] close atlandı — disabled (CRYPTO_FUTURES_CR6_ENABLED)")
+        return {"ok": False, "skipped": "disabled", "closed": [], "held": []}
+    if is_live_paused():
+        print(f"[{LABEL}] close: Live kapalı — mevcut pozisyonlar yine kapatılacak")
     state = load_state()
     opens = list(state.get("open_positions") or [])
     if not opens:
@@ -491,7 +541,7 @@ def run_close() -> dict:
         ]
         tot = sum(float(c.get("pnl") or 0) for c in closed)
         _tg_event_card(
-            "Supertrend · Kapanış",
+            "Algoritmalar Live · Kapanış",
             f"{len(closed)} işlem · {tot:+.2f}$",
             rows,
             footer=f"Saatlik close · toplam {tot:+.2f}$",
@@ -503,7 +553,7 @@ def run_close() -> dict:
             for h in held
         ]
         _tg_event_card(
-            "Supertrend · ATR Runner",
+            "Algoritmalar Live · ATR Runner",
             f"{len(held)} hold · saatlik close atlandı",
             rows,
             footer="Kâr kilidi aktif — stop vurulunca kapanır",
@@ -534,11 +584,13 @@ def should_hard_sl(pos: dict, upnl_net: float) -> bool:
 
 
 def run_trail() -> dict:
-    """*/2 poll — hard SL (%50 teminat) + ATR peak/stop; vurulursa kapat."""
-    if not _trading_allowed():
-        why = "paused" if is_live_paused() else "disabled"
-        print(f"[{LABEL}] trail atlandı — {why} (Binance Live kapalı)")
-        return {"ok": False, "skipped": why, "closed": [], "updated": 0}
+    """*/2 poll — hard SL (%50 teminat) + ATR peak/stop; vurulursa kapat.
+
+    Dashboard pause olsa bile çalışır (açık pozisyonları korur).
+    """
+    if not _manage_allowed():
+        print(f"[{LABEL}] trail atlandı — disabled (CRYPTO_FUTURES_CR6_ENABLED)")
+        return {"ok": False, "skipped": "disabled", "closed": [], "updated": 0}
     state = load_state()
     opens = list(state.get("open_positions") or [])
     if not opens:
@@ -614,7 +666,7 @@ def run_trail() -> dict:
         ]
         tot = sum(float(c.get("pnl") or 0) for c in hard_closed)
         _tg_event_card(
-            "Supertrend · Hard SL",
+            "Algoritmalar Live · Hard SL",
             f"{len(hard_closed)} × −%{int(HARD_SL_FRAC * 100)} teminat · {tot:+.2f}$",
             rows,
             footer=f"Net zarar ≥ teminat×{HARD_SL_FRAC:.0%} — anında kapatıldı",
@@ -627,7 +679,7 @@ def run_trail() -> dict:
         ]
         tot = sum(float(c.get("pnl") or 0) for c in atr_closed)
         _tg_event_card(
-            "Supertrend · ATR Stop",
+            "Algoritmalar Live · ATR Stop",
             f"{len(atr_closed)} kilit · {tot:+.2f}$",
             rows,
             footer="Trailing kâr kilidi vuruldu",
@@ -652,7 +704,7 @@ def run_open() -> dict:
 
     Aynı sembol tekrarlanmaz; toplam ≤ top_n (dashboard Max).
     """
-    if not _trading_allowed():
+    if not _opens_allowed():
         why = "paused" if is_live_paused() else "disabled"
         print(f"[{LABEL}] open atlandı — {why} (Binance Live kapalı / env)")
         return {"ok": False, "skipped": why}
@@ -876,7 +928,7 @@ def _scan_cache_fresh(state: dict, ttl_sec: int = 60) -> bool:
 
 
 def _waiting_list(scan: list[dict], open_syms: set[str]) -> list[dict]:
-    """Supertrend skor sırası — top-N bekleyen; açıklar işaretli."""
+    """4 algo birleşik skor sırası — top-N bekleyen; açıklar işaretli."""
     top_syms = {c["symbol"] for c in _pick_top(list(scan or []), n=get_top_n())}
     rows = sorted(
         list(scan or []),
@@ -916,7 +968,7 @@ def _waiting_list(scan: list[dict], open_syms: set[str]) -> list[dict]:
             "rank": rank,
             "is_top": sym in top_syms,
             "is_open": sym in open_syms,
-            "waiting": bool(is_active and sym not in open_syms and tier in (1, 2)),
+            "waiting": bool(is_active and sym not in open_syms),
         })
     return out
 
@@ -991,7 +1043,7 @@ def _drop_orphaned_opens(orphaned: list[dict]) -> None:
 
 
 def cr6_status_block(*, refresh: bool = True) -> dict:
-    """Dashboard / status() için Supertrend Live bloğu."""
+    """Dashboard / status() için Algoritmalar Live bloğu."""
     cfg = load_config()
     dry = _is_dry(cfg)
     state = load_state()
@@ -1078,7 +1130,7 @@ def run_status() -> dict:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Supertrend Live Binance Futures")
+    p = argparse.ArgumentParser(description="Algoritmalar Live Binance Futures (4 algo)")
     p.add_argument("cmd", choices=["open", "close", "trail", "status", "preview"])
     args = p.parse_args()
     if args.cmd == "open":

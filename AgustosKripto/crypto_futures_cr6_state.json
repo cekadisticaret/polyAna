@@ -1,269 +1,170 @@
 {
-  "open_positions": [
-    {
-      "strategy": "Supertrend",
-      "symbol": "INJUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "score": 8.8386,
-      "algo": "Supertrend",
-      "tier": 1,
-      "tier_label": "momentum",
-      "qty": 30.8,
-      "leverage": 15,
-      "margin_usd": 10.0,
-      "entry_price": 4.8612997,
-      "notional": 149.728,
-      "entry_time_tr": "2026-08-01T22:05:23.086909+03:00",
-      "slot_start_tr": "2026-08-01T22:00:00+03:00",
-      "slot_end_tr": "2026-08-01T23:00:00+03:00",
-      "order_id": 13299033187,
-      "dry_run": false,
-      "atr": 0.05171159,
-      "atr_usd": 1.59561,
-      "atr_period": 14,
-      "peak_upnl": 0.2592,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false
-    },
-    {
-      "strategy": "Supertrend",
-      "symbol": "NEARUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "score": 8.6811,
-      "algo": "Supertrend",
-      "tier": 2,
-      "tier_label": "alt-hacim",
-      "qty": 90.0,
-      "leverage": 15,
-      "margin_usd": 10.0,
-      "entry_price": 1.65972802,
-      "notional": 149.3755,
-      "entry_time_tr": "2026-08-01T22:05:27.130337+03:00",
-      "slot_start_tr": "2026-08-01T22:00:00+03:00",
-      "slot_end_tr": "2026-08-01T23:00:00+03:00",
-      "order_id": 34421436201,
-      "dry_run": false,
-      "atr": 0.01697454,
-      "atr_usd": 1.534095,
-      "atr_period": 14,
-      "peak_upnl": 0.3062,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false
-    },
-    {
-      "strategy": "Supertrend",
-      "symbol": "DOTUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "score": 8.612,
-      "algo": "Supertrend",
-      "tier": 2,
-      "tier_label": "alt-hacim",
-      "qty": 194.8,
-      "leverage": 15,
-      "margin_usd": 10.0,
-      "entry_price": 0.76997332,
-      "notional": 149.9908,
-      "entry_time_tr": "2026-08-01T22:05:31.195725+03:00",
-      "slot_start_tr": "2026-08-01T22:00:00+03:00",
-      "slot_end_tr": "2026-08-01T23:00:00+03:00",
-      "order_id": 33351494947,
-      "dry_run": false,
-      "atr": 0.00609198,
-      "atr_usd": 1.186791,
-      "atr_period": 14,
-      "peak_upnl": 0.0882,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false
-    },
-    {
-      "strategy": "Supertrend",
-      "symbol": "LTCUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "score": 8.6003,
-      "algo": "Supertrend",
-      "tier": 2,
-      "tier_label": "alt-hacim",
-      "qty": 3.411,
-      "leverage": 15,
-      "margin_usd": 10.0,
-      "entry_price": 43.97,
-      "notional": 149.9817,
-      "entry_time_tr": "2026-08-01T22:05:33.685448+03:00",
-      "slot_start_tr": "2026-08-01T22:00:00+03:00",
-      "slot_end_tr": "2026-08-01T23:00:00+03:00",
-      "order_id": 43859056259,
-      "dry_run": false,
-      "atr": 0.25272732,
-      "atr_usd": 0.862158,
-      "atr_period": 14,
-      "peak_upnl": 0.2333,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false
-    }
-  ],
-  "updated_at_tr": "2026-08-01T22:42:04.708245+03:00",
+  "open_positions": [],
+  "updated_at_tr": "2026-08-04T15:06:48.120943+03:00",
   "last_scan": [
     {
-      "symbol": "INJUSDT",
+      "symbol": "BTCUSDT",
       "signal": "DOWN",
-      "score": 8.8,
-      "algo": "Supertrend",
-      "price": 4.873,
+      "score": 3.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 63844.8,
       "tier": 1,
-      "tier_label": "momentum"
+      "tier_label": "major"
     },
     {
-      "symbol": "TIAUSDT",
+      "symbol": "ETHUSDT",
       "signal": "DOWN",
-      "score": 8.8,
-      "algo": "Supertrend",
-      "price": 0.3189,
+      "score": 3.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 1869.77,
       "tier": 1,
-      "tier_label": "momentum"
-    },
-    {
-      "symbol": "ARBUSDT",
-      "signal": "DOWN",
-      "score": 8.5756,
-      "algo": "Supertrend",
-      "price": 0.07854,
-      "tier": 1,
-      "tier_label": "momentum"
-    },
-    {
-      "symbol": "OPUSDT",
-      "signal": "DOWN",
-      "score": 8.8,
-      "algo": "Supertrend",
-      "price": 0.0829,
-      "tier": 1,
-      "tier_label": "momentum"
-    },
-    {
-      "symbol": "1000PEPEUSDT",
-      "signal": "DOWN",
-      "score": 9.3325,
-      "algo": "Supertrend",
-      "price": 0.0027537,
-      "tier": 1,
-      "tier_label": "momentum"
-    },
-    {
-      "symbol": "DOGEUSDT",
-      "signal": "DOWN",
-      "score": 9.1353,
-      "algo": "Supertrend",
-      "price": 0.06842,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "ADAUSDT",
-      "signal": "DOWN",
-      "score": 8.1136,
-      "algo": "Supertrend",
-      "price": 0.1729,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "AVAXUSDT",
-      "signal": "DOWN",
-      "score": 8.463,
-      "algo": "Supertrend",
-      "price": 6.127,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "LINKUSDT",
-      "signal": "DOWN",
-      "score": 8.5168,
-      "algo": "Supertrend",
-      "price": 7.997,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "DOTUSDT",
-      "signal": "DOWN",
-      "score": 8.7373,
-      "algo": "Supertrend",
-      "price": 0.7697,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "LTCUSDT",
-      "signal": "DOWN",
-      "score": 8.9997,
-      "algo": "Supertrend",
-      "price": 43.93,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "NEARUSDT",
-      "signal": "DOWN",
-      "score": 9.4889,
-      "algo": "Supertrend",
-      "price": 1.655,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "SUIUSDT",
-      "signal": "DOWN",
-      "score": 8.5797,
-      "algo": "Supertrend",
-      "price": 0.6706,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "APTUSDT",
-      "signal": "DOWN",
-      "score": 9.1124,
-      "algo": "Supertrend",
-      "price": 0.5501,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "BNBUSDT",
-      "signal": "DOWN",
-      "score": 9.4435,
-      "algo": "Supertrend",
-      "price": 576.34,
-      "tier": 2,
-      "tier_label": "alt-hacim"
-    },
-    {
-      "symbol": "XRPUSDT",
-      "signal": "DOWN",
-      "score": 9.2484,
-      "algo": "Supertrend",
-      "price": 1.0514,
-      "tier": 2,
-      "tier_label": "alt-hacim"
+      "tier_label": "major"
     },
     {
       "symbol": "SOLUSDT",
       "signal": "DOWN",
-      "score": 8.8226,
-      "algo": "Supertrend",
-      "price": 71.14,
-      "tier": 3,
-      "tier_label": "slow"
+      "score": 3.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 73.8,
+      "tier": 1,
+      "tier_label": "major"
+    },
+    {
+      "symbol": "BNBUSDT",
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 591.29,
+      "tier": 1,
+      "tier_label": "major"
+    },
+    {
+      "symbol": "XRPUSDT",
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 1.0767,
+      "tier": 1,
+      "tier_label": "major"
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "signal": "DOWN",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 0.07049,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "ADAUSDT",
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 0.1944,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "AVAXUSDT",
+      "signal": "DOWN",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 6.808,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "LINKUSDT",
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 8.197,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "DOTUSDT",
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 0.8313,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "LTCUSDT",
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 44.26,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "NEARUSDT",
+      "signal": "UP",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 1.741,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "SUIUSDT",
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 0.6937,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "APTUSDT",
+      "signal": "UP",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 0.5741,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "ARBUSDT",
+      "signal": "UP",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 0.08207,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "OPUSDT",
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 0.0886,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "INJUSDT",
+      "signal": "UP",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 4.942,
+      "tier": 2,
+      "tier_label": "alt"
+    },
+    {
+      "symbol": "TIAUSDT",
+      "signal": "UP",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 0.3371,
+      "tier": 2,
+      "tier_label": "alt"
     }
   ],
-  "last_scan_at_tr": "2026-08-01T22:41:12.513659+03:00"
+  "last_scan_at_tr": "2026-08-04T15:06:48.120914+03:00",
+  "last_open_slot": "2026-08-04 14:00"
 }

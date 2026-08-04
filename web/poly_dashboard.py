@@ -2536,7 +2536,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260804-a2-02-08-live"
+_DASH_UI_VER = "20260804-algo-live-dot"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -12129,6 +12129,8 @@ body{
 .book-card .br b{font-size:16px}
 .book-card .pos{color:var(--green)}.book-card .neg{color:var(--red)}
 .book-opens{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.45}
+.algo-live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#39ff8e;margin-right:6px;box-shadow:0 0 6px rgba(57,255,142,.85);vertical-align:middle;animation:algoLivePulse 1.6s ease-in-out infinite}
+@keyframes algoLivePulse{0%,100%{opacity:1}50%{opacity:.45}}
 .positions{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
 .pos-card{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
 .pos-card.dir-up{border-color:rgba(57,255,142,.25)}
@@ -12693,7 +12695,7 @@ body{
   <div class="live-bar" id="live-bar">
     <div class="live-bar-txt">
       <b id="live-bar-title">Binance Live</b>
-      <span id="live-bar-sub">A1#21 Fear & Greed emirleri · sanal etkilenmez</span>
+      <span id="live-bar-sub">Algoritmalar Live (Hurst+A1#11+Z-Score MR+MR) emirleri · sanal etkilenmez</span>
     </div>
     <div class="live-bar-actions">
       <div class="topn-box" title="Saatlik max açık pozisyon">
@@ -12708,7 +12710,7 @@ body{
   <div class="head">
     <div>
       <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">…</span></div>
-      <div class="page-sub" id="page-sub">A1#21 Fear & Greed Live · majors önce · top-6 · $10 × 15x · ATR kâr kilidi</div>
+      <div class="page-sub" id="page-sub">Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · majors önce · top-4 · $7 × 20x · ATR kâr kilidi</div>
     </div>
   </div>
 
@@ -12740,7 +12742,7 @@ body{
 
   <div class="panel">
     <div class="section">
-      <div class="section-title">Açık Pozisyonlar · A1#21 Fear & Greed Live</div>
+      <div class="section-title">Açık Pozisyonlar · Algoritmalar Live</div>
       <div class="positions" id="positions"><div class="empty">yükleniyor…</div></div>
     </div>
       <div class="section wait-rail">
@@ -12783,7 +12785,7 @@ body{
     <div class="head">
       <div>
         <div class="page-title">Geçmiş işlemler</div>
-        <div class="page-sub">A1#21 Fear & Greed Live kapanmış pozisyonlar</div>
+        <div class="page-sub">Algoritmalar Live kapanmış pozisyonlar</div>
       </div>
     </div>
     <div class="panel">
@@ -12860,6 +12862,8 @@ body{
 .book-card .br{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;font-weight:700}
 .book-card .br b{font-size:16px}
 .book-card .pos{color:var(--green)}.book-card .neg{color:var(--red)}
+.algo-live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#39ff8e;margin-right:6px;box-shadow:0 0 6px rgba(57,255,142,.85);vertical-align:middle;animation:algoLivePulse 1.6s ease-in-out infinite}
+@keyframes algoLivePulse{0%,100%{opacity:1}50%{opacity:.45}}
 .book-opens{font-size:11px;color:var(--muted);margin-top:8px}
 .detail-back{
   display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;
@@ -13241,7 +13245,7 @@ function renderCards(d){
 
   const pc = document.getElementById('positions');
   if(!cards.length){
-    pc.innerHTML = '<div class="empty">Açık A1#21 Fear & Greed Live pozisyonu yok</div>';
+    pc.innerHTML = '<div class="empty">Açık Algoritmalar Live pozisyonu yok</div>';
     return;
   }
   const ts = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
@@ -13294,7 +13298,7 @@ function renderCards(d){
       ${lockLine}
       ${slLine}
       <div class="pos-risk-row">Risk: $${Number(p.pm_spent||p.margin_usd||15).toFixed(0)}
-        <span class="tag">FG Live</span><span class="tag">${p.leverage||15}x</span>
+        <span class="tag">Algo4 Live</span><span class="tag">${p.leverage||20}x</span>
         ${p.tier_label ? `<span class="tag">${p.tier_label}</span>` : ''}
         ${stopLvl>=1 ? `<span class="tag">Stop${stopLvl}</span>` : ''}
         ${hardSl!=null ? `<span class="tag">SL ${hardSl.toFixed(0)}$</span>` : ''}
@@ -13321,14 +13325,14 @@ function renderLiveBar(d){
   if(sub){
     if(!envOn) sub.textContent = 'Env kapalı (CRYPTO_FUTURES_CR6_ENABLED)';
     else if(dashPaused) sub.textContent = 'Yeni açılış yok · açıklar :02/ATR/hard SL ile kapanır · max ' + topN;
-    else sub.textContent = 'A1#21 Fear & Greed aktif · max ' + topN + ' poz · sanal etkilenmez';
+    else sub.textContent = 'Algoritmalar Live aktif · max ' + topN + ' poz · sanal etkilenmez';
   }
   if(topIn && document.activeElement !== topIn){
     topIn.min = d.top_n_min != null ? d.top_n_min : 1;
     topIn.max = d.top_n_max != null ? d.top_n_max : 10;
     topIn.value = String(topN);
   }
-  if(pageSub) pageSub.textContent = 'A1#21 Fear & Greed Live · majors önce · top-' + topN + ' · $10 × 15x · ATR kâr kilidi';
+  if(pageSub) pageSub.textContent = 'Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · majors önce · top-' + topN + ' · $7 × 20x · ATR kâr kilidi';
   btn.textContent = dashPaused ? 'Aç' : 'Kapat';
   btn.disabled = !envOn ? true : false;
 }
@@ -13358,7 +13362,7 @@ async function saveTopN(){
     if(!d.ok){ alert(d.error || 'max poz kaydedilemedi'); return; }
     if(d.top_n != null) el.value = String(d.top_n);
     const pageSub = document.getElementById('page-sub');
-    if(pageSub) pageSub.textContent = 'A1#21 Fear & Greed Live · majors önce · top-' + (d.top_n || v) + ' · $10 × 15x · ATR kâr kilidi';
+    if(pageSub) pageSub.textContent = 'Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · majors önce · top-' + (d.top_n || v) + ' · $7 × 20x · ATR kâr kilidi';
     const sub = document.getElementById('live-bar-sub');
     if(sub && sub.textContent){
       // refresh alt yazı için hafif poll
@@ -13372,7 +13376,7 @@ async function toggleBinanceLive(){
   const pausing = !(bar && bar.classList.contains('paused'));
   const msg = pausing
     ? 'Binance Live kapatılsın mı? Yeni açılış durur; mevcut pozisyonlar :02 / ATR / hard SL ile kapanmaya devam eder. Sanal Algoritma/Analiz etkilenmez.'
-    : 'Binance Live açılsın mı? A1#21 Fear & Greed emirleri tekrar çalışır.';
+    : 'Binance Live açılsın mı? Algoritmalar Live (Hurst+A1#11+Z-Score MR+MR) emirleri tekrar çalışır.';
   if(!confirm(msg)) return;
   if(btn){ btn.disabled = true; btn.textContent = '…'; }
   try{
@@ -13405,7 +13409,7 @@ async function refresh(){
   }
 }
 async function closeCr6(symbol, qty, btn){
-  if(!confirm(symbol + ' A1#21 Fear & Greed Live pozisyonunu kapat?')) return;
+  if(!confirm(symbol + ' Algoritmalar Live pozisyonunu kapat?')) return;
   btn.classList.add('loading'); btn.textContent = 'Kapatılıyor…';
   try{
     const body = {symbol, strategy:'Supertrend'};
@@ -13521,8 +13525,9 @@ function renderBooks(elId, sumId, d){
     const sizeTag = active
       ? (` · <span style="color:var(--accent)">AKTİF $${m.toFixed(0)}×${lev}x</span>`)
       : (` · $${m.toFixed(0)}×${lev}x · open kapalı`);
+    const liveDot = active ? '<span class="algo-live-dot" title="Canlı — gerçek Binance işlemi de açıyor"></span>' : '';
     return `<a class="book-card" href="${href}" style="${active?'border-color:rgba(200,241,53,.35)':''}">
-      <div class="bt">${title}${active?' · ▶':''}</div>
+      <div class="bt">${liveDot}${title}${active?' · ▶':''}</div>
       <div class="bs">${sub} · ${wr} · ${b.history_n||0} işlem${sizeTag}</div>
       <div class="br"><span>Bakiye</span><b>$${Number(b.balance||0).toFixed(2)}</b></div>
       <div class="br"><span>Net P&L</span><b class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(2)}</b></div>
@@ -13811,7 +13816,7 @@ def api_crypto_futures_open():
 
 @app.route("/poly/api/crypto-futures/cr6")
 def api_crypto_futures_cr6():
-    """A1#21 Fear & Greed Live açık pozisyonlar + anlık K/Z (kutucuk poll)."""
+    """Algoritmalar Live açık pozisyonlar + anlık K/Z (kutucuk poll)."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     sys.path.insert(0, _DIR_KRIPTO)
@@ -13824,7 +13829,7 @@ def api_crypto_futures_cr6():
 
 @app.route("/poly/api/crypto-futures/live-control", methods=["GET", "POST"])
 def api_crypto_futures_live_control():
-    """Binance A1#21 Fear & Greed Live aç/kapa — sanal kitaplar etkilenmez."""
+    """Binance Algoritmalar Live aç/kapa — sanal kitaplar etkilenmez."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     sys.path.insert(0, _DIR_KRIPTO)
@@ -13878,7 +13883,7 @@ def api_crypto_futures_live_control():
 
 @app.route("/poly/api/crypto-futures/history")
 def api_crypto_futures_history():
-    """A1#21 Fear & Greed Live kapanmış işlem geçmişi (yeniden eskiye)."""
+    """Algoritmalar Live kapanmış işlem geçmişi (yeniden eskiye)."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     sys.path.insert(0, _DIR_KRIPTO)
@@ -14029,7 +14034,7 @@ def api_crypto_futures_close():
             qty = float(qty)
         strategy = (body.get("strategy") or "").upper()
         r = close_market(symbol, qty=qty)
-        # A1#21 Fear & Greed Live (eski CR6 state) düş
+        # Algoritmalar Live (eski CR6 state) düş
         if strategy in ("CR6", "Supertrend", "ST", "st") or body.get("cr6"):
             try:
                 from crypto_futures_cr6 import load_state, save_state, load_history, save_history

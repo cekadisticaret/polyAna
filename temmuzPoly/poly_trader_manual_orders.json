@@ -201,5 +201,166 @@
     "symbol": "BTCUSDT",
     "dir": "DOWN",
     "registered_at": "2026-07-31T01:12:19.465786+03:00"
+  },
+  {
+    "pm_order_id": "0xe26fb7a7b6cd11c26fbd7f529204b38636894ffb33e7a4ddcdd5cac9c7e6a679",
+    "pm_slug": "solana-up-or-down-august-1-2026-7am-et",
+    "symbol": "SOLUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-01T14:34:24.286139+03:00"
+  },
+  {
+    "pm_order_id": "0x8fcdd0dca5dbf8e20ae333e434246994479ea70fafa6e02046af19b16715fb30",
+    "pm_slug": "sol-updown-15m-1785742200",
+    "symbol": "SOLUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T10:41:32.843630+03:00"
+  },
+  {
+    "pm_order_id": "0x6994d99928021e9dd48430b07029f62424975e4bd866e1c1eefc31dfb2caa138",
+    "pm_slug": "solana-up-or-down-august-3-2026-3am-et",
+    "symbol": "SOLUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T10:55:23.773923+03:00"
+  },
+  {
+    "pm_order_id": "0xaeaabb19f7cd4d8408a9d27033b22d050f3624f2f027f3d68d17d306117f85a4",
+    "pm_slug": "solana-up-or-down-august-3-2026-8am-et",
+    "symbol": "SOLUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T15:41:05.180897+03:00"
+  },
+  {
+    "pm_order_id": "0x78f64c4206f914ae412c64812273bd381ab32f11fe104e83049f12ab10b6ac6b",
+    "pm_slug": "solana-up-or-down-august-3-2026-8am-et",
+    "symbol": "SOLUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T15:56:57.351991+03:00"
+  },
+  {
+    "pm_order_id": "0xd7a09902365dc54414f2d5edbcc1c62703f864dc7030d84e94109f1e179ed96f",
+    "pm_slug": "bitcoin-up-or-down-august-3-2026-9am-et",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T16:16:57.389098+03:00"
+  },
+  {
+    "pm_order_id": "0x06ef793b375fe41fe999616a57025dfd1368aa6b569b671ec2013a0d1eee4d8d",
+    "pm_slug": "btc-updown-15m-1785762900",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-03T16:23:58.771883+03:00"
+  },
+  {
+    "pm_order_id": "0x70f93651c88161e4aeb62e3f784520126eec759109659eb0a999c7e61824ab36",
+    "pm_slug": "btc-updown-15m-1785762900",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-03T16:29:45.293270+03:00"
+  },
+  {
+    "pm_order_id": "0xeb2bddde05304fb710ba7da19b2ffe646e83c39caf8c8f0763e01d817cc3c18d",
+    "pm_slug": "btc-updown-15m-1785763800",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-03T16:33:06.020729+03:00"
+  },
+  {
+    "pm_order_id": "0xe78d4215153df87df7450a1979cffbe16eac46d3a64178f5e194b72f440dc8eb",
+    "pm_slug": "btc-updown-5m-1785764100",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-03T16:38:19.240152+03:00"
+  },
+  {
+    "pm_order_id": "0xf875cb4b1d4fb921cf1216abf5cc794ea59d05fe2f0a453cf2b0204be4c7ba04",
+    "pm_slug": "btc-updown-5m-1785764400",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-03T16:43:29.246218+03:00"
+  },
+  {
+    "pm_order_id": "0x81106a08a4e64002a0c322081bea68193b756878c0dbceb888d91ae538f37a2f",
+    "pm_slug": "btc-updown-15m-1785770100",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-03T18:18:12.120052+03:00"
+  },
+  {
+    "pm_order_id": "0x8182ea437efee7cdac649aeeaefef263cec1d47be39e78fcd3cb526348f448cf",
+    "pm_slug": "btc-updown-15m-1785782700",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T21:52:35.186367+03:00"
+  },
+  {
+    "pm_order_id": "0x24630cc0681067256cb8bc03d3bd2ef31ef4b8887b5f6b70a284fa338bb8df0b",
+    "pm_slug": "btc-updown-5m-1785783300",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-03T21:57:38.883839+03:00"
+  },
+  {
+    "pm_order_id": "0x3c29f7ee8cb22aa0c4211b4032a35ac12f16a99f67ce4d59ba8a0cb018bdb5e2",
+    "pm_slug": "btc-updown-5m-1785784500",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T22:16:34.570590+03:00"
+  },
+  {
+    "pm_order_id": "0xdd5be2e1a0e017f665eacebd89a98f2d80ba2345ea1a44b0155665bf611a9938",
+    "pm_slug": "btc-updown-5m-1785784500",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-03T22:17:56.899080+03:00"
+  },
+  {
+    "pm_order_id": "0x73be89b96f57ee9b3f618b75699ca1da7e62ddecc8662a6ae4b5cdfc8fb7d743",
+    "pm_slug": "btc-updown-5m-1785785700",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-03T22:36:51.433871+03:00"
+  },
+  {
+    "pm_order_id": "0x795e5fb90b61b8f0658c283ed966a02d610149f1f01360a29a27fec4aaef193e",
+    "pm_slug": "btc-updown-5m-1785786000",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T22:42:36.769062+03:00"
+  },
+  {
+    "pm_order_id": "0xbac296ea397f11b14eb3b426cae07c7953b1f900465c2130c5109b5a78c1477d",
+    "pm_slug": "btc-updown-15m-1785785400",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T22:43:51.746237+03:00"
+  },
+  {
+    "pm_order_id": "0xaeb32f3b9d1e25bd270bd6cd664099312290812fadc6e1e5c30f3248bf57cc62",
+    "pm_slug": "btc-updown-15m-1785786300",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-03T22:50:07.380525+03:00"
+  },
+  {
+    "pm_order_id": "0x762a6b255bcc91f016d6c11a15e030e89f924d94867d0b93ac6648ad5db7a267",
+    "pm_slug": "btc-updown-15m-1785790800",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-04T00:06:55.901496+03:00"
+  },
+  {
+    "pm_order_id": "0xe0f3a0a3b06c9330b072217cbac95c6ad6de5f78feb97b854c96c94d2ecf38dc",
+    "pm_slug": "bitcoin-up-or-down-august-3-2026-5pm-et",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-04T00:08:08.606081+03:00"
+  },
+  {
+    "pm_order_id": "0xdf3740d1cb8563ae5226e8cf044204e1e3d5186a2b5b95d8b4570523e9673f35",
+    "pm_slug": "btc-updown-15m-1785791700",
+    "symbol": "BTCUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-04T00:16:44.981970+03:00"
   }
 ]

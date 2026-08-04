@@ -4,7 +4,7 @@ A1 LIVE — Analiz 1 Motoru (Gerçek Polymarket)
 Algoritma: poly_predictor_analysis.py — Analiz 1 ile aynı (RSI + MACD + EMA).
 Sabit $8–10–12/işlem (WR'ye göre), BTC+SOL.
 
-Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 08:00 açılır; manuel override mümkün).
+Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 12:00 açılır; manuel override mümkün).
 Modlar: close (:02 — PM sonucu için) / open (:05) / weekly / stats
 """
 import asyncio
@@ -21,7 +21,10 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
-from pm_trader_helpers import sanal_pnl, pm_realized_pnl, pm_tg_stake, resolve_slot_trade_amount, slot_amount_log, skip_if_weekend_pause, pm_live_wr_amount, pm_live_amount_range_str
+from pm_trader_helpers import (
+    sanal_pnl, pm_realized_pnl, pm_tg_stake, resolve_open_slot_gates,
+    slot_amount_log, skip_if_weekend_pause, pm_live_wr_amount, pm_live_amount_range_str,
+)
 
 # .env yükle
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -788,7 +791,8 @@ async def run_open() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
-    if skip_if_weekend_pause("A1 LIVE", "open", now_tr):
+    history = load_history()
+    if skip_if_weekend_pause("A1 LIVE", "open", now_tr, history=history):
         return
 
     hour_tr    = now_tr.hour
@@ -796,10 +800,14 @@ async def run_open() -> None:
     is_weekend = dow >= 5
 
     state   = load_state()
-    history = load_history()
 
     # PM bakiye kontrolü
     if not _PM_DRY_RUN and not can_open_trade(LABEL, tg_send):
+        return
+
+    cold_skip, _, _, _, cold_note = resolve_open_slot_gates(history, hour_tr, 0)
+    if cold_skip:
+        print(f"[A1 LIVE open] {saat} — {cold_note} → işlem yok")
         return
 
     results = []
@@ -818,7 +826,11 @@ async def run_open() -> None:
     for sig in results:
         if sig["predicted_dir"]:
             base = _trade_amount(history, sig["symbol"])
-            amount, hot_boost, cold_cut = resolve_slot_trade_amount(base, hour_tr, history)
+            _sk, amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
+                history, hour_tr, base
+            )
+            if gate_note:
+                print(f"[A1 LIVE open] {gate_note}")
             slot_amount_log("A1 LIVE", hour_tr, base, amount, hot_boost, cold_cut)
             pos, err = _try_pm_open(
                 state, sig, hour_tr=hour_tr, dow=dow, is_weekend=is_weekend,

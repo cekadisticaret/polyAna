@@ -20,7 +20,7 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz10_live.py open` (`PM_ANALIZ10_REAL_ENABLED`) | `/tmp/poly_trader_analiz10_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_live.py close` | `/tmp/poly_trader_analiz6_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py close` | `/tmp/crypto_futures_cr6.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py open` (A1#21 Fear & Greed Live) | `/tmp/crypto_futures_cr6.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py open` (Algoritmalar Live — Hurst+A1#11+Z-Score MR+MR gerçek Binance $7×20x) | `/tmp/crypto_futures_cr6.log` |
 | `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py trail` | `/tmp/crypto_futures_cr6_trail.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Algoritmalar/runner.py close` | `/tmp/agustos_algoritmalar.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Algoritmalar/runner.py open` | `/tmp/agustos_algoritmalar.log` |
@@ -73,7 +73,7 @@ alwaysApply: true
 - Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk).
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **08:00** İST — Live **open** atlanır; **close** çalışır. **Sanal 15M** (110 + A2 309/316/317) + A2 Top17 + A4 + A6 + A10 + A15: aynı pencerede open kapalı; Pzt **08:00**’de devam. Dashboard Live anahtarı ayrıca açılışı kesebilir.
-- **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **08:00** İST — `open` / `close` / `trail` atlanır (kod içi). Algoritmalar aktif open: **A2#05/#06/#07 + A1#11 $7×20x**; diğer defterler yalnızca close/trail. Binance A1#21 Fear & Greed Live ayrı (dashboard Live toggle).
+- **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **08:00** İST — `open` / `close` / `trail` atlanır (kod içi). Algoritmalar aktif open (sanal): **A2#05/#06/#07 + A1#11 $7×20x**; diğer defterler yalnızca close/trail. **Binance Algoritmalar Live (gerçek para)** ayrı — aynı 4 algonun çoğunluk oyu; dashboard Live toggle + top-N.
 - **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **08:00** İST (`0 19 * * 5` / `0 5 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis). Public: `bursaapp.com/poly` · Kripto Future: `bursaapp.com/kripto`.
 - **Kaynak silinme izleme:** `aiproject-file-watch.service` → log `/tmp/aiproject_file_watch.log`; olaylar `ops/incidents/`. Geri yükleme: `ops/CRITICAL_FILE_RESTORE.md` (**09:17 / 09:23 / 13:25 İST**, 2026-08-02). audit: `ausearch -k aiproject_del -ts recent -i`

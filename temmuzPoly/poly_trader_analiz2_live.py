@@ -5,7 +5,7 @@ Algoritma: poly_trader_analiz2 ile aynı sinyal (predict, ALLOW_FALLBACK=False).
 A1 Live'e dokunmaz; kendi state/history; bağımsız cron.
 
 Gerçek PM: PM_ANALIZ2_REAL_ENABLED (varsayılan false)
-Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 08:00 açılır; manuel override mümkün)
+Hafta sonu: dashboard anahtarı (Cum 22:00 otomatik kapanır · Pzt 12:00 açılır; manuel override mümkün)
 Modlar: close (:02 PM sonuç) / open (:05)
 """
 from __future__ import annotations
@@ -40,7 +40,7 @@ from pm_trader_helpers import (
     pm_stake_fields,
     pm_realized_pnl,
     pm_tg_stake,
-    resolve_slot_trade_amount,
+    resolve_open_slot_gates,
     slot_amount_log,
     tg_send_pm_live,
     skip_if_weekend_pause,
@@ -338,7 +338,8 @@ async def run_open() -> None:
 
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
-    if skip_if_weekend_pause(LABEL, "open", now_tr):
+    history = load_history()
+    if skip_if_weekend_pause(LABEL, "open", now_tr, history=history):
         return
     hour_tr = now_tr.hour
     dow = now_tr.weekday()
@@ -346,9 +347,13 @@ async def run_open() -> None:
     saat = now_tr.strftime("%H:%M")
 
     state = load_state()
-    history = load_history()
 
     if not can_open_trade(LABEL, tg_send):
+        return
+
+    cold_skip, _, _, _, cold_note = resolve_open_slot_gates(history, hour_tr, 0)
+    if cold_skip:
+        print(f"[{LABEL} open] {saat} — {cold_note} → işlem yok")
         return
 
     us_open = _us_market_open(now)
@@ -379,7 +384,11 @@ async def run_open() -> None:
             ),
         }
         base_amount = _trade_amount(history, sym)
-        amount, hot_boost, cold_cut = resolve_slot_trade_amount(base_amount, hour_tr, history)
+        _sk, amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
+            history, hour_tr, base_amount
+        )
+        if gate_note:
+            print(f"[{LABEL} open] {gate_note}")
         slot_amount_log(LABEL, hour_tr, base_amount, amount, hot_boost, cold_cut)
         pos, err = _try_pm_open(
             state,

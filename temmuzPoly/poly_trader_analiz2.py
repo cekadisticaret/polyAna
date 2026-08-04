@@ -31,7 +31,7 @@ from pm_trader_helpers import (
     SANAL_TRADE_AMOUNT_HIGH, SANAL_TRADE_AMOUNT_LOW,
     pm_tg_stake, pm_stake_fields, pm_resolve_pnl,
     resolve_slot_trade_amount, slot_amount_log,
-    skip_if_weekend_pause,
+    skip_if_weekend_pause, resolve_open_slot_gates,
 )
 
 # ── Config ────────────────────────────────────────────────────
@@ -337,9 +337,6 @@ async def run_open() -> None:
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
 
-    if skip_if_weekend_pause("2. ANALİZ", "open", now_tr):
-        return
-
     hour_tr    = now_tr.hour
     dow        = now_tr.weekday()
     is_weekend = dow >= 5
@@ -348,6 +345,13 @@ async def run_open() -> None:
 
     state   = load_state()
     history = load_history()
+
+    if skip_if_weekend_pause("2. ANALİZ", "open", now_tr, history=history):
+        return
+    cold_skip, _, _, _, cold_note = resolve_open_slot_gates(history, hour_tr, 0)
+    if cold_skip:
+        print(f"[2. ANALİZ open] {saat} — {cold_note} · işlem yok")
+        return
 
     # ABD açık → Analiz 1 ile aynı; kapalı → ek yedek sinyal
     us_open = _us_market_open(now)
@@ -361,8 +365,13 @@ async def run_open() -> None:
 
         name = sym.replace("USDT", "")
         base_amount = symbol_wr_amount(history, sym)
-        dyn_amount, hot_boost, cold_cut = resolve_slot_trade_amount(base_amount, hour_tr, history)
-        slot_amount_log("2. ANALİZ", hour_tr, base_amount, dyn_amount, hot_boost, cold_cut)
+        _sk, dyn_amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
+            history, hour_tr, base_amount
+        )
+        if gate_note and hot_boost:
+            print(f"[2. ANALİZ open] 🔥 {gate_note}")
+        else:
+            slot_amount_log("2. ANALİZ", hour_tr, base_amount, dyn_amount, hot_boost, cold_cut)
 
         try:
             klines = await _fetch_klines(sym, "1h", 3)

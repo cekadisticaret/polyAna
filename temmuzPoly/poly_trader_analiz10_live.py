@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_analiz_dual_core import CONFIG_A10, evaluate_symbol, _wr
 from poly_live_hourly_common import tg_send, try_pm_open
 from poly_predictor_analysis import _fetch_klines
-from pm_trader_helpers import pm_fetch_resolution, pm_get_balance, pm_realized_pnl, pm_stake_fields, pm_tg_stake, resolve_slot_trade_amount, skip_if_weekend_pause, slot_amount_log, pm_live_wr_amount, pm_live_amount_range_str
+from pm_trader_helpers import pm_fetch_resolution, pm_get_balance, pm_realized_pnl, pm_stake_fields, pm_tg_stake, resolve_open_slot_gates, skip_if_weekend_pause, slot_amount_log, pm_live_wr_amount, pm_live_amount_range_str
 from pm_balance_guard import can_open_trade
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -167,7 +167,8 @@ async def run_open() -> None:
         return
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
-    if skip_if_weekend_pause(LABEL, "open", now_tr):
+    history = load_history()
+    if skip_if_weekend_pause(LABEL, "open", now_tr, history=history):
         return
     if not can_open_trade(LABEL, lambda t: tg_send(LABEL, t)):
         return
@@ -177,7 +178,10 @@ async def run_open() -> None:
     is_weekend = dow >= 5
     saat = now_tr.strftime("%H:%M")
     state = load_state()
-    history = load_history()
+    cold_skip, _, _, _, cold_note = resolve_open_slot_gates(history, hour_tr, 0)
+    if cold_skip:
+        print(f"[{LABEL} open] {saat} — {cold_note} → işlem yok")
+        return
     opened = []
 
     for sym in SYMBOLS:
@@ -188,7 +192,11 @@ async def run_open() -> None:
         klines = await _fetch_klines(sym, "1h", 3)
         entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else sig["price"]
         base = _trade_amount(history, sym)
-        amount, hot_boost, cold_cut = resolve_slot_trade_amount(base, hour_tr, history)
+        _sk, amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
+            history, hour_tr, base
+        )
+        if gate_note:
+            print(f"[{LABEL} open] {gate_note}")
         slot_amount_log(LABEL, hour_tr, base, amount, hot_boost, cold_cut)
         pos, err = try_pm_open(
             state, label=LABEL, hata_file=HATA_FILE, sym=sym,
