@@ -15,6 +15,10 @@ _PM_ASSET_MAP = {
     "XRPUSDT": "xrp", "DOGEUSDT": "dogecoin", "BNBUSDT": "bnb",
 }
 _TZ_TR = ZoneInfo("Europe/Istanbul")
+
+# Hafta sonu duraklama: Cum 22:00 – Pzt resume_hour İST
+WEEKEND_RESUME_HOUR = 11          # sanal + erken Live grupları
+WEEKEND_RESUME_LATE_HOUR = 12     # A1 / A2 / A10 Live
 PM_DRY_RUN = os.getenv("POLY_DRY_RUN", "true").lower() == "true"
 PM_ORDER_ATTEMPTS = 3
 PM_ORDER_NOT_READY_ATTEMPTS = 8  # "order manager not ready" → 10sn × 8 ≈ 70sn
@@ -75,10 +79,10 @@ def tg_send_pm_live(text: str, *, label: str = "PM") -> bool:
         return False
 
 
-def in_weekend_pause_tr(now_tr: datetime, *, resume_hour: int = 8) -> bool:
+def in_weekend_pause_tr(now_tr: datetime, *, resume_hour: int = WEEKEND_RESUME_HOUR) -> bool:
     """Cuma 22:00 – Pazartesi resume_hour İST arası yeni işlem açılmaz.
 
-    Varsayılan resume_hour=8. A1/A2/A10 için 12 kullanılır.
+    Varsayılan WEEKEND_RESUME_HOUR=11. A1/A2/A10 Live için 12 kullanılır.
     """
     dow = now_tr.weekday()  # 0=Pzt … 4=Cum 5=Cmt 6=Paz
     h = now_tr.hour
@@ -145,7 +149,11 @@ def skip_if_weekend_pause(
         now_tr = now_tr.replace(tzinfo=_TZ_TR)
     else:
         now_tr = now_tr.astimezone(_TZ_TR)
-    resume_hour = 12 if (label or "").upper() in {x.upper() for x in _WEEKEND_RESUME_12_LABELS} else 8
+    resume_hour = (
+        WEEKEND_RESUME_LATE_HOUR
+        if (label or "").upper() in {x.upper() for x in _WEEKEND_RESUME_12_LABELS}
+        else WEEKEND_RESUME_HOUR
+    )
     if in_weekend_pause_tr(now_tr, resume_hour=resume_hour):
         if mode == "open" and history is not None and is_slot_force_hot(history, now_tr.hour):
             print(
@@ -194,6 +202,8 @@ _PM_LIVE_AMOUNT_DEFAULTS: dict[str, tuple[float, float, float]] = {
     "a2_16": (8.0, 12.0, 16.0),
     "a2_02": (4.0, 5.0, 6.0),
     "a2_08": (4.0, 5.0, 6.0),
+    "a2_03": (4.0, 5.0, 6.0),
+    "a2_04": (4.0, 5.0, 6.0),
     "a15": (12.0, 16.0, 20.0),
 }
 
@@ -1054,8 +1064,8 @@ def slot_amount_log(label: str, hour_tr: int, base: float, amount: float, hot_bo
 
 
 
-# ── Güçlü / soğuk saat (En Etkili Zaman) ──
-# WR>%85 → sabit $25 (sanal + Live A1/A2/A6/A10). Soğuk saat → open skip.
+# ── Güçlü / zayıf saat (En Etkili Zaman) ──
+# WR>%85 → sabit $25 (sanal + Live A1/A2/A6/A10). Zayıf saatte tutar -%30 (open blok yok).
 SLOT_FORCE_WR = 85.0
 SLOT_FORCE_AMOUNT = 25.0
 SLOT_COLD_BAD_DAYS = 3
@@ -1120,10 +1130,7 @@ def resolve_open_slot_gates(
     hour_tr: int,
     base_amount: float,
 ) -> tuple[bool, float, bool, bool, str]:
-    """(skip, amount, force_hot, cold_cut, note)."""
-    blocked, reason = is_slot_cold_block(history, hour_tr)
-    if blocked:
-        return True, base_amount, False, False, reason
+    """(skip, amount, force_hot, cold_cut, note). skip her zaman False — soğuk saat gate kaldırıldı."""
     if is_slot_force_hot(history, hour_tr):
         d = hour_slot_detail(history, hour_tr, min_trades=HOT_HOUR_MIN_TRADES) or {}
         note = (

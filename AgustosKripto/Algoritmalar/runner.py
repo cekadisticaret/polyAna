@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Algoritmalar — ALGO2 Top-17 + ALGO1 (Poly) sanal futures.
 
+Tüm 17 defter sanalda $30×10x işlem açar (komisyon dahil net PnL).
+4 defter (A2#05/#06/#07 + A1#11) ayrıca gerçek Binance işlemi de açar
+(crypto_futures_cr6.py → Algoritmalar Live, $7×20x) — sanal defterleri
+bundan bağımsız kendi $30×10x boyutunda kalır.
+
   python3 AgustosKripto/Algoritmalar/runner.py close
   python3 AgustosKripto/Algoritmalar/runner.py open
   python3 AgustosKripto/Algoritmalar/runner.py trail
@@ -22,8 +27,6 @@ sys.path.insert(0, _DIR)
 
 from virtual_book import (  # noqa: E402
     DEPOSIT,
-    LEVERAGE,
-    MARGIN_USD,
     MAX_OPENS_PER_HOUR,
     SYMBOLS,
     book_status,
@@ -31,26 +34,30 @@ from virtual_book import (  # noqa: E402
     close_all_positions,
     fetch_all_klines,
     in_weekend_pause_tr,
+    load_history,
     load_state,
     open_signals,
     refresh_status,
     reset_book,
     trail_positions,
     write_snapshot,
+    now_tr,
 )
 from catalog import ALL_BOOKS, pick_candidates, signal_for_book  # noqa: E402
+from algo_tg_notify import notify_close, notify_open, _format_close_trade, _format_open_pos, _wr  # noqa: E402
 
 DATA = os.path.join(_DIR, "data")
 
-# Aktif open — yalnızca bu 4 defter yeni işlem açar ($7 × 20x · max 6)
-# A2#05 Mean Reversion · A2#06 Z-Score MR · A2#07 Hurst · A1#11 Mean Reversion
-OPEN_ACTIVE_KEYS = frozenset({"algo_05", "algo_06", "algo_07", "algo1_11"})
-BOOK_CFG: dict[str, dict] = {
-    "algo_05": {"margin_usd": 7.0, "leverage": 20, "max_opens": 6},
-    "algo_06": {"margin_usd": 7.0, "leverage": 20, "max_opens": 6},
-    "algo_07": {"margin_usd": 7.0, "leverage": 20, "max_opens": 6},
-    "algo1_11": {"margin_usd": 7.0, "leverage": 20, "max_opens": 6},
-}
+# Tüm 17 defter sanalda işlem açar — $30 × 10x · max 6 (gerçek data için).
+VIRTUAL_MARGIN_USD = 30.0
+VIRTUAL_LEVERAGE = 10
+
+# Bu 4 defter aynı zamanda gerçek Binance işlemi de açıyor (crypto_futures_cr6.py
+# → Algoritmalar Live, $7×20x). Sanal defterleri farklı boyutlandırılır (yukarıdaki
+# varsayılan); yalnızca dashboard'da canlı nokta göstermek için işaretleniyor.
+REAL_LIVE_KEYS = frozenset({"algo_05", "algo_06", "algo_07", "algo1_11"})
+REAL_LIVE_MARGIN_USD = 7.0
+REAL_LIVE_LEVERAGE = 20
 
 
 def _paths(book: dict) -> tuple[str, str]:
@@ -62,17 +69,12 @@ def _paths(book: dict) -> tuple[str, str]:
 
 
 def _cfg(book: dict) -> dict:
-    base = {
-        "margin_usd": float(MARGIN_USD),
-        "leverage": int(LEVERAGE),
+    return {
+        "margin_usd": VIRTUAL_MARGIN_USD,
+        "leverage": VIRTUAL_LEVERAGE,
         "max_opens": int(MAX_OPENS_PER_HOUR),
-        "open_active": False,
+        "open_active": True,
     }
-    key = book["book_key"]
-    if key in OPEN_ACTIVE_KEYS:
-        base["open_active"] = True
-        base.update(BOOK_CFG.get(key) or {})
-    return base
 
 
 def label(book: dict) -> str:
@@ -83,8 +85,35 @@ def label(book: dict) -> str:
 def _skip_weekend(cmd: str) -> dict | None:
     if not in_weekend_pause_tr():
         return None
-    print(f"[Algoritmalar] hafta sonu — {cmd} skip (Cum 22:00 – Pzt 08:00 İST)")
+    print(f"[Algoritmalar] hafta sonu — {cmd} skip (Cum 22:00 – Pzt 11:00 İST)")
     return {"ok": True, "skipped": "weekend_pause", "cmd": cmd, "results": []}
+
+
+def _close_tg_block(book: dict, closed_n: int, hp: str, tur_pnl: float, balance: float) -> str | None:
+    if closed_n <= 0:
+        return None
+    history = load_history(hp)
+    trades = history[-closed_n:] if closed_n <= len(history) else history
+    lines = [_format_close_trade(t) for t in trades]
+    wins = sum(1 for t in trades if t.get("win"))
+    genel = _wr(wins, len(trades))
+    return (
+        f"<b>{label(book)}</b>\n"
+        + "\n".join(lines)
+        + f"\nBu tur: {'+' if tur_pnl >= 0 else ''}{tur_pnl:.2f}$  |  Bakiye: ${balance:.2f}\n"
+        f"Genel (bu tur): {genel}"
+    )
+
+
+def _open_tg_block(book: dict, positions: list[dict], balance: float, open_n: int) -> str | None:
+    if not positions:
+        return None
+    lines = [_format_open_pos(p) for p in positions]
+    return (
+        f"<b>{label(book)}</b>\n"
+        + "\n".join(lines)
+        + f"\n💰 Bakiye: ${balance:.2f}  |  📂 Açık: {open_n}"
+    )
 
 
 def run_close() -> dict:
@@ -93,10 +122,35 @@ def run_close() -> dict:
         return skipped
     kl = fetch_all_klines(SYMBOLS, limit=5)
     results = []
+    tg_blocks: list[str] = []
+    tur_pnl_total = 0.0
+    closed_total = 0
+    held_total = 0
     for book in ALL_BOOKS:
         sp, hp = _paths(book)
         r = close_all_positions(sp, hp, label=label(book), kl_cache=kl)
         results.append({"id": book["uid"], "name": book["name"], "panel": book["panel"], **r})
+        closed_n = int(r.get("closed") or 0)
+        if closed_n > 0:
+            block = _close_tg_block(
+                book, closed_n, hp,
+                float(r.get("pnl") or 0),
+                float(r.get("balance") or 0),
+            )
+            if block:
+                tg_blocks.append(block)
+        tur_pnl_total += float(r.get("pnl") or 0)
+        closed_total += closed_n
+        held_total += int(r.get("held") or 0)
+    ntr = now_tr()
+    saat_round = f"{ntr.hour:02d}:00"
+    notify_close(
+        saat_round=saat_round,
+        blocks=tg_blocks,
+        tur_pnl=tur_pnl_total,
+        total_closed=closed_total,
+        total_held=held_total,
+    )
     return {"ok": True, "results": results}
 
 
@@ -106,6 +160,9 @@ def run_open() -> dict:
         return skipped
     kl = fetch_all_klines(SYMBOLS, limit=80)
     results = []
+    tg_blocks: list[str] = []
+    opened_total = 0
+    open_positions_total = 0
     for book in ALL_BOOKS:
         sp, hp = _paths(book)
         cfg = _cfg(book)
@@ -141,12 +198,36 @@ def run_open() -> dict:
             "leverage": cfg["leverage"],
             **r,
         })
+        opened_n = int(r.get("opened") or 0)
+        if opened_n > 0:
+            st = load_state(sp)
+            block = _open_tg_block(
+                book,
+                list(r.get("positions") or []),
+                float(r.get("balance") or st.get("balance") or 0),
+                int(r.get("open") or 0),
+            )
+            if block:
+                tg_blocks.append(block)
+        opened_total += opened_n
+        open_positions_total += int(r.get("open") or 0)
     active_n = sum(1 for r in results if not r.get("skipped"))
     print(
-        f"[Algoritmalar] open aktif {active_n}/{len(OPEN_ACTIVE_KEYS)} "
-        f"· $7×20x · {', '.join(sorted(OPEN_ACTIVE_KEYS))}"
+        f"[Algoritmalar] open aktif {active_n}/{len(ALL_BOOKS)} "
+        f"· ${VIRTUAL_MARGIN_USD:.0f}×{VIRTUAL_LEVERAGE}x "
+        f"(gerçek Binance: {', '.join(sorted(REAL_LIVE_KEYS))} · ${REAL_LIVE_MARGIN_USD:.0f}×{REAL_LIVE_LEVERAGE}x)"
     )
-    return {"ok": True, "active_keys": sorted(OPEN_ACTIVE_KEYS), "results": results}
+    ntr = now_tr()
+    saat = ntr.strftime("%H:%M")
+    next_h = f"{(ntr.hour + 1) % 24:02d}:00"
+    notify_open(
+        saat=saat,
+        next_h=next_h,
+        blocks=tg_blocks,
+        total_opened=opened_total,
+        total_open=open_positions_total,
+    )
+    return {"ok": True, "active_keys": [b["book_key"] for b in ALL_BOOKS], "results": results}
 
 
 def run_trail() -> dict:
@@ -202,6 +283,7 @@ def _build_status(*, with_marks: bool = True) -> dict:
         st["leverage"] = cfg["leverage"]
         st["max_opens"] = cfg["max_opens"]
         st["open_active"] = bool(cfg["open_active"])
+        st["real_live"] = book["book_key"] in REAL_LIVE_KEYS
         books.append(st)
         tot_bal += float(st.get("balance") or 0)
         tot_pnl += float(st.get("total_pnl") or 0)
@@ -216,11 +298,11 @@ def _build_status(*, with_marks: bool = True) -> dict:
         "count": len(books),
         "count_v1": n_v1,
         "count_v2": n_v2,
-        "margin_usd": 15,
-        "leverage": 15,
-        "active_open_keys": sorted(OPEN_ACTIVE_KEYS),
-        "active_open_margin_usd": 7.0,
-        "active_open_leverage": 20,
+        "margin_usd": VIRTUAL_MARGIN_USD,
+        "leverage": VIRTUAL_LEVERAGE,
+        "active_open_keys": sorted(REAL_LIVE_KEYS),
+        "active_open_margin_usd": REAL_LIVE_MARGIN_USD,
+        "active_open_leverage": REAL_LIVE_LEVERAGE,
         "deposit_each": 300,
         "max_opens": MAX_OPENS_PER_HOUR,
         "total_balance": round(tot_bal, 2),

@@ -60,6 +60,13 @@ STATE_FILE = os.path.join(_DIR, "crypto_futures_state.json")
 HISTORY_FILE = os.path.join(_DIR, "crypto_futures_history.json")
 LABEL = "KRIPTO FUTURE"
 
+# Binance Live yeni açılış — bu majors kapalı (kapatma/trail etkilenmez)
+LIVE_OPEN_EXCLUDE = frozenset({"BTCUSDT", "ETHUSDT", "BNBUSDT"})
+
+
+def is_live_open_excluded(symbol: str) -> bool:
+    return (symbol or "").upper() in LIVE_OPEN_EXCLUDE
+
 
 def load_config() -> dict:
     defaults = {
@@ -281,6 +288,9 @@ def open_market(
 
     if symbol not in [s.upper() for s in cfg.get("symbols") or []]:
         raise ValueError(f"{symbol} allowlist dışı — crypto_futures_config.json")
+
+    if not reduce_only and is_live_open_excluded(symbol):
+        raise ValueError(f"{symbol} Binance Live açılış dışı (BTC/ETH/BNB kapalı)")
 
     lev = int(leverage or cfg.get("default_leverage") or 5)
     max_lev = int(cfg.get("max_leverage") or 20)

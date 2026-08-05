@@ -7,7 +7,7 @@
   "max_leverage": 20,
   "max_open_positions": 5,
   "dust_max_notional_usd": 2.0,
-  "taker_fee_rate": 0.0004,
+  "taker_fee_rate": 0.0005,
   "maker_fee_rate": 0.0002,
   "symbols": [
     "BTCUSDT",

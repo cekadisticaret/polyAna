@@ -39,6 +39,8 @@ _HEATMAP_SYMS = {
     "a2_16_live": ["BTC", "ETH", "SOL"],
     "a2_02_live": ["BTC", "ETH", "SOL"],
     "a2_08_live": ["BTC", "ETH", "SOL"],
+    "a2_03_live": ["BTC", "ETH", "SOL"],
+    "a2_04_live": ["BTC", "ETH", "SOL"],
 }
 # Sıcaklık haritası sekmesinde birleşik gösterilecek ek history kaynakları
 _HEATMAP_MERGE: dict[str, list[str]] = {}
@@ -65,6 +67,8 @@ _LIVE_PM_ANALYSES = frozenset({
     "a2_16_live",    # A2#16 Live → a2_16 sanal
     "a2_02_live",    # A2#02 Live → a2_02 sanal
     "a2_08_live",    # A2#08 Live → a2_08 sanal
+    "a2_03_live",    # A2#03 Live → a2_03 sanal
+    "a2_04_live",    # A2#04 Live → a2_04 sanal
     "analiz15_live", # A15 Live → analiz15 sanal
 })
 # Algoritma performansı panelinde gösterilmez
@@ -98,7 +102,7 @@ _HISTORY_ORDER = [
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
 _HISTORY_ORDER_GECMIS = [
     "analiz5", "analiz2_live", "analiz10_live", "analiz6_live", "15m_309_live",
-    "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live",
     *_HISTORY_ORDER,
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
@@ -119,6 +123,8 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "a2_16_live": "A2#16 Supertrend Live",
     "a2_02_live": "A2#02 RSI Div Live",
     "a2_08_live": "A2#08 Williams Live",
+    "a2_03_live": "A2#03 Stoch RSI Live",
+    "a2_04_live": "A2#04 Schaff Live",
     "analiz15_live": "A15 Live",
 }
 
@@ -129,7 +135,7 @@ _OVERVIEW_ACTIVE_ORDER = [
     "5m_sol_110",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
-    "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "analiz15_live": None,
+    "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "analiz15_live": None,
     "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz10": 300, "analiz15": 300,
     "analiz3": 300, "analiz8": 300,
@@ -144,6 +150,8 @@ _PM_PAUSE_KEYS = {
     "a2_16_live": "a2_16_live_paused",
     "a2_02_live": "a2_02_live_paused",
     "a2_08_live": "a2_08_live_paused",
+    "a2_03_live": "a2_03_live_paused",
+    "a2_04_live": "a2_04_live_paused",
     "analiz15_live": "analiz15_live_paused",
 }
 _OVERVIEW_SHORT_LABELS: dict[str, str] = {
@@ -155,6 +163,8 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "a2_16_live": "A2#16L",
     "a2_02_live": "A2#02L",
     "a2_08_live": "A2#08L",
+    "a2_03_live": "A2#03L",
+    "a2_04_live": "A2#04L",
     "analiz15_live": "A15L",
     "analiz1": "A1",
     "analiz2": "A2",
@@ -662,6 +672,8 @@ _LIVE_OVERVIEW_SYSTEMS = [
     ("a2_16_live", "A2#16 Supertrend Live", "a2_16_live_paused"),
     ("a2_02_live", "A2#02 RSI Div Live", "a2_02_live_paused"),
     ("a2_08_live", "A2#08 Williams Live", "a2_08_live_paused"),
+    ("a2_03_live", "A2#03 Stoch RSI Live", "a2_03_live_paused"),
+    ("a2_04_live", "A2#04 Schaff Live", "a2_04_live_paused"),
     ("analiz15_live", "A15 Live", "analiz15_live_paused"),
 ]
 
@@ -927,13 +939,15 @@ _PM_POSITION_SOURCES = [
     ("a2_16_live", "A2#16 Supertrend Live"),
     ("a2_02_live", "A2#02 RSI Div Live"),
     ("a2_08_live", "A2#08 Williams Live"),
+    ("a2_03_live", "A2#03 Stoch RSI Live"),
+    ("a2_04_live", "A2#04 Schaff Live"),
     ("analiz15_live", "A15 Live"),
     ("manual", "Manuel"),
     ("5m_sol_110", "15M 110 SOL"),
 ]
 _HOURLY_PM_ANALYSES = frozenset({
     "analiz5", "analiz2_live", "analiz10_live", "analiz6_live",
-    "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live", "manual",
+    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live", "manual",
 })
 _15M_PM_ANALYSES = frozenset({"5m_sol_110", "15m_309_live"})
 
@@ -2536,7 +2550,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260804-algo-live-dot"
+_DASH_UI_VER = "20260805-close-all"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -6207,7 +6221,7 @@ def api_pm_system_post():
         state = set_a3a8_signal_strict(bool(body["a3a8_signal_strict"]), source="dashboard")
         return jsonify({"ok": True, **state})
     group = body.get("group")
-    if group in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live", "hourly"):
+    if group in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live", "hourly"):
         if group == "hourly":
             if "paused" in body:
                 paused = bool(body["paused"])
@@ -6218,9 +6232,10 @@ def api_pm_system_post():
                     and cur["analiz10_paused"] and cur["analiz6_live_paused"]
                     and cur["15m_309_live_paused"] and cur.get("a2_16_live_paused", True)
                     and cur.get("a2_02_live_paused", True) and cur.get("a2_08_live_paused", True)
+                    and cur.get("a2_03_live_paused", True) and cur.get("a2_04_live_paused", True)
                     and cur.get("analiz15_live_paused", True)
                 )
-            for g in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live"):
+            for g in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live"):
                 set_group_paused(g, paused, source="dashboard")
             state = get_pm_system_control()
         elif "paused" in body:
@@ -7915,6 +7930,93 @@ def api_trade_desk_sync():
     return jsonify(result)
 
 
+def _pm_pos_match_target(stored: dict, target: dict, analiz: str) -> bool:
+    """State satırı ile hedef pozisyon eşleşmesi (close-all için token_id öncelikli)."""
+    tid_t = target.get("pm_token_id")
+    tid_s = stored.get("pm_token_id")
+    if tid_t and tid_s:
+        return tid_t == tid_s
+    sym = (target.get("symbol") or "").upper()
+    if analiz == "manual":
+        return _manual_pos_match(stored, sym, order_id=_manual_pos_id(target))
+    return stored.get("symbol", "").upper() == sym
+
+
+def _execute_pm_close(analiz: str, pos: dict) -> dict:
+    """Tek PM pozisyonu kapat — state güncellemez."""
+    token_id = pos.get("pm_token_id")
+    pm_size = float(pos.get("pm_size") or 0)
+    symbol = pos.get("symbol", "")
+
+    if not token_id:
+        return {"ok": False, "error": "token_id eksik", "symbol": symbol}
+
+    chain_sz = _pm_conditional_shares(token_id) if token_id else -1.0
+    pre_est = None
+
+    if chain_sz >= 0 and chain_sz <= 0.01:
+        pre_est = _estimate_close_value(pos)
+        sell_result = (
+            _pm_try_settled_reconcile(pos)
+            or _pm_try_worthless_reconcile(pos)
+            or {
+                "ok": True, "reconciled": True, "worthless": False,
+                "received": 0.0, "size": pm_size, "price": 0.0,
+                "status": "already_closed",
+            }
+        )
+    else:
+        if chain_sz > 0:
+            pm_size = chain_sz
+            pos = {**pos, "pm_size": chain_sz}
+        if pm_size <= 0:
+            return {"ok": False, "error": "pm_size eksik", "symbol": symbol}
+        pre_est = _estimate_close_value(pos)
+        sell_result = _pm_sell_position_retry(
+            token_id, pm_size,
+            pm_slug=pos.get("pm_slug", ""),
+            token_dir=pos.get("pm_token_dir") or pos.get("predicted_dir", ""),
+        )
+        if not sell_result.get("ok"):
+            sell_result = (
+                _pm_try_settled_reconcile(pos)
+                or _pm_try_worthless_reconcile(pos)
+                or sell_result
+            )
+
+    if not sell_result.get("ok"):
+        return {
+            "ok": False,
+            "error": _short_pm_error(sell_result.get("error", "PM satış başarısız")),
+            "sell": sell_result,
+            "symbol": symbol,
+        }
+
+    return {
+        "ok": True,
+        "sell": sell_result,
+        "symbol": symbol,
+        "pre_est": pre_est,
+        "_pos": pos,
+    }
+
+
+def _finalize_pm_close(analiz: str, pos: dict, sell_result: dict, pre_est: dict | None) -> None:
+    state = load_state(analiz)
+    state["open_positions"] = [
+        p for p in state.get("open_positions", [])
+        if not _pm_pos_match_target(p, pos, analiz)
+    ]
+    if analiz in _PM_CLOSE_ANALYSES:
+        delta = _pm_close_pnl_from_sell(pos, sell_result, pre_est)
+        state["total_pnl"] = round(state.get("total_pnl", 0.0) + delta, 2)
+    save_state(analiz, state)
+    _record_dashboard_close(analiz, pos, {**sell_result, "_pre_est": pre_est})
+    _tg_notify_pm_early_close(analiz, pos, sell_result)
+    _POS_LIST_CACHE["ts"] = 0.0
+    _POS_LIST_CACHE["rows"] = None
+
+
 @app.route("/poly/api/close/<analiz>/<symbol>", methods=["POST"])
 def api_close(analiz, symbol):
     if _auth_required(): return jsonify({"ok": False, "error": "unauthorized"}), 401
@@ -7944,66 +8046,70 @@ def api_close(analiz, symbol):
         if not pos:
             return jsonify({"ok": False, "error": "pozisyon bulunamadı"}), 404
 
-        token_id = pos.get("pm_token_id")
-        pm_size  = float(pos.get("pm_size") or 0)
-        chain_sz = _pm_conditional_shares(token_id) if token_id else -1.0
+        result = _execute_pm_close(analiz, pos)
+        if not result.get("ok"):
+            code = 400 if "eksik" in (result.get("error") or "") else 502
+            return jsonify(result), code
 
-        if not token_id:
-            return jsonify({"ok": False, "error": f"token_id eksik ({token_id=})"}), 400
-
-        if chain_sz >= 0 and chain_sz <= 0.01:
-            pre_est = _estimate_close_value(pos)
-            # Önce PM settle (kazanç dahil), sonra worthless; asla kör kayıp yazma
-            sell_result = (
-                _pm_try_settled_reconcile(pos)
-                or _pm_try_worthless_reconcile(pos)
-                or {
-                    "ok": True, "reconciled": True, "worthless": False,
-                    "received": 0.0, "size": pm_size, "price": 0.0,
-                    "status": "already_closed",
-                }
-            )
-        else:
-            if chain_sz > 0:
-                pm_size = chain_sz
-                pos = {**pos, "pm_size": chain_sz}
-            if pm_size <= 0:
-                return jsonify({"ok": False, "error": f"pm_size eksik ({pm_size=})"}), 400
-            pre_est = _estimate_close_value(pos)
-            sell_result = _pm_sell_position_retry(
-                token_id, pm_size,
-                pm_slug=pos.get("pm_slug", ""),
-                token_dir=pos.get("pm_token_dir") or pos.get("predicted_dir", ""),
-            )
-            if not sell_result.get("ok"):
-                sell_result = (
-                    _pm_try_settled_reconcile(pos)
-                    or _pm_try_worthless_reconcile(pos)
-                    or sell_result
-                )
-
-        if not sell_result.get("ok"):
-            return jsonify({
-                "ok": False,
-                "error": _short_pm_error(sell_result.get("error", "PM satış başarısız")),
-                "sell": sell_result,
-                "symbol": symbol,
-            }), 502
-
-        state["open_positions"] = [
-            p for p in state["open_positions"] if not _match(p)
-        ]
-        if analiz in _PM_CLOSE_ANALYSES:
-            delta = _pm_close_pnl_from_sell(pos, sell_result, pre_est)
-            state["total_pnl"] = round(state.get("total_pnl", 0.0) + delta, 2)
-        save_state(analiz, state)
-        _record_dashboard_close(analiz, pos, {**sell_result, "_pre_est": pre_est})
-        _tg_notify_pm_early_close(analiz, pos, sell_result)
-
+        _finalize_pm_close(analiz, result["_pos"], result["sell"], result.get("pre_est"))
         return jsonify({
             "ok": True,
-            "sell": sell_result,
+            "sell": result["sell"],
             "symbol": symbol,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/close-all", methods=["POST"])
+def api_close_all():
+    """Tüm açık gerçek PM pozisyonlarını kapat."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    try:
+        positions = collect_positions()
+        closable = [
+            p for p in positions
+            if p.get("pm_token_id") and float(p.get("pm_size") or 0) > 0
+        ]
+        if not closable:
+            return jsonify({"ok": True, "closed": 0, "failed": 0, "total": 0, "results": []})
+
+        results = []
+        closed = failed = 0
+        for pos in closable:
+            analiz = pos["_analiz"]
+            label = pos.get("_analiz_label", analiz)
+            name = (pos.get("symbol") or "").replace("USDT", "")
+            exec_result = _execute_pm_close(analiz, pos)
+            if exec_result.get("ok"):
+                _finalize_pm_close(
+                    analiz, exec_result["_pos"], exec_result["sell"], exec_result.get("pre_est"),
+                )
+                closed += 1
+                results.append({
+                    "ok": True,
+                    "analiz": analiz,
+                    "label": label,
+                    "symbol": name,
+                    "received": exec_result["sell"].get("received"),
+                })
+            else:
+                failed += 1
+                results.append({
+                    "ok": False,
+                    "analiz": analiz,
+                    "label": label,
+                    "symbol": name,
+                    "error": exec_result.get("error"),
+                })
+
+        return jsonify({
+            "ok": failed == 0,
+            "closed": closed,
+            "failed": failed,
+            "total": len(closable),
+            "results": results,
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -9427,6 +9533,20 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
         </div>
         <button type="button" class="pm-system-btn" id="pm-system-btn-a2_08_live" onclick="togglePmSystem('a2_08_live')">Kapat</button>
       </div>
+      <div class="pm-system-bar paused" id="pm-system-bar-a2_03_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-a2_03_live">⏸ A2#03 Stoch RSI Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-a2_03_live">Saatlik BTC+ETH+SOL · $4–6 · sanal A2#03 devam · varsayılan kapalı</div>
+        </div>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-a2_03_live" onclick="togglePmSystem('a2_03_live')">Aç</button>
+      </div>
+      <div class="pm-system-bar paused" id="pm-system-bar-a2_04_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-a2_04_live">⏸ A2#04 Schaff Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-a2_04_live">Saatlik BTC+ETH+SOL · $4–6 · sanal A2#04 devam · varsayılan kapalı</div>
+        </div>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-a2_04_live" onclick="togglePmSystem('a2_04_live')">Aç</button>
+      </div>
       <div class="pm-system-bar paused" id="pm-system-bar-analiz15_live">
         <div>
           <div class="pm-system-status" id="pm-system-status-analiz15_live">⏸ A15 Live kapalı</div>
@@ -9528,6 +9648,30 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
         <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_08_amount_low" type="number" step="0.5" min="1" max="100"></div>
         <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_08_amount_mid" type="number" step="0.5" min="1" max="100"></div>
         <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_08_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A2#03 Stoch RSI Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · $4–5–6 · sembol WR</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_03_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_03_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_03_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A2#04 Schaff Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · $4–5–6 · sembol WR</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_04_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_04_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_04_amount_high" type="number" step="0.5" min="1" max="100"></div>
       </div>
     </div>
 
@@ -9649,6 +9793,20 @@ const _PM_SYSTEM_ROWS = {
     subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#08 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
     subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#08 devam) · Aç ile işlem başlar',
   },
+  a2_03_live: {
+    bar: 'pm-system-bar-a2_03_live', btn: 'pm-system-btn-a2_03_live',
+    status: 'pm-system-status-a2_03_live', sub: 'pm-system-sub-a2_03_live',
+    active: '✅ A2#03 Stoch RSI Live açılış aktif', paused: '⏸ A2#03 Stoch RSI Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#03 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#03 devam) · varsayılan kapalı · Aç ile işlem başlar',
+  },
+  a2_04_live: {
+    bar: 'pm-system-bar-a2_04_live', btn: 'pm-system-btn-a2_04_live',
+    status: 'pm-system-status-a2_04_live', sub: 'pm-system-sub-a2_04_live',
+    active: '✅ A2#04 Schaff Live açılış aktif', paused: '⏸ A2#04 Schaff Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#04 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#04 devam) · varsayılan kapalı · Aç ile işlem başlar',
+  },
   analiz15_live: {
     bar: 'pm-system-bar-analiz15_live', btn: 'pm-system-btn-analiz15_live',
     status: 'pm-system-status-analiz15_live', sub: 'pm-system-sub-analiz15_live',
@@ -9661,7 +9819,7 @@ const _PM_SYSTEM_ROWS = {
     status: 'pm-system-status-15m_309_live', sub: 'pm-system-sub-15m_309_live',
     active: '✅ 15M 309 Live açılış aktif', paused: '⏸ 15M 309 Live kapalı',
     subOn: 'Gerçek PM · 15dk BTC+ETH+SOL · $3 sabit · sanal 309 devam · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal 309 devam) · Pzt 08:00 otomatik açılır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal 309 devam) · Pzt 11:00 otomatik açılır',
   },
 };
 
@@ -9695,6 +9853,8 @@ function updatePmSystemUI(d) {
   _pmSystemRow('a2_16_live', !!d.a2_16_live_paused, d.updated_at_tr);
   _pmSystemRow('a2_02_live', !!d.a2_02_live_paused, d.updated_at_tr);
   _pmSystemRow('a2_08_live', !!d.a2_08_live_paused, d.updated_at_tr);
+  _pmSystemRow('a2_03_live', !!d.a2_03_live_paused, d.updated_at_tr);
+  _pmSystemRow('a2_04_live', !!d.a2_04_live_paused, d.updated_at_tr);
   _pmSystemRow('analiz15_live', !!d.analiz15_live_paused, d.updated_at_tr);
   _pmSystemRow('15m_309_live', !!d['15m_309_live_paused'], d.updated_at_tr);
 }
@@ -9718,6 +9878,8 @@ const _SETTINGS_KEYS = [
   'a2_16_amount_low', 'a2_16_amount_mid', 'a2_16_amount_high',
   'a2_02_amount_low', 'a2_02_amount_mid', 'a2_02_amount_high',
   'a2_08_amount_low', 'a2_08_amount_mid', 'a2_08_amount_high',
+  'a2_03_amount_low', 'a2_03_amount_mid', 'a2_03_amount_high',
+  'a2_04_amount_low', 'a2_04_amount_mid', 'a2_04_amount_high',
   'a15_amount_low', 'a15_amount_mid', 'a15_amount_high',
 ];
 
@@ -10528,6 +10690,13 @@ HTML = r"""<!DOCTYPE html>
   .close-btn:disabled { background:#333; color:#666; cursor:not-allowed; opacity:.65; }
   .close-btn:disabled:hover { background:#333; filter:none; }
   .close-btn.loading { opacity:.5; pointer-events:none; }
+  .positions-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .positions-head .section-title { margin-bottom:0; flex:1; min-width:140px; }
+  .close-all-btn { background:#2a1414; border:1px solid #7f1d1d; color:#fca5a5; font-size:12px; font-weight:800;
+    padding:8px 14px; border-radius:12px; cursor:pointer; white-space:nowrap; }
+  .close-all-btn:hover:not(:disabled) { filter:brightness(1.12); }
+  .close-all-btn:disabled { opacity:.35; cursor:not-allowed; }
+  .close-all-btn.loading { opacity:.5; pointer-events:none; }
   .empty { color:#555; font-size:14px; padding:32px 0; }
 
   /* Toplam risk — lime kart (dış kutu yok) */
@@ -10845,9 +11014,20 @@ HTML = r"""<!DOCTYPE html>
               <div class="k">Açık</div>
               <div class="v" id="total-open-mob">0</div>
             </div>
+            <div>
+              <div class="k">Anlık Kâr/Zarar</div>
+              <div class="v" id="total-upnl-mob">—</div>
+            </div>
+            <div>
+              <div class="k">Anlık Kapama Toplamı</div>
+              <div class="v" id="total-close-mob">—</div>
+            </div>
           </div>
         </div>
-        <div class="section-title" style="margin:16px 0 12px">Açık Pozisyonlar</div>
+        <div class="positions-head">
+          <div class="section-title" style="margin:16px 0 0">Açık Pozisyonlar</div>
+          <button type="button" class="close-all-btn" id="close-all-btn-mob" onclick="closeAllPositions(this)" disabled>Tümünü Kapat</button>
+        </div>
         <div class="positions" id="positions-mob">
           <div class="empty">Yükleniyor...</div>
         </div>
@@ -10897,9 +11077,20 @@ HTML = r"""<!DOCTYPE html>
             <div class="k">Açık</div>
             <div class="v" id="total-open">0</div>
           </div>
+          <div>
+            <div class="k">Anlık Kâr/Zarar</div>
+            <div class="v" id="total-upnl">—</div>
+          </div>
+          <div>
+            <div class="k">Anlık Kapama Toplamı</div>
+            <div class="v" id="total-close">—</div>
+          </div>
         </div>
       </div>
-      <div class="section-title" style="margin-bottom:12px">Açık Pozisyonlar</div>
+      <div class="positions-head">
+        <div class="section-title" style="margin-bottom:0">Açık Pozisyonlar</div>
+        <button type="button" class="close-all-btn" id="close-all-btn" onclick="closeAllPositions(this)" disabled>Tümünü Kapat</button>
+      </div>
       <div class="positions" id="positions">
         <div class="empty">Yükleniyor...</div>
       </div>
@@ -11279,6 +11470,57 @@ function openPosChartFromCard(el) {
   window.location.href = '/poly/grafik?' + q;
 }
 
+async function closeAllPositions(btn) {
+  if (!btn || btn.disabled || btn.classList.contains('loading')) return;
+  const openN = parseInt(document.getElementById('total-open')?.textContent || '0', 10);
+  if (!openN) return;
+  if (!confirm('Tüm açık Polymarket pozisyonları kapatılsın mı? (' + openN + ' pozisyon)')) return;
+  const prev = btn.textContent;
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.textContent = 'Kapatılıyor...';
+  const otherId = btn.id === 'close-all-btn' ? 'close-all-btn-mob' : 'close-all-btn';
+  const other = document.getElementById(otherId);
+  if (other) { other.disabled = true; other.classList.add('loading'); other.textContent = 'Kapatılıyor...'; }
+  try {
+    const r = await fetch('/poly/api/close-all', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+    });
+    let d;
+    try { d = await r.json(); } catch (_) {
+      alert('Sunucu yanıtı okunamadı');
+      return;
+    }
+    if (!d.ok && !d.closed) {
+      alert(d.error || 'Kapatma başarısız');
+      return;
+    }
+    const msg = '✅ ' + d.closed + ' kapatıldı' + (d.failed ? ' · ' + d.failed + ' hata' : '');
+    btn.textContent = msg;
+    if (other) other.textContent = msg;
+    setTimeout(refresh, 1500);
+  } catch (e) {
+    alert(e.message);
+    btn.textContent = prev;
+    if (other) other.textContent = prev;
+  } finally {
+    btn.classList.remove('loading');
+    if (other) other.classList.remove('loading');
+    setTimeout(() => {
+      const closableN = parseInt(document.getElementById('total-open')?.textContent || '0', 10);
+      const dis = closableN === 0;
+      ['close-all-btn', 'close-all-btn-mob'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = dis;
+        if (el.textContent.startsWith('✅')) el.textContent = 'Tümünü Kapat';
+      });
+    }, 4000);
+  }
+}
+
 async function closePosition(analiz, symbol, btn, orderId) {
   if (btn.disabled || btn.classList.contains('loading')) return;
   btn.disabled = true;
@@ -11415,6 +11657,12 @@ async function refresh() {
     if (toEl) toEl.textContent = openN;
     const toMob = document.getElementById('total-open-mob');
     if (toMob) toMob.textContent = openN;
+    updateRiskCardTotals(d.positions || []);
+    const closableN = (d.positions || []).filter(p => p.closable).length;
+    ['close-all-btn', 'close-all-btn-mob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.classList.contains('loading')) el.disabled = closableN === 0;
+    });
 
     // Pozisyonlar — stats'tan önce boya
     const pc    = document.getElementById('positions');
@@ -11641,6 +11889,25 @@ function top3DonutSVG(pct, color){
       stroke-dasharray="${fill} ${bg}" stroke-linecap="round"/>
   </svg>`;
 }
+function updateRiskCardTotals(items) {
+  const positions = items || [];
+  const havePnl = positions.some(p => p.close_pnl != null);
+  const totalUpnl = positions.reduce((acc, p) => acc + (p.close_pnl || 0), 0);
+  const upnlStr = havePnl
+    ? (totalUpnl >= 0 ? '+' : '-') + '$' + Math.abs(totalUpnl).toFixed(2)
+    : '—';
+  const upEl = document.getElementById('total-upnl');
+  if (upEl) upEl.textContent = upnlStr;
+  const upMob = document.getElementById('total-upnl-mob');
+  if (upMob) upMob.textContent = upnlStr;
+  const haveClose = positions.some(p => p.close_val != null);
+  const totalClose = positions.reduce((acc, p) => acc + (p.close_val != null ? p.close_val : 0), 0);
+  const closeStr = haveClose ? '$' + totalClose.toFixed(2) : '—';
+  const tcEl = document.getElementById('total-close');
+  if (tcEl) tcEl.textContent = closeStr;
+  const tcMob = document.getElementById('total-close-mob');
+  if (tcMob) tcMob.textContent = closeStr;
+}
 function patchPositionsLive(items, updated) {
   items.forEach(p => {
     const key = p.live_key || (
@@ -11689,6 +11956,7 @@ async function refreshPositionsLive() {
     if (!r.ok) return;
     const d = await r.json();
     patchPositionsLive(d.positions || [], d.updated);
+    updateRiskCardTotals(d.positions || []);
   } catch (e) { console.error('positions-live', e); }
   finally { window._posLiveBusy = false; }
 }
@@ -11949,7 +12217,7 @@ function renderHeatmap(cells) {
 _SETTINGS_FILE = os.path.join(_DIR_POLY, "analiz5_settings.json")
 _AMT_META = {"unit": "$", "min": 1, "max": 100, "step": 0.5}
 _SETTINGS_LABELS = {}
-for _pfx, _lbl in (("a1", "A1 Live"), ("a2", "A2 Live"), ("a10", "A10 Live"), ("a6", "A6 Live"), ("a2_16", "A2#16 Supertrend Live"), ("a2_02", "A2#02 RSI Div Live"), ("a2_08", "A2#08 Williams Live"), ("a15", "A15 Live")):
+for _pfx, _lbl in (("a1", "A1 Live"), ("a2", "A2 Live"), ("a10", "A10 Live"), ("a6", "A6 Live"), ("a2_16", "A2#16 Supertrend Live"), ("a2_02", "A2#02 RSI Div Live"), ("a2_08", "A2#08 Williams Live"), ("a2_03", "A2#03 Stoch RSI Live"), ("a2_04", "A2#04 Schaff Live"), ("a15", "A15 Live")):
     for _tier, _tier_lbl in (("low", "düşük"), ("mid", "orta"), ("high", "yüksek")):
         _SETTINGS_LABELS[f"{_pfx}_amount_{_tier}"] = {
             "label": f"{_lbl} {_tier_lbl} WR giriş", **_AMT_META,
@@ -11964,6 +12232,8 @@ def _read_settings() -> dict:
         "a2_16_amount_low": 8.0, "a2_16_amount_mid": 12.0, "a2_16_amount_high": 16.0,
         "a2_02_amount_low": 4.0, "a2_02_amount_mid": 5.0, "a2_02_amount_high": 6.0,
         "a2_08_amount_low": 4.0, "a2_08_amount_mid": 5.0, "a2_08_amount_high": 6.0,
+        "a2_03_amount_low": 4.0, "a2_03_amount_mid": 5.0, "a2_03_amount_high": 6.0,
+        "a2_04_amount_low": 4.0, "a2_04_amount_mid": 5.0, "a2_04_amount_high": 6.0,
         "a15_amount_low": 12.0, "a15_amount_mid": 16.0, "a15_amount_high": 20.0,
     }
     if os.path.exists(_SETTINGS_FILE):
@@ -12181,7 +12451,7 @@ body{
       <div class="chip" id="sum-chip">—</div>
     </div>
     <div class="section">
-      <div class="section-title">17 algoritma durumu · en iyi → en kötü</div>
+      <div class="section-title">algoritma durumu · en iyi → en kötü</div>
       <div id="algo-books"><div class="empty">yükleniyor…</div></div>
     </div>
   </div>
@@ -12710,7 +12980,7 @@ body{
   <div class="head">
     <div>
       <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">…</span></div>
-      <div class="page-sub" id="page-sub">Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · majors önce · top-4 · $7 × 20x · ATR kâr kilidi</div>
+      <div class="page-sub" id="page-sub">Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · BTC/ETH/BNB açılış yok · top-4 · $7 × 20x · ATR kâr kilidi</div>
     </div>
   </div>
 
@@ -12800,13 +13070,13 @@ body{
     <div class="head">
       <div>
         <div class="page-title">Algoritmalar</div>
-        <div class="page-sub">Aktif open: A2#05/#06/#07 + A1#11 · $7×20x max6 · diğerleri close/trail · Pzt 08:00</div>
+        <div class="page-sub">17 defter sanalda $30×10x açıyor (max6) · A2#05/#06/#07 + A1#11 gerçek Binance'te de $7×20x · Pzt 11:00</div>
       </div>
       <div class="chip" id="algo-sum">—</div>
     </div>
     <div class="panel" style="grid-template-columns:1fr">
       <div class="section">
-        <div class="section-title">17 algoritma durumu</div>
+        <div class="section-title">algoritma durumu</div>
         <div id="algo-books"><div class="empty">yükleniyor…</div></div>
       </div>
     </div>
@@ -13332,7 +13602,7 @@ function renderLiveBar(d){
     topIn.max = d.top_n_max != null ? d.top_n_max : 10;
     topIn.value = String(topN);
   }
-  if(pageSub) pageSub.textContent = 'Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · majors önce · top-' + topN + ' · $7 × 20x · ATR kâr kilidi';
+  if(pageSub) pageSub.textContent = 'Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · BTC/ETH/BNB açılış yok · top-' + topN + ' · $7 × 20x · ATR kâr kilidi';
   btn.textContent = dashPaused ? 'Aç' : 'Kapat';
   btn.disabled = !envOn ? true : false;
 }
@@ -13362,7 +13632,7 @@ async function saveTopN(){
     if(!d.ok){ alert(d.error || 'max poz kaydedilemedi'); return; }
     if(d.top_n != null) el.value = String(d.top_n);
     const pageSub = document.getElementById('page-sub');
-    if(pageSub) pageSub.textContent = 'Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · majors önce · top-' + (d.top_n || v) + ' · $7 × 20x · ATR kâr kilidi';
+    if(pageSub) pageSub.textContent = 'Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · BTC/ETH/BNB açılış yok · top-' + (d.top_n || v) + ' · $7 × 20x · ATR kâr kilidi';
     const sub = document.getElementById('live-bar-sub');
     if(sub && sub.textContent){
       // refresh alt yazı için hafif poll
@@ -13525,7 +13795,7 @@ function renderBooks(elId, sumId, d){
     const sizeTag = active
       ? (` · <span style="color:var(--accent)">AKTİF $${m.toFixed(0)}×${lev}x</span>`)
       : (` · $${m.toFixed(0)}×${lev}x · open kapalı`);
-    const liveDot = active ? '<span class="algo-live-dot" title="Canlı — gerçek Binance işlemi de açıyor"></span>' : '';
+    const liveDot = b.real_live ? '<span class="algo-live-dot" title="Canlı — gerçek Binance işlemi de açıyor ($7×20x)"></span>' : '';
     return `<a class="book-card" href="${href}" style="${active?'border-color:rgba(200,241,53,.35)':''}">
       <div class="bt">${liveDot}${title}${active?' · ▶':''}</div>
       <div class="bs">${sub} · ${wr} · ${b.history_n||0} işlem${sizeTag}</div>

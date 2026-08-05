@@ -93,7 +93,7 @@ def now_tr_iso() -> str:
 
 
 def in_weekend_pause_tr(now: datetime | None = None) -> bool:
-    """Cum 22:00 – Pzt 08:00 İST — sanal Algoritma/Analiz open/close/trail yok."""
+    """Cum 22:00 – Pzt 11:00 İST — sanal Algoritma/Analiz open/close/trail yok."""
     n = now or now_tr()
     if n.tzinfo is None:
         n = n.replace(tzinfo=_TZ)
@@ -104,7 +104,7 @@ def in_weekend_pause_tr(now: datetime | None = None) -> bool:
         return True
     if dow in (5, 6):
         return True
-    if dow == 0 and h < 8:
+    if dow == 0 and h < 11:
         return True
     return False
 

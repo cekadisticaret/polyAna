@@ -1,6 +1,6 @@
 """Hafta sonu PM dashboard senkronu (İST).
 
-Cuma 22:00 kapat · Pzt 08:00 erken aç (A6/A2#16/A15) · Pzt 12:00 A1/A2/A10 aç.
+Cuma 22:00 kapat · Pzt 11:00 erken aç (A6/A2#16/A15) · Pzt 12:00 A1/A2/A10 aç.
 Manuel aç/kapat her zaman mümkün — cron yalnızca tek seferlik tetiklenir.
 """
 from __future__ import annotations
@@ -22,9 +22,9 @@ def main() -> None:
         state = weekend_pause_all()
         print("[PM WEEKEND] Cuma 22:00 — sistemler kapatildi")
     elif mode in ("open", "open_early"):
-        # Pzt 08:00 — A1/A2/A10 kapalı kalır (12:00'e kadar)
+        # Pzt 11:00 — A1/A2/A10 kapalı kalır (12:00'e kadar)
         state = weekend_resume_early()
-        print("[PM WEEKEND] Pazartesi 08:00 — erken acilis (A1/A2/A10 haric)")
+        print("[PM WEEKEND] Pazartesi 11:00 — erken acilis (A1/A2/A10 haric)")
     elif mode in ("open_a1a2a10", "open_late"):
         state = weekend_resume_a1a2a10()
         print("[PM WEEKEND] Pazartesi 12:00 — A1/A2/A10 acildi")

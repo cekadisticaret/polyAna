@@ -5,10 +5,12 @@
   "analiz6_live_paused": true,
   "15m_309_live_paused": true,
   "a2_16_live_paused": true,
-  "a2_02_live_paused": false,
-  "a2_08_live_paused": false,
+  "a2_02_live_paused": true,
+  "a2_08_live_paused": true,
+  "a2_03_live_paused": false,
+  "a2_04_live_paused": true,
   "analiz15_live_paused": true,
   "a3a8_signal_strict": true,
-  "updated_at_tr": "2026-08-04T14:40:58.974324+03:00",
-  "updated_by": "revert_poly_pause_mistake"
+  "updated_at_tr": "2026-08-05T10:47:04.622049+03:00",
+  "updated_by": "dashboard"
 }

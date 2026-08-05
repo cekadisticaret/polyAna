@@ -48,13 +48,17 @@ alwaysApply: true
 | `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py open` | `/tmp/poly_trader_a2_02_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_08_live.py close` | `/tmp/poly_trader_a2_08_live.log` |
 | `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_08_live.py open` | `/tmp/poly_trader_a2_08_live.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_03_live.py close` | `/tmp/poly_trader_a2_03_live.log` |
+| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_03_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_03_live.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py close` | `/tmp/poly_trader_a2_04_live.log` |
+| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_04_live.log` |
 | `*/30 * * * *` | `cd /root/aiProject/crypto-news-monitor && ./run_once.sh` | `/tmp/crypto_news_monitor.log` |
 | `2 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh close` | `/tmp/poly_analiz3_freqtrade.log` |
 | `5 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh open` | `/tmp/poly_analiz3_freqtrade.log` |
 | `2 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh close` | `/tmp/poly_analiz8_jesse.log` |
 | `5 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh open` | `/tmp/poly_analiz8_jesse.log` |
 | `0 19 * * 5` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py close` | `/tmp/pm_weekend_sync.log` |
-| `0 5 * * 1` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py open` | `/tmp/pm_weekend_sync.log` |
+| `0 8 * * 1` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py open` (Pzt 11:00 İST erken) | `/tmp/pm_weekend_sync.log` |
 | `0 21 * * *` | `temmuzPoly/weekly_slot_heatmap_all.py send` (00:00 İST — A15/A4 TG) | `/tmp/weekly_slot_heatmap_all.log` |
 | `15 * * * *` | `temmuzPoly/slot_data_archive.py` (saatlik slot arşivi) | `/tmp/slot_data_archive.log` |
 
@@ -72,9 +76,9 @@ alwaysApply: true
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
 - Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk).
 - A7’nin cron’u yoktu; trader kaldırıldı.
-- **Hafta sonu:** Cum **22:00** – Pzt **08:00** İST — Live **open** atlanır; **close** çalışır. **Sanal 15M** (110 + A2 309/316/317) + A2 Top17 + A4 + A6 + A10 + A15: aynı pencerede open kapalı; Pzt **08:00**’de devam. Dashboard Live anahtarı ayrıca açılışı kesebilir.
-- **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **08:00** İST — `open` / `close` / `trail` atlanır (kod içi). Algoritmalar aktif open (sanal): **A2#05/#06/#07 + A1#11 $7×20x**; diğer defterler yalnızca close/trail. **Binance Algoritmalar Live (gerçek para)** ayrı — aynı 4 algonun çoğunluk oyu; dashboard Live toggle + top-N.
-- **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **08:00** İST (`0 19 * * 5` / `0 5 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
+- **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** atlanır; **close** çalışır. **Sanal 15M** (110 + A2 309/316/317) + A2 Top17 + A4 + A6 + A10 + A15: aynı pencerede open kapalı; Pzt **11:00**’de devam. Dashboard Live anahtarı ayrıca açılışı kesebilir.
+- **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **11:00** İST — `open` / `close` / `trail` atlanır (kod içi). Algoritmalar sanal: **tüm 51 defter open $30×10x** (komisyon dahil net PnL); A2#05/#06/#07 + A1#11 ek olarak `real_live` işaretli. **Binance Algoritmalar Live (gerçek para)** ayrı sistem — aynı 4 algonun çoğunluk oyu, **$7×20x**; dashboard Live toggle + top-N.
+- **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **11:00** İST (`0 19 * * 5` / `0 8 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis). Public: `bursaapp.com/poly` · Kripto Future: `bursaapp.com/kripto`.
 - **Kaynak silinme izleme:** `aiproject-file-watch.service` → log `/tmp/aiproject_file_watch.log`; olaylar `ops/incidents/`. Geri yükleme: `ops/CRITICAL_FILE_RESTORE.md` (**09:17 / 09:23 / 13:25 İST**, 2026-08-02). audit: `ausearch -k aiproject_del -ts recent -i`
 
@@ -93,6 +97,8 @@ tail -f /tmp/chart_algo_panel_wr.log
 tail -f /tmp/poly_trader_a2.log
 tail -f /tmp/poly_trader_a2_02_live.log
 tail -f /tmp/poly_trader_a2_08_live.log
+tail -f /tmp/poly_trader_a2_03_live.log
+tail -f /tmp/poly_trader_a2_04_live.log
 tail -f /tmp/crypto_futures_cr6.log
 tail -f /tmp/crypto_futures_cr6_trail.log
 tail -f /tmp/agustos_algoritmalar.log

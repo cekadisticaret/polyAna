@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Binance USD-M komisyon yardımcıları — brüt → net PnL.
 
-Varsayılan taker %0.04 (MARKET). Canlıda commissionRate / userTrades ile gerçek değer.
+Varsayılan taker %0.05 (MARKET, VIP0 regular). Canlıda commissionRate / userTrades ile gerçek değer.
 """
 from __future__ import annotations
 
 import time
 from typing import Any
 
-# Binance USDT-M VIP0 varsayılanları
-DEFAULT_TAKER_FEE = 0.0004
+# Binance USDT-M VIP0 (regular) varsayılanları
+DEFAULT_TAKER_FEE = 0.0005
 DEFAULT_MAKER_FEE = 0.0002
 
 _RATE_CACHE: dict[str, tuple[float, float, float]] = {}  # symbol -> (taker, maker, ts)

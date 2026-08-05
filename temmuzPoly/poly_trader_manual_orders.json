@@ -362,5 +362,26 @@
     "symbol": "BTCUSDT",
     "dir": "DOWN",
     "registered_at": "2026-08-04T00:16:44.981970+03:00"
+  },
+  {
+    "pm_order_id": "0x10c1b022a114506734bb8307249a57d9ed236b50ae9fb274097615d538eb4b98",
+    "pm_slug": "solana-up-or-down-august-4-2026-1pm-et",
+    "symbol": "SOLUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-04T20:16:08.408558+03:00"
+  },
+  {
+    "pm_order_id": "0xd9f693d1c6cb24d5c89966ef1dfe18c69baecb82a93973af11ac9e59b8791fd4",
+    "pm_slug": "solana-up-or-down-august-4-2026-6pm-et",
+    "symbol": "SOLUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-05T01:21:56.517563+03:00"
+  },
+  {
+    "pm_order_id": "0xd808e64285d9577028498268068b93178504eccf4e2a3af9669f2530a1dbadda",
+    "pm_slug": "solana-up-or-down-august-4-2026-6pm-et",
+    "symbol": "SOLUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-05T01:34:35.915116+03:00"
   }
 ]

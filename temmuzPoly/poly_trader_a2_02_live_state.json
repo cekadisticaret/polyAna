@@ -1,54 +1,5 @@
 {
   "balance": 0.0,
-  "open_positions": [
-    {
-      "symbol": "ETHUSDT",
-      "predicted_dir": "DOWN",
-      "entry_price": 1871.98,
-      "entry_time_tr": "2026-08-04T15:06:15.611634+03:00",
-      "entry_hour_tr": 15,
-      "entry_dow": 1,
-      "entry_is_weekend": false,
-      "amount": 8.0,
-      "algo_name": "RSI Diverjansı (14) Katı",
-      "algo_num": 2,
-      "algo_signal": "DOWN",
-      "hot_hour_boost": false,
-      "cold_hour_cut": false,
-      "pm_slug": "ethereum-up-or-down-august-4-2026-8am-et",
-      "pm_title": "Ethereum Up or Down - August 4, 8AM ET",
-      "pm_token_id": "81234180898107132715047515016506509136576230756544094061165531983743356009988",
-      "pm_token_dir": "DOWN",
-      "pm_size": 12.0,
-      "pm_entry_price": 0.67,
-      "pm_order_id": "0xc5c02bc8d9d0db7fc29ab015c51a0fd0c8127b44bb6b770a7a88fbcf579735a0",
-      "pm_spent": 8.04,
-      "pm_live": true
-    },
-    {
-      "symbol": "SOLUSDT",
-      "predicted_dir": "DOWN",
-      "entry_price": 73.92,
-      "entry_time_tr": "2026-08-04T15:06:15.611634+03:00",
-      "entry_hour_tr": 15,
-      "entry_dow": 1,
-      "entry_is_weekend": false,
-      "amount": 8.0,
-      "algo_name": "RSI Diverjansı (14) Katı",
-      "algo_num": 2,
-      "algo_signal": "DOWN",
-      "hot_hour_boost": false,
-      "cold_hour_cut": false,
-      "pm_slug": "solana-up-or-down-august-4-2026-8am-et",
-      "pm_title": "Solana Up or Down - August 4, 8AM ET",
-      "pm_token_id": "60038687221259292294466400575032978977026048564552955457248426486426755863994",
-      "pm_token_dir": "DOWN",
-      "pm_size": 11.25,
-      "pm_entry_price": 0.72,
-      "pm_order_id": "0x142ed9cad5f82c79caf389da0ea5f9c240e72628951429ca760f73b72518ec96",
-      "pm_spent": 8.1,
-      "pm_live": true
-    }
-  ],
-  "total_pnl": 0.0
+  "open_positions": [],
+  "total_pnl": 110.66
 }

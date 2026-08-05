@@ -24,5 +24,26 @@
     "exit_time_tr": "2026-08-03T10:15:27.437132+03:00",
     "pnl": 0.78,
     "pm_live": true
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 73.48,
+    "exit_price": 74.14,
+    "entry_time_tr": "2026-08-05T04:05:22.123023+03:00",
+    "entry_hour_tr": 4,
+    "entry_dow": 2,
+    "amount": 12.0,
+    "pnl": 8.82,
+    "pm_live": true,
+    "exit_time_tr": "2026-08-05T05:02:25.875165+03:00",
+    "pm_spent": 12.18,
+    "pm_size": 21.0,
+    "pm_slug": "solana-up-or-down-august-4-2026-9pm-et",
+    "score_b": 1,
+    "conf_a": 0.9,
+    "tier": "⚡ Bir güçlü bir orta"
   }
 ]

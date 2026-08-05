@@ -1,9 +1,9 @@
 {
-  "balance": 277.97,
+  "balance": 279.43,
   "deposit": 300.0,
   "open_positions": [],
-  "total_pnl": -22.0126,
-  "total_commission": 11.881038,
-  "updated_at_tr": "2026-08-04T15:02:19.061287+03:00",
-  "last_open_slot": "2026-08-04 14:00"
+  "total_pnl": -20.5408,
+  "total_commission": 15.708562,
+  "updated_at_tr": "2026-08-05T10:02:19.902800+03:00",
+  "last_open_slot": "2026-08-05 09:00"
 }

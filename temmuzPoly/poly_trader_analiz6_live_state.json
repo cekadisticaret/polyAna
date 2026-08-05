@@ -1,5 +1,25 @@
 {
   "balance": 300,
-  "open_positions": [],
-  "total_pnl": 23.21
+  "open_positions": [
+    {
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 1868.84,
+      "entry_time_tr": "2026-08-05T10:06:32+03:00",
+      "entry_hour_tr": 10,
+      "entry_dow": 2,
+      "entry_is_weekend": false,
+      "amount": 6.29,
+      "pm_spent": 6.29,
+      "pm_slug": "ethereum-up-or-down-august-5-2026-3am-et",
+      "pm_token_dir": "UP",
+      "pm_token_id": "88361915484896144729373458233127642194817566860911348687209482994396181417074",
+      "pm_size": 14.06,
+      "pm_entry_price": 0.4474,
+      "pm_order_id": "0x6da3253fba16cbf4398d09d94394be1d3b5b859e9326b4c8ee755209b75eef3a",
+      "pm_live": true,
+      "synced_from_chain": true
+    }
+  ],
+  "total_pnl": 56.27
 }

@@ -19,16 +19,18 @@ _LABEL_GROUPS = {
     "A2#16 Supertrend Live": "a2_16_live",
     "A2#02 RSI Div Live": "a2_02_live",
     "A2#08 Williams Live": "a2_08_live",
+    "A2#03 Stoch RSI Live": "a2_03_live",
+    "A2#04 Schaff Live": "a2_04_live",
     "15. ANALİZ LIVE": "analiz15_live",
 }
 _VALID_GROUPS = frozenset({
     "analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live",
-    "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live",
 })
 # 15M 309 Live hafta sonu da çalışır — weekend cron bunu kapatmaz
 _WEEKEND_GROUPS = (
     "analiz5", "analiz2", "analiz10", "analiz6_live",
-    "a2_16_live", "a2_02_live", "a2_08_live", "analiz15_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live",
 )
 
 
@@ -42,6 +44,8 @@ def _load_control() -> dict:
         "a2_16_live_paused": True,
         "a2_02_live_paused": True,
         "a2_08_live_paused": True,
+        "a2_03_live_paused": True,
+        "a2_04_live_paused": True,
         "analiz15_live_paused": True,
         "a3a8_signal_strict": True,
         "updated_at_tr": "",
@@ -115,9 +119,11 @@ def get_pm_system_control() -> dict:
     a2_16l = bool(c.get("a2_16_live_paused", True))
     a2_02l = bool(c.get("a2_02_live_paused", True))
     a2_08l = bool(c.get("a2_08_live_paused", True))
+    a2_03l = bool(c.get("a2_03_live_paused", True))
+    a2_04l = bool(c.get("a2_04_live_paused", True))
     a15l = bool(c.get("analiz15_live_paused", True))
     strict = bool(c.get("a3a8_signal_strict", True))
-    all_paused = a5 and a2 and a10 and a6l and m309 and a2_16l and a2_02l and a2_08l and a15l
+    all_paused = a5 and a2 and a10 and a6l and m309 and a2_16l and a2_02l and a2_08l and a2_03l and a2_04l and a15l
     return {
         "analiz5_paused": a5,
         "analiz2_paused": a2,
@@ -127,6 +133,8 @@ def get_pm_system_control() -> dict:
         "a2_16_live_paused": a2_16l,
         "a2_02_live_paused": a2_02l,
         "a2_08_live_paused": a2_08l,
+        "a2_03_live_paused": a2_03l,
+        "a2_04_live_paused": a2_04l,
         "analiz15_live_paused": a15l,
         "a3a8_signal_strict": strict,
         "a3a8_signal_mode": "strict" if strict else "loose",
@@ -173,7 +181,7 @@ def set_pm_open_paused(paused: bool, *, source: str = "dashboard") -> dict:
     return get_pm_system_control()
 
 
-_WEEKEND_EARLY_GROUPS = ("analiz6_live", "a2_16_live", "analiz15_live")  # Pzt 08:00
+_WEEKEND_EARLY_GROUPS = ("analiz6_live", "a2_16_live", "analiz15_live")  # Pzt 11:00
 _WEEKEND_LATE_GROUPS = ("analiz5", "analiz2", "analiz10")  # A1/A2/A10 — Pzt 12:00
 
 
@@ -183,7 +191,7 @@ def weekend_pause_all(*, source: str = "weekend_cron") -> dict:
 
 
 def weekend_resume_early(*, source: str = "weekend_cron") -> dict:
-    """Pazartesi 08:00 — A1/A2/A10 hariç weekend gruplarını aç."""
+    """Pazartesi 11:00 — A1/A2/A10 hariç weekend gruplarını aç."""
     data = _load_control()
     for g in _WEEKEND_EARLY_GROUPS:
         data[f"{g}_paused"] = False

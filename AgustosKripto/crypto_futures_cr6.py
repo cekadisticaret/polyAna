@@ -62,6 +62,7 @@ from crypto_futures_trader import (  # noqa: E402
     dust_sweep,
     estimate_qty,
     get_positions,
+    is_live_open_excluded,
     load_config,
     open_market,
     usdt_balance,
@@ -199,10 +200,16 @@ def _enabled() -> bool:
 
 
 def _symbols() -> list[str]:
-    """Allowlist ∩ Algoritmalar Live evreni."""
+    """Allowlist ∩ Algoritmalar Live evreni — BTC/ETH/BNB yeni açılış dışı."""
     cfg = load_config()
     allow = {s.upper() for s in (cfg.get("symbols") or [])}
-    return [s for s in FG_SYMBOLS if s in allow] or list(FG_SYMBOLS)
+    syms = [
+        s for s in FG_SYMBOLS
+        if s in allow and not is_live_open_excluded(s)
+    ]
+    if syms:
+        return syms
+    return [s for s in FG_SYMBOLS if not is_live_open_excluded(s)]
 
 
 def _tier(symbol: str) -> int:
@@ -754,6 +761,8 @@ def run_open() -> dict:
         if len(opened) >= slots_left:
             break
         sym = cand["symbol"]
+        if is_live_open_excluded(sym):
+            continue
         if str(sym).upper() in held_syms:
             continue  # ATR runner / mevcut açık
         side = "LONG" if cand["signal"] == "UP" else "SHORT"

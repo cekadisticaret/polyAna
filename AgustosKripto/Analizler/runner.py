@@ -116,7 +116,7 @@ def _pick_supertrend(cands: list[dict], max_n: int = 4) -> list[dict]:
 def _skip_weekend(cmd: str) -> dict | None:
     if not in_weekend_pause_tr():
         return None
-    print(f"[Analizler] hafta sonu — {cmd} skip (Cum 22:00 – Pzt 08:00 İST)")
+    print(f"[Analizler] hafta sonu — {cmd} skip (Cum 22:00 – Pzt 11:00 İST)")
     return {"ok": True, "skipped": "weekend_pause", "cmd": cmd, "results": []}
 
 

@@ -1954,5 +1954,39 @@
     "to_win": 22.18,
     "pm_slug": "bitcoin-up-or-down-august-4-2026-12am-et",
     "tier": "⚡ Bir güçlü bir orta"
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 73.48,
+    "exit_price": 74.15,
+    "entry_time_tr": "2026-08-05T04:05:22.240045+03:00",
+    "entry_hour_tr": 4,
+    "entry_dow": 2,
+    "entry_is_weekend": false,
+    "amount": 16.0,
+    "pnl": 13.91,
+    "virtual": true,
+    "exit_time_tr": "2026-08-05T05:02:25.428668+03:00",
+    "score_b": 1,
+    "conf_a": 0.9,
+    "votes": [
+      1,
+      0,
+      0,
+      1
+    ],
+    "ind_poly_ok": true,
+    "ind_trend_ok": null,
+    "ind_mr_ok": null,
+    "ind_of_ok": true,
+    "pm_spent": 16.0,
+    "pm_size": 29.91,
+    "pm_entry_price": 0.535,
+    "to_win": 29.91,
+    "pm_slug": "solana-up-or-down-august-4-2026-9pm-et",
+    "tier": "⚡ Bir güçlü bir orta"
   }
 ]
