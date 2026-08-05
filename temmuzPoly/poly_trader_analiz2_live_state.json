@@ -1,6 +1,32 @@
 {
   "balance": 300.0,
-  "open_positions": [],
+  "open_positions": [
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 73.93,
+      "entry_time_tr": "2026-08-05T11:05:21.843581+03:00",
+      "entry_hour_tr": 11,
+      "entry_dow": 2,
+      "entry_is_weekend": false,
+      "amount": 12.0,
+      "signal_mode": "standard",
+      "us_market_open": false,
+      "ind_rsi_vote": "DOWN",
+      "ind_rsi_val": 71.9,
+      "ind_macd_vote": "DOWN",
+      "ind_ema_vote": "NEUTRAL",
+      "pm_slug": "solana-up-or-down-august-5-2026-4am-et",
+      "pm_title": "Solana Up or Down - August 5, 4AM ET",
+      "pm_token_id": "85682755013133846970670281893337444889962671317098022467366653520214833410384",
+      "pm_token_dir": "DOWN",
+      "pm_size": 33.5,
+      "pm_entry_price": 0.36,
+      "pm_order_id": "0x726dcbef9003840dc752e65bf3b2238f5e8098cd240ffd5b9fb6cf66490f7a78",
+      "pm_spent": 12.06,
+      "pm_live": true
+    }
+  ],
   "total_pnl": 28.25,
   "pnl_reset_tr": "2026-07-28T08:36:14+03:00",
   "pnl_reset_prev": -47.49

@@ -17,6 +17,8 @@ from poly_predictor_analysis import _fetch_klines
 from pm_trader_helpers import (
     SANAL_INITIAL_BALANCE,
     apply_pm_quote,
+    pm_sanal_settle_trade,
+    pm_sanal_slot_candle,
     resolve_slot_trade_amount,
     sanal_pnl,
     skip_if_weekend_pause,
@@ -241,16 +243,18 @@ async def run_close(cfg: A2Config, *, notify: bool = True) -> str | None:
     failed: list[dict] = []
 
     for pos in list(state["open_positions"]):
-        klines = await _fetch_klines(pos["symbol"], "1h", 2)
-        if not klines:
+        candle = pm_sanal_slot_candle(pos["symbol"], pos["entry_time_tr"])
+        if not candle:
             failed.append(pos)
             continue
-        current_price = klines[-1]["close"]
-        entry = pos["entry_price"]
+        hour_open, hour_close = candle
+        settled = pm_sanal_settle_trade(pos, hour_open, hour_close)
+        current_price = settled["exit_price"]
+        entry = settled["entry_price"]
         pred = pos["predicted_dir"]
-        actual = "UP" if current_price >= entry else "DOWN"
-        win = pred == actual
-        pnl = sanal_pnl(pos, win)
+        actual = settled["actual_dir"]
+        win = settled["win"]
+        pnl = settled["pnl"]
         toplam_pnl += pnl
         state["balance"] = round(state["balance"] + pnl, 2)
         state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)

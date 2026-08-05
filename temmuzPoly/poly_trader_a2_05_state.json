@@ -1,30 +1,7 @@
 {
-  "balance": 595.34,
-  "open_positions": [
-    {
-      "symbol": "ETHUSDT",
-      "predicted_dir": "UP",
-      "entry_price": 1868.84,
-      "entry_time_tr": "2026-08-05T10:06:21.629392+03:00",
-      "entry_hour_tr": 10,
-      "entry_dow": 2,
-      "entry_is_weekend": false,
-      "amount": 16.0,
-      "hot_hour_boost": false,
-      "cold_hour_cut": false,
-      "algo_signal": "UP",
-      "algo_name": "Mean Reversion (Z-Score)",
-      "algo_num": 5,
-      "pm_slug": "ethereum-up-or-down-august-5-2026-3am-et",
-      "pm_title": "Ethereum Up or Down - August 5, 3AM ET",
-      "pm_token_dir": "UP",
-      "pm_entry_price": 0.415,
-      "pm_spent": 16.0,
-      "pm_size": 38.55,
-      "to_win": 38.55
-    }
-  ],
-  "total_pnl": 295.34,
+  "balance": 553.18,
+  "open_positions": [],
+  "total_pnl": 253.18,
   "balance_reset_at_tr": "2026-08-01T08:59:43.520965+03:00",
   "balance_reset_note": "fixed to $300 (was bal=188.65 pnl=-111.35 open=0)"
 }

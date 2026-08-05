@@ -18,7 +18,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/chart_hourly_signals.py` | Grafik overlay — 1. Analiz (A1) + 3. Freqtrade (A3) + Jesse A8 saatlik UP/DOWN okları. |
 | `temmuzPoly/a3a8_signal_mode.py` | A3/A8 sıkı (filtreli) vs gevşek mod (`a3a8_signal_strict`; sıkı=entry/kesişim veya momentum+RSI teyit) |
 | `temmuzPoly/chart_algo_panel.py` | Grafik ALG1/ALG2 — 5m/15m konsensüs + slot WR takibi (`update_wr` cron */5). |
-| `web/poly_dashboard.py` | Poly dashboard port **5050** — menüde Kripto Future → **bursaapp.com/kripto**; `/algoritma-islemler` A2 Top-17 Poly sanal kartlar; anlık kapatma + **Tümünü Kapat** (`/poly/api/close-all`). |
+| `web/poly_dashboard.py` | Poly dashboard port **5050** — `/algoritma-islemler` A2 Top-17 Poly sanal; WR/işlem sayısı reset sonrası; **Tümünü Kapat** (`/poly/api/close-all`). |
+| `temmuzPoly/repair_a2_sanal_settlement.py` | A2 sanal geçmişi PM slot open/close ile yeniden hesaplar (Binance 1h). |
 | `scripts/watch_critical_files.py` | Kritik kaynak inotify izleyici — silinmede `ops/incidents/` olay kaydı |
 | `ops/CRITICAL_FILE_RESTORE.md` | 2026-08-02 kaynak silinme / geri yükleme zaman çizelgesi |
 | `ops/incidents/` | Silinme/eksik olay JSON+txt (process, git D, audit) |

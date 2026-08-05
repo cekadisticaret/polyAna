@@ -2065,9 +2065,16 @@ def _build_a2_poly_books() -> dict:
             state = json.load(open(spath, encoding="utf-8")) if os.path.exists(spath) else {}
         except Exception:
             continue
+        reset_at = state.get("balance_reset_at_tr")
+        hist_stats = hist
+        if reset_at:
+            hist_stats = [
+                t for t in hist
+                if (t.get("exit_time_tr") or "") >= reset_at
+            ]
         bal = round(float(state.get("balance") or init_bal), 2)
-        total = len(hist)
-        wins = sum(1 for t in hist if t.get("win"))
+        total = len(hist_stats)
+        wins = sum(1 for t in hist_stats if t.get("win"))
         wr = round(wins / total * 100, 1) if total else None
         pnl = round(bal - init_bal, 2)
         allowed = set(_allowed_syms_for(key))

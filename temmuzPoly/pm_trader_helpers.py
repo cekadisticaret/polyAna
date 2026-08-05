@@ -789,6 +789,44 @@ def sanal_pnl(pos: dict, win: bool) -> float:
     return 0.0
 
 
+def pm_sanal_slot_candle(symbol: str, entry_time_tr: str) -> tuple[float, float] | None:
+    """PM slot saatinin Binance 1h open/close (İST entry_time_tr)."""
+    try:
+        et = datetime.fromisoformat(entry_time_tr.replace("Z", "+00:00")).astimezone(_TZ_TR)
+    except Exception:
+        return None
+    slot = et.replace(minute=0, second=0, microsecond=0)
+    ms = int(slot.timestamp() * 1000)
+    url = (
+        "https://fapi.binance.com/fapi/v1/klines?"
+        f"symbol={symbol}&interval=1h&startTime={ms}&limit=1"
+    )
+    try:
+        with urllib.request.urlopen(url, timeout=15) as r:
+            data = json.loads(r.read())
+    except Exception:
+        return None
+    if not data:
+        return None
+    k = data[0]
+    return float(k[1]), float(k[4])
+
+
+def pm_sanal_settle_trade(pos: dict, hour_open: float, hour_close: float) -> dict:
+    """PM sanal sonuç: saat open (price-to-beat) vs saat close."""
+    pred = pos.get("predicted_dir") or pos.get("algo_signal") or ""
+    actual = "UP" if hour_close >= hour_open else "DOWN"
+    win = pred == actual
+    pnl = sanal_pnl(pos, win)
+    return {
+        "actual_dir": actual,
+        "win": win,
+        "pnl": pnl,
+        "entry_price": hour_open,
+        "exit_price": hour_close,
+    }
+
+
 def pm_realized_pnl(pos: dict, win: bool) -> float:
     """Kısmi kar al sonrası nihai P&L (eski 210 pozisyonları için geriye uyum)."""
     partial = float(pos.get("pm_partial_received") or 0)

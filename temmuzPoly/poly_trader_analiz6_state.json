@@ -1,12 +1,12 @@
 {
-  "balance": 682.07,
+  "balance": 676.26,
   "open_positions": [
     {
       "symbol": "BTCUSDT",
       "predicted_dir": "DOWN",
-      "entry_price": 64226.0,
-      "entry_time_tr": "2026-08-05T10:05:27.332342+03:00",
-      "entry_hour_tr": 10,
+      "entry_price": 64141.0,
+      "entry_time_tr": "2026-08-05T11:05:27.457204+03:00",
+      "entry_hour_tr": 11,
       "entry_dow": 2,
       "entry_is_weekend": false,
       "amount": 20.0,
@@ -14,35 +14,35 @@
       "cold_hour_cut": false,
       "algo_signal": "DOWN",
       "algo_name": "MACD Hist. Div",
-      "pm_slug": "bitcoin-up-or-down-august-5-2026-3am-et",
-      "pm_title": "Bitcoin Up or Down - August 5, 3AM ET",
+      "pm_slug": "bitcoin-up-or-down-august-5-2026-4am-et",
+      "pm_title": "Bitcoin Up or Down - August 5, 4AM ET",
       "pm_token_dir": "DOWN",
-      "pm_entry_price": 0.585,
+      "pm_entry_price": 0.435,
       "pm_spent": 20.0,
-      "pm_size": 34.19,
-      "to_win": 34.19
+      "pm_size": 45.98,
+      "to_win": 45.98
     },
     {
-      "symbol": "SOLUSDT",
+      "symbol": "ETHUSDT",
       "predicted_dir": "DOWN",
-      "entry_price": 73.98,
-      "entry_time_tr": "2026-08-05T10:05:27.332342+03:00",
-      "entry_hour_tr": 10,
+      "entry_price": 1871.85,
+      "entry_time_tr": "2026-08-05T11:05:27.457204+03:00",
+      "entry_hour_tr": 11,
       "entry_dow": 2,
       "entry_is_weekend": false,
       "amount": 20.0,
       "hot_hour_boost": false,
       "cold_hour_cut": false,
       "algo_signal": "DOWN",
-      "algo_name": "MACD Hist. Div",
-      "pm_slug": "solana-up-or-down-august-5-2026-3am-et",
-      "pm_title": "Solana Up or Down - August 5, 3AM ET",
+      "algo_name": "RSI Divergence",
+      "pm_slug": "ethereum-up-or-down-august-5-2026-4am-et",
+      "pm_title": "Ethereum Up or Down - August 5, 4AM ET",
       "pm_token_dir": "DOWN",
-      "pm_entry_price": 0.495,
+      "pm_entry_price": 0.455,
       "pm_spent": 20.0,
-      "pm_size": 40.4,
-      "to_win": 40.4
+      "pm_size": 43.96,
+      "to_win": 43.96
     }
   ],
-  "total_pnl": 382.07
+  "total_pnl": 376.26
 }
