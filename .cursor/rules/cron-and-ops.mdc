@@ -52,6 +52,12 @@ alwaysApply: true
 | `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_03_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_03_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py close` | `/tmp/poly_trader_a2_04_live.log` |
 | `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_04_live.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py close` | `/tmp/poly_trader_a2_05_live.log` |
+| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_05_live.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_06_live.py close` | `/tmp/poly_trader_a2_06_live.log` |
+| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_06_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_06_live.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_07_live.py close` | `/tmp/poly_trader_a2_07_live.log` |
+| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_07_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_07_live.log` |
 | `*/30 * * * *` | `cd /root/aiProject/crypto-news-monitor && ./run_once.sh` | `/tmp/crypto_news_monitor.log` |
 | `2 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh close` | `/tmp/poly_analiz3_freqtrade.log` |
 | `5 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh open` | `/tmp/poly_analiz3_freqtrade.log` |
@@ -99,6 +105,9 @@ tail -f /tmp/poly_trader_a2_02_live.log
 tail -f /tmp/poly_trader_a2_08_live.log
 tail -f /tmp/poly_trader_a2_03_live.log
 tail -f /tmp/poly_trader_a2_04_live.log
+tail -f /tmp/poly_trader_a2_05_live.log
+tail -f /tmp/poly_trader_a2_06_live.log
+tail -f /tmp/poly_trader_a2_07_live.log
 tail -f /tmp/crypto_futures_cr6.log
 tail -f /tmp/crypto_futures_cr6_trail.log
 tail -f /tmp/agustos_algoritmalar.log

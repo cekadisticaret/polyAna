@@ -21,16 +21,21 @@ _LABEL_GROUPS = {
     "A2#08 Williams Live": "a2_08_live",
     "A2#03 Stoch RSI Live": "a2_03_live",
     "A2#04 Schaff Live": "a2_04_live",
+    "A2#05 Mean Rev Live": "a2_05_live",
+    "A2#06 Z-Score MR Live": "a2_06_live",
+    "A2#07 Hurst Live": "a2_07_live",
     "15. ANALİZ LIVE": "analiz15_live",
 }
 _VALID_GROUPS = frozenset({
     "analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live",
-    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live",
+    "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live",
 })
 # 15M 309 Live hafta sonu da çalışır — weekend cron bunu kapatmaz
 _WEEKEND_GROUPS = (
     "analiz5", "analiz2", "analiz10", "analiz6_live",
-    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live",
+    "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live",
 )
 
 
@@ -46,6 +51,9 @@ def _load_control() -> dict:
         "a2_08_live_paused": True,
         "a2_03_live_paused": True,
         "a2_04_live_paused": True,
+        "a2_05_live_paused": True,
+        "a2_06_live_paused": True,
+        "a2_07_live_paused": True,
         "analiz15_live_paused": True,
         "a3a8_signal_strict": True,
         "updated_at_tr": "",
@@ -121,9 +129,15 @@ def get_pm_system_control() -> dict:
     a2_08l = bool(c.get("a2_08_live_paused", True))
     a2_03l = bool(c.get("a2_03_live_paused", True))
     a2_04l = bool(c.get("a2_04_live_paused", True))
+    a2_05l = bool(c.get("a2_05_live_paused", True))
+    a2_06l = bool(c.get("a2_06_live_paused", True))
+    a2_07l = bool(c.get("a2_07_live_paused", True))
     a15l = bool(c.get("analiz15_live_paused", True))
     strict = bool(c.get("a3a8_signal_strict", True))
-    all_paused = a5 and a2 and a10 and a6l and m309 and a2_16l and a2_02l and a2_08l and a2_03l and a2_04l and a15l
+    all_paused = (
+        a5 and a2 and a10 and a6l and m309 and a2_16l and a2_02l and a2_08l
+        and a2_03l and a2_04l and a2_05l and a2_06l and a2_07l and a15l
+    )
     return {
         "analiz5_paused": a5,
         "analiz2_paused": a2,
@@ -135,6 +149,9 @@ def get_pm_system_control() -> dict:
         "a2_08_live_paused": a2_08l,
         "a2_03_live_paused": a2_03l,
         "a2_04_live_paused": a2_04l,
+        "a2_05_live_paused": a2_05l,
+        "a2_06_live_paused": a2_06l,
+        "a2_07_live_paused": a2_07l,
         "analiz15_live_paused": a15l,
         "a3a8_signal_strict": strict,
         "a3a8_signal_mode": "strict" if strict else "loose",

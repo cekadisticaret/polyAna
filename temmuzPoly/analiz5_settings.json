@@ -1,7 +1,7 @@
 {
-  "a1_amount_low": 12.0,
-  "a1_amount_mid": 14.0,
-  "a1_amount_high": 16.0,
+  "a1_amount_low": 10.0,
+  "a1_amount_mid": 12.0,
+  "a1_amount_high": 14.0,
   "a2_amount_low": 8.0,
   "a2_amount_mid": 10.0,
   "a2_amount_high": 12.0,
@@ -29,5 +29,14 @@
   "a2_03_amount_high": 6.0,
   "a2_04_amount_low": 4.0,
   "a2_04_amount_mid": 5.0,
-  "a2_04_amount_high": 6.0
+  "a2_04_amount_high": 6.0,
+  "a2_05_amount_low": 6.0,
+  "a2_05_amount_mid": 6.0,
+  "a2_05_amount_high": 6.0,
+  "a2_06_amount_low": 6.0,
+  "a2_06_amount_mid": 6.0,
+  "a2_06_amount_high": 6.0,
+  "a2_07_amount_low": 6.0,
+  "a2_07_amount_mid": 6.0,
+  "a2_07_amount_high": 6.0
 }

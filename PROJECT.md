@@ -95,6 +95,9 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/poly_trader_a2_08_live.py` | A2#08 Williams Live — $4/5/6; sanal #08 ayrı; ayarlar aç/kapa |
 | `temmuzPoly/poly_trader_a2_03_live.py` | A2#03 Stoch RSI Live — $4/5/6; sanal #03 ayrı; ayarlar aç/kapa (varsayılan kapalı) |
 | `temmuzPoly/poly_trader_a2_04_live.py` | A2#04 Schaff Live — $4/5/6; sanal #04 ayrı; ayarlar aç/kapa (varsayılan kapalı) |
+| `temmuzPoly/poly_trader_a2_05_live.py` | A2#05 Mean Rev Live — $4/5/6; sanal #05 ayrı; ayarlar aç/kapa (varsayılan kapalı) |
+| `temmuzPoly/poly_trader_a2_06_live.py` | A2#06 Z-Score MR Live — $4/5/6; sanal #06 ayrı; ayarlar aç/kapa (varsayılan kapalı) |
+| `temmuzPoly/poly_trader_a2_07_live.py` | A2#07 Hurst Live — $4/5/6; sanal #07 ayrı; ayarlar aç/kapa (varsayılan kapalı) |
 | `temmuzPoly/poly_a2_algo_trader_core.py` | A2 sanal Top17 ($300); Cum 22:00–Pzt 11:00 open kapalı; #09/#16/#17 → eski ALFA kanalı |
 | `temmuzPoly/poly_15m_a2_algo_trader_core.py` | 15M A2 Top3 çekirdek (309/316/317; $300; Cum 22–Pzt 11 open kapalı; TG=110 botu) |
 | `temmuzPoly/poly_trader_15m_a2.py` | 15M A2 Top3 runner (`*/15` open=close+open; BTC+ETH+SOL sanal; 309 sonrası live tetikler) |

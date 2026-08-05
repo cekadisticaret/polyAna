@@ -41,6 +41,9 @@ _HEATMAP_SYMS = {
     "a2_08_live": ["BTC", "ETH", "SOL"],
     "a2_03_live": ["BTC", "ETH", "SOL"],
     "a2_04_live": ["BTC", "ETH", "SOL"],
+    "a2_05_live": ["BTC", "ETH", "SOL"],
+    "a2_06_live": ["BTC", "ETH", "SOL"],
+    "a2_07_live": ["BTC", "ETH", "SOL"],
 }
 # Sıcaklık haritası sekmesinde birleşik gösterilecek ek history kaynakları
 _HEATMAP_MERGE: dict[str, list[str]] = {}
@@ -69,6 +72,9 @@ _LIVE_PM_ANALYSES = frozenset({
     "a2_08_live",    # A2#08 Live → a2_08 sanal
     "a2_03_live",    # A2#03 Live → a2_03 sanal
     "a2_04_live",    # A2#04 Live → a2_04 sanal
+    "a2_05_live",    # A2#05 Live → a2_05 sanal
+    "a2_06_live",    # A2#06 Live → a2_06 sanal
+    "a2_07_live",    # A2#07 Live → a2_07 sanal
     "analiz15_live", # A15 Live → analiz15 sanal
 })
 # Algoritma performansı panelinde gösterilmez
@@ -102,7 +108,8 @@ _HISTORY_ORDER = [
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
 _HISTORY_ORDER_GECMIS = [
     "analiz5", "analiz2_live", "analiz10_live", "analiz6_live", "15m_309_live",
-    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live",
+    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live",
+    "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live",
     *_HISTORY_ORDER,
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
@@ -125,6 +132,9 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "a2_08_live": "A2#08 Williams Live",
     "a2_03_live": "A2#03 Stoch RSI Live",
     "a2_04_live": "A2#04 Schaff Live",
+    "a2_05_live": "A2#05 Mean Rev Live",
+    "a2_06_live": "A2#06 Z-Score MR Live",
+    "a2_07_live": "A2#07 Hurst Live",
     "analiz15_live": "A15 Live",
 }
 
@@ -135,7 +145,7 @@ _OVERVIEW_ACTIVE_ORDER = [
     "5m_sol_110",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
-    "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "analiz15_live": None,
+    "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz10": 300, "analiz15": 300,
     "analiz3": 300, "analiz8": 300,
@@ -152,6 +162,9 @@ _PM_PAUSE_KEYS = {
     "a2_08_live": "a2_08_live_paused",
     "a2_03_live": "a2_03_live_paused",
     "a2_04_live": "a2_04_live_paused",
+    "a2_05_live": "a2_05_live_paused",
+    "a2_06_live": "a2_06_live_paused",
+    "a2_07_live": "a2_07_live_paused",
     "analiz15_live": "analiz15_live_paused",
 }
 _OVERVIEW_SHORT_LABELS: dict[str, str] = {
@@ -165,6 +178,9 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "a2_08_live": "A2#08L",
     "a2_03_live": "A2#03L",
     "a2_04_live": "A2#04L",
+    "a2_05_live": "A2#05L",
+    "a2_06_live": "A2#06L",
+    "a2_07_live": "A2#07L",
     "analiz15_live": "A15L",
     "analiz1": "A1",
     "analiz2": "A2",
@@ -674,6 +690,9 @@ _LIVE_OVERVIEW_SYSTEMS = [
     ("a2_08_live", "A2#08 Williams Live", "a2_08_live_paused"),
     ("a2_03_live", "A2#03 Stoch RSI Live", "a2_03_live_paused"),
     ("a2_04_live", "A2#04 Schaff Live", "a2_04_live_paused"),
+    ("a2_05_live", "A2#05 Mean Rev Live", "a2_05_live_paused"),
+    ("a2_06_live", "A2#06 Z-Score MR Live", "a2_06_live_paused"),
+    ("a2_07_live", "A2#07 Hurst Live", "a2_07_live_paused"),
     ("analiz15_live", "A15 Live", "analiz15_live_paused"),
 ]
 
@@ -935,19 +954,20 @@ _PM_POSITION_SOURCES = [
     ("analiz2_live", "A2 Live"),
     ("analiz10_live", "A10 Live"),
     ("analiz6_live", "A6 Live"),
-    ("15m_309_live", "15M 309 Live"),
-    ("a2_16_live", "A2#16 Supertrend Live"),
-    ("a2_02_live", "A2#02 RSI Div Live"),
     ("a2_08_live", "A2#08 Williams Live"),
     ("a2_03_live", "A2#03 Stoch RSI Live"),
     ("a2_04_live", "A2#04 Schaff Live"),
+    ("a2_05_live", "A2#05 Mean Rev Live"),
+    ("a2_06_live", "A2#06 Z-Score MR Live"),
+    ("a2_07_live", "A2#07 Hurst Live"),
     ("analiz15_live", "A15 Live"),
     ("manual", "Manuel"),
     ("5m_sol_110", "15M 110 SOL"),
 ]
 _HOURLY_PM_ANALYSES = frozenset({
     "analiz5", "analiz2_live", "analiz10_live", "analiz6_live",
-    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live", "manual",
+    "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live",
+    "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live", "manual",
 })
 _15M_PM_ANALYSES = frozenset({"5m_sol_110", "15m_309_live"})
 
@@ -6228,7 +6248,7 @@ def api_pm_system_post():
         state = set_a3a8_signal_strict(bool(body["a3a8_signal_strict"]), source="dashboard")
         return jsonify({"ok": True, **state})
     group = body.get("group")
-    if group in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live", "hourly"):
+    if group in ("analiz5", "analiz2", "analiz10", "analiz6_live", "a2_08_live", "a2_03_live", "a2_04_live", "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live", "hourly"):
         if group == "hourly":
             if "paused" in body:
                 paused = bool(body["paused"])
@@ -6237,12 +6257,13 @@ def api_pm_system_post():
                 paused = not (
                     cur["analiz5_paused"] and cur["analiz2_paused"]
                     and cur["analiz10_paused"] and cur["analiz6_live_paused"]
-                    and cur["15m_309_live_paused"] and cur.get("a2_16_live_paused", True)
-                    and cur.get("a2_02_live_paused", True) and cur.get("a2_08_live_paused", True)
+                    and cur.get("a2_08_live_paused", True)
                     and cur.get("a2_03_live_paused", True) and cur.get("a2_04_live_paused", True)
+                    and cur.get("a2_05_live_paused", True) and cur.get("a2_06_live_paused", True)
+                    and cur.get("a2_07_live_paused", True)
                     and cur.get("analiz15_live_paused", True)
                 )
-            for g in ("analiz5", "analiz2", "analiz10", "analiz6_live", "15m_309_live", "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live", "analiz15_live"):
+            for g in ("analiz5", "analiz2", "analiz10", "analiz6_live", "a2_08_live", "a2_03_live", "a2_04_live", "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live"):
                 set_group_paused(g, paused, source="dashboard")
             state = get_pm_system_control()
         elif "paused" in body:
@@ -9519,20 +9540,6 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
         </div>
         <button type="button" class="pm-system-btn paused" id="pm-system-btn-analiz6_live" onclick="togglePmSystem('analiz6_live')">Aç</button>
       </div>
-      <div class="pm-system-bar paused" id="pm-system-bar-a2_16_live">
-        <div>
-          <div class="pm-system-status" id="pm-system-status-a2_16_live">⏸ A2#16 Supertrend Live kapalı</div>
-          <div class="pm-system-sub" id="pm-system-sub-a2_16_live">Saatlik BTC+ETH+SOL · Supertrend · sanal A2#16 devam · varsayılan kapalı</div>
-        </div>
-        <button type="button" class="pm-system-btn paused" id="pm-system-btn-a2_16_live" onclick="togglePmSystem('a2_16_live')">Aç</button>
-      </div>
-      <div class="pm-system-bar" id="pm-system-bar-a2_02_live">
-        <div>
-          <div class="pm-system-status" id="pm-system-status-a2_02_live">✅ A2#02 RSI Div Live açılış aktif</div>
-          <div class="pm-system-sub" id="pm-system-sub-a2_02_live">Saatlik BTC+ETH+SOL · $4–6 · sanal A2#02 devam</div>
-        </div>
-        <button type="button" class="pm-system-btn" id="pm-system-btn-a2_02_live" onclick="togglePmSystem('a2_02_live')">Kapat</button>
-      </div>
       <div class="pm-system-bar" id="pm-system-bar-a2_08_live">
         <div>
           <div class="pm-system-status" id="pm-system-status-a2_08_live">✅ A2#08 Williams Live açılış aktif</div>
@@ -9554,19 +9561,33 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
         </div>
         <button type="button" class="pm-system-btn paused" id="pm-system-btn-a2_04_live" onclick="togglePmSystem('a2_04_live')">Aç</button>
       </div>
+      <div class="pm-system-bar paused" id="pm-system-bar-a2_05_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-a2_05_live">⏸ A2#05 Mean Rev Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-a2_05_live">Saatlik BTC+ETH+SOL · $4–6 · sanal A2#05 devam · varsayılan kapalı</div>
+        </div>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-a2_05_live" onclick="togglePmSystem('a2_05_live')">Aç</button>
+      </div>
+      <div class="pm-system-bar paused" id="pm-system-bar-a2_06_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-a2_06_live">⏸ A2#06 Z-Score MR Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-a2_06_live">Saatlik BTC+ETH+SOL · $4–6 · sanal A2#06 devam · varsayılan kapalı</div>
+        </div>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-a2_06_live" onclick="togglePmSystem('a2_06_live')">Aç</button>
+      </div>
+      <div class="pm-system-bar paused" id="pm-system-bar-a2_07_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-a2_07_live">⏸ A2#07 Hurst Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-a2_07_live">Saatlik BTC+ETH+SOL · $4–6 · sanal A2#07 devam · varsayılan kapalı</div>
+        </div>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-a2_07_live" onclick="togglePmSystem('a2_07_live')">Aç</button>
+      </div>
       <div class="pm-system-bar paused" id="pm-system-bar-analiz15_live">
         <div>
           <div class="pm-system-status" id="pm-system-status-analiz15_live">⏸ A15 Live kapalı</div>
           <div class="pm-system-sub" id="pm-system-sub-analiz15_live">Saatlik BTC+ETH+SOL · BTC→A6 ETH→A8 SOL→A2 · sanal A15 devam · varsayılan kapalı</div>
         </div>
         <button type="button" class="pm-system-btn paused" id="pm-system-btn-analiz15_live" onclick="togglePmSystem('analiz15_live')">Aç</button>
-      </div>
-      <div class="pm-system-bar" id="pm-system-bar-15m_309_live">
-        <div>
-          <div class="pm-system-status" id="pm-system-status-15m_309_live">✅ 15M 309 Live açılış aktif</div>
-          <div class="pm-system-sub" id="pm-system-sub-15m_309_live">15dk BTC+ETH+SOL · $3 sabit · sanal 309 devam · Cum 22:00 otomatik kapanır</div>
-        </div>
-        <button type="button" class="pm-system-btn" id="pm-system-btn-15m_309_live" onclick="togglePmSystem('15m_309_live')">Kapat</button>
       </div>
     </div>
   </div>
@@ -9624,30 +9645,6 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
 
     <div class="setting-row">
       <div class="setting-left">
-        <div class="setting-label">A2#16 Supertrend Live</div>
-        <div class="setting-desc">Saatlik BTC+ETH+SOL · Supertrend · sembol WR düşük / orta / yüksek</div>
-      </div>
-      <div class="setting-right amount-triple">
-        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_16_amount_low" type="number" step="0.5" min="1" max="100"></div>
-        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_16_amount_mid" type="number" step="0.5" min="1" max="100"></div>
-        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_16_amount_high" type="number" step="0.5" min="1" max="100"></div>
-      </div>
-    </div>
-
-    <div class="setting-row">
-      <div class="setting-left">
-        <div class="setting-label">A2#02 RSI Div Live</div>
-        <div class="setting-desc">Saatlik BTC+ETH+SOL · $4–5–6 · sembol WR</div>
-      </div>
-      <div class="setting-right amount-triple">
-        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_02_amount_low" type="number" step="0.5" min="1" max="100"></div>
-        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_02_amount_mid" type="number" step="0.5" min="1" max="100"></div>
-        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_02_amount_high" type="number" step="0.5" min="1" max="100"></div>
-      </div>
-    </div>
-
-    <div class="setting-row">
-      <div class="setting-left">
         <div class="setting-label">A2#08 Williams Live</div>
         <div class="setting-desc">Saatlik BTC+ETH+SOL · $4–5–6 · sembol WR</div>
       </div>
@@ -9679,6 +9676,42 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
         <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_04_amount_low" type="number" step="0.5" min="1" max="100"></div>
         <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_04_amount_mid" type="number" step="0.5" min="1" max="100"></div>
         <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_04_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A2#05 Mean Rev Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · $4–5–6 · sembol WR</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_05_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_05_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_05_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A2#06 Z-Score MR Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · $4–5–6 · sembol WR</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_06_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_06_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_06_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A2#07 Hurst Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · $4–5–6 · sembol WR</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_07_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_07_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a2_07_amount_high" type="number" step="0.5" min="1" max="100"></div>
       </div>
     </div>
 
@@ -9779,20 +9812,6 @@ const _PM_SYSTEM_ROWS = {
     subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · sanal A6 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
     subOff: 'Gerçek PM yeni işlem açmaz (sanal A6 devam) · Aç ile işlem başlar',
   },
-  a2_16_live: {
-    bar: 'pm-system-bar-a2_16_live', btn: 'pm-system-btn-a2_16_live',
-    status: 'pm-system-status-a2_16_live', sub: 'pm-system-sub-a2_16_live',
-    active: '✅ A2#16 Supertrend Live açılış aktif', paused: '⏸ A2#16 Supertrend Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · Supertrend · sanal A2#16 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#16 devam) · Aç ile işlem başlar',
-  },
-  a2_02_live: {
-    bar: 'pm-system-bar-a2_02_live', btn: 'pm-system-btn-a2_02_live',
-    status: 'pm-system-status-a2_02_live', sub: 'pm-system-sub-a2_02_live',
-    active: '✅ A2#02 RSI Div Live açılış aktif', paused: '⏸ A2#02 RSI Div Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#02 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#02 devam) · Aç ile işlem başlar',
-  },
   a2_08_live: {
     bar: 'pm-system-bar-a2_08_live', btn: 'pm-system-btn-a2_08_live',
     status: 'pm-system-status-a2_08_live', sub: 'pm-system-sub-a2_08_live',
@@ -9814,19 +9833,33 @@ const _PM_SYSTEM_ROWS = {
     subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#04 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
     subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#04 devam) · varsayılan kapalı · Aç ile işlem başlar',
   },
+  a2_05_live: {
+    bar: 'pm-system-bar-a2_05_live', btn: 'pm-system-btn-a2_05_live',
+    status: 'pm-system-status-a2_05_live', sub: 'pm-system-sub-a2_05_live',
+    active: '✅ A2#05 Mean Rev Live açılış aktif', paused: '⏸ A2#05 Mean Rev Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#05 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#05 devam) · varsayılan kapalı · Aç ile işlem başlar',
+  },
+  a2_06_live: {
+    bar: 'pm-system-bar-a2_06_live', btn: 'pm-system-btn-a2_06_live',
+    status: 'pm-system-status-a2_06_live', sub: 'pm-system-sub-a2_06_live',
+    active: '✅ A2#06 Z-Score MR Live açılış aktif', paused: '⏸ A2#06 Z-Score MR Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#06 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#06 devam) · varsayılan kapalı · Aç ile işlem başlar',
+  },
+  a2_07_live: {
+    bar: 'pm-system-bar-a2_07_live', btn: 'pm-system-btn-a2_07_live',
+    status: 'pm-system-status-a2_07_live', sub: 'pm-system-sub-a2_07_live',
+    active: '✅ A2#07 Hurst Live açılış aktif', paused: '⏸ A2#07 Hurst Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#07 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#07 devam) · varsayılan kapalı · Aç ile işlem başlar',
+  },
   analiz15_live: {
     bar: 'pm-system-bar-analiz15_live', btn: 'pm-system-btn-analiz15_live',
     status: 'pm-system-status-analiz15_live', sub: 'pm-system-sub-analiz15_live',
     active: '✅ A15 Live açılış aktif', paused: '⏸ A15 Live kapalı',
     subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · BTC→A6 ETH→A8 SOL→A2 · sanal A15 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
     subOff: 'Gerçek PM yeni işlem açmaz (sanal A15 devam) · Aç ile işlem başlar',
-  },
-  '15m_309_live': {
-    bar: 'pm-system-bar-15m_309_live', btn: 'pm-system-btn-15m_309_live',
-    status: 'pm-system-status-15m_309_live', sub: 'pm-system-sub-15m_309_live',
-    active: '✅ 15M 309 Live açılış aktif', paused: '⏸ 15M 309 Live kapalı',
-    subOn: 'Gerçek PM · 15dk BTC+ETH+SOL · $3 sabit · sanal 309 devam · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal 309 devam) · Pzt 11:00 otomatik açılır',
   },
 };
 
@@ -9857,13 +9890,13 @@ function updatePmSystemUI(d) {
   _pmSystemRow('analiz2', !!d.analiz2_paused, d.updated_at_tr);
   _pmSystemRow('analiz10', !!d.analiz10_paused, d.updated_at_tr);
   _pmSystemRow('analiz6_live', !!d.analiz6_live_paused, d.updated_at_tr);
-  _pmSystemRow('a2_16_live', !!d.a2_16_live_paused, d.updated_at_tr);
-  _pmSystemRow('a2_02_live', !!d.a2_02_live_paused, d.updated_at_tr);
   _pmSystemRow('a2_08_live', !!d.a2_08_live_paused, d.updated_at_tr);
   _pmSystemRow('a2_03_live', !!d.a2_03_live_paused, d.updated_at_tr);
   _pmSystemRow('a2_04_live', !!d.a2_04_live_paused, d.updated_at_tr);
+  _pmSystemRow('a2_05_live', !!d.a2_05_live_paused, d.updated_at_tr);
+  _pmSystemRow('a2_06_live', !!d.a2_06_live_paused, d.updated_at_tr);
+  _pmSystemRow('a2_07_live', !!d.a2_07_live_paused, d.updated_at_tr);
   _pmSystemRow('analiz15_live', !!d.analiz15_live_paused, d.updated_at_tr);
-  _pmSystemRow('15m_309_live', !!d['15m_309_live_paused'], d.updated_at_tr);
 }
 
 async function loadPmSystem() {
@@ -9882,11 +9915,12 @@ const _SETTINGS_KEYS = [
   'a2_amount_low', 'a2_amount_mid', 'a2_amount_high',
   'a10_amount_low', 'a10_amount_mid', 'a10_amount_high',
   'a6_amount_low', 'a6_amount_mid', 'a6_amount_high',
-  'a2_16_amount_low', 'a2_16_amount_mid', 'a2_16_amount_high',
-  'a2_02_amount_low', 'a2_02_amount_mid', 'a2_02_amount_high',
   'a2_08_amount_low', 'a2_08_amount_mid', 'a2_08_amount_high',
   'a2_03_amount_low', 'a2_03_amount_mid', 'a2_03_amount_high',
   'a2_04_amount_low', 'a2_04_amount_mid', 'a2_04_amount_high',
+  'a2_05_amount_low', 'a2_05_amount_mid', 'a2_05_amount_high',
+  'a2_06_amount_low', 'a2_06_amount_mid', 'a2_06_amount_high',
+  'a2_07_amount_low', 'a2_07_amount_mid', 'a2_07_amount_high',
   'a15_amount_low', 'a15_amount_mid', 'a15_amount_high',
 ];
 
@@ -12224,7 +12258,7 @@ function renderHeatmap(cells) {
 _SETTINGS_FILE = os.path.join(_DIR_POLY, "analiz5_settings.json")
 _AMT_META = {"unit": "$", "min": 1, "max": 100, "step": 0.5}
 _SETTINGS_LABELS = {}
-for _pfx, _lbl in (("a1", "A1 Live"), ("a2", "A2 Live"), ("a10", "A10 Live"), ("a6", "A6 Live"), ("a2_16", "A2#16 Supertrend Live"), ("a2_02", "A2#02 RSI Div Live"), ("a2_08", "A2#08 Williams Live"), ("a2_03", "A2#03 Stoch RSI Live"), ("a2_04", "A2#04 Schaff Live"), ("a15", "A15 Live")):
+for _pfx, _lbl in (("a1", "A1 Live"), ("a2", "A2 Live"), ("a10", "A10 Live"), ("a6", "A6 Live"), ("a2_08", "A2#08 Williams Live"), ("a2_03", "A2#03 Stoch RSI Live"), ("a2_04", "A2#04 Schaff Live"), ("a2_05", "A2#05 Mean Rev Live"), ("a2_06", "A2#06 Z-Score MR Live"), ("a2_07", "A2#07 Hurst Live"), ("a15", "A15 Live")):
     for _tier, _tier_lbl in (("low", "düşük"), ("mid", "orta"), ("high", "yüksek")):
         _SETTINGS_LABELS[f"{_pfx}_amount_{_tier}"] = {
             "label": f"{_lbl} {_tier_lbl} WR giriş", **_AMT_META,
@@ -12236,11 +12270,12 @@ def _read_settings() -> dict:
         "a2_amount_low": 6.0, "a2_amount_mid": 7.0, "a2_amount_high": 8.0,
         "a10_amount_low": 8.0, "a10_amount_mid": 10.0, "a10_amount_high": 12.0,
         "a6_amount_low": 8.0, "a6_amount_mid": 10.0, "a6_amount_high": 12.0,
-        "a2_16_amount_low": 8.0, "a2_16_amount_mid": 12.0, "a2_16_amount_high": 16.0,
-        "a2_02_amount_low": 4.0, "a2_02_amount_mid": 5.0, "a2_02_amount_high": 6.0,
         "a2_08_amount_low": 4.0, "a2_08_amount_mid": 5.0, "a2_08_amount_high": 6.0,
         "a2_03_amount_low": 4.0, "a2_03_amount_mid": 5.0, "a2_03_amount_high": 6.0,
         "a2_04_amount_low": 4.0, "a2_04_amount_mid": 5.0, "a2_04_amount_high": 6.0,
+        "a2_05_amount_low": 4.0, "a2_05_amount_mid": 5.0, "a2_05_amount_high": 6.0,
+        "a2_06_amount_low": 4.0, "a2_06_amount_mid": 5.0, "a2_06_amount_high": 6.0,
+        "a2_07_amount_low": 4.0, "a2_07_amount_mid": 5.0, "a2_07_amount_high": 6.0,
         "a15_amount_low": 12.0, "a15_amount_mid": 16.0, "a15_amount_high": 20.0,
     }
     if os.path.exists(_SETTINGS_FILE):
