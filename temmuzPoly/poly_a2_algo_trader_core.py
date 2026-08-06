@@ -17,12 +17,16 @@ from poly_predictor_analysis import _fetch_klines
 from pm_trader_helpers import (
     SANAL_INITIAL_BALANCE,
     apply_pm_quote,
+    load_sanal_wr_amounts,
+    pm_hourly_profit_entry_ok,
     pm_sanal_settle_trade,
     pm_sanal_slot_candle,
+    pm_tg_stake,
     resolve_slot_trade_amount,
     sanal_pnl,
     skip_if_weekend_pause,
     slot_amount_log,
+    wr_tier_amount,
 )
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
@@ -60,9 +64,6 @@ _ALFA_BOT_TOKEN = os.getenv(
 _ALFA_CHAT_ID = os.getenv("TELEGRAM_ALFA_CHAT_ID") or os.getenv("TELEGRAM_CHAT") or "830754964"
 
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
-AMOUNT_LOW = 8.0
-AMOUNT_MID = 12.0
-AMOUNT_HIGH = 16.0
 
 
 @dataclass(frozen=True)
@@ -73,6 +74,18 @@ class A2Config:
     algo_name: str
     state_file: str
     history_file: str
+
+
+def _symbol_wr_amount(cfg: A2Config, history: list, symbol: str) -> float:
+    low, mid, high = load_sanal_wr_amounts(cfg.key)
+    return wr_tier_amount(history, symbol, low, mid, high)
+
+
+def _resolve_trade_amount(
+    cfg: A2Config, history: list, sym: str, hour_tr: int,
+) -> tuple[float, bool, bool]:
+    base = _symbol_wr_amount(cfg, history, sym)
+    return resolve_slot_trade_amount(base, hour_tr, history)
 
 
 def _build_configs() -> list[A2Config]:
@@ -99,24 +112,6 @@ CONFIG_BY_KEY = {c.key: c for c in ALL_CONFIGS}
 
 def _wr(wins: int, total: int) -> str:
     return f"%{wins / total * 100:.0f} ({wins}/{total})" if total else "veri yok"
-
-
-def _symbol_wr_amount(history: list, symbol: str) -> float:
-    trades = [t for t in history if t.get("symbol") == symbol]
-    if not trades:
-        return AMOUNT_MID
-    wins = sum(1 for t in trades if t.get("win"))
-    rate = wins / len(trades)
-    if rate > 0.5:
-        return AMOUNT_HIGH
-    if rate < 0.5:
-        return AMOUNT_LOW
-    return AMOUNT_MID
-
-
-def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float, bool, bool]:
-    base = _symbol_wr_amount(history, sym)
-    return resolve_slot_trade_amount(base, hour_tr, history)
 
 
 def _load_state(cfg: A2Config) -> dict:
@@ -270,7 +265,7 @@ async def run_close(cfg: A2Config, *, notify: bool = True) -> str | None:
             "entry_hour_tr": pos["entry_hour_tr"],
             "entry_dow": pos["entry_dow"],
             "entry_is_weekend": pos["entry_is_weekend"],
-            "amount": pos.get("amount", AMOUNT_MID),
+            "amount": pos.get("amount") or _symbol_wr_amount(cfg, history, pos["symbol"]),
             "exit_time_tr": now_tr.isoformat(),
             "pnl": pnl,
             "algo_signal": pos.get("algo_signal"),
@@ -347,11 +342,12 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
             continue
         candidates.append({"sym": sym, "direction": direction, "entry_price": entry_price})
 
+    opened: list[dict] = []
     for c in candidates:
         sym = c["sym"]
         direction = c["direction"]
-        dyn_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
-        slot_amount_log(cfg.label, hour_tr, _symbol_wr_amount(history, sym), dyn_amount, hot_boost, cold_cut)
+        dyn_amount, hot_boost, cold_cut = _resolve_trade_amount(cfg, history, sym, hour_tr)
+        slot_amount_log(cfg.label, hour_tr, _symbol_wr_amount(cfg, history, sym), dyn_amount, hot_boost, cold_cut)
         pos = {
             "symbol": sym,
             "predicted_dir": direction,
@@ -368,17 +364,22 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
             "algo_num": cfg.algo_num,
         }
         apply_pm_quote(pos, sym, direction, dyn_amount, datetime.now(timezone.utc))
+        ok, skip_msg = pm_hourly_profit_entry_ok(pos)
+        if not ok:
+            print(f"[{cfg.label} open] {sym} — {skip_msg}")
+            continue
         state["open_positions"].append(pos)
+        opened.append({**c, "pos": pos, "dyn_amount": dyn_amount, "hot_boost": hot_boost, "cold_cut": cold_cut})
 
     _save_state(cfg, state)
 
-    if not candidates:
+    if not opened:
         print(f"[{cfg.label} open] {saat} — işlem yok")
         return None
 
     next_h = f"{(hour_tr + 1) % 24:02d}:00"
     lines: list[str] = []
-    for c in candidates:
+    for c in opened:
         sym = c["sym"]
         direction = c["direction"]
         name = _sym_short(sym)
@@ -386,14 +387,16 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
         dir_tr = "YÜKSELİR" if direction == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins, sym_total = get_symbol_stats(history, sym)
-        pos_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
+        hot_boost = c["hot_boost"]
+        cold_cut = c["cold_cut"]
         tags = ""
         if hot_boost:
             tags += "  🔥+%40"
         if cold_cut:
             tags += "  ❄️-%30"
+        stake_line = pm_tg_stake(c["pos"])
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  giriş:{c['entry_price']:.2f}  💵{pos_amount:.0f}${tags}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  giriş:{c['entry_price']:.2f}  {stake_line}{tags}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )
@@ -410,7 +413,7 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
             f"{sep}"
         )
         tg_send_for_cfg(cfg, msg)
-    print(f"[{cfg.label} open] {saat} — {len(candidates)} yeni işlem")
+    print(f"[{cfg.label} open] {saat} — {len(opened)} yeni işlem")
     return block if not notify else None
 
 

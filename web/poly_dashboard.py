@@ -26,6 +26,7 @@ _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 _HEATMAP_SYMS = {
     "analiz1":  ["BTC", "SOL"],
     "analiz6":  ["BTC", "SOL", "ETH"],
+    "analiz6_v2": ["BTC", "ETH"],
     "analiz15": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
@@ -92,7 +93,7 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2", "analiz3", "analiz8",
-    "analiz4", "analiz6", "analiz10", "analiz15",
+    "analiz4", "analiz6", "analiz6_v2", "analiz10", "analiz15",
     "5m_sol_110",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
@@ -102,7 +103,7 @@ _HEATMAP_ORDER = [
     "5m_sol_110",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz6", "analiz15", "analiz3", "analiz8",
+    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz15", "analiz3", "analiz8",
     "analiz10", "5m_sol_110",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -118,6 +119,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz3":    "3. Analiz Freqtrade",
     "analiz4":    "4. Analiz",
     "analiz6":    "6. Analiz",
+    "analiz6_v2": "6. Analiz V2",
     "analiz15":   "15. Analiz",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
@@ -147,7 +149,7 @@ _OVERVIEW_ACTIVE_ORDER = [
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "15m_309_live": None,
-    "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz10": 300, "analiz15": 300,
+    "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz6_v2": 300, "analiz10": 300, "analiz15": 300,
     "analiz3": 300, "analiz8": 300,
     "5m_sol_110": 300,
 }
@@ -186,6 +188,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz2": "A2",
     "analiz4": "A4",
     "analiz6": "A6",
+    "analiz6_v2": "A6V2",
     "analiz15": "A15",
     "analiz10": "A10",
     "analiz3": "A3",
@@ -210,6 +213,9 @@ for _num, _name, *_rest in _A2_META:
     _OVERVIEW_INIT_BAL[_a2k] = 300
     _OVERVIEW_SHORT_LABELS[_a2k] = f"A2#{_num:02d}"
 
+# Algoritma işlemler ekranı: 6. Analiz + 6. Analiz V2 + A2 Top-17
+_ALGO_ISLEMLER_KEYS: list[str] = ["analiz6", "analiz6_v2"] + _A2_KEYS
+
 _HEATMAP_ORDER.extend(_A2_KEYS)
 _OVERVIEW_ACTIVE_ORDER.extend(_A2_KEYS)
 _HISTORY_ORDER.extend(_A2_KEYS)
@@ -222,6 +228,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("analiz3",    "3. Analiz Freqtrade",   300,  "SampleStrategy TA sanal PM BTC+SOL+ETH"),
     ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
     ("analiz6",    "6. Analiz",             300,  "MACD Div #26 (BTC/SOL) · RSI Div #38 (ETH)"),
+    ("analiz6_v2", "6. Analiz V2",          300,  "MACD Div #26 (BTC) · RSI Div #38 (ETH) · SOL yok"),
     ("analiz15",   "15. Analiz",            300,  "BTC→A6 · ETH→A8 sıkı · SOL→A2"),
     ("analiz8",    "8. Analiz Jesse",       300,  "GoldenCross EMA8/21 sanal PM BTC+SOL+ETH"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
@@ -2020,6 +2027,40 @@ def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) 
     return [best[s] for s in target if s in best]
 
 
+def _analiz_sym_wr(analiz_key: str, syms: list[str] | None = None, min_trades: int = 1) -> list[dict]:
+    """Seçili 1s analizin sembol bazlı WR — kart altı chip'ler (karışık analiz yok)."""
+    target = syms or list(_allowed_syms_for(analiz_key))
+    hist = _load_heatmap_history(analiz_key)
+    if not hist:
+        return []
+    from collections import defaultdict
+    buckets: dict[str, dict] = defaultdict(lambda: {"w": 0, "t": 0})
+    for t in hist:
+        sym = (t.get("symbol") or "").replace("USDT", "")
+        if sym not in target:
+            continue
+        buckets[sym]["t"] += 1
+        if t.get("win"):
+            buckets[sym]["w"] += 1
+    short = _OVERVIEW_SHORT_LABELS.get(analiz_key, _ANALYSIS_LABELS.get(analiz_key, analiz_key))
+    label = _ANALYSIS_LABELS.get(analiz_key, analiz_key)
+    out: list[dict] = []
+    for sym in target:
+        v = buckets.get(sym)
+        if not v or v["t"] < min_trades:
+            continue
+        out.append({
+            "sym": sym,
+            "wr": round(v["w"] / v["t"] * 100, 1),
+            "w": v["w"],
+            "t": v["t"],
+            "analiz": analiz_key,
+            "analiz_short": short,
+            "analiz_label": label,
+        })
+    return out
+
+
 @app.route("/poly/api/symbol_stats")
 def api_symbol_stats():
     if _auth_required(): return redirect("/poly/login")
@@ -2033,8 +2074,8 @@ def api_symbol_stats():
     else:
         analiz_key = _PANEL_STATS_ANALIZ
     hist = _load_heatmap_history(analiz_key)
-    # Sembol kartları: her coin için en başarılı 1s analiz (BTC/ETH/SOL)
-    sym_wr = _best_analiz_by_symbol(["BTC", "ETH", "SOL"], min_trades=10)
+    # Sembol kartları: seçili analizin kendi sembol WR (A10 kartında A6 ETH gösterme)
+    sym_wr = _analiz_sym_wr(analiz_key, list(_allowed_syms_for(analiz_key)), min_trades=1)
     if not hist:
         label = _ANALYSIS_LABELS.get(analiz_key, analiz_key)
         top_slots, bottom_slots = _best_hour_slots_across_analyses(top_n=3, min_trades=3)
@@ -2069,98 +2110,200 @@ def api_symbol_stats():
         "dynamic_best": True,
     })
 
-def _build_a2_poly_books() -> dict:
-    """Poly sanal A2 Top-17 defterleri — bakiyeye göre sıralı (iyi → kötü)."""
-    books = []
-    for key in _A2_KEYS:
-        init_bal = float(_OVERVIEW_INIT_BAL.get(key, 300) or 300)
-        label = _ANALYSIS_LABELS.get(key, key)
-        short = _OVERVIEW_SHORT_LABELS.get(key, key)
-        hpath = _trader_history_path(key)
-        spath = _trader_state_path(key)
-        if not os.path.exists(hpath) and not os.path.exists(spath):
+def _fmt_tr_date_short(iso: str | None) -> str | None:
+    """ISO zaman → dd.mm.yyyy."""
+    if not iso or len(iso) < 10:
+        return None
+    try:
+        y, m, d = iso[:10].split("-")
+        return f"{d}.{m}.{y}"
+    except Exception:
+        return iso[:10]
+
+
+def _poly_book_started_at(
+    state: dict,
+    hist_stats: list,
+    hist_all: list,
+    reset_at: str | None,
+) -> tuple[str | None, str | None]:
+    """(iso, dd.mm.yyyy) — reset sonrası dönem veya ilk işlem."""
+    raw: str | None = None
+    if reset_at:
+        raw = reset_at
+    else:
+        pool = hist_stats or hist_all
+        times = [t.get("entry_time_tr") for t in pool if t.get("entry_time_tr")]
+        if times:
+            raw = min(times)
+        else:
+            opens = state.get("open_positions") or []
+            ot = [p.get("entry_time_tr") for p in opens if p.get("entry_time_tr")]
+            if ot:
+                raw = min(ot)
+    if not raw:
+        return None, None
+    return raw, _fmt_tr_date_short(raw)
+
+
+def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict | None:
+    """Tek Poly sanal defter — A6 veya A2#xx."""
+    init_bal = float(_OVERVIEW_INIT_BAL.get(key, 300) or 300)
+    label = _ANALYSIS_LABELS.get(key, key)
+    short = _OVERVIEW_SHORT_LABELS.get(key, key)
+    hpath = _trader_history_path(key)
+    spath = _trader_state_path(key)
+    has_files = os.path.exists(hpath) or os.path.exists(spath)
+    if not has_files and key not in _ALGO_ISLEMLER_KEYS:
+        return None
+    try:
+        hist = _load_trader_history(key) if os.path.exists(hpath) else []
+        state = json.load(open(spath, encoding="utf-8")) if os.path.exists(spath) else {
+            "balance": init_bal,
+            "open_positions": [],
+            "total_pnl": 0.0,
+        }
+    except Exception:
+        return None
+    reset_at = state.get("balance_reset_at_tr")
+    hist_stats = hist
+    if reset_at:
+        hist_stats = [
+            t for t in hist
+            if (t.get("exit_time_tr") or "") >= reset_at
+        ]
+    bal = round(float(state.get("balance") or init_bal), 2)
+    total = len(hist_stats)
+    wins = sum(1 for t in hist_stats if t.get("win"))
+    wr = round(wins / total * 100, 1) if total else None
+    pnl = round(bal - init_bal, 2)
+    allowed = set(_allowed_syms_for(key))
+    from pm_trader_helpers import pm_payout_fields
+    cards = []
+    for idx, p in enumerate(state.get("open_positions") or []):
+        sym_raw = (p.get("symbol") or "")
+        sym = sym_raw.replace("USDT", "")
+        if sym and allowed and sym not in allowed:
             continue
-        try:
-            hist = _load_trader_history(key) if os.path.exists(hpath) else []
-            state = json.load(open(spath, encoding="utf-8")) if os.path.exists(spath) else {}
-        except Exception:
-            continue
-        reset_at = state.get("balance_reset_at_tr")
-        hist_stats = hist
-        if reset_at:
-            hist_stats = [
-                t for t in hist
-                if (t.get("exit_time_tr") or "") >= reset_at
-            ]
-        bal = round(float(state.get("balance") or init_bal), 2)
-        total = len(hist_stats)
-        wins = sum(1 for t in hist_stats if t.get("win"))
-        wr = round(wins / total * 100, 1) if total else None
-        pnl = round(bal - init_bal, 2)
-        allowed = set(_allowed_syms_for(key))
-        cards = []
-        for p in state.get("open_positions") or []:
-            sym_raw = (p.get("symbol") or "")
-            sym = sym_raw.replace("USDT", "")
-            if sym and allowed and sym not in allowed:
-                continue
-            up = str(p.get("predicted_dir") or p.get("pm_token_dir") or "").upper() in ("UP", "LONG")
-            spent = float(p.get("pm_spent") or p.get("amount") or 0)
-            size = float(p.get("pm_size") or p.get("to_win") or 0)
-            cards.append({
-                "name": sym or sym_raw or "?",
-                "symbol": sym_raw,
-                "side": "LONG" if up else "SHORT",
-                "dir_tr": "YÜKSELİR" if up else "DÜŞER",
-                "entry_price": p.get("entry_price"),
-                "current": p.get("entry_price"),
-                "pm_entry_price": p.get("pm_entry_price"),
-                "pm_spent": spent,
-                "pm_size": size,
-                "to_win": p.get("to_win") or size,
-                "amount": p.get("amount") or spent,
-                "margin_usd": spent,
-                "unrealized_pnl": 0.0,
-                "slot_label": p.get("pm_title") or p.get("pm_slug") or "",
-                "entry_time_tr": p.get("entry_time_tr"),
-                "algo_name": p.get("algo_name"),
-            })
-        # Poly sanal: PnL close'ta yazılır — açıkken anlık net 0
-        upnl = 0.0
-        num = None
-        m = re.match(r"^a2_(\d+)$", key)
-        if m:
-            num = int(m.group(1))
-        title = label
+        up = str(p.get("predicted_dir") or p.get("pm_token_dir") or "").upper() in ("UP", "LONG")
+        pay = pm_payout_fields(p)
+        spent = pay["pm_spent"]
+        size = pay["pm_size"]
+        cards.append({
+            "pos_idx": idx,
+            "name": sym or sym_raw or "?",
+            "symbol": sym_raw,
+            "side": "LONG" if up else "SHORT",
+            "dir_tr": "YÜKSELİR" if up else "DÜŞER",
+            "entry_price": p.get("entry_price"),
+            "current": p.get("entry_price"),
+            "pm_entry_price": pay.get("pm_entry_price"),
+            "pm_spent": spent,
+            "pm_size": size,
+            "to_win": pay["to_win"],
+            "win_payout": pay.get("win_payout"),
+            "win_profit": pay.get("win_profit"),
+            "amount": p.get("amount") or spent,
+            "margin_usd": spent,
+            "unrealized_pnl": 0.0,
+            "slot_label": p.get("pm_title") or p.get("pm_slug") or "",
+            "entry_time_tr": p.get("entry_time_tr"),
+            "algo_name": p.get("algo_name"),
+        })
+    num = None
+    m = re.match(r"^a2_(\d+)$", key)
+    if m:
+        num = int(m.group(1))
+    if key == "analiz6":
+        category = "Poly sanal · 6. Analiz"
+        panel = "poly_a6"
+        name = short or label
+        title = "MACD Div (BTC/SOL) · RSI Div (ETH)"
+    elif key == "analiz6_v2":
+        category = "Poly sanal · 6. Analiz V2"
+        panel = "poly_a6v2"
+        name = short or label
+        title = "MACD Div (BTC) · RSI Div (ETH)"
+    else:
+        category = "Poly sanal · A2 Top-17"
+        panel = "poly_a2"
         if short and short != label:
-            # "A2#16 Supertrend" → name A2#16, title Supertrend…
             name = short
             rest = label[len(short):].strip() if label.startswith(short) else label
             title = rest or label
         else:
             name = label
-        books.append({
-            "id": key,
-            "key": key,
-            "algo_num": num,
-            "name": name,
-            "label": label,
-            "title": title,
-            "category": "Poly sanal · A2 Top-17",
-            "panel": "poly_a2",
-            "balance": bal,
-            "init_bal": init_bal,
-            "equity": bal,
-            "total_pnl": pnl,
-            "unrealized_pnl": upnl,
-            "wr": wr,
-            "history_n": total,
-            "wins": wins,
-            "open_count": len(cards),
-            "cards": cards,
-            "margin_usd": 16,
-            "leverage": 1,
-        })
+            title = label
+    recent: list[dict] = []
+    if include_history:
+        for t in reversed(hist_stats[-100:]):
+            sym_raw = t.get("symbol") or ""
+            sym = sym_raw.replace("USDT", "")
+            if sym and allowed and sym not in allowed:
+                continue
+            pred = (t.get("predicted_dir") or "").upper()
+            win = bool(t.get("win"))
+            pnl_val = round(float(t.get("pnl") or 0), 2)
+            spent = float(t.get("pm_spent") or t.get("amount") or 0)
+            exit_tr = t.get("exit_time_tr") or t.get("entry_time_tr") or ""
+            recent.append({
+                "symbol": sym or sym_raw,
+                "dir": pred,
+                "dir_tr": "YÜKSELİR" if pred == "UP" else "DÜŞER",
+                "win": win,
+                "pnl": pnl_val,
+                "spent": round(spent, 2),
+                "pm_entry_price": t.get("pm_entry_price"),
+                "entry_price": t.get("entry_price"),
+                "exit_price": t.get("exit_price"),
+                "exit_time_tr": exit_tr,
+                "slot_label": t.get("pm_title") or t.get("pm_slug") or "",
+            })
+    started_iso, started_label = _poly_book_started_at(state, hist_stats, hist, reset_at)
+    row = {
+        "id": key,
+        "key": key,
+        "algo_num": num,
+        "name": name,
+        "label": label,
+        "title": title,
+        "category": category,
+        "panel": panel,
+        "balance": bal,
+        "init_bal": init_bal,
+        "equity": bal,
+        "total_pnl": pnl,
+        "unrealized_pnl": 0.0,
+        "wr": wr,
+        "history_n": total,
+        "wins": wins,
+        "open_count": len(cards),
+        "cards": cards,
+        "started_at_tr": started_iso,
+        "started_at_label": started_label,
+        "started_since_reset": bool(reset_at),
+        "margin_usd": 16 if key.startswith("a2_") else 20,
+        "leverage": 1,
+    }
+    try:
+        sys.path.insert(0, _DIR_POLY)
+        from pm_trader_helpers import load_sanal_wr_amounts
+        low, mid, high = load_sanal_wr_amounts(key)
+        row["trade_amounts"] = {"low": low, "mid": mid, "high": high}
+    except Exception:
+        row["trade_amounts"] = {"low": 12.0, "mid": 16.0, "high": 20.0}
+    if include_history:
+        row["recent_history"] = recent
+    return row
+
+
+def _build_a2_poly_books() -> dict:
+    """Poly sanal A6 + A2 Top-17 defterleri — bakiyeye göre sıralı."""
+    books = []
+    for key in _ALGO_ISLEMLER_KEYS:
+        row = _build_single_poly_book(key)
+        if row:
+            books.append(row)
     books.sort(key=lambda b: (
         float(b.get("balance") or 0),
         float(b.get("total_pnl") or 0),
@@ -2168,7 +2311,7 @@ def _build_a2_poly_books() -> dict:
     ), reverse=True)
     return {
         "ok": True,
-        "panel_filter": "poly_a2",
+        "panel_filter": "poly_algo",
         "books": books,
         "count": len(books),
         "total_balance": round(sum(float(b.get("balance") or 0) for b in books), 2),
@@ -2178,13 +2321,73 @@ def _build_a2_poly_books() -> dict:
     }
 
 
+def _patch_sanal_wr_amounts(key: str, body: dict) -> dict:
+    """Poly sanal defter — sembol WR giriş kademelerini kaydet."""
+    if key not in _ALGO_ISLEMLER_KEYS:
+        raise ValueError("not found")
+    try:
+        low = float(body.get("amount_low", body.get("low")))
+        mid = float(body.get("amount_mid", body.get("mid")))
+        high = float(body.get("amount_high", body.get("high")))
+    except (TypeError, ValueError):
+        raise ValueError("geçersiz tutar") from None
+    if low <= 0 or mid <= 0 or high <= 0:
+        raise ValueError("tutarlar pozitif olmalı")
+    sys.path.insert(0, _DIR_POLY)
+    from pm_trader_helpers import save_sanal_wr_amounts
+    save_sanal_wr_amounts(key, low, mid, high)
+    book = _build_single_poly_book(key, include_history=True)
+    if not book:
+        raise ValueError("defter okunamadı")
+    return book
+
+
+@app.route("/poly/api/a2-algoritmalar/<book_id>/amounts", methods=["POST"])
+def api_a2_algoritma_patch_amounts(book_id: str):
+    """Poly sanal — sembol WR giriş tutarları ($ düşük/orta/yüksek)."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    key = book_id.lower().strip()
+    if re.match(r"^\d+$", key):
+        key = f"a2_{int(key):02d}"
+    if key not in _ALGO_ISLEMLER_KEYS:
+        return jsonify({"ok": False, "error": "not found"}), 404
+    try:
+        body = request.get_json(silent=True) or {}
+        book = _patch_sanal_wr_amounts(key, body)
+        return jsonify({"ok": True, "book": book})
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route("/poly/api/a2-algoritmalar")
 def api_a2_algoritmalar():
-    """Poly sanal A2 Top-17 — Algoritma işlemler ekranı."""
+    """Poly sanal A6 + A2 Top-17 — Algoritma işlemler ekranı."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     try:
         return jsonify(_build_a2_poly_books())
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/a2-algoritmalar/<book_id>")
+def api_a2_algoritma_detail(book_id: str):
+    """Tek algoritma defteri + son 100 kapanmış işlem."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    key = book_id.lower().strip()
+    if re.match(r"^\d+$", key):
+        key = f"a2_{int(key):02d}"
+    if key not in _ALGO_ISLEMLER_KEYS:
+        return jsonify({"ok": False, "error": "not found"}), 404
+    try:
+        book = _build_single_poly_book(key, include_history=True)
+        if not book:
+            return jsonify({"ok": False, "error": "not found"}), 404
+        return jsonify({"ok": True, "book": book})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -11190,7 +11393,7 @@ HTML = r"""<!DOCTYPE html>
 <div class="right-panel">
   <!-- Sembol WR — tek mor kart (dış kutu yok) -->
   <div class="sym-vio">
-    <div class="sym-lime-title">Sembol Başarı Oranı <span style="font-size:10px;font-weight:600;opacity:.75">· 1s en iyi</span></div>
+    <div class="sym-lime-title">Sembol Başarı Oranı <span style="font-size:10px;font-weight:600;opacity:.75">· seçili analiz</span></div>
     <div class="sym-lime-row">
       <div class="sym-lime-val" id="sym-wr-total">—%</div>
       <div class="sym-lime-ico" aria-hidden="true">
@@ -12431,11 +12634,15 @@ body{
 .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .book-card{
   background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
-  display:block;color:inherit;text-decoration:none;cursor:pointer;
+  display:block;color:inherit;text-decoration:none;cursor:pointer;position:relative;
   transition:border-color .15s, transform .15s, background .15s;
 }
 .book-card:hover{border-color:rgba(200,241,53,.4);transform:translateY(-1px);background:rgba(255,255,255,.04)}
-.book-card .bt{font-size:14px;font-weight:800}
+.book-since{
+  position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;color:var(--muted);
+  letter-spacing:.02em;white-space:nowrap;
+}
+.book-card .bt{font-size:14px;font-weight:800;padding-right:72px}
 .book-card .bs{font-size:11px;color:var(--muted);margin-top:2px}
 .book-card .br{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;font-weight:700}
 .book-card .br b{font-size:16px}
@@ -12458,8 +12665,67 @@ body{
 .pos-entry,.pos-slot{font-size:11px;color:var(--muted);margin-top:4px}
 .pos-close-row{margin-top:10px;padding:10px 12px;background:rgba(0,0,0,.25);border-radius:12px;border:1px solid var(--line)}
 .live-close-val{font-size:18px;font-weight:800}
+.hist-list{display:flex;flex-direction:column;gap:0;margin-top:4px}
+.hist-row{
+  display:grid;grid-template-columns:72px 56px 1fr auto;gap:10px;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--line);font-size:12px;
+}
+.hist-row:last-child{border-bottom:none}
+.hist-time{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.hist-sym{font-weight:800}
+.hist-dir{font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;text-align:center}
+.hist-dir.up{background:rgba(57,255,142,.12);color:var(--green)}
+.hist-dir.down{background:rgba(255,92,122,.12);color:var(--red)}
+.hist-meta{color:var(--muted);line-height:1.35;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-pnl{font-weight:800;font-size:13px;text-align:right;white-space:nowrap}
+.hist-pnl.win{color:var(--green)}.hist-pnl.loss{color:var(--red)}
+@media(max-width:640px){
+  .hist-row{grid-template-columns:56px 48px 1fr auto;gap:6px;font-size:11px}
+}
 .empty{color:#555;font-size:13px;padding:12px 0}
 .detail-back{display:inline-flex;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--accent);text-decoration:none}
+.detail-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,320px);gap:16px;align-items:start}
+.detail-main{min-width:0;display:flex;flex-direction:column;gap:16px}
+.edit-panel{
+  position:sticky;top:24px;background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:16px 18px;max-height:calc(100vh - 48px);overflow-y:auto;
+}
+.edit-panel-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.edit-block{
+  background:var(--card2);border:1px solid var(--line);border-radius:14px;
+  padding:12px 14px;margin-bottom:10px;
+}
+.edit-block:last-child{margin-bottom:0}
+.edit-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.edit-sym{font-size:13px;font-weight:800}
+.edit-dir{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px}
+.edit-dir.up{background:rgba(57,255,142,.12);color:var(--green)}
+.edit-dir.down{background:rgba(255,92,122,.12);color:var(--red)}
+.edit-field{margin-bottom:8px}
+.edit-field label{display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.edit-field input{
+  width:100%;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:10px;
+  color:var(--txt);font-family:inherit;font-size:13px;font-weight:700;padding:8px 10px;
+}
+.edit-field input:focus{outline:none;border-color:rgba(200,241,53,.45)}
+.edit-preview{font-size:11px;color:var(--muted);margin:6px 0 10px;line-height:1.4}
+.edit-btn{
+  width:100%;border:none;border-radius:10px;padding:9px 12px;font-family:inherit;
+  font-size:12px;font-weight:800;cursor:pointer;background:rgba(200,241,53,.15);
+  color:var(--accent);transition:background .15s;
+}
+.edit-btn:hover{background:rgba(200,241,53,.25)}
+.edit-btn:disabled{opacity:.45;cursor:not-allowed}
+.edit-msg{font-size:11px;margin-top:6px;min-height:16px}
+.edit-msg.ok{color:var(--green)}.edit-msg.err{color:var(--red)}
+.edit-hint{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:12px}
+.edit-tier{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.edit-tier .edit-field{margin-bottom:0}
+.edit-tier .edit-field input{text-align:center}
+@media(max-width:1100px){
+  .detail-layout{grid-template-columns:1fr}
+  .edit-panel{position:relative;top:0;max-height:none}
+}
 @media(max-width:860px){
   body{flex-direction:column}
   .sidebar{width:100%;height:auto;position:relative;border-right:none;border-bottom:1px solid var(--line)}
@@ -12481,14 +12747,14 @@ body{
   <a class="nav-item" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
-  <div class="sidebar-footer"><span class="dot"></span>A2 Poly sanal</div>
+  <div class="sidebar-footer"><span class="dot"></span>A6 + A2 Poly sanal</div>
 </div>
 <div class="main">
   <div id="view-list">
     <div class="head">
       <div>
         <div class="page-title">Algoritma işlemler</div>
-        <div class="page-sub">A2 Top-17 · Poly sanal $300 · $8–12–16 · BTC+ETH+SOL · :02/:06</div>
+        <div class="page-sub">A6 + A6 V2 + A2 Top-17 · Poly sanal $300 · :02/:05</div>
       </div>
       <div class="chip" id="sum-chip">—</div>
     </div>
@@ -12500,15 +12766,28 @@ body{
   <div id="view-detail" style="display:none">
     <div class="head">
       <div>
-        <a class="detail-back" href="/algoritma-islemler">← 17 algoritma</a>
+        <a class="detail-back" href="/algoritma-islemler">← Algoritmalar</a>
         <div class="page-title" id="detail-title">—</div>
         <div class="page-sub" id="detail-sub">—</div>
       </div>
       <div class="chip" id="detail-sum">—</div>
     </div>
-    <div class="section">
-      <div class="section-title" id="detail-sec-title">Açık Pozisyonlar</div>
-      <div class="positions" id="detail-positions"><div class="empty">yükleniyor…</div></div>
+    <div class="detail-layout">
+      <div class="detail-main">
+        <div class="section">
+          <div class="section-title" id="detail-sec-title">Açık Pozisyonlar</div>
+          <div class="positions" id="detail-positions"><div class="empty">yükleniyor…</div></div>
+        </div>
+        <div class="section">
+          <div class="section-title" id="detail-hist-title">Geçmiş işlemler</div>
+          <div id="detail-history"><div class="empty">yükleniyor…</div></div>
+        </div>
+      </div>
+      <aside class="edit-panel" id="detail-edit-panel">
+        <div class="edit-panel-title">İşlem tutarları · sembol WR</div>
+        <div class="edit-hint">Sembol geçmiş WR'ye göre bir sonraki açılışta kullanılır. Sıcak saat +%40 · soğuk saat −%30 ayrıca uygulanır.</div>
+        <div id="detail-edit-forms"><div class="empty">yükleniyor…</div></div>
+      </aside>
     </div>
   </div>
 </div>
@@ -12516,6 +12795,7 @@ body{
 const PATH = location.pathname.replace(/\/+$/,'');
 const m = PATH.match(/\/algoritma-islemler\/([a-zA-Z0-9_]+)$/);
 const DETAIL_ID = m ? m[1] : null;
+let _detailBook = null;
 function fmtPx(n){
   if(n==null||isNaN(n)) return '—';
   const a=Math.abs(n);
@@ -12528,28 +12808,111 @@ function fmtMoney(n){
   if(n==null||isNaN(n)) return '—';
   return (n>=0?'+':'') + '$' + Number(n).toFixed(2);
 }
+function renderAmountPanel(book){
+  const el = document.getElementById('detail-edit-forms');
+  if(!el) return;
+  const ta = book?.trade_amounts || {};
+  const low = ta.low != null ? ta.low : 12;
+  const mid = ta.mid != null ? ta.mid : 16;
+  const high = ta.high != null ? ta.high : 20;
+  el.innerHTML = `
+    <div class="edit-tier">
+      <div class="edit-field">
+        <label>Düşük WR &lt;50%</label>
+        <input type="number" step="0.5" min="1" max="100" id="amt-low" value="${Number(low).toFixed(1)}">
+      </div>
+      <div class="edit-field">
+        <label>Orta =50%</label>
+        <input type="number" step="0.5" min="1" max="100" id="amt-mid" value="${Number(mid).toFixed(1)}">
+      </div>
+      <div class="edit-field">
+        <label>Yüksek &gt;50%</label>
+        <input type="number" step="0.5" min="1" max="100" id="amt-high" value="${Number(high).toFixed(1)}">
+      </div>
+    </div>
+    <div class="edit-preview">Örnek: $${Number(low).toFixed(0)} / $${Number(mid).toFixed(0)} / $${Number(high).toFixed(0)} · veri yok → orta</div>
+    <button type="button" class="edit-btn" id="amt-save-btn" onclick="saveAmounts(this)">Kaydet</button>
+    <div class="edit-msg" id="amt-save-msg"></div>`;
+}
+async function saveAmounts(btn){
+  if(!DETAIL_ID) return;
+  const msg = document.getElementById('amt-save-msg');
+  const low = document.getElementById('amt-low')?.value;
+  const mid = document.getElementById('amt-mid')?.value;
+  const high = document.getElementById('amt-high')?.value;
+  btn.disabled = true;
+  if(msg){ msg.textContent = 'kaydediliyor…'; msg.className = 'edit-msg'; }
+  try{
+    const r = await fetch('/poly/api/a2-algoritmalar/' + encodeURIComponent(DETAIL_ID) + '/amounts', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        amount_low: Number(low),
+        amount_mid: Number(mid),
+        amount_high: Number(high),
+      }),
+    });
+    const d = await r.json();
+    if(!d || !d.ok){
+      if(msg){ msg.textContent = d?.error || 'hata'; msg.className = 'edit-msg err'; }
+      return;
+    }
+    if(msg){ msg.textContent = 'kaydedildi — sonraki :05 açılış'; msg.className = 'edit-msg ok'; }
+    renderDetail(d.book, true);
+  } catch(e){
+    if(msg){ msg.textContent = 'ağ hatası'; msg.className = 'edit-msg err'; }
+  } finally {
+    btn.disabled = false;
+  }
+}
 function posCard(p){
   const up = (p.side || '') === 'LONG';
   const dirClass = up ? 'dir-up' : 'dir-down';
   const dc = up ? 'up' : 'down';
   const spent = Number(p.pm_spent != null ? p.pm_spent : (p.amount || 0));
-  const toWin = Number(p.to_win != null ? p.to_win : (p.pm_size || 0));
+  const payout = Number(p.win_payout != null ? p.win_payout : (p.to_win != null ? p.to_win : (p.pm_size || 0)));
+  const net = p.win_profit != null ? Number(p.win_profit) : (payout > 0 ? payout - spent : 0);
   const slot = p.slot_label || p.slot || '—';
   const pmEp = p.pm_entry_price != null ? Number(p.pm_entry_price).toFixed(3) : '—';
+  const payoutHtml = payout > 0
+    ? `<span class="live-close-val" style="color:var(--green)">$${payout.toFixed(2)}</span>
+       <span class="pos-pct pos" style="margin-left:8px">${net >= 0 ? '+' : ''}$${net.toFixed(2)} net</span>`
+    : '<span style="color:var(--muted);font-size:12px">PM kotasyonu yok</span>';
   return `<div class="pos-card ${dirClass}">
     <div class="pos-top">
       <div class="pos-name">${p.name || (p.symbol||'').replace('USDT','')}</div>
       <span class="pos-dir ${dc}">${p.dir_tr || (up ? 'YÜKSELİR' : 'DÜŞER')}</span>
     </div>
     <div class="pos-current">$${spent.toFixed(2)}</div>
-    <div class="pos-pct">stake · PM @ ${pmEp}</div>
+    <div class="pos-pct">risk · PM @ ${pmEp}</div>
     <div class="pos-entry">Spot giriş: $${fmtPx(p.entry_price)}</div>
     <div class="pos-slot">${slot}</div>
     <div class="pos-close-row">
-      <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">KAZANIRSA / SETTLE :02</div>
-      <span class="live-close-val" style="color:var(--green)">$${toWin.toFixed(2)}</span>
-      <span class="pos-pct pos" style="margin-left:8px">+$${(toWin-spent).toFixed(2)}</span>
+      <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">KAZANIRSA (PM kotasyonu)</div>
+      ${payoutHtml}
     </div>
+  </div>`;
+}
+function fmtHistTime(raw){
+  const s = String(raw || '');
+  if (s.length >= 16) return s.slice(5, 16).replace('T', ' ');
+  return s.slice(0, 11) || '—';
+}
+function histRow(t){
+  const win = !!t.win;
+  const pnl = Number(t.pnl || 0);
+  const spent = Number(t.spent || 0);
+  const dir = (t.dir || '').toUpperCase();
+  const dc = dir === 'UP' ? 'up' : 'down';
+  const slot = t.slot_label ? String(t.slot_label).replace(/ Up or Down.*/i, '') : '';
+  return `<div class="hist-row">
+    <div class="hist-time">${fmtHistTime(t.exit_time_tr)}</div>
+    <div class="hist-sym">${t.symbol || '—'}</div>
+    <div>
+      <span class="hist-dir ${dc}">${t.dir_tr || (dir === 'UP' ? 'UP' : 'DN')}</span>
+      <div class="hist-meta">$${spent.toFixed(0)} risk${slot ? ' · ' + slot : ''}</div>
+    </div>
+    <div class="hist-pnl ${win ? 'win' : 'loss'}">${win ? '✓' : '✗'} ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</div>
   </div>`;
 }
 function renderBooks(books){
@@ -12574,7 +12937,10 @@ function renderBooks(books){
     const sub = b.title || b.category || '';
     const opens = (b.cards||[]).map(c => (c.name||'') + ' ' + (c.side==='LONG'?'UP':'DOWN')).join(' · ') || 'açık yok';
     const href = '/algoritma-islemler/' + encodeURIComponent(b.id);
+    const since = b.started_at_label || '';
+    const sinceTitle = b.started_since_reset ? 'Sıfırlama sonrası dönem' : 'İlk işlem';
     return `<a class="book-card" href="${href}">
+      ${since ? `<div class="book-since" title="${sinceTitle}">${since}</div>` : ''}
       <div class="bt">${title}</div>
       <div class="bs">${sub} · ${wr} · ${histN} işlem</div>
       <div class="br"><span>Bakiye</span><b>$${Number(b.balance||0).toFixed(2)}</b></div>
@@ -12592,18 +12958,22 @@ function findBook(books, id){
     return bid === key || (num && num === key) || ('a2_'+num.padStart(2,'0')) === key;
   }) || null;
 }
-function renderDetail(book){
+function renderDetail(book, skipEdit){
   document.getElementById('view-list').style.display = 'none';
   document.getElementById('view-detail').style.display = 'block';
+  _detailBook = book;
   const title = document.getElementById('detail-title');
   const sub = document.getElementById('detail-sub');
   const sum = document.getElementById('detail-sum');
   const sec = document.getElementById('detail-sec-title');
   const pc = document.getElementById('detail-positions');
+  const histEl = document.getElementById('detail-history');
+  const histTitle = document.getElementById('detail-hist-title');
   if(!book){
     title.textContent = 'Bulunamadı';
-    sub.textContent = 'Bu A2 Poly defteri yok';
+    sub.textContent = 'Bu Poly sanal defteri yok';
     pc.innerHTML = '<div class="empty">defter bulunamadı</div>';
+    if (histEl) histEl.innerHTML = '';
     return;
   }
   const pnl = Number(book.total_pnl||0);
@@ -12612,19 +12982,44 @@ function renderDetail(book){
   sub.textContent = 'Poly sanal'
     + ' · WR ' + (book.wr != null ? book.wr + '%' : '—')
     + ' · ' + (book.history_n||0) + ' işlem'
-    + ' · Bakiye $' + Number(book.balance||0).toFixed(2);
+    + ' · Bakiye $' + Number(book.balance||0).toFixed(2)
+    + (book.started_at_label ? ' · başlangıç ' + book.started_at_label : '');
   sum.textContent = 'Net P&L ' + (pnl>=0?'+':'') + pnl.toFixed(2)
     + ' · açık ' + (book.open_count||0);
   sec.textContent = 'Açık Pozisyonlar · ' + (book.name || book.id);
   const cards = book.cards || [];
-  if(!cards.length){
-    pc.innerHTML = '<div class="empty">Açık pozisyon yok</div>';
-    return;
+  pc.innerHTML = cards.length
+    ? cards.map(posCard).join('')
+    : '<div class="empty">Açık pozisyon yok</div>';
+  const hist = book.recent_history || [];
+  const histN = Number(book.history_n || hist.length);
+  if (histTitle) {
+    histTitle.textContent = 'Geçmiş işlemler · son ' + hist.length
+      + (histN > hist.length ? ' / ' + histN + ' toplam' : '');
   }
-  pc.innerHTML = cards.map(posCard).join('');
+  if (histEl) {
+    histEl.innerHTML = hist.length
+      ? '<div class="hist-list">' + hist.map(histRow).join('') + '</div>'
+      : '<div class="empty">Henüz kapanmış işlem yok</div>';
+  }
+  if(!skipEdit) renderAmountPanel(book);
 }
 async function load(){
   try{
+    if(DETAIL_ID){
+      const r = await fetch('/poly/api/a2-algoritmalar/' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
+      const d = await r.json();
+      if(!d || !d.ok){
+        document.getElementById('detail-positions').innerHTML =
+          '<div class="empty">hata: '+(d&&d.error?d.error:'yüklenemedi')+'</div>';
+        const ef = document.getElementById('detail-edit-forms');
+        if(ef) ef.innerHTML = '';
+        return;
+      }
+      const editing = document.activeElement && document.activeElement.closest('#detail-edit-panel');
+      renderDetail(d.book, !!editing);
+      return;
+    }
     const r = await fetch('/poly/api/a2-algoritmalar', {cache:'no-store'});
     const d = await r.json();
     if(!d || !d.ok){
@@ -12640,14 +13035,11 @@ async function load(){
       + ' · Net P&L ' + (pnl>=0?'+':'') + Number(pnl).toFixed(1)
       + ' · ' + histSum + ' işlem'
       + ' · açık ' + (d.total_open||0);
-    if(DETAIL_ID){
-      renderDetail(findBook(books, DETAIL_ID));
-    } else {
-      renderBooks(books);
-    }
+    renderBooks(books);
   } catch(e){
     console.error(e);
-    document.getElementById('algo-books').innerHTML = '<div class="empty">yükleme hatası</div>';
+    const el = DETAIL_ID ? document.getElementById('detail-positions') : document.getElementById('algo-books');
+    if (el) el.innerHTML = '<div class="empty">yükleme hatası</div>';
   }
 }
 load();

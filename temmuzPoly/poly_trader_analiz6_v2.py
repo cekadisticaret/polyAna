@@ -1,20 +1,12 @@
 """
-6. ANALİZ — Çoklu indikatör sanal trader
+6. ANALİZ V2 — 6. Analiz kopyası (BTC + ETH only)
 
-Modlar:
-  close   → :02 — önceki saatin sonuçlarını kapatır
-  open    → :05 — sembol bazlı sinyal ile işlem açar
-  preview → :45 — bir sonraki saatin geçmiş başarı oranı (log)
-  weekly  → Cumartesi 21:00 — haftalık ısı haritası
-  stats   → manuel detaylı rapor
+6. Analiz ile aynı indikatör mantığı; SOL hariç.
+Ayrı state/history — orijinal poly_trader_analiz6.py DOKUNULMAZ.
+Live eşleme yok.
 
-Algoritma:
-  BTC + SOL → MACD Histogram Divergence (#26)
-  ETH       → RSI Divergence (#38)
-Sanal bütçe: $300, işlem $12/$16/$20 (sembol WR — 1. Analiz mantığı).
-NEUTRAL sinyalde işlem yok.
-Hafta sonu duraklama: Cuma 22:00 – Pazartesi 08:00 İST (open/close/preview atlanır).
-Sanal open → aynı adaylar için A6 Live gerçek PM (`PM_ANALIZ6_LIVE_ENABLED` + dashboard anahtarı).
+Modlar: close / open / preview / weekly / stats
+Cron: :02 close · :05 open
 """
 import asyncio
 import json
@@ -57,21 +49,20 @@ CHAT_ID   = os.getenv("TELEGRAM_ANALIZ4_CHAT_ID", os.getenv("TELEGRAM_CHAT", "83
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR          = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz6_state.json")
-HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz6_history.json")
-WEEKLY_IMG    = "/tmp/poly_analiz6_weekly_heatmap.png"
-LABEL         = "6. ANALİZ"
-BOOK_KEY      = "analiz6"
-ALGO_NAME     = "MACD Hist. Div + RSI Div"
+STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz6_v2_state.json")
+HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz6_v2_history.json")
+WEEKLY_IMG    = "/tmp/poly_analiz6_v2_weekly_heatmap.png"
+LABEL         = "6. ANALİZ V2"
+BOOK_KEY      = "analiz6_v2"
+ALGO_NAME     = "MACD Hist. Div + RSI Div (BTC/ETH)"
 
 INITIAL_BALANCE    = SANAL_INITIAL_BALANCE
 TRADE_AMOUNT       = SANAL_TRADE_AMOUNT
 TRADE_AMOUNT_HIGH  = SANAL_TRADE_AMOUNT_HIGH
 TRADE_AMOUNT_LOW   = SANAL_TRADE_AMOUNT_LOW
-SYMBOLS         = ["BTCUSDT", "SOLUSDT", "ETHUSDT"]
+SYMBOLS         = ["BTCUSDT", "ETHUSDT"]
 _SYMBOL_ALGOS    = {
     "BTCUSDT": (macd_histogram_div, "MACD Hist. Div"),
-    "SOLUSDT": (macd_histogram_div, "MACD Hist. Div"),
     "ETHUSDT": (rsi_divergence_strict, "RSI Divergence"),
 }
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -329,7 +320,6 @@ async def run_open() -> None:
         candidates.append({"sym": sym, "direction": direction, "price": price, "algo_name": algo_name})
 
     # Tüm sinyaller için pozisyon aç
-    live_candidates = []
     opened = []
     for c in candidates:
         sym         = c["sym"]
@@ -367,20 +357,10 @@ async def run_open() -> None:
             print(f"[{LABEL} open] {sym} — {skip_msg}")
             continue
         state["open_positions"].append(pos)
-        live_candidates.append(c)
         opened.append({**c, "entry_price": entry_price, "pos": pos,
                        "dyn_amount": dyn_amount, "hot_boost": hot_boost, "cold_cut": cold_cut})
 
     save_state(state)
-
-    if live_candidates:
-        try:
-            from poly_trader_analiz6_live import open_live_for_sanal_candidates
-            n_live = await open_live_for_sanal_candidates(live_candidates, now_tr, now)
-            if n_live:
-                print(f"[{LABEL} open] A6 Live — {n_live} gerçek PM eşlendi")
-        except Exception as e:
-            print(f"[{LABEL} open] A6 Live eşleme hatası: {e}")
 
     next_h = f"{(hour_tr + 1) % 24:02d}:00"
     lines  = []

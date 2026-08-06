@@ -18,6 +18,9 @@ alwaysApply: true
 | `5 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py open` (`PM_ANALIZ2_REAL_ENABLED`) | `/tmp/poly_trader_analiz2_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz10_live.py close` | `/tmp/poly_trader_analiz10_live.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz10_live.py open` (`PM_ANALIZ10_REAL_ENABLED`) | `/tmp/poly_trader_analiz10_live.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py close` | `/tmp/poly_trader_analiz6_v2.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py open` | `/tmp/poly_trader_analiz6_v2.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py weekly` | `/tmp/poly_trader_analiz6_v2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_live.py close` | `/tmp/poly_trader_analiz6_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py close` | `/tmp/crypto_futures_cr6.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py open` (Algoritmalar Live — Hurst+A1#11+Z-Score MR+MR gerçek Binance $7×20x) | `/tmp/crypto_futures_cr6.log` |

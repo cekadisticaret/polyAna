@@ -179,16 +179,83 @@ SANAL_TRADE_AMOUNT_LOW = 12.0   # sembol genel WR < %50
 
 def symbol_wr_amount(history: list, symbol: str) -> float:
     """Sembol bazlı geçmiş WR'ye göre işlem tutarı ($12 / $16 / $20)."""
+    return wr_tier_amount(
+        history, symbol,
+        SANAL_TRADE_AMOUNT_LOW, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
+    )
+
+
+_SANAL_A2_WR_DEFAULT = (8.0, 12.0, 16.0)
+_SANAL_A6_WR_DEFAULT = (12.0, 16.0, 20.0)
+
+
+def wr_tier_amount(
+    history: list, symbol: str, low: float, mid: float, high: float,
+) -> float:
+    """Sembol WR → düşük/orta/yüksek tutar."""
     trades = [t for t in history if t.get("symbol") == symbol]
     if not trades:
-        return SANAL_TRADE_AMOUNT
+        return mid
     wins = sum(1 for t in trades if t.get("win"))
     rate = wins / len(trades)
     if rate > 0.5:
-        return SANAL_TRADE_AMOUNT_HIGH
+        return high
     if rate < 0.5:
-        return SANAL_TRADE_AMOUNT_LOW
-    return SANAL_TRADE_AMOUNT
+        return low
+    return mid
+
+
+def sanal_wr_amount_defaults(book_key: str) -> tuple[float, float, float]:
+    if book_key.startswith("a2_"):
+        return _SANAL_A2_WR_DEFAULT
+    return _SANAL_A6_WR_DEFAULT
+
+
+def load_sanal_wr_amounts(book_key: str) -> tuple[float, float, float]:
+    """Poly sanal defter — sembol WR giriş kademeleri (analiz5_settings.json)."""
+    low_d, mid_d, high_d = sanal_wr_amount_defaults(book_key)
+    if not os.path.exists(_PM_LIVE_SETTINGS_FILE):
+        return low_d, mid_d, high_d
+    try:
+        with open(_PM_LIVE_SETTINGS_FILE) as f:
+            data = json.load(f)
+        low = float(data.get(f"sanal_{book_key}_amount_low", low_d))
+        mid = float(data.get(f"sanal_{book_key}_amount_mid", mid_d))
+        high = float(data.get(f"sanal_{book_key}_amount_high", high_d))
+        return low, mid, high
+    except Exception:
+        return low_d, mid_d, high_d
+
+
+def save_sanal_wr_amounts(
+    book_key: str, low: float, mid: float, high: float,
+) -> tuple[float, float, float]:
+    low = round(max(1.0, min(100.0, float(low))), 2)
+    mid = round(max(1.0, min(100.0, float(mid))), 2)
+    high = round(max(1.0, min(100.0, float(high))), 2)
+    data: dict = {}
+    if os.path.exists(_PM_LIVE_SETTINGS_FILE):
+        try:
+            with open(_PM_LIVE_SETTINGS_FILE) as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
+    data[f"sanal_{book_key}_amount_low"] = low
+    data[f"sanal_{book_key}_amount_mid"] = mid
+    data[f"sanal_{book_key}_amount_high"] = high
+    with open(_PM_LIVE_SETTINGS_FILE, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    return low, mid, high
+
+
+def symbol_wr_amount_for_book(history: list, symbol: str, book_key: str) -> float:
+    low, mid, high = load_sanal_wr_amounts(book_key)
+    return wr_tier_amount(history, symbol, low, mid, high)
+
+
+def sanal_wr_amount_range_str(book_key: str) -> str:
+    low, _, high = load_sanal_wr_amounts(book_key)
+    return f"${low:.0f}–${high:.0f}"
 
 
 _PM_LIVE_SETTINGS_FILE = os.path.join(
@@ -707,8 +774,8 @@ def pm_hourly_profit_entry_ok(
 ) -> tuple[bool, str]:
     """PM kotasyonunda net kazanç (to_win − spent) >= stake × min_ratio ise True."""
     spent, size, ep = pm_stake_fields(pos)
-    if spent <= 0 or size <= 0:
-        return True, ""
+    if size <= 0 or ep <= 0 or not pos.get("pm_slug"):
+        return False, "PM kotasyonu yok — işlem açılmaz (2× stake kullanılmaz)"
     net = round(size - spent, 2)
     need = round(spent * min_ratio, 2)
     if net >= need:
@@ -726,9 +793,26 @@ def pm_stake_fields(pos: dict) -> tuple[float, float, float]:
     spent = float(pos.get("pm_spent") or pos.get("amount") or 0)
     entry_p = float(pos.get("pm_entry_price") or pos.get("token_price") or 0)
     size = float(pos.get("pm_size") or pos.get("to_win") or 0)
-    if size <= 0 and spent > 0 and entry_p > 0:
+    if size <= 0 and spent > 0 and entry_p > 0 and (
+        pos.get("pm_entry_price") is not None or pos.get("token_price") is not None
+    ):
         size = round(spent / entry_p, 2)
     return spent, size, entry_p
+
+
+def pm_payout_fields(pos: dict) -> dict:
+    """PM giriş kotasyonu — kazanırsa toplam ödeme ve net kâr (2× stake yok)."""
+    spent, size, ep = pm_stake_fields(pos)
+    net = round(size - spent, 2) if size > 0 and spent > 0 else None
+    return {
+        "pm_spent": round(spent, 2),
+        "pm_size": round(size, 2) if size > 0 else 0.0,
+        "to_win": round(size, 2) if size > 0 else 0.0,
+        "win_payout": round(size, 2) if size > 0 else None,
+        "win_profit": net,
+        "pm_entry_price": ep if ep > 0 else None,
+        "has_pm_quote": bool(size > 0 and ep > 0 and pos.get("pm_slug")),
+    }
 
 
 def sanal_at_risk(state: dict) -> float:
