@@ -2129,33 +2129,68 @@ def api_symbol_stats():
     else:
         analiz_key = _PANEL_STATS_ANALIZ
     hist = _load_heatmap_history(analiz_key)
-    # Sembol kartları: seçili analizin kendi sembol WR (A10 kartında A6 ETH gösterme)
-    sym_wr = _analiz_sym_wr(analiz_key, list(_allowed_syms_for(analiz_key)), min_trades=1)
+    # Sembol kartları: her coin için en yüksek WR'li analiz (karışık olabilir)
+    sym_wr = _best_analiz_by_symbol(min_trades=5)
     if not hist:
         label = _ANALYSIS_LABELS.get(analiz_key, analiz_key)
         top_slots, bottom_slots = _best_hour_slots_across_analyses(top_n=3, min_trades=3)
-        return jsonify({"analiz": analiz_key, "analiz_label": label,
-                        "analiz_short": _OVERVIEW_SHORT_LABELS.get(analiz_key, label),
-                        "total": 0, "total_wins": 0, "total_wr": 0.0, "sym_wr": sym_wr,
+        if sym_wr:
+            total = sum(r["t"] for r in sym_wr)
+            total_wins = sum(r["w"] for r in sym_wr)
+            total_wr = round(total_wins / total * 100, 1) if total else 0.0
+            shorts = []
+            for r in sym_wr:
+                s = r.get("analiz_short") or r.get("analiz_label") or r.get("analiz")
+                if s and s not in shorts:
+                    shorts.append(s)
+            mix_short = " · ".join(shorts) if shorts else "—"
+            mix_label = "Coin başına en iyi: " + ", ".join(
+                f"{r['sym']}→{r.get('analiz_short') or r.get('analiz')}" for r in sym_wr
+            )
+        else:
+            total, total_wins, total_wr = 0, 0, 0.0
+            mix_short = _OVERVIEW_SHORT_LABELS.get(analiz_key, label)
+            mix_label = label
+        return jsonify({"analiz": analiz_key, "analiz_label": mix_label,
+                        "analiz_short": mix_short,
+                        "total": total, "total_wins": total_wins, "total_wr": total_wr, "sym_wr": sym_wr,
                         "top_slots": top_slots, "bottom_slots": bottom_slots, "dynamic_best": True})
 
-    # En başarılı 1s analizin toplam WR (mor kart başlığı)
-    if best and analiz_key == best["analiz"] and not forced:
+    # Mor kart başlığı — coin başına en iyi analizlerin birleşik WR
+    if sym_wr:
+        total = sum(r["t"] for r in sym_wr)
+        total_wins = sum(r["w"] for r in sym_wr)
+        total_wr = round(total_wins / total * 100, 1) if total else 0.0
+        shorts = []
+        for r in sym_wr:
+            s = r.get("analiz_short") or r.get("analiz_label") or r.get("analiz")
+            if s and s not in shorts:
+                shorts.append(s)
+        sym_mix_short = " · ".join(shorts) if shorts else "—"
+        sym_mix_label = "Coin başına en iyi: " + ", ".join(
+            f"{r['sym']}→{r.get('analiz_short') or r.get('analiz')}" for r in sym_wr
+        )
+    elif best and analiz_key == best["analiz"] and not forced:
         total = best["total"]
         total_wins = best["total_wins"]
         total_wr = best["total_wr"]
+        sym_mix_short = best["analiz_short"]
+        sym_mix_label = best["analiz_label"]
     else:
-        total      = len(hist)
+        total = len(hist)
         total_wins = sum(1 for t in hist if t.get("win"))
-        total_wr   = round(total_wins / total * 100, 1) if total else 0.0
+        total_wr = round(total_wins / total * 100, 1) if total else 0.0
+        label_fb = _ANALYSIS_LABELS.get(analiz_key, analiz_key)
+        sym_mix_short = _OVERVIEW_SHORT_LABELS.get(analiz_key, label_fb)
+        sym_mix_label = label_fb
 
     # En etkili / zayıf saatler — TÜM 1s analizlerde tarama (saat başına en iyi/kötü analiz)
     top_slots, bottom_slots = _best_hour_slots_across_analyses(top_n=3, min_trades=3)
     label = _ANALYSIS_LABELS.get(analiz_key, analiz_key)
     return jsonify({
         "analiz": analiz_key,
-        "analiz_label": label,
-        "analiz_short": _OVERVIEW_SHORT_LABELS.get(analiz_key, label),
+        "analiz_label": sym_mix_label if sym_wr else label,
+        "analiz_short": sym_mix_short if sym_wr else _OVERVIEW_SHORT_LABELS.get(analiz_key, label),
         "total": total,
         "total_wins": total_wins,
         "total_wr": total_wr,
@@ -9757,6 +9792,8 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
     .mobile-logout { font-size:12px; color:#555; text-decoration:none; }
     .page-title { font-size:20px; }
     .settings-card { padding:18px 16px; border-radius:16px; }
+    .setting-row { flex-direction:column; align-items:stretch; gap:12px; }
+    .setting-right, .amount-triple { width:100%; justify-content:center; }
     .pm-system-bar { align-items:flex-start; }
     .pm-system-btn { margin-top:2px; }
   }
@@ -9945,6 +9982,30 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
         <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6_amount_low" type="number" step="0.5" min="1" max="100"></div>
         <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6_amount_mid" type="number" step="0.5" min="1" max="100"></div>
         <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A6V2 Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH · MACD/RSI div · sembol WR düşük / orta / yüksek</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6v2_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6v2_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6v2_amount_high" type="number" step="0.5" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-left">
+        <div class="setting-label">A6V3 Live</div>
+        <div class="setting-desc">Saatlik BTC+ETH+SOL · BTC/ETH→A6 SOL→A2 · sembol WR düşük / orta / yüksek</div>
+      </div>
+      <div class="setting-right amount-triple">
+        <div class="amt-cell"><span class="amt-lbl">Düş</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6v3_amount_low" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Orta</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6v3_amount_mid" type="number" step="0.5" min="1" max="100"></div>
+        <div class="amt-cell"><span class="amt-lbl">Yük</span><span class="setting-unit">$</span><input class="setting-input pm-amt" id="a6v3_amount_high" type="number" step="0.5" min="1" max="100"></div>
       </div>
     </div>
 
@@ -10236,6 +10297,8 @@ const _SETTINGS_KEYS = [
   'a2_amount_low', 'a2_amount_mid', 'a2_amount_high',
   'a10_amount_low', 'a10_amount_mid', 'a10_amount_high',
   'a6_amount_low', 'a6_amount_mid', 'a6_amount_high',
+  'a6v2_amount_low', 'a6v2_amount_mid', 'a6v2_amount_high',
+  'a6v3_amount_low', 'a6v3_amount_mid', 'a6v3_amount_high',
   'a2_08_amount_low', 'a2_08_amount_mid', 'a2_08_amount_high',
   'a2_03_amount_low', 'a2_03_amount_mid', 'a2_03_amount_high',
   'a2_04_amount_low', 'a2_04_amount_mid', 'a2_04_amount_high',
@@ -11511,7 +11574,7 @@ HTML = r"""<!DOCTYPE html>
 <div class="right-panel">
   <!-- Sembol WR — tek mor kart (dış kutu yok) -->
   <div class="sym-vio">
-    <div class="sym-lime-title">Sembol Başarı Oranı <span style="font-size:10px;font-weight:600;opacity:.75">· seçili analiz</span></div>
+    <div class="sym-lime-title">Sembol Başarı Oranı <span style="font-size:10px;font-weight:600;opacity:.75">· coin başına en iyi</span></div>
     <div class="sym-lime-row">
       <div class="sym-lime-val" id="sym-wr-total">—%</div>
       <div class="sym-lime-ico" aria-hidden="true">
@@ -12579,7 +12642,7 @@ function renderHeatmap(cells) {
 _SETTINGS_FILE = os.path.join(_DIR_POLY, "analiz5_settings.json")
 _AMT_META = {"unit": "$", "min": 1, "max": 100, "step": 0.5}
 _SETTINGS_LABELS = {}
-for _pfx, _lbl in (("a1", "A1 Live"), ("a2", "A2 Live"), ("a10", "A10 Live"), ("a6", "A6 Live"), ("a2_08", "A2#08 Williams Live"), ("a2_03", "A2#03 Stoch RSI Live"), ("a2_04", "A2#04 Schaff Live"), ("a2_05", "A2#05 Mean Rev Live"), ("a2_06", "A2#06 Z-Score MR Live"), ("a2_07", "A2#07 Hurst Live"), ("a15", "A15 Live")):
+for _pfx, _lbl in (("a1", "A1 Live"), ("a2", "A2 Live"), ("a10", "A10 Live"), ("a6", "A6 Live"), ("a6v2", "A6V2 Live"), ("a6v3", "A6V3 Live"), ("a2_08", "A2#08 Williams Live"), ("a2_03", "A2#03 Stoch RSI Live"), ("a2_04", "A2#04 Schaff Live"), ("a2_05", "A2#05 Mean Rev Live"), ("a2_06", "A2#06 Z-Score MR Live"), ("a2_07", "A2#07 Hurst Live"), ("a15", "A15 Live")):
     for _tier, _tier_lbl in (("low", "düşük"), ("mid", "orta"), ("high", "yüksek")):
         _SETTINGS_LABELS[f"{_pfx}_amount_{_tier}"] = {
             "label": f"{_lbl} {_tier_lbl} WR giriş", **_AMT_META,
@@ -12591,6 +12654,8 @@ def _read_settings() -> dict:
         "a2_amount_low": 6.0, "a2_amount_mid": 7.0, "a2_amount_high": 8.0,
         "a10_amount_low": 8.0, "a10_amount_mid": 10.0, "a10_amount_high": 12.0,
         "a6_amount_low": 8.0, "a6_amount_mid": 10.0, "a6_amount_high": 12.0,
+        "a6v2_amount_low": 8.0, "a6v2_amount_mid": 10.0, "a6v2_amount_high": 12.0,
+        "a6v3_amount_low": 8.0, "a6v3_amount_mid": 10.0, "a6v3_amount_high": 12.0,
         "a2_08_amount_low": 4.0, "a2_08_amount_mid": 5.0, "a2_08_amount_high": 6.0,
         "a2_03_amount_low": 4.0, "a2_03_amount_mid": 5.0, "a2_03_amount_high": 6.0,
         "a2_04_amount_low": 4.0, "a2_04_amount_mid": 5.0, "a2_04_amount_high": 6.0,

@@ -362,7 +362,7 @@ async def run_open() -> None:
 
     sep = "━" * 26
     if not lines:
-        print(f"[6. ANALİZ open] {saat} İST — işlem yok")
+        print(f"[{LABEL} open] {saat} İST — işlem yok")
         return
 
     msg = (
@@ -375,7 +375,7 @@ async def run_open() -> None:
     )
 
     tg_send(msg)
-    print(f"[6. ANALİZ open] {saat} İST — {len(lines)} yeni işlem açıldı")
+    print(f"[{LABEL} open] {saat} İST — {len(lines)} yeni işlem açıldı")
 
 
 # ── PREVIEW: 45 geçe — bir sonraki saatin başarı oranı önizleme

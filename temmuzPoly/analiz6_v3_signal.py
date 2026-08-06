@@ -19,6 +19,22 @@ def engine_label(symbol: str) -> str:
     return _SYMBOL_ENGINE.get(symbol, ("?", "?"))[1]
 
 
+def _algo_klines_to_predict(kl_raw: list[dict]) -> list[dict]:
+    """algo_signals {o,h,l,c,v} → A2 predictor formatı (A15 ile aynı)."""
+    return [
+        {
+            "open_time": 0,
+            "open": x["o"],
+            "high": x["h"],
+            "low": x["l"],
+            "close": x["c"],
+            "volume": x.get("v", 0),
+            "taker_buy": 0,
+        }
+        for x in kl_raw
+    ]
+
+
 async def resolve_live_signal(symbol: str) -> tuple[str | None, float | None, str]:
     kind, algo_name = _SYMBOL_ENGINE.get(symbol, ("?", "?"))
     try:
@@ -34,7 +50,7 @@ async def resolve_live_signal(symbol: str) -> tuple[str | None, float | None, st
     elif kind == "a6_rsi":
         sig = rsi_divergence_strict(kl)
     elif kind == "a2":
-        sig = await direction_a2(kl, symbol)
+        sig = await direction_a2(_algo_klines_to_predict(kl), symbol)
     else:
         return None, price, algo_name
     if sig not in ("UP", "DOWN"):

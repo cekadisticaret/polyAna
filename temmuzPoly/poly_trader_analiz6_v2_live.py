@@ -74,7 +74,7 @@ def save_history(history: list) -> None:
 
 
 def _trade_amount(history: list, symbol: str) -> float:
-    return pm_live_wr_amount("a6", history, symbol, get_symbol_stats)
+    return pm_live_wr_amount("a6v2", history, symbol, get_symbol_stats)
 
 
 def _pm_bal_line() -> str:
@@ -232,7 +232,7 @@ async def open_live_for_sanal_candidates(
         )
     sep = "━" * 26
     tg_send(LABEL,
-        f"{sep}\n🆕 <b>{LABEL} — {saat}-{next_h}</b>  🔴 GERÇEK PM  {pm_live_amount_range_str('a6')}\n"
+        f"{sep}\n🆕 <b>{LABEL} — {saat}-{next_h}</b>  🔴 GERÇEK PM  {pm_live_amount_range_str('a6v2')}\n"
         + "\n".join(lines) + f"\n{sep}\n{_pm_bal_line()}\n{sep}")
     print(f"[{LABEL} open] {len(opened)} açıldı (sanal eşleme)")
     return len(opened)
