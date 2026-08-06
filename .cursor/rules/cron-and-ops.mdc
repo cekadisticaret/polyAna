@@ -20,7 +20,17 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz10_live.py open` (`PM_ANALIZ10_REAL_ENABLED`) | `/tmp/poly_trader_analiz10_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py close` | `/tmp/poly_trader_analiz6_v2.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py open` | `/tmp/poly_trader_analiz6_v2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py close` | `/tmp/poly_trader_analiz6_v3.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py open` | `/tmp/poly_trader_analiz6_v3.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py close` | `/tmp/poly_trader_b1_01.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py open` | `/tmp/poly_trader_b1_01.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2_live.py close` | `/tmp/poly_trader_analiz6_v2_live.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2_live.py open` | `/tmp/poly_trader_analiz6_v2_live.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3_live.py close` | `/tmp/poly_trader_analiz6_v3_live.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3_live.py open` | `/tmp/poly_trader_analiz6_v3_live.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py weekly` | `/tmp/poly_trader_analiz6_v2.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py weekly` | `/tmp/poly_trader_analiz6_v3.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py weekly` | `/tmp/poly_trader_b1_01.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_live.py close` | `/tmp/poly_trader_analiz6_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py close` | `/tmp/crypto_futures_cr6.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py open` (Algoritmalar Live — Hurst+A1#11+Z-Score MR+MR gerçek Binance $7×20x) | `/tmp/crypto_futures_cr6.log` |
@@ -37,10 +47,6 @@ alwaysApply: true
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/pm_balance_hourly.py` | `/tmp/pm_balance_hourly.log` |
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_5m_real_stats.py` | `/tmp/poly_5m_real_stats.log` |
 | `* * * * *` | `temmuzPoly/poly_trader_manual.py close` (manuel PM slot settle) | `/tmp/poly_trader_manual.log` |
-| `*/15 * * * *` | `poly_trader_5m_sol_110.py open` (+1 sn gecikme) | `/tmp/poly_5m_sol_110.log` |
-| `*/15 * * * *` | `poly_trader_15m_a2.py open` (309/316/317 sanal; 309 Live $3 aynı sinyal/anda) | `/tmp/poly_trader_15m_a2.log` |
-| `0 0 * * 0` | `poly_trader_5m_sol_110.py weekly` | `/tmp/poly_5m_sol_110.log` |
-| `0 0 * * 0` | `poly_trader_15m_a2.py weekly` | `/tmp/poly_trader_15m_a2.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_signals.py` | `/tmp/algo_signals.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_signals_v2.py` | `/tmp/algo_signals_v2.log` |
 | `*/5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/chart_algo_panel.py update_wr` | `/tmp/chart_algo_panel_wr.log` |
@@ -48,24 +54,20 @@ alwaysApply: true
 | `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py open` | `/tmp/poly_trader_a2.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py weekly` | `/tmp/poly_trader_a2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py close` | `/tmp/poly_trader_a2_02_live.log` |
-| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py open` | `/tmp/poly_trader_a2_02_live.log` |
+| `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py open` (sanal A2#02 sync) | `/tmp/poly_trader_a2_02_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_08_live.py close` | `/tmp/poly_trader_a2_08_live.log` |
-| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_08_live.py open` | `/tmp/poly_trader_a2_08_live.log` |
+| `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_08_live.py open` (sanal A2#08 sync) | `/tmp/poly_trader_a2_08_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_03_live.py close` | `/tmp/poly_trader_a2_03_live.log` |
-| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_03_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_03_live.log` |
+| `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_03_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_03_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py close` | `/tmp/poly_trader_a2_04_live.log` |
-| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_04_live.log` |
+| `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_04_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py close` | `/tmp/poly_trader_a2_05_live.log` |
-| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_05_live.log` |
+| `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py open` (sanal A2#05 sync) | `/tmp/poly_trader_a2_05_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_06_live.py close` | `/tmp/poly_trader_a2_06_live.log` |
-| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_06_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_06_live.log` |
+| `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_06_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_06_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_07_live.py close` | `/tmp/poly_trader_a2_07_live.log` |
-| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_07_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_07_live.log` |
+| `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_07_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_07_live.log` |
 | `*/30 * * * *` | `cd /root/aiProject/crypto-news-monitor && ./run_once.sh` | `/tmp/crypto_news_monitor.log` |
-| `2 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh close` | `/tmp/poly_analiz3_freqtrade.log` |
-| `5 * * * *` | `cd /root/aiProject/freqtrade && ./run_analiz3.sh open` | `/tmp/poly_analiz3_freqtrade.log` |
-| `2 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh close` | `/tmp/poly_analiz8_jesse.log` |
-| `5 * * * *` | `cd /root/aiProject/jesse && ./run_analiz8.sh open` | `/tmp/poly_analiz8_jesse.log` |
 | `0 19 * * 5` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py close` | `/tmp/pm_weekend_sync.log` |
 | `0 8 * * 1` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py open` (Pzt 11:00 İST erken) | `/tmp/pm_weekend_sync.log` |
 | `0 21 * * *` | `temmuzPoly/weekly_slot_heatmap_all.py send` (00:00 İST — A15/A4 TG) | `/tmp/weekly_slot_heatmap_all.log` |
@@ -77,7 +79,7 @@ alwaysApply: true
 | ~~`*/15 9-18 * * 1-5`~~ `yuzdeBist.py` | **PASIF** — crontab yorum satırı |
 | ~~`5 7-15,18 * * 1-5`~~ `bist_scanner.py` | **PASIF** — BIST Sinyal bildirim kapalı |
 | ~~`poly_trader_5m_sol_111.py`~~ | **KALDIRILDI** |
-| `poly_trader_analiz3.py`, `poly_trader_karisim1.py`, `run_alfa.sh`, `poly_trader_alfa.py`, `alfa_signal.py`, `poly_trader_analiz7.py`, `poly_trader_analiz9.py`, `poly_trader_analiz13.py`, `poly_trader_analiz21.py`, `poly_trader_analiz23.py`, `poly_trader_analiz31.py`, `poly_trader_analiz32.py`, `poly_trader_5m_btc_107.py`, `btc_analiz_hourly.py`, `poly_trader_5m_btc_105.py`, `jesse/poly_analiz8_live.py`, `jesse/run_analiz8_live.sh`, `poly_trader_5m_sol_109.py`, `poly_trader_5m_sol_112.py`, `poly_trader_5m_sol_113.py`, `poly_trader_5m_sol_114.py`, `poly_trader_cem_analiz.py`, `poly_trader_5m_sol_210.py`, `pm_partial_takeprofit.py` | **KALDIRILDI** |
+| `poly_trader_analiz3.py`, `poly_trader_karisim1.py`, `run_alfa.sh`, `poly_trader_alfa.py`, `alfa_signal.py`, `poly_trader_analiz7.py`, `poly_trader_analiz9.py`, `poly_trader_analiz13.py`, `poly_trader_analiz21.py`, `poly_trader_analiz23.py`, `poly_trader_analiz31.py`, `poly_trader_analiz32.py`, `poly_trader_5m_btc_107.py`, `btc_analiz_hourly.py`, `poly_trader_5m_btc_105.py`, `jesse/poly_analiz8_live.py`, `jesse/run_analiz8_live.sh`, `poly_trader_5m_sol_109.py`, `poly_trader_5m_sol_112.py`, `poly_trader_5m_sol_113.py`, `poly_trader_5m_sol_114.py`, `poly_trader_cem_analiz.py`, `poly_trader_5m_sol_210.py`, `pm_partial_takeprofit.py`, `freqtrade/run_analiz3.sh`, `jesse/run_analiz8.sh`, `poly_trader_5m_sol_110.py`, `poly_trader_15m_a2.py`, `poly_trader_15m_309_live.py` | **KALDIRILDI** |
 | `polyManuel/sol_bot.py`, `poly_trader.py` | **YOK** — disk/crontab’ta yok |
 
 ## Zamanlama Notları

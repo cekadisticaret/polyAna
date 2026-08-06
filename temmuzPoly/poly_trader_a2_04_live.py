@@ -2,7 +2,7 @@
 """A2#04 Schaff Trend Cycle LIVE — gerçek Polymarket $4–5–6.
 
 Sanal A2#04 ayrı devam eder. Env: PM_A2_04_LIVE_ENABLED=true
-Cron: close :02 · open :06
+Cron: close :02 · open :07
 Dashboard: a2_04_live aç/kapa (varsayılan kapalı)
 """
 from __future__ import annotations

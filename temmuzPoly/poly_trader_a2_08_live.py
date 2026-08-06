@@ -2,7 +2,7 @@
 """A2#08 Williams %R LIVE — gerçek Polymarket $4–5–6.
 
 Sanal A2#08 ayrı devam eder. Env: PM_A2_08_LIVE_ENABLED=true
-Cron: close :02 · open :06
+Cron: close :02 · open :07
 Dashboard: a2_08_live aç/kapa
 """
 from __future__ import annotations

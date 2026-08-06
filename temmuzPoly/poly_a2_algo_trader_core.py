@@ -369,7 +369,28 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
             print(f"[{cfg.label} open] {sym} — {skip_msg}")
             continue
         state["open_positions"].append(pos)
-        opened.append({**c, "pos": pos, "dyn_amount": dyn_amount, "hot_boost": hot_boost, "cold_cut": cold_cut})
+        live_tag = ""
+        try:
+            from poly_a2_algo_live_core import get_live_spec, mirror_open_from_sanal
+            live_spec = get_live_spec(cfg.algo_num)
+            if live_spec:
+                live_pos, live_err = await mirror_open_from_sanal(
+                    live_spec, pos, entry_price=c["entry_price"], now_tr=now_tr,
+                )
+                if live_pos:
+                    live_tag = "  🔴LIVE"
+                elif live_err and live_err not in ("exists", "inactive"):
+                    print(f"[{cfg.label} open] live mirror {sym}: {live_err}")
+        except Exception as e:
+            print(f"[{cfg.label} open] live mirror hata: {e}", file=sys.stderr)
+        opened.append({
+            **c,
+            "pos": pos,
+            "dyn_amount": dyn_amount,
+            "hot_boost": hot_boost,
+            "cold_cut": cold_cut,
+            "live_tag": live_tag,
+        })
 
     _save_state(cfg, state)
 
@@ -396,7 +417,7 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
             tags += "  ❄️-%30"
         stake_line = pm_tg_stake(c["pos"])
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  giriş:{c['entry_price']:.2f}  {stake_line}{tags}\n"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  giriş:{c['entry_price']:.2f}  {stake_line}{tags}{c.get('live_tag', '')}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )

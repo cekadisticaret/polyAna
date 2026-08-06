@@ -27,7 +27,9 @@ _HEATMAP_SYMS = {
     "analiz1":  ["BTC", "SOL"],
     "analiz6":  ["BTC", "SOL", "ETH"],
     "analiz6_v2": ["BTC", "ETH"],
+    "analiz6_v3": ["BTC", "ETH", "SOL"],
     "analiz15": ["BTC", "ETH", "SOL"],
+    "b1_01": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
@@ -77,6 +79,7 @@ _LIVE_PM_ANALYSES = frozenset({
     "a2_06_live",    # A2#06 Live → a2_06 sanal
     "a2_07_live",    # A2#07 Live → a2_07 sanal
     "analiz15_live", # A15 Live → analiz15 sanal
+    "analiz6_v2_live", "analiz6_v3_live",
 })
 # Algoritma performansı panelinde gösterilmez
 _ALGO_STATS_EXCLUDE = frozenset({"manual"}) | _LIVE_PM_ANALYSES
@@ -88,27 +91,25 @@ _REMOVED_ANALYSES = frozenset({
     "5m_btc_107", "5m_sol_111", "5m_sol_109", "analiz8_live",
     "5m_sol_112", "5m_sol_113", "5m_sol_114", "cem", "5m_sol_210",
     "alfa",
+    "analiz3", "analiz8", "5m_sol_110", "15m_309", "15m_316", "15m_317",
 })
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
-    "analiz1", "analiz2", "analiz3", "analiz8",
-    "analiz4", "analiz6", "analiz6_v2", "analiz10", "analiz15",
-    "5m_sol_110",
+    "analiz1", "analiz2",
+    "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz10", "analiz15",
-    "analiz3", "analiz8",
-    "5m_sol_110",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz15", "analiz3", "analiz8",
-    "analiz10", "5m_sol_110",
+    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01",
+    "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
 _HISTORY_ORDER_GECMIS = [
-    "analiz5", "analiz2_live", "analiz10_live", "analiz6_live", "15m_309_live",
+    "analiz5", "analiz2_live", "analiz10_live", "analiz6_live", "analiz6_v2_live", "analiz6_v3_live",
     "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live",
     "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live",
     *_HISTORY_ORDER,
@@ -120,7 +121,9 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz4":    "4. Analiz",
     "analiz6":    "6. Analiz",
     "analiz6_v2": "6. Analiz V2",
+    "analiz6_v3": "6. Analiz V3",
     "analiz15":   "15. Analiz",
+    "b1_01":      "B1#01",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -138,27 +141,27 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "a2_06_live": "A2#06 Z-Score MR Live",
     "a2_07_live": "A2#07 Hurst Live",
     "analiz15_live": "A15 Live",
+    "analiz6_v2_live": "A6V2 Live",
+    "analiz6_v3_live": "A6V3 Live",
 }
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz10", "analiz15",
-    "analiz3", "analiz8",
-    "5m_sol_110",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "15m_309_live": None,
-    "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz6_v2": 300, "analiz10": 300, "analiz15": 300,
-    "analiz3": 300, "analiz8": 300,
-    "5m_sol_110": 300,
+    "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz6_v2": 300,
+    "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
     "analiz2_live": "analiz2_paused",
     "analiz10_live": "analiz10_paused",
     "analiz6_live": "analiz6_live_paused",
-    "15m_309_live": "15m_309_live_paused",
+    "analiz6_v2_live": "analiz6_v2_live_paused",
+    "analiz6_v3_live": "analiz6_v3_live_paused",
     "a2_16_live": "a2_16_live_paused",
     "a2_02_live": "a2_02_live_paused",
     "a2_08_live": "a2_08_live_paused",
@@ -174,7 +177,8 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz2_live": "A2 Live",
     "analiz10_live": "A10 Live",
     "analiz6_live": "A6 Live",
-    "15m_309_live": "309L",
+    "analiz6_v2_live": "A6V2 Live",
+    "analiz6_v3_live": "A6V3 Live",
     "a2_16_live": "A2#16L",
     "a2_02_live": "A2#02L",
     "a2_08_live": "A2#08L",
@@ -189,7 +193,9 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz4": "A4",
     "analiz6": "A6",
     "analiz6_v2": "A6V2",
+    "analiz6_v3": "A6V3",
     "analiz15": "A15",
+    "b1_01": "B1#01",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -213,8 +219,10 @@ for _num, _name, *_rest in _A2_META:
     _OVERVIEW_INIT_BAL[_a2k] = 300
     _OVERVIEW_SHORT_LABELS[_a2k] = f"A2#{_num:02d}"
 
-# Algoritma işlemler ekranı: 6. Analiz + 6. Analiz V2 + A2 Top-17
-_ALGO_ISLEMLER_KEYS: list[str] = ["analiz6", "analiz6_v2"] + _A2_KEYS
+# Algoritma işlemler ekranı: A6 + V2/V3 + A15 + B1#01 + A2 Top-17
+_ALGO_ISLEMLER_KEYS: list[str] = [
+    "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01",
+] + _A2_KEYS
 
 _HEATMAP_ORDER.extend(_A2_KEYS)
 _OVERVIEW_ACTIVE_ORDER.extend(_A2_KEYS)
@@ -225,26 +233,21 @@ _ANALYSIS_ORDER.extend(_A2_KEYS)
 _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("analiz1",    "1. Analiz",             300,  "RSI+MACD+EMA"),
     ("analiz2",    "2. Analiz (SOL)",       300,  "A1 motoru SOL only $10-15-20"),
-    ("analiz3",    "3. Analiz Freqtrade",   300,  "SampleStrategy TA sanal PM BTC+SOL+ETH"),
     ("analiz4",    "4. Analiz",             300,  "Trend+MR+OF+Fund"),
     ("analiz6",    "6. Analiz",             300,  "MACD Div #26 (BTC/SOL) · RSI Div #38 (ETH)"),
     ("analiz6_v2", "6. Analiz V2",          300,  "MACD Div #26 (BTC) · RSI Div #38 (ETH) · SOL yok"),
+    ("analiz6_v3", "6. Analiz V3",          300,  "BTC/ETH→A6 · SOL→A2"),
     ("analiz15",   "15. Analiz",            300,  "BTC→A6 · ETH→A8 sıkı · SOL→A2"),
-    ("analiz8",    "8. Analiz Jesse",       300,  "GoldenCross EMA8/21 sanal PM BTC+SOL+ETH"),
+    ("b1_01",      "B1#01",                 300,  "Sembol bazlı en iyi motor birleşimi"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
-    ("5m_sol_110", "15M 110 SOL",           300,  "5M110Analiz 15m SOL sanal $8-10-12"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
 for _num, _name, *_rest in _A2_META:
     _a2k = f"a2_{_num:02d}"
     _ANALIZLER_SYSTEMS.append((_a2k, f"A2#{_num:02d} {_name}", 300, f"Top17 algo · sanal $8-12-16"))
 
-# 15M A2 Top3 — Squeeze / Supertrend / SuperTrend v2 (1h A2'dan bağımsız)
-_M15_A2_SPECS = [
-    ("15m_309", "15M 309 Squeeze Mom", "309", "A2#09 Squeeze · 15m sanal $6-8-10"),
-    ("15m_316", "15M 316 Supertrend", "316", "A2#16 Supertrend · 15m sanal $6-8-10"),
-    ("15m_317", "15M 317 SuperTrend v2", "317", "A2#17 SuperTrend v2 · 15m sanal $6-8-10"),
-]
+# 15M A2 Top3 kaldırıldı (309/316/317)
+_M15_A2_SPECS: list[tuple[str, str, str, str]] = []
 for _mk, _mlbl, _mshort, _mdesc in _M15_A2_SPECS:
     _HEATMAP_SYMS[_mk] = ["BTC", "ETH", "SOL"]
     _ANALYSIS_LABELS[_mk] = _mlbl
@@ -1690,13 +1693,18 @@ def api_history():
         resolved = [t for t in hist if t.get("win") is not None]
         recent = list(reversed(resolved[-limit:])) if resolved else []
         trades = [_format_history_trade(t, key, label) for t in recent]
+        total_res = len(resolved)
+        wins = sum(1 for t in resolved if t.get("win"))
+        wr = round(wins / total_res * 100, 1) if total_res else 0.0
         groups.append({
             "key": key, "label": label,
-            "total": len(hist), "resolved": len(resolved),
+            "total": len(hist), "resolved": total_res,
+            "wr": wr, "wins": wins,
             "trades": trades,
         })
         all_flat.extend(trades)
 
+    groups.sort(key=lambda g: (g.get("wr") or 0, g.get("resolved") or 0), reverse=True)
     all_flat.sort(key=lambda x: x["sort_ts"], reverse=True)
 
     return jsonify({
@@ -1863,14 +1871,19 @@ def _is_15m_analiz_key(key: str) -> bool:
 
 
 def _hourly_analiz_candidates() -> list[str]:
-    """1 saatlik sanal analizler (15m / live / A2# hariç)."""
-    return [
+    """1 saatlik sanal analizler (15m / live hariç) + A2# + algoritma-islemler."""
+    base = [
         k for k in _OVERVIEW_ACTIVE_ORDER
-        if not k.startswith("a2_")
-        and k not in _LIVE_PM_ANALYSES
+        if k not in _LIVE_PM_ANALYSES
         and k not in _REMOVED_ANALYSES
         and not _is_15m_analiz_key(k)
     ]
+    extra = [k for k in _A2_KEYS if k not in base]
+    return base + extra
+
+
+def _algo_islemler_candidates() -> list[str]:
+    return [k for k in _ALGO_ISLEMLER_KEYS if k not in _REMOVED_ANALYSES]
 
 
 def _best_hourly_analiz(min_trades: int = 30) -> dict | None:
@@ -1993,7 +2006,9 @@ def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) 
     from collections import defaultdict
     target = syms or list(_ACTIVE_SYMS)  # BTC, ETH, SOL
     # Yalnızca 1 saatlik ana sanal analizler — 15m / A2#xx / live hariç
-    candidates = _hourly_analiz_candidates()
+    candidates = _algo_islemler_candidates() + [
+        k for k in _hourly_analiz_candidates() if k not in _ALGO_ISLEMLER_KEYS
+    ]
     # sym -> best row
     best: dict[str, dict] = {}
     for key in candidates:
@@ -2059,6 +2074,46 @@ def _analiz_sym_wr(analiz_key: str, syms: list[str] | None = None, min_trades: i
             "analiz_label": label,
         })
     return out
+
+
+@app.route("/poly/api/best-by-symbol")
+def api_best_by_symbol():
+    """Sembol bazlı en başarılı analiz/algoritma (trader history)."""
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        min_tr = max(int(request.args.get("min_trades", 5)), 1)
+    except ValueError:
+        min_tr = 5
+    return jsonify({"items": _best_analiz_by_symbol(min_trades=min_tr)})
+
+
+@app.route("/poly/api/a2-trader-stats")
+def api_a2_trader_stats():
+    """A2#01–17 sanal trader WR listesi."""
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    rows = []
+    for key in _A2_KEYS:
+        hist = _load_trader_history(key)
+        if not hist:
+            continue
+        total = len(hist)
+        if total < 1:
+            continue
+        wins = sum(1 for t in hist if t.get("win"))
+        wr = round(wins / total * 100, 1) if total else 0
+        rows.append({
+            "key": key,
+            "label": _ANALYSIS_LABELS.get(key, key),
+            "short": _OVERVIEW_SHORT_LABELS.get(key, key),
+            "total": total,
+            "wins": wins,
+            "wr": wr,
+            "pnl": round(sum(float(t.get("pnl") or 0) for t in hist), 2),
+        })
+    rows.sort(key=lambda r: (r["wr"], r["total"]), reverse=True)
+    return jsonify({"algos": rows})
 
 
 @app.route("/poly/api/symbol_stats")
@@ -2224,6 +2279,21 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
         panel = "poly_a6v2"
         name = short or label
         title = "MACD Div (BTC) · RSI Div (ETH)"
+    elif key == "analiz6_v3":
+        category = "Poly sanal · 6. Analiz V3"
+        panel = "poly_a6v3"
+        name = short or label
+        title = "BTC/ETH→A6 · SOL→A2"
+    elif key == "analiz15":
+        category = "Poly sanal · 15. Analiz"
+        panel = "poly_a15"
+        name = short or label
+        title = "BTC→A6 · ETH→A8 · SOL→A2"
+    elif key == "b1_01":
+        category = "Poly sanal · B1#01"
+        panel = "poly_b1"
+        name = short or label
+        title = "Sembol bazlı en iyi motor"
     else:
         category = "Poly sanal · A2 Top-17"
         panel = "poly_a2"
@@ -2540,7 +2610,8 @@ def api_active_algos():
     ctrl = get_pm_system_control()
     recent_n = 14
     results = []
-    for key in _OVERVIEW_ACTIVE_ORDER:
+    active_keys = list(dict.fromkeys(_ALGO_ISLEMLER_KEYS + list(_OVERVIEW_ACTIVE_ORDER)))
+    for key in active_keys:
         if key in _REMOVED_ANALYSES or key in _LIVE_PM_ANALYSES:
             continue
         hpath = _trader_history_path(key)
@@ -3270,21 +3341,16 @@ def _patch_nav_islemler(html: str) -> str:
 
 
 def _patch_nav_kripto_future(html: str) -> str:
-    """Overview altına Kripto Future menü linki ekle → bursaapp.com/kripto."""
-    if 'href="/kripto"' in html or 'href="/poly/kripto-future"' in html or 'href="/kripto-future"' in html:
-        # Eski path varsa /kripto'ya çek
-        html = html.replace('href="/poly/kripto-future"', 'href="/kripto"')
-        html = html.replace('href="/kripto-future"', 'href="/kripto"')
-        return html
-    link = '<a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto Future</a>\n  '
-    needles = [
-        '<a class="nav-item active" id="nav-overview" onclick="showView(\'overview\')" href="#"><span class="nav-dot"></span>Overview</a>\n',
-        '<a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>\n',
-        '<a class="nav-item active" href="/poly"><span class="nav-dot"></span>Overview</a>\n',
-    ]
-    for needle in needles:
-        if needle in html:
-            return html.replace(needle, needle + '  ' + link, 1)
+    """Kripto linki sidebar'dan kaldır — Ayarlar altında 'Kripto'ya Geç'."""
+    import re
+    html = re.sub(
+        r'\s*<a class="nav-item"[^>]*href="/kripto"[^>]*>.*?</a>\n',
+        '\n',
+        html,
+        flags=re.DOTALL,
+    )
+    html = html.replace('href="/poly/kripto-future"', 'href="/kripto"')
+    html = html.replace('href="/kripto-future"', 'href="/kripto"')
     return html
 
 
@@ -5071,7 +5137,7 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
   </div>
 </div>
 <script>
-let _tf = '15m', _sym = 'SOLUSDT', _priceTf = '1m', _gate = 15;
+let _tf = '1h', _sym = 'BTCUSDT', _priceTf = '1m', _gate = 15;
 let _chart = null, _candleSeries = null, _priceLine = null;
 let _emaFastSeries = null, _emaSlowSeries = null, _mcEmaSeries = null, _ytEmaFastSeries = null, _ytEmaMidSeries = null, _volumeSeries = null;
 let _chartSym = null, _chartTf = null, _chartReq = 0;
@@ -9092,6 +9158,11 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
     </div>
     <div id="sym-rank-list"><div class="rank-empty">Veri bekleniyor…</div></div>
   </div>
+
+  <div class="rank-box" style="margin-top:14px">
+    <div class="rank-title">📈 A2 Top-17 Sanal <span style="opacity:.55;font-weight:600">WR</span></div>
+    <div id="a2-trader-rank"><div class="rank-empty">Yükleniyor…</div></div>
+  </div>
 </div><!-- /main-right -->
 
 </div><!-- /main-inner -->
@@ -9364,42 +9435,49 @@ function renderSymRanking(acc, sym, names, skipSet){
 }
 
 function renderTopSymAlgos(acc, names, skipSet){
+  renderTraderBestSym();
+}
+
+async function renderTraderBestSym(){
   const el = document.getElementById("top-sym-algos");
   if(!el) return;
-  const skip = skipSet || new Set();
-  const MIN_TRADES = 1;
-  const items = [];
-
-  for(const sym of SYMS){
-    let best = null, bestWr = -1, bestStat = "", bestSym = false;
-
-    for(const [num, data] of Object.entries(acc)){
-      if(skip.has(num)) continue;
-      // Önce sembol-bazlı bak
-      const sd = data.by_sym && data.by_sym[sym];
-      if(sd && sd.total >= MIN_TRADES){
-        const wr = sd.correct / sd.total;
-        if(wr > bestWr || (wr === bestWr && !bestSym)){
-          bestWr = wr; best = num;
-          bestStat = `${sd.correct}/${sd.total}`; bestSym = true;
-        }
-        continue;
-      }
-      // Sembol verisi yoksa genel veriye bak (daha düşük öncelik)
-      if(!bestSym && data.total >= MIN_TRADES){
-        const wr = data.correct / data.total;
-        if(wr > bestWr){ bestWr = wr; best = num; bestStat = `${data.correct}/${data.total}`; }
-      }
+  try{
+    const r = await fetch('/poly/api/best-by-symbol?min_trades=5');
+    const d = await r.json();
+    const items = d.items || [];
+    if(!items.length){
+      el.innerHTML = '<span style="font-size:12px;color:#444">Veri birikmesi bekleniyor…</span>';
+      return;
     }
-    if(best !== null && bestWr >= 0){
-      const pct = Math.round(bestWr * 100);
-      items.push(`<div class="sym-best">
-        <span class="sym-best-sym">${sym}</span>
-        <span><span class="sym-best-algo">${names[best] || "Algo "+best}</span><span class="sym-best-stat">%${pct} · ${bestStat}</span></span>
-      </div>`);
-    }
+    el.innerHTML = items.map(it =>
+      `<div class="sym-best"><span class="sym-best-sym">${it.sym}</span><span><span class="sym-best-algo">${it.analiz_short||it.analiz}</span><span class="sym-best-stat">%${it.wr} · ${it.w}/${it.t}</span></span></div>`
+    ).join('');
+  }catch(e){
+    el.innerHTML = '<span style="font-size:12px;color:#444">yüklenemedi</span>';
   }
-  el.innerHTML = items.length ? items.join("") : '<span style="font-size:12px;color:#444">Veri birikmesi bekleniyor…</span>';
+}
+
+async function renderA2TraderRank(){
+  const el = document.getElementById('a2-trader-rank');
+  if(!el) return;
+  try{
+    const r = await fetch('/poly/api/a2-trader-stats');
+    const d = await r.json();
+    const rows = d.algos || [];
+    if(!rows.length){ el.innerHTML = '<div class="rank-empty">Henüz A2 sanal veri yok</div>'; return; }
+    el.innerHTML = rows.slice(0,17).map((e,i)=>{
+      const wrClass = e.wr>=60?"wr-good":e.wr>=50?"wr-ok":"wr-bad";
+      return `<div class="rank-item">
+        <span class="rank-pos" style="color:#555">${i+1}</span>
+        <div class="rank-info">
+          <div class="rank-name">${e.short||e.label}</div>
+          <div class="rank-sub">${e.wins}/${e.total} işlem</div>
+          <div class="rank-bar-wrap"><div class="rank-bar-fill" style="width:${e.wr}%"></div></div>
+        </div>
+        <span class="rank-wr ${wrClass}">%${e.wr}</span>
+      </div>`;
+    }).join('');
+  }catch(e){ el.innerHTML = '<div class="rank-empty">yüklenemedi</div>'; }
 }
 
 function _algoTone(wr){
@@ -9564,6 +9642,8 @@ async function load(){
 }
 load();
 loadAccuracy();
+renderA2TraderRank();
+setInterval(renderA2TraderRank, 10*60*1000);
 try {
   const saved = parseInt(sessionStorage.getItem("algo_active_tab") || "1", 10);
   if(saved === 2) switchAlgoTab(2);
@@ -9712,6 +9792,14 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
   <div class="page-title">Ayarlar</div>
   <div class="page-sub">Gerçek PM aç/kapa · A1 Live miktarları · transfer</div>
 
+  <div class="settings-card" style="margin-bottom:16px">
+    <h3>Diğer</h3>
+    <a class="nav-item" href="/kripto" style="display:inline-flex;margin:0;border:1px solid #2a2a2a;border-radius:12px;padding:12px 16px;color:#c8f135;font-weight:700;text-decoration:none">
+      <span class="nav-dot" style="background:#c8f135"></span>Kripto'ya Geç
+    </a>
+    <div class="setting-desc" style="margin-top:8px">Binance Futures dashboard — ayrı panel</div>
+  </div>
+
   <div class="settings-card">
     <h3>Gerçek PM Sistemleri</h3>
     <div class="pm-system-wrap">
@@ -9742,6 +9830,20 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
           <div class="pm-system-sub" id="pm-system-sub-analiz6_live">Saatlik BTC+SOL+ETH · sanal A6 devam · varsayılan kapalı</div>
         </div>
         <button type="button" class="pm-system-btn paused" id="pm-system-btn-analiz6_live" onclick="togglePmSystem('analiz6_live')">Aç</button>
+      </div>
+      <div class="pm-system-bar paused" id="pm-system-bar-analiz6_v2_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-analiz6_v2_live">⏸ A6V2 Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-analiz6_v2_live">Saatlik BTC+ETH · sanal A6V2 devam · varsayılan kapalı</div>
+        </div>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-analiz6_v2_live" onclick="togglePmSystem('analiz6_v2_live')">Aç</button>
+      </div>
+      <div class="pm-system-bar paused" id="pm-system-bar-analiz6_v3_live">
+        <div>
+          <div class="pm-system-status" id="pm-system-status-analiz6_v3_live">⏸ A6V3 Live kapalı</div>
+          <div class="pm-system-sub" id="pm-system-sub-analiz6_v3_live">Saatlik BTC+ETH+SOL · A6+A2 SOL · sanal A6V3 devam · varsayılan kapalı</div>
+        </div>
+        <button type="button" class="pm-system-btn paused" id="pm-system-btn-analiz6_v3_live" onclick="togglePmSystem('analiz6_v3_live')">Aç</button>
       </div>
       <div class="pm-system-bar" id="pm-system-bar-a2_08_live">
         <div>
@@ -10015,6 +10117,20 @@ const _PM_SYSTEM_ROWS = {
     subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · sanal A6 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
     subOff: 'Gerçek PM yeni işlem açmaz (sanal A6 devam) · Aç ile işlem başlar',
   },
+  analiz6_v2_live: {
+    bar: 'pm-system-bar-analiz6_v2_live', btn: 'pm-system-btn-analiz6_v2_live',
+    status: 'pm-system-status-analiz6_v2_live', sub: 'pm-system-sub-analiz6_v2_live',
+    active: '✅ A6V2 Live açılış aktif', paused: '⏸ A6V2 Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH · sanal A6V2 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A6V2 devam) · Aç ile işlem başlar',
+  },
+  analiz6_v3_live: {
+    bar: 'pm-system-bar-analiz6_v3_live', btn: 'pm-system-btn-analiz6_v3_live',
+    status: 'pm-system-status-analiz6_v3_live', sub: 'pm-system-sub-analiz6_v3_live',
+    active: '✅ A6V3 Live açılış aktif', paused: '⏸ A6V3 Live kapalı',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · sanal A6V3 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A6V3 devam) · Aç ile işlem başlar',
+  },
   a2_08_live: {
     bar: 'pm-system-bar-a2_08_live', btn: 'pm-system-btn-a2_08_live',
     status: 'pm-system-status-a2_08_live', sub: 'pm-system-sub-a2_08_live',
@@ -10093,6 +10209,8 @@ function updatePmSystemUI(d) {
   _pmSystemRow('analiz2', !!d.analiz2_paused, d.updated_at_tr);
   _pmSystemRow('analiz10', !!d.analiz10_paused, d.updated_at_tr);
   _pmSystemRow('analiz6_live', !!d.analiz6_live_paused, d.updated_at_tr);
+  _pmSystemRow('analiz6_v2_live', !!d.analiz6_v2_live_paused, d.updated_at_tr);
+  _pmSystemRow('analiz6_v3_live', !!d.analiz6_v3_live_paused, d.updated_at_tr);
   _pmSystemRow('a2_08_live', !!d.a2_08_live_paused, d.updated_at_tr);
   _pmSystemRow('a2_03_live', !!d.a2_03_live_paused, d.updated_at_tr);
   _pmSystemRow('a2_04_live', !!d.a2_04_live_paused, d.updated_at_tr);
@@ -10653,8 +10771,8 @@ HTML = r"""<!DOCTYPE html>
   /* Stats kartları */
   .stats-row { display:grid; gap:14px; margin-bottom:14px; }
   .top-stats {
-    grid-template-columns:minmax(0, 250px) minmax(0, 250px);
-    gap:12px; max-width:520px;
+    grid-template-columns:1fr 1fr;
+    gap:12px; max-width:none; width:100%;
   }
   .bottom-stats { grid-template-columns:1fr; }
   .stat-card {
@@ -12738,7 +12856,6 @@ body{
   <div class="logo">Cem<span>BOT</span></div>
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
-  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto Future</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item active" href="/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>

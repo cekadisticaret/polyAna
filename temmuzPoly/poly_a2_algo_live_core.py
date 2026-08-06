@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""A2 Top-17 — bağımsız Live (gerçek PM) çekirdeği.
+"""A2 Top-17 — Live (gerçek PM) çekirdeği.
 
-Sanal A2 (poly_trader_a2.py / poly_a2_algo_trader_core) ayrı çalışır.
-Aynı sinyal: /tmp/algo_signals_v2.json → algo N.
+Sanal A2 açılışları kaynak; live sanal defterle birebir senkron (309 mirror gibi).
+Cron open :07 — sanal batch (:06) bittikten sonra eksikleri tamamlar.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from poly_live_hourly_common import tg_send, try_pm_open
 from poly_predictor_analysis import _fetch_klines
-from poly_a2_algo_trader_core import SYMBOLS, _load_v2_signal, _sym_short
+from poly_a2_algo_trader_core import _sym_short
 from pm_trader_helpers import (
     HOURLY_MIN_NET_PROFIT_RATIO,
     pm_fetch_resolution,
@@ -65,8 +65,53 @@ def _paths(spec: A2LiveSpec) -> tuple[str, str, str]:
     )
 
 
+_LIVE_MODULE_BY_NUM: dict[int, str] = {
+    2: "poly_trader_a2_02_live",
+    3: "poly_trader_a2_03_live",
+    4: "poly_trader_a2_04_live",
+    5: "poly_trader_a2_05_live",
+    6: "poly_trader_a2_06_live",
+    7: "poly_trader_a2_07_live",
+    8: "poly_trader_a2_08_live",
+    16: "poly_trader_a2_16_live",
+}
+
+
+def get_live_spec(algo_num: int) -> A2LiveSpec | None:
+    mod_name = _LIVE_MODULE_BY_NUM.get(algo_num)
+    if not mod_name:
+        return None
+    import importlib
+    mod = importlib.import_module(mod_name)
+    return getattr(mod, "SPEC", None)
+
+
 def _pm_enabled(spec: A2LiveSpec) -> bool:
     return os.getenv(spec.env_flag, "false").lower() in ("1", "true", "yes")
+
+
+def is_live_active(spec: A2LiveSpec) -> bool:
+    if not _pm_enabled(spec):
+        return False
+    return can_open_trade(spec.label, lambda t: tg_send(spec.label, t))
+
+
+def _sanal_state_path(algo_num: int) -> str:
+    return os.path.join(_DIR, f"poly_trader_a2_{algo_num:02d}_state.json")
+
+
+def _live_has_sanal_pos(live_state: dict, sanal_pos: dict) -> bool:
+    sym = sanal_pos.get("symbol")
+    slug = sanal_pos.get("pm_slug")
+    hour = sanal_pos.get("entry_hour_tr")
+    for p in live_state.get("open_positions") or []:
+        if p.get("symbol") != sym:
+            continue
+        if slug and p.get("pm_slug") == slug:
+            return True
+        if hour is not None and p.get("entry_hour_tr") == hour:
+            return True
+    return False
 
 
 def load_state(spec: A2LiveSpec) -> dict:
@@ -211,85 +256,137 @@ async def run_close(spec: A2LiveSpec) -> None:
     )
 
 
+async def mirror_open_from_sanal(
+    spec: A2LiveSpec,
+    sanal_pos: dict,
+    *,
+    entry_price: float,
+    now_tr: datetime | None = None,
+) -> tuple[dict | None, str | None]:
+    """Sanal pozisyon → gerçek PM (aynı sembol, yön, slot)."""
+    if not is_live_active(spec):
+        return None, "inactive"
+
+    sym = sanal_pos.get("symbol") or ""
+    direction = (sanal_pos.get("predicted_dir") or sanal_pos.get("pm_token_dir") or "").upper()
+    if not sym or direction not in ("UP", "DOWN"):
+        return None, "bad_pos"
+    if entry_price <= 0:
+        return None, "bad_entry"
+
+    if now_tr is None:
+        now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    now = datetime.now(timezone.utc)
+
+    state = load_state(spec)
+    if _live_has_sanal_pos(state, sanal_pos):
+        return None, "exists"
+
+    history = load_history(spec)
+    hour_tr = int(sanal_pos.get("entry_hour_tr", now_tr.hour))
+    dow = int(sanal_pos.get("entry_dow", now_tr.weekday()))
+    is_weekend = bool(sanal_pos.get("entry_is_weekend", dow >= 5))
+
+    base = _trade_amount(spec, history, sym)
+    amount, hot_boost, cold_cut = resolve_slot_trade_amount(base, hour_tr, history)
+    slot_amount_log(spec.label, hour_tr, base, amount, hot_boost, cold_cut)
+    _, _, hata = _paths(spec)
+
+    pos, err = try_pm_open(
+        state,
+        label=spec.label,
+        hata_file=hata,
+        sym=sym,
+        direction=direction,
+        entry_price=entry_price,
+        hour_tr=hour_tr,
+        dow=dow,
+        is_weekend=is_weekend,
+        now_tr=now_tr,
+        now=now,
+        extra={
+            "algo_name": spec.algo_name,
+            "algo_num": spec.algo_num,
+            "algo_signal": direction,
+            "hot_hour_boost": hot_boost,
+            "cold_hour_cut": cold_cut,
+            "mirrored_from_sanal": True,
+            "sanal_pm_slug": sanal_pos.get("pm_slug"),
+        },
+        amount=amount,
+        pm_live=True,
+        min_profit_ratio=HOURLY_MIN_NET_PROFIT_RATIO,
+    )
+    if pos:
+        save_state(spec, state)
+        name = _sym_short(sym)
+        print(
+            f"[{spec.label} mirror] {name} {direction} ${amount:.2f} "
+            f"(sanal A2#{spec.algo_num:02d})"
+        )
+    return pos, err
+
+
+async def sync_open_from_sanal_state(spec: A2LiveSpec) -> list[tuple[str, str, float, dict]]:
+    """Sanal defterdeki tüm açık pozisyonları live'a yansıt."""
+    if not is_live_active(spec):
+        print(f"[{spec.label} sync] live kapalı — atlandı")
+        return []
+
+    spath = _sanal_state_path(spec.algo_num)
+    if not os.path.exists(spath):
+        return []
+    try:
+        with open(spath, encoding="utf-8") as f:
+            sanal_state = json.load(f)
+    except Exception:
+        return []
+
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    opened: list[tuple[str, str, float, dict]] = []
+    for sanal_pos in sanal_state.get("open_positions") or []:
+        entry_price = float(sanal_pos.get("entry_price") or 0)
+        if entry_price <= 0:
+            continue
+        pos, err = await mirror_open_from_sanal(
+            spec, sanal_pos, entry_price=entry_price, now_tr=now_tr,
+        )
+        if pos:
+            sym = sanal_pos["symbol"]
+            direction = (sanal_pos.get("predicted_dir") or "").upper()
+            opened.append((sym, direction, entry_price, pos))
+        elif err and err not in ("exists", "inactive"):
+            print(f"[{spec.label} sync] {sanal_pos.get('symbol')} — {err}")
+    return opened
+
+
 async def run_open(spec: A2LiveSpec) -> None:
+    """Live open — sanal defterle senkron (bağımsız sinyal yok)."""
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    if skip_if_weekend_pause(spec.label, "open", now_tr):
+        return
     if not _pm_enabled(spec):
         print(f"[{spec.label} open] {spec.env_flag}=false — atlandı")
         return
-    now = datetime.now(timezone.utc)
-    now_tr = now.astimezone(_TZ_TR)
-    if skip_if_weekend_pause(spec.label, "open", now_tr):
-        return
-    if not can_open_trade(spec.label, lambda t: tg_send(spec.label, t)):
-        return
 
-    hour_tr = now_tr.hour
-    dow = now_tr.weekday()
-    is_weekend = dow >= 5
     saat = now_tr.strftime("%H:%M")
-
-    sig_entry = _load_v2_signal(spec.algo_num)
-    if not sig_entry:
-        print(f"[{spec.label} open] {saat} — A2#{spec.algo_num:02d} sinyal yok")
-        return
-
-    state = load_state(spec)
+    hour_tr = now_tr.hour
     history = load_history(spec)
-    open_syms = {p["symbol"] for p in state.get("open_positions", [])}
-    opened = []
-    _, _, hata = _paths(spec)
+    opened = await sync_open_from_sanal_state(spec)
 
-    for sym in SYMBOLS:
-        short = _sym_short(sym)
-        direction = sig_entry.get(short)
-        if direction not in ("UP", "DOWN"):
-            print(f"[{spec.label} open] {sym} — NEUTRAL, işlem yok")
-            continue
-        if sym in open_syms:
-            print(f"[{spec.label} open] {sym} zaten açık — atlandı")
-            continue
-        try:
-            klines = await _fetch_klines(sym, "1h", 3)
-            entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else None
-        except Exception:
-            entry_price = None
-        if entry_price is None:
-            continue
-
-        base = _trade_amount(spec, history, sym)
-        amount, hot_boost, cold_cut = resolve_slot_trade_amount(base, hour_tr, history)
-        slot_amount_log(spec.label, hour_tr, base, amount, hot_boost, cold_cut)
-        pos, err = try_pm_open(
-            state,
-            label=spec.label,
-            hata_file=hata,
-            sym=sym,
-            direction=direction,
-            entry_price=entry_price,
-            hour_tr=hour_tr,
-            dow=dow,
-            is_weekend=is_weekend,
-            now_tr=now_tr,
-            now=now,
-            extra={
-                "algo_name": spec.algo_name,
-                "algo_num": spec.algo_num,
-                "algo_signal": direction,
-                "hot_hour_boost": hot_boost,
-                "cold_hour_cut": cold_cut,
-            },
-            amount=amount,
-            pm_live=True,
-            min_profit_ratio=HOURLY_MIN_NET_PROFIT_RATIO,
-        )
-        if pos:
-            opened.append((sym, direction, entry_price, pos))
-            open_syms.add(sym)
-        elif err:
-            print(f"[{spec.label} open] {sym} PM hatası: {err}")
-
-    save_state(spec, state)
     if not opened:
-        print(f"[{spec.label} open] {saat} — açılan yok")
+        sanal_n = 0
+        spath = _sanal_state_path(spec.algo_num)
+        if os.path.exists(spath):
+            try:
+                with open(spath, encoding="utf-8") as f:
+                    sanal_n = len(json.load(f).get("open_positions") or [])
+            except Exception:
+                pass
+        print(
+            f"[{spec.label} open] {saat} — live açılan yok"
+            + (f" (sanal {sanal_n} açık)" if sanal_n else "")
+        )
         return
 
     next_h = f"{(hour_tr + 1) % 24:02d}:00"
@@ -310,9 +407,10 @@ async def run_open(spec: A2LiveSpec) -> None:
         f"{sep}\n🆕 <b>{spec.label} — {saat}-{next_h}</b>  🔴 GERÇEK PM  "
         f"{pm_live_amount_range_str(spec.amount_system)}\n"
         + "\n".join(lines)
-        + f"\n{sep}\n{_pm_bal_line()}\n{sep}",
+        + f"\n(sanal A2#{spec.algo_num:02d} ile aynı)\n"
+        + f"{sep}\n{_pm_bal_line()}\n{sep}",
     )
-    print(f"[{spec.label} open] {len(opened)} açıldı")
+    print(f"[{spec.label} open] {len(opened)} açıldı (sanal sync)")
 
 
 def main(spec: A2LiveSpec) -> None:
