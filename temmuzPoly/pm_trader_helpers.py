@@ -108,6 +108,7 @@ _WEEKEND_RESUME_12_LABELS = frozenset({
 
 _SANAL_WEEKEND_LABELS = frozenset({
     "1. ANALİZ", "2. ANALİZ", "4. ANALİZ", "6. ANALİZ", "10. ANALİZ", "15. ANALİZ", "A2",
+    "B1#01", "B1#02",
     "15M 110 SOL",
     "15M 309 Squeeze Mom",
     "15M 316 Supertrend",

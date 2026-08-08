@@ -1,7 +1,7 @@
 {
-  "balance": 276.32,
+  "balance": 300.0,
   "open_positions": [],
-  "total_pnl": -23.68,
-  "balance_reset_at_tr": "2026-08-07T15:58:29.120692+03:00",
-  "balance_reset_note": "algoritma-islemler toplu reset $300"
+  "total_pnl": 0.0,
+  "balance_reset_at_tr": "2026-08-08T20:58:00+03:00",
+  "balance_reset_note": "B1#02 sıfırlandı $300 — Cum 22:00 hafta sonu duraklaması"
 }

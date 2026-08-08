@@ -24,6 +24,8 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py open` | `/tmp/poly_trader_analiz6_v3.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py close` | `/tmp/poly_trader_b1_01.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py open` | `/tmp/poly_trader_b1_01.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_02.py close` | `/tmp/poly_trader_b1_02.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_02.py open` | `/tmp/poly_trader_b1_02.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2_live.py close` | `/tmp/poly_trader_analiz6_v2_live.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2_live.py open` | `/tmp/poly_trader_analiz6_v2_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3_live.py close` | `/tmp/poly_trader_analiz6_v3_live.log` |
@@ -31,6 +33,7 @@ alwaysApply: true
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py weekly` | `/tmp/poly_trader_analiz6_v2.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py weekly` | `/tmp/poly_trader_analiz6_v3.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py weekly` | `/tmp/poly_trader_b1_01.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_02.py weekly` | `/tmp/poly_trader_b1_02.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_live.py close` | `/tmp/poly_trader_analiz6_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py close` | `/tmp/crypto_futures_cr6.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py open` (Algoritmalar Live — Hurst+A1#11+Z-Score MR+MR gerçek Binance $7×20x) | `/tmp/crypto_futures_cr6.log` |
