@@ -1,6 +1,7 @@
 .env
 crypto-news-monitor/node_modules/
 crypto-news-monitor/data/
+twitter_bot/data/
 freqtrade/.git/
 freqtrade/.venv/
 # freqtrade upstream — yalnizca aiProject wrapper dosyalari commit edilir

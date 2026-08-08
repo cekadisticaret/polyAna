@@ -292,6 +292,38 @@ def compute_coin_leaders(*, min_trades: int = 2) -> list[dict]:
     return out
 
 
+def compute_recent_test_trades(*, limit: int = 12) -> list[dict]:
+    """Tüm Test defterlerinden son kapanan işlemler — overview sağ panel."""
+    rows: list[dict] = []
+    for book in ALL_BOOKS:
+        hp = _history_path_for_book(book)
+        if not hp:
+            continue
+        try:
+            hist = load_history(hp)
+        except Exception:
+            continue
+        algo = book.get("name") or book["uid"]
+        for t in hist[-4:]:
+            sym = (t.get("symbol") or "").upper()
+            if not sym:
+                continue
+            rows.append({
+                "algo": t.get("algo") or algo,
+                "symbol": sym,
+                "name": sym.replace("USDT", ""),
+                "side": t.get("side"),
+                "pnl": round(float(t.get("pnl") or 0), 4),
+                "win": bool(t.get("win")),
+                "interval": t.get("interval"),
+                "exit_time_tr": t.get("exit_time_tr") or "",
+                "entry_time_tr": t.get("entry_time_tr") or "",
+                "close_reason": t.get("close_reason") or "",
+            })
+    rows.sort(key=lambda x: x.get("exit_time_tr") or "", reverse=True)
+    return rows[:limit]
+
+
 # Kripto Test'e özel: hafta sonu duraklaması KAPALI — sadece bu ekran 7/24 çalışır.
 # Algoritmalar/Analizler/Poly bu değişiklikten etkilenmez (virtual_book.in_weekend_pause_tr
 # hâlâ oradaki hafta sonu kısıtını uyguluyor).

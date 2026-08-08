@@ -41,6 +41,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/pm_profit_baseline.json` | PM Kar başlangıç bakiyesi (varsayılan $314); Toplam Kar = nakit − baseline. |
 | `temmuzPoly/` | Poly trader'lar, algo motorları, backtest; dashboard port **5050**. |
 | `crypto-news-monitor/` | Kripto haber/tweet tarayıcı — RSS + opsiyonel Twitter, Claude skor, Telegram alarm (30 dk cron) |
+| `twitter_bot/` | @tradecomio otomatik tweet — `post_tweet.py` (tweepy, OAuth1.0a v2+v1.1 medya), `render_card.py` (Pillow "İşlem Sonucu" görsel kartı), `tweet_trade_card.py` (saatlik cron: son 3 saatteki en başarılı Test işlemi → giriş/kapanış/kâr% kart; yeni kazanan yoksa atlar, `data/trade_card_state.json` dedupe) |
 | `freqtrade/` | [freqtrade/freqtrade](https://github.com/freqtrade/freqtrade) — kurulu venv; dry-run config; **3. Analiz Freqtrade** saatlik sanal PM (BTC+SOL+ETH) |
 | `freqtrade/poly_analiz3_freqtrade.py` | 3. Analiz Freqtrade — SampleStrategy TA + saatlik sanal Polymarket $300 |
 | `freqtrade/analiz3_signal.py` | Freqtrade TA → PM UP/DOWN sinyal motoru |
@@ -137,6 +138,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `AgustosKripto/Algoritmalar/runner.py close/open/trail/reset` — sanal $300; tüm 51 defter open $30×10x; close/open TG → **10. ANALİZ kanalı** (🔶 SANAL); Cum 22:00–Pzt 11:00 İST skip
 - `AgustosKripto/Analizler/runner.py close/open/trail` — A1–A10 + A6(Supertrend $10×15x max4) + ATR trail
 - `AgustosKripto/Test/runner.py close/open/trail/scan` — Poly sinyal kaynaklı sanal defterler; `$100×6x`; `scan` 10 dk'da bir erken sinyal yakalar (`:05` beklemeden)
+- `twitter_bot/tweet_trade_card.py` — `20 * * * *` saatlik: son 3 saatteki en yüksek %kârlı Test işlemi → giriş/kapanış/kâr görsel kart → @tradecomio tweet; yeni kazanan yoksa atlar (`/tmp/twitter_trade_card.log`)
 - `temmuzPoly/poly_trader_analiz15.py close/open` — **15. Analiz** BTC→A6 · ETH→A8 · SOL→A2 sanal ($300); Cum 22:00–Pzt 11:00 open kapalı
 - `temmuzPoly/poly_trader_analiz6.py weekly` — Cumartesi 21:00 haftalık 6 ısı haritası
 - `temmuzPoly/poly_trader_analiz15.py weekly` — Cumartesi 21:00 haftalık 15 ısı haritası

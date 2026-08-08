@@ -90,6 +90,47 @@ def label(meta: dict) -> str:
     return f"{meta['name']} {meta['title']}"
 
 
+def find_analiz(analiz_id: str) -> dict | None:
+    key = str(analiz_id or "").lower().strip()
+    for m in ANALIZ_META:
+        mid = str(m["id"]).lower()
+        name = str(m["name"]).lower()
+        if key in (mid, name, f"a{mid.lstrip('a')}"):
+            return m
+    return None
+
+
+def book_detail(analiz_id: str, *, recent_limit: int = 80, with_marks: bool = True) -> dict | None:
+    """Tek analiz defteri — açık pozisyonlar + son kapanmış işlemler."""
+    meta = find_analiz(analiz_id)
+    if not meta:
+        return None
+    sp, hp = _paths(meta["id"])
+    kl = {}
+    if with_marks:
+        opens = load_state(sp).get("open_positions") or []
+        syms = sorted({p.get("symbol") for p in opens if p.get("symbol")})
+        if syms:
+            kl = fetch_all_klines(syms, limit=2)
+    cfg = _cfg(meta["id"])
+    st = book_status(
+        sp, hp,
+        label=label(meta),
+        kl_cache=kl,
+        live_marks=with_marks,
+        recent_limit=recent_limit,
+    )
+    st["id"] = meta["id"]
+    st["name"] = meta["name"]
+    st["title"] = meta["title"]
+    st["category"] = "Analizler"
+    st["margin_usd"] = cfg["margin_usd"]
+    st["leverage"] = cfg["leverage"]
+    st["max_opens"] = cfg["max_opens"]
+    st["deposit"] = DEPOSIT
+    return st
+
+
 def _pick(cands: list[dict], max_n: int = MAX_OPENS_PER_HOUR, *, by_score: bool = False) -> list[dict]:
     """by_score=True → en güçlü skor önce; değilse majors öncelik."""
     if by_score:

@@ -19,6 +19,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _DIR_KRIPTO = os.path.join(os.path.dirname(__file__), "..", "AgustosKripto")
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_ENV_FILE = os.path.join(_ROOT, ".env")
+if os.path.exists(_ENV_FILE):
+    with open(_ENV_FILE, encoding="utf-8") as _ef:
+        for _line in _ef:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
 _PANEL_STATS_ANALIZ = "analiz1"  # sağ panel: sembol WR + en etkili zaman
 _ACTIVE_SYMS = ["BTC", "ETH", "SOL"]
 
@@ -574,11 +582,22 @@ _PM_15M_Q_CACHE: dict = {"ts": 0.0, "key": None, "rows": None}
 _PM_QUOTE_CACHE_TTL = 15.0
 
 
+def _last_hourly_pm_balance() -> float:
+    """PM API kapalıyken son bilinen portföy (saatlik arşiv)."""
+    for r in reversed(_load_balance_hourly_records()):
+        v = float(r.get("portfolio_usd") or 0)
+        if v > 0:
+            return round(v, 2)
+    return -1.0
+
+
 def get_pm_balance() -> float:
     import time as _time
     now = _time.time()
     if now - float(_PM_BAL_CACHE.get("ts") or 0) < _PM_BAL_CACHE_TTL:
-        return float(_PM_BAL_CACHE["val"])
+        cached = float(_PM_BAL_CACHE["val"])
+        if cached >= 0:
+            return cached
     try:
         sys.path.insert(0, _DIR_POLY)
         # Ortak cache'li client — analiz5 her seferinde api-key türetmesin
@@ -590,6 +609,8 @@ def get_pm_balance() -> float:
             val = float(_pm_get_balance())
         except Exception:
             val = -1.0
+    if val < 0:
+        val = _last_hourly_pm_balance()
     _PM_BAL_CACHE["ts"] = now
     _PM_BAL_CACHE["val"] = val
     return val
@@ -13581,10 +13602,89 @@ body{
   #view-dash .panel > .section:first-child{order:0}
   #view-dash .panel > .wait-rail{order:1}
 }
-/* Geçici: overview üst blok (live bar + TOP1/2 + cüzdan) kapalı */
-.kf-top-paused .live-bar,
-.kf-top-paused .head,
-.kf-top-paused .hero{display:none!important}
+/* Poly-benzeri Kripto overview */
+body.kf-overview .main{margin-right:300px;max-width:none}
+.kf-right-panel{
+  width:300px;min-height:100vh;background:rgba(10,10,14,.92);backdrop-filter:blur(12px);
+  padding:20px 14px;position:fixed;top:0;right:0;bottom:0;overflow-y:auto;
+  border-left:1px solid var(--line);display:none;z-index:9;
+}
+body.kf-overview .kf-right-panel{display:block}
+.kf-overview-grid{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+.kf-overview-left,.kf-overview-right{min-width:0}
+.kf-stats-row{display:grid;gap:12px;margin-bottom:14px}
+.kf-top-stats{grid-template-columns:1fr 1fr}
+.kf-ov-wallet{
+  padding:16px;border-radius:22px;position:relative;overflow:hidden;min-height:130px;
+  display:flex;flex-direction:column;color:#fff;
+  background:linear-gradient(145deg,#6339f9 0%,#a21caf 48%,#c63f82 100%);
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 16px 36px rgba(99,57,249,.3);
+}
+.kf-ov-wallet.cash{
+  background:linear-gradient(145deg,#6d28d9 0%,#a21caf 48%,#db2777 100%);
+  box-shadow:0 16px 36px rgba(109,40,217,.3);
+}
+.kf-ov-tag{font-size:10px;font-weight:800;letter-spacing:.6px;opacity:.85}
+.kf-ov-lbl{font-size:11px;font-weight:700;opacity:.82;margin-top:12px}
+.kf-ov-bal{font-size:26px;font-weight:800;letter-spacing:-1px;margin-top:4px;line-height:1.1}
+.kf-ov-sub{font-size:11px;opacity:.75;margin-top:auto;padding-top:12px}
+.kf-stat-card{
+  background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:14px;
+}
+.kf-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kf-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px}
+.kf-stat-val{font-size:22px;font-weight:800;letter-spacing:-.4px}
+.kf-stat-val.up{color:var(--green)}.kf-stat-val.down{color:var(--red)}
+.kf-stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.kf-leaders-box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 14px}
+.kf-leaders-head,.kf-leaders-row{
+  display:grid;grid-template-columns:54px 1fr 44px 52px 64px;gap:6px;align-items:center;
+  padding:6px 2px;font-size:12px;
+}
+.kf-leaders-head{font-weight:700;opacity:.5;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--line);margin-bottom:4px}
+.kf-leaders-row{border-bottom:1px solid rgba(255,255,255,.04)}
+.kf-leaders-row:last-child{border:none}
+.kf-rp-section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.kf-rp-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.kf-trade-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px}
+.kf-trade-item:last-child{border:none}
+.kf-trade-sym{font-weight:700;font-size:12px}
+.kf-trade-meta{font-size:10px;color:#666;margin-top:2px}
+.kf-trade-pnl{font-weight:800;font-size:12px}
+.kf-trade-pnl.pos{color:var(--green)}.kf-trade-pnl.neg{color:var(--red)}
+.kf-algo-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.kf-algo-item:last-child{border:none}
+.kf-algo-name{font-size:11px;font-weight:700;min-width:68px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kf-algo-bar{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.kf-algo-bar-fill{height:100%;background:var(--green);border-radius:99px}
+.kf-algo-wr{font-size:11px;font-weight:800;min-width:34px;text-align:right}
+.kf-sym-vio{
+  border-radius:18px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;
+  background:linear-gradient(145deg,#5b21b6,#7c3aed 55%,#a78bfa);color:#fff;
+}
+.kf-sym-lime{
+  border-radius:18px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;
+  background:var(--card);border:1px solid rgba(57,255,142,.22);color:var(--txt);
+}
+.kf-sym-lime .kf-sym-title{color:var(--accent)}
+.kf-sym-lime .kf-sym-meta{color:var(--muted);opacity:1}
+.kf-sym-lime .wait-item{background:rgba(0,0,0,.32);border-color:rgba(255,255,255,.08);color:var(--txt)}
+.kf-sym-lime .wait-item:hover{border-color:rgba(57,255,142,.38);background:rgba(57,255,142,.08)}
+.kf-sym-lime .wait-item.top{border-color:rgba(57,255,142,.32);background:rgba(57,255,142,.1)}
+.kf-sym-lime .wait-name{color:var(--txt)}
+.kf-sym-lime .wait-meta{color:var(--muted)}
+.kf-sym-lime .wait-score{color:#b8b8c6}
+.kf-sym-lime .empty{color:var(--muted)}
+.kf-sym-title{font-size:12px;font-weight:800;margin-bottom:8px}
+.kf-sym-val{font-size:26px;font-weight:800;letter-spacing:-.8px}
+.kf-sym-meta{font-size:11px;opacity:.8;margin-top:6px}
+.kf-wait-compact .wait-item{padding:9px 10px;border-radius:12px}
+@media(max-width:1100px){
+  body.kf-overview .main{margin-right:0}
+  body.kf-overview .kf-right-panel{display:none!important}
+  .kf-overview-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -13605,12 +13705,12 @@ body{
     <div class="sidebar-footer"><span class="dot"></span>Canlı</div>
   </div>
 </div>
-<div class="main">
-  <div id="view-dash" class="kf-top-paused">
+<div class="main" id="kf-main">
+  <div id="view-dash">
   <div class="live-bar" id="live-bar">
     <div class="live-bar-txt">
       <b id="live-bar-title">Binance Live</b>
-      <span id="live-bar-sub">Algoritmalar Live (Hurst+A1#11+Z-Score MR+MR) emirleri · sanal etkilenmez</span>
+      <span id="live-bar-sub">Algoritmalar Live · sanal Test etkilenmez</span>
     </div>
     <div class="live-bar-actions">
       <div class="topn-box" title="Saatlik max açık pozisyon">
@@ -13625,44 +13725,52 @@ body{
   <div class="head">
     <div>
       <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">…</span></div>
-      <div class="page-sub" id="page-sub">Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · BTC/ETH/BNB açılış yok · top-4 · $7 × 20x · ATR kâr kilidi</div>
+      <div class="page-sub" id="page-sub">Kripto Test · 30 coin · $100×6x · coin bazlı en başarılı algoritma</div>
     </div>
+    <button type="button" class="wbtn" title="Yenile" onclick="refreshOverviewFast(true)" style="width:40px;height:40px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);cursor:pointer;font-size:18px">↻</button>
   </div>
 
-  <div class="hero">
-    <div class="hero-tops" id="hero-tops">
-      <div class="glass hero-top-card hero-empty"><div class="hero-side">TOP1 yükleniyor…</div></div>
-      <div class="glass hero-top-card t2 hero-empty"><div class="hero-side">TOP2 yükleniyor…</div></div>
-    </div>
-    <div class="wallet">
-      <div class="wallet-top">
-        <div class="wallet-dots"><i></i><i></i></div>
-        <span style="font-size:12px;font-weight:700;opacity:.85">FUTURES</span>
-      </div>
-      <div class="wallet-lbl">Toplam bakiye (Binance)</div>
-      <div class="wallet-bal" id="st-total">—</div>
-      <div class="wallet-row">
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div class="wallet-kpi">Kullanılabilir <b id="st-usdt">—</b></div>
-          <div class="wallet-kpi">Net K/Z <b id="st-upnl">+$0.00</b></div>
-          <div class="wallet-kpi">Komisyon ≈ <b id="st-fee">$0.00</b></div>
+  <div class="kf-overview-grid">
+    <div class="kf-overview-left">
+      <div class="kf-stats-row kf-top-stats">
+        <div class="kf-ov-wallet">
+          <div class="kf-ov-tag">TEST BAKİYE</div>
+          <div class="kf-ov-lbl">Toplam sanal bakiye</div>
+          <div class="kf-ov-bal" id="kf-bal">—</div>
+          <div class="kf-ov-sub" id="kf-books-sub">59 defter · yükleniyor…</div>
         </div>
-        <div class="wallet-btns">
-          <button class="wbtn" title="Yenile" onclick="refresh()">↻</button>
-          <button class="wbtn" title="Adaylar" onclick="document.getElementById('waiting').scrollIntoView({behavior:'smooth'})">↓</button>
+        <div class="kf-ov-wallet cash">
+          <div class="kf-ov-tag">NET P&L</div>
+          <div class="kf-ov-lbl">Kapanmış işlemler</div>
+          <div class="kf-ov-bal" id="kf-pnl">—</div>
+          <div class="kf-ov-sub" id="kf-open-sub">açık pozisyon —</div>
         </div>
       </div>
+      <div class="kf-stat-card">
+        <div class="kf-stat-grid">
+          <div>
+            <div class="kf-stat-label">Tarama evreni</div>
+            <div class="kf-stat-val" id="kf-symbols">30</div>
+            <div class="kf-stat-sub">Binance Futures · scan */10dk</div>
+          </div>
+          <div>
+            <div class="kf-stat-label">Açık pozisyon</div>
+            <div class="kf-stat-val" id="kf-open">—</div>
+            <div class="kf-stat-sub" id="kf-updated">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-title">Coin bazlı en başarılı algoritma</div>
+      <div class="kf-leaders-box" id="positions"><div class="empty">yükleniyor…</div></div>
+      <div class="section-title" style="margin-top:18px">En başarılı algo + coin</div>
+      <div class="kf-leaders-box" id="kf-top-success"><div class="empty">yükleniyor…</div></div>
     </div>
-  </div>
-
-  <div class="panel">
-    <div class="section">
-      <div class="section-title">Açık Pozisyonlar · Algoritmalar Live</div>
-      <div class="positions" id="positions"><div class="empty">yükleniyor…</div></div>
-    </div>
-      <div class="section wait-rail">
-      <div class="section-title">İşlem Bekleyen</div>
-      <div class="wait-list" id="waiting"><div class="empty">yükleniyor…</div></div>
+    <div class="kf-overview-right">
+      <div class="kf-sym-lime">
+        <div class="kf-sym-title">İşlem bekleyen · <span id="kf-wait-n">30</span> coin</div>
+        <div class="kf-sym-meta" id="kf-wait-hint">Sinyal bekleyen coinler</div>
+        <div class="wait-list kf-wait-compact" id="waiting" style="margin-top:10px;max-height:420px"><div class="empty">yükleniyor…</div></div>
+      </div>
     </div>
   </div>
   </div><!-- /view-dash -->
@@ -13784,6 +13892,27 @@ body{
     </div>
   </div>
 </div>
+
+<div class="kf-right-panel" id="kf-right-panel">
+  <div class="kf-sym-vio">
+    <div class="kf-sym-title">Coin liderleri</div>
+    <div class="kf-sym-val" id="kf-rp-wr">—</div>
+    <div class="kf-sym-meta" id="kf-rp-wr-sub">en yüksek WR coinler</div>
+    <div id="kf-rp-leaders" style="margin-top:10px"></div>
+  </div>
+  <div class="kf-rp-section">
+    <div class="kf-rp-title">En başarılı algoritmalar</div>
+    <div id="kf-rp-algos"><div style="color:#666;font-size:12px">yükleniyor…</div></div>
+  </div>
+  <div class="kf-rp-section">
+    <div class="kf-rp-title">Son Test işlemleri</div>
+    <div id="kf-recent-test"><div style="color:#666;font-size:12px">yükleniyor…</div></div>
+  </div>
+  <div class="kf-rp-section">
+    <div class="kf-rp-title">Son Live işlemleri <span style="font-size:10px;opacity:.6">Binance</span></div>
+    <div id="kf-recent-live"><div style="color:#666;font-size:12px">yükleniyor…</div></div>
+  </div>
+</div>
 <style>
 .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .book-card{
@@ -13838,7 +13967,6 @@ const _mGrafik = PATH.match(/\\/kripto\\/grafik(?:\\/([A-Za-z0-9]+))?$/);
 const DETAIL_KIND = _mAnaliz ? 'analizler' : (_mAlgo ? 'algoritmalar' : (_mTest ? 'test' : null));
 const DETAIL_ID = _mAnaliz ? _mAnaliz[1].toLowerCase() : (_mAlgo ? _mAlgo[1].replace(/^0+/, '') || '0' : (_mTest ? _mTest[1].toLowerCase() : null));
 const IS_GECMIS = PATH.endsWith('/gecmis');
-const KRIPTO_TOP_PAUSED = true; /* overview: live bar + TOP1/2 + cüzdan geçici kapalı */
 const IS_ALGO = PATH.endsWith('/algoritmalar');
 const IS_ANALIZ = PATH.endsWith('/analizler');
 const IS_TEST = PATH.endsWith('/test') && !_mTest;
@@ -14195,70 +14323,166 @@ async function loadKriptoChart(){
     if(meta) meta.textContent = 'hata: ' + e;
   }
 }
-function renderCards(d){
-  const cards = d.cards || [];
-  const avail = (d.usdt && d.usdt.available != null) ? d.usdt.available : null;
-  const wallet = (d.usdt && d.usdt.balance != null) ? d.usdt.balance : avail;
-  const upnl = d.total_unrealized_pnl;
-  // Anlık toplam ≈ cüzdan + açık pozisyon K/Z
-  const totalLive = (wallet != null)
-    ? (Number(wallet) + (upnl != null ? Number(upnl) : 0))
-    : null;
-  const fmtUsd = (n) => n != null
-    ? '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
-    : '—';
-  const totEl = document.getElementById('st-total');
-  if (totEl) totEl.textContent = fmtUsd(totalLive != null ? totalLive : wallet);
-  const avEl = document.getElementById('st-usdt');
-  if (avEl) avEl.textContent = fmtUsd(avail != null ? avail : wallet);
-  const upEl = document.getElementById('st-upnl');
-  upEl.textContent = upnl == null ? '—' : fmtMoney(upnl);
-  upEl.style.color = upnl > 0 ? '#fff' : upnl < 0 ? '#ffe4e6' : '#fff';
-  const feeEl = document.getElementById('st-fee');
-  if(feeEl){
-    const fee = d.total_commission_est;
-    feeEl.textContent = fee == null ? '—' : ('$' + Number(fee).toFixed(2));
-  }
-  const badge = document.getElementById('mode-badge');
-  if(badge){
-    if(d.live_paused){ badge.textContent='DURDURULDU'; badge.className='badge dry'; }
-    else if(d.dry_run){ badge.textContent='DRY-RUN'; badge.className='badge dry'; }
-    else { badge.textContent='CANLI'; badge.className='badge live'; }
-  }
-  if(!KRIPTO_TOP_PAUSED){
-    renderLiveBar(d);
-    renderHero(d);
-  }
-  renderWaiting(d);
+const KRIPTO_TOP_PAUSED = false;
+let _kfOverviewCache = null;
+let _kfOverviewAt = 0;
 
-  const pc = document.getElementById('positions');
-  const leaders = d.coin_leaders || [];
-  if(leaders.length){
-    const rowStyle = 'display:grid;grid-template-columns:64px 1fr 52px 62px 78px;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;';
-    const headHtml = '<div style="' + rowStyle + 'font-weight:600;opacity:.55;font-size:11px;text-transform:uppercase">'
-      + '<span>Coin</span><span>En iyi algo</span><span>WR</span><span>İşlem</span><span>Net</span></div>';
-    const rowsHtml = leaders.map(function(l){
-      const best = l.best;
-      if(!best){
-        return '<div style="' + rowStyle + 'opacity:.35">'
-          + '<span><b>' + l.symbol + '</b></span><span>veri yok</span><span>—</span><span>—</span><span>—</span></div>';
-      }
-      const pnlColor = best.pnl >= 0 ? 'var(--green)' : 'var(--red)';
-      const ruTxt = l.runner_up ? (' <span style="opacity:.5;font-size:11px">· 2. ' + l.runner_up.algo + ' ' + l.runner_up.wr + '%</span>') : '';
-      return '<div style="' + rowStyle + '">'
-        + '<span><b>' + l.symbol + '</b></span>'
-        + '<span>' + best.algo + ruTxt + '</span>'
-        + '<span>' + best.wr + '%</span>'
-        + '<span>' + best.wins + '/' + best.trades + '</span>'
-        + '<span style="color:' + pnlColor + '">' + fmtMoney(best.pnl) + '</span></div>';
-    }).join('');
-    const posNote = cards.length ? (' · ' + cards.length + ' açık Algoritmalar Live pozisyonu var (otomatik kapanır)') : '';
-    pc.innerHTML = '<div class="empty top-hit-hint">Coin bazlı en başarılı algoritma (Kripto Test)' + posNote + '</div>'
-      + '<div>' + headHtml + rowsHtml + '</div>';
-  } else {
+function renderCoinLeadersTable(leaders, targetId){
+  const pc = document.getElementById(targetId || 'positions');
+  if(!pc) return;
+  if(!leaders || !leaders.length){
     pc.innerHTML = '<div class="empty">Veri yok</div>';
+    return;
+  }
+  const head = '<div class="kf-leaders-head"><span>Coin</span><span>En iyi algo</span><span>WR</span><span>İşlem</span><span>Net</span></div>';
+  const rows = leaders.map(function(l){
+    const best = l.best;
+    if(!best){
+      return '<div class="kf-leaders-row" style="opacity:.35"><span><b>'+l.symbol+'</b></span><span>veri yok</span><span>—</span><span>—</span><span>—</span></div>';
+    }
+    const pnlCls = best.pnl >= 0 ? 'pos' : 'neg';
+    const ru = l.runner_up ? (' <span style="opacity:.55;font-size:10px">· 2. '+l.runner_up.algo+'</span>') : '';
+    return '<div class="kf-leaders-row">'
+      + '<span><b>'+l.symbol+'</b></span>'
+      + '<span>'+best.algo+ru+'</span>'
+      + '<span>'+best.wr+'%</span>'
+      + '<span>'+best.wins+'/'+best.trades+'</span>'
+      + '<span class="'+pnlCls+'" style="color:'+(best.pnl>=0?'var(--green)':'var(--red)')+'">'+fmtMoney(best.pnl)+'</span></div>';
+  }).join('');
+  pc.innerHTML = head + rows;
+}
+
+function renderTopSuccessList(tops){
+  const el = document.getElementById('kf-top-success');
+  const rp = document.getElementById('kf-rp-algos');
+  const rows = tops || [];
+  const html = rows.length ? rows.map(function(t, i){
+    const wr = Number(t.wr||0);
+    const barW = Math.max(4, Math.min(100, wr));
+    const pnlCls = (t.pnl||0) >= 0 ? 'pos' : 'neg';
+    return '<div class="kf-algo-item">'
+      + '<span class="kf-algo-name">#'+(i+1)+' '+t.label+'</span>'
+      + '<div class="kf-algo-bar"><div class="kf-algo-bar-fill" style="width:'+barW+'%"></div></div>'
+      + '<span class="kf-algo-wr" style="color:'+(wr>=55?'var(--green)':wr>=50?'var(--accent)':'var(--red)')+'">'+wr+'%</span>'
+      + '<span class="'+pnlCls+'" style="font-size:11px;font-weight:800;min-width:52px;text-align:right">'+fmtMoney(t.pnl)+'</span>'
+      + '</div>';
+  }).join('') : '<div style="color:#666;font-size:12px">Veri yok</div>';
+  if(el) el.innerHTML = html;
+  if(rp) rp.innerHTML = html;
+}
+
+function renderRpLeadersMini(leaders){
+  const wrEl = document.getElementById('kf-rp-wr');
+  const subEl = document.getElementById('kf-rp-wr-sub');
+  const box = document.getElementById('kf-rp-leaders');
+  if(!box) return;
+  const withData = (leaders||[]).filter(l => l.best);
+  if(!withData.length){
+    box.innerHTML = '<div style="font-size:12px;opacity:.7">Henüz yeterli veri yok</div>';
+    return;
+  }
+  const avgWr = Math.round(withData.reduce((a,l)=>a+Number(l.best.wr||0),0)/withData.length);
+  if(wrEl) wrEl.textContent = avgWr + '%';
+  if(subEl) subEl.textContent = withData.length + ' coin · ortalama WR';
+  box.innerHTML = withData.slice(0,6).map(l => {
+    const b = l.best;
+    return '<div class="kf-trade-item"><div><div class="kf-trade-sym">'+l.symbol+' · '+b.algo+'</div>'
+      + '<div class="kf-trade-meta">'+b.wins+'/'+b.trades+' işlem</div></div>'
+      + '<div class="kf-trade-pnl '+(b.pnl>=0?'pos':'neg')+'">'+fmtMoney(b.pnl)+'</div></div>';
+  }).join('');
+}
+
+function renderRecentTrades(rows, elId, emptyLbl){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(!rows || !rows.length){
+    el.innerHTML = '<div style="color:#666;font-size:12px">'+(emptyLbl||'Henüz işlem yok')+'</div>';
+    return;
+  }
+  el.innerHTML = rows.map(t => {
+    const pnl = Number(t.pnl||0);
+    const pnlCls = pnl >= 0 ? 'pos' : 'neg';
+    const sym = t.name || (t.symbol||'').replace('USDT','');
+    const side = (t.side||'').toUpperCase();
+    const dir = side === 'LONG' ? '↑' : side === 'SHORT' ? '↓' : '';
+    const ts = (t.exit_time_tr||'').slice(11,16) || (t.exit_time_tr||'').slice(0,10) || '—';
+    return '<div class="kf-trade-item"><div>'
+      + '<div class="kf-trade-sym">'+dir+' '+sym+' <span style="opacity:.55;font-size:10px">'+((t.algo||'').toUpperCase())+'</span></div>'
+      + '<div class="kf-trade-meta">'+ts+(t.close_reason ? (' · '+t.close_reason) : '')+'</div>'
+      + '</div><div class="kf-trade-pnl '+pnlCls+'">'+fmtMoney(pnl)+'</div></div>';
+  }).join('');
+}
+
+function renderOverview(d){
+  if(!d || !d.ok) return;
+  const fmtUsd = (n) => n != null
+    ? '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})
+    : '—';
+  const balEl = document.getElementById('kf-bal');
+  if(balEl) balEl.textContent = fmtUsd(d.total_balance);
+  const pnl = Number(d.total_pnl||0);
+  const pnlEl = document.getElementById('kf-pnl');
+  if(pnlEl){
+    pnlEl.textContent = (pnl>=0?'+':'') + '$' + Math.abs(pnl).toFixed(2);
+    pnlEl.style.color = pnl >= 0 ? '#fff' : '#ffe4e6';
+  }
+  const booksSub = document.getElementById('kf-books-sub');
+  if(booksSub) booksSub.textContent = (d.count||'—') + ' defter · Kripto Test sanal';
+  const openSub = document.getElementById('kf-open-sub');
+  if(openSub) openSub.textContent = (d.total_open||0) + ' açık pozisyon';
+  const symEl = document.getElementById('kf-symbols');
+  if(symEl) symEl.textContent = String(d.symbols_n || 30);
+  const openEl = document.getElementById('kf-open');
+  if(openEl) openEl.textContent = String(d.total_open != null ? d.total_open : '—');
+  const updEl = document.getElementById('kf-updated');
+  if(updEl) updEl.textContent = new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) + ' güncellendi';
+  const waitN = document.getElementById('kf-wait-n');
+  if(waitN) waitN.textContent = String(d.symbols_n || 30);
+  const waitHint = document.getElementById('kf-wait-hint');
+  if(waitHint){
+    const sigN = (d.waiting||[]).filter(w => w.signal === 'UP' || w.signal === 'DOWN').length;
+    waitHint.textContent = sigN + ' coin sinyal bekliyor';
+  }
+  renderCoinLeadersTable(d.coin_leaders, 'positions');
+  renderTopSuccessList(d.top_success);
+  renderRpLeadersMini(d.coin_leaders);
+  renderWaiting(d);
+  renderRecentTrades(d.recent_test_trades, 'kf-recent-test', 'Henüz Test işlemi yok');
+  renderRecentTrades(d.recent_live_trades, 'kf-recent-live', 'Henüz Live işlemi yok');
+}
+
+async function refreshOverviewFast(force){
+  const now = Date.now();
+  if(!force && _kfOverviewCache && (now - _kfOverviewAt) < 8000){
+    renderOverview(_kfOverviewCache);
+    return;
+  }
+  try{
+    const r = await fetch('/poly/api/kripto/overview', {cache:'no-store'});
+    const d = await r.json();
+    if(!d.ok){
+      const pc = document.getElementById('positions');
+      if(pc) pc.innerHTML = '<div class="empty">hata: '+(d.error||'yüklenemedi')+'</div>';
+      return;
+    }
+    _kfOverviewCache = d;
+    _kfOverviewAt = now;
+    renderOverview(d);
+  }catch(e){
+    const pc = document.getElementById('positions');
+    if(pc) pc.innerHTML = '<div class="empty">hata: '+e+'</div>';
   }
 }
+
+async function refreshLiveBar(){
+  try{
+    const r = await fetch('/poly/api/crypto-futures/live-control', {cache:'no-store'});
+    const d = await r.json();
+    if(d.ok) renderLiveBar(d);
+  }catch(e){}
+}
+
+function renderCards(d){ renderOverview(d); }
 function renderLiveBar(d){
   const bar = document.getElementById('live-bar');
   const btn = document.getElementById('live-toggle-btn');
@@ -14282,7 +14506,12 @@ function renderLiveBar(d){
     topIn.max = d.top_n_max != null ? d.top_n_max : 10;
     topIn.value = String(topN);
   }
-  if(pageSub) pageSub.textContent = 'Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · BTC/ETH/BNB açılış yok · top-' + topN + ' · $7 × 20x · ATR kâr kilidi';
+  const badge = document.getElementById('mode-badge');
+  if(badge){
+    if(!envOn){ badge.textContent='ENV KAPALI'; badge.className='badge dry'; }
+    else if(dashPaused){ badge.textContent='LIVE KAPALI'; badge.className='badge dry'; }
+    else { badge.textContent='LIVE AÇIK'; badge.className='badge live'; }
+  }
   btn.textContent = dashPaused ? 'Aç' : 'Kapat';
   btn.disabled = !envOn ? true : false;
 }
@@ -14311,12 +14540,9 @@ async function saveTopN(){
     const d = await r.json();
     if(!d.ok){ alert(d.error || 'max poz kaydedilemedi'); return; }
     if(d.top_n != null) el.value = String(d.top_n);
-    const pageSub = document.getElementById('page-sub');
-    if(pageSub) pageSub.textContent = 'Algoritmalar Live · Hurst+A1#11+Z-Score MR+MR · BTC/ETH/BNB açılış yok · top-' + (d.top_n || v) + ' · $7 × 20x · ATR kâr kilidi';
     const sub = document.getElementById('live-bar-sub');
     if(sub && sub.textContent){
-      // refresh alt yazı için hafif poll
-      refresh();
+      refreshLiveBar();
     }
   }catch(e){ alert(String(e)); }
 }
@@ -14336,27 +14562,15 @@ async function toggleBinanceLive(){
     });
     const d = await r.json();
     if(!d.ok){ alert(d.error || 'kontrol hatası'); if(btn) btn.disabled=false; return; }
-    await refresh();
+    await refreshLiveBar();
   }catch(e){
     alert(String(e));
     if(btn) btn.disabled = false;
   }
 }
 async function refresh(){
-  try{
-    const r = await fetch('/poly/api/crypto-futures/cr6', {cache:'no-store'});
-    const d = await r.json();
-    if(!d.ok && d.error){
-      document.getElementById('positions').innerHTML = '<div class="empty">hata: '+d.error+'</div>';
-      document.getElementById('waiting').innerHTML = '<div class="empty">hata</div>';
-      renderLiveBar(d);
-      return;
-    }
-    renderCards(d);
-  }catch(e){
-    document.getElementById('positions').innerHTML = '<div class="empty">hata: '+e+'</div>';
-    document.getElementById('waiting').innerHTML = '<div class="empty">hata</div>';
-  }
+  await refreshOverviewFast(true);
+  await refreshLiveBar();
 }
 async function closeCr6(symbol, qty, btn){
   if(!confirm(symbol + ' Algoritmalar Live pozisyonunu kapat?')) return;
@@ -14370,7 +14584,8 @@ async function closeCr6(symbol, qty, btn){
     });
     const d = await r.json();
     if(!d.ok){ alert(d.error || 'kapatma hatası'); btn.textContent='Pozisyonu Kapat'; btn.classList.remove('loading'); return; }
-    await refresh();
+    await refreshOverviewFast(true);
+    await refreshLiveBar();
   }catch(e){
     alert(String(e));
     btn.textContent='Pozisyonu Kapat'; btn.classList.remove('loading');
@@ -14536,7 +14751,7 @@ function renderBookHistory(book, kind){
   const histEl = document.getElementById('detail-history');
   const histTitle = document.getElementById('detail-hist-title');
   const section = histEl ? histEl.closest('.section') : null;
-  if(kind !== 'test'){
+  if(kind !== 'test' && kind !== 'analizler'){
     if(section) section.style.display = 'none';
     return;
   }
@@ -14652,11 +14867,12 @@ function renderBookDetail(book, kind){
 }
 async function loadBookDetail(){
   if(!DETAIL_KIND || !DETAIL_ID) return;
-  if(DETAIL_KIND === 'test'){
+  if(DETAIL_KIND === 'test' || DETAIL_KIND === 'analizler'){
+    const apiBase = DETAIL_KIND === 'test' ? '/poly/api/kripto/test' : '/poly/api/kripto/analizler';
     try{
-      let r = await fetch('/poly/api/kripto/test/' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
+      let r = await fetch(apiBase + '/' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
       if(!r.ok){
-        r = await fetch('/poly/api/kripto/test?detail=' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
+        r = await fetch(apiBase + '?detail=' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
       }
       const d = await r.json();
       if(!d || !d.ok){
@@ -14808,10 +15024,13 @@ function initKriptoViews(){
     loadTestBooks();
     setInterval(loadTestBooks, 60000);
   } else {
+    document.body.classList.add('kf-overview');
     if(dash) dash.style.display = 'block';
     if(nOv) nOv.classList.add('active');
-    refresh();
-    setInterval(refresh, 6000);
+    refreshOverviewFast(true);
+    refreshLiveBar();
+    setInterval(() => refreshOverviewFast(false), 15000);
+    setInterval(refreshLiveBar, 30000);
   }
 }
 initKriptoViews();
@@ -14905,6 +15124,50 @@ def api_crypto_futures_open():
         return jsonify({"ok": True, **r})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 400
+
+
+@app.route("/poly/api/kripto/overview")
+def api_kripto_overview():
+    """Kripto overview — snapshot tabanlı hızlı yükleme (Binance yok)."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    if _DIR_KRIPTO not in sys.path:
+        sys.path.insert(0, _DIR_KRIPTO)
+    from virtual_book import read_snapshot  # noqa: WPS433
+    snap = read_snapshot("test", max_age=900) or {}
+    mod = _load_agustos_runner("Test")
+    coin_leaders = snap.get("coin_leaders") or mod.compute_coin_leaders()
+    top_success = snap.get("top_success") or mod.compute_top_success(n=8)
+    waiting = snap.get("waiting") or []
+    recent_test = mod.compute_recent_test_trades(limit=12)
+    recent_live: list[dict] = []
+    try:
+        from crypto_futures_cr6 import load_history as _cr6_hist  # noqa: WPS433
+        for t in list(reversed(_cr6_hist() or []))[:8]:
+            sym = (t.get("symbol") or "").upper()
+            recent_live.append({
+                "symbol": sym,
+                "name": sym.replace("USDT", "") if sym.endswith("USDT") else sym,
+                "side": t.get("side"),
+                "algo": t.get("algo") or t.get("strategy") or "Live",
+                "pnl": round(float(t.get("pnl") or 0), 4),
+                "exit_time_tr": t.get("exit_time_tr") or "",
+            })
+    except Exception:
+        pass
+    return jsonify({
+        "ok": True,
+        "coin_leaders": coin_leaders,
+        "top_success": list(top_success)[:8],
+        "waiting": waiting,
+        "total_balance": snap.get("total_balance"),
+        "total_pnl": snap.get("total_pnl"),
+        "total_open": snap.get("total_open") or 0,
+        "symbols_n": snap.get("symbols_n") or 30,
+        "count": snap.get("count"),
+        "recent_test_trades": recent_test,
+        "recent_live_trades": recent_live,
+    })
 
 
 @app.route("/poly/api/crypto-futures/cr6")
@@ -15160,7 +15423,29 @@ def api_kripto_analizler():
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     try:
+        detail_id = (request.args.get("detail") or request.args.get("book") or "").strip()
+        if detail_id:
+            mod = _load_agustos_runner("Analizler")
+            book = mod.book_detail(detail_id, recent_limit=80, with_marks=True)
+            if book is None:
+                return jsonify({"ok": False, "error": "book not found"}), 404
+            return jsonify({"ok": True, "book": book})
         return jsonify(_agustos_status_or_snap("Analizler", "analizler"))
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/kripto/analizler/<book_id>")
+def api_kripto_analizler_detail(book_id: str):
+    """Tek analiz defteri — açık pozisyonlar + son kapanmış işlemler."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    try:
+        mod = _load_agustos_runner("Analizler")
+        book = mod.book_detail(book_id, recent_limit=80, with_marks=True)
+        if book is None:
+            return jsonify({"ok": False, "error": "book not found"}), 404
+        return jsonify({"ok": True, "book": book})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 

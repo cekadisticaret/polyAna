@@ -79,6 +79,7 @@ alwaysApply: true
 | `0 8 * * 1` | `cd /root/aiProject && python3 temmuzPoly/pm_weekend_sync.py open` (Pzt 11:00 İST erken) | `/tmp/pm_weekend_sync.log` |
 | `0 21 * * *` | `temmuzPoly/weekly_slot_heatmap_all.py send` (00:00 İST — A15/A4 TG) | `/tmp/weekly_slot_heatmap_all.log` |
 | `15 * * * *` | `temmuzPoly/slot_data_archive.py` (saatlik slot arşivi) | `/tmp/slot_data_archive.log` |
+| `20 * * * *` | `cd /root/aiProject && python3 twitter_bot/tweet_trade_card.py` (@tradecomio saatlik en başarılı işlem — giriş/kapanış/kâr görsel; yeni yoksa atlar) | `/tmp/twitter_trade_card.log` |
 
 ## Pasif / Kaldırılmış
 | Zamanlama | Durum |
@@ -134,4 +135,5 @@ tail -f /tmp/poly_analiz3_freqtrade.log
 tail -f /tmp/poly_analiz8_jesse.log
 tail -f /tmp/weekly_slot_heatmap_all.log
 tail -f /tmp/slot_data_archive.log
+tail -f /tmp/twitter_trade_card.log
 ```
