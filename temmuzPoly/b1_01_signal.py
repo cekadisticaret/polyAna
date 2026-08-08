@@ -102,7 +102,7 @@ def load_mapping(refresh: bool = True) -> dict[str, dict]:
         return compute_best_mapping()
 
 
-async def _resolve_from_book(book: str, symbol: str) -> tuple[str | None, float | None, str]:
+async def resolve_from_book(book: str, symbol: str) -> tuple[str | None, float | None, str]:
     if book == "analiz15":
         return await a15_resolve(symbol)
     if book == "analiz6_v3":
@@ -165,6 +165,6 @@ async def resolve_live_signal(symbol: str) -> tuple[str | None, float | None, st
     if not row:
         return await a6v3_resolve(symbol)
     book = row["book"]
-    sig, price, algo_name = await _resolve_from_book(book, symbol)
+    sig, price, algo_name = await resolve_from_book(book, symbol)
     src = row.get("label") or book
     return sig, price, f"B1←{src} · {algo_name}"

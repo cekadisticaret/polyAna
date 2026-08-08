@@ -30,6 +30,7 @@ _HEATMAP_SYMS = {
     "analiz6_v3": ["BTC", "ETH", "SOL"],
     "analiz15": ["BTC", "ETH", "SOL"],
     "b1_01": ["BTC", "ETH", "SOL"],
+    "b1_02": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
@@ -97,14 +98,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01",
+    "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01",
+    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02",
     "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -124,6 +125,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz6_v3": "6. Analiz V3",
     "analiz15":   "15. Analiz",
     "b1_01":      "B1#01",
+    "b1_02":      "B1#02",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -147,13 +149,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz6_v2": 300,
-    "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300,
+    "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -196,6 +198,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz6_v3": "A6V3",
     "analiz15": "A15",
     "b1_01": "B1#01",
+    "b1_02": "B1#02",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -219,9 +222,10 @@ for _num, _name, *_rest in _A2_META:
     _OVERVIEW_INIT_BAL[_a2k] = 300
     _OVERVIEW_SHORT_LABELS[_a2k] = f"A2#{_num:02d}"
 
-# Algoritma işlemler ekranı: A6 + V2/V3 + A15 + B1#01 + A2 Top-17
+# Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02 + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
-    "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01",
+    "analiz1", "analiz2",
+    "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02",
 ] + _A2_KEYS
 
 _HEATMAP_ORDER.extend(_A2_KEYS)
@@ -239,6 +243,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("analiz6_v3", "6. Analiz V3",          300,  "BTC/ETH→A6 · SOL→A2"),
     ("analiz15",   "15. Analiz",            300,  "BTC→A6 · ETH→A8 sıkı · SOL→A2"),
     ("b1_01",      "B1#01",                 300,  "Sembol bazlı en iyi motor birleşimi"),
+    ("b1_02",      "B1#02",                 300,  "BTC→A15 · ETH→A6 · SOL→A2#01"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
@@ -2304,7 +2309,17 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
     m = re.match(r"^a2_(\d+)$", key)
     if m:
         num = int(m.group(1))
-    if key == "analiz6":
+    if key == "analiz1":
+        category = "Poly sanal · 1. Analiz"
+        panel = "poly_a1"
+        name = short or label
+        title = "RSI+MACD+EMA (BTC/SOL)"
+    elif key == "analiz2":
+        category = "Poly sanal · 2. Analiz"
+        panel = "poly_a2_sol"
+        name = short or label
+        title = "A1 motoru · SOL only"
+    elif key == "analiz6":
         category = "Poly sanal · 6. Analiz"
         panel = "poly_a6"
         name = short or label
@@ -2329,6 +2344,11 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
         panel = "poly_b1"
         name = short or label
         title = "Sembol bazlı en iyi motor"
+    elif key == "b1_02":
+        category = "Poly sanal · B1#02"
+        panel = "poly_b1"
+        name = short or label
+        title = "BTC→A15 · ETH→A6 · SOL→A2#01"
     else:
         category = "Poly sanal · A2 Top-17"
         panel = "poly_a2"
@@ -10217,8 +10237,8 @@ const _PM_SYSTEM_ROWS = {
     bar: 'pm-system-bar-a2_05_live', btn: 'pm-system-btn-a2_05_live',
     status: 'pm-system-status-a2_05_live', sub: 'pm-system-sub-a2_05_live',
     active: '✅ A2#05 Mean Rev Live açılış aktif', paused: '⏸ A2#05 Mean Rev Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#05 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#05 devam) · varsayılan kapalı · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#05 sync · Cum 22:00 kapanır · Pzt 11:00 devam',
+    subOff: 'Hafta sonu / manuel kapalı (Cum 22:00 – Pzt 11:00 otomatik) · sanal A2#05 devam',
   },
   a2_06_live: {
     bar: 'pm-system-bar-a2_06_live', btn: 'pm-system-btn-a2_06_live',
@@ -13318,6 +13338,8 @@ body{
 .nav-item.active{background:rgba(200,241,53,.1);color:var(--accent)}
 .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5}
 .nav-item.active .nav-dot{opacity:1;background:var(--accent)}
+.nav-item.nav-sub{margin-left:12px;padding-left:20px;font-size:12px}
+.nav-item.nav-sub .nav-dot{width:5px;height:5px;opacity:.35}
 .sidebar-footer{margin-top:auto;font-size:11px;color:#444;padding:12px;display:flex;align-items:center;gap:6px}
 .sidebar-footer .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
 .main{flex:1;padding:28px 28px 40px;max-width:none;width:100%;min-width:0}
@@ -13523,6 +13545,8 @@ body{
 .wait-badge.open{color:#888;background:rgba(255,255,255,.06)}
 .empty{color:#555;font-size:13px;padding:28px 0;text-align:center}
 .positions .empty{grid-column:1/-1}
+.pos-card.top-hit{border-color:rgba(57,255,142,.22);box-shadow:inset 0 0 0 1px rgba(57,255,142,.06)}
+.top-hit-hint{font-size:11px;margin-bottom:2px;opacity:.75}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(max-width:1200px){
   .panel{grid-template-columns:minmax(0,1fr) 300px}
@@ -13557,6 +13581,10 @@ body{
   #view-dash .panel > .section:first-child{order:0}
   #view-dash .panel > .wait-rail{order:1}
 }
+/* Geçici: overview üst blok (live bar + TOP1/2 + cüzdan) kapalı */
+.kf-top-paused .live-bar,
+.kf-top-paused .head,
+.kf-top-paused .hero{display:none!important}
 </style>
 </head>
 <body>
@@ -13570,6 +13598,7 @@ body{
     <a class="nav-item" id="nav-kripto-overview" href="/kripto"><span class="nav-dot"></span>Overview</a>
     <a class="nav-item" id="nav-kripto-algo" href="/kripto/algoritmalar"><span class="nav-dot"></span>Algoritmalar</a>
     <a class="nav-item" id="nav-kripto-analiz" href="/kripto/analizler"><span class="nav-dot"></span>Analizler</a>
+    <a class="nav-item nav-sub" id="nav-kripto-test" href="/kripto/test"><span class="nav-dot"></span>Test</a>
     <a class="nav-item" id="nav-kripto-grafik" href="/kripto/grafik"><span class="nav-dot"></span>Grafik</a>
     <a class="nav-item" id="nav-kripto-gecmis" href="/kripto/gecmis"><span class="nav-dot"></span>Geçmiş işlemler</a>
     <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geçiş yap</a>
@@ -13577,7 +13606,7 @@ body{
   </div>
 </div>
 <div class="main">
-  <div id="view-dash">
+  <div id="view-dash" class="kf-top-paused">
   <div class="live-bar" id="live-bar">
     <div class="live-bar-txt">
       <b id="live-bar-title">Binance Live</b>
@@ -13714,6 +13743,26 @@ body{
     </div>
   </div>
 
+  <div id="view-test" style="display:none">
+    <div class="head">
+      <div>
+        <div class="page-title">Test</div>
+        <div class="page-sub">Poly algoritma-islemler + ALGO1 → sanal Binance · $1000 · $100×6x · max 4 · 1h/4h ATR · scan */10dk (canlı giriş + ters sinyal kapama) · 30 coin · 7/24 (hafta sonu duraklaması yok)</div>
+      </div>
+      <div class="chip" id="test-sum">—</div>
+    </div>
+    <div class="panel" style="grid-template-columns:1fr 320px">
+      <div class="section">
+        <div class="section-title">Test defterleri</div>
+        <div id="test-books"><div class="empty">yükleniyor…</div></div>
+      </div>
+      <div class="section wait-rail">
+        <div class="section-title">İşlem Bekleyen · 30 coin</div>
+        <div class="wait-list" id="test-waiting"><div class="empty">yükleniyor…</div></div>
+      </div>
+    </div>
+  </div>
+
   <div id="view-detail" style="display:none">
     <div class="head">
       <div>
@@ -13727,6 +13776,10 @@ body{
       <div class="section">
         <div class="section-title" id="detail-sec-title">Açık Pozisyonlar</div>
         <div class="positions" id="detail-positions"><div class="empty">yükleniyor…</div></div>
+      </div>
+      <div class="section" style="margin-top:16px">
+        <div class="section-title" id="detail-hist-title">Geçmiş işlemler</div>
+        <div id="detail-history"><div class="empty">yükleniyor…</div></div>
       </div>
     </div>
   </div>
@@ -13756,6 +13809,23 @@ body{
   font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;
 }
 .detail-back:hover{filter:brightness(1.1)}
+.hist-list{display:flex;flex-direction:column;gap:0;margin-top:4px}
+.hist-row{
+  display:grid;grid-template-columns:72px 56px 1fr auto;gap:10px;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--line);font-size:12px;
+}
+.hist-row:last-child{border-bottom:none}
+.hist-time{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.hist-sym{font-weight:800}
+.hist-dir{font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;text-align:center}
+.hist-dir.up{background:rgba(57,255,142,.12);color:var(--green)}
+.hist-dir.down{background:rgba(255,92,122,.12);color:var(--red)}
+.hist-meta{color:var(--muted);line-height:1.35;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-pnl{font-weight:800;font-size:13px;text-align:right;white-space:nowrap}
+.hist-pnl.win{color:var(--green)}.hist-pnl.loss{color:var(--red)}
+@media(max-width:640px){
+  .hist-row{grid-template-columns:56px 48px 1fr auto;gap:6px;font-size:11px}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
@@ -13763,12 +13833,15 @@ const ICO_COLORS = ['#f5a623','#627eea','#14f195','#f3ba2f','#00aae4','#c2a633',
 const PATH = location.pathname.replace(/\\/+$/,'');
 const _mAnaliz = PATH.match(/\\/kripto\\/analizler\\/([a-zA-Z0-9_]+)$/);
 const _mAlgo = PATH.match(/\\/kripto\\/algoritmalar\\/([a-zA-Z0-9_]+)$/);
+const _mTest = PATH.match(/\\/kripto\\/test\\/([a-zA-Z0-9_]+)$/);
 const _mGrafik = PATH.match(/\\/kripto\\/grafik(?:\\/([A-Za-z0-9]+))?$/);
-const DETAIL_KIND = _mAnaliz ? 'analizler' : (_mAlgo ? 'algoritmalar' : null);
-const DETAIL_ID = _mAnaliz ? _mAnaliz[1].toLowerCase() : (_mAlgo ? _mAlgo[1].replace(/^0+/, '') || '0' : null);
+const DETAIL_KIND = _mAnaliz ? 'analizler' : (_mAlgo ? 'algoritmalar' : (_mTest ? 'test' : null));
+const DETAIL_ID = _mAnaliz ? _mAnaliz[1].toLowerCase() : (_mAlgo ? _mAlgo[1].replace(/^0+/, '') || '0' : (_mTest ? _mTest[1].toLowerCase() : null));
 const IS_GECMIS = PATH.endsWith('/gecmis');
+const KRIPTO_TOP_PAUSED = true; /* overview: live bar + TOP1/2 + cüzdan geçici kapalı */
 const IS_ALGO = PATH.endsWith('/algoritmalar');
 const IS_ANALIZ = PATH.endsWith('/analizler');
+const IS_TEST = PATH.endsWith('/test') && !_mTest;
 const IS_GRAFIK = !!_mGrafik;
 let CHART_SYM = (_mGrafik && _mGrafik[1]) ? _mGrafik[1].toUpperCase().replace(/USDT$/,'') : (localStorage.getItem('kf_chart_sym') || 'INJ');
 if(localStorage.getItem('kf_chart_tf_v2') !== '1'){
@@ -13796,6 +13869,32 @@ function fmtPx(n){
 function fmtMoney(n){
   if(n==null||isNaN(n)) return '—';
   return (n>=0?'+':'') + '$' + Number(n).toFixed(2);
+}
+function atrHistoryLine(hist){
+  if(!hist || !hist.length) return '';
+  const parts = hist.map(h => {
+    const t = h.ts ? String(h.ts).slice(11,16) : '—';
+    const px = h.price != null ? '$'+fmtPx(h.price) : '—';
+    return h.level + '.ATR ' + t + ' · ' + px;
+  });
+  return `<div class="pos-entry" style="opacity:.65;font-size:11px">${parts.join(' &rarr; ')}</div>`;
+}
+function atrLockLine(p, pnlNet){
+  const stopLvl = Number(p.stop_level||0);
+  const lockEq = p.lock_equity != null ? Number(p.lock_equity) : null;
+  const atrUsd = p.atr_usd != null ? Number(p.atr_usd) : null;
+  const lossStop = p.loss_stop_usd != null ? Number(p.loss_stop_usd) : (atrUsd!=null ? -atrUsd : null);
+  const histLine = atrHistoryLine(p.lock_history);
+  if(stopLvl >= 1){
+    return `<div class="pos-entry">ATR Stop${stopLvl}${lockEq!=null?' · kilit $'+lockEq.toFixed(2):''}${atrUsd!=null?' · atr$ '+atrUsd.toFixed(2):''} · <b>runner</b></div>${histLine}`;
+  }
+  if(atrUsd==null) return '';
+  const pnl = Number(pnlNet != null ? pnlNet : (p.unrealized_pnl||0));
+  if(pnl < 0 && lossStop != null){
+    return `<div class="pos-entry">ATR zarar stop <b>${fmtMoney(lossStop)}</b> · atr$ ${atrUsd.toFixed(2)} · şu an ${fmtMoney(pnl)}</div>`;
+  }
+  const armNeed = (1.7 * atrUsd).toFixed(2);
+  return `<div class="pos-entry">Kâr kilidi: +$${armNeed} kâra ulaşınca · atr$ ${atrUsd.toFixed(2)}</div>`;
 }
 function pickTopTwo(d){
   const waiting = d.waiting || [];
@@ -14121,79 +14220,44 @@ function renderCards(d){
     feeEl.textContent = fee == null ? '—' : ('$' + Number(fee).toFixed(2));
   }
   const badge = document.getElementById('mode-badge');
-  if(d.live_paused){ badge.textContent='DURDURULDU'; badge.className='badge dry'; }
-  else if(d.dry_run){ badge.textContent='DRY-RUN'; badge.className='badge dry'; }
-  else { badge.textContent='CANLI'; badge.className='badge live'; }
-  renderLiveBar(d);
-
-  renderHero(d);
+  if(badge){
+    if(d.live_paused){ badge.textContent='DURDURULDU'; badge.className='badge dry'; }
+    else if(d.dry_run){ badge.textContent='DRY-RUN'; badge.className='badge dry'; }
+    else { badge.textContent='CANLI'; badge.className='badge live'; }
+  }
+  if(!KRIPTO_TOP_PAUSED){
+    renderLiveBar(d);
+    renderHero(d);
+  }
   renderWaiting(d);
 
   const pc = document.getElementById('positions');
-  if(!cards.length){
-    pc.innerHTML = '<div class="empty">Açık Algoritmalar Live pozisyonu yok</div>';
-    return;
+  const leaders = d.coin_leaders || [];
+  if(leaders.length){
+    const rowStyle = 'display:grid;grid-template-columns:64px 1fr 52px 62px 78px;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;';
+    const headHtml = '<div style="' + rowStyle + 'font-weight:600;opacity:.55;font-size:11px;text-transform:uppercase">'
+      + '<span>Coin</span><span>En iyi algo</span><span>WR</span><span>İşlem</span><span>Net</span></div>';
+    const rowsHtml = leaders.map(function(l){
+      const best = l.best;
+      if(!best){
+        return '<div style="' + rowStyle + 'opacity:.35">'
+          + '<span><b>' + l.symbol + '</b></span><span>veri yok</span><span>—</span><span>—</span><span>—</span></div>';
+      }
+      const pnlColor = best.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+      const ruTxt = l.runner_up ? (' <span style="opacity:.5;font-size:11px">· 2. ' + l.runner_up.algo + ' ' + l.runner_up.wr + '%</span>') : '';
+      return '<div style="' + rowStyle + '">'
+        + '<span><b>' + l.symbol + '</b></span>'
+        + '<span>' + best.algo + ruTxt + '</span>'
+        + '<span>' + best.wr + '%</span>'
+        + '<span>' + best.wins + '/' + best.trades + '</span>'
+        + '<span style="color:' + pnlColor + '">' + fmtMoney(best.pnl) + '</span></div>';
+    }).join('');
+    const posNote = cards.length ? (' · ' + cards.length + ' açık Algoritmalar Live pozisyonu var (otomatik kapanır)') : '';
+    pc.innerHTML = '<div class="empty top-hit-hint">Coin bazlı en başarılı algoritma (Kripto Test)' + posNote + '</div>'
+      + '<div>' + headHtml + rowsHtml + '</div>';
+  } else {
+    pc.innerHTML = '<div class="empty">Veri yok</div>';
   }
-  const ts = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  pc.innerHTML = cards.map(p => {
-    const up = (p.side || '') === 'LONG';
-    const dirClass = up ? 'dir-up' : 'dir-down';
-    const dc = up ? 'up' : 'down';
-    const delta = p.delta != null ? p.delta : ((p.current||0) - (p.entry_price||0));
-    const deltaStr = (delta>=0?'+':'') + '$' + fmtPx(Math.abs(delta));
-    const pnl = p.close_pnl != null ? p.close_pnl : p.unrealized_pnl;
-    const gross = p.close_pnl_gross != null ? p.close_pnl_gross : p.unrealized_pnl_gross;
-    const fee = p.commission_est != null ? Number(p.commission_est) : null;
-    const pnlCls = pnl >= 0 ? 'pos' : 'neg';
-    const cvColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-    const qty = p.qty != null ? p.qty : '';
-    const feeLine = fee != null
-      ? `<div class="pos-entry">Brüt ${fmtMoney(gross)} · Komisyon −$${fee.toFixed(2)} · <b>Net ${fmtMoney(pnl)}</b></div>`
-      : '';
-    const stopLvl = Number(p.stop_level||0);
-    const lockEq = p.lock_equity != null ? Number(p.lock_equity) : null;
-    const atrUsd = p.atr_usd != null ? Number(p.atr_usd) : null;
-    const hardSl = p.hard_sl_usd != null ? Number(p.hard_sl_usd) : null;
-    const lockLine = stopLvl >= 1
-      ? `<div class="pos-entry">ATR Stop${stopLvl}${lockEq!=null?' · kilit $'+lockEq.toFixed(2):''}${atrUsd!=null?' · atr$ '+atrUsd.toFixed(2):''} · <b>runner</b></div>`
-      : (atrUsd!=null ? `<div class="pos-entry">ATR kilit bekleniyor · atr$ ${atrUsd.toFixed(2)}</div>` : '');
-    const slLine = hardSl != null
-      ? `<div class="pos-entry">Hard SL ${hardSl.toFixed(2)}$ · net zarar bu seviyede anında kapatır</div>`
-      : '';
-    const pName = (p.name || (p.symbol||'').replace('USDT','') || '').replace(/'/g,'');
-    const pSym = (p.symbol || (pName + 'USDT')).replace(/'/g,'');
-    const pRef = (p.entry_price != null && !isNaN(p.entry_price)) ? Number(p.entry_price) : '';
-    return `<div class="pos-card ${dirClass}" role="button" tabindex="0" onclick="openKriptoChart('${pSym}', ${pRef === '' ? 'null' : pRef})" style="cursor:pointer" title="Grafik · ${pName}">
-      <div class="pos-top">
-        <div class="pos-name">${pName}</div>
-        <div class="pos-dir ${dc}">${p.dir_tr || (up?'YÜKSELİR':'DÜŞER')}</div>
-      </div>
-      <div class="pos-price-row">
-        <span class="pos-current">$${fmtPx(p.current)}</span>
-        <span class="pos-pct ${delta>=0?'pos':'neg'}">${deltaStr}</span>
-      </div>
-      <div class="pos-entry">Giriş · $${fmtPx(p.entry_price)}</div>
-      <div class="pos-slot">${stopLvl>=1?'ATR runner':'1s slot'} · ${p.slot_label || '—'}</div>
-      <div class="pos-close-row">
-        <span class="close-lbl">Net kapatma</span>
-        <span class="live-close-val" style="color:${cvColor}">$${Number(p.close_val!=null?p.close_val:0).toFixed(2)}</span>
-        <span class="live-close-pnl ${pnlCls}">${fmtMoney(pnl)}</span>
-        <span class="live-updated">${ts} güncellendi</span>
-      </div>
-      ${feeLine}
-      ${lockLine}
-      ${slLine}
-      <div class="pos-risk-row">Risk: $${Number(p.pm_spent||p.margin_usd||15).toFixed(0)}
-        <span class="tag">Algo4 Live</span><span class="tag">${p.leverage||20}x</span>
-        ${p.tier_label ? `<span class="tag">${p.tier_label}</span>` : ''}
-        ${stopLvl>=1 ? `<span class="tag">Stop${stopLvl}</span>` : ''}
-        ${hardSl!=null ? `<span class="tag">SL ${hardSl.toFixed(0)}$</span>` : ''}
-      </div>
-      <div class="close-btn-wrap">
-        <button class="close-btn" onclick="event.stopPropagation(); event.preventDefault(); closeCr6('${p.symbol}', ${qty || 'null'}, this)">Pozisyonu Kapat</button>
-      </div>
-    </div>`;
-  }).join('');
 }
 function renderLiveBar(d){
   const bar = document.getElementById('live-bar');
@@ -14382,6 +14446,15 @@ function renderBooks(elId, sumId, d){
       + ' · açık ' + (d.total_open||0);
   }
   const books = (d.books || []).slice().sort((a, b) => {
+    if (elId === 'test-books') {
+      const pa = Number(a.total_pnl||0) + Number(a.unrealized_pnl||0);
+      const pb = Number(b.total_pnl||0) + Number(b.unrealized_pnl||0);
+      if (pb !== pa) return pb - pa;
+      const wa = (a.history_n >= 2 && a.wr != null) ? Number(a.wr) : -1;
+      const wb = (b.history_n >= 2 && b.wr != null) ? Number(b.wr) : -1;
+      if (wb !== wa) return wb - wa;
+      return (b.wins||0) - (a.wins||0);
+    }
     const ea = Number(a.equity != null ? a.equity : (Number(a.balance||0) + Number(a.unrealized_pnl||0)));
     const eb = Number(b.equity != null ? b.equity : (Number(b.balance||0) + Number(b.unrealized_pnl||0)));
     if (eb !== ea) return eb - ea;
@@ -14396,7 +14469,8 @@ function renderBooks(elId, sumId, d){
     el.innerHTML = '<div class="empty">defter yok</div>';
     return;
   }
-  const base = (elId === 'algo-books') ? '/kripto/algoritmalar' : '/kripto/analizler';
+  const base = (elId === 'algo-books') ? '/kripto/algoritmalar'
+    : (elId === 'test-books') ? '/kripto/test' : '/kripto/analizler';
   el.innerHTML = '<div class="book-grid">' + books.map(b => {
     const pnl = Number(b.total_pnl||0);
     const upnl = Number(b.unrealized_pnl||0);
@@ -14432,6 +14506,60 @@ function findBook(books, id){
       || (num && num === key) || (bid.replace(/^a1_0*/, '') === key.replace(/^a1_0*/, ''));
   }) || null;
 }
+function fmtHistTime(raw){
+  const s = String(raw || '');
+  if (s.length >= 16) return s.slice(5, 16).replace('T', ' ');
+  return s.slice(0, 11) || '—';
+}
+function kfHistRow(t){
+  const win = !!t.win;
+  const pnl = Number(t.pnl || 0);
+  const gross = t.pnl_gross != null ? Number(t.pnl_gross) : pnl;
+  const fee = t.commission != null ? Number(t.commission) : null;
+  const up = (t.side || '') === 'LONG';
+  const dc = up ? 'up' : 'down';
+  const reason = t.close_reason ? String(t.close_reason) : '';
+  const tf = t.interval || '1h';
+  const slot = t.slot ? String(t.slot).slice(0, 16) : '';
+  const feeTxt = fee != null ? (' · kom. $' + fee.toFixed(2)) : '';
+  return `<div class="hist-row">
+    <div class="hist-time">${fmtHistTime(t.exit_time_tr)}</div>
+    <div class="hist-sym">${t.name || (t.symbol||'').replace('USDT','')}</div>
+    <div>
+      <span class="hist-dir ${dc}">${t.dir_tr || (up?'LONG':'SHORT')}</span>
+      <div class="hist-meta">${tf}${slot ? ' · '+slot : ''}${reason ? ' · '+reason : ''} · $${fmtPx(t.entry_price)}→$${fmtPx(t.exit_price)}${feeTxt}</div>
+    </div>
+    <div class="hist-pnl ${win ? 'win' : 'loss'}">${win ? '✓' : '✗'} ${fmtMoney(pnl)}</div>
+  </div>`;
+}
+function renderBookHistory(book, kind){
+  const histEl = document.getElementById('detail-history');
+  const histTitle = document.getElementById('detail-hist-title');
+  const section = histEl ? histEl.closest('.section') : null;
+  if(kind !== 'test'){
+    if(section) section.style.display = 'none';
+    return;
+  }
+  if(section) section.style.display = '';
+  if(!histEl) return;
+  const hist = book && (book.recent_history || []);
+  const histN = Number(book && book.history_n || hist.length);
+  if(histTitle){
+    histTitle.textContent = 'Geçmiş işlemler · son ' + hist.length
+      + (histN > hist.length ? ' / ' + histN + ' toplam' : '');
+  }
+  if(!hist.length){
+    histEl.innerHTML = '<div class="empty">Henüz kapanmış işlem yok</div>';
+    return;
+  }
+  const wins = hist.filter(t => t.win).length;
+  const net = hist.reduce((a,t)=>a+Number(t.pnl||0),0);
+  const head = `<div class="pos-card" style="margin-bottom:12px;border-color:rgba(200,241,53,.2)">
+    <div class="pos-entry"><b>Gösterilen özet (net)</b> · ${hist.length} işlem · ${wins} kazanç</div>
+    <div class="pos-entry">Net toplam ${fmtMoney(net)}</div>
+  </div>`;
+  histEl.innerHTML = head + '<div class="hist-list">' + hist.map(kfHistRow).join('') + '</div>';
+}
 function renderBookDetail(book, kind){
   const back = document.getElementById('detail-back');
   const title = document.getElementById('detail-title');
@@ -14439,18 +14567,22 @@ function renderBookDetail(book, kind){
   const sum = document.getElementById('detail-sum');
   const sec = document.getElementById('detail-sec-title');
   const pc = document.getElementById('detail-positions');
+  const histEl = document.getElementById('detail-history');
   if(!book){
     if(title) title.textContent = 'Bulunamadı';
     if(sub) sub.textContent = 'Bu defter yok veya henüz oluşmadı';
     if(pc) pc.innerHTML = '<div class="empty">defter bulunamadı</div>';
-    if(back) back.href = kind === 'algoritmalar' ? '/kripto/algoritmalar' : '/kripto/analizler';
+    if(histEl) histEl.innerHTML = '';
+    if(back) back.href = kind === 'algoritmalar' ? '/kripto/algoritmalar'
+      : kind === 'test' ? '/kripto/test' : '/kripto/analizler';
     return;
   }
   const tag = book.name || book.label || book.id;
   const pnl = Number(book.total_pnl||0);
   const upnl = Number(book.unrealized_pnl||0);
   const wr = book.wr != null ? (book.wr + '%') : '—';
-  if(back) back.href = kind === 'algoritmalar' ? '/kripto/algoritmalar' : '/kripto/analizler';
+  if(back) back.href = kind === 'algoritmalar' ? '/kripto/algoritmalar'
+    : kind === 'test' ? '/kripto/test' : '/kripto/analizler';
   if(title) title.textContent = tag;
   if(sub) sub.textContent = (book.title || book.category || 'Sanal futures')
     + ' · WR ' + wr + ' · ' + (book.history_n||0) + ' işlem'
@@ -14466,8 +14598,7 @@ function renderBookDetail(book, kind){
   const cards = book.cards || [];
   if(!cards.length){
     pc.innerHTML = '<div class="empty">Açık pozisyon yok</div>';
-    return;
-  }
+  } else {
   const ts = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
   pc.innerHTML = cards.map(p => {
     const up = (p.side || '') === 'LONG';
@@ -14487,11 +14618,8 @@ function renderBookDetail(book, kind){
       ? `<div class="pos-entry">Brüt ${fmtMoney(gross)} · Komisyon −$${fee.toFixed(2)} · <b>Net ${fmtMoney(pnlP)}</b></div>`
       : '';
     const stopLvl = Number(p.stop_level||0);
-    const lockEq = p.lock_equity != null ? Number(p.lock_equity) : null;
-    const atrUsd = p.atr_usd != null ? Number(p.atr_usd) : null;
-    const lockLine = stopLvl >= 1
-      ? `<div class="pos-entry">ATR Stop${stopLvl}${lockEq!=null?' · kilit $'+lockEq.toFixed(2):''}${atrUsd!=null?' · atr$ '+atrUsd.toFixed(2):''} · <b>runner</b></div>`
-      : (atrUsd!=null ? `<div class="pos-entry">ATR kilit bekleniyor · atr$ ${atrUsd.toFixed(2)}</div>` : '');
+    const lockLine = atrLockLine(p, pnlP);
+    const ivLabel = (p.interval === '4h') ? '4s slot' : '1s slot';
     return `<div class="pos-card ${dirClass}">
       <div class="pos-top">
         <div class="pos-name">${p.name || (p.symbol||'').replace('USDT','')}</div>
@@ -14502,7 +14630,7 @@ function renderBookDetail(book, kind){
         <span class="pos-pct ${delta>=0?'pos':'neg'}">${deltaStr}</span>
       </div>
       <div class="pos-entry">Giriş · $${fmtPx(p.entry_price)}</div>
-      <div class="pos-slot">${stopLvl>=1?'ATR runner':'1s slot'} · ${slot}</div>
+      <div class="pos-slot">${stopLvl>=1?'ATR runner':ivLabel} · ${slot}</div>
       <div class="pos-close-row">
         <span class="close-lbl">Net kapatma</span>
         <span class="live-close-val" style="color:${cvColor}">$${closeVal.toFixed(2)}</span>
@@ -14519,11 +14647,39 @@ function renderBookDetail(book, kind){
       </div>
     </div>`;
   }).join('');
+  }
+  renderBookHistory(book, kind);
 }
 async function loadBookDetail(){
   if(!DETAIL_KIND || !DETAIL_ID) return;
+  if(DETAIL_KIND === 'test'){
+    try{
+      let r = await fetch('/poly/api/kripto/test/' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
+      if(!r.ok){
+        r = await fetch('/poly/api/kripto/test?detail=' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
+      }
+      const d = await r.json();
+      if(!d || !d.ok){
+        renderBookDetail(null, DETAIL_KIND);
+        const pc = document.getElementById('detail-positions');
+        if(pc) pc.innerHTML = '<div class="empty">hata: '+(d&&d.error?d.error:'yüklenemedi')+'</div>';
+        const histEl = document.getElementById('detail-history');
+        if(histEl) histEl.innerHTML = '<div class="empty">geçmiş yüklenemedi</div>';
+        return;
+      }
+      renderBookDetail(d.book, DETAIL_KIND);
+    }catch(e){
+      const pc = document.getElementById('detail-positions');
+      if(pc) pc.innerHTML = '<div class="empty">hata: '+e+'</div>';
+      const histEl = document.getElementById('detail-history');
+      if(histEl) histEl.innerHTML = '<div class="empty">geçmiş hatası: '+e+'</div>';
+    }
+    return;
+  }
   const api = DETAIL_KIND === 'algoritmalar'
     ? '/poly/api/kripto/algoritmalar'
+    : DETAIL_KIND === 'test'
+    ? '/poly/api/kripto/test'
     : '/poly/api/kripto/analizler';
   try{
     const r = await fetch(api, {cache:'no-store'});
@@ -14539,6 +14695,45 @@ async function loadBookDetail(){
     const pc = document.getElementById('detail-positions');
     if(pc) pc.innerHTML = '<div class="empty">hata: '+e+'</div>';
   }
+}
+async function loadTestBooks(){
+  try{
+    const r = await fetch('/poly/api/kripto/test', {cache:'no-store'});
+    const d = await r.json();
+    renderBooks('test-books','test-sum', d);
+    renderTestWaiting(d);
+  }catch(e){
+    document.getElementById('test-books').innerHTML = '<div class="empty">hata: '+e+'</div>';
+  }
+}
+function renderTestWaiting(d){
+  const wl = document.getElementById('test-waiting');
+  if(!wl) return;
+  const rows = (d && d.waiting) ? d.waiting : [];
+  if(!rows.length){
+    wl.innerHTML = '<div class="empty">Aday yok — tarama bekleniyor</div>';
+    return;
+  }
+  wl.innerHTML = rows.map(w => {
+    const sig = w.signal || 'NEUTRAL';
+    const dc = sig === 'UP' ? 'up' : sig === 'DOWN' ? 'down' : 'neu';
+    const cls = (w.is_open ? 'open' : '') + (w.is_top && !w.is_open ? ' top' : '');
+    const badge = w.is_open
+      ? '<span class="wait-badge open">AÇIK</span>'
+      : (w.is_top ? '<span class="wait-badge">TOP</span>' : '');
+    const tier = w.tier_label ? w.tier_label : '';
+    const name = (w.name || (w.symbol||'').replace('USDT','') || '').replace(/'/g, '');
+    const symFull = (w.symbol || (name + 'USDT')).replace(/'/g, '');
+    return `<div class="wait-item ${cls}" role="button" tabindex="0" onclick="openKriptoChart('${symFull}')" title="Grafik · ${name}">
+      <div><div class="wait-name">${name}</div>
+      <div class="wait-meta">${tier ? tier+' · ' : ''}${w.algo || '—'} · $${fmtPx(w.price)}</div></div>
+      <div class="wait-right">
+        <span class="wait-score">${Number(w.score||0)}</span>
+        <span class="wait-dir ${dc}">${w.dir_tr || 'NÖTR'}</span>
+        ${badge}
+      </div>
+    </div>`;
+  }).join('');
 }
 async function loadAlgoBooks(){
   try{
@@ -14561,18 +14756,21 @@ function initKriptoViews(){
   const gec = document.getElementById('view-gecmis');
   const algo = document.getElementById('view-algo');
   const anal = document.getElementById('view-analiz');
+  const test = document.getElementById('view-test');
   const det = document.getElementById('view-detail');
   const graf = document.getElementById('view-grafik');
   const nOv = document.getElementById('nav-kripto-overview');
   const nGe = document.getElementById('nav-kripto-gecmis');
   const nAl = document.getElementById('nav-kripto-algo');
   const nAn = document.getElementById('nav-kripto-analiz');
+  const nTe = document.getElementById('nav-kripto-test');
   const nGr = document.getElementById('nav-kripto-grafik');
-  [dash,gec,algo,anal,det,graf].forEach(el => { if(el) el.style.display = 'none'; });
-  [nOv,nGe,nAl,nAn,nGr].forEach(el => { if(el) el.classList.remove('active'); });
+  [dash,gec,algo,anal,test,det,graf].forEach(el => { if(el) el.style.display = 'none'; });
+  [nOv,nGe,nAl,nAn,nTe,nGr].forEach(el => { if(el) el.classList.remove('active'); });
   if(DETAIL_KIND){
     if(det) det.style.display = 'block';
     if(DETAIL_KIND === 'algoritmalar' && nAl) nAl.classList.add('active');
+    if(DETAIL_KIND === 'test' && nTe) nTe.classList.add('active');
     if(DETAIL_KIND === 'analizler' && nAn) nAn.classList.add('active');
     loadBookDetail();
     setInterval(loadBookDetail, 15000);
@@ -14604,6 +14802,11 @@ function initKriptoViews(){
     if(nAn) nAn.classList.add('active');
     loadAnalizBooks();
     setInterval(loadAnalizBooks, 30000);
+  } else if(IS_TEST){
+    if(test) test.style.display = 'block';
+    if(nTe) nTe.classList.add('active');
+    loadTestBooks();
+    setInterval(loadTestBooks, 60000);
   } else {
     if(dash) dash.style.display = 'block';
     if(nOv) nOv.classList.add('active');
@@ -14652,7 +14855,11 @@ def page_kripto_future():
 @app.route("/kripto/analizler/")
 @app.route("/kripto/analizler/<book_id>")
 @app.route("/kripto/analizler/<book_id>/")
-def page_kripto_sub(book_id=None, symbol=None):
+@app.route("/kripto/test")
+@app.route("/kripto/test/")
+@app.route("/kripto/test/<book_id>")
+@app.route("/kripto/test/<book_id>/")
+def page_kripto_test(book_id=None):
     if _auth_required():
         return _login_redirect()
     return KRIPTO_FUTURE_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
@@ -14708,7 +14915,16 @@ def api_crypto_futures_cr6():
     sys.path.insert(0, _DIR_KRIPTO)
     try:
         from crypto_futures_cr6 import cr6_status_block
-        return jsonify({"ok": True, **cr6_status_block()})
+        data = cr6_status_block()
+        try:
+            data["top_success"] = _kripto_test_top_success(n=6)
+        except Exception:
+            data.setdefault("top_success", [])
+        try:
+            data["coin_leaders"] = _kripto_test_coin_leaders()
+        except Exception:
+            data.setdefault("coin_leaders", [])
+        return jsonify({"ok": True, **data})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -14840,14 +15056,46 @@ def _load_agustos_runner(rel_dir: str):
     return mod
 
 
+def _kripto_test_top_success(n: int = 6) -> list:
+    """Kripto Test en başarılı algo+coin — snapshot veya canlı hesap."""
+    if _DIR_KRIPTO not in sys.path:
+        sys.path.insert(0, _DIR_KRIPTO)
+    from virtual_book import read_snapshot  # noqa: WPS433
+    snap = read_snapshot("test", max_age=900)
+    if snap and snap.get("top_success"):
+        return list(snap["top_success"])[:n]
+    mod = _load_agustos_runner("Test")
+    return mod.compute_top_success(n=n)
+
+
+def _kripto_test_coin_leaders() -> list:
+    """20 coin'in her biri için en başarılı algoritma (Kripto Test geçmişi)."""
+    if _DIR_KRIPTO not in sys.path:
+        sys.path.insert(0, _DIR_KRIPTO)
+    from virtual_book import read_snapshot  # noqa: WPS433
+    snap = read_snapshot("test", max_age=900)
+    if snap and snap.get("coin_leaders"):
+        return list(snap["coin_leaders"])
+    mod = _load_agustos_runner("Test")
+    return mod.compute_coin_leaders()
+
+
 def _agustos_status_or_snap(rel_dir: str, snap_key: str):
     """Önce disk snapshot (ms), yoksa canlı build; prewarm arka planda taze tutar."""
     if _DIR_KRIPTO not in sys.path:
         sys.path.insert(0, _DIR_KRIPTO)
     from virtual_book import read_snapshot  # noqa: WPS433
-    snap = read_snapshot(snap_key)
+    # Test: 5 dk taze snapshot yeter — yoksa 30 dk bayat bile anında dönsün (70s bekleme yok)
+    snap_ttl = 300.0 if snap_key == "test" else None
+    snap = read_snapshot(snap_key, max_age=snap_ttl)
     if snap is not None:
         return snap
+    if snap_key == "test":
+        stale = read_snapshot(snap_key, max_age=1800.0)
+        if stale is not None:
+            out = dict(stale)
+            out["_stale_snapshot"] = True
+            return out
     mod = _load_agustos_runner(rel_dir)
     return mod.status_block(with_marks=True)
 
@@ -14875,6 +15123,38 @@ def api_kripto_algoritmalar():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@app.route("/poly/api/kripto/test")
+def api_kripto_test():
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    try:
+        detail_id = (request.args.get("detail") or request.args.get("book") or "").strip()
+        if detail_id:
+            mod = _load_agustos_runner("Test")
+            book = mod.book_detail(detail_id, recent_limit=80, with_marks=True)
+            if book is None:
+                return jsonify({"ok": False, "error": "book not found"}), 404
+            return jsonify({"ok": True, "book": book})
+        return jsonify(_agustos_status_or_snap("Test", "test"))
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/kripto/test/<book_id>")
+def api_kripto_test_detail(book_id: str):
+    """Tek test defteri — açık pozisyonlar + son kapanmış işlemler."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    try:
+        mod = _load_agustos_runner("Test")
+        book = mod.book_detail(book_id, recent_limit=80, with_marks=True)
+        if book is None:
+            return jsonify({"ok": False, "error": "book not found"}), 404
+        return jsonify({"ok": True, "book": book})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route("/poly/api/kripto/analizler")
 def api_kripto_analizler():
     if _auth_required():
@@ -14890,12 +15170,13 @@ def _agustos_prewarm_loop():
     import time as _t
     _t.sleep(3)
     while True:
-        try:
-            for rel in ("Algoritmalar", "Analizler"):
+        # Test önce — 59 defter + 30 coin konsensüs yavaş; kullanıcı /kripto/test için öncelik
+        for rel in ("Test", "Algoritmalar", "Analizler"):
+            try:
                 mod = _load_agustos_runner(rel)
                 mod.refresh_status_block(with_marks=True)
-        except Exception as e:
-            print(f"[agustos prewarm] {e}", flush=True)
+            except Exception as e:
+                print(f"[agustos prewarm] {rel}: {e}", flush=True)
         _t.sleep(25)
 
 

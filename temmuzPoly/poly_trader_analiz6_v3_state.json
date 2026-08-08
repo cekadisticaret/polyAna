@@ -1,6 +1,50 @@
 {
-  "balance": 300.0,
-  "open_positions": [],
-  "total_pnl": 0.0,
-  "balance_reset_at_tr": "2026-08-06T20:01:48"
+  "balance": 148.91,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 65100.0,
+      "entry_time_tr": "2026-08-08T18:05:33.795109+03:00",
+      "entry_hour_tr": 18,
+      "entry_dow": 5,
+      "entry_is_weekend": true,
+      "amount": 12.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": false,
+      "algo_signal": "UP",
+      "algo_name": "MACD Hist. Div",
+      "pm_slug": "bitcoin-up-or-down-august-8-2026-11am-et",
+      "pm_title": "Bitcoin Up or Down - August 8, 11AM ET",
+      "pm_token_dir": "UP",
+      "pm_entry_price": 0.465,
+      "pm_spent": 12.0,
+      "pm_size": 25.81,
+      "to_win": 25.81
+    },
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 76.48,
+      "entry_time_tr": "2026-08-08T18:05:33.795109+03:00",
+      "entry_hour_tr": 18,
+      "entry_dow": 5,
+      "entry_is_weekend": true,
+      "amount": 12.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": false,
+      "algo_signal": "DOWN",
+      "algo_name": "Poly Predictor",
+      "pm_slug": "solana-up-or-down-august-8-2026-11am-et",
+      "pm_title": "Solana Up or Down - August 8, 11AM ET",
+      "pm_token_dir": "DOWN",
+      "pm_entry_price": 0.42,
+      "pm_spent": 12.0,
+      "pm_size": 28.57,
+      "to_win": 28.57
+    }
+  ],
+  "total_pnl": -151.09,
+  "balance_reset_at_tr": "2026-08-07T15:58:29.120692+03:00",
+  "balance_reset_note": "algoritma-islemler toplu reset $300"
 }

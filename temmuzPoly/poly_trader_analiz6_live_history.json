@@ -981,5 +981,31 @@
     "pm_size": 14.06,
     "pm_slug": "ethereum-up-or-down-august-5-2026-3am-et",
     "algo_name": null
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "binance_actual": "UP",
+    "win": false,
+    "pm_win": null,
+    "settle_source": "manual_sell",
+    "entry_price": 1916.09,
+    "exit_price": 1919.82,
+    "entry_time_tr": "2026-08-05T23:05:29.157380+03:00",
+    "entry_hour_tr": 23,
+    "entry_dow": 2,
+    "entry_is_weekend": false,
+    "score": 0,
+    "amount": 4.0,
+    "pm_spent": 4.08,
+    "pm_size": 29.0,
+    "pm_entry_price": 0.48,
+    "pm_order_id": "0x0a074b78eadc5568956d03774e88515f10692f59a9de2f9f042b2b25685fd7e4",
+    "pm_slug": "ethereum-up-or-down-august-5-2026-4pm-et",
+    "pm_token_dir": "DOWN",
+    "exit_time_tr": "2026-08-05T23:49:02.934726+03:00",
+    "pnl": -1.42,
+    "pm_live": true
   }
 ]

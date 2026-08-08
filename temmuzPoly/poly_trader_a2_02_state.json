@@ -1,30 +1,7 @@
 {
-  "balance": 363.13,
-  "open_positions": [
-    {
-      "symbol": "ETHUSDT",
-      "predicted_dir": "DOWN",
-      "entry_price": 1871.85,
-      "entry_time_tr": "2026-08-05T11:06:15.829869+03:00",
-      "entry_hour_tr": 11,
-      "entry_dow": 2,
-      "entry_is_weekend": false,
-      "amount": 16.0,
-      "hot_hour_boost": false,
-      "cold_hour_cut": false,
-      "algo_signal": "DOWN",
-      "algo_name": "RSI Diverjansı (14) Katı",
-      "algo_num": 2,
-      "pm_slug": "ethereum-up-or-down-august-5-2026-4am-et",
-      "pm_title": "Ethereum Up or Down - August 5, 4AM ET",
-      "pm_token_dir": "DOWN",
-      "pm_entry_price": 0.455,
-      "pm_spent": 16.0,
-      "pm_size": 35.16,
-      "to_win": 35.16
-    }
-  ],
-  "total_pnl": 63.13,
-  "balance_reset_at_tr": "2026-08-01T08:59:43.520965+03:00",
-  "balance_reset_note": "fixed to $300 (was bal=274.28 pnl=-25.72 open=0)"
+  "balance": 299.84,
+  "open_positions": [],
+  "total_pnl": -0.16,
+  "balance_reset_at_tr": "2026-08-07T15:58:29.120692+03:00",
+  "balance_reset_note": "algoritma-islemler toplu reset $300"
 }

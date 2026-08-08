@@ -1,0 +1,66 @@
+Zaman: 2026-08-02 13:42:49 +03
+Tür: DELETE
+Path: /root/aiProject/temmuzPoly/_incident_smoke.py
+
+=== Process şüpheliler ===
+pid=779 ppid=1 uid=0 exe=/usr/bin/python3.12 (deleted)
+  cmd=/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+  cwd=/
+pid=2112627 ppid=2112465 uid=0 exe=/usr/bin/dash
+  cmd=sh /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/bin/cursor-server --start-server --host 127.0.0.1 --port 0 --connection-token-file /run/user/0/cursor-remote-code.token.6ca0869f6193ac0d40fa6ae74ed01260 --teleme
+  cwd=/root
+pid=2112639 ppid=2112627 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/out/server-main.js --start-server --host 127.0.0.1 --port 0 --connection-token-file
+  cwd=/root
+pid=2112690 ppid=2112639 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/out
+  cwd=/root
+pid=2112703 ppid=2112639 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=2112756 ppid=2112690 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clie
+  cwd=/root/aiProject
+pid=2112963 ppid=2112639 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/out/bootstrap-fork --type=ptyHost --logsPath /root/.cursor-server/data/logs/2026080
+  cwd=/root
+pid=2113574 ppid=2112690 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProc
+  cwd=/root/aiProject
+pid=2124629 ppid=2124497 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/multiplex-server/e0e6952a313d583840d50b387ab40c7bba7e66b79d95be1f22b3e7fc0706ae74.js 4e0f750a-51c4-4e09-9fb3-d840b7b85177 0
+  cwd=/root
+pid=2128721 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /root/aiProject/web/poly_dashboard.py
+  cwd=/root/aiProject
+pid=2129118 ppid=2112690 uid=0 exe=/usr/bin/bash
+  cmd=/bin/bash -O extglob -c snap=$(command cat <&3) && builtin shopt -s extglob && builtin eval -- "$snap" && { builtin set +u 2>/dev/null || true; builtin eval "${__CURSOR_SANDBOX_ENV_RESTORE:-}" 2>/dev/null; builtin export PWD="$(builtin pwd)
+  cwd=/root/aiProject
+pid=2495918 ppid=1 uid=0 exe=/opt/digitalocean/bin/droplet-agent
+  cmd=/opt/digitalocean/bin/droplet-agent
+  cwd=/
+pid=3948884 ppid=1 uid=0 exe=/root/.cursor-server/bin/linux-x64/3f21b08f0b436a07be29fbfe00b304fa15553350/resources/helpers/cursorsandbox
+  cmd=/root/.cursor-server/bin/linux-x64/3f21b08f0b436a07be29fbfe00b304fa15553350/resources/helpers/cursorsandbox --policy /tmp/sandbox-policy-b18fefa2e257f948 -- /bin/bash -O extglob -c snap=$(command cat <&3) && builtin shopt -s extglob && buil
+  cwd=/root/aiProject
+
+=== git status (D) ===
+bash: line 1: rg: command not found
+
+=== audit ===
+----
+type=PROCTITLE msg=audit(08/02/26 10:42:48.854:200) : proctitle=/sbin/auditctl -R /etc/audit/audit.rules 
+type=SYSCALL msg=audit(08/02/26 10:42:48.854:200) : arch=x86_64 syscall=sendto success=yes exit=1108 a0=0x5 a1=0x7ffd6fd83ee0 a2=0x454 a3=0x0 items=0 ppid=2129552 pid=2129566 auid=root uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=(none) ses=111182 comm=auditctl exe=/usr/sbin/auditctl subj=unconfined key=(null) 
+type=CONFIG_CHANGE msg=audit(08/02/26 10:42:48.854:200) : auid=root ses=111182 subj=unconfined op=add_rule key=aiproject_del list=exit res=yes 
+----
+type=PROCTITLE msg=audit(08/02/26 10:42:48.855:201) : proctitle=/sbin/auditctl -R /etc/audit/audit.rules 
+type=PATH msg=audit(08/02/26 10:42:48.855:201) : item=0 name=/root/aiProject/ inode=537758 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=CWD msg=audit(08/02/26 10:42:48.855:201) : cwd=/root/aiProject 
+type=SOCKADDR msg=audit(08/02/26 10:42:48.855:201) : saddr={ saddr_fam=netlink nlnk-fam=16 nlnk-pid=0 } 
+type=SYSCALL msg=audit(08/02/26 10:42:48.855:201) : arch=x86_64 syscall=sendto success=yes exit=1096 a0=0x5 a1=0x7ffd6fd83ee0 a2=0x448 a3=0x0 items=1 ppid=2129552 pid=2129566 auid=root uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=(none) ses=111182 comm=auditctl exe=/usr/sbin/auditctl subj=unconfined key=(null) 
+type=CONFIG_CHANGE msg=audit(08/02/26 10:42:48.855:201) : auid=root ses=111182 subj=unconfined op=add_rule key=aiproject_del list=exit res=yes 
+----
+type=PROCTITLE msg=audit(08/02/26 10:42:48.855:202) : proctitle=/sbin/auditctl -R /etc/audit/audit.rules 
+type=PATH msg=audit(08/02/26 10:42:48.855:202) : item=0 name=/root/aiProject/.cursor/rules/ inode=538874 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=CWD msg=audit(08/02/26 10:42:48.855:202) :
+
+Tam JSON: /root/aiProject/ops/incidents/incident_20260802_134249_DELETE.json

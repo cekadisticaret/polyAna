@@ -1,0 +1,53 @@
+Zaman: 2026-08-08 16:53:17 +03
+Tür: MOVED_FROM
+Path: /root/aiProject/temmuzPoly/pm_orphan_sync.py
+
+=== Process şüpheliler ===
+pid=779 ppid=1 uid=0 exe=/usr/bin/python3.12 (deleted)
+  cmd=/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+  cwd=/
+pid=2178910 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=python3 -
+  cwd=/root
+pid=2495918 ppid=1 uid=0 exe=/opt/digitalocean/bin/droplet-agent
+  cmd=/opt/digitalocean/bin/droplet-agent
+  cwd=/
+pid=3428230 ppid=1 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/multiplex-server/e0e6952a313d583840d50b387ab40c7bba7e66b79d95be1f22b3e7fc0706ae74.js 026b6fb5-a353-471a-867a-68a2aa3e774c 0
+  cwd=/root
+pid=3469787 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /root/aiProject/web/poly_dashboard.py
+  cwd=/root/aiProject
+pid=3476172 ppid=3476014 uid=0 exe=/usr/bin/dash
+  cmd=sh /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/bin/cursor-server --start-server --host 127.0.0.1 --port 0 --connection-token-file /run/user/0/cursor-remote-code.token.6ca0869f6193ac0d40fa6ae74ed01260 --teleme
+  cwd=/root
+pid=3476181 ppid=3476172 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/out/server-main.js --start-server --host 127.0.0.1 --port 0 --connection-token-file
+  cwd=/root
+pid=3476265 ppid=3476181 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/out
+  cwd=/root
+pid=3476276 ppid=3476181 uid=0 exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node
+  cmd=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=3948884 ppid=1 uid=0 exe=/root/.cursor-server/bin/linux-x64/3f21b08f0b436a07be29fbfe00b304fa15553350/resources/helpers/cursorsandbox
+  cmd=/root/.cursor-server/bin/linux-x64/3f21b08f0b436a07be29fbfe00b304fa15553350/resources/helpers/cursorsandbox --policy /tmp/sandbox-policy-b18fefa2e257f948 -- /bin/bash -O extglob -c snap=$(command cat <&3) && builtin shopt -s extglob && buil
+  cwd=/root/aiProject
+
+=== git status (D) ===
+bash: line 1: rg: command not found
+
+=== audit ===
+----
+type=PROCTITLE msg=audit(08/08/26 13:53:13.955:304021) : proctitle=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/linux-x64/a758f2241ca9 
+type=PATH msg=audit(08/08/26 13:53:13.955:304021) : item=3 name=/tmp/ps8sTsVR inode=525424 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=CREATE cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=PATH msg=audit(08/08/26 13:53:13.955:304021) : item=2 name=/root/aiProject/PROJECT.md inode=525424 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=DELETE cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=PATH msg=audit(08/08/26 13:53:13.955:304021) : item=1 name=/root/aiProject/ inode=537758 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=PATH msg=audit(08/08/26 13:53:13.955:304021) : item=0 name=/tmp/ inode=1748 dev=fd:01 mode=dir,sticky,777 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=CWD msg=audit(08/08/26 13:53:13.955:304021) : cwd=/root 
+type=SYSCALL msg=audit(08/08/26 13:53:13.955:304021) : arch=x86_64 syscall=rename success=yes exit=0 a0=0x1ae6f460 a1=0x1ae6f47b a2=0x1 a3=0x0 items=4 ppid=3476172 pid=3476181 auid=root uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=(none) ses=146413 comm=libuv-worker exe=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node subj=unconfined key=aiproject_del 
+----
+type=PROCTITLE msg=audit(08/08/26 13:53:14.465:304022) : proctitle=/root/.cursor-server/bin/linux-x64/a758f2241ca99fecf380180b6cbdbbce0f1f42c0/node /root/.cursor-server/bin/linux-x64/a758f2241ca9 
+type=PATH msg=audit(08/08/26 13:53:14.465:304022) : item=3 name=/tmp/Oep4iRFw inode=526370 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=CREATE cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_fro
+
+Tam JSON: /root/aiProject/ops/incidents/incident_20260808_165317_MOVED_FROM.json

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""ATR kâr kilidi (trailing lock) — sadece kârda çalışır.
+"""ATR kâr kilidi (trailing lock) + zarar stop.
 
-Pozisyon dolara çevrilmiş ATR ile silahlanır; stop zirveyi takip eder, asla düşmez.
+Kâr: peak ≥ arm×ATR$ olunca stop zirveyi takip eder (asla düşmez).
+Zarar: stop_level=0 iken net uPnL ≤ −loss_stop×ATR$ ise kapat (trail */2).
 Saatlik close: kârda ve stop_level>=1 ise atlanır; kapanış stop geri çekilişinde.
 """
 from __future__ import annotations
@@ -16,6 +17,14 @@ TRAIL_ATR = float(os.environ.get("ATR_LOCK_TRAIL", "1.0"))
 LOCK1_MIN_ATR = float(os.environ.get("ATR_LOCK_MIN", "1.0"))
 # stop_level artışı için minimum stop_upnl yükselişi (atr_$ çarpanı)
 LEVEL_STEP_ATR = float(os.environ.get("ATR_LOCK_LEVEL_STEP", "0.5"))
+# Zarar stop — net uPnL bu kadar ATR$ altına inince kapat (kâr kilidi yokken)
+# 1.0x çok sıkıydı: normal saatlik/4h gürültüsünü de kesip ortalama kaybı büyütüyordu
+# (veri: 1.0x ile tetiklenen işlemler ortalama -$2.77 net, doğal kapanan işlemler -$0.07).
+LOSS_STOP_ATR = float(os.environ.get("ATR_LOSS_STOP", "2.0"))
+# Açılıştan hemen sonraki gürültü/spread sıçramasıyla tetiklenmesin
+LOSS_STOP_MIN_AGE_MIN = float(os.environ.get("ATR_LOSS_STOP_MIN_AGE", "10"))
+# Bir defterde tutulacak maksimum ATR seviye geçmişi kaydı
+LOCK_HISTORY_MAX = int(os.environ.get("ATR_LOCK_HISTORY_MAX", "20"))
 
 
 def atr_from_klines(klines: list[dict], period: int | None = None) -> float | None:
@@ -95,6 +104,7 @@ def init_lock_fields(
     out["stop_upnl"] = out.get("stop_upnl")  # None until armed
     out["stop_level"] = int(out.get("stop_level") or 0)
     out["lock_armed"] = bool(out.get("lock_armed") or False)
+    out.setdefault("lock_history", [])
     return out
 
 
@@ -106,10 +116,18 @@ def _cfg_from_pos(pos: dict) -> tuple[float, float, float, float]:
     return arm, trail, lock1, step
 
 
-def update_lock(pos: dict, upnl_net: float) -> tuple[dict, bool]:
+def update_lock(
+    pos: dict,
+    upnl_net: float,
+    *,
+    ts: str | None = None,
+    mark: float | None = None,
+) -> tuple[dict, bool]:
     """peak/stop güncelle. Dönüş: (pos, changed).
 
     stop_level: 1 = ilk silahlanma; sonra stop_upnl her ~0.5 atr_$ yükselişte +1.
+    ts/mark verilirse ve seviye artarsa lock_history'e {level, ts, stop_upnl, price}
+    eklenir (yalnızca son ulaşılan seviye kaydedilir — ara seviyeler atlanır).
     """
     out = dict(pos)
     au = float(out.get("atr_usd") or 0)
@@ -124,6 +142,7 @@ def update_lock(pos: dict, upnl_net: float) -> tuple[dict, bool]:
     prev_level = int(out.get("stop_level") or 0)
     prev_stop = out.get("stop_upnl")
     prev_stop_f = float(prev_stop) if prev_stop is not None else None
+    new_level = prev_level
 
     if prev_level == 0:
         if peak >= arm * au:
@@ -133,6 +152,7 @@ def update_lock(pos: dict, upnl_net: float) -> tuple[dict, bool]:
             out["stop_level"] = 1
             out["lock_armed"] = True
             changed = True
+            new_level = 1
     else:
         raw = peak - trail * au
         stop = max(raw, lock1 * au)
@@ -143,9 +163,20 @@ def update_lock(pos: dict, upnl_net: float) -> tuple[dict, bool]:
             gained = stop - base
             if gained >= step * au - 1e-9:
                 bumps = int(gained / (step * au)) if step * au > 0 else 1
-                out["stop_level"] = prev_level + max(1, bumps)
+                new_level = prev_level + max(1, bumps)
+                out["stop_level"] = new_level
             out["lock_armed"] = True
             changed = True
+
+    if changed and new_level > prev_level:
+        hist = list(out.get("lock_history") or [])
+        hist.append({
+            "level": new_level,
+            "ts": ts,
+            "stop_upnl": out.get("stop_upnl"),
+            "price": mark,
+        })
+        out["lock_history"] = hist[-LOCK_HISTORY_MAX:]
 
     return out, changed
 
@@ -157,6 +188,27 @@ def should_stop_out(pos: dict, upnl_net: float) -> bool:
     if level < 1 or stop is None:
         return False
     return float(upnl_net) <= float(stop)
+
+
+def loss_stop_threshold(pos: dict) -> float | None:
+    """Zarar stop eşiği (negatif uPnL). Kâr kilidi aktifken devre dışı."""
+    if int(pos.get("stop_level") or 0) >= 1:
+        return None
+    au = float(pos.get("atr_usd") or 0)
+    if au <= 0:
+        return None
+    mult = float(pos.get("loss_stop_atr") or LOSS_STOP_ATR)
+    if mult <= 0:
+        return None
+    return round(-mult * au, 6)
+
+
+def should_loss_stop(pos: dict, upnl_net: float) -> bool:
+    """Kâr kilidi yokken ATR zarar stop'u."""
+    lim = loss_stop_threshold(pos)
+    if lim is None:
+        return False
+    return float(upnl_net) <= lim
 
 
 def should_skip_hourly_close(pos: dict, upnl_net: float) -> bool:
@@ -178,6 +230,7 @@ def lock_equity(pos: dict) -> float | None:
 def lock_summary(pos: dict) -> dict[str, Any]:
     """UI / log için özet alanlar."""
     level = int(pos.get("stop_level") or 0)
+    lst = loss_stop_threshold(pos)
     return {
         "atr": pos.get("atr"),
         "atr_usd": pos.get("atr_usd"),
@@ -187,4 +240,6 @@ def lock_summary(pos: dict) -> dict[str, Any]:
         "lock_armed": bool(pos.get("lock_armed") or level >= 1),
         "lock_equity": lock_equity(pos),
         "runner": level >= 1,
+        "loss_stop_usd": lst,
+        "lock_history": pos.get("lock_history") or [],
     }

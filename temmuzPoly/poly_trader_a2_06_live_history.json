@@ -1,0 +1,22 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 64033.0,
+    "exit_price": 64049.5,
+    "entry_time_tr": "2026-08-05T14:06:23.525175+03:00",
+    "entry_hour_tr": 14,
+    "entry_dow": 2,
+    "amount": 6.0,
+    "pnl": 5.29,
+    "pm_live": true,
+    "exit_time_tr": "2026-08-05T15:02:42.256000+03:00",
+    "pm_spent": 6.21,
+    "pm_size": 11.5,
+    "pm_slug": "bitcoin-up-or-down-august-5-2026-7am-et",
+    "algo_name": "Z-Score Mean Reversion",
+    "algo_num": 6
+  }
+]

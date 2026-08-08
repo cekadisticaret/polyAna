@@ -41,6 +41,10 @@ alwaysApply: true
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Analizler/runner.py close` | `/tmp/agustos_analizler.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Analizler/runner.py open` | `/tmp/agustos_analizler.log` |
 | `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Analizler/runner.py trail` | `/tmp/agustos_analizler_trail.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/runner.py close` | `/tmp/agustos_kripto_test.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/runner.py open` | `/tmp/agustos_kripto_test.log` |
+| `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/runner.py trail` | `/tmp/agustos_kripto_test_trail.log` |
+| `*/10 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/runner.py scan` | `/tmp/agustos_kripto_test_scan.log` (10 dk'da bir erken sinyal taraması — `:05` beklemeden dolan sinyalleri yakalar) |
 | `0 21 * * *` | `temmuzPoly/poly_trader_analiz1.py daily` | `/tmp/poly_trader_analiz*.log` |
 | `0 21 * * 6` | `temmuzPoly/poly_trader_analiz{1,2,4,5,6,10,15}.py weekly` | `/tmp/poly_trader_analiz*.log` |
 | `30 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz5_midcheck.py` | `/tmp/poly_trader_analiz5_midcheck.log` |
@@ -89,6 +93,7 @@ alwaysApply: true
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** atlanır; **close** çalışır. **Sanal 15M** (110 + A2 309/316/317) + A2 Top17 + A4 + A6 + A10 + A15: aynı pencerede open kapalı; Pzt **11:00**’de devam. Dashboard Live anahtarı ayrıca açılışı kesebilir.
 - **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **11:00** İST — `open` / `close` / `trail` atlanır (kod içi). Algoritmalar sanal: **tüm 51 defter open $30×10x** (komisyon dahil net PnL); A2#05/#06/#07 + A1#11 ek olarak `real_live` işaretli. **Binance Algoritmalar Live (gerçek para)** ayrı sistem — aynı 4 algonun çoğunluk oyu, **$7×20x**; dashboard Live toggle + top-N.
+- **AgustosKripto/Test (`/kripto/test`):** Poly sinyal kaynaklarının (A1/A2 vb.) sanal Binance Futures defterleri — **$100×6x**, deposit $1000/defter, **30 coin** tarama evreni (`AgustosKripto/Test/catalog.py::TEST_SYMBOLS`). Timeframe (1h/4h) coin+algoritma bazlı geçmiş başarıya göre otomatik seçilir. ATR: kâr kilidi + `2.0×ATR$` zarar-stop (min. 10 dk pozisyon yaşı). Komisyon Binance'ten gerçek taker oranı çekilerek hesaplanır (6s dosya cache). `scan` (10 dk) `:05` beklemeden erken sinyal yakalar. Dosya kilidi (`fcntl`) ile cron çakışmaları önlenir. Ana ekranda (`/kripto`) Algoritmalar Live pozisyon kartları yerine her zaman coin bazlı en başarılı algoritma tablosu (`coin_leaders`) gösterilir.
 - **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **11:00** İST (`0 19 * * 5` / `0 8 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis). Public: `bursaapp.com/poly` · Kripto Future: `bursaapp.com/kripto`.
 - **Kaynak silinme izleme:** `aiproject-file-watch.service` → log `/tmp/aiproject_file_watch.log`; olaylar `ops/incidents/`. Geri yükleme: `ops/CRITICAL_FILE_RESTORE.md` (**09:17 / 09:23 / 13:25 İST**, 2026-08-02). audit: `ausearch -k aiproject_del -ts recent -i`

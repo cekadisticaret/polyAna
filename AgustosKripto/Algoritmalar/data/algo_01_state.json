@@ -1,33 +1,9 @@
 {
-  "balance": 294.46,
+  "balance": 259.94,
   "deposit": 300.0,
-  "open_positions": [
-    {
-      "symbol": "ADAUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "Liquidity Sweep Proxy",
-      "score": 1,
-      "qty": 1548.786784,
-      "leverage": 10,
-      "margin_usd": 30.0,
-      "entry_price": 0.1937,
-      "notional": 300.0,
-      "entry_fee": 0.15,
-      "entry_time_tr": "2026-08-05T11:05:32.046726+03:00",
-      "slot": "2026-08-05 11:00",
-      "virtual": true,
-      "atr": 0.00206636,
-      "atr_usd": 3.200353,
-      "atr_period": 14,
-      "peak_upnl": 0.4748,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false
-    }
-  ],
-  "total_pnl": -5.5457,
-  "total_commission": 11.046242,
-  "updated_at_tr": "2026-08-05T11:26:08.011277+03:00",
-  "last_open_slot": "2026-08-05 11:00"
+  "open_positions": [],
+  "total_pnl": -40.0581,
+  "total_commission": 23.948999,
+  "updated_at_tr": "2026-08-07T21:03:10.356990+03:00",
+  "last_open_slot": "2026-08-07 20:00"
 }

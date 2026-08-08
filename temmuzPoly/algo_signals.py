@@ -19,8 +19,13 @@ def fetch_klines(pair, interval="1h", limit=200):
     r = requests.get(f"{FUTURES}/fapi/v1/klines",
                      params={"symbol": pair, "interval": interval, "limit": limit},
                      timeout=10)
+    data = r.json()
+    if not isinstance(data, list):
+        code = data.get("code") if isinstance(data, dict) else None
+        msg = data.get("msg") if isinstance(data, dict) else data
+        raise RuntimeError(f"binance klines hata {pair} {interval} [{r.status_code}] code={code} msg={msg}")
     return [{"o": float(x[1]), "h": float(x[2]), "l": float(x[3]),
-             "c": float(x[4]), "v": float(x[5])} for x in r.json()]
+             "c": float(x[4]), "v": float(x[5])} for x in data]
 
 # ── Teknik göstergeler ────────────────────────────────────────────────
 

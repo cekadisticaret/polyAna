@@ -25,7 +25,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `ops/incidents/` | Silinme/eksik olay JSON+txt (process, git D, audit) |
 | `AgustosKripto/` | Kripto Future — CR6 canlı + sanal Algoritmalar/Analizler; `bursaapp.com/kripto` |
 | `AgustosKripto/virtual_book.py` | Sanal futures — net PnL + ATR kâr kilidi; cache + `/tmp/agustos_snap` |
-| `AgustosKripto/atr_profit_lock.py` | ATR trailing kâr kilidi — arm 1.7 / trail 1.0; saatlik close skip + trail stop |
+| `AgustosKripto/atr_profit_lock.py` | ATR trailing kâr kilidi (arm 1.7 / trail 1.0) + zarar-stop (`2.0×ATR$`, min 10 dk yaş); `lock_history` (seviye/zaman/fiyat) |
+| `AgustosKripto/Test/` | Poly sinyal kaynaklarının (A1/A2 vb.) sanal Binance Futures defterleri; `$100×6x` deposit $1000; 1h/4h coin+algo bazlı otomatik seçim; gerçek Binance komisyon oranı; `bursaapp.com/kripto/test` |
 | `AgustosKripto/fee_utils.py` | Binance komisyon — estimate + userTrades; brüt→net |
 | `AgustosKripto/algo_tg_notify.py` | Kripto sanal algo TG — **10. ANALİZ kanalı** (`poly_analiz_dual_core` bot); close/open özeti 🔶 SANAL |
 | `AgustosKripto/Algoritmalar/` | ALGO2+ALGO1 sanal $300; **tüm 51 defter open $30×10x** max6 (komisyon dahil net PnL); A2#05/#06/#07 + A1#11 ayrıca gerçek Binance'te $7×20x (`real_live`); hafta sonu skip; `reset` |
@@ -133,6 +134,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `AgustosKripto/crypto_futures_cr6.py close/open/trail` — **Algoritmalar Live** (gerçek Binance); Hurst+A1#11 MR+Z-Score MR+MR çoğunluk oyu; top-4 majors önce; $7×20x; ATR kâr kilidi
 - `AgustosKripto/Algoritmalar/runner.py close/open/trail/reset` — sanal $300; tüm 51 defter open $30×10x; close/open TG → **10. ANALİZ kanalı** (🔶 SANAL); Cum 22:00–Pzt 11:00 İST skip
 - `AgustosKripto/Analizler/runner.py close/open/trail` — A1–A10 + A6(Supertrend $10×15x max4) + ATR trail
+- `AgustosKripto/Test/runner.py close/open/trail/scan` — Poly sinyal kaynaklı sanal defterler; `$100×6x`; `scan` 10 dk'da bir erken sinyal yakalar (`:05` beklemeden)
 - `temmuzPoly/poly_trader_analiz15.py close/open` — **15. Analiz** BTC→A6 · ETH→A8 · SOL→A2 sanal ($300); Cum 22:00–Pzt 11:00 open kapalı
 - `temmuzPoly/poly_trader_analiz6.py weekly` — Cumartesi 21:00 haftalık 6 ısı haritası
 - `temmuzPoly/poly_trader_analiz15.py weekly` — Cumartesi 21:00 haftalık 15 ısı haritası

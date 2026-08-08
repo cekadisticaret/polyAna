@@ -383,5 +383,47 @@
     "symbol": "SOLUSDT",
     "dir": "DOWN",
     "registered_at": "2026-08-05T01:34:35.915116+03:00"
+  },
+  {
+    "pm_order_id": "0x5e7b7ab9a96157531f608c77fb85936cdee140e196683da862aa8f2307fd2fac",
+    "pm_slug": "bitcoin-up-or-down-august-5-2026-4pm-et",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-05T23:57:54.466260+03:00"
+  },
+  {
+    "pm_order_id": "0x309b66773768794f125bf9ace224649b0740b1ee362877beb181eac7a37911ff",
+    "pm_slug": "sol-updown-5m-1785963900",
+    "symbol": "SOLUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-06T00:08:13.667757+03:00"
+  },
+  {
+    "pm_order_id": "0x18fe1b36c25e017cb7a1313d55aa21b552400c159632c3baf25cf6dce9d39839",
+    "pm_slug": "solana-up-or-down-august-5-2026-5pm-et",
+    "symbol": "SOLUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-06T00:19:09.821271+03:00"
+  },
+  {
+    "pm_order_id": "0x2cf9dfcc66b30119084a6e0128e785413cf4663ccb1bbc2de90920fdd2351c0a",
+    "pm_slug": "sol-updown-5m-1785966000",
+    "symbol": "SOLUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-06T00:40:53.499165+03:00"
+  },
+  {
+    "pm_order_id": "0x61695a01a0d36d7d2399270aead7c18d4c1fe253b1c9988839d7b4efd0435057",
+    "pm_slug": "bitcoin-up-or-down-august-6-2026-8am-et",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-06T15:42:08.127892+03:00"
+  },
+  {
+    "pm_order_id": "0xe7ea24cd7f7776945bf991f79435eb02a3f6396acf9266723fc671760cb64882",
+    "pm_slug": "solana-up-or-down-august-6-2026-9am-et",
+    "symbol": "SOLUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-06T16:35:00.863011+03:00"
   }
 ]

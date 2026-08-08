@@ -1,7 +1,7 @@
 {
-  "balance": 176.63,
+  "balance": 262.06,
   "open_positions": [],
-  "total_pnl": -123.37,
-  "balance_reset_at_tr": "2026-08-01T08:59:43.520965+03:00",
-  "balance_reset_note": "fixed to $300 (was bal=216.12 pnl=-83.88 open=3)"
+  "total_pnl": -37.94,
+  "balance_reset_at_tr": "2026-08-07T15:58:29.120692+03:00",
+  "balance_reset_note": "algoritma-islemler toplu reset $300"
 }
