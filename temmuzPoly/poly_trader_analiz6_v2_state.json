@@ -1,27 +1,7 @@
 {
-  "balance": 300.0,
-  "open_positions": [
-    {
-      "symbol": "BTCUSDT",
-      "predicted_dir": "UP",
-      "entry_price": 65100.0,
-      "entry_time_tr": "2026-08-08T18:05:28.957799+03:00",
-      "entry_hour_tr": 18,
-      "entry_dow": 5,
-      "entry_is_weekend": true,
-      "amount": 16.0,
-      "hot_hour_boost": false,
-      "cold_hour_cut": false,
-      "algo_signal": "UP",
-      "algo_name": "MACD Hist. Div",
-      "pm_slug": "bitcoin-up-or-down-august-8-2026-11am-et",
-      "pm_title": "Bitcoin Up or Down - August 8, 11AM ET",
-      "pm_token_dir": "UP",
-      "pm_entry_price": 0.465,
-      "pm_spent": 16.0,
-      "pm_size": 34.41,
-      "to_win": 34.41
-    }
-  ],
-  "total_pnl": 0.0
+  "balance": 322.32,
+  "open_positions": [],
+  "total_pnl": 22.32,
+  "balance_reset_at_tr": "2026-08-09T12:04:43.868081+03:00",
+  "balance_reset_note": "algoritma-islemler bakiye $300 — geçmiş korundu"
 }

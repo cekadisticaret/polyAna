@@ -50,11 +50,18 @@
       "atr": 0.00467673,
       "atr_usd": 0.6284,
       "atr_period": 14,
-      "peak_upnl": 0.0,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
+      "peak_upnl": 1.3139,
+      "stop_upnl": 0.6855,
+      "stop_level": 1,
+      "lock_armed": true,
+      "lock_history": [
+        {
+          "level": 1,
+          "ts": null,
+          "stop_upnl": 0.6284,
+          "price": null
+        }
+      ]
     },
     {
       "strategy": "Algoritmalar Live (4)",
@@ -78,11 +85,18 @@
       "atr": 0.00434261,
       "atr_usd": 1.0073,
       "atr_period": 14,
-      "peak_upnl": 0.0071,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
+      "peak_upnl": 1.9034,
+      "stop_upnl": 1.0073,
+      "stop_level": 1,
+      "lock_armed": true,
+      "lock_history": [
+        {
+          "level": 1,
+          "ts": null,
+          "stop_upnl": 1.0073,
+          "price": null
+        }
+      ]
     },
     {
       "strategy": "Algoritmalar Live (4)",
@@ -106,39 +120,52 @@
       "atr": 0.00052617,
       "atr_usd": 0.92229,
       "atr_period": 14,
-      "peak_upnl": 0.3686,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
+      "peak_upnl": 4.7498,
+      "stop_upnl": 3.82751,
+      "stop_level": 2,
+      "lock_armed": true,
+      "lock_history": [
+        {
+          "level": 1,
+          "ts": null,
+          "stop_upnl": 0.92229,
+          "price": null
+        },
+        {
+          "level": 2,
+          "ts": null,
+          "stop_upnl": 2.25871,
+          "price": null
+        }
+      ]
     }
   ],
-  "updated_at_tr": "2026-08-08T18:52:05.308464+03:00",
+  "updated_at_tr": "2026-08-09T22:44:04.418940+03:00",
   "last_scan": [
     {
       "symbol": "SOLUSDT",
       "signal": "DOWN",
       "score": 3.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 76.34,
+      "price": 76.43,
       "tier": 1,
       "tier_label": "major"
     },
     {
       "symbol": "XRPUSDT",
-      "signal": "DOWN",
+      "signal": "UP",
       "score": 3.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 1.0438,
+      "price": 1.0336,
       "tier": 1,
       "tier_label": "major"
     },
     {
       "symbol": "DOGEUSDT",
-      "signal": "DOWN",
+      "signal": "UP",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.0711,
+      "price": 0.07006,
       "tier": 2,
       "tier_label": "alt"
     },
@@ -147,34 +174,34 @@
       "signal": "UP",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.1997,
+      "price": 0.1966,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "AVAXUSDT",
-      "signal": "DOWN",
+      "signal": "UP",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 6.54,
+      "price": 6.466,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "LINKUSDT",
-      "signal": "DOWN",
-      "score": 2.5,
-      "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 8.334,
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 8.307,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "DOTUSDT",
-      "signal": "NEUTRAL",
-      "score": 0.0,
-      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
-      "price": 0.8177,
+      "signal": "UP",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 0.8064,
       "tier": 2,
       "tier_label": "alt"
     },
@@ -183,74 +210,74 @@
       "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 45.83,
+      "price": 46.22,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "NEARUSDT",
-      "signal": "DOWN",
+      "signal": "UP",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 1.63,
+      "price": 1.618,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "SUIUSDT",
-      "signal": "DOWN",
-      "score": 2.5,
-      "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.7009,
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 0.6923,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "APTUSDT",
-      "signal": "DOWN",
+      "signal": "UP",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.6101,
+      "price": 0.598,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "ARBUSDT",
-      "signal": "DOWN",
+      "signal": "UP",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.07962,
+      "price": 0.07714,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "OPUSDT",
-      "signal": "DOWN",
+      "signal": "UP",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.0888,
+      "price": 0.0882,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "INJUSDT",
-      "signal": "UP",
-      "score": 2.5,
-      "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 4.432,
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 4.421,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "TIAUSDT",
-      "signal": "NEUTRAL",
-      "score": 0.0,
-      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
-      "price": 0.3284,
+      "signal": "UP",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 0.3263,
       "tier": 2,
       "tier_label": "alt"
     }
   ],
-  "last_scan_at_tr": "2026-08-08T18:51:49.473346+03:00",
+  "last_scan_at_tr": "2026-08-09T12:17:25.314598+03:00",
   "last_open_slot": "2026-08-08 17:00"
 }

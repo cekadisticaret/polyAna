@@ -268,6 +268,7 @@ def _build_status(*, with_marks: bool = True) -> dict:
         cfg = _cfg(m["id"])
         st = book_status(
             sp, hp, label=label(m), kl_cache=kl, live_marks=with_marks,
+            recent_limit=30,
         )
         st["id"] = m["id"]
         st["name"] = m["name"]

@@ -106,9 +106,18 @@ _WEEKEND_RESUME_12_LABELS = frozenset({
 })
 
 
+# Hafta sonu da çalışmaya devam eden sanal trader'lar (algoritma-islemler)
+_SANAL_WEEKEND_FREE_LABELS = frozenset({
+    "1. ANALİZ",
+    "6. ANALİZ",
+    "6. ANALİZ V2",
+    "6. ANALİZ V3",
+    "B1#01",
+    "B1#02",
+})
+
 _SANAL_WEEKEND_LABELS = frozenset({
-    "1. ANALİZ", "2. ANALİZ", "4. ANALİZ", "6. ANALİZ", "10. ANALİZ", "15. ANALİZ", "A2",
-    "B1#01", "B1#02",
+    "2. ANALİZ", "4. ANALİZ", "10. ANALİZ", "15. ANALİZ", "A2",
     "15M 110 SOL",
     "15M 309 Squeeze Mom",
     "15M 316 Supertrend",
@@ -118,6 +127,8 @@ _SANAL_WEEKEND_LABELS = frozenset({
 
 
 def _weekend_pause_applies(label: str) -> bool:
+    if label in _SANAL_WEEKEND_FREE_LABELS:
+        return False
     if label in _SANAL_WEEKEND_LABELS:
         return True
     # Tüm 15M sanal etiketleri (15M 309 …)

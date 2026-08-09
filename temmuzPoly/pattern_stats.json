@@ -1,0 +1,3935 @@
+{
+  "generated_at_tr": "2026-08-09T22:40:14.155139+03:00",
+  "min_n_watch": 8,
+  "min_n_confident": 20,
+  "book_trade_counts": {
+    "analiz1": 12,
+    "analiz2": 1,
+    "analiz6": 19,
+    "analiz6_v2": 30,
+    "analiz6_v3": 61,
+    "analiz15": 2,
+    "b1_01": 44,
+    "b1_02": 13,
+    "a2_02": 3,
+    "a2_03": 14,
+    "a2_04": 14,
+    "a2_05": 11,
+    "a2_06": 11,
+    "a2_07": 11,
+    "a2_08": 15,
+    "a2_09": 14,
+    "a2_10": 15,
+    "a2_11": 15,
+    "a2_12": 15,
+    "a2_13": 14,
+    "a2_14": 14,
+    "a2_15": 4,
+    "a2_16": 15,
+    "a2_17": 15,
+    "analiz10": 67
+  },
+  "pairwise": [
+    {
+      "book_a": "analiz6_v2",
+      "book_b": "analiz6_v3",
+      "n_overlap": 29,
+      "n_agree": 29,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 48.3,
+      "win_rate_when_agree_ci": [
+        31.4,
+        65.6
+      ],
+      "tier_agree": "confident",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_08",
+      "book_b": "a2_10",
+      "n_overlap": 15,
+      "n_agree": 15,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 73.3,
+      "win_rate_when_agree_ci": [
+        48.0,
+        89.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_08",
+      "book_b": "a2_11",
+      "n_overlap": 15,
+      "n_agree": 15,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 73.3,
+      "win_rate_when_agree_ci": [
+        48.0,
+        89.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_10",
+      "book_b": "a2_11",
+      "n_overlap": 15,
+      "n_agree": 15,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 73.3,
+      "win_rate_when_agree_ci": [
+        48.0,
+        89.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_12",
+      "book_b": "a2_16",
+      "n_overlap": 15,
+      "n_agree": 15,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 73.3,
+      "win_rate_when_agree_ci": [
+        48.0,
+        89.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_12",
+      "book_b": "a2_17",
+      "n_overlap": 15,
+      "n_agree": 15,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 73.3,
+      "win_rate_when_agree_ci": [
+        48.0,
+        89.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_16",
+      "book_b": "a2_17",
+      "n_overlap": 15,
+      "n_agree": 15,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 73.3,
+      "win_rate_when_agree_ci": [
+        48.0,
+        89.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_04",
+      "n_overlap": 14,
+      "n_agree": 14,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        32.6,
+        78.6
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_09",
+      "book_b": "a2_13",
+      "n_overlap": 14,
+      "n_agree": 14,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 35.7,
+      "win_rate_when_agree_ci": [
+        16.3,
+        61.2
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "analiz6_v3",
+      "n_overlap": 13,
+      "n_agree": 12,
+      "agree_rate_pct": 92.3,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        25.4,
+        74.6
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_08",
+      "n_overlap": 14,
+      "n_agree": 12,
+      "agree_rate_pct": 85.7,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        39.1,
+        86.2
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_10",
+      "n_overlap": 14,
+      "n_agree": 12,
+      "agree_rate_pct": 85.7,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        39.1,
+        86.2
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_11",
+      "n_overlap": 14,
+      "n_agree": 12,
+      "agree_rate_pct": 85.7,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        39.1,
+        86.2
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_08",
+      "n_overlap": 14,
+      "n_agree": 12,
+      "agree_rate_pct": 85.7,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        39.1,
+        86.2
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_10",
+      "n_overlap": 14,
+      "n_agree": 12,
+      "agree_rate_pct": 85.7,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        39.1,
+        86.2
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_11",
+      "n_overlap": 14,
+      "n_agree": 12,
+      "agree_rate_pct": 85.7,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        39.1,
+        86.2
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_09",
+      "book_b": "a2_14",
+      "n_overlap": 14,
+      "n_agree": 12,
+      "agree_rate_pct": 85.7,
+      "win_rate_when_agree_pct": 33.3,
+      "win_rate_when_agree_ci": [
+        13.8,
+        60.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_13",
+      "book_b": "a2_14",
+      "n_overlap": 14,
+      "n_agree": 12,
+      "agree_rate_pct": 85.7,
+      "win_rate_when_agree_pct": 33.3,
+      "win_rate_when_agree_ci": [
+        13.8,
+        60.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "b1_01",
+      "n_overlap": 17,
+      "n_agree": 11,
+      "agree_rate_pct": 64.7,
+      "win_rate_when_agree_pct": 45.5,
+      "win_rate_when_agree_ci": [
+        21.3,
+        72.0
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        18.8,
+        81.2
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        18.8,
+        81.2
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_09",
+      "n_overlap": 14,
+      "n_agree": 11,
+      "agree_rate_pct": 78.6,
+      "win_rate_when_agree_pct": 45.5,
+      "win_rate_when_agree_ci": [
+        21.3,
+        72.0
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 3,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        43.8,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        56.2
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_13",
+      "n_overlap": 14,
+      "n_agree": 11,
+      "agree_rate_pct": 78.6,
+      "win_rate_when_agree_pct": 45.5,
+      "win_rate_when_agree_ci": [
+        21.3,
+        72.0
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 3,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        43.8,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        56.2
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_09",
+      "n_overlap": 14,
+      "n_agree": 11,
+      "agree_rate_pct": 78.6,
+      "win_rate_when_agree_pct": 45.5,
+      "win_rate_when_agree_ci": [
+        21.3,
+        72.0
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 3,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        43.8,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        56.2
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_13",
+      "n_overlap": 14,
+      "n_agree": 11,
+      "agree_rate_pct": 78.6,
+      "win_rate_when_agree_pct": 45.5,
+      "win_rate_when_agree_ci": [
+        21.3,
+        72.0
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 3,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        43.8,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        56.2
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_06",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_07",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_12",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_16",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_17",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_07",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_12",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_16",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_17",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_07",
+      "book_b": "a2_12",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_07",
+      "book_b": "a2_16",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_07",
+      "book_b": "a2_17",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 72.7,
+      "win_rate_when_agree_ci": [
+        43.4,
+        90.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_08",
+      "book_b": "a2_12",
+      "n_overlap": 15,
+      "n_agree": 11,
+      "agree_rate_pct": 73.3,
+      "win_rate_when_agree_pct": 81.8,
+      "win_rate_when_agree_ci": [
+        52.3,
+        94.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_08",
+      "book_b": "a2_16",
+      "n_overlap": 15,
+      "n_agree": 11,
+      "agree_rate_pct": 73.3,
+      "win_rate_when_agree_pct": 81.8,
+      "win_rate_when_agree_ci": [
+        52.3,
+        94.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_08",
+      "book_b": "a2_17",
+      "n_overlap": 15,
+      "n_agree": 11,
+      "agree_rate_pct": 73.3,
+      "win_rate_when_agree_pct": 81.8,
+      "win_rate_when_agree_ci": [
+        52.3,
+        94.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_10",
+      "book_b": "a2_12",
+      "n_overlap": 15,
+      "n_agree": 11,
+      "agree_rate_pct": 73.3,
+      "win_rate_when_agree_pct": 81.8,
+      "win_rate_when_agree_ci": [
+        52.3,
+        94.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_10",
+      "book_b": "a2_16",
+      "n_overlap": 15,
+      "n_agree": 11,
+      "agree_rate_pct": 73.3,
+      "win_rate_when_agree_pct": 81.8,
+      "win_rate_when_agree_ci": [
+        52.3,
+        94.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_10",
+      "book_b": "a2_17",
+      "n_overlap": 15,
+      "n_agree": 11,
+      "agree_rate_pct": 73.3,
+      "win_rate_when_agree_pct": 81.8,
+      "win_rate_when_agree_ci": [
+        52.3,
+        94.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_11",
+      "book_b": "a2_12",
+      "n_overlap": 15,
+      "n_agree": 11,
+      "agree_rate_pct": 73.3,
+      "win_rate_when_agree_pct": 81.8,
+      "win_rate_when_agree_ci": [
+        52.3,
+        94.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_11",
+      "book_b": "a2_16",
+      "n_overlap": 15,
+      "n_agree": 11,
+      "agree_rate_pct": 73.3,
+      "win_rate_when_agree_pct": 81.8,
+      "win_rate_when_agree_ci": [
+        52.3,
+        94.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_11",
+      "book_b": "a2_17",
+      "n_overlap": 15,
+      "n_agree": 11,
+      "agree_rate_pct": 73.3,
+      "win_rate_when_agree_pct": 81.8,
+      "win_rate_when_agree_ci": [
+        52.3,
+        94.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        15.0,
+        85.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "b1_02",
+      "n_overlap": 11,
+      "n_agree": 11,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 54.5,
+      "win_rate_when_agree_ci": [
+        28.0,
+        78.7
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "b1_01",
+      "n_overlap": 17,
+      "n_agree": 10,
+      "agree_rate_pct": 58.8,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        23.7,
+        76.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 57.1,
+      "a_win_rate_when_disagree_ci": [
+        25.0,
+        84.2
+      ],
+      "b_win_rate_when_disagree_pct": 42.9,
+      "b_win_rate_when_disagree_ci": [
+        15.8,
+        75.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_08",
+      "n_overlap": 11,
+      "n_agree": 10,
+      "agree_rate_pct": 90.9,
+      "win_rate_when_agree_pct": 80.0,
+      "win_rate_when_agree_ci": [
+        49.0,
+        94.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_10",
+      "n_overlap": 11,
+      "n_agree": 10,
+      "agree_rate_pct": 90.9,
+      "win_rate_when_agree_pct": 80.0,
+      "win_rate_when_agree_ci": [
+        49.0,
+        94.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_11",
+      "n_overlap": 11,
+      "n_agree": 10,
+      "agree_rate_pct": 90.9,
+      "win_rate_when_agree_pct": 80.0,
+      "win_rate_when_agree_ci": [
+        49.0,
+        94.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_08",
+      "n_overlap": 11,
+      "n_agree": 10,
+      "agree_rate_pct": 90.9,
+      "win_rate_when_agree_pct": 80.0,
+      "win_rate_when_agree_ci": [
+        49.0,
+        94.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_10",
+      "n_overlap": 11,
+      "n_agree": 10,
+      "agree_rate_pct": 90.9,
+      "win_rate_when_agree_pct": 80.0,
+      "win_rate_when_agree_ci": [
+        49.0,
+        94.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_11",
+      "n_overlap": 11,
+      "n_agree": 10,
+      "agree_rate_pct": 90.9,
+      "win_rate_when_agree_pct": 80.0,
+      "win_rate_when_agree_ci": [
+        49.0,
+        94.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_07",
+      "book_b": "a2_08",
+      "n_overlap": 11,
+      "n_agree": 10,
+      "agree_rate_pct": 90.9,
+      "win_rate_when_agree_pct": 80.0,
+      "win_rate_when_agree_ci": [
+        49.0,
+        94.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_07",
+      "book_b": "a2_10",
+      "n_overlap": 11,
+      "n_agree": 10,
+      "agree_rate_pct": 90.9,
+      "win_rate_when_agree_pct": 80.0,
+      "win_rate_when_agree_ci": [
+        49.0,
+        94.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_07",
+      "book_b": "a2_11",
+      "n_overlap": 11,
+      "n_agree": 10,
+      "agree_rate_pct": 90.9,
+      "win_rate_when_agree_pct": 80.0,
+      "win_rate_when_agree_ci": [
+        49.0,
+        94.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "analiz6_v2",
+      "n_overlap": 10,
+      "n_agree": 10,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        23.7,
+        76.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "b1_02",
+      "n_overlap": 12,
+      "n_agree": 10,
+      "agree_rate_pct": 83.3,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        23.7,
+        76.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v2",
+      "book_b": "b1_02",
+      "n_overlap": 10,
+      "n_agree": 10,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        23.7,
+        76.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_14",
+      "n_overlap": 14,
+      "n_agree": 9,
+      "agree_rate_pct": 64.3,
+      "win_rate_when_agree_pct": 44.4,
+      "win_rate_when_agree_ci": [
+        18.9,
+        73.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 80.0,
+      "a_win_rate_when_disagree_ci": [
+        37.6,
+        96.4
+      ],
+      "b_win_rate_when_disagree_pct": 20.0,
+      "b_win_rate_when_disagree_ci": [
+        3.6,
+        62.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_14",
+      "n_overlap": 14,
+      "n_agree": 9,
+      "agree_rate_pct": 64.3,
+      "win_rate_when_agree_pct": 44.4,
+      "win_rate_when_agree_ci": [
+        18.9,
+        73.3
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 80.0,
+      "a_win_rate_when_disagree_ci": [
+        37.6,
+        96.4
+      ],
+      "b_win_rate_when_disagree_pct": 20.0,
+      "b_win_rate_when_disagree_ci": [
+        3.6,
+        62.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_08",
+      "book_b": "a2_09",
+      "n_overlap": 14,
+      "n_agree": 9,
+      "agree_rate_pct": 64.3,
+      "win_rate_when_agree_pct": 55.6,
+      "win_rate_when_agree_ci": [
+        26.7,
+        81.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        56.6,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        43.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_08",
+      "book_b": "a2_13",
+      "n_overlap": 14,
+      "n_agree": 9,
+      "agree_rate_pct": 64.3,
+      "win_rate_when_agree_pct": 55.6,
+      "win_rate_when_agree_ci": [
+        26.7,
+        81.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        56.6,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        43.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_09",
+      "book_b": "a2_10",
+      "n_overlap": 14,
+      "n_agree": 9,
+      "agree_rate_pct": 64.3,
+      "win_rate_when_agree_pct": 55.6,
+      "win_rate_when_agree_ci": [
+        26.7,
+        81.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        43.4
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        56.6,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_09",
+      "book_b": "a2_11",
+      "n_overlap": 14,
+      "n_agree": 9,
+      "agree_rate_pct": 64.3,
+      "win_rate_when_agree_pct": 55.6,
+      "win_rate_when_agree_ci": [
+        26.7,
+        81.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        43.4
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        56.6,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_10",
+      "book_b": "a2_13",
+      "n_overlap": 14,
+      "n_agree": 9,
+      "agree_rate_pct": 64.3,
+      "win_rate_when_agree_pct": 55.6,
+      "win_rate_when_agree_ci": [
+        26.7,
+        81.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        56.6,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        43.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_11",
+      "book_b": "a2_13",
+      "n_overlap": 14,
+      "n_agree": 9,
+      "agree_rate_pct": 64.3,
+      "win_rate_when_agree_pct": 55.6,
+      "win_rate_when_agree_ci": [
+        26.7,
+        81.1
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        56.6,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        43.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_05",
+      "n_overlap": 10,
+      "n_agree": 8,
+      "agree_rate_pct": 80.0,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_06",
+      "n_overlap": 10,
+      "n_agree": 8,
+      "agree_rate_pct": 80.0,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_07",
+      "n_overlap": 10,
+      "n_agree": 8,
+      "agree_rate_pct": 80.0,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_12",
+      "n_overlap": 14,
+      "n_agree": 8,
+      "agree_rate_pct": 57.1,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 33.3,
+      "a_win_rate_when_disagree_ci": [
+        9.7,
+        70.0
+      ],
+      "b_win_rate_when_disagree_pct": 66.7,
+      "b_win_rate_when_disagree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_16",
+      "n_overlap": 14,
+      "n_agree": 8,
+      "agree_rate_pct": 57.1,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 33.3,
+      "a_win_rate_when_disagree_ci": [
+        9.7,
+        70.0
+      ],
+      "b_win_rate_when_disagree_pct": 66.7,
+      "b_win_rate_when_disagree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_17",
+      "n_overlap": 14,
+      "n_agree": 8,
+      "agree_rate_pct": 57.1,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 33.3,
+      "a_win_rate_when_disagree_ci": [
+        9.7,
+        70.0
+      ],
+      "b_win_rate_when_disagree_pct": 66.7,
+      "b_win_rate_when_disagree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_05",
+      "n_overlap": 10,
+      "n_agree": 8,
+      "agree_rate_pct": 80.0,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_06",
+      "n_overlap": 10,
+      "n_agree": 8,
+      "agree_rate_pct": 80.0,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_07",
+      "n_overlap": 10,
+      "n_agree": 8,
+      "agree_rate_pct": 80.0,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 50.0,
+      "a_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "b_win_rate_when_disagree_pct": 50.0,
+      "b_win_rate_when_disagree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_12",
+      "n_overlap": 14,
+      "n_agree": 8,
+      "agree_rate_pct": 57.1,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 33.3,
+      "a_win_rate_when_disagree_ci": [
+        9.7,
+        70.0
+      ],
+      "b_win_rate_when_disagree_pct": 66.7,
+      "b_win_rate_when_disagree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_16",
+      "n_overlap": 14,
+      "n_agree": 8,
+      "agree_rate_pct": 57.1,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 33.3,
+      "a_win_rate_when_disagree_ci": [
+        9.7,
+        70.0
+      ],
+      "b_win_rate_when_disagree_pct": 66.7,
+      "b_win_rate_when_disagree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_17",
+      "n_overlap": 14,
+      "n_agree": 8,
+      "agree_rate_pct": 57.1,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        40.9,
+        92.9
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 33.3,
+      "a_win_rate_when_disagree_ci": [
+        9.7,
+        70.0
+      ],
+      "b_win_rate_when_disagree_pct": 66.7,
+      "b_win_rate_when_disagree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v2",
+      "book_b": "b1_01",
+      "n_overlap": 13,
+      "n_agree": 8,
+      "agree_rate_pct": 61.5,
+      "win_rate_when_agree_pct": 37.5,
+      "win_rate_when_agree_ci": [
+        13.7,
+        69.4
+      ],
+      "tier_agree": "watch",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 40.0,
+      "a_win_rate_when_disagree_ci": [
+        11.8,
+        76.9
+      ],
+      "b_win_rate_when_disagree_pct": 60.0,
+      "b_win_rate_when_disagree_ci": [
+        23.1,
+        88.2
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_08",
+      "book_b": "a2_14",
+      "n_overlap": 14,
+      "n_agree": 7,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 85.7,
+      "a_win_rate_when_disagree_ci": [
+        48.7,
+        97.4
+      ],
+      "b_win_rate_when_disagree_pct": 14.3,
+      "b_win_rate_when_disagree_ci": [
+        2.6,
+        51.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_09",
+      "book_b": "a2_12",
+      "n_overlap": 14,
+      "n_agree": 7,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 14.3,
+      "a_win_rate_when_disagree_ci": [
+        2.6,
+        51.3
+      ],
+      "b_win_rate_when_disagree_pct": 85.7,
+      "b_win_rate_when_disagree_ci": [
+        48.7,
+        97.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_09",
+      "book_b": "a2_16",
+      "n_overlap": 14,
+      "n_agree": 7,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 14.3,
+      "a_win_rate_when_disagree_ci": [
+        2.6,
+        51.3
+      ],
+      "b_win_rate_when_disagree_pct": 85.7,
+      "b_win_rate_when_disagree_ci": [
+        48.7,
+        97.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_09",
+      "book_b": "a2_17",
+      "n_overlap": 14,
+      "n_agree": 7,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 14.3,
+      "a_win_rate_when_disagree_ci": [
+        2.6,
+        51.3
+      ],
+      "b_win_rate_when_disagree_pct": 85.7,
+      "b_win_rate_when_disagree_ci": [
+        48.7,
+        97.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_10",
+      "book_b": "a2_14",
+      "n_overlap": 14,
+      "n_agree": 7,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 85.7,
+      "a_win_rate_when_disagree_ci": [
+        48.7,
+        97.4
+      ],
+      "b_win_rate_when_disagree_pct": 14.3,
+      "b_win_rate_when_disagree_ci": [
+        2.6,
+        51.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_11",
+      "book_b": "a2_14",
+      "n_overlap": 14,
+      "n_agree": 7,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 85.7,
+      "a_win_rate_when_disagree_ci": [
+        48.7,
+        97.4
+      ],
+      "b_win_rate_when_disagree_pct": 14.3,
+      "b_win_rate_when_disagree_ci": [
+        2.6,
+        51.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_12",
+      "book_b": "a2_13",
+      "n_overlap": 14,
+      "n_agree": 7,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 85.7,
+      "a_win_rate_when_disagree_ci": [
+        48.7,
+        97.4
+      ],
+      "b_win_rate_when_disagree_pct": 14.3,
+      "b_win_rate_when_disagree_ci": [
+        2.6,
+        51.3
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_13",
+      "book_b": "a2_16",
+      "n_overlap": 14,
+      "n_agree": 7,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 14.3,
+      "a_win_rate_when_disagree_ci": [
+        2.6,
+        51.3
+      ],
+      "b_win_rate_when_disagree_pct": 85.7,
+      "b_win_rate_when_disagree_ci": [
+        48.7,
+        97.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_13",
+      "book_b": "a2_17",
+      "n_overlap": 14,
+      "n_agree": 7,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 57.1,
+      "win_rate_when_agree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 14.3,
+      "a_win_rate_when_disagree_ci": [
+        2.6,
+        51.3
+      ],
+      "b_win_rate_when_disagree_pct": 85.7,
+      "b_win_rate_when_disagree_ci": [
+        48.7,
+        97.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_09",
+      "n_overlap": 10,
+      "n_agree": 6,
+      "agree_rate_pct": 60.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 75.0,
+      "a_win_rate_when_disagree_ci": [
+        30.1,
+        95.4
+      ],
+      "b_win_rate_when_disagree_pct": 25.0,
+      "b_win_rate_when_disagree_ci": [
+        4.6,
+        69.9
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_13",
+      "n_overlap": 10,
+      "n_agree": 6,
+      "agree_rate_pct": 60.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 75.0,
+      "a_win_rate_when_disagree_ci": [
+        30.1,
+        95.4
+      ],
+      "b_win_rate_when_disagree_pct": 25.0,
+      "b_win_rate_when_disagree_ci": [
+        4.6,
+        69.9
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_09",
+      "n_overlap": 10,
+      "n_agree": 6,
+      "agree_rate_pct": 60.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 75.0,
+      "a_win_rate_when_disagree_ci": [
+        30.1,
+        95.4
+      ],
+      "b_win_rate_when_disagree_pct": 25.0,
+      "b_win_rate_when_disagree_ci": [
+        4.6,
+        69.9
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_13",
+      "n_overlap": 10,
+      "n_agree": 6,
+      "agree_rate_pct": 60.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 75.0,
+      "a_win_rate_when_disagree_ci": [
+        30.1,
+        95.4
+      ],
+      "b_win_rate_when_disagree_pct": 25.0,
+      "b_win_rate_when_disagree_ci": [
+        4.6,
+        69.9
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_07",
+      "book_b": "a2_09",
+      "n_overlap": 10,
+      "n_agree": 6,
+      "agree_rate_pct": 60.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 75.0,
+      "a_win_rate_when_disagree_ci": [
+        30.1,
+        95.4
+      ],
+      "b_win_rate_when_disagree_pct": 25.0,
+      "b_win_rate_when_disagree_ci": [
+        4.6,
+        69.9
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_07",
+      "book_b": "a2_13",
+      "n_overlap": 10,
+      "n_agree": 6,
+      "agree_rate_pct": 60.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 75.0,
+      "a_win_rate_when_disagree_ci": [
+        30.1,
+        95.4
+      ],
+      "b_win_rate_when_disagree_pct": 25.0,
+      "b_win_rate_when_disagree_ci": [
+        4.6,
+        69.9
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "b1_01",
+      "book_b": "b1_02",
+      "n_overlap": 13,
+      "n_agree": 6,
+      "agree_rate_pct": 46.2,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        30.0,
+        90.3
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 42.9,
+      "a_win_rate_when_disagree_ci": [
+        15.8,
+        75.0
+      ],
+      "b_win_rate_when_disagree_pct": 57.1,
+      "b_win_rate_when_disagree_ci": [
+        25.0,
+        84.2
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "b1_01",
+      "n_overlap": 10,
+      "n_agree": 5,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 60.0,
+      "win_rate_when_agree_ci": [
+        23.1,
+        88.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 60.0,
+      "a_win_rate_when_disagree_ci": [
+        23.1,
+        88.2
+      ],
+      "b_win_rate_when_disagree_pct": 40.0,
+      "b_win_rate_when_disagree_ci": [
+        11.8,
+        76.9
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_12",
+      "book_b": "a2_14",
+      "n_overlap": 14,
+      "n_agree": 5,
+      "agree_rate_pct": 35.7,
+      "win_rate_when_agree_pct": 60.0,
+      "win_rate_when_agree_ci": [
+        23.1,
+        88.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 9,
+      "a_win_rate_when_disagree_pct": 77.8,
+      "a_win_rate_when_disagree_ci": [
+        45.3,
+        93.7
+      ],
+      "b_win_rate_when_disagree_pct": 22.2,
+      "b_win_rate_when_disagree_ci": [
+        6.3,
+        54.7
+      ],
+      "tier_disagree": "watch"
+    },
+    {
+      "book_a": "a2_14",
+      "book_b": "a2_16",
+      "n_overlap": 14,
+      "n_agree": 5,
+      "agree_rate_pct": 35.7,
+      "win_rate_when_agree_pct": 60.0,
+      "win_rate_when_agree_ci": [
+        23.1,
+        88.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 9,
+      "a_win_rate_when_disagree_pct": 22.2,
+      "a_win_rate_when_disagree_ci": [
+        6.3,
+        54.7
+      ],
+      "b_win_rate_when_disagree_pct": 77.8,
+      "b_win_rate_when_disagree_ci": [
+        45.3,
+        93.7
+      ],
+      "tier_disagree": "watch"
+    },
+    {
+      "book_a": "a2_14",
+      "book_b": "a2_17",
+      "n_overlap": 14,
+      "n_agree": 5,
+      "agree_rate_pct": 35.7,
+      "win_rate_when_agree_pct": 60.0,
+      "win_rate_when_agree_ci": [
+        23.1,
+        88.2
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 9,
+      "a_win_rate_when_disagree_pct": 22.2,
+      "a_win_rate_when_disagree_ci": [
+        6.3,
+        54.7
+      ],
+      "b_win_rate_when_disagree_pct": 77.8,
+      "b_win_rate_when_disagree_ci": [
+        45.3,
+        93.7
+      ],
+      "tier_disagree": "watch"
+    },
+    {
+      "book_a": "a2_05",
+      "book_b": "a2_14",
+      "n_overlap": 10,
+      "n_agree": 4,
+      "agree_rate_pct": 40.0,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        30.1,
+        95.4
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 66.7,
+      "a_win_rate_when_disagree_ci": [
+        30.0,
+        90.3
+      ],
+      "b_win_rate_when_disagree_pct": 33.3,
+      "b_win_rate_when_disagree_ci": [
+        9.7,
+        70.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_06",
+      "book_b": "a2_14",
+      "n_overlap": 10,
+      "n_agree": 4,
+      "agree_rate_pct": 40.0,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        30.1,
+        95.4
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 66.7,
+      "a_win_rate_when_disagree_ci": [
+        30.0,
+        90.3
+      ],
+      "b_win_rate_when_disagree_pct": 33.3,
+      "b_win_rate_when_disagree_ci": [
+        9.7,
+        70.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_07",
+      "book_b": "a2_14",
+      "n_overlap": 10,
+      "n_agree": 4,
+      "agree_rate_pct": 40.0,
+      "win_rate_when_agree_pct": 75.0,
+      "win_rate_when_agree_ci": [
+        30.1,
+        95.4
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 6,
+      "a_win_rate_when_disagree_pct": 66.7,
+      "a_win_rate_when_disagree_ci": [
+        30.0,
+        90.3
+      ],
+      "b_win_rate_when_disagree_pct": 33.3,
+      "b_win_rate_when_disagree_ci": [
+        9.7,
+        70.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_03",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_04",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_08",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_09",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_10",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_11",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_13",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_14",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_03",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_04",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_05",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_06",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_07",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_08",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_09",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_10",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_11",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_12",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_13",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_16",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_17",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_03",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_04",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_08",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_09",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_10",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_11",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_13",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_14",
+      "n_overlap": 3,
+      "n_agree": 3,
+      "agree_rate_pct": 100.0,
+      "win_rate_when_agree_pct": 66.7,
+      "win_rate_when_agree_ci": [
+        20.8,
+        93.9
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 0,
+      "a_win_rate_when_disagree_pct": null,
+      "a_win_rate_when_disagree_ci": null,
+      "b_win_rate_when_disagree_pct": null,
+      "b_win_rate_when_disagree_ci": null,
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_03",
+      "book_b": "a2_15",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_04",
+      "book_b": "a2_15",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_08",
+      "book_b": "a2_15",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_10",
+      "book_b": "a2_15",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_11",
+      "book_b": "a2_15",
+      "n_overlap": 4,
+      "n_agree": 3,
+      "agree_rate_pct": 75.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_12",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_16",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "a2_17",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6",
+      "book_b": "a2_14",
+      "n_overlap": 4,
+      "n_agree": 2,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_02",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_03",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_04",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_08",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_09",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_10",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_11",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_13",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_14",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 50.0,
+      "win_rate_when_agree_ci": [
+        9.5,
+        90.5
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_12",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_16",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_02",
+      "book_b": "a2_17",
+      "n_overlap": 3,
+      "n_agree": 2,
+      "agree_rate_pct": 66.7,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 1,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        79.3
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_12",
+      "book_b": "a2_15",
+      "n_overlap": 4,
+      "n_agree": 2,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_15",
+      "book_b": "a2_16",
+      "n_overlap": 4,
+      "n_agree": 2,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_15",
+      "book_b": "a2_17",
+      "n_overlap": 4,
+      "n_agree": 2,
+      "agree_rate_pct": 50.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 100.0,
+      "a_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "b_win_rate_when_disagree_pct": 0.0,
+      "b_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "analiz6",
+      "n_overlap": 8,
+      "n_agree": 1,
+      "agree_rate_pct": 12.5,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 7,
+      "a_win_rate_when_disagree_pct": 71.4,
+      "a_win_rate_when_disagree_ci": [
+        35.9,
+        91.8
+      ],
+      "b_win_rate_when_disagree_pct": 28.6,
+      "b_win_rate_when_disagree_ci": [
+        8.2,
+        64.1
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "analiz6_v3",
+      "n_overlap": 6,
+      "n_agree": 1,
+      "agree_rate_pct": 16.7,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 80.0,
+      "a_win_rate_when_disagree_ci": [
+        37.6,
+        96.4
+      ],
+      "b_win_rate_when_disagree_pct": 20.0,
+      "b_win_rate_when_disagree_ci": [
+        3.6,
+        62.4
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_12",
+      "n_overlap": 3,
+      "n_agree": 1,
+      "agree_rate_pct": 33.3,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_16",
+      "n_overlap": 3,
+      "n_agree": 1,
+      "agree_rate_pct": 33.3,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz6_v3",
+      "book_b": "a2_17",
+      "n_overlap": 3,
+      "n_agree": 1,
+      "agree_rate_pct": 33.3,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 2,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        65.8
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        34.2,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_09",
+      "book_b": "a2_15",
+      "n_overlap": 4,
+      "n_agree": 1,
+      "agree_rate_pct": 25.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 3,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        56.2
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_13",
+      "book_b": "a2_15",
+      "n_overlap": 4,
+      "n_agree": 1,
+      "agree_rate_pct": 25.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 3,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        56.2
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "a2_14",
+      "book_b": "a2_15",
+      "n_overlap": 4,
+      "n_agree": 1,
+      "agree_rate_pct": 25.0,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 3,
+      "a_win_rate_when_disagree_pct": 0.0,
+      "a_win_rate_when_disagree_ci": [
+        0.0,
+        56.2
+      ],
+      "b_win_rate_when_disagree_pct": 100.0,
+      "b_win_rate_when_disagree_ci": [
+        43.8,
+        100.0
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "b1_02",
+      "n_overlap": 6,
+      "n_agree": 1,
+      "agree_rate_pct": 16.7,
+      "win_rate_when_agree_pct": 100.0,
+      "win_rate_when_agree_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_agree": "noise",
+      "n_disagree": 5,
+      "a_win_rate_when_disagree_pct": 60.0,
+      "a_win_rate_when_disagree_ci": [
+        23.1,
+        88.2
+      ],
+      "b_win_rate_when_disagree_pct": 40.0,
+      "b_win_rate_when_disagree_ci": [
+        11.8,
+        76.9
+      ],
+      "tier_disagree": "noise"
+    },
+    {
+      "book_a": "analiz1",
+      "book_b": "analiz6_v2",
+      "n_overlap": 4,
+      "n_agree": 0,
+      "agree_rate_pct": 0.0,
+      "win_rate_when_agree_pct": null,
+      "win_rate_when_agree_ci": null,
+      "tier_agree": "noise",
+      "n_disagree": 4,
+      "a_win_rate_when_disagree_pct": 75.0,
+      "a_win_rate_when_disagree_ci": [
+        30.1,
+        95.4
+      ],
+      "b_win_rate_when_disagree_pct": 25.0,
+      "b_win_rate_when_disagree_ci": [
+        4.6,
+        69.9
+      ],
+      "tier_disagree": "noise"
+    }
+  ],
+  "indicator": [
+    {
+      "book": "analiz1",
+      "n_unanimous": 1,
+      "win_rate_unanimous_pct": 100.0,
+      "win_rate_unanimous_ci": [
+        20.7,
+        100.0
+      ],
+      "tier_unanimous": "noise",
+      "n_split": 11,
+      "win_rate_split_pct": 63.6,
+      "win_rate_split_ci": [
+        35.4,
+        84.8
+      ],
+      "tier_split": "watch"
+    }
+  ]
+}

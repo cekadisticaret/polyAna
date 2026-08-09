@@ -1741,6 +1741,151 @@ def api_history():
     })
 
 
+_ANALYST_KEYS: list[str] = list(dict.fromkeys(_ALGO_ISLEMLER_KEYS + ["analiz10"]))
+_ANALYST_JOURNAL_FILE = os.path.join(_DIR_POLY, "analyst_journal.jsonl")
+_ANALYST_JOURNAL_MAX_LINES = 2000
+# History alanlarında ham indikatör/skor bağlamı taşıyanlar — "neden" gerekçesi için
+_ANALYST_TRADE_FIELDS = (
+    "symbol", "predicted_dir", "actual_dir", "win", "pnl",
+    "entry_price", "exit_price", "entry_time_tr", "exit_time_tr",
+    "entry_hour_tr", "entry_dow", "entry_is_weekend",
+    "algo_signal", "algo_name", "algo_ok", "algo_num",
+    "ind_rsi_vote", "ind_rsi_ok", "ind_macd_vote", "ind_macd_ok",
+    "ind_ema_vote", "ind_ema_ok",
+    "score", "interval", "close_reason",
+)
+
+
+def _analyst_token_ok() -> bool:
+    expected = (os.environ.get("ANALYST_API_TOKEN") or "").strip()
+    if not expected:
+        return False
+    got = (request.headers.get("X-Analyst-Token") or "").strip()
+    return got == expected
+
+
+def _analyst_trade_row(t: dict) -> dict:
+    row = {k: t.get(k) for k in _ANALYST_TRADE_FIELDS if t.get(k) is not None}
+    ts = _trade_sort_ts(t)
+    if ts:
+        row["sort_ts"] = ts
+    return row
+
+
+@app.route("/poly/api/analyst/digest")
+def api_analyst_digest():
+    if not _analyst_token_ok():
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        hours = min(max(float(request.args.get("hours", 6)), 1), 168)
+    except ValueError:
+        hours = 6.0
+    try:
+        limit = min(max(int(request.args.get("limit", 25)), 1), 100)
+    except ValueError:
+        limit = 25
+    cutoff = time.time() - hours * 3600
+
+    books = []
+    for key in _ANALYST_KEYS:
+        label = _ANALYSIS_LABELS.get(key, _auto_label(key))
+        hist = _load_trader_history(key)
+        resolved = [t for t in hist if t.get("win") is not None]
+        if not resolved and not os.path.exists(_trader_history_path(key)):
+            continue
+        resolved.sort(key=_trade_sort_ts, reverse=True)
+
+        def _within_window(t: dict) -> bool:
+            ts = _trade_sort_ts(t)
+            if not ts:
+                return False
+            try:
+                dt = datetime.fromisoformat(ts)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=_TZ_TR)
+                return dt.timestamp() >= cutoff
+            except (ValueError, TypeError):
+                return False
+
+        recent = [t for t in resolved if _within_window(t)][:limit]
+        wins_all = sum(1 for t in resolved if t.get("win"))
+        pnl_all = sum(float(t.get("pnl") or 0) for t in resolved)
+        wins_recent = sum(1 for t in recent if t.get("win"))
+        pnl_recent = sum(float(t.get("pnl") or 0) for t in recent)
+        books.append({
+            "key": key,
+            "label": label,
+            "trades_all_time": len(resolved),
+            "wr_all_time": round(100.0 * wins_all / len(resolved), 1) if resolved else None,
+            "pnl_all_time": round(pnl_all, 2),
+            "trades_in_window": len(recent),
+            "wr_in_window": round(100.0 * wins_recent / len(recent), 1) if recent else None,
+            "pnl_in_window": round(pnl_recent, 2),
+            "recent_trades": [_analyst_trade_row(t) for t in recent],
+        })
+
+    return jsonify({
+        "ok": True,
+        "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
+        "hours": hours,
+        "limit": limit,
+        "books": books,
+    })
+
+
+@app.route("/poly/api/analyst/journal", methods=["GET", "POST"])
+def api_analyst_journal():
+    if not _analyst_token_ok():
+        return jsonify({"error": "unauthorized"}), 401
+
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        text = (data.get("text") or "").strip()
+        if not text:
+            return jsonify({"error": "text zorunlu"}), 400
+        tags = data.get("tags") if isinstance(data.get("tags"), list) else []
+        entry = {
+            "ts": datetime.now(_TZ_TR).isoformat(),
+            "text": text[:4000],
+            "tags": [str(t) for t in tags][:10],
+        }
+        os.makedirs(os.path.dirname(_ANALYST_JOURNAL_FILE), exist_ok=True)
+        lines: list[str] = []
+        if os.path.exists(_ANALYST_JOURNAL_FILE):
+            try:
+                with open(_ANALYST_JOURNAL_FILE, encoding="utf-8") as f:
+                    lines = f.readlines()
+            except Exception:
+                lines = []
+        lines.append(json.dumps(entry, ensure_ascii=False) + "\n")
+        if len(lines) > _ANALYST_JOURNAL_MAX_LINES:
+            lines = lines[-_ANALYST_JOURNAL_MAX_LINES:]
+        with open(_ANALYST_JOURNAL_FILE, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+        return jsonify({"ok": True, "entry": entry})
+
+    try:
+        limit = min(max(int(request.args.get("limit", 10)), 1), 200)
+    except ValueError:
+        limit = 10
+    entries: list[dict] = []
+    if os.path.exists(_ANALYST_JOURNAL_FILE):
+        try:
+            with open(_ANALYST_JOURNAL_FILE, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entries.append(json.loads(line))
+                    except Exception:
+                        continue
+        except Exception:
+            entries = []
+    entries = entries[-limit:][::-1]
+    return jsonify({"ok": True, "count": len(entries), "entries": entries})
+
+
 @app.route("/poly/api/heatmap")
 def api_heatmap():
     if _auth_required(): return redirect("/poly/login")
@@ -2927,7 +3072,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260805-close-all"
+_DASH_UI_VER = "20260809-kripto-hist2"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -3416,17 +3561,33 @@ def _patch_nav_islemler(html: str) -> str:
     return html
 
 
+_NAV_KRIPTO_SIDEBAR_LINK = (
+    '  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto\'ya Geç</a>\n'
+)
+
+
 def _patch_nav_kripto_future(html: str) -> str:
-    """Kripto linki sidebar'dan kaldır — Ayarlar altında 'Kripto'ya Geç'."""
+    """Sidebar: Ayarlar altında Kripto'ya Geç; eski üst menü /kripto linkini kaldır."""
     import re
-    html = re.sub(
-        r'\s*<a class="nav-item"[^>]*href="/kripto"[^>]*>.*?</a>\n',
-        '\n',
-        html,
-        flags=re.DOTALL,
-    )
     html = html.replace('href="/poly/kripto-future"', 'href="/kripto"')
     html = html.replace('href="/kripto-future"', 'href="/kripto"')
+    if (
+        "Ayarlar</a>\n  <a class=\"nav-item\" href=\"/kripto\">"
+        "<span class=\"nav-dot\"></span>Kripto'ya Geç</a>"
+    ) in html:
+        return html
+    html = re.sub(
+        r'\n  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto\'ya Geç</a>\n',
+        '\n',
+        html,
+    )
+    for needle in (
+        '  <a class="nav-item active" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>\n',
+        '  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>\n',
+    ):
+        if needle in html:
+            html = html.replace(needle, needle + _NAV_KRIPTO_SIDEBAR_LINK, 1)
+            break
     return html
 
 
@@ -12970,6 +13131,7 @@ body{
   <a class="nav-item" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
+  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto'ya Geç</a>
   <div class="sidebar-footer"><span class="dot"></span>A6 + A2 Poly sanal</div>
 </div>
 <div class="main">
@@ -14867,8 +15029,10 @@ function renderBookDetail(book, kind){
 }
 async function loadBookDetail(){
   if(!DETAIL_KIND || !DETAIL_ID) return;
-  if(DETAIL_KIND === 'test' || DETAIL_KIND === 'analizler'){
-    const apiBase = DETAIL_KIND === 'test' ? '/poly/api/kripto/test' : '/poly/api/kripto/analizler';
+  if(DETAIL_KIND === 'test' || DETAIL_KIND === 'analizler' || DETAIL_KIND === 'algoritmalar'){
+    const apiBase = DETAIL_KIND === 'test' ? '/poly/api/kripto/test'
+      : DETAIL_KIND === 'analizler' ? '/poly/api/kripto/analizler'
+      : '/poly/api/kripto/algoritmalar';
     try{
       let r = await fetch(apiBase + '/' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
       if(!r.ok){
@@ -15368,6 +15532,13 @@ def api_kripto_algoritmalar():
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     try:
+        detail_id = (request.args.get("detail") or request.args.get("book") or "").strip()
+        if detail_id:
+            mod = _load_agustos_runner("Algoritmalar")
+            book = mod.book_detail(detail_id, recent_limit=80, with_marks=True)
+            if book is None:
+                return jsonify({"ok": False, "error": "book not found"}), 404
+            return jsonify({"ok": True, "book": book})
         data = _agustos_status_or_snap("Algoritmalar", "algoritmalar")
         panel = (request.args.get("panel") or "").strip().lower()
         if panel in ("v2", "algo2", "a2") and isinstance(data, dict) and data.get("ok"):
@@ -15382,6 +15553,21 @@ def api_kripto_algoritmalar():
             data["total_open"] = sum(int(b.get("open_count") or 0) for b in books)
             data["panel_filter"] = "v2"
         return jsonify(data)
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/kripto/algoritmalar/<book_id>")
+def api_kripto_algoritmalar_detail(book_id: str):
+    """Tek algoritma defteri — açık pozisyonlar + son kapanmış işlemler."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    try:
+        mod = _load_agustos_runner("Algoritmalar")
+        book = mod.book_detail(book_id, recent_limit=80, with_marks=True)
+        if book is None:
+            return jsonify({"ok": False, "error": "book not found"}), 404
+        return jsonify({"ok": True, "book": book})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -15542,10 +15728,12 @@ for _html_name in (
         # Kripto kendi menüsü — Poly nav / PM Kar enjekte etme
         _html = _patch_cembot_brand(_html)
         _html = _patch_kf_theme(_html)
+        _html = _patch_cache_bust(_html)
     elif _html_name == "ALGORITMA_ISLEMLER_HTML":
         # Kendi Poly menüsü + KF görünüm
         _html = _patch_cembot_brand(_html)
         _html = _patch_kf_theme(_html)
+        _html = _patch_nav_kripto_future(_html)
     elif _html_name != "LOGIN_HTML":
         _html = _patch_sidebar_profit(_patch_sidebar_cleanup(_html))
         _html = _patch_nav_algo_islemler(_patch_nav_kripto_future(_patch_nav_islemler(_html)))

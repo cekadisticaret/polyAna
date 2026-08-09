@@ -1,0 +1,206 @@
+{
+  "ok": true,
+  "horizons": [
+    1,
+    2,
+    4,
+    8,
+    24
+  ],
+  "round_trip_fee": 0.001,
+  "results": [
+    {
+      "book": "A6",
+      "uid": "analiz6",
+      "signals": 163062,
+      "hours_sampled": 8928,
+      "horizons": [
+        {
+          "hours": 1,
+          "gross_pct": 0.0041,
+          "se_pct": 0.0065,
+          "t": 0.64,
+          "net_pct": -0.0959,
+          "beats_fee": false
+        },
+        {
+          "hours": 2,
+          "gross_pct": 0.0083,
+          "se_pct": 0.0092,
+          "t": 0.91,
+          "net_pct": -0.0917,
+          "beats_fee": false
+        },
+        {
+          "hours": 4,
+          "gross_pct": 0.0082,
+          "se_pct": 0.0128,
+          "t": 0.64,
+          "net_pct": -0.0918,
+          "beats_fee": false
+        },
+        {
+          "hours": 8,
+          "gross_pct": -0.0011,
+          "se_pct": 0.0182,
+          "t": -0.06,
+          "net_pct": -0.1011,
+          "beats_fee": false
+        },
+        {
+          "hours": 24,
+          "gross_pct": -0.0257,
+          "se_pct": 0.0303,
+          "t": -0.85,
+          "net_pct": -0.1257,
+          "beats_fee": false
+        }
+      ]
+    },
+    {
+      "book": "A6V2",
+      "uid": "analiz6_v2",
+      "signals": 163062,
+      "hours_sampled": 8928,
+      "horizons": [
+        {
+          "hours": 1,
+          "gross_pct": 0.0041,
+          "se_pct": 0.0065,
+          "t": 0.64,
+          "net_pct": -0.0959,
+          "beats_fee": false
+        },
+        {
+          "hours": 2,
+          "gross_pct": 0.0083,
+          "se_pct": 0.0092,
+          "t": 0.91,
+          "net_pct": -0.0917,
+          "beats_fee": false
+        },
+        {
+          "hours": 4,
+          "gross_pct": 0.0082,
+          "se_pct": 0.0128,
+          "t": 0.64,
+          "net_pct": -0.0918,
+          "beats_fee": false
+        },
+        {
+          "hours": 8,
+          "gross_pct": -0.0011,
+          "se_pct": 0.0182,
+          "t": -0.06,
+          "net_pct": -0.1011,
+          "beats_fee": false
+        },
+        {
+          "hours": 24,
+          "gross_pct": -0.0257,
+          "se_pct": 0.0303,
+          "t": -0.85,
+          "net_pct": -0.1257,
+          "beats_fee": false
+        }
+      ]
+    },
+    {
+      "book": "A6V3",
+      "uid": "analiz6_v3",
+      "signals": 13162,
+      "hours_sampled": 7314,
+      "horizons": [
+        {
+          "hours": 1,
+          "gross_pct": 0.0047,
+          "se_pct": 0.0063,
+          "t": 0.74,
+          "net_pct": -0.0953,
+          "beats_fee": false
+        },
+        {
+          "hours": 2,
+          "gross_pct": 0.0055,
+          "se_pct": 0.0089,
+          "t": 0.62,
+          "net_pct": -0.0945,
+          "beats_fee": false
+        },
+        {
+          "hours": 4,
+          "gross_pct": -0.0129,
+          "se_pct": 0.0125,
+          "t": -1.03,
+          "net_pct": -0.1129,
+          "beats_fee": false
+        },
+        {
+          "hours": 8,
+          "gross_pct": -0.0476,
+          "se_pct": 0.018,
+          "t": -2.64,
+          "net_pct": -0.1476,
+          "beats_fee": false
+        },
+        {
+          "hours": 24,
+          "gross_pct": -0.0384,
+          "se_pct": 0.0312,
+          "t": -1.23,
+          "net_pct": -0.1384,
+          "beats_fee": false
+        }
+      ]
+    },
+    {
+      "book": "A1",
+      "uid": "analiz1",
+      "signals": 26244,
+      "hours_sampled": 6298,
+      "horizons": [
+        {
+          "hours": 1,
+          "gross_pct": 0.0006,
+          "se_pct": 0.0121,
+          "t": 0.05,
+          "net_pct": -0.0994,
+          "beats_fee": false
+        },
+        {
+          "hours": 2,
+          "gross_pct": -0.016,
+          "se_pct": 0.0173,
+          "t": -0.92,
+          "net_pct": -0.116,
+          "beats_fee": false
+        },
+        {
+          "hours": 4,
+          "gross_pct": -0.0563,
+          "se_pct": 0.0242,
+          "t": -2.33,
+          "net_pct": -0.1563,
+          "beats_fee": false
+        },
+        {
+          "hours": 8,
+          "gross_pct": -0.0715,
+          "se_pct": 0.0339,
+          "t": -2.11,
+          "net_pct": -0.1715,
+          "beats_fee": false
+        },
+        {
+          "hours": 24,
+          "gross_pct": -0.1077,
+          "se_pct": 0.0624,
+          "t": -1.73,
+          "net_pct": -0.2077,
+          "beats_fee": false
+        }
+      ]
+    }
+  ],
+  "elapsed_sec": 282.1
+}

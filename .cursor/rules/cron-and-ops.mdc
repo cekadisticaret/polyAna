@@ -80,6 +80,8 @@ alwaysApply: true
 | `0 21 * * *` | `temmuzPoly/weekly_slot_heatmap_all.py send` (00:00 İST — A15/A4 TG) | `/tmp/weekly_slot_heatmap_all.log` |
 | `15 * * * *` | `temmuzPoly/slot_data_archive.py` (saatlik slot arşivi) | `/tmp/slot_data_archive.log` |
 | `20 * * * *` | `cd /root/aiProject && python3 twitter_bot/tweet_trade_card.py` (@tradecomio saatlik en başarılı işlem — giriş/kapanış/kâr görsel; yeni yoksa atlar) | `/tmp/twitter_trade_card.log` |
+| `0 */3 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_algo_analyst.py` (Poly Algo Analist — A1/A6 ailesi/A2#01-17/A10/A15/B1#01-02 karşılaştırmalı yorum, Anthropic API ile üretilip Telegram'a gönderilir, özet `temmuzPoly/analyst_journal.jsonl`'a kaydedilir) | `/tmp/poly_algo_analyst.log` |
+| `0 21 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_algo_daily_report.py` (Poly Algo Analist Günlük Rapor — 00:00 İST; günlük defter özeti + `algo_pattern_stats.py`'de eşik atlayan yeni "watch/confident" kalıplar; `temmuzPoly/analyst_daily_reports.jsonl`) | `/tmp/poly_algo_daily_report.log` |
 
 ## Pasif / Kaldırılmış
 | Zamanlama | Durum |
@@ -95,7 +97,7 @@ alwaysApply: true
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
 - Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk).
 - A7’nin cron’u yoktu; trader kaldırıldı.
-- **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** atlanır; **close** çalışır. **Sanal 15M** (110 + A2 309/316/317) + A2 Top17 + A4 + A6 + A10 + A15: aynı pencerede open kapalı; Pzt **11:00**’de devam. Dashboard Live anahtarı ayrıca açılışı kesebilir.
+- **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** atlanır; **close** çalışır. **Sanal 15M** (110 + A2 309/316/317) + A2 Top17 + A4 + A10 + A15: aynı pencerede open kapalı; Pzt **11:00**’de devam. **İstisna:** Poly sanal **A1** + **A6** + **A6V2** + **A6V3** + **B1#01** + **B1#02** — `algoritma-islemler` — hafta sonu da open/close devam. Dashboard Live anahtarı ayrıca açılışı kesebilir.
 - **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **11:00** İST — `open` / `close` / `trail` atlanır (kod içi). Algoritmalar sanal: **tüm 51 defter open $30×10x** (komisyon dahil net PnL); A2#05/#06/#07 + A1#11 ek olarak `real_live` işaretli. **Binance Algoritmalar Live (gerçek para)** ayrı sistem — aynı 4 algonun çoğunluk oyu, **$7×20x**; dashboard Live toggle + top-N.
 - **AgustosKripto/Test (`/kripto/test`):** Poly sinyal kaynaklarının (A1/A2 vb.) sanal Binance Futures defterleri — **$100×6x**, deposit $1000/defter, **30 coin** tarama evreni (`AgustosKripto/Test/catalog.py::TEST_SYMBOLS`). Timeframe (1h/4h) coin+algoritma bazlı geçmiş başarıya göre otomatik seçilir. ATR: kâr kilidi + `2.0×ATR$` zarar-stop (min. 10 dk pozisyon yaşı). Komisyon Binance'ten gerçek taker oranı çekilerek hesaplanır (6s dosya cache). `scan` (10 dk) `:05` beklemeden erken sinyal yakalar. Dosya kilidi (`fcntl`) ile cron çakışmaları önlenir. Ana ekranda (`/kripto`) Algoritmalar Live pozisyon kartları yerine her zaman coin bazlı en başarılı algoritma tablosu (`coin_leaders`) gösterilir.
 - **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **11:00** İST (`0 19 * * 5` / `0 8 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
@@ -136,4 +138,6 @@ tail -f /tmp/poly_analiz8_jesse.log
 tail -f /tmp/weekly_slot_heatmap_all.log
 tail -f /tmp/slot_data_archive.log
 tail -f /tmp/twitter_trade_card.log
+tail -f /tmp/poly_algo_analyst.log
+tail -f /tmp/poly_algo_daily_report.log
 ```

@@ -3402,5 +3402,24 @@
     "dry_run": true,
     "order_id": "DRY-CLOSE-1786201355",
     "partial": false
+  },
+  {
+    "symbol": "APTUSDT",
+    "side": "LONG",
+    "qty": 164.4,
+    "entry_price": 0.6082000000000001,
+    "exit_price": 0.60852155,
+    "pnl_gross": 0.0529,
+    "commission": 0.09998,
+    "entry_fee": 0.049994,
+    "exit_fee": 0.049986,
+    "pnl": -0.0471,
+    "leverage": 10,
+    "margin_usd": 10.0,
+    "entry_time_tr": "2026-08-08T21:16:32.932458+03:00",
+    "exit_time_tr": "2026-08-08T21:17:13.434929+03:00",
+    "dry_run": false,
+    "order_id": 20481688540,
+    "partial": false
   }
 ]

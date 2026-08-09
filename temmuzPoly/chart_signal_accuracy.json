@@ -1,69 +1,123 @@
 {
   "MC": {
-    "total": 640,
-    "correct": 387,
+    "total": 684,
+    "correct": 408,
     "by_sym": {
       "BTC": {
-        "total": 215,
-        "correct": 127
+        "total": 227,
+        "correct": 131
       },
       "ETH": {
-        "total": 209,
-        "correct": 126
+        "total": 223,
+        "correct": 135
       },
       "SOL": {
-        "total": 216,
-        "correct": 134
+        "total": 234,
+        "correct": 142
       }
     }
   },
   "YT": {
-    "total": 1049,
-    "correct": 668,
+    "total": 1131,
+    "correct": 724,
     "by_sym": {
       "BTC": {
-        "total": 352,
-        "correct": 228
+        "total": 380,
+        "correct": 246
       },
       "ETH": {
-        "total": 352,
-        "correct": 220
+        "total": 380,
+        "correct": 240
       },
       "SOL": {
-        "total": 345,
-        "correct": 220
+        "total": 371,
+        "correct": 238
       }
     }
   },
   "TAHMIN": {
-    "total": 767,
-    "correct": 509,
+    "total": 833,
+    "correct": 552,
     "by_sym": {
       "BTC": {
-        "total": 261,
-        "correct": 178
+        "total": 284,
+        "correct": 192
       },
       "ETH": {
-        "total": 261,
-        "correct": 165
+        "total": 287,
+        "correct": 183
       },
       "SOL": {
-        "total": 245,
-        "correct": 166
+        "total": 262,
+        "correct": 177
       }
     }
   },
   "TAHMIN2": {
-    "total": 913,
-    "correct": 561,
+    "total": 990,
+    "correct": 608,
     "by_sym": {
       "BTC": {
-        "total": 304,
-        "correct": 177
+        "total": 329,
+        "correct": 194
       },
       "ETH": {
-        "total": 312,
-        "correct": 195
+        "total": 338,
+        "correct": 209
+      },
+      "SOL": {
+        "total": 323,
+        "correct": 205
+      }
+    }
+  },
+  "T2_LM": {
+    "total": 721,
+    "correct": 499,
+    "by_sym": {
+      "BTC": {
+        "total": 212,
+        "correct": 146
+      },
+      "ETH": {
+        "total": 246,
+        "correct": 167
+      },
+      "SOL": {
+        "total": 263,
+        "correct": 186
+      }
+    }
+  },
+  "T2_ST": {
+    "total": 626,
+    "correct": 376,
+    "by_sym": {
+      "BTC": {
+        "total": 202,
+        "correct": 119
+      },
+      "ETH": {
+        "total": 228,
+        "correct": 136
+      },
+      "SOL": {
+        "total": 196,
+        "correct": 121
+      }
+    }
+  },
+  "T2_ADX": {
+    "total": 879,
+    "correct": 551,
+    "by_sym": {
+      "BTC": {
+        "total": 287,
+        "correct": 171
+      },
+      "ETH": {
+        "total": 295,
+        "correct": 191
       },
       "SOL": {
         "total": 297,
@@ -71,93 +125,39 @@
       }
     }
   },
-  "T2_LM": {
-    "total": 701,
-    "correct": 487,
+  "T2_LZ": {
+    "total": 876,
+    "correct": 436,
     "by_sym": {
       "BTC": {
-        "total": 210,
+        "total": 285,
         "correct": 145
       },
       "ETH": {
-        "total": 241,
-        "correct": 164
+        "total": 295,
+        "correct": 141
       },
       "SOL": {
-        "total": 250,
-        "correct": 178
-      }
-    }
-  },
-  "T2_ST": {
-    "total": 579,
-    "correct": 349,
-    "by_sym": {
-      "BTC": {
-        "total": 186,
-        "correct": 111
-      },
-      "ETH": {
-        "total": 212,
-        "correct": 127
-      },
-      "SOL": {
-        "total": 181,
-        "correct": 111
-      }
-    }
-  },
-  "T2_ADX": {
-    "total": 807,
-    "correct": 502,
-    "by_sym": {
-      "BTC": {
-        "total": 261,
-        "correct": 153
-      },
-      "ETH": {
-        "total": 270,
-        "correct": 175
-      },
-      "SOL": {
-        "total": 276,
-        "correct": 174
-      }
-    }
-  },
-  "T2_LZ": {
-    "total": 808,
-    "correct": 397,
-    "by_sym": {
-      "BTC": {
-        "total": 261,
-        "correct": 128
-      },
-      "ETH": {
-        "total": 271,
-        "correct": 130
-      },
-      "SOL": {
-        "total": 276,
-        "correct": 139
+        "total": 296,
+        "correct": 150
       }
     }
   },
   "T2_CVD": {
-    "total": 926,
-    "correct": 519,
+    "total": 1001,
+    "correct": 560,
     "by_sym": {
       "BTC": {
-        "total": 307,
-        "correct": 169
+        "total": 335,
+        "correct": 185
       },
       "ETH": {
-        "total": 316,
-        "correct": 177
+        "total": 341,
+        "correct": 191
       },
       "SOL": {
-        "total": 303,
-        "correct": 173
+        "total": 325,
+        "correct": 184
       }
     }
   }

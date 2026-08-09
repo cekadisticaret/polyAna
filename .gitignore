@@ -2,6 +2,9 @@
 crypto-news-monitor/node_modules/
 crypto-news-monitor/data/
 twitter_bot/data/
+AgustosKripto/Test/data/minute_cache/
+AgustosKripto/Test/data/maker_events_*.json
+AgustosKripto/Test/data/maker_sim_*.json
 freqtrade/.git/
 freqtrade/.venv/
 # freqtrade upstream — yalnizca aiProject wrapper dosyalari commit edilir
@@ -41,6 +44,8 @@ analiz/state.json
 *.bak[0-9]*
 temmuzPoly/poly_trader_analiz1_state.json
 temmuzPoly/poly_trader_analiz1_history.json
+temmuzPoly/analyst_journal.jsonl
+temmuzPoly/analyst_daily_reports.jsonl
 temmuzPoly/poly_trader_analiz2_state.json
 temmuzPoly/poly_trader_analiz2_history.json
 temmuzPoly/poly_trader_5m_sol_110_state.json

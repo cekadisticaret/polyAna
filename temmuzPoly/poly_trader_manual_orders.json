@@ -425,5 +425,12 @@
     "symbol": "SOLUSDT",
     "dir": "UP",
     "registered_at": "2026-08-06T16:35:00.863011+03:00"
+  },
+  {
+    "pm_order_id": "0x1baf1fc7de034b272424e3f6336d1a598b3ba0c552b28ebf40f8ca819acae2d2",
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-1pm-et",
+    "symbol": "BTCUSDT",
+    "dir": "UP",
+    "registered_at": "2026-08-08T20:44:22.804603+03:00"
   }
 ]

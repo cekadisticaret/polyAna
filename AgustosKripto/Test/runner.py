@@ -585,6 +585,7 @@ def _build_status(*, with_marks: bool = True) -> dict:
             label=label(book),
             kl_cache=kl if with_marks else {},
             live_marks=with_marks,
+            recent_limit=30,
         )
         st["id"] = book["uid"]
         st["name"] = book["name"]

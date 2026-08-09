@@ -33,12 +33,19 @@ BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
 CHAT_ID = "830754964"
 
 
-def _portfolio() -> tuple[float, float, float]:
-    """(cash_usdc, positions_usd, portfolio_usd)"""
-    cash = pm_get_balance()
+def _portfolio() -> tuple[float, float, float] | None:
+    """(cash_usdc, positions_usd, portfolio_usd) — API hatasında None."""
+    try:
+        cash = pm_get_balance()
+    except Exception as e:
+        print(f"[PM BALANCE] bakiye okunamadı: {e}", file=sys.stderr)
+        return None
+    if cash < 0:
+        print("[PM BALANCE] POLY_PRIVATE_KEY yok veya API hatası — kayıt atlanıyor", file=sys.stderr)
+        return None
     pos_val = 0.0
     funder = os.getenv("POLY_FUNDER", "")
-    if funder and cash >= 0:
+    if funder:
         try:
             url = f"https://data-api.polymarket.com/positions?user={funder}&sizeThreshold=0.01"
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -47,8 +54,6 @@ def _portfolio() -> tuple[float, float, float]:
                     pos_val += float(p.get("currentValue") or 0)
         except Exception as e:
             print(f"[PM BALANCE] positions API: {e}", file=sys.stderr)
-    if cash < 0:
-        cash = 0.0
     return round(cash, 2), round(pos_val, 2), round(cash + pos_val, 2)
 
 
@@ -280,7 +285,11 @@ def _midnight_message(now_tr: datetime, cash: float, pos: float, total: float, p
 
 def run() -> None:
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    cash, pos, total = _portfolio()
+    port = _portfolio()
+    if port is None:
+        print(f"[PM BALANCE] {now_tr.strftime('%H:%M')} İST — API hatası, saatlik kayıt atlandı")
+        return
+    cash, pos, total = port
 
     data = _load_data()
     record = {

@@ -82,6 +82,61 @@ def label(book: dict) -> str:
     return f"{panel}#{int(book['id']):02d} {book.get('title') or book.get('name')}"
 
 
+def find_book(book_id: str) -> dict | None:
+    """UID, book_key veya algo numarası ile defter bul."""
+    if not book_id:
+        return None
+    bid = str(book_id).lower().strip()
+    for book in ALL_BOOKS:
+        uid = str(book.get("uid", "")).lower()
+        bk = str(book.get("book_key", "")).lower()
+        num = str(book.get("id", ""))
+        if bid in (uid, bk, num):
+            return book
+        if num.isdigit():
+            if bid in (f"algo_{int(num):02d}", f"a{num}", f"a1_{num}", f"a2_{num}"):
+                return book
+            if bid.lstrip("0") == num.lstrip("0"):
+                return book
+    return None
+
+
+def book_detail(book_id: str, *, recent_limit: int = 30, with_marks: bool = True) -> dict | None:
+    """Tek defter — açık pozisyonlar + son kapanmış işlemler."""
+    book = find_book(book_id)
+    if not book:
+        return None
+    sp, hp = _paths(book)
+    kl = {}
+    if with_marks:
+        opens = load_state(sp).get("open_positions") or []
+        syms = sorted({p.get("symbol") for p in opens if p.get("symbol")})
+        if syms:
+            kl = fetch_all_klines(syms, limit=2)
+    cfg = _cfg(book)
+    st = book_status(
+        sp, hp,
+        label=label(book),
+        kl_cache=kl,
+        live_marks=with_marks,
+        recent_limit=recent_limit,
+    )
+    st["id"] = book["uid"]
+    st["name"] = book["name"]
+    st["title"] = book.get("title") or book["name"]
+    st["category"] = book.get("category") or ""
+    st["panel"] = book["panel"]
+    st["algo_num"] = book["id"]
+    st["book_key"] = book["book_key"]
+    st["margin_usd"] = cfg["margin_usd"]
+    st["leverage"] = cfg["leverage"]
+    st["max_opens"] = cfg["max_opens"]
+    st["open_active"] = bool(cfg["open_active"])
+    st["real_live"] = book["book_key"] in REAL_LIVE_KEYS
+    st["deposit"] = DEPOSIT
+    return st
+
+
 def _skip_weekend(cmd: str) -> dict | None:
     if not in_weekend_pause_tr():
         return None
@@ -271,6 +326,7 @@ def _build_status(*, with_marks: bool = True) -> dict:
             label=label(book),
             kl_cache=kl,
             live_marks=with_marks,
+            recent_limit=30,
         )
         st["id"] = book["uid"]
         st["name"] = book["name"]
