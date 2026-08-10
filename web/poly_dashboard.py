@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _DIR_KRIPTO = os.path.join(os.path.dirname(__file__), "..", "AgustosKripto")
+_DIR_SONNET = os.path.join(os.path.dirname(__file__), "..", "Sonnet")
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _ENV_FILE = os.path.join(_ROOT, ".env")
 if os.path.exists(_ENV_FILE):
@@ -39,6 +40,7 @@ _HEATMAP_SYMS = {
     "analiz15": ["BTC", "ETH", "SOL"],
     "b1_01": ["BTC", "ETH", "SOL"],
     "b1_02": ["BTC", "ETH", "SOL"],
+    "b1_mum": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
@@ -106,14 +108,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02",
+    "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02",
+    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02", "b1_mum",
     "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -134,6 +136,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz15":   "15. Analiz",
     "b1_01":      "B1#01",
     "b1_02":      "B1#02",
+    "b1_mum":     "B1#03 MUM ANALİZ",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -157,13 +160,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz6_v2": 300,
-    "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300,
+    "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300, "b1_mum": 300,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -207,6 +210,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz15": "A15",
     "b1_01": "B1#01",
     "b1_02": "B1#02",
+    "b1_mum": "B1#03 MUM",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -230,10 +234,10 @@ for _num, _name, *_rest in _A2_META:
     _OVERVIEW_INIT_BAL[_a2k] = 300
     _OVERVIEW_SHORT_LABELS[_a2k] = f"A2#{_num:02d}"
 
-# Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02 + A2 Top-17
+# Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02",
+    "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02", "b1_mum",
 ] + _A2_KEYS
 
 _HEATMAP_ORDER.extend(_A2_KEYS)
@@ -252,6 +256,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("analiz15",   "15. Analiz",            300,  "BTC→A6 · ETH→A8 sıkı · SOL→A2"),
     ("b1_01",      "B1#01",                 300,  "Sembol bazlı en iyi motor birleşimi"),
     ("b1_02",      "B1#02",                 300,  "BTC→A15 · ETH→A6 · SOL→A2#01"),
+    ("b1_mum",     "B1#03 MUM ANALİZ",      300,  "Sonnet mum pattern confluence · 1h · ±15"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
@@ -1833,6 +1838,146 @@ def api_analyst_digest():
     })
 
 
+_ANALYST_FEED_FILE = os.path.join(_DIR_POLY, "analyst_feed.jsonl")
+_ANALYST_FEED_MAX_LINES = 500
+_ANALYST_TELEGRAM_LOG_FILE = os.path.join(_DIR_POLY, "analyst_telegram_log.jsonl")
+
+
+def _append_analyst_feed_line(entry: dict) -> None:
+    os.makedirs(os.path.dirname(_ANALYST_FEED_FILE), exist_ok=True)
+    lines: list[str] = []
+    if os.path.exists(_ANALYST_FEED_FILE):
+        try:
+            with open(_ANALYST_FEED_FILE, encoding="utf-8") as f:
+                lines = f.readlines()
+        except Exception:
+            lines = []
+    lines.append(json.dumps(entry, ensure_ascii=False) + "\n")
+    if len(lines) > _ANALYST_FEED_MAX_LINES:
+        lines = lines[-_ANALYST_FEED_MAX_LINES:]
+    with open(_ANALYST_FEED_FILE, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
+
+def _read_analyst_feed_lines() -> list[dict]:
+    entries: list[dict] = []
+    if os.path.exists(_ANALYST_FEED_FILE):
+        try:
+            with open(_ANALYST_FEED_FILE, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entries.append(json.loads(line))
+                    except Exception:
+                        continue
+        except Exception:
+            entries = []
+    return entries
+
+
+def _parse_telegram_feed_text(ts: str, text: str) -> dict | None:
+    raw = (text or "").strip()
+    if not raw:
+        return None
+    lines = raw.splitlines()
+    title = lines[0].strip() if lines else "Poly Algo Analist"
+    body = "\n".join(lines[2:]).strip() if len(lines) > 2 else raw
+    if not body:
+        body = raw
+    kind = "daily" if "Günlük Rapor" in title else "periodic"
+    return {
+        "ts": ts,
+        "kind": kind,
+        "title": title.lstrip("\U0001f9e0📅 ").strip() or "Poly Algo Analist",
+        "body": body,
+        "tags": [],
+        "source": "telegram_log",
+    }
+
+
+def _telegram_log_feed_entries() -> list[dict]:
+    entries: list[dict] = []
+    if not os.path.exists(_ANALYST_TELEGRAM_LOG_FILE):
+        return entries
+    try:
+        with open(_ANALYST_TELEGRAM_LOG_FILE, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    row = json.loads(line)
+                except Exception:
+                    continue
+                parsed = _parse_telegram_feed_text(row.get("ts") or "", row.get("text") or "")
+                if parsed:
+                    entries.append(parsed)
+    except Exception:
+        return []
+    return entries
+
+
+def _journal_fallback_feed_entries() -> list[dict]:
+    """Journal kayıtlarından feed (tam metin varsa body, yoksa özet)."""
+    entries: list[dict] = []
+    if not os.path.exists(_ANALYST_JOURNAL_FILE):
+        return entries
+    try:
+        with open(_ANALYST_JOURNAL_FILE, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    row = json.loads(line)
+                except Exception:
+                    continue
+                ts = row.get("ts") or ""
+                body = (row.get("body") or row.get("text") or "").strip()
+                if not body:
+                    continue
+                try:
+                    dt = datetime.fromisoformat(ts)
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=_TZ_TR)
+                    title_ts = dt.strftime("%d.%m %H:%M")
+                except (ValueError, TypeError):
+                    title_ts = ""
+                entries.append({
+                    "ts": ts,
+                    "kind": "periodic",
+                    "title": f"Poly Algo Analist — {title_ts}" if title_ts else "Poly Algo Analist",
+                    "body": body,
+                    "tags": row.get("tags") if isinstance(row.get("tags"), list) else [],
+                    "source": "journal",
+                })
+    except Exception:
+        return []
+    return entries
+
+
+def _merge_analyst_feed_entries(*sources: list[dict]) -> list[dict]:
+    merged: dict[str, dict] = {}
+    for source in sources:
+        for entry in source:
+            ts = entry.get("ts") or ""
+            if not ts:
+                continue
+            prev = merged.get(ts)
+            if not prev:
+                merged[ts] = dict(entry)
+                continue
+            prev_body = (prev.get("body") or "").strip()
+            new_body = (entry.get("body") or "").strip()
+            if len(new_body) > len(prev_body):
+                merged[ts] = dict(entry)
+            elif len(new_body) == len(prev_body) and entry.get("source") == "telegram_log":
+                merged[ts] = dict(entry)
+    return sorted(merged.values(), key=lambda e: e.get("ts") or "")
+
+
 @app.route("/poly/api/analyst/journal", methods=["GET", "POST"])
 def api_analyst_journal():
     if not _analyst_token_ok():
@@ -1841,14 +1986,21 @@ def api_analyst_journal():
     if request.method == "POST":
         data = request.get_json(silent=True) or {}
         text = (data.get("text") or "").strip()
+        body_full = (data.get("body") or "").strip()
+        title = (data.get("title") or "").strip()
+        kind = (data.get("kind") or "periodic").strip()[:32]
+        if not text and not body_full:
+            return jsonify({"error": "text veya body zorunlu"}), 400
         if not text:
-            return jsonify({"error": "text zorunlu"}), 400
+            text = body_full[:400]
         tags = data.get("tags") if isinstance(data.get("tags"), list) else []
         entry = {
             "ts": datetime.now(_TZ_TR).isoformat(),
             "text": text[:4000],
             "tags": [str(t) for t in tags][:10],
         }
+        if body_full:
+            entry["body"] = body_full[:12000]
         os.makedirs(os.path.dirname(_ANALYST_JOURNAL_FILE), exist_ok=True)
         lines: list[str] = []
         if os.path.exists(_ANALYST_JOURNAL_FILE):
@@ -1862,6 +2014,15 @@ def api_analyst_journal():
             lines = lines[-_ANALYST_JOURNAL_MAX_LINES:]
         with open(_ANALYST_JOURNAL_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
+        if body_full:
+            feed_entry = {
+                "ts": entry["ts"],
+                "kind": kind,
+                "title": title[:200] or "Poly Algo Analist",
+                "body": body_full[:12000],
+                "tags": entry["tags"],
+            }
+            _append_analyst_feed_line(feed_entry)
         return jsonify({"ok": True, "entry": entry})
 
     try:
@@ -1884,6 +2045,49 @@ def api_analyst_journal():
             entries = []
     entries = entries[-limit:][::-1]
     return jsonify({"ok": True, "count": len(entries), "entries": entries})
+
+
+@app.route("/poly/api/analyst/feed", methods=["GET", "POST"])
+def api_analyst_feed():
+    if request.method == "POST":
+        if not _analyst_token_ok():
+            return jsonify({"error": "unauthorized"}), 401
+        data = request.get_json(silent=True) or {}
+        title = (data.get("title") or "").strip()
+        body = (data.get("body") or "").strip()
+        kind = (data.get("kind") or "periodic").strip()[:32]
+        if not body:
+            return jsonify({"error": "body zorunlu"}), 400
+        tags = data.get("tags") if isinstance(data.get("tags"), list) else []
+        entry = {
+            "ts": datetime.now(_TZ_TR).isoformat(),
+            "kind": kind,
+            "title": title[:200] or "Poly Algo Analist",
+            "body": body[:12000],
+            "tags": [str(t) for t in tags][:10],
+        }
+        _append_analyst_feed_line(entry)
+        return jsonify({"ok": True, "entry": entry})
+
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        limit = min(max(int(request.args.get("limit", 50)), 1), 200)
+    except ValueError:
+        limit = 50
+
+    entries = _merge_analyst_feed_entries(
+        _read_analyst_feed_lines(),
+        _telegram_log_feed_entries(),
+        _journal_fallback_feed_entries(),
+    )
+    entries = entries[-limit:][::-1]
+    return jsonify({
+        "ok": True,
+        "count": len(entries),
+        "entries": entries,
+        "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
+    })
 
 
 @app.route("/poly/api/heatmap")
@@ -2515,6 +2719,11 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
         panel = "poly_b1"
         name = short or label
         title = "BTC→A15 · ETH→A6 · SOL→A2#01"
+    elif key == "b1_mum":
+        category = "Poly sanal · B1#03 MUM ANALİZ"
+        panel = "poly_b1"
+        name = short or label
+        title = "Sonnet mum confluence · 1h"
     else:
         category = "Poly sanal · A2 Top-17"
         panel = "poly_a2"
@@ -3072,7 +3281,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260809-kripto-hist2"
+_DASH_UI_VER = "20260810-candle-chart-overlay-v2"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -3599,6 +3808,24 @@ def _patch_nav_algo_islemler(html: str) -> str:
     needles = [
         '<a class="nav-item active" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>\n',
         '<a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>\n',
+    ]
+    for needle in needles:
+        if needle in html:
+            return html.replace(needle, needle + '  ' + link, 1)
+    return html
+
+
+def _patch_nav_yapay_zeka_analiz(html: str) -> str:
+    """Analizler altına Yapay Zeka Analiz (mum/grafik) menü linki."""
+    if 'href="/poly/yapay-zeka-analiz"' in html:
+        return html
+    link = (
+        '<a class="nav-item" href="/poly/yapay-zeka-analiz">'
+        '<span class="nav-dot"></span>Yapay Zeka Analiz</a>\n  '
+    )
+    needles = [
+        '<a class="nav-item active" href="/analizler"><span class="nav-dot"></span>Analizler</a>\n',
+        '<a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>\n',
     ]
     for needle in needles:
         if needle in html:
@@ -5246,6 +5473,32 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .algo-badge.yt{background:#0f1a2a;color:#67e8f9;border:1px solid #0891b2}
 .algo-badge.yt.up{background:#0f2a24;color:#2dd4bf;border:1px solid #0d9488}
 .algo-badge.yt.down{background:#2a1414;color:#f87171;border:1px solid #b91c1c}
+.algo-badge.cp{background:#1a1528;color:#c4b5fd;border:1px solid #6d28d9}
+.algo-badge.cp.up{background:#142814;color:#4ade80;border:1px solid #22c55e}
+.algo-badge.cp.down{background:#2a1414;color:#f87171;border:1px solid #ef4444}
+.candle-analysis{font-size:10px;color:#777;margin-top:4px;line-height:1.45}
+.candle-analysis b{color:#bbb;font-weight:700}
+.candle-report-wrap{margin-top:0;flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.candle-report-toggle{font-size:10px;font-weight:700;color:#a78bfa;background:#1a1528;border:1px solid #4c1d95;border-radius:8px;padding:4px 10px;cursor:pointer;flex-shrink:0;margin-bottom:6px}
+.candle-report-toggle:hover{background:#251a38}
+.candle-report{flex:1;min-height:0;padding:10px 12px;background:#0d0d12;border:1px solid #222;border-radius:10px;font-size:10px;line-height:1.5;color:#9ca3af;white-space:pre-wrap;overflow:auto;font-family:ui-monospace,monospace}
+.candle-report[hidden]{display:none}
+.grafik-body-split{flex:1;display:flex;gap:12px;min-height:0;overflow:hidden;width:100%}
+.grafik-report-side{flex:0 0 28%;max-width:28%;min-width:240px;display:flex;flex-direction:column;min-height:0}
+.grafik-chart-side{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
+.grafik-report-panel{flex:1;display:flex;flex-direction:column;background:#111;border:1px solid #1e1e1e;border-radius:16px;padding:12px 14px;min-height:0;overflow:hidden}
+.grafik-report-title{font-size:11px;font-weight:800;color:#a78bfa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;flex-shrink:0}
+.grafik-chart-side .chart-panel-full{flex:1;min-height:0}
+@media(min-width:769px){
+  .grafik-report-side .candle-report-toggle{display:none}
+  .grafik-report-side .candle-report{display:block!important}
+}
+@media(max-width:768px){
+  .grafik-body-split{flex-direction:column;overflow:auto}
+  .grafik-report-side{flex:none;max-width:none;min-width:0;max-height:220px}
+  .grafik-report-panel{max-height:220px}
+  .candle-report{max-height:160px}
+}
 .dir-verdict{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
 .dir-verdict .dir-pill{font-size:14px;font-weight:900;padding:6px 14px;border-radius:10px;letter-spacing:.4px;border:1px solid #333}
 .dir-verdict .dir-pill.UP{background:#142814;color:#4ade80;border-color:#22c55e}
@@ -5274,8 +5527,12 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .composite-wrap{margin-top:8px;border-top:1px solid #1a1a1a;padding-top:8px;flex-shrink:0}
 .composite-lbl{font-size:10px;color:#555;text-transform:uppercase;font-weight:700;margin-bottom:4px}
 #composite-chart{height:96px;width:100%}
-.chart-split{flex:1;display:flex;flex-direction:column;min-height:0}
+.chart-split{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
 #trade-chart{flex:1;min-height:480px;width:100%}
+.candle-chart-hud{position:absolute;top:10px;left:10px;z-index:6;padding:6px 12px;border-radius:10px;font-size:12px;font-weight:800;letter-spacing:.02em;border:1px solid #333;background:rgba(10,10,10,.88);backdrop-filter:blur(6px);pointer-events:none;max-width:calc(100% - 24px)}
+.candle-chart-hud.bull{color:#4ade80;border-color:#22c55e;box-shadow:0 0 12px rgba(74,222,128,.15)}
+.candle-chart-hud.bear{color:#f87171;border-color:#ef4444;box-shadow:0 0 12px rgba(248,113,113,.15)}
+.candle-chart-hud.neu{color:#c4b5fd;border-color:#7c3aed}
 .grafik-mobile-bar{display:none;align-items:center;gap:10px;padding:10px 12px;background:#0a0a0a;border-bottom:1px solid #1a1a1a;flex-shrink:0}
 .gm-back{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:#141414;color:#c8f135;text-decoration:none;font-size:20px;font-weight:800;flex-shrink:0}
 .gm-title{flex:1;font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -5290,6 +5547,9 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
   body.grafik-mobile-focus .chart-toolbar .tabs{gap:4px}
   body.grafik-mobile-focus .chart-toolbar .tab{padding:6px 10px;font-size:11px;border-radius:10px}
   body.grafik-mobile-focus .chart-toolbar .tab-px{padding:5px 10px;font-size:11px;min-width:36px}
+  body.grafik-mobile-focus .grafik-body-split{flex-direction:column;flex:1;min-height:0;overflow:hidden}
+  body.grafik-mobile-focus .grafik-report-side{display:none}
+  body.grafik-mobile-focus .grafik-chart-side{flex:1;min-height:0}
   body.grafik-mobile-focus .chart-panel-full{flex:1;min-height:0;border:none;border-radius:0;padding:6px 10px 10px;display:flex;flex-direction:column;overflow:hidden}
   body.grafik-mobile-focus .chart-head{order:3;flex-shrink:0;margin-bottom:0}
   body.grafik-mobile-focus .chart-head .chart-title,
@@ -5347,6 +5607,18 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
       <button type="button" class="tab-px" id="tab-px-1h" onclick="setPriceTf('1h')">1h</button>
     </div>
   </div>
+  <div class="grafik-body-split">
+    <aside class="grafik-report-side">
+      <div class="grafik-report-panel">
+        <div class="grafik-report-title">Mum analiz raporu</div>
+        <div class="candle-analysis" id="candle-analysis"></div>
+        <div class="candle-report-wrap" id="candle-report-wrap" hidden>
+          <button type="button" class="candle-report-toggle" id="candle-report-toggle" onclick="toggleCandleReport()">Mum analiz raporu</button>
+          <pre class="candle-report" id="candle-report"></pre>
+        </div>
+      </div>
+    </aside>
+    <div class="grafik-chart-side">
   <div class="chart-panel-full">
     <div class="chart-head">
       <div>
@@ -5369,13 +5641,17 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
       <div style="margin-left:auto;font-size:11px;color:#555" id="spot-tf"></div>
     </div>
     <div class="chart-split">
+      <div class="candle-chart-hud" id="candle-chart-hud" hidden></div>
       <div id="trade-chart"></div>
+    </div>
+  </div>
     </div>
   </div>
 </div>
 <script>
 let _tf = '1h', _sym = 'BTCUSDT', _priceTf = '1m', _gate = 15;
-let _chart = null, _candleSeries = null, _priceLine = null;
+let _chart = null, _candleSeries = null, _priceLine = null, _levelLines = [];
+let _sdSupportSeries = null, _sdResistSeries = null;
 let _emaFastSeries = null, _emaSlowSeries = null, _mcEmaSeries = null, _ytEmaFastSeries = null, _ytEmaMidSeries = null, _volumeSeries = null;
 let _chartSym = null, _chartTf = null, _chartReq = 0;
 let _chartScaleMin = null, _chartScaleMax = null, _lastCandles = [];
@@ -5515,6 +5791,11 @@ function setPriceTf(px) { _priceTf = px; savePrefs(); resetAllCharts(); loadTrad
 
 function chartH() {
   if (document.body.classList.contains('grafik-mobile-focus')) return mobileChartH();
+  const chartEl = document.getElementById('trade-chart');
+  if (chartEl) {
+    const top = chartEl.getBoundingClientRect().top;
+    return Math.max(420, window.innerHeight - top - 12);
+  }
   return Math.max(520, window.innerHeight - 150);
 }
 
@@ -5545,21 +5826,36 @@ function priceBarSeconds() {
   return 60;
 }
 
-function calcTightScale(candles, refPrice) {
+function calcTightScale(candles, refPrice, ca) {
   if (!candles.length) return null;
   let lo = Math.min(...candles.map(c => c.low)), hi = Math.max(...candles.map(c => c.high));
   if (refPrice != null) { lo = Math.min(lo, refPrice); hi = Math.max(hi, refPrice); }
+  const extra = candleLevelPrices(ca);
+  extra.forEach(p => { lo = Math.min(lo, p); hi = Math.max(hi, p); });
   const span = Math.max(hi - lo, 0.0001);
   const padMult = isGrafikMobile() ? 0.11 : 0.06;
   const padMin = isGrafikMobile() ? 0.028 : 0.015;
   const pad = Math.max(span * padMult, span * padMin);
   return { lo: lo - pad, hi: hi + pad };
 }
-function applyChartPriceScale(candles, refPrice) {
-  const tight = calcTightScale(candles, refPrice);
+function candleLevelPrices(ca) {
+  if (!ca || !ca.ok) return [];
+  const out = [];
+  const push = v => { if (v != null && isFinite(Number(v))) out.push(Number(v)); };
+  push(ca.nearest_support && ca.nearest_support.price);
+  push(ca.nearest_resistance && ca.nearest_resistance.price);
+  (ca.support || []).forEach(lv => push(lv.price));
+  (ca.resistance || []).forEach(lv => push(lv.price));
+  return out;
+}
+function applyChartPriceScale(candles, refPrice, ca) {
+  const tight = calcTightScale(candles, refPrice, ca);
   if (!tight) { _chartScaleMin = _chartScaleMax = null; return; }
   _chartScaleMin = tight.lo; _chartScaleMax = tight.hi;
-  if (_candleSeries) _candleSeries.applyOptions({ autoscaleInfoProvider: () => ({ priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } }) });
+  const scaleFn = () => ({ priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } });
+  if (_candleSeries) _candleSeries.applyOptions({ autoscaleInfoProvider: scaleFn });
+  [_emaFastSeries, _emaSlowSeries, _mcEmaSeries, _ytEmaFastSeries, _ytEmaMidSeries, _sdSupportSeries, _sdResistSeries]
+    .forEach(s => { if (s) s.applyOptions({ autoscaleInfoProvider: scaleFn }); });
 }
 function fitBarDensity(count) {
   const c = document.getElementById('trade-chart');
@@ -5595,6 +5891,7 @@ function focusCandleWindow(candles) {
 function resetAllCharts() {
   if (_chart) { _chart.remove(); _chart = null; }
   _candleSeries = _priceLine = _emaFastSeries = _emaSlowSeries = _mcEmaSeries = _ytEmaFastSeries = _ytEmaMidSeries = _volumeSeries = null;
+  _sdSupportSeries = _sdResistSeries = null;
   _chartScaleMin = _chartScaleMax = null; _chartSym = null;
 }
 
@@ -5995,6 +6292,18 @@ function ensureTradeChart() {
       lastValueVisible: false,
       priceLineVisible: false,
     });
+    _sdSupportSeries = _chart.addLineSeries({
+      color: 'rgba(74,222,128,0.95)', lineWidth: 2,
+      lineStyle: LightweightCharts.LineStyle.Solid,
+      priceLineVisible: false, lastValueVisible: true, title: 'Destek',
+      autoscaleInfoProvider: () => (_chartScaleMin != null) ? { priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } } : null,
+    });
+    _sdResistSeries = _chart.addLineSeries({
+      color: 'rgba(248,113,113,0.95)', lineWidth: 2,
+      lineStyle: LightweightCharts.LineStyle.Solid,
+      priceLineVisible: false, lastValueVisible: true, title: 'Direnç',
+      autoscaleInfoProvider: () => (_chartScaleMin != null) ? { priceRange: { minValue: _chartScaleMin, maxValue: _chartScaleMax } } : null,
+    });
     _chart.priceScale('vol').applyOptions({ borderColor: '#1a1a1a' });
     applyChartVolumeLayout();
     window.addEventListener('resize', () => {
@@ -6009,7 +6318,214 @@ function renderHourlyBadges(hc) {
   const el = document.getElementById('algo-badges');
   if (!el) return;
   const acc = window._lastChartD && window._lastChartD.signal_accuracy;
-  el.innerHTML = multiConfirmBadgeHtml(window._lastMultiConfirm, acc) + yonTahminBadgeHtml(window._lastYonTahmin, acc);
+  const d = window._lastChartD || {};
+  el.innerHTML = multiConfirmBadgeHtml(window._lastMultiConfirm, acc) + yonTahminBadgeHtml(window._lastYonTahmin, acc)
+    + candlePatternBadgeHtml(d.candle_analysis);
+}
+
+function _patTr(name) {
+  const m = {
+    doji: 'doji', marubozu: 'marubozu', hammer: 'çekiç', shooting_star: 'yıldız',
+    engulfing: 'engulfing', piercing_darkcloud: 'piercing', star: 'yıldız form.',
+    three_soldiers_crows: '3 asker/karga',
+  };
+  return m[name] || name;
+}
+
+function candlePatternBadgeHtml(ca) {
+  if (!ca || !ca.ok) return '<span class="algo-badge neutral cp">MUM · —</span>';
+  const sc = Number(ca.score);
+  const cls = sc > 15 ? 'up' : sc < -15 ? 'down' : 'neutral';
+  const arrow = sc > 15 ? '↑' : sc < -15 ? '↓' : '·';
+  const pats = ca.patterns ? Object.keys(ca.patterns) : [];
+  const patLbl = pats.length ? _patTr(pats[0]) : 'nötr';
+  const tip = (ca.explanation || '').replace(/"/g, '&quot;');
+  return '<span class="algo-badge cp ' + cls + '" title="' + tip + '">MUM ' + arrow + ' ' + sc.toFixed(0)
+    + (pats.length ? (' · ' + patLbl) : '') + '</span>';
+}
+
+function _syncCandleReportBtn(open) {
+  const btn = document.getElementById('candle-report-toggle');
+  if (btn) btn.textContent = open ? 'Raporu gizle' : 'Mum analiz raporu';
+}
+
+function renderCandleAnalysis(ca, dec) {
+  const el = document.getElementById('candle-analysis');
+  const wrap = document.getElementById('candle-report-wrap');
+  const pre = document.getElementById('candle-report');
+  if (!el) return;
+  if (!ca || !ca.ok) {
+    el.innerHTML = '';
+    if (wrap) wrap.hidden = true;
+    if (pre) { pre.textContent = ''; pre.hidden = true; }
+    return;
+  }
+  const d = dec != null ? dec : 2;
+  const parts = [];
+  const pats = ca.patterns ? Object.entries(ca.patterns).map(([k, v]) => {
+    const dir = Number(v) > 0 ? '↑' : Number(v) < 0 ? '↓' : '·';
+    return _patTr(k) + ' ' + dir;
+  }) : [];
+  if (pats.length) parts.push('<b>Pattern:</b> ' + pats.join(', '));
+  if (ca.nearest_support) {
+    parts.push('<b>Destek:</b> $' + Number(ca.nearest_support.price).toFixed(d)
+      + ' (' + Number(ca.nearest_support.dist_pct).toFixed(2) + '%)');
+  }
+  if (ca.nearest_resistance) {
+    parts.push('<b>Direnç:</b> $' + Number(ca.nearest_resistance.price).toFixed(d)
+      + ' (' + Number(ca.nearest_resistance.dist_pct).toFixed(2) + '%)');
+  }
+  if (ca.explanation) parts.push(ca.explanation);
+  el.innerHTML = parts.join(' · ');
+  if (wrap && pre && ca.report) {
+    wrap.hidden = false;
+    pre.textContent = ca.report;
+    if (isGrafikMobile()) {
+      pre.hidden = true;
+      _syncCandleReportBtn(false);
+    } else {
+      pre.hidden = false;
+    }
+  } else if (wrap) {
+    wrap.hidden = true;
+  }
+}
+
+function toggleCandleReport() {
+  const pre = document.getElementById('candle-report');
+  if (!pre) return;
+  pre.hidden = !pre.hidden;
+  _syncCandleReportBtn(!pre.hidden);
+}
+
+function clearLevelLines() {
+  if (!_candleSeries || !_levelLines.length) { _levelLines = []; }
+  else {
+    _levelLines.forEach(ln => { try { _candleSeries.removePriceLine(ln); } catch (e) {} });
+    _levelLines = [];
+  }
+  if (_sdSupportSeries) _sdSupportSeries.setData([]);
+  if (_sdResistSeries) _sdResistSeries.setData([]);
+  const hud = document.getElementById('candle-chart-hud');
+  if (hud) hud.hidden = true;
+}
+
+function renderCandleChartHud(ca) {
+  const el = document.getElementById('candle-chart-hud');
+  if (!el) return;
+  if (!ca || !ca.ok || ca.score == null) { el.hidden = true; return; }
+  const sc = Number(ca.score);
+  const cls = sc > 15 ? 'bull' : sc < -15 ? 'bear' : 'neu';
+  const parts = ['Mum skor ' + (sc >= 0 ? '+' : '') + sc.toFixed(0)];
+  const dom = _dominantPattern(ca.patterns);
+  if (dom) {
+    const arrow = dom[1] > 0 ? '↑' : dom[1] < 0 ? '↓' : '·';
+    parts.push(_patTr(dom[0]) + ' ' + arrow);
+  }
+  if (ca.nearest_support) parts.push('S $' + Number(ca.nearest_support.price).toFixed(1));
+  if (ca.nearest_resistance) parts.push('D $' + Number(ca.nearest_resistance.price).toFixed(1));
+  el.className = 'candle-chart-hud ' + cls;
+  el.textContent = parts.join(' · ');
+  el.hidden = false;
+}
+
+function applyCandleSdSeries(ca, candles) {
+  if (!_sdSupportSeries || !_sdResistSeries || !ca || !ca.ok || !candles || !candles.length) return;
+  const fromIdx = Math.max(0, candles.length - Math.min(48, candles.length));
+  const slice = candles.slice(fromIdx);
+  const mk = price => slice.map(c => ({ time: c.time, value: Number(price) }));
+  if (ca.nearest_support) _sdSupportSeries.setData(mk(ca.nearest_support.price));
+  if (ca.nearest_resistance) _sdResistSeries.setData(mk(ca.nearest_resistance.price));
+}
+
+const _PAT_CHART_SHORT = {
+  hammer: 'H', shooting_star: 'SS', engulfing: 'ENG', marubozu: 'MAR',
+  star: '*', piercing_darkcloud: 'P', three_soldiers_crows: '3', doji: 'D',
+};
+
+function _dominantPattern(pats) {
+  let best = null, bestW = 0;
+  const w = { engulfing: 3, star: 3, three_soldiers_crows: 2.5, hammer: 2, shooting_star: 2,
+    marubozu: 1.5, piercing_darkcloud: 1.5, doji: 0.5 };
+  for (const [k, v] of Object.entries(pats || {})) {
+    const score = Math.abs(Number(v)) * (w[k] || 1);
+    if (score > bestW) { bestW = score; best = [k, Number(v)]; }
+  }
+  return best;
+}
+
+function appendCandlePatternMarkers(markers, ca, candles) {
+  if (!ca || !ca.ok || !candles || !candles.length) return;
+  const seen = new Set();
+  const lastIdx = candles.length - 1;
+  for (const entry of (ca.recent_patterns || [])) {
+    const idx = entry.idx;
+    if (idx == null || idx < 0 || idx >= candles.length) continue;
+    const dom = _dominantPattern(entry.patterns);
+    if (!dom) continue;
+    const [name, val] = dom;
+    const t = candles[idx].time;
+    if (seen.has(t)) continue;
+    seen.add(t);
+    const lbl = _PAT_CHART_SHORT[name] || String(name).slice(0, 3).toUpperCase();
+    const trLbl = _patTr(name);
+    const bull = val > 0 && name !== 'doji';
+    const bear = val < 0;
+    let text = trLbl || lbl;
+    if (idx === lastIdx && ca.score != null) {
+      text = (trLbl || lbl) + ' ' + Math.round(Number(ca.score));
+    }
+    markers.push({
+      time: t,
+      position: bull ? 'belowBar' : bear ? 'aboveBar' : 'inBar',
+      color: bull ? '#4ade80' : bear ? '#f87171' : '#94a3b8',
+      shape: bull ? 'arrowUp' : bear ? 'arrowDown' : 'circle',
+      text: text,
+      size: 2,
+    });
+  }
+  if (!seen.has(candles[lastIdx].time) && ca.score != null) {
+    const sc = Number(ca.score);
+    markers.push({
+      time: candles[lastIdx].time,
+      position: sc >= 0 ? 'belowBar' : 'aboveBar',
+      color: sc > 15 ? '#4ade80' : sc < -15 ? '#f87171' : '#fbbf24',
+      shape: 'square',
+      text: 'MUM ' + (sc >= 0 ? '+' : '') + Math.round(sc),
+      size: 2,
+    });
+  }
+  markers.sort((a, b) => a.time - b.time);
+}
+
+function applyCandleLevels(ca) {
+  clearLevelLines();
+  if (!_candleSeries || !ca || !ca.ok) return;
+  const near = (a, b) => a != null && b != null && Math.abs(Number(a) - Number(b)) < 1e-8;
+  const addLine = (price, color, title, axis, width, style) => {
+    _levelLines.push(_candleSeries.createPriceLine({
+      price: Number(price),
+      color: color,
+      lineWidth: width || 1,
+      lineStyle: style != null ? style : LightweightCharts.LineStyle.Dotted,
+      axisLabelVisible: axis !== false,
+      title: title,
+    }));
+  };
+  if (ca.nearest_support) {
+    addLine(ca.nearest_support.price, 'rgba(74,222,128,0.95)', 'Destek', true, 2, LightweightCharts.LineStyle.Solid);
+  }
+  if (ca.nearest_resistance) {
+    addLine(ca.nearest_resistance.price, 'rgba(248,113,113,0.95)', 'Direnç', true, 2, LightweightCharts.LineStyle.Solid);
+  }
+  (ca.support || []).slice(0, 3).forEach((lv, i) => {
+    if (near(lv.price, ca.nearest_support && ca.nearest_support.price)) return;
+    addLine(lv.price, 'rgba(74,222,128,0.28)', 'S' + (i + 1), false);
+  });
+  (ca.resistance || []).slice(0, 3).forEach((lv, i) => {
+    if (near(lv.price, ca.nearest_resistance && ca.nearest_resistance.price)) return;
+    addLine(lv.price, 'rgba(248,113,113,0.28)', 'D' + (i + 1), false);
+  });
 }
 
 function updateMotorBadge(ov) {
@@ -6017,18 +6533,19 @@ function updateMotorBadge(ov) {
   if (!el) return;
   const acc = window._lastChartD && window._lastChartD.signal_accuracy;
   const mcYt = multiConfirmBadgeHtml(window._lastMultiConfirm, acc) + yonTahminBadgeHtml(window._lastYonTahmin, acc);
+  const ca = window._lastChartD && window._lastChartD.candle_analysis;
   if (!ov || !ov.ok) {
-    el.innerHTML = '<span class="algo-badge neutral m110">110 · —</span>' + mcYt;
+    el.innerHTML = '<span class="algo-badge neutral m110">110 · —</span>' + mcYt + candlePatternBadgeHtml(ca);
     return;
   }
   const cur = ov.slot_open || ov.current;
   const dir = cur.direction;
   if (dir === 'UP' || dir === 'DOWN') {
     const cls = dir === 'UP' ? 'up' : 'down';
-    el.innerHTML = '<span class="algo-badge m110 ' + cls + '">110 · ' + dir + '</span>' + mcYt;
+    el.innerHTML = '<span class="algo-badge m110 ' + cls + '">110 · ' + dir + '</span>' + mcYt + candlePatternBadgeHtml(ca);
     return;
   }
-  el.innerHTML = '<span class="algo-badge neutral m110">110 · ' + (cur.label || '—') + '</span>' + mcYt;
+  el.innerHTML = '<span class="algo-badge neutral m110">110 · ' + (cur.label || '—') + '</span>' + mcYt + candlePatternBadgeHtml(ca);
 }
 
 function renderFifteenBadges(d, ov) {
@@ -6048,6 +6565,7 @@ function renderFifteenBadges(d, ov) {
     }
   }
   html += multiConfirmBadgeHtml(d.multi_confirm, acc) + yonTahminBadgeHtml(d.yon_tahmin, acc);
+  html += candlePatternBadgeHtml(d.candle_analysis);
   el.innerHTML = html;
 }
 
@@ -6164,6 +6682,7 @@ async function loadTradeChart() {
   try {
     const r = await fetch(chartUrl(), { cache: 'no-store' });
     const d = applySlotFrozenVerdict(prepareChartPayload(await r.json()), tf, sym);
+    window._lastChartD = d;
     window._lastMultiConfirm = d.multi_confirm;
     window._lastYonTahmin = d.yon_tahmin;
     if (reqId !== _chartReq || tf !== _tf || sym !== selectedSymbol()) return;
@@ -6174,7 +6693,9 @@ async function loadTradeChart() {
     document.getElementById('chart-meta').textContent =
       (_tf === '1h' ? 'A1 saatlik · MC teyit · slot sabit' : _tf === '15m' ? '110 · MC teyit · slot sabit' : '110 motor · MC teyit · slot sabit') + ' · ' + pxLbl + ' mum · ' + (d.slot_label || '') + ' İST';
     updateDirVerdict(d);
+    renderCandleAnalysis(d.candle_analysis, dec);
     document.getElementById('chart-ref-lbl').textContent = d.ref_price != null ? '$' + Number(d.ref_price).toFixed(dec) : '—';
+    clearLevelLines();
     if (_priceLine) { _candleSeries.removePriceLine(_priceLine); _priceLine = null; }
     if (!d.candles || !d.candles.length) {
       _candleSeries.setData([]); _candleSeries.setMarkers([]);
@@ -6185,7 +6706,7 @@ async function loadTradeChart() {
     const scaleCandles = isGrafikMobile()
       ? d.candles.slice(Math.max(0, d.candles.length - (visibleCandleCount() || d.candles.length)))
       : d.candles;
-    applyChartPriceScale(scaleCandles, d.ref_price);
+    applyChartPriceScale(scaleCandles, d.ref_price, d.candle_analysis);
     _candleSeries.setData(d.candles);
     if (_volumeSeries) _volumeSeries.setData(volumeHistogramData(d.candles));
     applyChartVolumeLayout();
@@ -6202,7 +6723,11 @@ async function loadTradeChart() {
         title: 'Ref',
       });
     }
+    applyCandleLevels(d.candle_analysis);
+    applyCandleSdSeries(d.candle_analysis, d.candles);
+    renderCandleChartHud(d.candle_analysis);
     const markers = [];
+    appendCandlePatternMarkers(markers, d.candle_analysis, d.candles);
     const ov = _tf !== '1h' && d.algo_overlay ? clipOverlayToCandles(d.algo_overlay, d.candles) : null;
     if (_tf === '1h') {
       renderHourlyBadges(d.hourly_current);
@@ -8103,6 +8628,79 @@ def _snap_hourly_signals_to_chart(
     return out
 
 
+def _compute_candle_analysis(candles: list[dict]) -> dict:
+    """Sonnet/candle_pattern_engine1 — grafik mumları için pattern + seviye + rapor."""
+    if not candles or len(candles) < 3:
+        return {"ok": False, "error": "yetersiz mum"}
+    try:
+        if _DIR_SONNET not in sys.path:
+            sys.path.insert(0, _DIR_SONNET)
+        import importlib
+        import numpy as np
+        engine_mod = importlib.import_module("candle_pattern_engine1")
+        CandleEngine = engine_mod.CandleEngine
+
+        o = np.array([float(c["open"]) for c in candles], dtype=float)
+        h = np.array([float(c["high"]) for c in candles], dtype=float)
+        l = np.array([float(c["low"]) for c in candles], dtype=float)
+        cl = np.array([float(c["close"]) for c in candles], dtype=float)
+        engine = CandleEngine(o, h, l, cl)
+        result = engine.confluence_score()
+        levels = engine.detect_levels()
+        all_patterns = engine.detect_patterns()
+        active = {k: v for k, v in all_patterns[-1].items() if v != 0}
+        recent = []
+        lookback = 12
+        for i in range(max(0, len(all_patterns) - lookback), len(all_patterns)):
+            pats = {k: v for k, v in all_patterns[i].items() if v != 0}
+            if pats:
+                recent.append({"idx": i, "patterns": pats})
+
+        def _level_json(lv):
+            return {
+                "price": round(float(lv.price), 6),
+                "kind": lv.kind,
+                "touches": int(lv.touches),
+                "strength": float(lv.strength),
+            }
+
+        def _prox_json(prox):
+            if not prox:
+                return None
+            lv, dist = prox
+            return {
+                "price": round(float(lv.price), 6),
+                "strength": float(lv.strength),
+                "dist_pct": float(dist),
+            }
+
+        report = ""
+        if len(candles) >= 5:
+            try:
+                report = engine.generate_report()
+            except Exception:
+                report = ""
+
+        return {
+            "ok": True,
+            "engine": "candle_pattern_engine1",
+            "score": float(result.score),
+            "pattern": float(result.pattern_component),
+            "level": float(result.level_component),
+            "trend": float(result.trend_component),
+            "explanation": result.explanation,
+            "patterns": active,
+            "recent_patterns": recent,
+            "nearest_support": _prox_json(result.nearest_support),
+            "nearest_resistance": _prox_json(result.nearest_resistance),
+            "support": [_level_json(lv) for lv in levels["support"][:5]],
+            "resistance": [_level_json(lv) for lv in levels["resistance"][:5]],
+            "report": report,
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 def _trade_desk_chart(
     symbol: str,
     timeframe: str,
@@ -8174,6 +8772,7 @@ def _trade_desk_chart(
             last["high"] = max(last["high"], lp)
             last["low"] = min(last["low"], lp)
             out["candles"] = out["candles"][:-1] + [last]
+        out["candle_analysis"] = _compute_candle_analysis(out.get("candles") or [])
         return out
     candle_interval = price_tf
     candle_limit = px_limit
@@ -8291,6 +8890,7 @@ def _trade_desk_chart(
             result["tahmin2"] = {"ok": False, "error": str(e), "votes": []}
     if candles:
         _attach_slot_open_signals(result, candles, ts_period, dec)
+    result["candle_analysis"] = _compute_candle_analysis(candles)
     _trade_chart_cache[cache_key] = (now_f, result)
     if len(_trade_chart_cache) > 48:
         cutoff = now_f - 120
@@ -10356,92 +10956,92 @@ const _PM_SYSTEM_ROWS = {
     bar: 'pm-system-bar-analiz5', btn: 'pm-system-btn-analiz5',
     status: 'pm-system-status-analiz5', sub: 'pm-system-sub-analiz5',
     active: '✅ A1 Live açılış aktif', paused: '⏸ A1 Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A1 devam) · Pzt 12:00 otomatik açılır',
+    subOn: 'Gerçek PM · saatlik BTC+SOL · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A1 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   analiz2: {
     bar: 'pm-system-bar-analiz2', btn: 'pm-system-btn-analiz2',
     status: 'pm-system-status-analiz2', sub: 'pm-system-sub-analiz2',
     active: '✅ A2 açılış aktif', paused: '⏸ A2 kapalı',
-    subOn: 'Gerçek PM · saatlik SOL · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2 devam) · Pzt 12:00 otomatik açılır',
+    subOn: 'Gerçek PM · saatlik SOL · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   analiz10: {
     bar: 'pm-system-bar-analiz10', btn: 'pm-system-btn-analiz10',
     status: 'pm-system-status-analiz10', sub: 'pm-system-sub-analiz10',
     active: '✅ A10 Live açılış aktif', paused: '⏸ A10 Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+SOL · çift konsensüs · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A10 devam) · Pzt 12:00 otomatik açılır',
+    subOn: 'Gerçek PM · saatlik BTC+SOL · çift konsensüs · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A10 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   analiz6_live: {
     bar: 'pm-system-bar-analiz6_live', btn: 'pm-system-btn-analiz6_live',
     status: 'pm-system-status-analiz6_live', sub: 'pm-system-sub-analiz6_live',
     active: '✅ A6 Live açılış aktif', paused: '⏸ A6 Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · sanal A6 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A6 devam) · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+SOL+ETH · sanal A6 devam · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A6 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   analiz6_v2_live: {
     bar: 'pm-system-bar-analiz6_v2_live', btn: 'pm-system-btn-analiz6_v2_live',
     status: 'pm-system-status-analiz6_v2_live', sub: 'pm-system-sub-analiz6_v2_live',
     active: '✅ A6V2 Live açılış aktif', paused: '⏸ A6V2 Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH · sanal A6V2 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A6V2 devam) · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+ETH · sanal A6V2 devam · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A6V2 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   analiz6_v3_live: {
     bar: 'pm-system-bar-analiz6_v3_live', btn: 'pm-system-btn-analiz6_v3_live',
     status: 'pm-system-status-analiz6_v3_live', sub: 'pm-system-sub-analiz6_v3_live',
     active: '✅ A6V3 Live açılış aktif', paused: '⏸ A6V3 Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · sanal A6V3 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A6V3 devam) · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · sanal A6V3 devam · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A6V3 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   a2_08_live: {
     bar: 'pm-system-bar-a2_08_live', btn: 'pm-system-btn-a2_08_live',
     status: 'pm-system-status-a2_08_live', sub: 'pm-system-sub-a2_08_live',
     active: '✅ A2#08 Williams Live açılış aktif', paused: '⏸ A2#08 Williams Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#08 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#08 devam) · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#08 devam · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#08 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   a2_03_live: {
     bar: 'pm-system-bar-a2_03_live', btn: 'pm-system-btn-a2_03_live',
     status: 'pm-system-status-a2_03_live', sub: 'pm-system-sub-a2_03_live',
     active: '✅ A2#03 Stoch RSI Live açılış aktif', paused: '⏸ A2#03 Stoch RSI Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#03 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#03 devam) · varsayılan kapalı · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#03 devam · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#03 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   a2_04_live: {
     bar: 'pm-system-bar-a2_04_live', btn: 'pm-system-btn-a2_04_live',
     status: 'pm-system-status-a2_04_live', sub: 'pm-system-sub-a2_04_live',
     active: '✅ A2#04 Schaff Live açılış aktif', paused: '⏸ A2#04 Schaff Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#04 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#04 devam) · varsayılan kapalı · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#04 devam · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#04 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   a2_05_live: {
     bar: 'pm-system-bar-a2_05_live', btn: 'pm-system-btn-a2_05_live',
     status: 'pm-system-status-a2_05_live', sub: 'pm-system-sub-a2_05_live',
     active: '✅ A2#05 Mean Rev Live açılış aktif', paused: '⏸ A2#05 Mean Rev Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#05 sync · Cum 22:00 kapanır · Pzt 11:00 devam',
-    subOff: 'Hafta sonu / manuel kapalı (Cum 22:00 – Pzt 11:00 otomatik) · sanal A2#05 devam',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#05 sync · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#05 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   a2_06_live: {
     bar: 'pm-system-bar-a2_06_live', btn: 'pm-system-btn-a2_06_live',
     status: 'pm-system-status-a2_06_live', sub: 'pm-system-sub-a2_06_live',
     active: '✅ A2#06 Z-Score MR Live açılış aktif', paused: '⏸ A2#06 Z-Score MR Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#06 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#06 devam) · varsayılan kapalı · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#06 devam · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#06 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   a2_07_live: {
     bar: 'pm-system-bar-a2_07_live', btn: 'pm-system-btn-a2_07_live',
     status: 'pm-system-status-a2_07_live', sub: 'pm-system-sub-a2_07_live',
     active: '✅ A2#07 Hurst Live açılış aktif', paused: '⏸ A2#07 Hurst Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#07 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#07 devam) · varsayılan kapalı · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · $4–6 · sanal A2#07 devam · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A2#07 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
   analiz15_live: {
     bar: 'pm-system-bar-analiz15_live', btn: 'pm-system-btn-analiz15_live',
     status: 'pm-system-status-analiz15_live', sub: 'pm-system-sub-analiz15_live',
     active: '✅ A15 Live açılış aktif', paused: '⏸ A15 Live kapalı',
-    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · BTC→A6 ETH→A8 SOL→A2 · sanal A15 devam · kapanış :02 · Cum 22:00 otomatik kapanır',
-    subOff: 'Gerçek PM yeni işlem açmaz (sanal A15 devam) · Aç ile işlem başlar',
+    subOn: 'Gerçek PM · saatlik BTC+ETH+SOL · BTC→A6 ETH→A8 SOL→A2 · sanal A15 devam · kapanış :02 · ayarlardan açıkken hafta sonu dahil',
+    subOff: 'Gerçek PM yeni işlem açmaz (sanal A15 devam) · Cum 22:00 otomatik kapanır · Aç ile hafta sonu dahil',
   },
 };
 
@@ -11505,6 +12105,7 @@ HTML = r"""<!DOCTYPE html>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item" id="nav-heatmap" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item" href="/poly/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
   <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
@@ -13127,6 +13728,7 @@ body{
   <a class="nav-item active" href="/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item" href="/poly/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
   <a class="nav-item" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
@@ -13435,6 +14037,136 @@ setInterval(load, 15000);
 """
 
 
+YAPAY_ZEKA_ANALIZ_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yapay Zeka Analiz — PolyMarket</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex}
+.sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:20px;letter-spacing:-0.5px}
+.logo span{color:#c8f135}
+.nav-label{font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:14px;transition:.15s}
+.nav-item:hover{background:#1a1a1a;color:#fff}
+.nav-item.active{background:#1a2e1a;color:#c8f135;font-weight:600}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0}
+.nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:#c8f135}
+.sidebar-footer{margin-top:auto;font-size:12px;color:#333;padding:8px 12px;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{flex:1;padding:28px;max-width:860px}
+h1{font-size:22px;font-weight:800;margin-bottom:6px}
+.subtitle{font-size:13px;color:#555;margin-bottom:24px}
+.feed{display:flex;flex-direction:column;gap:16px}
+.card{
+  background:linear-gradient(145deg,#121212 0%,#161616 100%);
+  border:1px solid #222;border-radius:16px;padding:18px 20px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+.card-title .ico{font-size:18px;line-height:1}
+.card-meta{font-size:12px;color:#666;white-space:nowrap}
+.badge{
+  display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;padding:3px 8px;border-radius:999px;margin-bottom:10px;
+}
+.badge.periodic{background:#1a2e1a;color:#86efac}
+.badge.daily{background:#1e1b4b;color:#a5b4fc}
+.card-body{font-size:14px;line-height:1.65;color:#ccc;white-space:pre-wrap}
+.card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag{font-size:10px;color:#888;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:2px 7px}
+#loading{text-align:center;color:#555;padding:60px 20px;font-size:14px}
+.empty{text-align:center;color:#555;padding:40px 20px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo">Poly<span>Market</span></div>
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
+  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item active" href="/poly/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
+  <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
+  <div class="nav-label">Hesap</div>
+  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>
+  <a class="nav-item" href="/poly/logout"><span class="nav-dot"></span>Çıkış</a>
+  <div class="sidebar-footer"><span class="live-dot"></span>Canlı</div>
+</div>
+<div class="main">
+  <h1>Yapay Zeka Analiz</h1>
+  <div class="subtitle" id="subtitle">Poly Algo Analist bildirimleri yükleniyor…</div>
+  <div id="feed" class="feed"><div id="loading">Yükleniyor…</div></div>
+</div>
+<script>
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtTs(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  if(Number.isNaN(d.getTime())) return ts;
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mi = String(d.getMinutes()).padStart(2,'0');
+  return dd + '.' + mm + ' ' + hh + ':' + mi;
+}
+function kindLabel(kind){
+  return kind === 'daily' ? 'Günlük Rapor' : '3 Saatlik';
+}
+function kindClass(kind){
+  return kind === 'daily' ? 'daily' : 'periodic';
+}
+function renderCard(e){
+  const tags = Array.isArray(e.tags) ? e.tags : [];
+  const tagHtml = tags.length
+    ? '<div class="card-tags">' + tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>'
+    : '';
+  return '<article class="card">'
+    + '<span class="badge ' + kindClass(e.kind) + '">' + esc(kindLabel(e.kind)) + '</span>'
+    + '<div class="card-head">'
+    + '<div class="card-title"><span class="ico">🧠</span>' + esc(e.title || 'Poly Algo Analist') + '</div>'
+    + '<div class="card-meta">' + esc(fmtTs(e.ts)) + '</div>'
+    + '</div>'
+    + '<div class="card-body">' + esc(e.body || '') + '</div>'
+    + tagHtml
+    + '</article>';
+}
+async function load(){
+  const feed = document.getElementById('feed');
+  try{
+    const r = await fetch('/poly/api/analyst/feed?limit=100');
+    if(!r.ok){ feed.innerHTML = '<div class="empty">API hatası: ' + r.status + '</div>'; return; }
+    const data = await r.json();
+    if(data.error){ feed.innerHTML = '<div class="empty">Oturum hatası</div>'; return; }
+    const entries = data.entries || [];
+    document.getElementById('subtitle').textContent =
+      entries.length + ' bildirim · en yeni üstte · Telegram ile eş zamanlı';
+    if(!entries.length){
+      feed.innerHTML = '<div class="empty">Henüz bildirim yok. İlk analiz 3 saatte bir gelir.</div>';
+      return;
+    }
+    feed.innerHTML = entries.map(renderCard).join('');
+  }catch(e){
+    feed.innerHTML = '<div class="empty">Yükleme hatası</div>';
+  }
+}
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>
+"""
+
+
 @app.route("/algoritma-islemler")
 @app.route("/algoritma-islemler/")
 def page_algoritma_islemler():
@@ -13473,6 +14205,20 @@ def page_grafik():
     if _auth_required():
         return _login_redirect()
     return GRAFIK_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/yapay-zeka-analiz")
+@app.route("/yapay-zeka-analiz/")
+def page_yapay_zeka_analiz_redirect():
+    return redirect("/poly/yapay-zeka-analiz")
+
+
+@app.route("/poly/yapay-zeka-analiz")
+@app.route("/poly/yapay-zeka-analiz/")
+def page_yapay_zeka_analiz():
+    if _auth_required():
+        return _login_redirect()
+    return YAPAY_ZEKA_ANALIZ_HTML, 200, _ISLEMLER_NOCACHE
 
 
 @app.route("/poly/islemler")
@@ -15463,6 +16209,30 @@ def api_crypto_futures_history():
 _AGUSTOS_RUNNER_CACHE: dict = {}
 
 
+def _expected_agustos_book_count(rel_dir: str) -> int | None:
+    """catalog.py'den güncel defter sayısı — runner cache bayat kalınca snapshot tamamlanır."""
+    import importlib.util
+    path = os.path.join(_DIR_KRIPTO, rel_dir, "catalog.py")
+    if not os.path.isfile(path):
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location(
+            f"agustos_{rel_dir.lower()}_catalog_check", path,
+        )
+        mod = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(mod)
+        return len(getattr(mod, "ALL_BOOKS", []) or [])
+    except Exception:
+        return None
+
+
+def _snapshot_book_count(snap: dict | None) -> int:
+    if not snap:
+        return 0
+    return len(snap.get("books") or [])
+
+
 def _load_agustos_runner(rel_dir: str):
     """Algoritmalar/runner.py veya Analizler/runner.py — bir kez yükle, cache'le."""
     if rel_dir in _AGUSTOS_RUNNER_CACHE:
@@ -15512,19 +16282,34 @@ def _agustos_status_or_snap(rel_dir: str, snap_key: str):
     if _DIR_KRIPTO not in sys.path:
         sys.path.insert(0, _DIR_KRIPTO)
     from virtual_book import read_snapshot  # noqa: WPS433
+    expected = _expected_agustos_book_count(rel_dir)
     # Test: 5 dk taze snapshot yeter — yoksa 30 dk bayat bile anında dönsün (70s bekleme yok)
     snap_ttl = 300.0 if snap_key == "test" else None
     snap = read_snapshot(snap_key, max_age=snap_ttl)
+    if snap is not None and expected and _snapshot_book_count(snap) < expected:
+        print(
+            f"[agustos] {snap_key} snapshot eksik "
+            f"({_snapshot_book_count(snap)}/{expected}) — yeniden oluşturuluyor",
+            flush=True,
+        )
+        snap = None
+        _AGUSTOS_RUNNER_CACHE.pop(rel_dir, None)
     if snap is not None:
         return snap
     if snap_key == "test":
         stale = read_snapshot(snap_key, max_age=1800.0)
         if stale is not None:
-            out = dict(stale)
-            out["_stale_snapshot"] = True
-            return out
+            if expected and _snapshot_book_count(stale) < expected:
+                _AGUSTOS_RUNNER_CACHE.pop(rel_dir, None)
+            else:
+                out = dict(stale)
+                out["_stale_snapshot"] = True
+                return out
     mod = _load_agustos_runner(rel_dir)
-    return mod.status_block(with_marks=True)
+    try:
+        return mod.refresh_status_block(with_marks=True)
+    except Exception:
+        return mod.status_block(with_marks=True)
 
 
 @app.route("/poly/api/kripto/algoritmalar")
@@ -15721,7 +16506,7 @@ def harita():
 for _html_name in (
     "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "ALGORITMA_ISLEMLER_HTML", "AYARLAR_HTML",
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
-    "LOGIN_HTML",
+    "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML",
 ):
     _html = globals()[_html_name]
     if _html_name == "KRIPTO_FUTURE_HTML":
@@ -15729,6 +16514,11 @@ for _html_name in (
         _html = _patch_cembot_brand(_html)
         _html = _patch_kf_theme(_html)
         _html = _patch_cache_bust(_html)
+    elif _html_name == "YAPAY_ZEKA_ANALIZ_HTML":
+        _html = _patch_cembot_brand(_html)
+        _html = _patch_kf_theme(_html)
+        _html = _patch_nav_kripto_future(_html)
+        _html = _patch_nav_algo_islemler(_html)
     elif _html_name == "ALGORITMA_ISLEMLER_HTML":
         # Kendi Poly menüsü + KF görünüm
         _html = _patch_cembot_brand(_html)
@@ -15736,7 +16526,9 @@ for _html_name in (
         _html = _patch_nav_kripto_future(_html)
     elif _html_name != "LOGIN_HTML":
         _html = _patch_sidebar_profit(_patch_sidebar_cleanup(_html))
-        _html = _patch_nav_algo_islemler(_patch_nav_kripto_future(_patch_nav_islemler(_html)))
+        _html = _patch_nav_yapay_zeka_analiz(
+            _patch_nav_algo_islemler(_patch_nav_kripto_future(_patch_nav_islemler(_html)))
+        )
         _html = _patch_cembot_brand(_html)
     else:
         _html = _patch_cembot_brand(_html)

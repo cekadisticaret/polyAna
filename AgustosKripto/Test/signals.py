@@ -159,6 +159,22 @@ def _poly_analiz15(kl_by_symbol: dict[str, list]) -> dict[str, str]:
     return out
 
 
+def _poly_b1_mum(kl_by_symbol: dict[str, list]) -> dict[str, str]:
+    from b1_mum_signal import resolve_direction  # noqa: E402
+
+    out = {sym: "NEUTRAL" for sym in kl_by_symbol}
+    for sym, kl in kl_by_symbol.items():
+        if len(kl) < 30:
+            continue
+        try:
+            d = resolve_direction(sym, kl)
+            if d in ("UP", "DOWN"):
+                out[sym] = d
+        except Exception as e:
+            print(f"[Test b1_mum] {sym}: {e}")
+    return out
+
+
 def _poly_b1(source_key: str, kl_by_symbol: dict[str, list]) -> dict[str, str]:
     mod = __import__(
         "b1_02_signal" if source_key == "b1_02" else "b1_01_signal",
@@ -192,6 +208,8 @@ def _poly_islemler(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]:
         return _poly_analiz6(key, kl_by_symbol)
     if key == "analiz15":
         return _poly_analiz15(kl_by_symbol)
+    if key == "b1_mum":
+        return _poly_b1_mum(kl_by_symbol)
     if key in ("b1_01", "b1_02"):
         return _poly_b1(key, kl_by_symbol)
     return {sym: "NEUTRAL" for sym in kl_by_symbol}

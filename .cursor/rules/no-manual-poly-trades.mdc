@@ -1,0 +1,29 @@
+---
+description: Poly/PM canlı işlem yasağı — kullanıcı açıkça istemeden asla trade açma
+alwaysApply: true
+---
+
+# YAPILMAMASI GEREKEN — Poly / PM işlem açma
+
+## Kırmızı çizgi
+
+Kullanıcı **açıkça** "canlıda aç", "PM işlem aç", "şimdi open çalıştır" demeden **ASLA**:
+
+- `poly_trader_*_live.py open` çalıştırma
+- `poly_trader_analiz*.py open` / `poly_trader_b1_*.py open` / `poly_trader_a2.py open` **manuel** çalıştırma
+- `algo_islemler_fresh_start.py` dışında toplu `open` tetikleme
+- Dashboard/API üzerinden gerçek para / Polymarket emri gönderme
+- Hafta sonu bypass veya Live mirror'ı tetikleyecek herhangi bir open
+
+**"İşlemleri aç" / "başlat" / "çalışsınlar"** = hazırlık (close + $300 reset, erteleme kaldır) + **cron'un kendi saatinde açmasını bekle**. Manuel `open` **YASAK**.
+
+## İzinli (kullanıcı trade istemeden)
+
+- `close` — kullanıcı kapat/sıfırla dediğinde
+- `algo_islemler_fresh_start.py` — close + bakiye $300 (open **içermez**)
+- Kod değişikliği, log okuma, dashboard restart
+- Kullanıcının **net** "şimdi open çalıştır" / "canlı aç" talimatı
+
+## Tarihçe (2026-08-10)
+
+Agent yanlışlıkla manuel `open` çalıştırdı → A2#08 Live mirror gerçek PM pozisyonları açtı → kullanıcı zarar. Bu kural bu yüzden eklendi.

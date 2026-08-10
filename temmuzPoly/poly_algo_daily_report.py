@@ -172,6 +172,15 @@ def main() -> int:
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
         print(f"[daily_report] Telegram gönderilemedi: {e}", file=sys.stderr)
 
+    try:
+        ac.post_feed(
+            title=f"Poly Algo Analist — Günlük Rapor ({today_str})",
+            body=f"{body}\n\n{raw_table}",
+            kind="daily",
+        )
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
+        print(f"[daily_report] Feed kaydı başarısız: {e}", file=sys.stderr)
+
     entry = {
         "ts": datetime.now(ac.TZ_TR).isoformat(),
         "date_tr": today_str,

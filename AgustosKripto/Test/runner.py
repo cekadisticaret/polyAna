@@ -37,23 +37,28 @@ from virtual_book import (  # noqa: E402
 )
 import importlib.util as _ilu
 
-_test_cat_spec = _ilu.spec_from_file_location(
-    "kripto_test_catalog",
-    os.path.join(_DIR, "catalog.py"),
-)
-_test_cat = _ilu.module_from_spec(_test_cat_spec)
-assert _test_cat_spec.loader is not None
-_test_cat_spec.loader.exec_module(_test_cat)
+_CAT_PATH = os.path.join(_DIR, "catalog.py")
+_SIG_PATH = os.path.join(_DIR, "signals.py")
+
+
+def _load_test_module(stem: str, path: str):
+    """catalog/signals — dosya mtime değişince yeni modül (dashboard cache bayat kalmasın)."""
+    key = f"{stem}_{int(os.path.getmtime(path))}"
+    if key in sys.modules:
+        return sys.modules[key]
+    spec = _ilu.spec_from_file_location(key, path)
+    mod = _ilu.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(mod)
+    sys.modules[key] = mod
+    return mod
+
+
+_test_cat = _load_test_module("kripto_test_catalog", _CAT_PATH)
 ALL_BOOKS = _test_cat.ALL_BOOKS
 TEST_SYMBOLS = _test_cat.TEST_SYMBOLS
 
-_test_sig_spec = _ilu.spec_from_file_location(
-    "kripto_test_signals",
-    os.path.join(_DIR, "signals.py"),
-)
-_test_sig = _ilu.module_from_spec(_test_sig_spec)
-assert _test_sig_spec.loader is not None
-_test_sig_spec.loader.exec_module(_test_sig)
+_test_sig = _load_test_module("kripto_test_signals", _SIG_PATH)
 signal_for_book = _test_sig.signal_for_book
 
 _test_eng_spec = _ilu.spec_from_file_location(

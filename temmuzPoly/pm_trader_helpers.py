@@ -106,18 +106,22 @@ _WEEKEND_RESUME_12_LABELS = frozenset({
 })
 
 
-# Hafta sonu da çalışmaya devam eden sanal trader'lar (algoritma-islemler)
+# Hafta sonu da çalışmaya devam eden sanal trader'lar (algoritma-islemler — tamamı)
 _SANAL_WEEKEND_FREE_LABELS = frozenset({
     "1. ANALİZ",
+    "2. ANALİZ",
     "6. ANALİZ",
     "6. ANALİZ V2",
     "6. ANALİZ V3",
+    "15. ANALİZ",
+    "A2",
     "B1#01",
     "B1#02",
+    "B1#03 MUM ANALİZ",
 })
 
 _SANAL_WEEKEND_LABELS = frozenset({
-    "2. ANALİZ", "4. ANALİZ", "10. ANALİZ", "15. ANALİZ", "A2",
+    "4. ANALİZ", "10. ANALİZ",
     "15M 110 SOL",
     "15M 309 Squeeze Mom",
     "15M 316 Supertrend",
@@ -153,14 +157,27 @@ def skip_if_weekend_pause(
     """
     if mode == "close":
         return False
-    if not _weekend_pause_applies(label):
-        return False
     if now_tr is None:
         now_tr = datetime.now(_TZ_TR)
     elif now_tr.tzinfo is None:
         now_tr = now_tr.replace(tzinfo=_TZ_TR)
     else:
         now_tr = now_tr.astimezone(_TZ_TR)
+    try:
+        from pm_balance_guard import skip_algo_islemler_open_deferred
+        if skip_algo_islemler_open_deferred(label, now_tr):
+            return True
+    except Exception:
+        pass
+    if not _weekend_pause_applies(label):
+        return False
+    # Dashboard'dan açık bırakılan Live analiz — hafta sonu da işlem açabilir
+    try:
+        from pm_balance_guard import is_dashboard_live_open
+        if is_dashboard_live_open(label):
+            return False
+    except Exception:
+        pass
     resume_hour = (
         WEEKEND_RESUME_LATE_HOUR
         if (label or "").upper() in {x.upper() for x in _WEEKEND_RESUME_12_LABELS}

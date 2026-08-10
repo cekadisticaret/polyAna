@@ -8,6 +8,7 @@ A2#01-17, A10, A15, B1#01/02) karşılaştırır, Anthropic API ile doğal dilde
 Cron: her 3 saatte bir — `0 */3 * * *`
 """
 import json
+import os
 import sys
 import urllib.error
 from datetime import datetime
@@ -127,16 +128,26 @@ def main() -> int:
 
     now_str = datetime.now(ac.TZ_TR).strftime("%d.%m %H:%M")
     tg_text = f"\U0001f9e0 Poly Algo Analist — {now_str}\n\n{body}"
-    try:
-        ac.send_telegram(tg_text)
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
-        print(f"[analyst] Telegram gönderilemedi: {e}", file=sys.stderr)
+    if os.environ.get("ANALYST_SKIP_TELEGRAM"):
+        ac.log_telegram_text(tg_text)
+    else:
+        try:
+            ac.send_telegram(tg_text)
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
+            print(f"[analyst] Telegram gönderilemedi: {e}", file=sys.stderr)
 
     tags = [b["key"] for b in books][:10]
+    title = f"Poly Algo Analist — {now_str}"
     try:
-        ac.post_journal(summary_line or body[:300], tags)
+        ac.post_journal(
+            summary_line or body[:300],
+            tags,
+            body=body,
+            title=title,
+            kind="periodic",
+        )
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
-        print(f"[analyst] Journal kaydı başarısız: {e}", file=sys.stderr)
+        print(f"[analyst] Journal/feed kaydı başarısız: {e}", file=sys.stderr)
 
     print("[analyst] Tamamlandı.")
     return 0

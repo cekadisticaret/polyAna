@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import os
 import urllib.request
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -26,6 +27,8 @@ ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 TG_TOKEN = os.environ.get("TELEGRAM_ANALIST_BOT_TOKEN", "")
 TG_CHAT = os.environ.get("TELEGRAM_ANALIST_CHAT_ID", "")
 CLAUDE_MODEL = "claude-sonnet-5"
+_TELEGRAM_LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analyst_telegram_log.jsonl")
+_TELEGRAM_LOG_MAX_LINES = 500
 
 
 def required_env_missing() -> list[str]:
@@ -56,18 +59,67 @@ def fetch_journal(limit: int = 8) -> dict:
     return http_json(url, headers={"X-Analyst-Token": ANALYST_TOKEN})
 
 
-def post_journal(text: str, tags: list[str]) -> dict:
-    body = json.dumps({"text": text, "tags": tags}).encode("utf-8")
+def post_journal(
+    text: str,
+    tags: list[str],
+    *,
+    body: str | None = None,
+    title: str | None = None,
+    kind: str = "periodic",
+) -> dict:
+    payload: dict = {"text": text, "tags": tags, "kind": kind}
+    if body:
+        payload["body"] = body
+    if title:
+        payload["title"] = title
+    data = json.dumps(payload).encode("utf-8")
     url = f"{DASH_BASE}/poly/api/analyst/journal"
     return http_json(
         url,
         headers={"X-Analyst-Token": ANALYST_TOKEN, "Content-Type": "application/json"},
-        data=body,
+        data=data,
         method="POST",
     )
 
 
+def post_feed(title: str, body: str, kind: str = "periodic", tags: list[str] | None = None) -> dict:
+    payload: dict = {"title": title, "body": body, "kind": kind}
+    if tags:
+        payload["tags"] = tags
+    url = f"{DASH_BASE}/poly/api/analyst/feed"
+    return http_json(
+        url,
+        headers={"X-Analyst-Token": ANALYST_TOKEN, "Content-Type": "application/json"},
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+    )
+
+
+def _append_telegram_log(text: str) -> None:
+    try:
+        entry = {
+            "ts": datetime.now(TZ_TR).isoformat(),
+            "text": text[:12000],
+        }
+        lines: list[str] = []
+        if os.path.exists(_TELEGRAM_LOG_FILE):
+            with open(_TELEGRAM_LOG_FILE, encoding="utf-8") as f:
+                lines = f.readlines()
+        lines.append(json.dumps(entry, ensure_ascii=False) + "\n")
+        if len(lines) > _TELEGRAM_LOG_MAX_LINES:
+            lines = lines[-_TELEGRAM_LOG_MAX_LINES:]
+        with open(_TELEGRAM_LOG_FILE, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+    except Exception:
+        pass
+
+
+def log_telegram_text(text: str) -> None:
+    _append_telegram_log(text)
+
+
 def send_telegram(text: str) -> dict:
+    _append_telegram_log(text)
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
     data = json.dumps({"chat_id": TG_CHAT, "text": text}).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})

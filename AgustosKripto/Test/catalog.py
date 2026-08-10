@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test defter kataloğu — algoritma-islemler (25) + /algoritma ALGO1."""
+"""Test defter kataloğu — algoritma-islemler (26) + /algoritma ALGO1."""
 from __future__ import annotations
 
 import os
@@ -45,6 +45,7 @@ _ISLEMLER_POLY: list[tuple[str, str, str]] = [
     ("analiz15",   "A15",   "15. Analiz · BTC A6 · ETH A8 · SOL A2"),
     ("b1_01",      "B1#01", "B1#01 · en iyi motor"),
     ("b1_02",      "B1#02", "B1#02 · BTC A15 · ETH A6 · SOL A2#01"),
+    ("b1_mum",     "B1#03", "B1#03 MUM · Sonnet mum confluence 1h ±15"),
 ]
 
 _ISLEMLER_A2: list[tuple[str, str, str]] = [
