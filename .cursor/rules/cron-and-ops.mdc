@@ -84,6 +84,7 @@ alwaysApply: true
 | `15 * * * *` | `temmuzPoly/slot_data_archive.py` (saatlik slot arşivi) | `/tmp/slot_data_archive.log` |
 | `20 * * * *` | `cd /root/aiProject && python3 twitter_bot/tweet_trade_card.py` (@tradecomio saatlik en başarılı işlem — giriş/kapanış/kâr görsel; yeni yoksa atlar) | `/tmp/twitter_trade_card.log` |
 | `0 */3 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_algo_analyst.py` (Poly Algo Analist — A1/A6 ailesi/A2#01-17/A10/A15/B1#01-02 karşılaştırmalı yorum, Anthropic API ile üretilip Telegram'a gönderilir, özet `temmuzPoly/analyst_journal.jsonl`'a kaydedilir) | `/tmp/poly_algo_analyst.log` |
+| `20 */3 * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/kripto_test_analyst.py` (Kripto Test AI Analist — Kripto Test sanal defterleri arasında ayrışma bulur, Anthropic API ile yorum üretir, ayrı Telegram kanalına (LAB bot) gönderir, tam metin `AgustosKripto/Test/kripto_analyst_feed.jsonl`'a kaydedilir — `bursaapp.com/kripto/yapay-zeka-analiz`) | `/tmp/kripto_test_analyst.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_algo_daily_report.py` (Poly Algo Analist Günlük Rapor — 00:00 İST; günlük defter özeti + `algo_pattern_stats.py`'de eşik atlayan yeni "watch/confident" kalıplar; `temmuzPoly/analyst_daily_reports.jsonl`) | `/tmp/poly_algo_daily_report.log` |
 
 ## Pasif / Kaldırılmış
@@ -143,4 +144,5 @@ tail -f /tmp/slot_data_archive.log
 tail -f /tmp/twitter_trade_card.log
 tail -f /tmp/poly_algo_analyst.log
 tail -f /tmp/poly_algo_daily_report.log
+tail -f /tmp/kripto_test_analyst.log
 ```

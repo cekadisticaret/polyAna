@@ -120,8 +120,13 @@ def log_telegram_text(text: str) -> None:
 
 def send_telegram(text: str) -> dict:
     _append_telegram_log(text)
-    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
-    data = json.dumps({"chat_id": TG_CHAT, "text": text}).encode("utf-8")
+    return send_telegram_to(TG_TOKEN, TG_CHAT, text)
+
+
+def send_telegram_to(bot_token: str, chat_id: str, text: str) -> dict:
+    """Farklı analist botları için genel Telegram gönderimi (LAB, ANALIST, vb.)."""
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    data = json.dumps({"chat_id": chat_id, "text": text}).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read().decode("utf-8"))

@@ -2090,6 +2090,230 @@ def api_analyst_feed():
     })
 
 
+def _build_sanal_algo_leader_rows() -> list[dict]:
+    """Sanal Poly defterleri — genel + sembol bazlı WR/PnL."""
+    keys: list[tuple[str, str, int | None]] = []
+    seen: set[str] = set()
+    for key, label, init_bal, _desc in _ANALIZLER_SYSTEMS:
+        if key in _REMOVED_ANALYSES or key in _LIVE_PM_ANALYSES:
+            continue
+        keys.append((key, label, init_bal))
+        seen.add(key)
+    for key in sorted(_discover_trader_keys()):
+        if key in seen or key in _REMOVED_ANALYSES or key in _LIVE_PM_ANALYSES:
+            continue
+        if key in _ALGO_STATS_EXCLUDE:
+            continue
+        keys.append((
+            key,
+            _ANALYSIS_LABELS.get(key, _auto_label(key)),
+            _OVERVIEW_INIT_BAL.get(key, 300),
+        ))
+
+    rows: list[dict] = []
+    for key, label, init_bal in keys:
+        hpath = _trader_history_path(key)
+        spath = _trader_state_path(key)
+        if not os.path.exists(hpath) and not os.path.exists(spath):
+            continue
+        try:
+            hist = _load_trader_history(key) if os.path.exists(hpath) else []
+            state = json.load(open(spath, encoding="utf-8")) if os.path.exists(spath) else {}
+        except Exception:
+            continue
+        resolved = [t for t in hist if t.get("win") is not None]
+        if len(resolved) < _ALGO_STATS_MIN_TRADES:
+            continue
+        allowed = set(_allowed_syms_for(key))
+        wins = sum(1 for t in resolved if t.get("win"))
+        wr = round(100.0 * wins / len(resolved), 1)
+        init = float(init_bal or 300)
+        bal = float(state.get("balance", init))
+        pnl = round(bal - init, 2)
+        sym_map: dict[str, dict] = {}
+        for t in resolved:
+            sym = (t.get("symbol") or "").replace("USDT", "")
+            if sym not in allowed:
+                continue
+            if sym not in sym_map:
+                sym_map[sym] = {"w": 0, "t": 0, "pnl": 0.0}
+            sym_map[sym]["t"] += 1
+            if t.get("win"):
+                sym_map[sym]["w"] += 1
+            sym_map[sym]["pnl"] += float(t.get("pnl") or 0)
+        sym_stats = {
+            sym: {
+                "wr": round(v["w"] / v["t"] * 100, 1),
+                "total": v["t"],
+                "pnl": round(v["pnl"], 2),
+            }
+            for sym, v in sym_map.items()
+            if v["t"] >= _ALGO_STATS_MIN_TRADES
+        }
+        short = _OVERVIEW_SHORT_LABELS.get(key, label)
+        rows.append({
+            "key": key,
+            "label": label,
+            "short": short,
+            "wr": wr,
+            "total": len(resolved),
+            "pnl": pnl,
+            "sym_stats": sym_stats,
+        })
+    return rows
+
+
+def _leader_board(rows: list[dict], *, sym: str | None = None, limit: int = 8) -> list[dict]:
+    if sym:
+        picked: list[dict] = []
+        for row in rows:
+            st = row.get("sym_stats", {}).get(sym)
+            if not st:
+                continue
+            picked.append({
+                "key": row["key"],
+                "label": row["short"],
+                "wr": st["wr"],
+                "total": st["total"],
+                "pnl": st["pnl"],
+            })
+        picked.sort(key=lambda x: (x["pnl"], x["wr"], x["total"]), reverse=True)
+        return picked[:limit]
+    overall = [{
+        "key": r["key"],
+        "label": r["short"],
+        "wr": r["wr"],
+        "total": r["total"],
+        "pnl": r["pnl"],
+    } for r in rows]
+    overall.sort(key=lambda x: (x["pnl"], x["wr"], x["total"]), reverse=True)
+    return overall[:limit]
+
+
+_KRIPTO_TEST_ANALYST_FEED_FILE = os.path.join(_DIR_KRIPTO, "Test", "kripto_analyst_feed.jsonl")
+
+
+def _read_kripto_test_analyst_feed() -> list[dict]:
+    entries: list[dict] = []
+    if os.path.exists(_KRIPTO_TEST_ANALYST_FEED_FILE):
+        try:
+            with open(_KRIPTO_TEST_ANALYST_FEED_FILE, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entries.append(json.loads(line))
+                    except Exception:
+                        continue
+        except Exception:
+            entries = []
+    return entries
+
+
+@app.route("/poly/api/kripto/analyst/feed")
+def api_kripto_analyst_feed():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        limit = min(max(int(request.args.get("limit", 50)), 1), 200)
+    except ValueError:
+        limit = 50
+    entries = _read_kripto_test_analyst_feed()
+    entries = entries[-limit:][::-1]
+    return jsonify({
+        "ok": True,
+        "count": len(entries),
+        "entries": entries,
+        "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
+    })
+
+
+def _build_kripto_test_leader_rows() -> list[dict]:
+    """Kripto Test sanal Binance Futures defterleri — genel + sembol bazlı WR/PnL."""
+    mod = _load_agustos_runner("Test")
+    allowed_syms = {s.replace("USDT", "") for s in mod.TEST_SYMBOLS}
+    rows: list[dict] = []
+    for book in mod.ALL_BOOKS:
+        hp = mod._history_path_for_book(book)
+        if not hp:
+            continue
+        try:
+            hist = mod.load_history(hp)
+        except Exception:
+            continue
+        resolved = [t for t in hist if t.get("win") is not None]
+        if len(resolved) < _ALGO_STATS_MIN_TRADES:
+            continue
+        wins = sum(1 for t in resolved if t.get("win"))
+        wr = round(100.0 * wins / len(resolved), 1)
+        pnl = round(sum(float(t.get("pnl") or 0) for t in resolved), 2)
+        sym_map: dict[str, dict] = {}
+        for t in resolved:
+            sym = (t.get("symbol") or "").upper().replace("USDT", "")
+            if sym not in allowed_syms:
+                continue
+            if sym not in sym_map:
+                sym_map[sym] = {"w": 0, "t": 0, "pnl": 0.0}
+            sym_map[sym]["t"] += 1
+            if t.get("win"):
+                sym_map[sym]["w"] += 1
+            sym_map[sym]["pnl"] += float(t.get("pnl") or 0)
+        sym_stats = {
+            sym: {
+                "wr": round(v["w"] / v["t"] * 100, 1),
+                "total": v["t"],
+                "pnl": round(v["pnl"], 2),
+            }
+            for sym, v in sym_map.items()
+            if v["t"] >= _ALGO_STATS_MIN_TRADES
+        }
+        rows.append({
+            "key": book["uid"],
+            "short": book.get("name") or book["uid"],
+            "wr": wr,
+            "total": len(resolved),
+            "pnl": pnl,
+            "sym_stats": sym_stats,
+        })
+    return rows
+
+
+@app.route("/poly/api/kripto/analyst/leaders")
+def api_kripto_analyst_leaders():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        rows = _build_kripto_test_leader_rows()
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+    return jsonify({
+        "ok": True,
+        "min_trades": _ALGO_STATS_MIN_TRADES,
+        "overall": _leader_board(rows, limit=10),
+        "btc": _leader_board(rows, sym="BTC", limit=6),
+        "eth": _leader_board(rows, sym="ETH", limit=6),
+        "sol": _leader_board(rows, sym="SOL", limit=6),
+        "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
+    })
+
+
+@app.route("/poly/api/analyst/leaders")
+def api_analyst_leaders():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    rows = _build_sanal_algo_leader_rows()
+    return jsonify({
+        "ok": True,
+        "min_trades": _ALGO_STATS_MIN_TRADES,
+        "overall": _leader_board(rows, limit=10),
+        "btc": _leader_board(rows, sym="BTC", limit=6),
+        "eth": _leader_board(rows, sym="ETH", limit=6),
+        "sol": _leader_board(rows, sym="SOL", limit=6),
+        "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
+    })
+
+
 @app.route("/poly/api/heatmap")
 def api_heatmap():
     if _auth_required(): return redirect("/poly/login")
@@ -14059,10 +14283,39 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .sidebar-footer{margin-top:auto;font-size:12px;color:#333;padding:8px 12px;display:flex;align-items:center;gap:6px}
 .live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.main{flex:1;padding:28px;max-width:860px}
+.main{flex:1;padding:28px;max-width:1240px}
+.page-head{margin-bottom:24px}
+.page-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+@media(max-width:980px){.page-grid{grid-template-columns:1fr}}
 h1{font-size:22px;font-weight:800;margin-bottom:6px}
-.subtitle{font-size:13px;color:#555;margin-bottom:24px}
+.subtitle{font-size:13px;color:#555}
 .feed{display:flex;flex-direction:column;gap:16px}
+.leaders-panel{
+  position:sticky;top:28px;
+  background:linear-gradient(160deg,#101010 0%,#141414 100%);
+  border:1px solid #222;border-radius:16px;padding:16px;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);
+}
+.leaders-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px}
+.leaders-sub{font-size:11px;color:#666;margin-bottom:14px;line-height:1.4}
+.leaders-section{margin-bottom:16px}
+.leaders-section:last-child{margin-bottom:0}
+.leaders-section h3{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:#86efac;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #222;
+}
+.leader-row{
+  display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;
+  padding:7px 0;border-bottom:1px solid #1a1a1a;
+}
+.leader-row:last-child{border-bottom:none}
+.leader-rank{font-size:11px;font-weight:800;color:#555;text-align:center}
+.leader-name{font-size:12px;font-weight:600;color:#ddd;line-height:1.3}
+.leader-meta{font-size:10px;color:#777;margin-top:2px}
+.leader-pnl{font-size:12px;font-weight:800;text-align:right;white-space:nowrap}
+.leader-pnl.pos{color:#4ade80}
+.leader-pnl.neg{color:#f87171}
+.leader-pnl.zero{color:#888}
 .card{
   background:linear-gradient(145deg,#121212 0%,#161616 100%);
   border:1px solid #222;border-radius:16px;padding:18px 20px;
@@ -14101,13 +14354,54 @@ h1{font-size:22px;font-weight:800;margin-bottom:6px}
   <div class="sidebar-footer"><span class="live-dot"></span>Canlı</div>
 </div>
 <div class="main">
-  <h1>Yapay Zeka Analiz</h1>
-  <div class="subtitle" id="subtitle">Poly Algo Analist bildirimleri yükleniyor…</div>
-  <div id="feed" class="feed"><div id="loading">Yükleniyor…</div></div>
+  <div class="page-head">
+    <h1>Yapay Zeka Analiz</h1>
+    <div class="subtitle" id="subtitle">Poly Algo Analist bildirimleri yükleniyor…</div>
+  </div>
+  <div class="page-grid">
+    <div id="feed" class="feed"><div id="loading">Yükleniyor…</div></div>
+    <aside class="leaders-panel">
+      <div class="leaders-title">Lider Analizi</div>
+      <div class="leaders-sub" id="leaders-sub">Sanal defterler · min. 5 işlem</div>
+      <div id="leaders-panel"><div class="empty" style="padding:20px 0">Yükleniyor…</div></div>
+    </aside>
+  </div>
 </div>
 <script>
 function esc(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function pnlCls(v){ return v>0?'pos':v<0?'neg':'zero'; }
+function pnlStr(v){ return (v>=0?'+':'') + '$' + Math.abs(Number(v)||0).toFixed(0); }
+function renderLeaderRows(items){
+  if(!items || !items.length) return '<div class="empty" style="padding:12px 0">Veri yok</div>';
+  return items.map((r,i) =>
+    '<div class="leader-row">'
+    + '<div class="leader-rank">' + (i+1) + '</div>'
+    + '<div><div class="leader-name">' + esc(r.label) + '</div>'
+    + '<div class="leader-meta">WR ' + esc(r.wr) + '% · ' + esc(r.total) + ' işlem</div></div>'
+    + '<div class="leader-pnl ' + pnlCls(r.pnl) + '">' + pnlStr(r.pnl) + '</div>'
+    + '</div>'
+  ).join('');
+}
+function renderLeaders(data){
+  const el = document.getElementById('leaders-panel');
+  if(!data || data.error){ el.innerHTML = '<div class="empty">Yüklenemedi</div>'; return; }
+  const min = data.min_trades || 5;
+  document.getElementById('leaders-sub').textContent =
+    'Sanal defterler · min. ' + min + ' işlem · PnL sıralı';
+  el.innerHTML =
+    '<div class="leaders-section"><h3>Genel</h3>' + renderLeaderRows(data.overall) + '</div>'
+    + '<div class="leaders-section"><h3>BTC</h3>' + renderLeaderRows(data.btc) + '</div>'
+    + '<div class="leaders-section"><h3>ETH</h3>' + renderLeaderRows(data.eth) + '</div>'
+    + '<div class="leaders-section"><h3>SOL</h3>' + renderLeaderRows(data.sol) + '</div>';
+}
+async function loadLeaders(){
+  try{
+    const r = await fetch('/poly/api/analyst/leaders');
+    if(!r.ok) return;
+    renderLeaders(await r.json());
+  }catch(e){}
 }
 function fmtTs(ts){
   if(!ts) return '';
@@ -14160,11 +14454,222 @@ async function load(){
   }
 }
 load();
+loadLeaders();
 setInterval(load, 60000);
+setInterval(loadLeaders, 120000);
 </script>
 </body>
 </html>
 """
+
+
+KRIPTO_YAPAY_ZEKA_ANALIZ_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yapay Zeka Analiz — Kripto Test</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex}
+.sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:20px;letter-spacing:-0.5px}
+.logo span{color:#c8f135}
+.nav-label{font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:14px;transition:.15s}
+.nav-item:hover{background:#1a1a1a;color:#fff}
+.nav-item.active{background:#1a2e1a;color:#c8f135;font-weight:600}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0}
+.nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:#c8f135}
+.sidebar-footer{margin-top:auto;font-size:12px;color:#333;padding:8px 12px;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{flex:1;padding:28px;max-width:1240px}
+.page-head{margin-bottom:24px}
+.page-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+@media(max-width:980px){.page-grid{grid-template-columns:1fr}}
+h1{font-size:22px;font-weight:800;margin-bottom:6px}
+.subtitle{font-size:13px;color:#555}
+.feed{display:flex;flex-direction:column;gap:16px}
+.leaders-panel{
+  position:sticky;top:28px;
+  background:linear-gradient(160deg,#101010 0%,#141414 100%);
+  border:1px solid #222;border-radius:16px;padding:16px;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);
+}
+.leaders-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px}
+.leaders-sub{font-size:11px;color:#666;margin-bottom:14px;line-height:1.4}
+.leaders-section{margin-bottom:16px}
+.leaders-section:last-child{margin-bottom:0}
+.leaders-section h3{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:#86efac;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #222;
+}
+.leader-row{
+  display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;
+  padding:7px 0;border-bottom:1px solid #1a1a1a;
+}
+.leader-row:last-child{border-bottom:none}
+.leader-rank{font-size:11px;font-weight:800;color:#555;text-align:center}
+.leader-name{font-size:12px;font-weight:600;color:#ddd;line-height:1.3}
+.leader-meta{font-size:10px;color:#777;margin-top:2px}
+.leader-pnl{font-size:12px;font-weight:800;text-align:right;white-space:nowrap}
+.leader-pnl.pos{color:#4ade80}
+.leader-pnl.neg{color:#f87171}
+.leader-pnl.zero{color:#888}
+.card{
+  background:linear-gradient(145deg,#121212 0%,#161616 100%);
+  border:1px solid #222;border-radius:16px;padding:18px 20px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+.card-title .ico{font-size:18px;line-height:1}
+.card-meta{font-size:12px;color:#666;white-space:nowrap}
+.badge{
+  display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;padding:3px 8px;border-radius:999px;margin-bottom:10px;
+}
+.badge.periodic{background:#1a2e1a;color:#86efac}
+.badge.daily{background:#1e1b4b;color:#a5b4fc}
+.card-body{font-size:14px;line-height:1.65;color:#ccc;white-space:pre-wrap}
+.card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag{font-size:10px;color:#888;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:2px 7px}
+#loading{text-align:center;color:#555;padding:60px 20px;font-size:14px}
+.empty{text-align:center;color:#555;padding:40px 20px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  __KRIPTO_BRAND__
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/kripto/algoritmalar"><span class="nav-dot"></span>Algoritmalar</a>
+  <a class="nav-item" href="/kripto/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item" href="/kripto/test"><span class="nav-dot"></span>Test</a>
+  <a class="nav-item active" href="/kripto/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
+  <a class="nav-item" href="/kripto/grafik"><span class="nav-dot"></span>Grafik</a>
+  <a class="nav-item" href="/kripto/gecmis"><span class="nav-dot"></span>Geçmiş işlemler</a>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geçiş yap</a>
+  <div class="sidebar-footer"><span class="live-dot"></span>Canlı</div>
+</div>
+<div class="main">
+  <div class="page-head">
+    <h1>Yapay Zeka Analiz</h1>
+    <div class="subtitle" id="subtitle">Kripto Test AI Analist bildirimleri yükleniyor…</div>
+  </div>
+  <div class="page-grid">
+    <div id="feed" class="feed"><div id="loading">Yükleniyor…</div></div>
+    <aside class="leaders-panel">
+      <div class="leaders-title">Lider Analizi</div>
+      <div class="leaders-sub" id="leaders-sub">Kripto Test sanal defterler · min. 5 işlem</div>
+      <div id="leaders-panel"><div class="empty" style="padding:20px 0">Yükleniyor…</div></div>
+    </aside>
+  </div>
+</div>
+<script>
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function pnlCls(v){ return v>0?'pos':v<0?'neg':'zero'; }
+function pnlStr(v){ return (v>=0?'+':'') + '$' + Math.abs(Number(v)||0).toFixed(0); }
+function renderLeaderRows(items){
+  if(!items || !items.length) return '<div class="empty" style="padding:12px 0">Veri yok</div>';
+  return items.map((r,i) =>
+    '<div class="leader-row">'
+    + '<div class="leader-rank">' + (i+1) + '</div>'
+    + '<div><div class="leader-name">' + esc(r.label) + '</div>'
+    + '<div class="leader-meta">WR ' + esc(r.wr) + '% · ' + esc(r.total) + ' işlem</div></div>'
+    + '<div class="leader-pnl ' + pnlCls(r.pnl) + '">' + pnlStr(r.pnl) + '</div>'
+    + '</div>'
+  ).join('');
+}
+function renderLeaders(data){
+  const el = document.getElementById('leaders-panel');
+  if(!data || data.error){ el.innerHTML = '<div class="empty">Yüklenemedi</div>'; return; }
+  const min = data.min_trades || 5;
+  document.getElementById('leaders-sub').textContent =
+    'Kripto Test sanal defterler · min. ' + min + ' işlem · PnL sıralı';
+  el.innerHTML =
+    '<div class="leaders-section"><h3>Genel</h3>' + renderLeaderRows(data.overall) + '</div>'
+    + '<div class="leaders-section"><h3>BTC</h3>' + renderLeaderRows(data.btc) + '</div>'
+    + '<div class="leaders-section"><h3>ETH</h3>' + renderLeaderRows(data.eth) + '</div>'
+    + '<div class="leaders-section"><h3>SOL</h3>' + renderLeaderRows(data.sol) + '</div>';
+}
+async function loadLeaders(){
+  try{
+    const r = await fetch('/poly/api/kripto/analyst/leaders');
+    if(!r.ok) return;
+    renderLeaders(await r.json());
+  }catch(e){}
+}
+function fmtTs(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  if(Number.isNaN(d.getTime())) return ts;
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mi = String(d.getMinutes()).padStart(2,'0');
+  return dd + '.' + mm + ' ' + hh + ':' + mi;
+}
+function kindLabel(kind){
+  return kind === 'daily' ? 'Günlük Rapor' : '3 Saatlik';
+}
+function kindClass(kind){
+  return kind === 'daily' ? 'daily' : 'periodic';
+}
+function renderCard(e){
+  const tags = Array.isArray(e.tags) ? e.tags : [];
+  const tagHtml = tags.length
+    ? '<div class="card-tags">' + tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>'
+    : '';
+  return '<article class="card">'
+    + '<span class="badge ' + kindClass(e.kind) + '">' + esc(kindLabel(e.kind)) + '</span>'
+    + '<div class="card-head">'
+    + '<div class="card-title"><span class="ico">🧪</span>' + esc(e.title || 'Kripto Test AI Analist') + '</div>'
+    + '<div class="card-meta">' + esc(fmtTs(e.ts)) + '</div>'
+    + '</div>'
+    + '<div class="card-body">' + esc(e.body || '') + '</div>'
+    + tagHtml
+    + '</article>';
+}
+async function load(){
+  const feed = document.getElementById('feed');
+  try{
+    const r = await fetch('/poly/api/kripto/analyst/feed?limit=100');
+    if(!r.ok){ feed.innerHTML = '<div class="empty">API hatası: ' + r.status + '</div>'; return; }
+    const data = await r.json();
+    if(data.error){ feed.innerHTML = '<div class="empty">Oturum hatası</div>'; return; }
+    const entries = data.entries || [];
+    document.getElementById('subtitle').textContent =
+      entries.length + ' bildirim · en yeni üstte · Telegram ile eş zamanlı';
+    if(!entries.length){
+      feed.innerHTML = '<div class="empty">Henüz bildirim yok. İlk analiz 3 saatte bir gelir.</div>';
+      return;
+    }
+    feed.innerHTML = entries.map(renderCard).join('');
+  }catch(e){
+    feed.innerHTML = '<div class="empty">Yükleme hatası</div>';
+  }
+}
+load();
+loadLeaders();
+setInterval(load, 60000);
+setInterval(loadLeaders, 120000);
+</script>
+</body>
+</html>
+"""
+
+
+@app.route("/kripto/yapay-zeka-analiz")
+@app.route("/kripto/yapay-zeka-analiz/")
+def page_kripto_yapay_zeka_analiz():
+    if _auth_required():
+        return _login_redirect()
+    return KRIPTO_YAPAY_ZEKA_ANALIZ_HTML, 200, _ISLEMLER_NOCACHE
 
 
 @app.route("/algoritma-islemler")
@@ -14607,6 +15112,7 @@ body.kf-overview .kf-right-panel{display:block}
     <a class="nav-item" id="nav-kripto-algo" href="/kripto/algoritmalar"><span class="nav-dot"></span>Algoritmalar</a>
     <a class="nav-item" id="nav-kripto-analiz" href="/kripto/analizler"><span class="nav-dot"></span>Analizler</a>
     <a class="nav-item nav-sub" id="nav-kripto-test" href="/kripto/test"><span class="nav-dot"></span>Test</a>
+    <a class="nav-item" href="/kripto/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
     <a class="nav-item" id="nav-kripto-grafik" href="/kripto/grafik"><span class="nav-dot"></span>Grafik</a>
     <a class="nav-item" id="nav-kripto-gecmis" href="/kripto/gecmis"><span class="nav-dot"></span>Geçmiş işlemler</a>
     <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geçiş yap</a>
@@ -16506,11 +17012,12 @@ def harita():
 for _html_name in (
     "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "ALGORITMA_ISLEMLER_HTML", "AYARLAR_HTML",
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
-    "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML",
+    "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
 ):
     _html = globals()[_html_name]
-    if _html_name == "KRIPTO_FUTURE_HTML":
+    if _html_name in ("KRIPTO_FUTURE_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML"):
         # Kripto kendi menüsü — Poly nav / PM Kar enjekte etme
+        _html = _html.replace("__KRIPTO_BRAND__", _CEMBOT_KRIPTO_BRAND_HTML)
         _html = _patch_cembot_brand(_html)
         _html = _patch_kf_theme(_html)
         _html = _patch_cache_bust(_html)
