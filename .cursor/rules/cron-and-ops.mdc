@@ -28,6 +28,9 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_02.py open` | `/tmp/poly_trader_b1_02.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_mum.py close` | `/tmp/poly_trader_b1_mum.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_mum.py open` | `/tmp/poly_trader_b1_mum.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_04.py close` | `/tmp/poly_trader_b1_04.log` |
+| `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_04.py open` (B1#04 — a2 sinyalleri :05'te üretildiği için :07) | `/tmp/poly_trader_b1_04.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_04.py weekly` | `/tmp/poly_trader_b1_04.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2_live.py close` | `/tmp/poly_trader_analiz6_v2_live.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2_live.py open` | `/tmp/poly_trader_analiz6_v2_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3_live.py close` | `/tmp/poly_trader_analiz6_v3_live.log` |
@@ -121,6 +124,7 @@ tail -f /tmp/algo_signals.log
 tail -f /tmp/algo_signals_v2.log
 tail -f /tmp/chart_algo_panel_wr.log
 tail -f /tmp/poly_trader_a2.log
+tail -f /tmp/poly_trader_b1_04.log
 tail -f /tmp/poly_trader_a2_02_live.log
 tail -f /tmp/poly_trader_a2_08_live.log
 tail -f /tmp/poly_trader_a2_03_live.log

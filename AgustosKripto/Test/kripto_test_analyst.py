@@ -14,7 +14,7 @@ import json
 import os
 import sys
 import urllib.error
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _AGUSTOS = os.path.dirname(_DIR)
@@ -30,6 +30,10 @@ import runner as test_runner  # noqa: E402
 _WINDOW_HOURS = 6
 _DIGEST_LIMIT = 15
 _JOURNAL_LIMIT = 8
+_MIN_INTERVAL_HOURS = 3.0
+# Cron `20 */3 * * *` (UTC) ile hizalı 3 saatlik pencere — dakika bazlı cooldown
+# her ikinci çalışmayı atlıyordu (feed :20:22'de yazılıyor, cron :20:01'de tetikleniyor).
+_CRON_SLOT_HOURS = 3
 _FEED_FILE = os.path.join(_DIR, "kripto_analyst_feed.jsonl")
 _FEED_MAX_LINES = 500
 
@@ -162,6 +166,36 @@ def _read_feed(limit: int = _JOURNAL_LIMIT) -> list[dict]:
     return rows[-limit:][::-1]
 
 
+def _cron_slot(dt: datetime) -> tuple:
+    """3 saatlik cron penceresi (UTC, `20 */3 * * *` ile aynı hizalama)."""
+    utc = dt.astimezone(timezone.utc)
+    return (utc.date(), utc.hour // _CRON_SLOT_HOURS)
+
+
+def _cooldown_remaining_hours() -> float | None:
+    """Bu 3 saatlik pencerede zaten bildirim varsa kalan süre (saat)."""
+    rows = _read_feed(limit=1)
+    if not rows:
+        return None
+    last_dt = _parse_dt(rows[0].get("ts"))
+    if not last_dt:
+        return None
+    now = datetime.now(ac.TZ_TR)
+    if _cron_slot(last_dt) == _cron_slot(now):
+        # Aynı pencere — bir sonraki cron slotuna kadar bekle
+        utc = now.astimezone(timezone.utc)
+        next_slot_h = (utc.hour // _CRON_SLOT_HOURS + 1) * _CRON_SLOT_HOURS
+        if next_slot_h >= 24:
+            next_start = datetime(
+                utc.year, utc.month, utc.day, tzinfo=timezone.utc,
+            ) + timedelta(days=1)
+        else:
+            next_start = utc.replace(hour=next_slot_h, minute=20, second=0, microsecond=0)
+        remaining_h = (next_start - utc).total_seconds() / 3600.0
+        return max(remaining_h, 0.05)
+    return None
+
+
 def build_user_prompt(digest: dict, prev_entries: list[dict]) -> str:
     books = digest["books"]
     payload = {
@@ -190,6 +224,16 @@ def main() -> int:
     if not LAB_TOKEN or not LAB_CHAT:
         print("[kripto_analyst] TELEGRAM_LAB_BOT_TOKEN/TELEGRAM_LAB_CHAT_ID eksik", file=sys.stderr)
         return 1
+
+    force = os.environ.get("KRIPTO_TEST_ANALYST_FORCE", "").strip().lower() in ("1", "true", "yes")
+    remaining = _cooldown_remaining_hours()
+    if remaining is not None and not force:
+        mins = max(1, int(remaining * 60))
+        print(
+            f"[kripto_analyst] Bu 3 saatlik pencerede zaten bildirim var "
+            f"— sonraki cron ~{mins} dk sonra.",
+        )
+        return 0
 
     digest = build_digest()
     if not digest["books"]:

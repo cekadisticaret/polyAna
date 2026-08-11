@@ -118,7 +118,21 @@ _SANAL_WEEKEND_FREE_LABELS = frozenset({
     "B1#01",
     "B1#02",
     "B1#03 MUM ANALİZ",
+    "B1#04",
 })
+
+
+def _is_algo_islemler_label(label: str) -> bool:
+    """algoritma-islemler sayfasındaki sanal defter etiketleri — 7/24."""
+    if not label:
+        return False
+    u = label.strip().upper()
+    if u == "A2" or u.startswith("A2#"):
+        return True
+    for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#"):
+        if label.startswith(prefix):
+            return True
+    return False
 
 _SANAL_WEEKEND_LABELS = frozenset({
     "4. ANALİZ", "10. ANALİZ",
@@ -131,6 +145,8 @@ _SANAL_WEEKEND_LABELS = frozenset({
 
 
 def _weekend_pause_applies(label: str) -> bool:
+    if _is_algo_islemler_label(label):
+        return False
     if label in _SANAL_WEEKEND_FREE_LABELS:
         return False
     if label in _SANAL_WEEKEND_LABELS:
@@ -1130,8 +1146,11 @@ def pm_5m_fetch_resolution(slug: str, min_decisive: float = 0.99) -> dict | None
 
 pm_fetch_resolution = pm_5m_fetch_resolution  # 1h saatlik marketler de aynı format
 
-# Dashboard "En Etkili Zaman" ile aynı mantık — top 3 saat +%40, bottom 3 saat -%30
-HOT_HOUR_BOOST = 1.4
+# Dashboard "En Etkili Zaman" ile aynı mantık — bottom 3 saat -%30.
+# Hot-hour büyütme kapalı: 3 işlemle "etkili saat" seçildiği için gürültüye bahis
+# büyütüyordu — boost'lu 90 sanal işlem %26.7 WR / -$570, normaller %55.2 / +$1770
+# (ölçüm 2026-08-11). 1.0 = nötr; apply_hot_hour_boost da bu sabiti kullanır.
+HOT_HOUR_BOOST = 1.0
 HOT_HOUR_MIN_TRADES = 3
 COLD_HOUR_CUT = 0.7
 SLOT_TOP_N = 3
@@ -1201,29 +1220,29 @@ def resolve_slot_trade_amount(
     hour_tr: int,
     history: list,
     *,
-    boost: float = HOT_HOUR_BOOST,
     cut: float = COLD_HOUR_CUT,
 ) -> tuple[float, bool, bool]:
-    """Top 3 saatte +%40, bottom 3 saatte -%30 (hot öncelikli)."""
+    """Bottom 3 saatte -%30, top 3 saatte tutar sabit (hot öncelikli).
+
+    Top 3 saat hâlâ cut'ı bloklar, ama tutarı artırmaz.
+    """
     if hour_tr in compute_top_slot_hours(history):
-        return round(base_amount * boost, 2), True, False
+        return base_amount, False, False
     if hour_tr in compute_bottom_slot_hours(history):
         return round(base_amount * cut, 2), False, True
     return base_amount, False, False
 
 
 def slot_amount_log(label: str, hour_tr: int, base: float, amount: float, hot_boost: bool, cold_cut: bool) -> None:
-    if hot_boost:
-        print(f"[{label}] 🔥 etkili saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f} (+40%)")
-    elif cold_cut:
+    if cold_cut:
         print(f"[{label}] ❄️ zayıf saat {hour_tr:02d}:00 — ${base:.0f} → ${amount:.0f} (-30%)")
 
 
 
 # ── Güçlü / zayıf saat (En Etkili Zaman) ──
-# WR>%85 → sabit $25 (sanal + Live A1/A2/A6/A10). Zayıf saatte tutar -%30 (open blok yok).
+# Zayıf saatte tutar -%30 (open blok yok). Güçlü saat artık tutarı etkilemez;
+# SLOT_FORCE_WR yalnızca hafta sonu duraklama bypass'ında kullanılır.
 SLOT_FORCE_WR = 85.0
-SLOT_FORCE_AMOUNT = 25.0
 SLOT_COLD_BAD_DAYS = 3
 SLOT_COLD_LOSSES = 4
 
@@ -1286,14 +1305,11 @@ def resolve_open_slot_gates(
     hour_tr: int,
     base_amount: float,
 ) -> tuple[bool, float, bool, bool, str]:
-    """(skip, amount, force_hot, cold_cut, note). skip her zaman False — soğuk saat gate kaldırıldı."""
-    if is_slot_force_hot(history, hour_tr):
-        d = hour_slot_detail(history, hour_tr, min_trades=HOT_HOUR_MIN_TRADES) or {}
-        note = (
-            f"güçlü saat {hour_tr:02d}:00 WR %{d.get('wr', 0):.0f} "
-            f"({d.get('w', 0)}/{d.get('t', 0)}) → ${SLOT_FORCE_AMOUNT:.0f}"
-        )
-        return False, float(SLOT_FORCE_AMOUNT), True, False, note
+    """(skip, amount, force_hot, cold_cut, note). skip her zaman False — soğuk saat gate kaldırıldı.
+
+    Güçlü saatte sabit $25'e zorlama kaldırıldı (aynı hot-hour gürültüsü, daha büyük
+    çarpan). is_slot_force_hot yalnızca hafta sonu duraklama bypass'ında kullanılır.
+    """
     amount, hot_boost, cold_cut = resolve_slot_trade_amount(base_amount, hour_tr, history)
     return False, amount, hot_boost, cold_cut, ""
 
@@ -1304,7 +1320,7 @@ def apply_hot_hour_boost(
     history: list,
     boost: float = HOT_HOUR_BOOST,
 ) -> tuple[float, bool]:
-    """En etkili saatlerde giriş tutarını artır (varsayılan +%40)."""
+    """En etkili saatlerde giriş tutarını artır. HOT_HOUR_BOOST=1.0 olduğu için nötr."""
     if hour_tr in compute_top_slot_hours(history):
         return round(base_amount * boost, 2), True
     return base_amount, False

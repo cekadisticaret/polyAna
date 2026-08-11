@@ -311,9 +311,10 @@ async def run_close(cfg: A2Config, *, notify: bool = True) -> str | None:
 
 async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    # Cum 22:00 – Pzt 08:00 İST — diğer sanal gibi yeni işlem yok (close çalışır)
+    from pm_balance_guard import is_a2_live_dashboard_open
     if skip_if_weekend_pause("A2", "open", now_tr):
-        return None
+        if not is_a2_live_dashboard_open(cfg.algo_num):
+            return None
     saat = now_tr.strftime("%H:%M")
     hour_tr = now_tr.hour
     dow = now_tr.weekday()
@@ -512,8 +513,10 @@ async def run_mode(mode: str, configs: list[A2Config] | None = None) -> None:
                     + f"\n{sep}"
                 )
     elif mode == "open":
+        from pm_balance_guard import is_a2_live_dashboard_open
         if skip_if_weekend_pause("A2", "open", now_tr):
-            return
+            if not any(is_a2_live_dashboard_open(c.algo_num) for c in cfgs):
+                return
         blocks_a2: list[str] = []
         blocks_alfa: list[str] = []
         for cfg in cfgs:

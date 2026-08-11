@@ -267,6 +267,22 @@ def get_usdc_balance() -> float:
         return 9999.0
 
 
+def is_dashboard_live_open(label: str) -> bool:
+    """Dashboard Live anahtarı açık mı (*_paused=false) — hafta sonu bypass için."""
+    group = _label_group(label)
+    if group is None:
+        return False
+    return not is_group_paused(group)
+
+
+def is_a2_live_dashboard_open(algo_num: int) -> bool:
+    """A2#NN Live dashboard'da açıksa sanal A2#NN hafta sonu da açılabilir."""
+    group = f"a2_{int(algo_num):02d}_live"
+    if group not in _VALID_GROUPS:
+        return False
+    return not is_group_paused(group)
+
+
 def can_open_trade(label: str, tg_send=None) -> bool:
     """Yeni PM açılışı — dashboard grup anahtarı kapalıysa engelle."""
     group = _label_group(label)
@@ -276,3 +292,79 @@ def can_open_trade(label: str, tg_send=None) -> bool:
         print(f"[PM SYSTEM] {label} — açılış kapalı ({group})", file=sys.stderr)
         return False
     return True
+
+
+# ── Algoritma-islemler toplu open erteleme ───────────────────
+_ALGO_ISLEMLER_DEFER_PREFIXES = (
+    "1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#",
+)
+
+
+def _is_algo_islemler_sanal_label(label: str) -> bool:
+    if not label:
+        return False
+    u = label.strip().upper()
+    if u == "A2" or u.startswith("A2#"):
+        return True
+    for prefix in _ALGO_ISLEMLER_DEFER_PREFIXES:
+        if label.startswith(prefix):
+            return True
+    return False
+
+
+def get_algo_islemler_open_after_tr() -> datetime | None:
+    raw = _load_control().get("algo_islemler_open_after_tr")
+    if not raw:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(raw))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=_TZ_TR)
+        return dt.astimezone(_TZ_TR)
+    except Exception:
+        return None
+
+
+def set_algo_islemler_open_after(when_tr: datetime, *, source: str = "script") -> dict:
+    data = _load_control()
+    if when_tr.tzinfo is None:
+        when_tr = when_tr.replace(tzinfo=_TZ_TR)
+    else:
+        when_tr = when_tr.astimezone(_TZ_TR)
+    data["algo_islemler_open_after_tr"] = when_tr.isoformat()
+    data["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
+    data["updated_by"] = source
+    _save_control(data)
+    return data
+
+
+def clear_algo_islemler_open_after(*, source: str = "script") -> dict:
+    data = _load_control()
+    data.pop("algo_islemler_open_after_tr", None)
+    data["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
+    data["updated_by"] = source
+    _save_control(data)
+    return data
+
+
+def skip_algo_islemler_open_deferred(label: str, now_tr: datetime | None = None) -> bool:
+    """True → open/preview atla (algoritma-islemler sanal defterler)."""
+    if not _is_algo_islemler_sanal_label(label):
+        return False
+    after = get_algo_islemler_open_after_tr()
+    if after is None:
+        return False
+    if now_tr is None:
+        now_tr = datetime.now(_TZ_TR)
+    elif now_tr.tzinfo is None:
+        now_tr = now_tr.replace(tzinfo=_TZ_TR)
+    else:
+        now_tr = now_tr.astimezone(_TZ_TR)
+    if now_tr < after:
+        print(
+            f"[{label}] {now_tr.strftime('%H:%M')} İST — algoritma-islemler open ertelendi "
+            f"({after.strftime('%d.%m %H:%M')} İST'e kadar)",
+            file=sys.stderr,
+        )
+        return True
+    return False

@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 64268.7,
+    "exit_price": 63888.6,
+    "entry_time_tr": "2026-08-10T19:06:03.063174+03:00",
+    "entry_hour_tr": 19,
+    "entry_dow": 0,
+    "entry_is_weekend": false,
+    "amount": 12.0,
+    "exit_time_tr": "2026-08-10T20:02:09.371107+03:00",
+    "pnl": -12.0,
+    "algo_signal": "UP",
+    "algo_name": "Liquidity Sweep Proxy",
+    "algo_num": 1,
+    "pm_spent": 12.0,
+    "pm_size": 23.76,
+    "pm_entry_price": 0.505,
+    "to_win": 23.76,
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-12pm-et",
+    "hot_hour_boost": false,
+    "cold_hour_cut": false
+  }
+]

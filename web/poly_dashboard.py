@@ -41,6 +41,7 @@ _HEATMAP_SYMS = {
     "b1_01": ["BTC", "ETH", "SOL"],
     "b1_02": ["BTC", "ETH", "SOL"],
     "b1_mum": ["BTC", "ETH", "SOL"],
+    "b1_04": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
@@ -108,14 +109,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum",
+    "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02", "b1_mum",
+    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
     "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -137,6 +138,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "b1_01":      "B1#01",
     "b1_02":      "B1#02",
     "b1_mum":     "B1#03 MUM ANALİZ",
+    "b1_04":      "B1#04",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -160,13 +162,14 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz6_v2": 300,
     "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300, "b1_mum": 300,
+    "b1_04": 300,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -211,6 +214,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "b1_01": "B1#01",
     "b1_02": "B1#02",
     "b1_mum": "B1#03 MUM",
+    "b1_04": "B1#04",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -237,7 +241,7 @@ for _num, _name, *_rest in _A2_META:
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02", "b1_mum",
+    "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
 ] + _A2_KEYS
 
 _HEATMAP_ORDER.extend(_A2_KEYS)
@@ -257,6 +261,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("b1_01",      "B1#01",                 300,  "Sembol bazlı en iyi motor birleşimi"),
     ("b1_02",      "B1#02",                 300,  "BTC→A15 · ETH→A6 · SOL→A2#01"),
     ("b1_mum",     "B1#03 MUM ANALİZ",      300,  "Sonnet mum pattern confluence · 1h · ±15"),
+    ("b1_04",      "B1#04",                 300,  "Edge-ağırlıklı küme konsensüsü · 23 motor"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
@@ -1958,23 +1963,38 @@ def _journal_fallback_feed_entries() -> list[dict]:
     return entries
 
 
+def _feed_dedupe_key(entry: dict) -> str:
+    """Aynı bildirimin feed / journal / telegram kayıtları ~100ms farklı ts ile gelir."""
+    ts = entry.get("ts") or ""
+    if len(ts) >= 16:
+        return ts[:16]  # YYYY-MM-DDTHH:MM
+    return ts
+
+
+def _feed_source_rank(entry: dict) -> int:
+    src = entry.get("source") or "feed"
+    return {"feed": 3, "journal": 2, "telegram_log": 1}.get(src, 0)
+
+
 def _merge_analyst_feed_entries(*sources: list[dict]) -> list[dict]:
     merged: dict[str, dict] = {}
     for source in sources:
         for entry in source:
-            ts = entry.get("ts") or ""
-            if not ts:
+            key = _feed_dedupe_key(entry)
+            if not key:
                 continue
-            prev = merged.get(ts)
+            prev = merged.get(key)
             if not prev:
-                merged[ts] = dict(entry)
+                merged[key] = dict(entry)
                 continue
+            prev_rank = _feed_source_rank(prev)
+            new_rank = _feed_source_rank(entry)
             prev_body = (prev.get("body") or "").strip()
             new_body = (entry.get("body") or "").strip()
-            if len(new_body) > len(prev_body):
-                merged[ts] = dict(entry)
-            elif len(new_body) == len(prev_body) and entry.get("source") == "telegram_log":
-                merged[ts] = dict(entry)
+            if new_rank > prev_rank:
+                merged[key] = dict(entry)
+            elif new_rank == prev_rank and len(new_body) > len(prev_body):
+                merged[key] = dict(entry)
     return sorted(merged.values(), key=lambda e: e.get("ts") or "")
 
 
@@ -2948,6 +2968,11 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
         panel = "poly_b1"
         name = short or label
         title = "Sonnet mum confluence · 1h"
+    elif key == "b1_04":
+        category = "Poly sanal · B1#04"
+        panel = "poly_b1"
+        name = short or label
+        title = "Edge-ağırlıklı küme konsensüsü"
     else:
         category = "Poly sanal · A2 Top-17"
         panel = "poly_a2"
@@ -13965,7 +13990,7 @@ body{
     <div class="head">
       <div>
         <div class="page-title">Algoritma işlemler</div>
-        <div class="page-sub">A6 + A6 V2 + A2 Top-17 · Poly sanal $300 · :02/:05</div>
+        <div class="page-sub">A6 + A6 V2 + A2 Top-17 + B1 · Poly sanal $300 · :02/:05/:07 · 7/24 (hafta sonu duraklama yok)</div>
       </div>
       <div class="chip" id="sum-chip">—</div>
     </div>
@@ -13996,7 +14021,7 @@ body{
       </div>
       <aside class="edit-panel" id="detail-edit-panel">
         <div class="edit-panel-title">İşlem tutarları · sembol WR</div>
-        <div class="edit-hint">Sembol geçmiş WR'ye göre bir sonraki açılışta kullanılır. Sıcak saat +%40 · soğuk saat −%30 ayrıca uygulanır.</div>
+        <div class="edit-hint">Sembol geçmiş WR'ye göre bir sonraki açılışta kullanılır. Soğuk saat −%30 ayrıca uygulanır (sıcak saat büyütme kapalı).</div>
         <div id="detail-edit-forms"><div class="empty">yükleniyor…</div></div>
       </aside>
     </div>

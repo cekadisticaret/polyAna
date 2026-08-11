@@ -61,7 +61,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/poly_predictor_analysis.py` | A1/A2 ortak `predict`; Kill Zone yalnızca A2 (`kill_zone=True`) |
 | `temmuzPoly/btc_5m_105_algo.py` | 5M ortak sinyal motoru (15M adaptörleri; 4-algo + MR veto) |
 | `temmuzPoly/poly_trader_5m_common.py` | 5M BTC ortak yardımcılar (Binance, 4-algo, PM emir) |
-| `temmuzPoly/pm_trader_helpers.py` | PM emir + sanal kotasyon; gerçek PM WR giriş (`load_pm_live_amounts` / `analiz5_settings.json`) |
+| `temmuzPoly/pm_trader_helpers.py` | PM emir + sanal kotasyon; gerçek PM WR giriş (`load_pm_live_amounts` / `analiz5_settings.json`); slot tutarı: zayıf saat -%30, hot-hour büyütme **kapalı** (`HOT_HOUR_BOOST=1.0`) |
 | `temmuzPoly/pm_manual_sync.py` | Manuel PM — Polymarket activity → manual state senkron (5/15dk + saatlik) |
 | `temmuzPoly/poly_trader_manual.py` | Manuel PM slot-sonu otomatik settle (`close`) — 5m/15m/1h |
 | `temmuzPoly/pm_orphan_sync.py` | Ghost PM — zincirde açık ama state'te yok pozisyonları live trader'a yazar (trader sembol allowlist) |
@@ -71,7 +71,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/btc_analiz1_algo.py` | 1. Analiz tam algoritma (standalone kopya, poly_predictor ile aynı) |
 | `temmuzPoly/poly_trader_analiz1.py` | 1. Analiz sanal (BTC+SOL); $12-16-20 WR; PM net kazanç ≥%50 yoksa giriş yok; top-3 saatte +%50; 12:00 yarı; **hafta sonu da açık** |
 | `temmuzPoly/poly_trader_analiz2.py` | 2. Analiz sanal (SOL only; $300; PM net kazanç ≥%50 yoksa giriş yok; **ALLOW_FALLBACK=False**) |
-| `temmuzPoly/poly_trader_analiz2_live.py` | 2. Analiz **canlı PM** SOL; slot gate WR>%85 → $25; PM net ≥%50 |
+| `temmuzPoly/poly_trader_analiz2_live.py` | 2. Analiz **canlı PM** SOL; slot gate zayıf saat -%30; PM net ≥%50 |
 | `temmuzPoly/backtest_common.py` | 1Y walk-forward backtest ortak yardımcılar |
 | `temmuzPoly/backtest_analiz2.py` | 2. Analiz 1Y walk-forward backtest (SOL, predict motoru) |
 | `temmuzPoly/backtest_analiz1.py` | 1. Analiz 1Y walk-forward backtest (BTC+SOL, predict motoru) |
@@ -83,10 +83,10 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/backtest_algo_catalog.py` | 78 algo 1Y yön backtest (BTC+ETH+SOL 1h) → `backtest_algo_catalog_1y.json` |
 | `temmuzPoly/backtest_algo_catalog_notify.py` | Top-30 algo 1Y P&L özeti + Telegram (`--send`) |
 | `temmuzPoly/poly_trader_analiz5_midcheck.py` | A1 Live açık pozisyon :30 anlık değer + PM kotasyon görseli (TG) |
-| `temmuzPoly/poly_trader_analiz5.py` | **A1 Live** — gerçek PM; slot gate: top3 +%40 / zayıf saat -%30 / WR>%85 → **$25** |
+| `temmuzPoly/poly_trader_analiz5.py` | **A1 Live** — gerçek PM; slot gate: zayıf saat -%30 (hot-hour büyütme kapalı) |
 | `temmuzPoly/poly_analiz_dual_core.py` | 10. Analiz çift konsensüs ortak motor (A1+A4; PM net kazanç ≥%50 filtresi) |
 | `temmuzPoly/poly_trader_analiz10.py` | 10. Analiz çift konsensüs sanal (BTC+SOL, $300); Cum 22:00–Pzt 11:00 open kapalı |
-| `temmuzPoly/poly_trader_analiz10_live.py` | A10 Live gerçek PM; slot gate (WR>%85 → $25); PM net ≥%50 yoksa giriş yok |
+| `temmuzPoly/poly_trader_analiz10_live.py` | A10 Live gerçek PM; slot gate (zayıf saat -%30); PM net ≥%50 yoksa giriş yok |
 | `temmuzPoly/poly_trader_analiz6.py` | 6. Analiz sanal (BTC+SOL+ETH); TG=15. Analiz (A4 botu); A6 Live eşleme; **hafta sonu da açık** |
 | `temmuzPoly/poly_trader_analiz6_v2.py` | 6. Analiz V2 sanal (BTC+ETH only); A6V2 Live eşleme; **hafta sonu da açık** |
 | `temmuzPoly/poly_trader_analiz6_v3.py` | 6. Analiz V3 sanal (BTC/ETH→A6 · SOL→A2); A6V3 Live eşleme; **hafta sonu da açık** |
@@ -94,13 +94,16 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/b1_01_signal.py` | B1#01 motor seçimi — algoritma-islemler WR taraması |
 | `temmuzPoly/poly_trader_b1_02.py` | B1#02 sanal — sabit BTC→A15 · ETH→A6 · SOL→A2#01 ($300); **hafta sonu da açık** |
 | `temmuzPoly/poly_trader_b1_mum.py` | B1#03 MUM ANALİZ sanal — Sonnet mum confluence 1h ±15 ($300); TG; **hafta sonu açık** |
+| `temmuzPoly/poly_trader_b1_04.py` | B1#04 sanal — 23 birincil motorun edge-ağırlıklı küme konsensüsü ($300); :02 close / :07 open |
+| `temmuzPoly/b1_04_signal.py` | B1#04 karar motoru — kopya defterleri tek oya indirir, oyları başabaşa göre ölçülmüş edge ile ağırlıklandırır; eşik `B1_04_MIN_EDGE` (varsayılan **0.0** = oylama yön gösterince gir) |
+| `temmuzPoly/b1_04_backfill.py` | B1#04 geçmişini A2#05 slotlarında walk-forward simüle edip doldurur (`--write`); kayıtlar `backfill: true` |
 | `temmuzPoly/algo_islemler_fresh_start.py` | Algoritma-islemler close + bakiye $300 sıfırla (cron open bekler) |
 | `temmuzPoly/algo_islemler_defer_to_next_hour.py` | (ops) open erteleme — normalde kullanma |
 | `temmuzPoly/b1_02_signal.py` | B1#02 sabit sembol→motor eşlemesi |
 | `temmuzPoly/analiz6_v3_signal.py` | A6V3 sinyal — BTC/ETH A6, SOL A2 (algo→predict kline dönüşümü) |
 | `temmuzPoly/poly_trader_analiz6_v2_live.py` | A6V2 Live gerçek PM (BTC+ETH); dashboard toggle |
 | `temmuzPoly/poly_trader_analiz6_v3_live.py` | A6V3 Live gerçek PM (BTC+ETH+SOL); dashboard toggle |
-| `temmuzPoly/poly_trader_analiz6_live.py` | A6 Live gerçek PM; slot gate WR>%85 → $25; sanal A6 adayları |
+| `temmuzPoly/poly_trader_analiz6_live.py` | A6 Live gerçek PM; slot gate zayıf saat -%30; sanal A6 adayları |
 | `temmuzPoly/poly_live_hourly_common.py` | Saatlik gerçek PM ortak açılış yardımcıları |
 | `temmuzPoly/poly_trader_manual_state.json` | Manuel PM işlemleri state (dashboard açık pozisyon) |
 | `temmuzPoly/analiz32_5m_adapter.py` | 5M110Analiz → 5m sinyal adaptörü (algo bozulmaz) |
@@ -162,13 +165,13 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_analiz15.py close/open` — **15. Analiz** BTC→A6 · ETH→A8 · SOL→A2 sanal ($300); Cum 22:00–Pzt 11:00 open kapalı
 - `temmuzPoly/poly_trader_analiz6.py weekly` — Cumartesi 21:00 haftalık 6 ısı haritası
 - `temmuzPoly/poly_trader_analiz15.py weekly` — Cumartesi 21:00 haftalık 15 ısı haritası
-- `temmuzPoly/poly_trader_analiz5.py close/open` — **A1 Live**; WR>%85 → **$25** PM (slot gate)
-- `temmuzPoly/poly_trader_analiz2_live.py close/open` — **A2 Live**; aynı slot gate ($25 force)
+- `temmuzPoly/poly_trader_analiz5.py close/open` — **A1 Live**; slot gate: zayıf saat -%30 (hot-hour büyütme kapalı)
+- `temmuzPoly/poly_trader_analiz2_live.py close/open` — **A2 Live**; aynı slot gate (zayıf saat -%30)
 - `temmuzPoly/pm_weekend_sync.py close/open` — Cum **22:00** / Pzt **11:00** İST erken açılış; A1/A2/A10 Live Pzt **12:00**
 - `temmuzPoly/poly_trader_analiz5_midcheck.py` — saat **:30** o saatin açık pozisyonu anlık değer + kotasyon görseli (TG)
 - `temmuzPoly/poly_trader_analiz5.py weekly` — Cumartesi 21:00 haftalık 5 ısı haritası
 - `temmuzPoly/poly_trader_analiz10.py close/open` — çift konsensüs **sanal**; Cum 22:00–Pzt 11:00 open kapalı
-- `temmuzPoly/poly_trader_analiz10_live.py` — **A10 Live** :02/:05; slot gate WR>%85 → $25; Ayarlar anahtarı
+- `temmuzPoly/poly_trader_analiz10_live.py` — **A10 Live** :02/:05; slot gate zayıf saat -%30; Ayarlar anahtarı
 - `temmuzPoly/pm_balance_hourly.py` — saat başı PM portföy kaydı; **00:00 İST** Telegram bakiye özeti; 3 saat peş peşe düşüşte 🔴 ALERT
 - `temmuzPoly/poly_trader_5m_real_stats.py` — saat başı: 110 sanal PM Telegram özeti
 - `temmuzPoly/algo_signals.py` — `:05` her saat: 36 algo sinyali → `/tmp/algo_signals.json`

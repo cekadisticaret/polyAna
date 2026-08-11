@@ -1,7 +1,29 @@
 {
-  "balance": 337.79,
-  "open_positions": [],
-  "total_pnl": 37.79,
-  "balance_reset_at_tr": "2026-08-09T12:04:43.868081+03:00",
-  "balance_reset_note": "algoritma-islemler bakiye $300 — geçmiş korundu"
+  "balance": 283.79,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 64281.0,
+      "entry_time_tr": "2026-08-11T13:05:10.637430+03:00",
+      "entry_hour_tr": 13,
+      "entry_dow": 1,
+      "entry_is_weekend": false,
+      "amount": 12.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": false,
+      "algo_signal": "UP",
+      "algo_name": "MACD Hist. Div",
+      "pm_slug": "bitcoin-up-or-down-august-11-2026-6am-et",
+      "pm_title": "Bitcoin Up or Down - August 11, 6AM ET",
+      "pm_token_dir": "UP",
+      "pm_entry_price": 0.395,
+      "pm_spent": 12.0,
+      "pm_size": 30.38,
+      "to_win": 30.38
+    }
+  ],
+  "total_pnl": -16.21,
+  "balance_reset_at_tr": "2026-08-10T00:33:03.974396+03:00",
+  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş korundu"
 }

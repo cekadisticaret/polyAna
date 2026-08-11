@@ -31,7 +31,7 @@ from pm_trader_helpers import (
     skip_if_weekend_pause,
     slot_amount_log,
 )
-from pm_balance_guard import can_open_trade
+from pm_balance_guard import can_open_trade, is_dashboard_live_open
 
 _ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
 if os.path.exists(_ENV_FILE):
@@ -87,6 +87,9 @@ def get_live_spec(algo_num: int) -> A2LiveSpec | None:
 
 
 def _pm_enabled(spec: A2LiveSpec) -> bool:
+    """Dashboard Live anahtarı tek otorite; .env bayrağı yedek (geriye uyumluluk)."""
+    if is_dashboard_live_open(spec.label):
+        return True
     return os.getenv(spec.env_flag, "false").lower() in ("1", "true", "yes")
 
 
@@ -366,7 +369,7 @@ async def run_open(spec: A2LiveSpec) -> None:
     if skip_if_weekend_pause(spec.label, "open", now_tr):
         return
     if not _pm_enabled(spec):
-        print(f"[{spec.label} open] {spec.env_flag}=false — atlandı")
+        print(f"[{spec.label} open] dashboard kapalı ({spec.amount_system}) — atlandı")
         return
 
     saat = now_tr.strftime("%H:%M")
