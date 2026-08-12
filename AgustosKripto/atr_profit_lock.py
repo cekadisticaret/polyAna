@@ -12,9 +12,18 @@ from typing import Any
 
 # Varsayılan çarpanlar (env ile override)
 ATR_PERIOD = int(os.environ.get("ATR_LOCK_PERIOD", "14"))
-ARM_ATR = float(os.environ.get("ATR_LOCK_ARM", "1.7"))
+# 1.7x çok geç silahlanıyordu: 20.816 işlemin sadece 265'i kilide ulaşıyordu.
+# Kayıtlı peak_upnl/atr_usd (MFE) dağılımı üzerinde eşik taraması:
+#   ARM 1.7 → 265 kilit, ARM 1.4 → 564, ARM 1.2 → 811, ARM 1.0 → 1348.
+# MFE 0.5 ATR'yi geçen işlemlerin kazanma oranı %23.5'ten %88.7'ye çıkıyor,
+# yani erken silahlanma doğru taraf.
+ARM_ATR = float(os.environ.get("ATR_LOCK_ARM", "1.0"))
 TRAIL_ATR = float(os.environ.get("ATR_LOCK_TRAIL", "1.0"))
-LOCK1_MIN_ATR = float(os.environ.get("ATR_LOCK_MIN", "1.0"))
+# ARM ile eşit olmamalı: stop = max(peak - TRAIL, LOCK_MIN) olduğu için
+# LOCK_MIN == ARM iken kilit tam zirveye kurulur ve pozisyon silahlandığı anda
+# kapanır (sabit TP'ye dönüşür, runner kalmaz). 0.5 ile kâr kilitlenir ama
+# MFE 4+ bandındaki uzun kuyruk (n=54, ort. +$13.9) açık kalır.
+LOCK1_MIN_ATR = float(os.environ.get("ATR_LOCK_MIN", "0.5"))
 # stop_level artışı için minimum stop_upnl yükselişi (atr_$ çarpanı)
 LEVEL_STEP_ATR = float(os.environ.get("ATR_LOCK_LEVEL_STEP", "0.5"))
 # Zarar stop — net uPnL bu kadar ATR$ altına inince kapat (kâr kilidi yokken)

@@ -26,6 +26,7 @@ from pm_trader_helpers import (
     pm_live_amount_range_str,
     pm_live_wr_amount,
     pm_realized_pnl,
+    pm_sanal_slot_candle,
     pm_tg_stake,
     resolve_slot_trade_amount,
     skip_if_weekend_pause,
@@ -177,6 +178,46 @@ def _pm_bal_line() -> str:
     return f"💰 PM Bakiye: ${bal:.2f}" if bal >= 0 else "💰 PM Bakiye: ?"
 
 
+def _resolve_pm(pos: dict, *, now_hour: int):
+    """PM sonuç — slot bitmişse gevşek eşik, o da yoksa Binance mum yedeği.
+
+    Gamma bazen saat bitince uzun süre mid-price (örn. 0.75) tutuyor;
+    closed=False iken 0.99 eşiği hiç geçmiyor. Slot bitmişse:
+      1) 0.90 eşiği
+      2) Binance 1h slot mumu (sanal settle ile aynı) — defteri kilitlemez
+    """
+    slug = pos.get("pm_slug")
+    if not slug:
+        return None
+    res = pm_fetch_resolution(slug)
+    if res is not None:
+        return res
+    entry_h = pos.get("entry_hour_tr")
+    slot_ended = entry_h is not None and int(entry_h) != int(now_hour)
+    if not slot_ended:
+        return None
+    res = pm_fetch_resolution(slug, min_decisive=0.90)
+    if res is not None:
+        return res
+    candle = pm_sanal_slot_candle(pos.get("symbol") or "", pos.get("entry_time_tr") or "")
+    if not candle:
+        return None
+    hour_open, hour_close = candle
+    up_won = hour_close >= hour_open
+    print(
+        f"[A2 live] {pos.get('symbol')} PM kesin değil → Binance yedek "
+        f"{'UP' if up_won else 'DOWN'} ({hour_open:.2f}→{hour_close:.2f})"
+    )
+    return {
+        "up_won": up_won,
+        "closed": False,
+        "up_price": 1.0 if up_won else 0.0,
+        "down_price": 0.0 if up_won else 1.0,
+        "title": "binance_fallback",
+        "source": "binance_slot",
+    }
+
+
 async def run_close(spec: A2LiveSpec) -> None:
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     if skip_if_weekend_pause(spec.label, "close", now_tr):
@@ -188,6 +229,7 @@ async def run_close(spec: A2LiveSpec) -> None:
         return
 
     lines = []
+    pending = []
     tur_pnl = 0.0
     failed = []
     for pos in list(state["open_positions"]):
@@ -195,6 +237,7 @@ async def run_close(spec: A2LiveSpec) -> None:
         klines = await _fetch_klines(sym, "1h", 2)
         if not klines:
             failed.append(pos)
+            pending.append(f"{_sym_short(sym)} (kline yok)")
             continue
         current_price = klines[-1]["close"]
         entry = pos["entry_price"]
@@ -202,20 +245,26 @@ async def run_close(spec: A2LiveSpec) -> None:
         amount = pos.get("amount", spec.default_amount)
         has_pm = bool(pos.get("pm_slug") and pos.get("pm_order_id"))
         if has_pm:
-            res = pm_fetch_resolution(pos["pm_slug"])
+            res = _resolve_pm(pos, now_hour=now_tr.hour)
             if res is None:
                 failed.append(pos)
+                pending.append(
+                    f"{_sym_short(sym)} h={pos.get('entry_hour_tr')} "
+                    f"(PM sonuç henüz kesin değil)"
+                )
                 continue
             token_dir = pos.get("pm_token_dir") or pred
             win = (token_dir == "UP" and res["up_won"]) or (token_dir == "DOWN" and not res["up_won"])
             actual = "UP" if res["up_won"] else "DOWN"
             pnl = pm_realized_pnl(pos, win)
+            settle_src = res.get("source") or "pm"
         else:
             actual = "UP" if current_price >= entry else "DOWN"
             win = pred == actual
             pm_spent = float(pos.get("pm_spent") or amount)
             pm_size = float(pos.get("pm_size") or 0)
             pnl = round(pm_size - pm_spent, 2) if win and pm_size else round(-pm_spent, 2)
+            settle_src = "no_pm"
         tur_pnl += pnl
         state["total_pnl"] = round(state.get("total_pnl", 0.0) + pnl, 2)
         history.append({
@@ -237,6 +286,7 @@ async def run_close(spec: A2LiveSpec) -> None:
             "pm_slug": pos.get("pm_slug"),
             "algo_name": pos.get("algo_name", spec.algo_name),
             "algo_num": spec.algo_num,
+            "settle_source": settle_src if has_pm else "no_pm",
         })
         name = _sym_short(sym)
         lines.append(f"{'✅' if win else '❌'} {name}  {pred}  net {'+' if pnl >= 0 else ''}{pnl:.2f}$")
@@ -244,8 +294,11 @@ async def run_close(spec: A2LiveSpec) -> None:
     state["open_positions"] = failed
     save_state(spec, state)
     save_history(spec, history)
+    if pending:
+        print(f"[{spec.label} close] {len(pending)} pozisyon bekliyor: {', '.join(pending)}")
     if not lines:
         return
+    print(f"[{spec.label} close] {len(lines)} pozisyon kapatıldı")
     closed = len(history)
     wins = sum(1 for t in history if t["win"])
     genel = f"%{wins / closed * 100:.0f}" if closed else "—"

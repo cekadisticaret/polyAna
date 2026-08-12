@@ -178,62 +178,80 @@ def _history_path_for_book(book: dict) -> str | None:
     return hp if os.path.exists(hp) else None
 
 
-def compute_top_success(*, n: int = 6, min_trades: int = 2) -> list[dict]:
-    """Algo+coin bazında en yüksek WR (eşitlikte net PnL) — Kripto overview kutusu."""
-    buckets: dict[tuple[str, str], dict] = {}
-    for book in ALL_BOOKS:
-        hp = _history_path_for_book(book)
-        if not hp:
-            continue
-        try:
-            hist = load_history(hp)
-        except Exception:
-            continue
-        algo = (book.get("name") or book["uid"]).lower()
-        for t in hist:
-            sym = (t.get("symbol") or "").upper().replace("USDT", "")
-            if not sym or sym not in _TEST_SYM_SET:
-                continue
-            key = (algo, sym)
-            b = buckets.setdefault(
-                key,
-                {"algo": algo, "symbol": sym, "wins": 0, "trades": 0, "pnl": 0.0},
-            )
-            b["trades"] += 1
-            if t.get("win"):
-                b["wins"] += 1
-            b["pnl"] += float(t.get("pnl") or 0)
-    rows: list[dict] = []
-    for b in buckets.values():
-        if b["trades"] < min_trades:
-            continue
-        wr = round(100.0 * b["wins"] / b["trades"], 1)
-        rows.append({
-            "algo": b["algo"],
-            "symbol": b["symbol"],
-            "label": f"{b['algo']} {b['symbol']}",
-            "wins": b["wins"],
-            "trades": b["trades"],
-            "wr": wr,
-            "pnl": round(b["pnl"], 4),
-        })
-    rows.sort(key=lambda x: (-x["wr"], -x["pnl"], -x["trades"]))
-    return rows[:n]
+# ── Drift-nötr sıralama ───────────────────────────────────────
+# WR bazlı sıralama örneklem dönemindeki piyasa yönünü ölçüyordu:
+# 30 coin × 60 algoritma = 1.800 kombinasyonda 2-3 işlemli %100'ler
+# rastgele oluşuyor ve her saat değişiyor. Ölçülen: ADA SHORT'un
+# t=8,68'lik "kenarı" LONG −0,1409% / SHORT +0,1485% ayrıştırmasında
+# yok oldu (SKILL ~0). Bu yüzden sıralama artık SKILL + t-istatistiği.
+LEADER_MIN_TRADES = 20
+LEADER_MIN_T = 2.0
+LEADER_MIN_SKILL = 0.04  # maker gidiş-dönüş maliyeti %0.04
 
 
-def top_success_block(*, n: int = 6) -> list[dict]:
-    from virtual_book import read_snapshot
+def _trade_ret_pct(t: dict) -> float | None:
+    """Kaldıraçsız yüzde getiri — yön düzeltmeli."""
+    try:
+        entry = float(t["entry_price"])
+        exit_ = float(t["exit_price"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if entry <= 0:
+        return None
+    move = (exit_ - entry) / entry * 100.0
+    return move if t.get("side") == "LONG" else -move
 
-    snap = read_snapshot("test", max_age=900)
-    if snap and snap.get("top_success"):
-        return list(snap["top_success"])[:n]
-    return compute_top_success(n=n)
+
+def _skill_stats(longs: list[float], shorts: list[float]) -> dict:
+    """SKILL / DRIFT / t — tek yön varsa SKILL hesaplanamaz (None)."""
+    allv = longs + shorts
+    n = len(allv)
+    out = {
+        "n": n,
+        "n_long": len(longs),
+        "n_short": len(shorts),
+        "skill": None,
+        "drift": None,
+        "t": 0.0,
+    }
+    if n < 2:
+        return out
+    mean = sum(allv) / n
+    sd = (sum((v - mean) ** 2 for v in allv) / n) ** 0.5
+    out["t"] = round((mean / (sd / n ** 0.5)) if sd > 0 else 0.0, 2)
+    out["mean_ret"] = round(mean, 4)
+    if longs and shorts:
+        ml = sum(longs) / len(longs)
+        ms = sum(shorts) / len(shorts)
+        out["mean_long"] = round(ml, 4)
+        out["mean_short"] = round(ms, 4)
+        out["skill"] = round((ml + ms) / 2, 4)
+        out["drift"] = round((ms - ml) / 2, 4)
+    return out
 
 
-def compute_coin_leaders(*, min_trades: int = 2) -> list[dict]:
-    """20 coin'in her biri için en başarılı algoritma — 'hangi coin'de hangi
-    algoritma çok başarılı' sorusuna cevap; algoritma seçimi için lider tablosu.
-    """
+def _leader_qualifies(row: dict) -> bool:
+    """Gerçek para için asgari kenar şartı."""
+    skill = row.get("skill")
+    return (
+        skill is not None
+        and row.get("trades", 0) >= LEADER_MIN_TRADES
+        and skill >= LEADER_MIN_SKILL
+        and abs(row.get("t") or 0) >= LEADER_MIN_T
+    )
+
+
+def _leader_sort_key(r: dict):
+    """Nitelikli olanlar önce, sonra SKILL, sonra işlem sayısı."""
+    return (
+        0 if r.get("qualifies") else 1,
+        -(r.get("skill") if r.get("skill") is not None else -99),
+        -(r.get("trades") or 0),
+    )
+
+
+def _collect_pairs() -> dict:
+    """(coin, algo) → istatistik kovası; tüm Test defterlerini tarar."""
     buckets: dict[tuple[str, str], dict] = {}
     for book in ALL_BOOKS:
         hp = _history_path_for_book(book)
@@ -248,50 +266,120 @@ def compute_coin_leaders(*, min_trades: int = 2) -> list[dict]:
             sym = (t.get("symbol") or "").upper().replace("USDT", "")
             if not sym or sym not in _TEST_SYM_SET:
                 continue
-            key = (sym, algo)
             b = buckets.setdefault(
-                key,
-                {"symbol": sym, "algo": algo, "wins": 0, "trades": 0, "pnl": 0.0},
+                (sym, algo),
+                {
+                    "symbol": sym, "algo": algo, "wins": 0, "trades": 0,
+                    "pnl": 0.0, "gross": 0.0, "commission": 0.0,
+                    "longs": [], "shorts": [],
+                },
             )
             b["trades"] += 1
             if t.get("win"):
                 b["wins"] += 1
             b["pnl"] += float(t.get("pnl") or 0)
+            b["gross"] += float(t.get("pnl_gross") or 0)
+            b["commission"] += float(t.get("commission") or 0)
+            v = _trade_ret_pct(t)
+            if v is not None:
+                if t.get("side") == "LONG":
+                    b["longs"].append(v)
+                elif t.get("side") == "SHORT":
+                    b["shorts"].append(v)
+    return buckets
 
+
+def _pair_row(b: dict) -> dict:
+    st = _skill_stats(b["longs"], b["shorts"])
+    row = {
+        "symbol": b["symbol"],
+        "algo": b["algo"],
+        "wins": b["wins"],
+        "trades": b["trades"],
+        "wr": round(100.0 * b["wins"] / b["trades"], 1) if b["trades"] else 0.0,
+        "pnl": round(b["pnl"], 4),
+        "gross": round(b["gross"], 4),
+        "commission": round(b["commission"], 4),
+        "skill": st["skill"],
+        "drift": st["drift"],
+        "t": st["t"],
+        "n_long": st["n_long"],
+        "n_short": st["n_short"],
+    }
+    row["qualifies"] = _leader_qualifies(row)
+    return row
+
+
+def compute_top_success(*, n: int = 6, min_trades: int | None = None) -> list[dict]:
+    """Algo+coin bazında en yüksek SKILL — Kripto overview kutusu.
+
+    Sıralama drift-nötr SKILL üzerinden; nitelikli (n≥20, SKILL≥%0.04,
+    |t|≥2) satırlar en üstte.
+    """
+    floor = LEADER_MIN_TRADES if min_trades is None else int(min_trades)
+    rows = [
+        _pair_row(b)
+        for b in _collect_pairs().values()
+        if b["trades"] >= floor
+    ]
+    for r in rows:
+        r["algo"] = str(r["algo"]).lower()
+        r["label"] = f"{r['algo']} {r['symbol']}"
+    rows.sort(key=_leader_sort_key)
+    return rows[:n]
+
+
+def top_success_block(*, n: int = 6) -> list[dict]:
+    from virtual_book import read_snapshot
+
+    snap = read_snapshot("test", max_age=900)
+    if snap and snap.get("top_success"):
+        return list(snap["top_success"])[:n]
+    return compute_top_success(n=n)
+
+
+def compute_coin_leaders(*, min_trades: int | None = None) -> list[dict]:
+    """30 coin'in her biri için en yüksek SKILL'li algoritma.
+
+    'En iyi' artık WR değil drift-nötr SKILL: LONG ve SHORT ortalamalarının
+    ortalaması. Böylece coin'in örneklem dönemindeki yönü sıralamaya
+    karışmıyor. `qualified` alanı gerçek para eşiğini geçen coin sayısını
+    ayırt etmek için.
+    """
+    floor = LEADER_MIN_TRADES if min_trades is None else int(min_trades)
     by_symbol: dict[str, list[dict]] = {}
-    for b in buckets.values():
-        if b["trades"] < min_trades:
+    for b in _collect_pairs().values():
+        if b["trades"] < floor:
             continue
-        row = {**b, "wr": round(100.0 * b["wins"] / b["trades"], 1), "pnl": round(b["pnl"], 4)}
-        by_symbol.setdefault(b["symbol"], []).append(row)
+        by_symbol.setdefault(b["symbol"], []).append(_pair_row(b))
+
+    def _slim(r: dict) -> dict:
+        return {
+            "algo": r["algo"], "wr": r["wr"], "trades": r["trades"],
+            "wins": r["wins"], "pnl": r["pnl"], "skill": r["skill"],
+            "drift": r["drift"], "t": r["t"], "n_long": r["n_long"],
+            "n_short": r["n_short"], "qualifies": r["qualifies"],
+        }
 
     out: list[dict] = []
     for sym in sorted({s.replace("USDT", "") for s in TEST_SYMBOLS}):
-        cands = sorted(
-            by_symbol.get(sym) or [],
-            key=lambda r: (-r["wr"], -r["pnl"], -r["trades"]),
-        )
+        cands = sorted(by_symbol.get(sym) or [], key=_leader_sort_key)
         if not cands:
-            out.append({"symbol": sym, "best": None, "runner_up": None, "candidates": 0})
+            out.append({
+                "symbol": sym, "best": None, "runner_up": None,
+                "candidates": 0, "qualified": 0,
+            })
             continue
-        best = cands[0]
-        runner_up = cands[1] if len(cands) > 1 else None
         out.append({
             "symbol": sym,
-            "best": {
-                "algo": best["algo"], "wr": best["wr"],
-                "trades": best["trades"], "wins": best["wins"], "pnl": best["pnl"],
-            },
-            "runner_up": (
-                {
-                    "algo": runner_up["algo"], "wr": runner_up["wr"],
-                    "trades": runner_up["trades"], "pnl": runner_up["pnl"],
-                } if runner_up else None
-            ),
+            "best": _slim(cands[0]),
+            "runner_up": _slim(cands[1]) if len(cands) > 1 else None,
             "candidates": len(cands),
+            "qualified": sum(1 for r in cands if r["qualifies"]),
         })
     out.sort(key=lambda r: (
-        -(r["best"]["wr"] if r["best"] else -1),
+        0 if (r["best"] and r["best"]["qualifies"]) else 1,
+        -((r["best"]["skill"] if r["best"] and r["best"]["skill"] is not None else -99)),
         -(r["best"]["trades"] if r["best"] else 0),
     ))
     return out

@@ -20,14 +20,14 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/chart_algo_panel.py` | Grafik ALG1/ALG2 — 5m/15m konsensüs + slot WR takibi (`update_wr` cron */5). |
 | `Sonnet/candle_pattern_engine1.py` | Mum pattern + S/D + confluence + `generate_report()` (grafik raporu) |
 | `Sonnet/candle_pattern_engine.py` | v1 motor (yedek; grafik engine1 kullanır) |
-| `web/poly_dashboard.py` | Poly dashboard **5050** — `/poly/grafik` mum analizi; `/algoritma-islemler` A1/A2/A6/V2/V3/A15/B1×3 + A2 Top-17 (7/24 sanal); `/poly/yapay-zeka-analiz` Poly Algo Analist bildirim akışı + Lider Analizi; `/kripto/yapay-zeka-analiz` Kripto Test AI Analist bildirim akışı + Lider Analizi |
+| `web/poly_dashboard.py` | Poly dashboard **5050** — `/poly/grafik` mum analizi; `/algoritma-islemler` A1/A2/A6/V2/V3/A15/B1×3 + A2 Top-17 (7/24 sanal); `/poly/yapay-zeka-analiz` Poly Algo Analist bildirim akışı + Lider Analizi; `/kripto/yapay-zeka-analiz` Kripto Test AI Analist bildirim akışı + Lider Analizi; `/kripto` coin liderleri **SKILL + t** ile sıralanır (WR değil) |
 | `temmuzPoly/repair_a2_sanal_settlement.py` | A2 sanal geçmişi PM slot open/close ile yeniden hesaplar (Binance 1h). |
 | `scripts/watch_critical_files.py` | Kritik kaynak inotify izleyici — silinmede `ops/incidents/` olay kaydı |
 | `ops/CRITICAL_FILE_RESTORE.md` | 2026-08-02 kaynak silinme / geri yükleme zaman çizelgesi |
 | `ops/incidents/` | Silinme/eksik olay JSON+txt (process, git D, audit) |
 | `AgustosKripto/` | Kripto Future — CR6 canlı + sanal Algoritmalar/Analizler; `bursaapp.com/kripto` |
 | `AgustosKripto/virtual_book.py` | Sanal futures — net PnL + ATR kâr kilidi; cache + `/tmp/agustos_snap` |
-| `AgustosKripto/atr_profit_lock.py` | ATR trailing kâr kilidi (arm 1.7 / trail 1.0) + zarar-stop (`2.0×ATR$`, min 10 dk yaş); `lock_history` (seviye/zaman/fiyat) |
+| `AgustosKripto/atr_profit_lock.py` | ATR trailing kâr kilidi (**arm 1.0 / trail 0.5** — MFE'de işlemlerin %79'u 0.5 ATR'yi geçmiyordu) + zarar-stop (`2.0×ATR$`, min 10 dk yaş); `lock_history` (seviye/zaman/fiyat) |
 | `AgustosKripto/Test/` | Poly sinyal kaynaklarının (A1/A2/B1 MUM vb.) sanal Binance Futures defterleri; `$100×6x` deposit $1000; 1h/4h coin+algo bazlı otomatik seçim; gerçek Binance komisyon oranı; `bursaapp.com/kripto/test` |
 | `AgustosKripto/Test/kripto_test_analyst.py` | Kripto Test AI Analist — 3 saatte bir Kripto Test defterleri arasında ayrışma bulur, Anthropic API ile doğal dilde yorum üretir, Telegram'a (LAB bot, ayrı kanal) gönderir, tam metni `kripto_analyst_feed.jsonl`'a kaydeder; `bursaapp.com/kripto/yapay-zeka-analiz` |
 | `AgustosKripto/Test/analog.py` | Analog pencere eşleştirme — son 48 mum z-score şekli → 270k geçmiş pencerede korelasyon → ileri getiri dağılımı + güven skoru; `build`/`query`/`eval` |
@@ -35,16 +35,19 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `AgustosKripto/Test/horizon_sweep.py` | Tutma süresi taraması — sinyal → 1/2/4/8/24s imzalı getiri, saat-kümelenmiş SE; portföy mekaniği yok |
 | `AgustosKripto/Test/minute_data.py` | Maker fill sim için 1m OHLC cache — `fetch`/`info`; `data/minute_cache/*_1m.npz` (30 coin × 90g ≈ 3.9M mum, ~28 MB) |
 | `AgustosKripto/Test/maker_sim.py` | Limit emir fill simülasyonu — analog sinyal + 1m low/high; offset × pencere × ters seçilim; taker vs maker karşılaştırma |
-| `AgustosKripto/fee_utils.py` | Binance komisyon — estimate + userTrades; brüt→net |
+| `AgustosKripto/fee_utils.py` | Binance komisyon — estimate + userTrades; brüt→net; `get_taker_rate` / `get_maker_rate` |
+| `AgustosKripto/skill_audit.py` | Kalıcı denetim — drift-nötr `SKILL` = (ort. LONG% + ort. SHORT%)/2, `DRIFT`, t-istatistiği; defter/coin/konsensüs/güven kırılımı + MFE dağılımı + maker senaryosu. `--leaders` `--mfe` `--consensus` `--conviction` `--all` |
+| `AgustosKripto/conviction_filter.py` | Yüksek güven vetosu — oy birliği (4/4) sinyalleri açılmaz; ölçülen SKILL −0.065% (t=−3.89, 5/5 dilim). Vetolananlar `conviction_shadow.jsonl` gölge defterine yazılır; ters açma **kapalı** (kanıt yetersiz). Ayar: `conviction_filter.json` |
+| `AgustosKripto/funding_harvest.py` | Funding hasadı tarayıcı (delta-nötr) — perp funding oranı + `fundingIntervalHours` (4h/8h sembole göre) → yıllık %, başabaş süre, likidite skoru; **emir açmaz**, `--tg` ile rapor |
 | `AgustosKripto/algo_tg_notify.py` | Kripto sanal algo TG — **10. ANALİZ kanalı** (`poly_analiz_dual_core` bot); close/open özeti 🔶 SANAL |
 | `AgustosKripto/Algoritmalar/` | ALGO2+ALGO1 sanal $300; **tüm 51 defter open $30×10x** max6 (komisyon dahil net PnL); A2#05/#06/#07 + A1#11 ayrıca gerçek Binance'te $7×20x (`real_live`); hafta sonu skip; `reset` |
 | `AgustosKripto/Analizler/` | A1–A10 + A6(Supertrend $10×15x max4); ATR runner; A3/A8 venv |
-| `AgustosKripto/binance_futures_client.py` | Binance USD-M REST — emir, bakiye, commissionRate, userTrades |
-| `AgustosKripto/crypto_futures_trader.py` | Futures open/close + `dust` süpürme (|notional|≤$2); brüt/komisyon/net |
-| `AgustosKripto/crypto_futures_cr6.py` | **Algoritmalar Live** (gerçek Binance) — Hurst+A1#11 MR+Z-Score MR+Mean Reversion çoğunluk oyu; top-N; $7×20x; **yeni open BTC/ETH/BNB yok**; ATR/hard SL |
+| `AgustosKripto/binance_futures_client.py` | Binance USD-M REST — emir, bakiye, commissionRate, userTrades, `book_ticker`, `query_order`, `premium_index`, `funding_info` |
+| `AgustosKripto/crypto_futures_trader.py` | Futures open/close + `dust` süpürme (|notional|≤$2); brüt/komisyon/net; `open_maker` (post-only GTX limit, tick yuvarlama, dolmazsa iptal) |
+| `AgustosKripto/crypto_futures_cr6.py` | **Algoritmalar Live** (gerçek Binance) — Hurst+A1#11 MR+Z-Score MR+Mean Reversion çoğunluk oyu; top-N; $7×20x; **yeni open BTC/ETH/BNB yok**; ATR/hard SL; `fcntl` state kilidi + atomik yazım, `order_id` idempotency (hayalet pozisyon temizliği), `MAX_HOLD_HOURS` |
 | `AgustosKripto/crypto_futures_live_control.json` | Binance Live — `live_paused` (yeni açılış) + `top_n` (1–10); sanal Algoritma/Analiz etkilenmez |
 | `AgustosKripto/cr6_tg_card.py` | Algoritmalar Live TG sarı kart (ALGO2 stili) — açılış/kapanış/ATR photo |
-| `AgustosKripto/crypto_futures_config.json` | Sembol allowlist + default $6 / 10x; `CRYPTO_FUTURES_LIVE` + CR6 canlı |
+| `AgustosKripto/crypto_futures_config.json` | Sembol allowlist + default $6 / 10x; `CRYPTO_FUTURES_LIVE` + CR6 canlı; `entry_mode: maker` + `maker_wait_sec: 90` |
 | `temmuzPoly/analiz5_settings.json` | A1/A2/A10/A6 Live WR giriş tutarları (düşük/orta/yüksek) |
 | `temmuzPoly/pm_profit_baseline.json` | PM Kar başlangıç bakiyesi (varsayılan $314); Toplam Kar = nakit − baseline. |
 | `temmuzPoly/` | Poly trader'lar, algo motorları, backtest; dashboard port **5050**. |
@@ -90,6 +93,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/poly_trader_analiz6.py` | 6. Analiz sanal (BTC+SOL+ETH); TG=15. Analiz (A4 botu); A6 Live eşleme; **hafta sonu da açık** |
 | `temmuzPoly/poly_trader_analiz6_v2.py` | 6. Analiz V2 sanal (BTC+ETH only); A6V2 Live eşleme; **hafta sonu da açık** |
 | `temmuzPoly/poly_trader_analiz6_v3.py` | 6. Analiz V3 sanal (BTC/ETH→A6 · SOL→A2); A6V3 Live eşleme; **hafta sonu da açık** |
+| `temmuzPoly/poly_trader_analiz6_v4.py` | **A2#05 X A6V3 MELEZ** sanal — V3 iskeletini import edip globalleri yönlendirir (V3 dosyası dokunulmaz); BTC→MACD Div #26 · ETH/SOL→Mean Rev ($300); defter anahtarı `melez` · URL `/algoritma-islemler/melez` |
 | `temmuzPoly/poly_trader_b1_01.py` | B1#01 sanal — sembol bazlı en iyi motor birleşimi ($300); **hafta sonu da açık** |
 | `temmuzPoly/b1_01_signal.py` | B1#01 motor seçimi — algoritma-islemler WR taraması |
 | `temmuzPoly/poly_trader_b1_02.py` | B1#02 sanal — sabit BTC→A15 · ETH→A6 · SOL→A2#01 ($300); **hafta sonu da açık** |
@@ -101,6 +105,9 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/algo_islemler_defer_to_next_hour.py` | (ops) open erteleme — normalde kullanma |
 | `temmuzPoly/b1_02_signal.py` | B1#02 sabit sembol→motor eşlemesi |
 | `temmuzPoly/analiz6_v3_signal.py` | A6V3 sinyal — BTC/ETH A6, SOL A2 (algo→predict kline dönüşümü) |
+| `temmuzPoly/analiz6_v4_signal.py` | MELEZ sinyal — her sembolde uzun dönem isabeti en yüksek motor: BTC→`macd_histogram_div` (%55,0), ETH/SOL→`mean_reversion` (%54,2 / %53,2) |
+| `temmuzPoly/analiz6_v4_backfill.py` | MELEZ geçmişini A6V3 (BTC) + A2#05 (ETH/SOL) defterlerinin gerçek kararlarından walk-forward kurar (`--write`); kayıtlar `backfilled: true` |
+| `temmuzPoly/backtest_a2_a6_melez_1y.py` | A2#05 · A6V3 · MELEZ — 1Y walk-forward backtest (BTC/ETH/SOL); ay ay Telegram (`--telegram`) |
 | `temmuzPoly/poly_trader_analiz6_v2_live.py` | A6V2 Live gerçek PM (BTC+ETH); dashboard toggle |
 | `temmuzPoly/poly_trader_analiz6_v3_live.py` | A6V3 Live gerçek PM (BTC+ETH+SOL); dashboard toggle |
 | `temmuzPoly/poly_trader_analiz6_live.py` | A6 Live gerçek PM; slot gate zayıf saat -%30; sanal A6 adayları |
@@ -152,7 +159,11 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_analiz6.py close/open` — 6. Analiz sanal; **open** aynı adayda A6 Live gerçek PM dener (`PM_ANALIZ6_LIVE_ENABLED` + dashboard)
 - `temmuzPoly/poly_trader_analiz6_v2.py close/open` — 6. Analiz V2 sanal (BTC+ETH); A6 ile aynı indikatör; SOL yok; Live yok
 - `temmuzPoly/poly_trader_analiz6_live.py close` — A6 Live kapanış :02; open sanal A6 open ile tetiklenir
-- `AgustosKripto/crypto_futures_cr6.py close/open/trail` — **Algoritmalar Live** (gerçek Binance); Hurst+A1#11 MR+Z-Score MR+MR çoğunluk oyu; top-4 majors önce; $7×20x; ATR kâr kilidi
+- `AgustosKripto/crypto_futures_cr6.py close/open/trail` — **Algoritmalar Live** (gerçek Binance); Hurst+A1#11 MR+Z-Score MR+MR çoğunluk oyu; top-4 majors önce; $7×20x; ATR kâr kilidi; giriş **maker** (dolmazsa iptal, işlem atlanır); `MAX_HOLD_HOURS` slot kilitlenmesini önler
+- `AgustosKripto/skill_audit.py` — elle; **20.826 işlem / 5,2 gün** denetimi: brüt PnL −$694 (t=−0,91 ≈ sıfır), komisyon $9.334 → net **−$10.027**. Eşiği geçen defter **2/103** (şans beklentisi ~26 → gerçek kenar yok). Konsensüs ters çalışıyor: **tam uzlaşı ≥%95 SKILL −%0,066 t=−2,15**, bölünmüş <%65 pozitif. MFE: işlemlerin **%79'u 0,5 ATR'yi geçmiyor** ve tüm zararı bu bant yapıyor (−$19.984)
+- **Ölü bant filtresi kurulamaz:** MFE ancak kapanışta bilinir, giriş anında vekil değişken aranmalı. Denenen tüm giriş özellikleri (ATR%, saat, interval, tutma süresi) ileri testte çöktü — eğitimin seçtiği "en iyi 6 saat" testte t=−1,85'e döndü (aşırı uydurma kanıtı). LONG/SHORT asimetrisi drift, yetenek değil
+- **Yerine kurulan — güven vetosu:** algo içi skor yüzdeliğinin **üst %20'si** SKILL −%0,065 · t=−3,89 · **5/5 zaman diliminde negatif** · DRIFT yalnız +%0,014 (yani piyasa yönü değil). 52 defterin 37'sinde (%71) mevcut. Konsensüs kesitiyle bağımsız olarak aynı sayı (−0,065 / −0,066). Üst kova atılınca kalanın SKILL'i **−0,000%** — zarar durur, kâr başlamaz. Ters açmanın maker sonrası beklentisi +%0,025 ama **%95 aralık [−0,007%, +0,057%] sıfırı kesiyor** → gerçek parayla ters işlem yok, gölge defter toplanıyor
+- `AgustosKripto/funding_harvest.py` — elle / `--tg`; funding oranı taraması, yön riski yok; sembol başına gerçek `fundingIntervalHours` (4h/8h) ile yıllıklandırma
 - `AgustosKripto/Algoritmalar/runner.py close/open/trail/reset` — sanal $300; tüm 51 defter open $30×10x; close/open TG → **10. ANALİZ kanalı** (🔶 SANAL); Cum 22:00–Pzt 11:00 İST skip
 - `AgustosKripto/Analizler/runner.py close/open/trail` — A1–A10 + A6(Supertrend $10×15x max4) + ATR trail
 - `AgustosKripto/Test/runner.py close/open/trail/scan` — Poly sinyal kaynaklı sanal defterler; `$100×6x`; `scan` 10 dk'da bir erken sinyal yakalar (`:05` beklemeden)

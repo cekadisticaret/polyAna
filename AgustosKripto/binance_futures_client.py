@@ -145,6 +145,40 @@ class BinanceFuturesClient:
         data = self.get("/fapi/v1/ticker/price", {"symbol": symbol.upper()})
         return float(data["price"])
 
+    def book_ticker(self, symbol: str) -> dict:
+        """GET /fapi/v1/ticker/bookTicker — en iyi alış/satış (maker giriş için)."""
+        d = self.get("/fapi/v1/ticker/bookTicker", {"symbol": symbol.upper()})
+        return {
+            "symbol": d.get("symbol"),
+            "bid": float(d.get("bidPrice") or 0),
+            "ask": float(d.get("askPrice") or 0),
+            "bid_qty": float(d.get("bidQty") or 0),
+            "ask_qty": float(d.get("askQty") or 0),
+        }
+
+    def premium_index(self, symbol: str | None = None) -> Any:
+        """GET /fapi/v1/premiumIndex — sembol verilmezse tüm perp'ler.
+
+        `lastFundingRate` bir sonraki ödemede uygulanacak orandır.
+        """
+        params = {"symbol": symbol.upper()} if symbol else None
+        return self.get("/fapi/v1/premiumIndex", params)
+
+    def funding_rate_history(self, symbol: str, limit: int = 100) -> list:
+        """GET /fapi/v1/fundingRate — geçmiş funding ödemeleri."""
+        return self.get(
+            "/fapi/v1/fundingRate",
+            {"symbol": symbol.upper(), "limit": int(limit)},
+        )
+
+    def funding_info(self) -> list:
+        """GET /fapi/v1/fundingInfo — sembol başına fundingIntervalHours + cap/floor.
+
+        Tüm semboller 8 saatte bir ödemez; volatil altlarda interval 4 saat.
+        Yıllıklandırma için bu alan şart.
+        """
+        return self.get("/fapi/v1/fundingInfo")
+
     def klines(self, symbol: str, interval: str = "15m", limit: int = 100) -> list:
         return self.get(
             "/fapi/v1/klines",
@@ -181,6 +215,13 @@ class BinanceFuturesClient:
         if "symbol" in params:
             params["symbol"] = str(params["symbol"]).upper()
         return self.post("/fapi/v1/order", params, signed=True)
+
+    def query_order(self, symbol: str, order_id: int | None = None, **extra) -> dict:
+        """GET /fapi/v1/order — emir durumu (NEW / FILLED / EXPIRED …)."""
+        params: dict = {"symbol": symbol.upper(), **extra}
+        if order_id is not None:
+            params["orderId"] = int(order_id)
+        return self.get("/fapi/v1/order", params, signed=True)
 
     def cancel_order(self, symbol: str, order_id: int | None = None, **extra) -> dict:
         params = {"symbol": symbol.upper(), **extra}

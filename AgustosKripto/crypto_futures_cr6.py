@@ -17,9 +17,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
+import fcntl
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta
@@ -41,6 +44,7 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
+import conviction_filter  # noqa: E402
 from algo_signals import fetch_klines as _algo_fetch_klines  # noqa: E402
 from catalog import ALL_BOOKS, signal_for_book  # noqa: E402
 from atr_profit_lock import (  # noqa: E402
@@ -64,6 +68,7 @@ from crypto_futures_trader import (  # noqa: E402
     get_positions,
     is_live_open_excluded,
     load_config,
+    open_maker,
     open_market,
     usdt_balance,
     _client,
@@ -85,6 +90,13 @@ TOP_N_MAX = 10
 TOP_N = TOP_N_DEFAULT  # varsayılan; runtime get_top_n()
 # Anlık net zarar ≥ teminatın bu oranı → saatlik/ATR beklemeden market kapat
 HARD_SL_FRAC = 0.5  # $7 → -$3.5
+# ATR runner azami tutma süresi. Kâr kilidi açık runner'ı süresiz tutuyordu;
+# 4 pozisyon 3 gün boyunca top_n kotasını doldurup yeni açılışı bloke etti
+# (2026-08-08 → 08-11). Süre dolunca kâr kilidi olsa da kapatılır.
+MAX_HOLD_HOURS = float(os.environ.get("CR6_MAX_HOLD_HOURS", "8"))
+# State dosyası kilidi bekleme süresi — close (:02) ile trail (*/2) aynı
+# dakikada çalışıp birbirinin state'ini eziyordu.
+STATE_LOCK_WAIT_SEC = float(os.environ.get("CR6_STATE_LOCK_WAIT", "90"))
 
 # Canlıya geçen 4 algoritma — Algoritmalar/catalog.py ile aynı anahtarlar
 LIVE_ALGO_KEYS = ("algo_05", "algo_06", "algo_07", "algo1_11")
@@ -115,6 +127,21 @@ CHAT_ID = os.getenv("TELEGRAM_ANALIZ4_CHAT_ID", os.getenv("TELEGRAM_CHAT", ""))
 
 def _env_enabled() -> bool:
     return os.getenv("CRYPTO_FUTURES_CR6_ENABLED", "true").lower() in ("1", "true", "yes")
+
+
+def _entry_mode() -> str:
+    """`maker` (post-only limit, %0.02) veya `taker` (MARKET, %0.05).
+
+    Ölçüm: 20.816 işlemin brüt PnL'i −$721, komisyonu $9.328. Maker'a geçiş
+    aynı evrende komisyonu $3.732'ye indiriyor (net −$10.048 → −$4.452).
+    """
+    env = os.getenv("CR6_ENTRY_MODE")
+    if env:
+        return env.strip().lower()
+    try:
+        return str(load_config().get("entry_mode") or "maker").lower()
+    except Exception:
+        return "maker"
 
 
 def _clamp_top_n(n) -> int:
@@ -225,6 +252,82 @@ def _tier_label(symbol: str) -> str:
     return "other"
 
 
+def _atomic_write_json(path: str, data) -> None:
+    """Yarım yazılmış JSON bırakmamak için tmp + rename."""
+    tmp = f"{path}.tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+
+
+class StateLockBusy(RuntimeError):
+    """Başka bir CR6 komutu state üzerinde çalışıyor."""
+
+
+@contextlib.contextmanager
+def state_lock(wait_sec: float | None = None):
+    """State dosyası için özel kilit.
+
+    close/trail/open aynı dakikada tetiklenebiliyor; kilitsiz çalışırken
+    ikisi de state'i baştan okuyup sonunda yazdığı için kapanan pozisyonlar
+    açık listesine geri dönüyordu.
+    """
+    limit = STATE_LOCK_WAIT_SEC if wait_sec is None else float(wait_sec)
+    lock_path = STATE_FILE + ".lock"
+    os.makedirs(os.path.dirname(lock_path) or ".", exist_ok=True)
+    fh = open(lock_path, "w")
+    deadline = time.monotonic() + limit
+    got = False
+    try:
+        while True:
+            try:
+                fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                got = True
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise StateLockBusy(
+                        f"state kilidi {limit:.0f}s içinde alınamadı",
+                    ) from None
+                time.sleep(0.5)
+        yield
+    finally:
+        if got:
+            with contextlib.suppress(Exception):
+                fcntl.flock(fh, fcntl.LOCK_UN)
+        fh.close()
+
+
+def _closed_order_ids(history: list | None = None) -> set:
+    """History'de kapanmış pozisyonların order_id kümesi."""
+    rows = load_history() if history is None else history
+    out = set()
+    for r in rows:
+        if not isinstance(r, dict) or r.get("exit_price") is None:
+            continue
+        oid = r.get("order_id")
+        if oid:
+            out.add(str(oid))
+    return out
+
+
+def _drop_closed_ghosts(opens: list, history: list | None = None) -> tuple[list, list]:
+    """Zaten kapanmış (order_id history'de) pozisyonları açık listesinden çıkar.
+
+    Dönüş: (temiz liste, atılan hayaletler).
+    """
+    done = _closed_order_ids(history)
+    if not done:
+        return list(opens), []
+    keep, ghosts = [], []
+    for p in opens:
+        oid = p.get("order_id")
+        (ghosts if oid and str(oid) in done else keep).append(p)
+    return keep, ghosts
+
+
 def load_state() -> dict:
     if os.path.exists(STATE_FILE):
         try:
@@ -237,8 +340,7 @@ def load_state() -> dict:
 
 def save_state(state: dict) -> None:
     state["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
-    with open(STATE_FILE, "w") as f:
-        json.dump(state, f, indent=2, ensure_ascii=False)
+    _atomic_write_json(STATE_FILE, state)
 
 
 def load_history() -> list:
@@ -252,8 +354,7 @@ def load_history() -> list:
 
 
 def save_history(history: list) -> None:
-    with open(HISTORY_FILE, "w") as f:
-        json.dump(history, f, indent=2, ensure_ascii=False)
+    _atomic_write_json(HISTORY_FILE, history)
 
 
 def _tg(text: str) -> None:
@@ -493,6 +594,28 @@ def _close_one(pos: dict, *, reason: str) -> dict:
     }
 
 
+def pos_age_hours(pos: dict) -> float | None:
+    """Pozisyonun giriş anından bu yana geçen saat."""
+    raw = pos.get("entry_time_tr") or pos.get("slot_start_tr")
+    if not raw:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(raw))
+    except Exception:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=_TZ_TR)
+    return (datetime.now(_TZ_TR) - dt).total_seconds() / 3600.0
+
+
+def hold_expired(pos: dict) -> bool:
+    """MAX_HOLD_HOURS aşıldı mı? Aşıldıysa kâr kilidi olsa da kapanır."""
+    if MAX_HOLD_HOURS <= 0:
+        return False
+    age = pos_age_hours(pos)
+    return age is not None and age >= MAX_HOLD_HOURS
+
+
 def run_close() -> dict:
     """Saatlik :02 — ATR runner (kâr + stop_level>=1) hold; diğerleri kapat.
 
@@ -503,13 +626,29 @@ def run_close() -> dict:
         return {"ok": False, "skipped": "disabled", "closed": [], "held": []}
     if is_live_paused():
         print(f"[{LABEL}] close: Live kapalı — mevcut pozisyonlar yine kapatılacak")
+    try:
+        with state_lock():
+            return _run_close_locked()
+    except StateLockBusy as e:
+        print(f"[{LABEL}] close atlandı — {e}")
+        return {"ok": False, "skipped": "locked", "closed": [], "held": []}
+
+
+def _run_close_locked() -> dict:
     state = load_state()
-    opens = list(state.get("open_positions") or [])
+    history = load_history()
+    opens, ghosts = _drop_closed_ghosts(
+        list(state.get("open_positions") or []), history,
+    )
+    if ghosts:
+        for g in ghosts:
+            print(f"[{LABEL}] GHOST temizlendi {g.get('symbol')} order={g.get('order_id')}")
+        state["open_positions"] = opens
+        save_state(state)
     if not opens:
         print(f"[{LABEL}] close: açık yok")
-        return {"closed": [], "ok": True, "held": []}
+        return {"closed": [], "ok": True, "held": [], "ghosts": ghosts}
 
-    history = load_history()
     closed = []
     remaining = []
     held = []
@@ -518,7 +657,8 @@ def run_close() -> dict:
         try:
             _g, upnl_net, _px = _live_upnl_net(pos)
             pos2, _ch = update_lock(pos, upnl_net)
-            if should_skip_hourly_close(pos2, upnl_net):
+            expired = hold_expired(pos2)
+            if should_skip_hourly_close(pos2, upnl_net) and not expired:
                 remaining.append(pos2)
                 held.append(pos2)
                 print(
@@ -526,12 +666,15 @@ def run_close() -> dict:
                     f"uPnL={upnl_net:+.2f} lock={pos2.get('stop_upnl')}"
                 )
                 continue
-            rec = _close_one(pos2, reason="hourly")
+            reason = "max_hold" if expired else "hourly"
+            rec = _close_one(pos2, reason=reason)
             history.append(rec)
             closed.append(rec)
+            age = pos_age_hours(pos2)
             print(
-                f"[{LABEL}] CLOSE {rec.get('side')} {sym} "
+                f"[{LABEL}] CLOSE[{reason}] {rec.get('side')} {sym} "
                 f"qty={rec.get('qty')} pnl={rec.get('pnl', 0):+.4f}"
+                + (f" age={age:.1f}h" if age is not None else "")
             )
         except Exception as e:
             print(f"[{LABEL}] CLOSE hata {sym}: {e}")
@@ -598,12 +741,28 @@ def run_trail() -> dict:
     if not _manage_allowed():
         print(f"[{LABEL}] trail atlandı — disabled (CRYPTO_FUTURES_CR6_ENABLED)")
         return {"ok": False, "skipped": "disabled", "closed": [], "updated": 0}
-    state = load_state()
-    opens = list(state.get("open_positions") or [])
-    if not opens:
-        return {"ok": True, "closed": [], "updated": 0}
+    try:
+        with state_lock():
+            return _run_trail_locked()
+    except StateLockBusy as e:
+        print(f"[{LABEL}] trail atlandı — {e}")
+        return {"ok": False, "skipped": "locked", "closed": [], "updated": 0}
 
+
+def _run_trail_locked() -> dict:
+    state = load_state()
     history = load_history()
+    opens, ghosts = _drop_closed_ghosts(
+        list(state.get("open_positions") or []), history,
+    )
+    if ghosts:
+        for g in ghosts:
+            print(f"[{LABEL}] GHOST temizlendi {g.get('symbol')} order={g.get('order_id')}")
+        state["open_positions"] = opens
+        save_state(state)
+    if not opens:
+        return {"ok": True, "closed": [], "updated": 0, "ghosts": ghosts}
+
     closed = []
     remaining = []
     updated = 0
@@ -636,6 +795,17 @@ def run_trail() -> dict:
                 print(
                     f"[{LABEL}] HARD SL {sym} uPnL={upnl_net:+.2f} "
                     f"limit={hard_sl_threshold(pos):+.2f} "
+                    f"pnl={rec.get('pnl', 0):+.4f}"
+                )
+                continue
+            if hold_expired(pos):
+                rec = _close_one(pos, reason="max_hold")
+                history.append(rec)
+                closed.append(rec)
+                age = pos_age_hours(pos)
+                print(
+                    f"[{LABEL}] MAX HOLD {sym} "
+                    f"age={age:.1f}h/{MAX_HOLD_HOURS:.0f}h "
                     f"pnl={rec.get('pnl', 0):+.4f}"
                 )
                 continue
@@ -715,9 +885,22 @@ def run_open() -> dict:
         why = "paused" if is_live_paused() else "disabled"
         print(f"[{LABEL}] open atlandı — {why} (Binance Live kapalı / env)")
         return {"ok": False, "skipped": why}
+    try:
+        with state_lock():
+            return _run_open_locked()
+    except StateLockBusy as e:
+        print(f"[{LABEL}] open atlandı — {e}")
+        return {"ok": False, "skipped": "locked"}
 
+
+def _run_open_locked() -> dict:
     state = load_state()
-    existing = list(state.get("open_positions") or [])
+    existing, ghosts = _drop_closed_ghosts(list(state.get("open_positions") or []))
+    if ghosts:
+        for g in ghosts:
+            print(f"[{LABEL}] GHOST temizlendi {g.get('symbol')} order={g.get('order_id')}")
+        state["open_positions"] = existing
+        save_state(state)
     held_syms = {
         str(p.get("symbol") or "").upper()
         for p in existing
@@ -756,6 +939,8 @@ def run_open() -> dict:
 
     opened = []
     errors = []
+    vetoed = []
+    conv_cfg = conviction_filter.load_config()
 
     for cand in ranked:
         if len(opened) >= slots_left:
@@ -765,6 +950,21 @@ def run_open() -> dict:
             continue
         if str(sym).upper() in held_syms:
             continue  # ATR runner / mevcut açık
+        # Uzlaşı arttıkça ölçülen kenar negatife dönüyor (SKILL -0.065%,
+        # t=-3.89, 5/5 zaman diliminde). En yüksek güven kovası açılmıyor.
+        verdict = conviction_filter.evaluate(
+            cand, total_books=len(LIVE_BOOKS), cfg=conv_cfg
+        )
+        if verdict["veto"]:
+            print(f"[{LABEL}] {sym} VETO — {verdict['reason']} (gölge deftere yazıldı)")
+            conviction_filter.log_shadow(cand, verdict, slot=slot_key, label="cr6")
+            vetoed.append({
+                "symbol": sym,
+                "signal": cand.get("signal"),
+                "agree": verdict["agree"],
+                "reason": verdict["reason"],
+            })
+            continue
         side = "LONG" if cand["signal"] == "UP" else "SHORT"
         est = estimate_qty(sym, MARGIN_USD, LEVERAGE)
         if not est.get("ok"):
@@ -772,7 +972,8 @@ def run_open() -> dict:
             errors.append({"symbol": sym, "error": "min_lot"})
             continue
         try:
-            r = open_market(
+            opener = open_maker if _entry_mode() == "maker" else open_market
+            r = opener(
                 sym,
                 side,
                 margin_usd=MARGIN_USD,
@@ -780,7 +981,18 @@ def run_open() -> dict:
                 margin_type="ISOLATED",
                 skip_max_positions=True,  # kota ST top_n; paylaşılan state engellemesin
             )
-            entry = float((r.get("order") or {}).get("avgPrice") or r.get("mark_price") or 0)
+            if not r.get("ok"):
+                # maker emri dolmadı / post-only reddedildi — sinyal atlanır
+                reason = r.get("reason") or "not_filled"
+                print(f"[{LABEL}] {sym} maker giriş yok ({reason}) — atlandı")
+                errors.append({"symbol": sym, "error": reason})
+                continue
+            entry = float(
+                r.get("entry_price")
+                or (r.get("order") or {}).get("avgPrice")
+                or r.get("mark_price")
+                or 0
+            )
             if entry <= 0:
                 entry = float(r.get("mark_price") or cand.get("price") or 0)
             atr_val = None
@@ -808,6 +1020,8 @@ def run_open() -> dict:
                     "slot_start_tr": start.isoformat(),
                     "slot_end_tr": end.isoformat(),
                     "order_id": (r.get("order") or {}).get("orderId"),
+                    "entry_type": r.get("entry_type") or "taker",
+                    "entry_fee": r.get("entry_fee"),
                     "dry_run": r.get("dry_run"),
                 },
                 atr=atr_val,
@@ -849,6 +1063,7 @@ def run_open() -> dict:
         "held": len(existing),
         "open_count": len(existing) + len(opened),
         "errors": errors,
+        "vetoed": vetoed,
         "scan_count": len(rows),
         "top_n": top_n,
         "dry_run": _is_dry(load_config()),

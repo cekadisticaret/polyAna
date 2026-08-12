@@ -67,6 +67,30 @@ def get_taker_rate(
     return taker_cfg
 
 
+def get_maker_rate(
+    client: Any | None = None,
+    symbol: str = "BTCUSDT",
+    *,
+    cfg: dict | None = None,
+) -> float:
+    """Maker (post-only limit) oranı. API commissionRate (cache) → config → default."""
+    _taker_cfg, maker_cfg = load_fee_rates_from_config(cfg)
+    sym = (symbol or "BTCUSDT").upper()
+    hit = _RATE_CACHE.get(sym)
+    if hit and (time.time() - hit[2]) < _RATE_TTL_SEC:
+        return hit[1]
+    if client is not None and getattr(client, "configured", lambda: False)():
+        try:
+            data = client.commission_rate(sym)
+            taker = float(data.get("takerCommissionRate") or _taker_cfg)
+            maker = float(data.get("makerCommissionRate") or maker_cfg)
+            _RATE_CACHE[sym] = (taker, maker, time.time())
+            return maker
+        except Exception as e:
+            print(f"[fee_utils] commissionRate {sym}: {e}")
+    return maker_cfg
+
+
 def sum_trade_commission(trades: list | None) -> float:
     """userTrades listesinden USDT komisyon toplamı (mutlak)."""
     total = 0.0

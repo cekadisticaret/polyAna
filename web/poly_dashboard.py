@@ -37,6 +37,7 @@ _HEATMAP_SYMS = {
     "analiz6":  ["BTC", "SOL", "ETH"],
     "analiz6_v2": ["BTC", "ETH"],
     "analiz6_v3": ["BTC", "ETH", "SOL"],
+    "melez": ["BTC", "ETH", "SOL"],
     "analiz15": ["BTC", "ETH", "SOL"],
     "b1_01": ["BTC", "ETH", "SOL"],
     "b1_02": ["BTC", "ETH", "SOL"],
@@ -72,6 +73,14 @@ _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
         os.path.join(_ROOT, "jesse/storage/analiz8_jesse_history.json"),
         os.path.join(_ROOT, "jesse/storage/analiz8_jesse_state.json"),
     ),
+    "melez": (
+        os.path.join(_DIR_POLY, "poly_trader_analiz6_v4_history.json"),
+        os.path.join(_DIR_POLY, "poly_trader_analiz6_v4_state.json"),
+    ),
+}
+# Eski URL/API anahtarları → güncel defter anahtarı
+_ALGO_BOOK_ALIASES: dict[str, str] = {
+    "analiz6_v4": "melez",
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Algoritma performansı / harita / analizler — gerçek PM (Live) gösterilmez; sanal karşılığı kullanılır
@@ -109,14 +118,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
+    "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
+    "analiz2", "analiz1", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
     "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -134,6 +143,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz6":    "6. Analiz",
     "analiz6_v2": "6. Analiz V2",
     "analiz6_v3": "6. Analiz V3",
+    "melez": "A2#05 X A6V3 MELEZ",
     "analiz15":   "15. Analiz",
     "b1_01":      "B1#01",
     "b1_02":      "B1#02",
@@ -162,14 +172,14 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
+    "analiz1", "analiz2", "analiz4", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz4": 300, "analiz6": 300, "analiz6_v2": 300,
     "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300, "b1_mum": 300,
-    "b1_04": 300,
+    "b1_04": 300, "melez": 300,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -210,6 +220,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz6": "A6",
     "analiz6_v2": "A6V2",
     "analiz6_v3": "A6V3",
+    "melez": "MELEZ",
     "analiz15": "A15",
     "b1_01": "B1#01",
     "b1_02": "B1#02",
@@ -241,7 +252,7 @@ for _num, _name, *_rest in _A2_META:
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04",
 ] + _A2_KEYS
 
 _HEATMAP_ORDER.extend(_A2_KEYS)
@@ -257,6 +268,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("analiz6",    "6. Analiz",             300,  "MACD Div #26 (BTC/SOL) · RSI Div #38 (ETH)"),
     ("analiz6_v2", "6. Analiz V2",          300,  "MACD Div #26 (BTC) · RSI Div #38 (ETH) · SOL yok"),
     ("analiz6_v3", "6. Analiz V3",          300,  "BTC/ETH→A6 · SOL→A2"),
+    ("melez", "A2#05 X A6V3 MELEZ",    300,  "BTC→MACD Div #26 (A6V3) · ETH/SOL→Mean Rev (A2#05)"),
     ("analiz15",   "15. Analiz",            300,  "BTC→A6 · ETH→A8 sıkı · SOL→A2"),
     ("b1_01",      "B1#01",                 300,  "Sembol bazlı en iyi motor birleşimi"),
     ("b1_02",      "B1#02",                 300,  "BTC→A15 · ETH→A6 · SOL→A2#01"),
@@ -311,6 +323,14 @@ def _trader_state_path(key: str) -> str:
     if key in _CUSTOM_TRADER_FILES:
         return _CUSTOM_TRADER_FILES[key][1]
     return os.path.join(_DIR_POLY, f"poly_trader_{key}_state.json")
+
+
+def _normalize_algo_book_id(book_id: str) -> str:
+    """URL/API book_id → dahili defter anahtarı (eski analiz6_v4 → melez)."""
+    key = book_id.lower().strip()
+    if re.match(r"^\d+$", key):
+        key = f"a2_{int(key):02d}"
+    return _ALGO_BOOK_ALIASES.get(key, key)
 
 
 def _load_trader_open_positions(key: str) -> list[dict]:
@@ -2948,6 +2968,11 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
         panel = "poly_a6v3"
         name = short or label
         title = "BTC/ETH→A6 · SOL→A2"
+    elif key == "melez":
+        category = "Poly sanal · A2#05 X A6V3 MELEZ"
+        panel = "poly_melez"
+        name = short or label
+        title = "BTC→MACD Div (A6V3) · ETH/SOL→Mean Rev (A2#05)"
     elif key == "analiz15":
         category = "Poly sanal · 15. Analiz"
         panel = "poly_a15"
@@ -3096,9 +3121,7 @@ def api_a2_algoritma_patch_amounts(book_id: str):
     """Poly sanal — sembol WR giriş tutarları ($ düşük/orta/yüksek)."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
-    key = book_id.lower().strip()
-    if re.match(r"^\d+$", key):
-        key = f"a2_{int(key):02d}"
+    key = _normalize_algo_book_id(book_id)
     if key not in _ALGO_ISLEMLER_KEYS:
         return jsonify({"ok": False, "error": "not found"}), 404
     try:
@@ -3127,9 +3150,7 @@ def api_a2_algoritma_detail(book_id: str):
     """Tek algoritma defteri + son 100 kapanmış işlem."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
-    key = book_id.lower().strip()
-    if re.match(r"^\d+$", key):
-        key = f"a2_{int(key):02d}"
+    key = _normalize_algo_book_id(book_id)
     if key not in _ALGO_ISLEMLER_KEYS:
         return jsonify({"ok": False, "error": "not found"}), 404
     try:
@@ -14709,6 +14730,9 @@ def page_algoritma_islemler():
 def page_algoritma_islemler_detail(book_id):
     if _auth_required():
         return redirect("/poly/login")
+    norm = _normalize_algo_book_id(book_id)
+    if norm != book_id.lower().strip():
+        return redirect(f"/algoritma-islemler/{norm}")
     return ALGORITMA_ISLEMLER_HTML, 200, {"Cache-Control": "no-store"}
 
 
@@ -15077,9 +15101,11 @@ body.kf-overview .kf-right-panel{display:block}
 .kf-stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
 .kf-leaders-box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 14px}
 .kf-leaders-head,.kf-leaders-row{
-  display:grid;grid-template-columns:54px 1fr 44px 52px 64px;gap:6px;align-items:center;
+  display:grid;grid-template-columns:52px 1fr 56px 40px 48px 60px;gap:5px;align-items:center;
   padding:6px 2px;font-size:12px;
 }
+.kf-lead-ok{color:var(--green);font-weight:800}
+.kf-lead-weak{opacity:.5}
 .kf-leaders-head{font-weight:700;opacity:.5;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--line);margin-bottom:4px}
 .kf-leaders-row{border-bottom:1px solid rgba(255,255,255,.04)}
 .kf-leaders-row:last-child{border:none}
@@ -15199,9 +15225,9 @@ body.kf-overview .kf-right-panel{display:block}
           </div>
         </div>
       </div>
-      <div class="section-title">Coin bazlı en başarılı algoritma</div>
+      <div class="section-title">Coin bazlı en yetenekli algoritma</div>
       <div class="kf-leaders-box" id="positions"><div class="empty">yükleniyor…</div></div>
-      <div class="section-title" style="margin-top:18px">En başarılı algo + coin</div>
+      <div class="section-title" style="margin-top:18px">En yüksek SKILL · algo + coin</div>
       <div class="kf-leaders-box" id="kf-top-success"><div class="empty">yükleniyor…</div></div>
     </div>
     <div class="kf-overview-right">
@@ -15334,13 +15360,13 @@ body.kf-overview .kf-right-panel{display:block}
 
 <div class="kf-right-panel" id="kf-right-panel">
   <div class="kf-sym-vio">
-    <div class="kf-sym-title">Coin liderleri</div>
+    <div class="kf-sym-title">Eşiği geçen coinler</div>
     <div class="kf-sym-val" id="kf-rp-wr">—</div>
-    <div class="kf-sym-meta" id="kf-rp-wr-sub">en yüksek WR coinler</div>
+    <div class="kf-sym-meta" id="kf-rp-wr-sub">coin gerçek para eşiğini geçiyor</div>
     <div id="kf-rp-leaders" style="margin-top:10px"></div>
   </div>
   <div class="kf-rp-section">
-    <div class="kf-rp-title">En başarılı algoritmalar</div>
+    <div class="kf-rp-title">En yetenekli algoritmalar (SKILL)</div>
     <div id="kf-rp-algos"><div style="color:#666;font-size:12px">yükleniyor…</div></div>
   </div>
   <div class="kf-rp-section">
@@ -15773,22 +15799,30 @@ function renderCoinLeadersTable(leaders, targetId){
     pc.innerHTML = '<div class="empty">Veri yok</div>';
     return;
   }
-  const head = '<div class="kf-leaders-head"><span>Coin</span><span>En iyi algo</span><span>WR</span><span>İşlem</span><span>Net</span></div>';
+  const nQual = leaders.filter(l => l.best && l.best.qualifies).length;
+  const note = '<div style="font-size:10px;opacity:.55;line-height:1.5;margin-bottom:6px">'
+    + 'SKILL = (ort. LONG% + ort. SHORT%) / 2 — piyasa yönünden arındırılmış kenar. '
+    + 'Yeşil satır gerçek para eşiğini geçiyor (işlem ≥20 · SKILL ≥%0.04 · |t| ≥2). '
+    + '<b>'+nQual+'/'+leaders.length+' coin</b> eşiği geçiyor.</div>';
+  const head = '<div class="kf-leaders-head"><span>Coin</span><span>En iyi algo</span><span>SKILL</span><span>t</span><span>İşlem</span><span>Net</span></div>';
   const rows = leaders.map(function(l){
     const best = l.best;
     if(!best){
-      return '<div class="kf-leaders-row" style="opacity:.35"><span><b>'+l.symbol+'</b></span><span>veri yok</span><span>—</span><span>—</span><span>—</span></div>';
+      return '<div class="kf-leaders-row" style="opacity:.35"><span><b>'+l.symbol+'</b></span><span>yeterli işlem yok</span><span>—</span><span>—</span><span>—</span><span>—</span></div>';
     }
-    const pnlCls = best.pnl >= 0 ? 'pos' : 'neg';
     const ru = l.runner_up ? (' <span style="opacity:.55;font-size:10px">· 2. '+l.runner_up.algo+'</span>') : '';
-    return '<div class="kf-leaders-row">'
+    const sk = best.skill == null ? '—' : (best.skill > 0 ? '+' : '') + best.skill.toFixed(2) + '%';
+    const skCls = best.qualifies ? 'kf-lead-ok' : '';
+    const tv = Math.abs(Number(best.t||0)) >= 2 ? String(best.t) : '<span style="opacity:.45">'+best.t+'</span>';
+    return '<div class="kf-leaders-row'+(best.qualifies ? '' : ' kf-lead-weak')+'">'
       + '<span><b>'+l.symbol+'</b></span>'
       + '<span>'+best.algo+ru+'</span>'
-      + '<span>'+best.wr+'%</span>'
-      + '<span>'+best.wins+'/'+best.trades+'</span>'
-      + '<span class="'+pnlCls+'" style="color:'+(best.pnl>=0?'var(--green)':'var(--red)')+'">'+fmtMoney(best.pnl)+'</span></div>';
+      + '<span class="'+skCls+'">'+sk+'</span>'
+      + '<span>'+tv+'</span>'
+      + '<span>'+best.n_long+'L/'+best.n_short+'S</span>'
+      + '<span style="color:'+(best.pnl>=0?'var(--green)':'var(--red)')+'">'+fmtMoney(best.pnl)+'</span></div>';
   }).join('');
-  pc.innerHTML = head + rows;
+  pc.innerHTML = note + head + rows;
 }
 
 function renderTopSuccessList(tops){
@@ -15796,14 +15830,15 @@ function renderTopSuccessList(tops){
   const rp = document.getElementById('kf-rp-algos');
   const rows = tops || [];
   const html = rows.length ? rows.map(function(t, i){
-    const wr = Number(t.wr||0);
-    const barW = Math.max(4, Math.min(100, wr));
-    const pnlCls = (t.pnl||0) >= 0 ? 'pos' : 'neg';
+    const sk = Number(t.skill||0);
+    // Bar SKILL'e göre: %0.30 tam dolu kabul (maker maliyeti %0.04'ün ~7 katı)
+    const barW = Math.max(4, Math.min(100, Math.round(sk / 0.30 * 100)));
+    const col = t.qualifies ? 'var(--green)' : (sk > 0 ? 'var(--accent)' : 'var(--red)');
     return '<div class="kf-algo-item">'
       + '<span class="kf-algo-name">#'+(i+1)+' '+t.label+'</span>'
       + '<div class="kf-algo-bar"><div class="kf-algo-bar-fill" style="width:'+barW+'%"></div></div>'
-      + '<span class="kf-algo-wr" style="color:'+(wr>=55?'var(--green)':wr>=50?'var(--accent)':'var(--red)')+'">'+wr+'%</span>'
-      + '<span class="'+pnlCls+'" style="font-size:11px;font-weight:800;min-width:52px;text-align:right">'+fmtMoney(t.pnl)+'</span>'
+      + '<span class="kf-algo-wr" style="color:'+col+'">'+(sk>0?'+':'')+sk.toFixed(2)+'%</span>'
+      + '<span style="font-size:10px;opacity:.6;min-width:52px;text-align:right">t='+t.t+' · n='+t.trades+'</span>'
       + '</div>';
   }).join('') : '<div style="color:#666;font-size:12px">Veri yok</div>';
   if(el) el.innerHTML = html;
@@ -15820,14 +15855,16 @@ function renderRpLeadersMini(leaders){
     box.innerHTML = '<div style="font-size:12px;opacity:.7">Henüz yeterli veri yok</div>';
     return;
   }
-  const avgWr = Math.round(withData.reduce((a,l)=>a+Number(l.best.wr||0),0)/withData.length);
-  if(wrEl) wrEl.textContent = avgWr + '%';
-  if(subEl) subEl.textContent = withData.length + ' coin · ortalama WR';
-  box.innerHTML = withData.slice(0,6).map(l => {
+  const qual = withData.filter(l => l.best.qualifies);
+  if(wrEl) wrEl.textContent = qual.length + '/' + (leaders||[]).length;
+  if(subEl) subEl.textContent = 'coin gerçek para eşiğini geçiyor';
+  const show = (qual.length ? qual : withData).slice(0,6);
+  box.innerHTML = show.map(l => {
     const b = l.best;
+    const sk = b.skill == null ? '—' : (b.skill > 0 ? '+' : '') + b.skill.toFixed(2) + '%';
     return '<div class="kf-trade-item"><div><div class="kf-trade-sym">'+l.symbol+' · '+b.algo+'</div>'
-      + '<div class="kf-trade-meta">'+b.wins+'/'+b.trades+' işlem</div></div>'
-      + '<div class="kf-trade-pnl '+(b.pnl>=0?'pos':'neg')+'">'+fmtMoney(b.pnl)+'</div></div>';
+      + '<div class="kf-trade-meta">'+b.n_long+'L/'+b.n_short+'S · t='+b.t+'</div></div>'
+      + '<div class="kf-trade-pnl '+((b.skill||0)>=0?'pos':'neg')+'">'+sk+'</div></div>';
   }).join('');
 }
 
@@ -16577,8 +16614,12 @@ def api_kripto_overview():
     from virtual_book import read_snapshot  # noqa: WPS433
     snap = read_snapshot("test", max_age=900) or {}
     mod = _load_agustos_runner("Test")
-    coin_leaders = snap.get("coin_leaders") or mod.compute_coin_leaders()
-    top_success = snap.get("top_success") or mod.compute_top_success(n=8)
+    coin_leaders = snap.get("coin_leaders")
+    if not _leaders_have_skill(coin_leaders):
+        coin_leaders = mod.compute_coin_leaders()
+    top_success = snap.get("top_success")
+    if not _leaders_have_skill(top_success):
+        top_success = mod.compute_top_success(n=8)
     waiting = snap.get("waiting") or []
     recent_test = mod.compute_recent_test_trades(limit=12)
     recent_live: list[dict] = []
@@ -16790,19 +16831,28 @@ def _kripto_test_top_success(n: int = 6) -> list:
         sys.path.insert(0, _DIR_KRIPTO)
     from virtual_book import read_snapshot  # noqa: WPS433
     snap = read_snapshot("test", max_age=900)
-    if snap and snap.get("top_success"):
+    if snap and _leaders_have_skill(snap.get("top_success")):
         return list(snap["top_success"])[:n]
     mod = _load_agustos_runner("Test")
     return mod.compute_top_success(n=n)
 
 
+def _leaders_have_skill(rows) -> bool:
+    """Snapshot SKILL şemasıyla mı yazılmış? WR dönemi snapshot'ları bayat."""
+    if not rows:
+        return False
+    first = rows[0]
+    probe = first.get("best") if isinstance(first, dict) and "best" in first else first
+    return isinstance(probe, dict) and "skill" in probe
+
+
 def _kripto_test_coin_leaders() -> list:
-    """20 coin'in her biri için en başarılı algoritma (Kripto Test geçmişi)."""
+    """30 coin'in her biri için en yüksek SKILL'li algoritma (Kripto Test geçmişi)."""
     if _DIR_KRIPTO not in sys.path:
         sys.path.insert(0, _DIR_KRIPTO)
     from virtual_book import read_snapshot  # noqa: WPS433
     snap = read_snapshot("test", max_age=900)
-    if snap and snap.get("coin_leaders"):
+    if snap and _leaders_have_skill(snap.get("coin_leaders")):
         return list(snap["coin_leaders"])
     mod = _load_agustos_runner("Test")
     return mod.compute_coin_leaders()

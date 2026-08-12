@@ -21,7 +21,9 @@ CLI:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
+import math
 import os
 import sys
 import time
@@ -40,6 +42,7 @@ from binance_futures_client import (
 from fee_utils import (
     commission_for_order,
     estimate_fee,
+    get_maker_rate,
     get_taker_rate,
     net_pnl,
     roundtrip_fee,
@@ -413,6 +416,244 @@ def open_market(
         state["open_positions"] = opens
         save_state(state)
 
+    return result
+
+
+def _round_to_tick(price: float, tick: float, *, mode: str = "down") -> float:
+    """Fiyatı tick_size'a yuvarla — LIMIT emir PRICE_FILTER için.
+
+    mode="down" alış (bid) tarafı, mode="up" satış (ask) tarafı içindir;
+    böylece post-only emir karşı tarafa değmez.
+    """
+    if not tick or tick <= 0:
+        return float(price)
+    decs = max(0, -int(round(math.log10(tick)))) if tick < 1 else 0
+    steps = float(price) / tick
+    # float artığı yüzünden yanlış basamağa kaymayı önle
+    steps = round(steps, 6)
+    steps = math.ceil(steps) if mode == "up" else math.floor(steps)
+    return round(steps * tick, decs)
+
+
+def open_maker(
+    symbol: str,
+    side: str,
+    *,
+    margin_usd: float | None = None,
+    leverage: int | None = None,
+    margin_type: str | None = None,
+    wait_sec: float | None = None,
+    poll_sec: float = 3.0,
+    skip_max_positions: bool = False,
+) -> dict:
+    """Post-only LIMIT ile pozisyon aç — maker komisyonu (%0.02 vs %0.05).
+
+    Emir en iyi alış (LONG) / satış (SHORT) seviyesine `timeInForce=GTX`
+    (post-only) ile konur. Karşı tarafa değecek olursa Binance emri
+    reddeder, yani taker'a düşme riski yok.
+
+    `wait_sec` içinde dolmazsa emir iptal edilir ve `ok=False,
+    reason="unfilled"` döner — sinyal atlanır. Bu bilinçli bir filtre:
+    momentum kovalayan agresif girişler kendiliğinden elenir.
+    """
+    cfg = load_config()
+    symbol = symbol.upper()
+    side_u = side.upper()
+    if side_u in ("LONG", "BUY"):
+        order_side, pos_side = "BUY", "LONG"
+    elif side_u in ("SHORT", "SELL"):
+        order_side, pos_side = "SELL", "SHORT"
+    else:
+        raise ValueError("side LONG/SHORT olmalı")
+
+    if symbol not in [s.upper() for s in cfg.get("symbols") or []]:
+        raise ValueError(f"{symbol} allowlist dışı — crypto_futures_config.json")
+    if is_live_open_excluded(symbol):
+        raise ValueError(f"{symbol} Binance Live açılış dışı (BTC/ETH/BNB kapalı)")
+
+    lev = int(leverage or cfg.get("default_leverage") or 5)
+    max_lev = int(cfg.get("max_leverage") or 20)
+    if lev < 1 or lev > max_lev:
+        raise ValueError(f"leverage 1–{max_lev} olmalı")
+    margin = float(
+        margin_usd if margin_usd is not None else cfg.get("default_margin_usd") or 20
+    )
+    if margin <= 0:
+        raise ValueError("margin_usd > 0 olmalı")
+
+    mtype = (margin_type or cfg.get("default_margin_type") or "ISOLATED").upper()
+    timeout = float(
+        wait_sec if wait_sec is not None else cfg.get("maker_wait_sec") or 90
+    )
+    dry = _is_dry(cfg)
+    c = _client(cfg)
+
+    state = load_state()
+    if c.configured() and not dry:
+        state = reconcile_shared_opens_with_binance(state, c)
+    opens = state.get("open_positions") or []
+    max_pos = int(cfg.get("max_open_positions") or 5)
+    if not skip_max_positions and len(opens) >= max_pos:
+        raise RuntimeError(f"max_open_positions={max_pos} doldu")
+
+    prep = prepare_symbol(symbol, lev, mtype, client=c, dry_run=dry)
+    filt = prep["filters"]
+    tick = float(filt.get("tick_size") or 0.01)
+
+    tick_mode = "down" if order_side == "BUY" else "up"
+    if dry:
+        px = c.mark_price(symbol)
+        limit_px = _round_to_tick(px, tick, mode=tick_mode)
+    else:
+        book = c.book_ticker(symbol)
+        limit_px = _round_to_tick(
+            book["bid"] if order_side == "BUY" else book["ask"],
+            tick,
+            mode=tick_mode,
+        )
+    if limit_px <= 0:
+        raise RuntimeError("limit fiyatı hesaplanamadı")
+
+    qty = qty_from_notional(
+        margin,
+        limit_px,
+        leverage=lev,
+        step_size=filt["step_size"],
+        min_qty=filt["min_qty"],
+        min_notional=filt["min_notional"],
+    )
+    if qty <= 0:
+        raise RuntimeError("qty hesaplanamadı (min lot / notional)")
+
+    now_tr = datetime.now(_TZ_TR)
+    maker_rate = get_maker_rate(c, symbol, cfg=cfg)
+    result: dict = {
+        "ok": True,
+        "dry_run": dry,
+        "entry_type": "maker",
+        "symbol": symbol,
+        "side": pos_side,
+        "order_side": order_side,
+        "leverage": lev,
+        "margin_usd": margin,
+        "margin_type": mtype,
+        "limit_price": limit_px,
+        "mark_price": limit_px,
+        "qty": qty,
+        "notional": round(qty * limit_px, 4),
+        "entry_time_tr": now_tr.isoformat(),
+        "testnet": c.testnet,
+        "maker_rate": maker_rate,
+    }
+
+    if dry:
+        result["order"] = {
+            "orderId": f"DRYM-{int(time.time())}",
+            "status": "DRY_RUN",
+            "avgPrice": str(limit_px),
+            "executedQty": str(qty),
+        }
+        print(
+            f"[{LABEL}] DRY MAKER {pos_side} {symbol} qty={qty} "
+            f"limit@{limit_px} margin=${margin:.2f} lev={lev}x"
+        )
+        filled_qty, avg_px, oid = qty, limit_px, result["order"]["orderId"]
+    else:
+        if not c.configured():
+            raise BinanceFuturesError("API key yok — canlı emir atılamaz")
+        order = c.new_order(
+            symbol=symbol,
+            side=order_side,
+            type="LIMIT",
+            timeInForce="GTX",  # post-only: karşı tarafa değerse reddedilir
+            quantity=qty,
+            price=limit_px,
+        )
+        oid = order.get("orderId")
+        status = str(order.get("status") or "").upper()
+        if status == "EXPIRED":
+            # GTX reddi — fiyat karşı tarafa değecekti
+            result.update({"ok": False, "reason": "post_only_rejected", "order": order})
+            print(f"[{LABEL}] MAKER {symbol} post-only reddedildi (fiyat kaydı)")
+            return result
+
+        deadline = time.monotonic() + timeout
+        filled_qty, avg_px = 0.0, limit_px
+        while True:
+            try:
+                o = c.query_order(symbol, oid)
+            except Exception as e:
+                print(f"[{LABEL}] MAKER query {symbol}: {e}")
+                o = {}
+            status = str(o.get("status") or status).upper()
+            filled_qty = float(o.get("executedQty") or 0)
+            if float(o.get("avgPrice") or 0) > 0:
+                avg_px = float(o["avgPrice"])
+            if status == "FILLED":
+                break
+            if status in ("CANCELED", "EXPIRED", "REJECTED"):
+                break
+            if time.monotonic() >= deadline:
+                break
+            time.sleep(max(0.5, float(poll_sec)))
+
+        if status != "FILLED":
+            with contextlib.suppress(Exception):
+                c.cancel_order(symbol, oid)
+            if filled_qty <= 0:
+                result.update({"ok": False, "reason": "unfilled", "order": o or order})
+                print(
+                    f"[{LABEL}] MAKER {symbol} {timeout:.0f}s içinde dolmadı — "
+                    f"iptal, sinyal atlandı"
+                )
+                return result
+            print(
+                f"[{LABEL}] MAKER {symbol} kısmi dolum {filled_qty}/{qty} — "
+                f"kalan iptal"
+            )
+        result["order"] = o or order
+        print(
+            f"[{LABEL}] LIVE MAKER {pos_side} {symbol} qty={filled_qty} "
+            f"@{avg_px} orderId={oid} lev={lev}x"
+        )
+
+    qty = float(filled_qty or qty)
+    fill_notional = round(qty * avg_px, 4)
+    if dry:
+        entry_fee, fee_src = estimate_fee(fill_notional, maker_rate), "estimate_maker"
+    else:
+        entry_fee, fee_src = commission_for_order(
+            c, symbol, oid, notional=fill_notional, rate=maker_rate, cfg=cfg,
+        )
+    result.update({
+        "qty": qty,
+        "entry_price": avg_px,
+        "notional": fill_notional,
+        "entry_fee": entry_fee,
+        "fee_source": fee_src,
+        "filled": True,
+    })
+
+    pos = {
+        "symbol": symbol,
+        "side": pos_side,
+        "qty": qty,
+        "leverage": lev,
+        "margin_usd": margin,
+        "margin_type": mtype,
+        "entry_price": avg_px,
+        "notional": fill_notional,
+        "entry_fee": entry_fee,
+        "entry_type": "maker",
+        "entry_time_tr": now_tr.isoformat(),
+        "order_id": oid,
+        "dry_run": dry,
+        "testnet": c.testnet,
+    }
+    opens = [p for p in opens if p.get("symbol") != symbol]
+    opens.append(pos)
+    state["open_positions"] = opens
+    save_state(state)
     return result
 
 

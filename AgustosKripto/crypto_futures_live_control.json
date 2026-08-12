@@ -1,6 +1,6 @@
 {
-  "live_paused": false,
+  "live_paused": true,
   "top_n": 4,
-  "updated_at_tr": "2026-08-04T23:09:27.751434+03:00",
-  "updated_by": "dashboard"
+  "updated_at_tr": "2026-08-11T15:03:00+03:00",
+  "updated_by": "skill_audit: kenar sifir, olu bant filtresi bekleniyor"
 }

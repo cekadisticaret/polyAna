@@ -22,6 +22,9 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py open` | `/tmp/poly_trader_analiz6_v2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py close` | `/tmp/poly_trader_analiz6_v3.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py open` | `/tmp/poly_trader_analiz6_v3.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v4.py close` | `/tmp/poly_trader_analiz6_v4.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v4.py open` (**A2#05 X A6V3 MELEZ** — BTC:MACD Div #26 · ETH/SOL:Mean Rev; sanal) | `/tmp/poly_trader_analiz6_v4.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v4.py weekly` | `/tmp/poly_trader_analiz6_v4.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py close` | `/tmp/poly_trader_b1_01.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py open` | `/tmp/poly_trader_b1_01.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_02.py close` | `/tmp/poly_trader_b1_02.log` |
@@ -75,6 +78,7 @@ alwaysApply: true
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py close` | `/tmp/poly_trader_a2_04_live.log` |
 | `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_04_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py close` | `/tmp/poly_trader_a2_05_live.log` |
+| `12 * * * *` | `temmuzPoly/poly_trader_a2_{02,03,04,05,06,07,08,16}_live.py close` (PM sonuç gecikmesi — settle retry) | `/tmp/poly_trader_a2_*_live.log` |
 | `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py open` (sanal A2#05 sync) | `/tmp/poly_trader_a2_05_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_06_live.py close` | `/tmp/poly_trader_a2_06_live.log` |
 | `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_06_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_06_live.log` |
@@ -106,7 +110,13 @@ alwaysApply: true
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** varsayılan olarak atlanır (**close** çalışır); **dashboard'dan Aç** yapılan Live analiz hafta sonu dahil işlem açar. **Sanal 15M** (110 + A2 309/316/317) + A4 + A10: aynı pencerede open kapalı; Pzt **11:00**’de devam. **`/algoritma-islemler` (tamamı):** A1/A2/A6/V2/V3/A15/B1#01-03 + A2 Top-17 — hafta sonu da open/close devam (7/24 sanal).
 - **AgustosKripto sanal (Algoritmalar + Analizler):** Cum **22:00** – Pzt **11:00** İST — `open` / `close` / `trail` atlanır (kod içi). Algoritmalar sanal: **tüm 51 defter open $30×10x** (komisyon dahil net PnL); A2#05/#06/#07 + A1#11 ek olarak `real_live` işaretli. **Binance Algoritmalar Live (gerçek para)** ayrı sistem — aynı 4 algonun çoğunluk oyu, **$7×20x**; dashboard Live toggle + top-N.
-- **AgustosKripto/Test (`/kripto/test`):** Poly sinyal kaynaklarının (A1/A2 vb.) sanal Binance Futures defterleri — **$100×6x**, deposit $1000/defter, **30 coin** tarama evreni (`AgustosKripto/Test/catalog.py::TEST_SYMBOLS`). Timeframe (1h/4h) coin+algoritma bazlı geçmiş başarıya göre otomatik seçilir. ATR: kâr kilidi + `2.0×ATR$` zarar-stop (min. 10 dk pozisyon yaşı). Komisyon Binance'ten gerçek taker oranı çekilerek hesaplanır (6s dosya cache). `scan` (10 dk) `:05` beklemeden erken sinyal yakalar. Dosya kilidi (`fcntl`) ile cron çakışmaları önlenir. Ana ekranda (`/kripto`) Algoritmalar Live pozisyon kartları yerine her zaman coin bazlı en başarılı algoritma tablosu (`coin_leaders`) gösterilir.
+- **AgustosKripto/Test (`/kripto/test`):** Poly sinyal kaynaklarının (A1/A2 vb.) sanal Binance Futures defterleri — **$100×6x**, deposit $1000/defter, **30 coin** tarama evreni (`AgustosKripto/Test/catalog.py::TEST_SYMBOLS`). Timeframe (1h/4h) coin+algoritma bazlı geçmiş başarıya göre otomatik seçilir. ATR: kâr kilidi + `2.0×ATR$` zarar-stop (min. 10 dk pozisyon yaşı). Komisyon Binance'ten gerçek taker oranı çekilerek hesaplanır (6s dosya cache). `scan` (10 dk) `:05` beklemeden erken sinyal yakalar. Dosya kilidi (`fcntl`) ile cron çakışmaları önlenir. Ana ekranda (`/kripto`) Algoritmalar Live pozisyon kartları yerine her zaman coin bazlı lider tablosu (`coin_leaders`) gösterilir.
+- **Lider sıralaması (WR → SKILL):** `/kripto` coin liderleri artık kazanma oranıyla değil **drift-nötr SKILL** = (ort. LONG% + ort. SHORT%) / 2 ve t-istatistiğiyle sıralanır; asgari **20 işlem** (`runner.py::LEADER_MIN_TRADES`), eşik **SKILL ≥ %0.04 · |t| ≥ 2**. Sebep: 30 coin × 60 algoritmada 2-3 işlemli %100 WR satırları rastgele ve her saat değişiyordu. Bayat (WR şemalı) snapshot'lar `_leaders_have_skill` ile reddedilip yeniden hesaplanır.
+- **A2#05 X A6V3 MELEZ (yeni, 2026-08-12; defter anahtarı `melez`, URL `/algoritma-islemler/melez`):** A6V3'ün sembol-uzmanlaşma yapısı + her sembolde uzun dönem isabeti en yüksek motor. BTC→MACD Div #26 (%55,0 · n=487), ETH/SOL→Mean Reversion (A2#05 motoru; %54,2 / %53,2). `poly_trader_analiz6_v4.py` V3 iskeletini import edip globalleri yönlendirir — **V3 dosyası dokunulmaz**. Geçmiş `analiz6_v4_backfill.py` ile A6V3 (BTC) + A2#05 (ETH/SOL) defterlerinin gerçek kararlarından walk-forward kuruldu: 161 işlem, WR %51,6, +$199,98. **Uyarı:** backfill penceresi (08-07→08-12) BTC MACD bacağının kötü haftasına denk geldi (%45,1 vs uzun dönem %55,0), o yüzden backfill A2#05'in altında görünüyor — karar ileriye dönük veriyle verilmeli.
+- **Kripto denetim:** `python3 AgustosKripto/skill_audit.py --all` — cron yok, elle. Gerçek para kararı öncesi çalıştır; tek doğru ölçüt SKILL + t, WR değil.
+- **Binance Live DURDURULDU (2026-08-11):** `crypto_futures_live_control.json` → `live_paused: true`. Sebep: denetim brüt kenarın sıfır olduğunu gösterdi (net −$10.027'nin tamamı komisyon). Hayalet pozisyon tıkanıklığı 08-08'den beri kazara koruma sağlıyordu; tıkanıklık açıldığı için açılış elle durduruldu. **Yeniden açmadan önce** `skill_audit.py --all` çalıştır ve eşiği geçen defter sayısını kontrol et. `close`/`trail` çalışmaya devam ediyor.
+- **Güven vetosu:** `conviction_filter.py` — CR6 açılışında oy birliği (4/4) sinyalleri açılmaz, `conviction_shadow.jsonl`'a yazılır. Ölçülen SKILL −%0,065 · t=−3,89 · 5/5 dilim. `invert_vetoed` varsayılan **false** — ters açmanın %95 aralığı sıfırı kestiği için gerçek parayla denenmiyor.
+- **Funding tarayıcı:** `python3 AgustosKripto/funding_harvest.py [--tg]` — cron yok, elle. Yalnız rapor üretir, **emir açmaz**.
 - **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **11:00** İST (`0 19 * * 5` / `0 8 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
 - Dashboard: `web/poly_dashboard.py` port **5050** (sürekli servis). Public: `bursaapp.com/poly` · Kripto Future: `bursaapp.com/kripto`.
 - **Kaynak silinme izleme:** `aiproject-file-watch.service` → log `/tmp/aiproject_file_watch.log`; olaylar `ops/incidents/`. Geri yükleme: `ops/CRITICAL_FILE_RESTORE.md` (**09:17 / 09:23 / 13:25 İST**, 2026-08-02). audit: `ausearch -k aiproject_del -ts recent -i`
@@ -125,6 +135,7 @@ tail -f /tmp/algo_signals_v2.log
 tail -f /tmp/chart_algo_panel_wr.log
 tail -f /tmp/poly_trader_a2.log
 tail -f /tmp/poly_trader_b1_04.log
+tail -f /tmp/poly_trader_analiz6_v4.log
 tail -f /tmp/poly_trader_a2_02_live.log
 tail -f /tmp/poly_trader_a2_08_live.log
 tail -f /tmp/poly_trader_a2_03_live.log
