@@ -28,6 +28,7 @@ from virtual_book import (  # noqa: E402
     load_history,
     load_state,
     open_signals,
+    position_age_minutes,
     refresh_status,
     reset_book,
     save_state,
@@ -61,6 +62,10 @@ TEST_SYMBOLS = _test_cat.TEST_SYMBOLS
 _test_sig = _load_test_module("kripto_test_signals", _SIG_PATH)
 signal_for_book = _test_sig.signal_for_book
 
+_test_gate = _load_test_module("kripto_test_edge_gate", os.path.join(_DIR, "edge_gate.py"))
+edge_decision = _test_gate.decision
+edge_summary = _test_gate.summary
+
 _test_eng_spec = _ilu.spec_from_file_location(
     "kripto_test_engine",
     os.path.join(_DIR, "engine.py"),
@@ -81,6 +86,18 @@ DEPOSIT = 1000.0
 MARGIN_USD = 100.0
 LEVERAGE = 6
 MAX_OPEN_POSITIONS = 4
+
+# ── PRO rejimi ───────────────────────────────────────────────
+# Ölçüm: saatlik zorunlu kapanış 1 yılda A2#05'e 34.692 işlem × $0,58 komisyon
+# yükledi (−$26.552). Aynı sinyal sinyal-dönene-kadar tutulunca 5.841 işleme
+# indi (−$11.811): komisyonun %83'ü kalkıyor. PRO defterleri bu rejimi kullanır
+# ve ek olarak `edge_gate` ölçülen kenarı komisyonu aşmayan çifti hiç açmaz.
+PRO_MAX_HOLD_HOURS = 48.0   # kapı bir ufuk vermezse tavan
+PRO_MIN_HOLD_HOURS = 1.0    # açıldığı saat içinde süre sınırıyla kapanmasın
+
+
+def is_pro(book: dict) -> bool:
+    return (book.get("mode") or "") == "pro"
 
 
 def _paths(book: dict) -> tuple[str, str]:
@@ -165,6 +182,9 @@ def _history_path_for_book(book: dict) -> str | None:
                 return hp
         except Exception:
             pass
+    if is_pro(book):
+        # PRO defteri farklı çıkış rejimi — başka defterin geçmişiyle karışmaz
+        return hp if os.path.exists(hp) else None
     src = book.get("source")
     if src == "islemler_a2":
         num = book.get("id") or int(str(book.get("uid", "a2_0")).split("_")[-1])
@@ -430,7 +450,27 @@ def _skip_weekend(cmd: str) -> dict | None:
     return {"ok": True, "skipped": "weekend_pause", "cmd": cmd, "results": []}
 
 
+def _pro_expired_symbols(state: dict) -> set[str]:
+    """Süre sınırını aşan PRO pozisyonları — kapının verdiği ufuk, yoksa tavan."""
+    out: set[str] = set()
+    for pos in (state.get("open_positions") or []):
+        sym = str(pos.get("symbol") or "").upper()
+        if not sym:
+            continue
+        limit = float(pos.get("max_hold_h") or PRO_MAX_HOLD_HOURS)
+        limit = max(limit, PRO_MIN_HOLD_HOURS)
+        if position_age_minutes(pos) >= limit * 60.0:
+            out.add(sym)
+    return out
+
+
 def run_close() -> dict:
+    """Saatlik settle — PRO defterleri hariç.
+
+    PRO'da saatlik zorunlu kapanış yok: pozisyon sinyal dönene (scan), ATR
+    stopuna (trail) veya süre sınırına kadar tutulur. Bu turda yalnız süresi
+    dolanlar kapatılır.
+    """
     skipped = _skip_weekend("close")
     if skipped:
         return skipped
@@ -443,6 +483,14 @@ def run_close() -> dict:
     for book in ALL_BOOKS:
         sp, hp = _paths(book)
         _ensure_state(sp)
+        if is_pro(book):
+            expired = _pro_expired_symbols(load_state(sp))
+            r = (close_reversal_positions(
+                    sp, hp, label=label(book), reversed_symbols=expired,
+                    kl_cache=kl, reason="max_hold")
+                 if expired else {"ok": True, "closed": 0, "closed_symbols": []})
+            results.append({"id": book["uid"], "name": book["name"], "pro": True, **r})
+            continue
         r = close_all_positions(sp, hp, label=label(book), kl_cache=kl)
         skip_add = set(r.get("closed_atr_syms") or [])
         if skip_add:
@@ -455,6 +503,33 @@ def run_close() -> dict:
     return {"ok": True, "results": results}
 
 
+def _apply_edge_gate(book: dict, cands: list[dict]) -> list[dict]:
+    """PRO defterinde adayları ölçülen kenara göre süz ve kademe/süre işle.
+
+    Kapıdan geçmeyen (defter, coin) hiç açılmaz — kripto kaybının kaynağı
+    kenarı olmayan sinyalleri komisyon ödeyerek işlemekti.
+    """
+    if not is_pro(book):
+        return cands
+    out = []
+    for c in cands:
+        d = edge_decision(book["uid"], c["symbol"])
+        if not d.get("allowed"):
+            continue
+        mult = float(d.get("size_mult") or 0)
+        if mult <= 0:
+            continue
+        c = dict(c)
+        c["margin_usd"] = round(MARGIN_USD * mult, 2)
+        c["max_hold_h"] = float(d.get("hours") or PRO_MAX_HOLD_HOURS)
+        c["edge_tier"] = d.get("tier")
+        c["edge_skill_pct"] = d.get("skill_pct")
+        c["edge_t"] = d.get("skill_t")
+        c["edge_hours"] = d.get("hours")
+        out.append(c)
+    return out
+
+
 def run_open() -> dict:
     skipped = _skip_weekend("open")
     if skipped:
@@ -462,6 +537,7 @@ def run_open() -> dict:
     kl_1h = fetch_all_klines(TEST_SYMBOLS, limit=80, interval="1h")
     kl_4h = fetch_all_klines(TEST_SYMBOLS, limit=80, interval="4h")
     results = []
+    gate_blocked = 0
     for book in ALL_BOOKS:
         sp, hp = _paths(book)
         _ensure_state(sp)
@@ -477,6 +553,10 @@ def run_open() -> dict:
         )
         for c in cands:
             c["algo"] = book["name"]
+        if is_pro(book):
+            n0 = len(cands)
+            cands = _apply_edge_gate(book, cands)
+            gate_blocked += n0 - len(cands)
         r = open_signals(
             sp, hp,
             label=label(book),
@@ -494,11 +574,14 @@ def run_open() -> dict:
             "opened": r.get("opened", 0),
             **r,
         })
+    gs = edge_summary()
     print(
         f"[Kripto Test] open {len(ALL_BOOKS)} defter · ${MARGIN_USD:.0f}×{LEVERAGE}x "
-        f"· max {MAX_OPEN_POSITIONS} · 1h/4h ATR"
+        f"· max {MAX_OPEN_POSITIONS} · 1h/4h ATR · "
+        f"kenar kapısı: {gate_blocked} aday reddedildi, "
+        f"{len(gs.get('allowed') or [])} çift izinli"
     )
-    return {"ok": True, "results": results}
+    return {"ok": True, "results": results, "gate_blocked": gate_blocked}
 
 
 def run_trail() -> dict:
@@ -558,6 +641,9 @@ def run_scan() -> dict:
         reversed_syms = find_reversal_closes(
             book, opens, kl_1h, kl_4h, signal_for_book=signal_for_book,
         )
+        if is_pro(book):
+            # PRO'da saatlik close yok — süre sınırı bu turda da kontrol edilir
+            reversed_syms = set(reversed_syms) | _pro_expired_symbols(st)
         r_close: dict = {"closed": 0, "closed_symbols": []}
         if reversed_syms:
             r_close = close_reversal_positions(
@@ -579,6 +665,8 @@ def run_scan() -> dict:
             )
             for c in cands:
                 c["algo"] = book["name"]
+            if is_pro(book):
+                cands = _apply_edge_gate(book, cands)
             r_open = open_signals(
                 sp, hp,
                 label=label(book),
@@ -614,7 +702,9 @@ def run_scan() -> dict:
 
 def _build_waiting(kl: dict[str, list], open_syms: set[str]) -> list[dict]:
     votes: dict[str, dict[str, int]] = {s: {"UP": 0, "DOWN": 0} for s in TEST_SYMBOLS}
-    for book in ALL_BOOKS:
+    # PRO defterleri aynı motorun kopyası — konsensüsü ikiye katlamasınlar
+    vote_books = [b for b in ALL_BOOKS if not is_pro(b)]
+    for book in vote_books:
         sigs = signal_for_book(book, kl)
         for sym, d in sigs.items():
             if sym not in votes:
@@ -645,7 +735,7 @@ def _build_waiting(kl: dict[str, list], open_syms: set[str]) -> list[dict]:
             "is_top": score >= 8 and sig in ("UP", "DOWN"),
             "waiting": sym not in open_syms and sig in ("UP", "DOWN"),
             "algo": f"konsensüs {up}↑ {dn}↓",
-            "tier_label": f"{len(ALL_BOOKS)} algo",
+            "tier_label": f"{len(vote_books)} algo",
         })
     rows.sort(key=lambda x: (-x["score"], x["symbol"]))
     return rows
@@ -691,6 +781,13 @@ def _build_status(*, with_marks: bool = True) -> dict:
         st["max_opens"] = MAX_OPEN_POSITIONS
         st["open_active"] = True
         st["deposit"] = DEPOSIT
+        if is_pro(book):
+            st["mode"] = "pro"
+            st["pro_of"] = book.get("pro_of")
+            st["gate_pairs"] = [
+                r for r in (edge_summary().get("allowed") or [])
+                if r.get("uid") == book.get("pro_of")
+            ]
         books.append(st)
         tot_bal += float(st.get("balance") or 0)
         tot_pnl += float(st.get("total_pnl") or 0)
@@ -721,6 +818,8 @@ def _build_status(*, with_marks: bool = True) -> dict:
         "waiting": waiting,
         "top_success": top_success,
         "coin_leaders": coin_leaders,
+        "edge_gate": edge_summary(),
+        "pro_count": sum(1 for b in ALL_BOOKS if is_pro(b)),
     }
 
 

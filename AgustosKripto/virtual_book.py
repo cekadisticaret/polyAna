@@ -336,6 +336,10 @@ def fetch_all_klines(
     return out
 
 
+# Adaydan pozisyona taşınan ek alanlar — kenar kapısı kademesi ve süre sınırı
+_CAND_CARRY = ("max_hold_h", "edge_tier", "edge_skill_pct", "edge_t", "edge_hours")
+
+
 def _pos_interval(pos: dict) -> str:
     return str(pos.get("interval") or "1h")
 
@@ -678,13 +682,14 @@ def close_reversal_positions(
     label: str,
     reversed_symbols: set[str],
     kl_cache: dict[str, list] | None = None,
+    reason: str = "signal_reversal",
 ) -> dict:
     if not reversed_symbols:
         return {"ok": True, "closed": 0, "closed_symbols": []}
     with book_lock(state_path):
         return _close_reversal_positions_locked(
             state_path, history_path, label=label,
-            reversed_symbols=reversed_symbols, kl_cache=kl_cache,
+            reversed_symbols=reversed_symbols, kl_cache=kl_cache, reason=reason,
         )
 
 
@@ -695,11 +700,13 @@ def _close_reversal_positions_locked(
     label: str,
     reversed_symbols: set[str],
     kl_cache: dict[str, list] | None = None,
+    reason: str = "signal_reversal",
 ) -> dict:
-    """Ters sinyal geldiğinde ATR beklemeden anlık fiyattan kapat.
+    """Verilen sembolleri ATR beklemeden anlık fiyattan kapat.
 
     reversed_symbols: bu turda genuine ters sinyal + min bekleme süresi
     dolan sembollerin seti (üst katman — engine.py — belirler).
+    reason: kapanış etiketi — PRO defterlerinde süre sınırı için "max_hold".
     """
     state = load_state(state_path)
     history = load_history(history_path)
@@ -730,7 +737,7 @@ def _close_reversal_positions_locked(
             continue
         mark = float(kl[-1]["c"])
         tur_pnl += _settle_close(
-            state, history, pos, exit_px=mark, label=label, reason="signal_reversal",
+            state, history, pos, exit_px=mark, label=label, reason=reason,
         )
         closed += 1
         closed_symbols.append(sym)
@@ -853,11 +860,14 @@ def _open_signals_locked(
         if len(kl) < 2:
             continue
         entry = float(kl[-1]["c"]) if entry_price_mode == "live" else float(kl[-2]["c"])
-        qty = qty_from_entry(entry, margin_usd=m, leverage=lev)
+        # Aday kendi marjını verebilir (kenar kapısı kademesi) — yoksa defter marjı
+        m_c = float(cand.get("margin_usd") or m)
+        notional_c = m_c * lev
+        qty = qty_from_entry(entry, margin_usd=m_c, leverage=lev)
         if qty <= 0:
             continue
         rate = real_taker_rate(sym)
-        entry_fee = estimate_fee(notional, rate)
+        entry_fee = estimate_fee(notional_c, rate)
         kl_atr = kl if len(kl) >= 30 else cache.get(f"{sym}|{iv}")
         if not kl_atr or len(kl_atr) < 30:
             try:
@@ -875,13 +885,14 @@ def _open_signals_locked(
                 "interval": iv,
                 "qty": qty,
                 "leverage": lev,
-                "margin_usd": m,
+                "margin_usd": m_c,
                 "entry_price": entry,
-                "notional": notional,
+                "notional": notional_c,
                 "entry_fee": entry_fee,
                 "entry_time_tr": now_tr_iso(),
                 "slot": slot,
                 "virtual": True,
+                **{k: cand[k] for k in _CAND_CARRY if cand.get(k) is not None},
             },
             atr=atr_from_klines(kl_atr or []),
             price=entry,
@@ -890,7 +901,7 @@ def _open_signals_locked(
         held_syms.add(sym)
         print(
             f"[{label}] open {sym} {side} @{entry} qty={qty} {iv} "
-            f"margin=${m}x{lev} fee≈${entry_fee:.4f} "
+            f"margin=${m_c}x{lev} fee≈${entry_fee:.4f} "
             f"(held={len(existing)} +new={len(opened)}/{slots_left})"
         )
 

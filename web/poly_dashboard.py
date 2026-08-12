@@ -16177,8 +16177,16 @@ function renderBooks(elId, sumId, d){
       ? (` · <span style="color:var(--accent)">AKTİF $${m.toFixed(0)}×${lev}x</span>`)
       : (` · $${m.toFixed(0)}×${lev}x · open kapalı`);
     const liveDot = b.real_live ? '<span class="algo-live-dot" title="Canlı — gerçek Binance işlemi de açıyor ($7×20x)"></span>' : '';
+    const gateN = (b.gate_pairs||[]).length;
+    const proTag = b.mode === 'pro'
+      ? `<span style="margin-left:6px;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:700;`
+        + `background:${gateN?'rgba(200,241,53,.16)':'rgba(255,255,255,.07)'};`
+        + `color:${gateN?'var(--accent)':'var(--muted)'}" `
+        + `title="PRO rejimi — saatlik zorunlu kapanış yok; yalnız ölçülen SKILL komisyonu aşan coin'lerde pozisyon açar">`
+        + `PRO ${gateN?gateN+' coin izinli':'kapı kapalı'}</span>`
+      : '';
     return `<a class="book-card" href="${href}" style="${active?'border-color:rgba(200,241,53,.35)':''}">
-      <div class="bt">${liveDot}${title}${active?' · ▶':''}</div>
+      <div class="bt">${liveDot}${title}${proTag}${active?' · ▶':''}</div>
       <div class="bs">${sub} · ${wr} · ${b.history_n||0} işlem${sizeTag}</div>
       <div class="br"><span>Bakiye</span><b>$${Number(b.balance||0).toFixed(2)}</b></div>
       <div class="br"><span>Net P&L</span><b class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(2)}</b></div>

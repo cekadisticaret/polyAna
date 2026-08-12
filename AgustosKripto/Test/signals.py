@@ -14,7 +14,7 @@ for p in (_POLY, _ALGO_DIR):
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from algo_signals import macd_histogram_div, rsi_divergence_strict  # noqa: E402
+from algo_signals import macd_histogram_div, mean_reversion, rsi_divergence_strict  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location(
     "agustos_algo_catalog",
@@ -138,6 +138,28 @@ def _poly_analiz6_v3(kl_by_symbol: dict[str, list]) -> dict[str, str]:
     return out
 
 
+def _poly_melez(kl_by_symbol: dict[str, list]) -> dict[str, str]:
+    """MELEZ — BTC: MACD Hist. Div (A6V3 bacağı) · diğer: Mean Reversion (A2#05 bacağı).
+
+    Poly tarafında melez yalnız BTC/ETH/SOL işler; 30 coin evreninde ETH/SOL
+    motoru (mean reversion) altlara da uygulanır ki diğer defterlerle
+    karşılaştırılabilir olsun.
+    """
+    out = {}
+    for sym, kl in kl_by_symbol.items():
+        if len(kl) < 30:
+            out[sym] = "NEUTRAL"
+            continue
+        fn = macd_histogram_div if sym == "BTCUSDT" else mean_reversion
+        try:
+            sig = fn(kl)
+            out[sym] = sig if sig in ("UP", "DOWN") else "NEUTRAL"
+        except Exception as e:
+            print(f"[Test MELEZ] {sym}: {e}")
+            out[sym] = "NEUTRAL"
+    return out
+
+
 def _poly_analiz15(kl_by_symbol: dict[str, list]) -> dict[str, str]:
     from analiz15_signal import resolve_direction  # noqa: E402
 
@@ -204,6 +226,8 @@ def _poly_islemler(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]:
         return _poly_analiz1_2(kl_by_symbol)
     if key == "analiz6_v3":
         return _poly_analiz6_v3(kl_by_symbol)
+    if key == "melez":
+        return _poly_melez(kl_by_symbol)
     if key in ("analiz6", "analiz6_v2"):
         return _poly_analiz6(key, kl_by_symbol)
     if key == "analiz15":

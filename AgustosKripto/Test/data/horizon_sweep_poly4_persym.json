@@ -1,0 +1,4481 @@
+{
+  "ok": true,
+  "horizons": [
+    1,
+    2,
+    4,
+    8,
+    12,
+    24,
+    48
+  ],
+  "round_trip_fee": 0.001,
+  "maker_round_trip_fee": 0.0004,
+  "results": [
+    {
+      "book": "A6V3",
+      "uid": "analiz6_v3",
+      "signals": 4313,
+      "hours_sampled": 2423,
+      "universe": 30,
+      "horizons": [
+        {
+          "hours": 1,
+          "gross_pct": 0.002,
+          "se_pct": 0.0113,
+          "t": 0.17,
+          "net_pct": -0.098,
+          "beats_fee": false,
+          "skill_pct": 0.0022,
+          "skill_se_pct": 0.0109,
+          "skill_t": 0.2,
+          "drift_pct": 0.0084,
+          "n_long": 2157,
+          "n_short": 2156,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 2,
+          "gross_pct": 0.0014,
+          "se_pct": 0.0158,
+          "t": 0.09,
+          "net_pct": -0.0986,
+          "beats_fee": false,
+          "skill_pct": -0.0014,
+          "skill_se_pct": 0.0149,
+          "skill_t": -0.1,
+          "drift_pct": 0.0148,
+          "n_long": 2157,
+          "n_short": 2156,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 4,
+          "gross_pct": -0.0365,
+          "se_pct": 0.0219,
+          "t": -1.67,
+          "net_pct": -0.1365,
+          "beats_fee": false,
+          "skill_pct": -0.0213,
+          "skill_se_pct": 0.0214,
+          "skill_t": -0.99,
+          "drift_pct": 0.0276,
+          "n_long": 2157,
+          "n_short": 2156,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 8,
+          "gross_pct": -0.0999,
+          "se_pct": 0.0327,
+          "t": -3.05,
+          "net_pct": -0.1999,
+          "beats_fee": false,
+          "skill_pct": -0.0706,
+          "skill_se_pct": 0.0343,
+          "skill_t": -2.06,
+          "drift_pct": 0.0378,
+          "n_long": 2157,
+          "n_short": 2156,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 12,
+          "gross_pct": -0.0906,
+          "se_pct": 0.0457,
+          "t": -1.98,
+          "net_pct": -0.1906,
+          "beats_fee": false,
+          "skill_pct": -0.0691,
+          "skill_se_pct": 0.0471,
+          "skill_t": -1.47,
+          "drift_pct": 0.0754,
+          "n_long": 2157,
+          "n_short": 2156,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 24,
+          "gross_pct": -0.0577,
+          "se_pct": 0.0638,
+          "t": -0.9,
+          "net_pct": -0.1577,
+          "beats_fee": false,
+          "skill_pct": -0.054,
+          "skill_se_pct": 0.0674,
+          "skill_t": -0.8,
+          "drift_pct": 0.1423,
+          "n_long": 2157,
+          "n_short": 2156,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 48,
+          "gross_pct": 0.0851,
+          "se_pct": 0.0973,
+          "t": 0.87,
+          "net_pct": -0.0149,
+          "beats_fee": false,
+          "skill_pct": 0.0904,
+          "skill_se_pct": 0.1011,
+          "skill_t": 0.89,
+          "drift_pct": 0.2884,
+          "n_long": 2157,
+          "n_short": 2156,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        }
+      ],
+      "by_symbol": {
+        "BTCUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0006,
+            "skill_se_pct": 0.0109,
+            "skill_t": -0.06,
+            "drift_pct": 0.008,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0115,
+            "skill_se_pct": 0.0148,
+            "skill_t": 0.77,
+            "drift_pct": 0.0176,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0107,
+            "skill_se_pct": 0.0216,
+            "skill_t": -0.49,
+            "drift_pct": 0.0207,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0542,
+            "skill_se_pct": 0.0331,
+            "skill_t": -1.64,
+            "drift_pct": 0.0356,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0587,
+            "skill_se_pct": 0.0421,
+            "skill_t": -1.39,
+            "drift_pct": 0.0674,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.077,
+            "skill_se_pct": 0.0546,
+            "skill_t": -1.41,
+            "drift_pct": 0.1569,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.0331,
+            "skill_se_pct": 0.074,
+            "skill_t": -0.45,
+            "drift_pct": 0.2398,
+            "n_long": 889,
+            "n_short": 907
+          }
+        ],
+        "ETHUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0451,
+            "skill_se_pct": 0.0261,
+            "skill_t": -1.73,
+            "drift_pct": -0.022,
+            "n_long": 356,
+            "n_short": 330
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0767,
+            "skill_se_pct": 0.0352,
+            "skill_t": -2.18,
+            "drift_pct": -0.0168,
+            "n_long": 356,
+            "n_short": 330
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0777,
+            "skill_se_pct": 0.0503,
+            "skill_t": -1.55,
+            "drift_pct": -0.0217,
+            "n_long": 356,
+            "n_short": 330
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.1255,
+            "skill_se_pct": 0.0799,
+            "skill_t": -1.57,
+            "drift_pct": 0.0196,
+            "n_long": 356,
+            "n_short": 330
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.2196,
+            "skill_se_pct": 0.1004,
+            "skill_t": -2.19,
+            "drift_pct": 0.0568,
+            "n_long": 356,
+            "n_short": 330
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.1741,
+            "skill_se_pct": 0.1629,
+            "skill_t": -1.07,
+            "drift_pct": 0.0579,
+            "n_long": 356,
+            "n_short": 330
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.0376,
+            "skill_se_pct": 0.2925,
+            "skill_t": 0.13,
+            "drift_pct": 0.2429,
+            "n_long": 356,
+            "n_short": 330
+          }
+        ],
+        "SOLUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": 0.0223,
+            "skill_se_pct": 0.0176,
+            "skill_t": 1.26,
+            "drift_pct": 0.0194,
+            "n_long": 912,
+            "n_short": 919
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0136,
+            "skill_se_pct": 0.0249,
+            "skill_t": 0.55,
+            "drift_pct": 0.0227,
+            "n_long": 912,
+            "n_short": 919
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0112,
+            "skill_se_pct": 0.0351,
+            "skill_t": -0.32,
+            "drift_pct": 0.0518,
+            "n_long": 912,
+            "n_short": 919
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0665,
+            "skill_se_pct": 0.056,
+            "skill_t": -1.19,
+            "drift_pct": 0.0459,
+            "n_long": 912,
+            "n_short": 919
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0231,
+            "skill_se_pct": 0.0769,
+            "skill_t": -0.3,
+            "drift_pct": 0.0878,
+            "n_long": 912,
+            "n_short": 919
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0121,
+            "skill_se_pct": 0.1087,
+            "skill_t": 0.11,
+            "drift_pct": 0.1579,
+            "n_long": 912,
+            "n_short": 919
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2308,
+            "skill_se_pct": 0.1553,
+            "skill_t": 1.49,
+            "drift_pct": 0.3531,
+            "n_long": 912,
+            "n_short": 919
+          }
+        ]
+      }
+    },
+    {
+      "book": "MELEZ",
+      "uid": "melez",
+      "signals": 69241,
+      "hours_sampled": 2973,
+      "universe": 30,
+      "horizons": [
+        {
+          "hours": 1,
+          "gross_pct": -0.0126,
+          "se_pct": 0.012,
+          "t": -1.04,
+          "net_pct": -0.1126,
+          "beats_fee": false,
+          "skill_pct": -0.0156,
+          "skill_se_pct": 0.0134,
+          "skill_t": -1.16,
+          "drift_pct": 0.0052,
+          "n_long": 36822,
+          "n_short": 32419,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 2,
+          "gross_pct": -0.0068,
+          "se_pct": 0.0158,
+          "t": -0.43,
+          "net_pct": -0.1068,
+          "beats_fee": false,
+          "skill_pct": -0.0133,
+          "skill_se_pct": 0.0174,
+          "skill_t": -0.77,
+          "drift_pct": 0.0008,
+          "n_long": 36822,
+          "n_short": 32419,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 4,
+          "gross_pct": -0.017,
+          "se_pct": 0.0254,
+          "t": -0.67,
+          "net_pct": -0.117,
+          "beats_fee": false,
+          "skill_pct": -0.0129,
+          "skill_se_pct": 0.0259,
+          "skill_t": -0.5,
+          "drift_pct": 0.0197,
+          "n_long": 36822,
+          "n_short": 32419,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 8,
+          "gross_pct": 0.0049,
+          "se_pct": 0.0395,
+          "t": 0.12,
+          "net_pct": -0.0951,
+          "beats_fee": false,
+          "skill_pct": -0.0161,
+          "skill_se_pct": 0.0436,
+          "skill_t": -0.37,
+          "drift_pct": 0.0374,
+          "n_long": 36822,
+          "n_short": 32419,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 12,
+          "gross_pct": 0.0098,
+          "se_pct": 0.0554,
+          "t": 0.18,
+          "net_pct": -0.0902,
+          "beats_fee": false,
+          "skill_pct": -0.0247,
+          "skill_se_pct": 0.0586,
+          "skill_t": -0.42,
+          "drift_pct": 0.0773,
+          "n_long": 36822,
+          "n_short": 32419,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 24,
+          "gross_pct": 0.0473,
+          "se_pct": 0.0897,
+          "t": 0.53,
+          "net_pct": -0.0527,
+          "beats_fee": false,
+          "skill_pct": 0.0277,
+          "skill_se_pct": 0.0942,
+          "skill_t": 0.29,
+          "drift_pct": 0.1302,
+          "n_long": 36822,
+          "n_short": 32419,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 48,
+          "gross_pct": 0.0188,
+          "se_pct": 0.1263,
+          "t": 0.15,
+          "net_pct": -0.0812,
+          "beats_fee": false,
+          "skill_pct": 0.0149,
+          "skill_se_pct": 0.1304,
+          "skill_t": 0.11,
+          "drift_pct": 0.2652,
+          "n_long": 36822,
+          "n_short": 32419,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        }
+      ],
+      "by_symbol": {
+        "AAVEUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0174,
+            "skill_se_pct": 0.0189,
+            "skill_t": -0.92,
+            "drift_pct": 0.0202,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0144,
+            "skill_se_pct": 0.0271,
+            "skill_t": -0.53,
+            "drift_pct": 0.0093,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0036,
+            "skill_se_pct": 0.0392,
+            "skill_t": 0.09,
+            "drift_pct": 0.046,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0226,
+            "skill_se_pct": 0.0679,
+            "skill_t": -0.33,
+            "drift_pct": 0.0653,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0898,
+            "skill_se_pct": 0.0918,
+            "skill_t": -0.98,
+            "drift_pct": 0.1035,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0603,
+            "skill_se_pct": 0.1563,
+            "skill_t": -0.39,
+            "drift_pct": 0.1832,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.091,
+            "skill_se_pct": 0.2335,
+            "skill_t": -0.39,
+            "drift_pct": 0.3843,
+            "n_long": 1228,
+            "n_short": 1098
+          }
+        ],
+        "ADAUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0284,
+            "skill_se_pct": 0.0178,
+            "skill_t": -1.6,
+            "drift_pct": -0.0161,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0155,
+            "skill_se_pct": 0.0236,
+            "skill_t": -0.66,
+            "drift_pct": -0.0051,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0088,
+            "skill_se_pct": 0.0366,
+            "skill_t": -0.24,
+            "drift_pct": 0.0171,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0123,
+            "skill_se_pct": 0.0617,
+            "skill_t": 0.2,
+            "drift_pct": 0.0756,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0493,
+            "skill_se_pct": 0.0888,
+            "skill_t": 0.56,
+            "drift_pct": 0.1527,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.1107,
+            "skill_se_pct": 0.1444,
+            "skill_t": 0.77,
+            "drift_pct": 0.2302,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.0683,
+            "skill_se_pct": 0.2105,
+            "skill_t": -0.32,
+            "drift_pct": 0.4301,
+            "n_long": 1305,
+            "n_short": 1057
+          }
+        ],
+        "APTUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0109,
+            "skill_se_pct": 0.0207,
+            "skill_t": -0.53,
+            "drift_pct": 0.0091,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0095,
+            "skill_se_pct": 0.0276,
+            "skill_t": -0.35,
+            "drift_pct": 0.0213,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0334,
+            "skill_se_pct": 0.0412,
+            "skill_t": 0.81,
+            "drift_pct": 0.062,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0769,
+            "skill_se_pct": 0.0712,
+            "skill_t": 1.08,
+            "drift_pct": 0.1195,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0853,
+            "skill_se_pct": 0.093,
+            "skill_t": 0.92,
+            "drift_pct": 0.2184,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0209,
+            "skill_se_pct": 0.1487,
+            "skill_t": 0.14,
+            "drift_pct": 0.4299,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1007,
+            "skill_se_pct": 0.2166,
+            "skill_t": 0.47,
+            "drift_pct": 0.9466,
+            "n_long": 1242,
+            "n_short": 1076
+          }
+        ],
+        "ARBUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.013,
+            "skill_se_pct": 0.0214,
+            "skill_t": -0.61,
+            "drift_pct": 0.017,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0158,
+            "skill_se_pct": 0.0292,
+            "skill_t": -0.54,
+            "drift_pct": 0.0128,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0124,
+            "skill_se_pct": 0.0433,
+            "skill_t": 0.29,
+            "drift_pct": 0.0582,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0619,
+            "skill_se_pct": 0.0716,
+            "skill_t": 0.86,
+            "drift_pct": 0.0974,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0609,
+            "skill_se_pct": 0.0905,
+            "skill_t": 0.67,
+            "drift_pct": 0.1812,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.142,
+            "skill_se_pct": 0.1483,
+            "skill_t": 0.96,
+            "drift_pct": 0.3016,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1945,
+            "skill_se_pct": 0.2128,
+            "skill_t": 0.91,
+            "drift_pct": 0.6397,
+            "n_long": 1271,
+            "n_short": 1066
+          }
+        ],
+        "ATOMUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0289,
+            "skill_se_pct": 0.0176,
+            "skill_t": -1.64,
+            "drift_pct": 0.0113,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0285,
+            "skill_se_pct": 0.0237,
+            "skill_t": -1.2,
+            "drift_pct": 0.017,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0303,
+            "skill_se_pct": 0.0337,
+            "skill_t": -0.9,
+            "drift_pct": 0.0412,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0039,
+            "skill_se_pct": 0.0578,
+            "skill_t": 0.07,
+            "drift_pct": 0.1043,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0368,
+            "skill_se_pct": 0.0709,
+            "skill_t": 0.52,
+            "drift_pct": 0.1494,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.2667,
+            "skill_se_pct": 0.1076,
+            "skill_t": 2.48,
+            "drift_pct": 0.2948,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2266,
+            "skill_se_pct": 0.1571,
+            "skill_t": 1.44,
+            "drift_pct": 0.6219,
+            "n_long": 1246,
+            "n_short": 1062
+          }
+        ],
+        "AVAXUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0135,
+            "skill_se_pct": 0.0176,
+            "skill_t": -0.77,
+            "drift_pct": 0.0063,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0096,
+            "skill_se_pct": 0.0247,
+            "skill_t": 0.39,
+            "drift_pct": 0.0084,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0139,
+            "skill_se_pct": 0.0359,
+            "skill_t": 0.39,
+            "drift_pct": 0.0265,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0323,
+            "skill_se_pct": 0.0581,
+            "skill_t": 0.56,
+            "drift_pct": 0.0666,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0547,
+            "skill_se_pct": 0.0812,
+            "skill_t": 0.67,
+            "drift_pct": 0.1153,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.2053,
+            "skill_se_pct": 0.1256,
+            "skill_t": 1.63,
+            "drift_pct": 0.2485,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2702,
+            "skill_se_pct": 0.1632,
+            "skill_t": 1.66,
+            "drift_pct": 0.5672,
+            "n_long": 1250,
+            "n_short": 1106
+          }
+        ],
+        "BNBUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0112,
+            "skill_se_pct": 0.0122,
+            "skill_t": -0.92,
+            "drift_pct": -0.0076,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0034,
+            "skill_se_pct": 0.0159,
+            "skill_t": -0.21,
+            "drift_pct": -0.0053,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0142,
+            "skill_se_pct": 0.0238,
+            "skill_t": -0.59,
+            "drift_pct": -0.0082,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0375,
+            "skill_se_pct": 0.0419,
+            "skill_t": -0.9,
+            "drift_pct": 0.0188,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0994,
+            "skill_se_pct": 0.0555,
+            "skill_t": -1.79,
+            "drift_pct": 0.0257,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.1608,
+            "skill_se_pct": 0.0923,
+            "skill_t": -1.74,
+            "drift_pct": 0.0531,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.1298,
+            "skill_se_pct": 0.1548,
+            "skill_t": -0.84,
+            "drift_pct": 0.0797,
+            "n_long": 1112,
+            "n_short": 1208
+          }
+        ],
+        "BTCUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0006,
+            "skill_se_pct": 0.0109,
+            "skill_t": -0.06,
+            "drift_pct": 0.008,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0115,
+            "skill_se_pct": 0.0148,
+            "skill_t": 0.77,
+            "drift_pct": 0.0176,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0107,
+            "skill_se_pct": 0.0216,
+            "skill_t": -0.49,
+            "drift_pct": 0.0207,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0542,
+            "skill_se_pct": 0.0331,
+            "skill_t": -1.64,
+            "drift_pct": 0.0356,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0587,
+            "skill_se_pct": 0.0421,
+            "skill_t": -1.39,
+            "drift_pct": 0.0674,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.077,
+            "skill_se_pct": 0.0546,
+            "skill_t": -1.41,
+            "drift_pct": 0.1569,
+            "n_long": 889,
+            "n_short": 907
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.0331,
+            "skill_se_pct": 0.074,
+            "skill_t": -0.45,
+            "drift_pct": 0.2398,
+            "n_long": 889,
+            "n_short": 907
+          }
+        ],
+        "DOGEUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0122,
+            "skill_se_pct": 0.0172,
+            "skill_t": -0.71,
+            "drift_pct": 0.0078,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0008,
+            "skill_se_pct": 0.0224,
+            "skill_t": -0.04,
+            "drift_pct": 0.008,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.002,
+            "skill_se_pct": 0.0349,
+            "skill_t": -0.06,
+            "drift_pct": 0.0487,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0106,
+            "skill_se_pct": 0.06,
+            "skill_t": -0.18,
+            "drift_pct": 0.0989,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0199,
+            "skill_se_pct": 0.0812,
+            "skill_t": -0.24,
+            "drift_pct": 0.147,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0678,
+            "skill_se_pct": 0.127,
+            "skill_t": 0.53,
+            "drift_pct": 0.2201,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1431,
+            "skill_se_pct": 0.1907,
+            "skill_t": 0.75,
+            "drift_pct": 0.4268,
+            "n_long": 1251,
+            "n_short": 1104
+          }
+        ],
+        "DOTUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0077,
+            "skill_se_pct": 0.0195,
+            "skill_t": -0.39,
+            "drift_pct": 0.0215,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0088,
+            "skill_se_pct": 0.0263,
+            "skill_t": -0.33,
+            "drift_pct": 0.0207,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0058,
+            "skill_se_pct": 0.0391,
+            "skill_t": 0.15,
+            "drift_pct": 0.0396,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.032,
+            "skill_se_pct": 0.071,
+            "skill_t": 0.45,
+            "drift_pct": 0.0603,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0541,
+            "skill_se_pct": 0.0948,
+            "skill_t": 0.57,
+            "drift_pct": 0.1232,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.101,
+            "skill_se_pct": 0.153,
+            "skill_t": 0.66,
+            "drift_pct": 0.2472,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1561,
+            "skill_se_pct": 0.1788,
+            "skill_t": 0.87,
+            "drift_pct": 0.6318,
+            "n_long": 1269,
+            "n_short": 1042
+          }
+        ],
+        "ENAUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.007,
+            "skill_se_pct": 0.0251,
+            "skill_t": -0.28,
+            "drift_pct": 0.0018,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.026,
+            "skill_se_pct": 0.0334,
+            "skill_t": -0.78,
+            "drift_pct": -0.0067,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0003,
+            "skill_se_pct": 0.0497,
+            "skill_t": 0.01,
+            "drift_pct": 0.0431,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.019,
+            "skill_se_pct": 0.0861,
+            "skill_t": -0.22,
+            "drift_pct": 0.088,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0144,
+            "skill_se_pct": 0.1198,
+            "skill_t": -0.12,
+            "drift_pct": 0.1334,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0509,
+            "skill_se_pct": 0.1751,
+            "skill_t": 0.29,
+            "drift_pct": 0.3388,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.1151,
+            "skill_se_pct": 0.2897,
+            "skill_t": -0.4,
+            "drift_pct": 0.585,
+            "n_long": 1330,
+            "n_short": 1008
+          }
+        ],
+        "ETHUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0156,
+            "skill_se_pct": 0.0139,
+            "skill_t": -1.12,
+            "drift_pct": 0.0061,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0222,
+            "skill_se_pct": 0.0193,
+            "skill_t": -1.15,
+            "drift_pct": -0.0015,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0126,
+            "skill_se_pct": 0.0282,
+            "skill_t": -0.45,
+            "drift_pct": 0.014,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0348,
+            "skill_se_pct": 0.0496,
+            "skill_t": -0.7,
+            "drift_pct": 0.0254,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0462,
+            "skill_se_pct": 0.0683,
+            "skill_t": -0.68,
+            "drift_pct": 0.0712,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0411,
+            "skill_se_pct": 0.1137,
+            "skill_t": -0.36,
+            "drift_pct": 0.1173,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.075,
+            "skill_se_pct": 0.178,
+            "skill_t": -0.42,
+            "drift_pct": 0.222,
+            "n_long": 1149,
+            "n_short": 1150
+          }
+        ],
+        "FILUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0177,
+            "skill_se_pct": 0.0257,
+            "skill_t": -0.69,
+            "drift_pct": 0.0207,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0185,
+            "skill_se_pct": 0.0352,
+            "skill_t": -0.53,
+            "drift_pct": 0.0076,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0463,
+            "skill_se_pct": 0.0542,
+            "skill_t": -0.85,
+            "drift_pct": 0.0268,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0332,
+            "skill_se_pct": 0.1085,
+            "skill_t": -0.31,
+            "drift_pct": -0.0106,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0249,
+            "skill_se_pct": 0.1471,
+            "skill_t": -0.17,
+            "drift_pct": 0.0278,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0428,
+            "skill_se_pct": 0.2015,
+            "skill_t": 0.21,
+            "drift_pct": 0.0875,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.209,
+            "skill_se_pct": 0.2155,
+            "skill_t": 0.97,
+            "drift_pct": 0.1823,
+            "n_long": 1219,
+            "n_short": 1078
+          }
+        ],
+        "HYPEUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0197,
+            "skill_se_pct": 0.0218,
+            "skill_t": -0.9,
+            "drift_pct": -0.0075,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0026,
+            "skill_se_pct": 0.03,
+            "skill_t": -0.09,
+            "drift_pct": -0.026,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0111,
+            "skill_se_pct": 0.0439,
+            "skill_t": 0.25,
+            "drift_pct": -0.019,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0204,
+            "skill_se_pct": 0.0767,
+            "skill_t": -0.27,
+            "drift_pct": -0.0211,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0618,
+            "skill_se_pct": 0.1052,
+            "skill_t": -0.59,
+            "drift_pct": -0.0587,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0678,
+            "skill_se_pct": 0.1828,
+            "skill_t": -0.37,
+            "drift_pct": -0.2187,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.0444,
+            "skill_se_pct": 0.2474,
+            "skill_t": 0.18,
+            "drift_pct": -0.4218,
+            "n_long": 1180,
+            "n_short": 1154
+          }
+        ],
+        "INJUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0202,
+            "skill_se_pct": 0.0239,
+            "skill_t": -0.84,
+            "drift_pct": 0.0197,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0155,
+            "skill_se_pct": 0.0318,
+            "skill_t": -0.49,
+            "drift_pct": -0.0105,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0088,
+            "skill_se_pct": 0.0471,
+            "skill_t": -0.19,
+            "drift_pct": 0.0571,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0272,
+            "skill_se_pct": 0.0784,
+            "skill_t": -0.35,
+            "drift_pct": 0.0557,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0254,
+            "skill_se_pct": 0.1049,
+            "skill_t": -0.24,
+            "drift_pct": 0.1091,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0777,
+            "skill_se_pct": 0.1643,
+            "skill_t": 0.47,
+            "drift_pct": 0.1678,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.4055,
+            "skill_se_pct": 0.221,
+            "skill_t": 1.83,
+            "drift_pct": 0.3911,
+            "n_long": 1263,
+            "n_short": 1090
+          }
+        ],
+        "KAITOUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": 0.0162,
+            "skill_se_pct": 0.0289,
+            "skill_t": 0.56,
+            "drift_pct": 0.0473,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0009,
+            "skill_se_pct": 0.0379,
+            "skill_t": -0.02,
+            "drift_pct": 0.0078,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0166,
+            "skill_se_pct": 0.056,
+            "skill_t": -0.3,
+            "drift_pct": 0.0328,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0152,
+            "skill_se_pct": 0.0948,
+            "skill_t": -0.16,
+            "drift_pct": 0.0159,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0211,
+            "skill_se_pct": 0.1321,
+            "skill_t": 0.16,
+            "drift_pct": 0.0255,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.252,
+            "skill_se_pct": 0.2133,
+            "skill_t": 1.18,
+            "drift_pct": -0.0529,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.064,
+            "skill_se_pct": 0.3135,
+            "skill_t": -0.2,
+            "drift_pct": -0.1326,
+            "n_long": 1207,
+            "n_short": 1096
+          }
+        ],
+        "LINKUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0076,
+            "skill_se_pct": 0.0171,
+            "skill_t": -0.44,
+            "drift_pct": -0.001,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0074,
+            "skill_se_pct": 0.0231,
+            "skill_t": 0.32,
+            "drift_pct": -0.0024,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0157,
+            "skill_se_pct": 0.033,
+            "skill_t": 0.48,
+            "drift_pct": 0.0339,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0485,
+            "skill_se_pct": 0.0563,
+            "skill_t": 0.86,
+            "drift_pct": 0.0501,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0948,
+            "skill_se_pct": 0.0786,
+            "skill_t": 1.21,
+            "drift_pct": 0.1004,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.1982,
+            "skill_se_pct": 0.1282,
+            "skill_t": 1.55,
+            "drift_pct": 0.109,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2238,
+            "skill_se_pct": 0.1949,
+            "skill_t": 1.15,
+            "drift_pct": 0.2353,
+            "n_long": 1224,
+            "n_short": 1121
+          }
+        ],
+        "LTCUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0056,
+            "skill_se_pct": 0.0163,
+            "skill_t": -0.34,
+            "drift_pct": -0.0016,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0029,
+            "skill_se_pct": 0.0222,
+            "skill_t": -0.13,
+            "drift_pct": 0.0004,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0164,
+            "skill_se_pct": 0.0311,
+            "skill_t": 0.53,
+            "drift_pct": 0.022,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0342,
+            "skill_se_pct": 0.0525,
+            "skill_t": 0.65,
+            "drift_pct": 0.0449,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.05,
+            "skill_se_pct": 0.0648,
+            "skill_t": 0.77,
+            "drift_pct": 0.0988,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0799,
+            "skill_se_pct": 0.1025,
+            "skill_t": 0.78,
+            "drift_pct": 0.2156,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2494,
+            "skill_se_pct": 0.1357,
+            "skill_t": 1.84,
+            "drift_pct": 0.3478,
+            "n_long": 1190,
+            "n_short": 1152
+          }
+        ],
+        "NEARUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0046,
+            "skill_se_pct": 0.0222,
+            "skill_t": -0.21,
+            "drift_pct": 0.0001,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0012,
+            "skill_se_pct": 0.0303,
+            "skill_t": -0.04,
+            "drift_pct": -0.0061,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0099,
+            "skill_se_pct": 0.0438,
+            "skill_t": 0.23,
+            "drift_pct": -0.0137,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0052,
+            "skill_se_pct": 0.0801,
+            "skill_t": -0.06,
+            "drift_pct": -0.058,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.068,
+            "skill_se_pct": 0.1118,
+            "skill_t": -0.61,
+            "drift_pct": -0.0442,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0636,
+            "skill_se_pct": 0.191,
+            "skill_t": -0.33,
+            "drift_pct": -0.0509,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.1416,
+            "skill_se_pct": 0.2847,
+            "skill_t": -0.5,
+            "drift_pct": -0.0767,
+            "n_long": 1233,
+            "n_short": 1080
+          }
+        ],
+        "ONDOUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0026,
+            "skill_se_pct": 0.0227,
+            "skill_t": -0.11,
+            "drift_pct": 0.0045,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0081,
+            "skill_se_pct": 0.0294,
+            "skill_t": -0.28,
+            "drift_pct": -0.0007,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0062,
+            "skill_se_pct": 0.0441,
+            "skill_t": 0.14,
+            "drift_pct": 0.03,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.006,
+            "skill_se_pct": 0.071,
+            "skill_t": 0.08,
+            "drift_pct": 0.0635,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0182,
+            "skill_se_pct": 0.0962,
+            "skill_t": 0.19,
+            "drift_pct": 0.0846,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.1313,
+            "skill_se_pct": 0.1544,
+            "skill_t": 0.85,
+            "drift_pct": 0.1325,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1782,
+            "skill_se_pct": 0.214,
+            "skill_t": 0.83,
+            "drift_pct": 0.308,
+            "n_long": 1274,
+            "n_short": 1067
+          }
+        ],
+        "OPUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": 0.0051,
+            "skill_se_pct": 0.023,
+            "skill_t": 0.22,
+            "drift_pct": 0.0435,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0057,
+            "skill_se_pct": 0.0298,
+            "skill_t": 0.19,
+            "drift_pct": 0.0531,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0195,
+            "skill_se_pct": 0.0446,
+            "skill_t": 0.44,
+            "drift_pct": 0.0929,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0509,
+            "skill_se_pct": 0.0751,
+            "skill_t": 0.68,
+            "drift_pct": 0.1356,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0442,
+            "skill_se_pct": 0.102,
+            "skill_t": 0.43,
+            "drift_pct": 0.2343,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0784,
+            "skill_se_pct": 0.1631,
+            "skill_t": 0.48,
+            "drift_pct": 0.4345,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.0049,
+            "skill_se_pct": 0.2413,
+            "skill_t": -0.02,
+            "drift_pct": 0.8975,
+            "n_long": 1233,
+            "n_short": 1108
+          }
+        ],
+        "SOLUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0179,
+            "skill_se_pct": 0.0154,
+            "skill_t": -1.16,
+            "drift_pct": 0.0075,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0057,
+            "skill_se_pct": 0.0217,
+            "skill_t": -0.26,
+            "drift_pct": 0.0006,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0009,
+            "skill_se_pct": 0.0315,
+            "skill_t": -0.03,
+            "drift_pct": 0.0334,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0176,
+            "skill_se_pct": 0.0554,
+            "skill_t": -0.32,
+            "drift_pct": 0.0504,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0292,
+            "skill_se_pct": 0.072,
+            "skill_t": -0.41,
+            "drift_pct": 0.0902,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0262,
+            "skill_se_pct": 0.1181,
+            "skill_t": 0.22,
+            "drift_pct": 0.1528,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.071,
+            "skill_se_pct": 0.1654,
+            "skill_t": 0.43,
+            "drift_pct": 0.2463,
+            "n_long": 1221,
+            "n_short": 1161
+          }
+        ],
+        "SUIUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0121,
+            "skill_se_pct": 0.0209,
+            "skill_t": -0.58,
+            "drift_pct": 0.018,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0108,
+            "skill_se_pct": 0.0278,
+            "skill_t": 0.39,
+            "drift_pct": 0.0108,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0241,
+            "skill_se_pct": 0.042,
+            "skill_t": 0.57,
+            "drift_pct": 0.0604,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0324,
+            "skill_se_pct": 0.0712,
+            "skill_t": 0.45,
+            "drift_pct": 0.1188,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0407,
+            "skill_se_pct": 0.0948,
+            "skill_t": 0.43,
+            "drift_pct": 0.1957,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.1998,
+            "skill_se_pct": 0.1502,
+            "skill_t": 1.33,
+            "drift_pct": 0.3773,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.0057,
+            "skill_se_pct": 0.2277,
+            "skill_t": -0.02,
+            "drift_pct": 0.6872,
+            "n_long": 1246,
+            "n_short": 1020
+          }
+        ],
+        "TAOUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0343,
+            "skill_se_pct": 0.0235,
+            "skill_t": -1.46,
+            "drift_pct": -0.026,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0368,
+            "skill_se_pct": 0.0323,
+            "skill_t": -1.14,
+            "drift_pct": -0.0068,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0381,
+            "skill_se_pct": 0.0474,
+            "skill_t": -0.81,
+            "drift_pct": -0.0383,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0789,
+            "skill_se_pct": 0.0831,
+            "skill_t": -0.95,
+            "drift_pct": -0.0341,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.1251,
+            "skill_se_pct": 0.1075,
+            "skill_t": -1.16,
+            "drift_pct": 0.0036,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0442,
+            "skill_se_pct": 0.1878,
+            "skill_t": -0.24,
+            "drift_pct": 0.042,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.1986,
+            "skill_se_pct": 0.2778,
+            "skill_t": -0.72,
+            "drift_pct": 0.1081,
+            "n_long": 1230,
+            "n_short": 1051
+          }
+        ],
+        "TIAUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": 0.0154,
+            "skill_se_pct": 0.0252,
+            "skill_t": 0.61,
+            "drift_pct": 0.0391,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0085,
+            "skill_se_pct": 0.0339,
+            "skill_t": 0.25,
+            "drift_pct": 0.027,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.035,
+            "skill_se_pct": 0.048,
+            "skill_t": 0.73,
+            "drift_pct": 0.0679,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0531,
+            "skill_se_pct": 0.0794,
+            "skill_t": 0.67,
+            "drift_pct": 0.0819,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.1123,
+            "skill_se_pct": 0.1045,
+            "skill_t": 1.07,
+            "drift_pct": 0.1714,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.2611,
+            "skill_se_pct": 0.1734,
+            "skill_t": 1.51,
+            "drift_pct": 0.2745,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1584,
+            "skill_se_pct": 0.2569,
+            "skill_t": 0.62,
+            "drift_pct": 0.6138,
+            "n_long": 1261,
+            "n_short": 1075
+          }
+        ],
+        "UNIUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0371,
+            "skill_se_pct": 0.0218,
+            "skill_t": -1.7,
+            "drift_pct": 0.0122,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0348,
+            "skill_se_pct": 0.0299,
+            "skill_t": -1.16,
+            "drift_pct": -0.0098,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0167,
+            "skill_se_pct": 0.0453,
+            "skill_t": -0.37,
+            "drift_pct": 0.0149,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0364,
+            "skill_se_pct": 0.0764,
+            "skill_t": 0.48,
+            "drift_pct": 0.0094,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0491,
+            "skill_se_pct": 0.1022,
+            "skill_t": 0.48,
+            "drift_pct": 0.0355,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0513,
+            "skill_se_pct": 0.1711,
+            "skill_t": 0.3,
+            "drift_pct": 0.0519,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2618,
+            "skill_se_pct": 0.1968,
+            "skill_t": 1.33,
+            "drift_pct": 0.1287,
+            "n_long": 1261,
+            "n_short": 1085
+          }
+        ],
+        "WLDUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0532,
+            "skill_se_pct": 0.0305,
+            "skill_t": -1.75,
+            "drift_pct": -0.0155,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0689,
+            "skill_se_pct": 0.0414,
+            "skill_t": -1.67,
+            "drift_pct": -0.0452,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.1048,
+            "skill_se_pct": 0.0612,
+            "skill_t": -1.71,
+            "drift_pct": -0.0497,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0888,
+            "skill_se_pct": 0.0972,
+            "skill_t": -0.91,
+            "drift_pct": -0.0014,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.1292,
+            "skill_se_pct": 0.1354,
+            "skill_t": -0.95,
+            "drift_pct": 0.0491,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.11,
+            "skill_se_pct": 0.2602,
+            "skill_t": -0.42,
+            "drift_pct": 0.0621,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.4488,
+            "skill_se_pct": 0.5115,
+            "skill_t": -0.88,
+            "drift_pct": 0.1623,
+            "n_long": 1294,
+            "n_short": 1010
+          }
+        ],
+        "XLMUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0128,
+            "skill_se_pct": 0.0194,
+            "skill_t": -0.66,
+            "drift_pct": 0.0154,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0053,
+            "skill_se_pct": 0.0274,
+            "skill_t": -0.19,
+            "drift_pct": 0.0078,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0104,
+            "skill_se_pct": 0.0426,
+            "skill_t": -0.24,
+            "drift_pct": 0.0456,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0282,
+            "skill_se_pct": 0.0676,
+            "skill_t": -0.42,
+            "drift_pct": 0.0624,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0439,
+            "skill_se_pct": 0.094,
+            "skill_t": -0.47,
+            "drift_pct": 0.1072,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0499,
+            "skill_se_pct": 0.1486,
+            "skill_t": 0.34,
+            "drift_pct": 0.1908,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.0226,
+            "skill_se_pct": 0.2532,
+            "skill_t": 0.09,
+            "drift_pct": 0.2617,
+            "n_long": 1314,
+            "n_short": 981
+          }
+        ],
+        "XRPUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0182,
+            "skill_se_pct": 0.0142,
+            "skill_t": -1.28,
+            "drift_pct": -0.0008,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0266,
+            "skill_se_pct": 0.02,
+            "skill_t": -1.33,
+            "drift_pct": 0.004,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0089,
+            "skill_se_pct": 0.0307,
+            "skill_t": -0.29,
+            "drift_pct": 0.0395,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0458,
+            "skill_se_pct": 0.0525,
+            "skill_t": -0.87,
+            "drift_pct": 0.066,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0498,
+            "skill_se_pct": 0.0722,
+            "skill_t": -0.69,
+            "drift_pct": 0.129,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0448,
+            "skill_se_pct": 0.111,
+            "skill_t": 0.4,
+            "drift_pct": 0.2417,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.0117,
+            "skill_se_pct": 0.1574,
+            "skill_t": 0.07,
+            "drift_pct": 0.4434,
+            "n_long": 1256,
+            "n_short": 1028
+          }
+        ],
+        "ZECUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0635,
+            "skill_se_pct": 0.0344,
+            "skill_t": -1.85,
+            "drift_pct": -0.1031,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0713,
+            "skill_se_pct": 0.046,
+            "skill_t": -1.55,
+            "drift_pct": -0.0818,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.2381,
+            "skill_se_pct": 0.0681,
+            "skill_t": -3.5,
+            "drift_pct": -0.2406,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.3889,
+            "skill_se_pct": 0.1245,
+            "skill_t": -3.12,
+            "drift_pct": -0.3308,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.5647,
+            "skill_se_pct": 0.1776,
+            "skill_t": -3.18,
+            "drift_pct": -0.4734,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.8709,
+            "skill_se_pct": 0.3156,
+            "skill_t": -2.76,
+            "drift_pct": -1.0029,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.8319,
+            "skill_se_pct": 0.45,
+            "skill_t": -1.85,
+            "drift_pct": -2.1243,
+            "n_long": 1174,
+            "n_short": 1178
+          }
+        ]
+      }
+    },
+    {
+      "book": "A2#05",
+      "uid": "a2_05",
+      "signals": 69785,
+      "hours_sampled": 2973,
+      "universe": 30,
+      "horizons": [
+        {
+          "hours": 1,
+          "gross_pct": -0.0132,
+          "se_pct": 0.0122,
+          "t": -1.08,
+          "net_pct": -0.1132,
+          "beats_fee": false,
+          "skill_pct": -0.0157,
+          "skill_se_pct": 0.0136,
+          "skill_t": -1.15,
+          "drift_pct": 0.0051,
+          "n_long": 37107,
+          "n_short": 32678,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 2,
+          "gross_pct": -0.0079,
+          "se_pct": 0.016,
+          "t": -0.49,
+          "net_pct": -0.1079,
+          "beats_fee": false,
+          "skill_pct": -0.0138,
+          "skill_se_pct": 0.0176,
+          "skill_t": -0.78,
+          "drift_pct": 0.0006,
+          "n_long": 37107,
+          "n_short": 32678,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 4,
+          "gross_pct": -0.0182,
+          "se_pct": 0.0257,
+          "t": -0.71,
+          "net_pct": -0.1182,
+          "beats_fee": false,
+          "skill_pct": -0.0125,
+          "skill_se_pct": 0.0262,
+          "skill_t": -0.48,
+          "drift_pct": 0.0196,
+          "n_long": 37107,
+          "n_short": 32678,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 8,
+          "gross_pct": 0.0062,
+          "se_pct": 0.04,
+          "t": 0.16,
+          "net_pct": -0.0938,
+          "beats_fee": false,
+          "skill_pct": -0.0148,
+          "skill_se_pct": 0.0441,
+          "skill_t": -0.34,
+          "drift_pct": 0.0379,
+          "n_long": 37107,
+          "n_short": 32678,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 12,
+          "gross_pct": 0.0109,
+          "se_pct": 0.0561,
+          "t": 0.19,
+          "net_pct": -0.0891,
+          "beats_fee": false,
+          "skill_pct": -0.024,
+          "skill_se_pct": 0.0592,
+          "skill_t": -0.41,
+          "drift_pct": 0.0776,
+          "n_long": 37107,
+          "n_short": 32678,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 24,
+          "gross_pct": 0.047,
+          "se_pct": 0.0905,
+          "t": 0.52,
+          "net_pct": -0.053,
+          "beats_fee": false,
+          "skill_pct": 0.0274,
+          "skill_se_pct": 0.0949,
+          "skill_t": 0.29,
+          "drift_pct": 0.1294,
+          "n_long": 37107,
+          "n_short": 32678,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        },
+        {
+          "hours": 48,
+          "gross_pct": 0.0176,
+          "se_pct": 0.1271,
+          "t": 0.14,
+          "net_pct": -0.0824,
+          "beats_fee": false,
+          "skill_pct": 0.0132,
+          "skill_se_pct": 0.1311,
+          "skill_t": 0.1,
+          "drift_pct": 0.2651,
+          "n_long": 37107,
+          "n_short": 32678,
+          "skill_beats_taker": false,
+          "skill_beats_maker": false
+        }
+      ],
+      "by_symbol": {
+        "AAVEUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0174,
+            "skill_se_pct": 0.0189,
+            "skill_t": -0.92,
+            "drift_pct": 0.0202,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0144,
+            "skill_se_pct": 0.0271,
+            "skill_t": -0.53,
+            "drift_pct": 0.0093,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0036,
+            "skill_se_pct": 0.0392,
+            "skill_t": 0.09,
+            "drift_pct": 0.046,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0226,
+            "skill_se_pct": 0.0679,
+            "skill_t": -0.33,
+            "drift_pct": 0.0653,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0898,
+            "skill_se_pct": 0.0918,
+            "skill_t": -0.98,
+            "drift_pct": 0.1035,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0603,
+            "skill_se_pct": 0.1563,
+            "skill_t": -0.39,
+            "drift_pct": 0.1832,
+            "n_long": 1228,
+            "n_short": 1098
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.091,
+            "skill_se_pct": 0.2335,
+            "skill_t": -0.39,
+            "drift_pct": 0.3843,
+            "n_long": 1228,
+            "n_short": 1098
+          }
+        ],
+        "ADAUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0284,
+            "skill_se_pct": 0.0178,
+            "skill_t": -1.6,
+            "drift_pct": -0.0161,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0155,
+            "skill_se_pct": 0.0236,
+            "skill_t": -0.66,
+            "drift_pct": -0.0051,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0088,
+            "skill_se_pct": 0.0366,
+            "skill_t": -0.24,
+            "drift_pct": 0.0171,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0123,
+            "skill_se_pct": 0.0617,
+            "skill_t": 0.2,
+            "drift_pct": 0.0756,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0493,
+            "skill_se_pct": 0.0888,
+            "skill_t": 0.56,
+            "drift_pct": 0.1527,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.1107,
+            "skill_se_pct": 0.1444,
+            "skill_t": 0.77,
+            "drift_pct": 0.2302,
+            "n_long": 1305,
+            "n_short": 1057
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.0683,
+            "skill_se_pct": 0.2105,
+            "skill_t": -0.32,
+            "drift_pct": 0.4301,
+            "n_long": 1305,
+            "n_short": 1057
+          }
+        ],
+        "APTUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0109,
+            "skill_se_pct": 0.0207,
+            "skill_t": -0.53,
+            "drift_pct": 0.0091,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0095,
+            "skill_se_pct": 0.0276,
+            "skill_t": -0.35,
+            "drift_pct": 0.0213,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0334,
+            "skill_se_pct": 0.0412,
+            "skill_t": 0.81,
+            "drift_pct": 0.062,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0769,
+            "skill_se_pct": 0.0712,
+            "skill_t": 1.08,
+            "drift_pct": 0.1195,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0853,
+            "skill_se_pct": 0.093,
+            "skill_t": 0.92,
+            "drift_pct": 0.2184,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0209,
+            "skill_se_pct": 0.1487,
+            "skill_t": 0.14,
+            "drift_pct": 0.4299,
+            "n_long": 1242,
+            "n_short": 1076
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1007,
+            "skill_se_pct": 0.2166,
+            "skill_t": 0.47,
+            "drift_pct": 0.9466,
+            "n_long": 1242,
+            "n_short": 1076
+          }
+        ],
+        "ARBUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.013,
+            "skill_se_pct": 0.0214,
+            "skill_t": -0.61,
+            "drift_pct": 0.017,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0158,
+            "skill_se_pct": 0.0292,
+            "skill_t": -0.54,
+            "drift_pct": 0.0128,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0124,
+            "skill_se_pct": 0.0433,
+            "skill_t": 0.29,
+            "drift_pct": 0.0582,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0619,
+            "skill_se_pct": 0.0716,
+            "skill_t": 0.86,
+            "drift_pct": 0.0974,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0609,
+            "skill_se_pct": 0.0905,
+            "skill_t": 0.67,
+            "drift_pct": 0.1812,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.142,
+            "skill_se_pct": 0.1483,
+            "skill_t": 0.96,
+            "drift_pct": 0.3016,
+            "n_long": 1271,
+            "n_short": 1066
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1945,
+            "skill_se_pct": 0.2128,
+            "skill_t": 0.91,
+            "drift_pct": 0.6397,
+            "n_long": 1271,
+            "n_short": 1066
+          }
+        ],
+        "ATOMUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0289,
+            "skill_se_pct": 0.0176,
+            "skill_t": -1.64,
+            "drift_pct": 0.0113,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0285,
+            "skill_se_pct": 0.0237,
+            "skill_t": -1.2,
+            "drift_pct": 0.017,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0303,
+            "skill_se_pct": 0.0337,
+            "skill_t": -0.9,
+            "drift_pct": 0.0412,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0039,
+            "skill_se_pct": 0.0578,
+            "skill_t": 0.07,
+            "drift_pct": 0.1043,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0368,
+            "skill_se_pct": 0.0709,
+            "skill_t": 0.52,
+            "drift_pct": 0.1494,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.2667,
+            "skill_se_pct": 0.1076,
+            "skill_t": 2.48,
+            "drift_pct": 0.2948,
+            "n_long": 1246,
+            "n_short": 1062
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2266,
+            "skill_se_pct": 0.1571,
+            "skill_t": 1.44,
+            "drift_pct": 0.6219,
+            "n_long": 1246,
+            "n_short": 1062
+          }
+        ],
+        "AVAXUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0135,
+            "skill_se_pct": 0.0176,
+            "skill_t": -0.77,
+            "drift_pct": 0.0063,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0096,
+            "skill_se_pct": 0.0247,
+            "skill_t": 0.39,
+            "drift_pct": 0.0084,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0139,
+            "skill_se_pct": 0.0359,
+            "skill_t": 0.39,
+            "drift_pct": 0.0265,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0323,
+            "skill_se_pct": 0.0581,
+            "skill_t": 0.56,
+            "drift_pct": 0.0666,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0547,
+            "skill_se_pct": 0.0812,
+            "skill_t": 0.67,
+            "drift_pct": 0.1153,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.2053,
+            "skill_se_pct": 0.1256,
+            "skill_t": 1.63,
+            "drift_pct": 0.2485,
+            "n_long": 1250,
+            "n_short": 1106
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2702,
+            "skill_se_pct": 0.1632,
+            "skill_t": 1.66,
+            "drift_pct": 0.5672,
+            "n_long": 1250,
+            "n_short": 1106
+          }
+        ],
+        "BNBUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0112,
+            "skill_se_pct": 0.0122,
+            "skill_t": -0.92,
+            "drift_pct": -0.0076,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0034,
+            "skill_se_pct": 0.0159,
+            "skill_t": -0.21,
+            "drift_pct": -0.0053,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0142,
+            "skill_se_pct": 0.0238,
+            "skill_t": -0.59,
+            "drift_pct": -0.0082,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0375,
+            "skill_se_pct": 0.0419,
+            "skill_t": -0.9,
+            "drift_pct": 0.0188,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0994,
+            "skill_se_pct": 0.0555,
+            "skill_t": -1.79,
+            "drift_pct": 0.0257,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.1608,
+            "skill_se_pct": 0.0923,
+            "skill_t": -1.74,
+            "drift_pct": 0.0531,
+            "n_long": 1112,
+            "n_short": 1208
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.1298,
+            "skill_se_pct": 0.1548,
+            "skill_t": -0.84,
+            "drift_pct": 0.0797,
+            "n_long": 1112,
+            "n_short": 1208
+          }
+        ],
+        "BTCUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0057,
+            "skill_se_pct": 0.0096,
+            "skill_t": -0.6,
+            "drift_pct": 0.0047,
+            "n_long": 1174,
+            "n_short": 1166
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0084,
+            "skill_se_pct": 0.0132,
+            "skill_t": -0.64,
+            "drift_pct": 0.0072,
+            "n_long": 1174,
+            "n_short": 1166
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0016,
+            "skill_se_pct": 0.0196,
+            "skill_t": 0.08,
+            "drift_pct": 0.0172,
+            "n_long": 1174,
+            "n_short": 1166
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0085,
+            "skill_se_pct": 0.034,
+            "skill_t": -0.25,
+            "drift_pct": 0.0489,
+            "n_long": 1174,
+            "n_short": 1166
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0306,
+            "skill_se_pct": 0.0442,
+            "skill_t": -0.69,
+            "drift_pct": 0.0754,
+            "n_long": 1174,
+            "n_short": 1166
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.061,
+            "skill_se_pct": 0.0693,
+            "skill_t": -0.88,
+            "drift_pct": 0.1284,
+            "n_long": 1174,
+            "n_short": 1166
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.0723,
+            "skill_se_pct": 0.1022,
+            "skill_t": -0.71,
+            "drift_pct": 0.2445,
+            "n_long": 1174,
+            "n_short": 1166
+          }
+        ],
+        "DOGEUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0122,
+            "skill_se_pct": 0.0172,
+            "skill_t": -0.71,
+            "drift_pct": 0.0078,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0008,
+            "skill_se_pct": 0.0224,
+            "skill_t": -0.04,
+            "drift_pct": 0.008,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.002,
+            "skill_se_pct": 0.0349,
+            "skill_t": -0.06,
+            "drift_pct": 0.0487,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0106,
+            "skill_se_pct": 0.06,
+            "skill_t": -0.18,
+            "drift_pct": 0.0989,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0199,
+            "skill_se_pct": 0.0812,
+            "skill_t": -0.24,
+            "drift_pct": 0.147,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0678,
+            "skill_se_pct": 0.127,
+            "skill_t": 0.53,
+            "drift_pct": 0.2201,
+            "n_long": 1251,
+            "n_short": 1104
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1431,
+            "skill_se_pct": 0.1907,
+            "skill_t": 0.75,
+            "drift_pct": 0.4268,
+            "n_long": 1251,
+            "n_short": 1104
+          }
+        ],
+        "DOTUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0077,
+            "skill_se_pct": 0.0195,
+            "skill_t": -0.39,
+            "drift_pct": 0.0215,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0088,
+            "skill_se_pct": 0.0263,
+            "skill_t": -0.33,
+            "drift_pct": 0.0207,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0058,
+            "skill_se_pct": 0.0391,
+            "skill_t": 0.15,
+            "drift_pct": 0.0396,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.032,
+            "skill_se_pct": 0.071,
+            "skill_t": 0.45,
+            "drift_pct": 0.0603,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0541,
+            "skill_se_pct": 0.0948,
+            "skill_t": 0.57,
+            "drift_pct": 0.1232,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.101,
+            "skill_se_pct": 0.153,
+            "skill_t": 0.66,
+            "drift_pct": 0.2472,
+            "n_long": 1269,
+            "n_short": 1042
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1561,
+            "skill_se_pct": 0.1788,
+            "skill_t": 0.87,
+            "drift_pct": 0.6318,
+            "n_long": 1269,
+            "n_short": 1042
+          }
+        ],
+        "ENAUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.007,
+            "skill_se_pct": 0.0251,
+            "skill_t": -0.28,
+            "drift_pct": 0.0018,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.026,
+            "skill_se_pct": 0.0334,
+            "skill_t": -0.78,
+            "drift_pct": -0.0067,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0003,
+            "skill_se_pct": 0.0497,
+            "skill_t": 0.01,
+            "drift_pct": 0.0431,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.019,
+            "skill_se_pct": 0.0861,
+            "skill_t": -0.22,
+            "drift_pct": 0.088,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0144,
+            "skill_se_pct": 0.1198,
+            "skill_t": -0.12,
+            "drift_pct": 0.1334,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0509,
+            "skill_se_pct": 0.1751,
+            "skill_t": 0.29,
+            "drift_pct": 0.3388,
+            "n_long": 1330,
+            "n_short": 1008
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.1151,
+            "skill_se_pct": 0.2897,
+            "skill_t": -0.4,
+            "drift_pct": 0.585,
+            "n_long": 1330,
+            "n_short": 1008
+          }
+        ],
+        "ETHUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0156,
+            "skill_se_pct": 0.0139,
+            "skill_t": -1.12,
+            "drift_pct": 0.0061,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0222,
+            "skill_se_pct": 0.0193,
+            "skill_t": -1.15,
+            "drift_pct": -0.0015,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0126,
+            "skill_se_pct": 0.0282,
+            "skill_t": -0.45,
+            "drift_pct": 0.014,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0348,
+            "skill_se_pct": 0.0496,
+            "skill_t": -0.7,
+            "drift_pct": 0.0254,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0462,
+            "skill_se_pct": 0.0683,
+            "skill_t": -0.68,
+            "drift_pct": 0.0712,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0411,
+            "skill_se_pct": 0.1137,
+            "skill_t": -0.36,
+            "drift_pct": 0.1173,
+            "n_long": 1149,
+            "n_short": 1150
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.075,
+            "skill_se_pct": 0.178,
+            "skill_t": -0.42,
+            "drift_pct": 0.222,
+            "n_long": 1149,
+            "n_short": 1150
+          }
+        ],
+        "FILUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0177,
+            "skill_se_pct": 0.0257,
+            "skill_t": -0.69,
+            "drift_pct": 0.0207,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0185,
+            "skill_se_pct": 0.0352,
+            "skill_t": -0.53,
+            "drift_pct": 0.0076,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0463,
+            "skill_se_pct": 0.0542,
+            "skill_t": -0.85,
+            "drift_pct": 0.0268,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0332,
+            "skill_se_pct": 0.1085,
+            "skill_t": -0.31,
+            "drift_pct": -0.0106,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0249,
+            "skill_se_pct": 0.1471,
+            "skill_t": -0.17,
+            "drift_pct": 0.0278,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0428,
+            "skill_se_pct": 0.2015,
+            "skill_t": 0.21,
+            "drift_pct": 0.0875,
+            "n_long": 1219,
+            "n_short": 1078
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.209,
+            "skill_se_pct": 0.2155,
+            "skill_t": 0.97,
+            "drift_pct": 0.1823,
+            "n_long": 1219,
+            "n_short": 1078
+          }
+        ],
+        "HYPEUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0197,
+            "skill_se_pct": 0.0218,
+            "skill_t": -0.9,
+            "drift_pct": -0.0075,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0026,
+            "skill_se_pct": 0.03,
+            "skill_t": -0.09,
+            "drift_pct": -0.026,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0111,
+            "skill_se_pct": 0.0439,
+            "skill_t": 0.25,
+            "drift_pct": -0.019,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0204,
+            "skill_se_pct": 0.0767,
+            "skill_t": -0.27,
+            "drift_pct": -0.0211,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0618,
+            "skill_se_pct": 0.1052,
+            "skill_t": -0.59,
+            "drift_pct": -0.0587,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0678,
+            "skill_se_pct": 0.1828,
+            "skill_t": -0.37,
+            "drift_pct": -0.2187,
+            "n_long": 1180,
+            "n_short": 1154
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.0444,
+            "skill_se_pct": 0.2474,
+            "skill_t": 0.18,
+            "drift_pct": -0.4218,
+            "n_long": 1180,
+            "n_short": 1154
+          }
+        ],
+        "INJUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0202,
+            "skill_se_pct": 0.0239,
+            "skill_t": -0.84,
+            "drift_pct": 0.0197,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0155,
+            "skill_se_pct": 0.0318,
+            "skill_t": -0.49,
+            "drift_pct": -0.0105,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0088,
+            "skill_se_pct": 0.0471,
+            "skill_t": -0.19,
+            "drift_pct": 0.0571,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0272,
+            "skill_se_pct": 0.0784,
+            "skill_t": -0.35,
+            "drift_pct": 0.0557,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0254,
+            "skill_se_pct": 0.1049,
+            "skill_t": -0.24,
+            "drift_pct": 0.1091,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0777,
+            "skill_se_pct": 0.1643,
+            "skill_t": 0.47,
+            "drift_pct": 0.1678,
+            "n_long": 1263,
+            "n_short": 1090
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.4055,
+            "skill_se_pct": 0.221,
+            "skill_t": 1.83,
+            "drift_pct": 0.3911,
+            "n_long": 1263,
+            "n_short": 1090
+          }
+        ],
+        "KAITOUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": 0.0162,
+            "skill_se_pct": 0.0289,
+            "skill_t": 0.56,
+            "drift_pct": 0.0473,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0009,
+            "skill_se_pct": 0.0379,
+            "skill_t": -0.02,
+            "drift_pct": 0.0078,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0166,
+            "skill_se_pct": 0.056,
+            "skill_t": -0.3,
+            "drift_pct": 0.0328,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0152,
+            "skill_se_pct": 0.0948,
+            "skill_t": -0.16,
+            "drift_pct": 0.0159,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0211,
+            "skill_se_pct": 0.1321,
+            "skill_t": 0.16,
+            "drift_pct": 0.0255,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.252,
+            "skill_se_pct": 0.2133,
+            "skill_t": 1.18,
+            "drift_pct": -0.0529,
+            "n_long": 1207,
+            "n_short": 1096
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.064,
+            "skill_se_pct": 0.3135,
+            "skill_t": -0.2,
+            "drift_pct": -0.1326,
+            "n_long": 1207,
+            "n_short": 1096
+          }
+        ],
+        "LINKUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0076,
+            "skill_se_pct": 0.0171,
+            "skill_t": -0.44,
+            "drift_pct": -0.001,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0074,
+            "skill_se_pct": 0.0231,
+            "skill_t": 0.32,
+            "drift_pct": -0.0024,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0157,
+            "skill_se_pct": 0.033,
+            "skill_t": 0.48,
+            "drift_pct": 0.0339,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0485,
+            "skill_se_pct": 0.0563,
+            "skill_t": 0.86,
+            "drift_pct": 0.0501,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0948,
+            "skill_se_pct": 0.0786,
+            "skill_t": 1.21,
+            "drift_pct": 0.1004,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.1982,
+            "skill_se_pct": 0.1282,
+            "skill_t": 1.55,
+            "drift_pct": 0.109,
+            "n_long": 1224,
+            "n_short": 1121
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2238,
+            "skill_se_pct": 0.1949,
+            "skill_t": 1.15,
+            "drift_pct": 0.2353,
+            "n_long": 1224,
+            "n_short": 1121
+          }
+        ],
+        "LTCUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0056,
+            "skill_se_pct": 0.0163,
+            "skill_t": -0.34,
+            "drift_pct": -0.0016,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0029,
+            "skill_se_pct": 0.0222,
+            "skill_t": -0.13,
+            "drift_pct": 0.0004,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0164,
+            "skill_se_pct": 0.0311,
+            "skill_t": 0.53,
+            "drift_pct": 0.022,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0342,
+            "skill_se_pct": 0.0525,
+            "skill_t": 0.65,
+            "drift_pct": 0.0449,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.05,
+            "skill_se_pct": 0.0648,
+            "skill_t": 0.77,
+            "drift_pct": 0.0988,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0799,
+            "skill_se_pct": 0.1025,
+            "skill_t": 0.78,
+            "drift_pct": 0.2156,
+            "n_long": 1190,
+            "n_short": 1152
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2494,
+            "skill_se_pct": 0.1357,
+            "skill_t": 1.84,
+            "drift_pct": 0.3478,
+            "n_long": 1190,
+            "n_short": 1152
+          }
+        ],
+        "NEARUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0046,
+            "skill_se_pct": 0.0222,
+            "skill_t": -0.21,
+            "drift_pct": 0.0001,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0012,
+            "skill_se_pct": 0.0303,
+            "skill_t": -0.04,
+            "drift_pct": -0.0061,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0099,
+            "skill_se_pct": 0.0438,
+            "skill_t": 0.23,
+            "drift_pct": -0.0137,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0052,
+            "skill_se_pct": 0.0801,
+            "skill_t": -0.06,
+            "drift_pct": -0.058,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.068,
+            "skill_se_pct": 0.1118,
+            "skill_t": -0.61,
+            "drift_pct": -0.0442,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0636,
+            "skill_se_pct": 0.191,
+            "skill_t": -0.33,
+            "drift_pct": -0.0509,
+            "n_long": 1233,
+            "n_short": 1080
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.1416,
+            "skill_se_pct": 0.2847,
+            "skill_t": -0.5,
+            "drift_pct": -0.0767,
+            "n_long": 1233,
+            "n_short": 1080
+          }
+        ],
+        "ONDOUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0026,
+            "skill_se_pct": 0.0227,
+            "skill_t": -0.11,
+            "drift_pct": 0.0045,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0081,
+            "skill_se_pct": 0.0294,
+            "skill_t": -0.28,
+            "drift_pct": -0.0007,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0062,
+            "skill_se_pct": 0.0441,
+            "skill_t": 0.14,
+            "drift_pct": 0.03,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.006,
+            "skill_se_pct": 0.071,
+            "skill_t": 0.08,
+            "drift_pct": 0.0635,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0182,
+            "skill_se_pct": 0.0962,
+            "skill_t": 0.19,
+            "drift_pct": 0.0846,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.1313,
+            "skill_se_pct": 0.1544,
+            "skill_t": 0.85,
+            "drift_pct": 0.1325,
+            "n_long": 1274,
+            "n_short": 1067
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1782,
+            "skill_se_pct": 0.214,
+            "skill_t": 0.83,
+            "drift_pct": 0.308,
+            "n_long": 1274,
+            "n_short": 1067
+          }
+        ],
+        "OPUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": 0.0051,
+            "skill_se_pct": 0.023,
+            "skill_t": 0.22,
+            "drift_pct": 0.0435,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0057,
+            "skill_se_pct": 0.0298,
+            "skill_t": 0.19,
+            "drift_pct": 0.0531,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0195,
+            "skill_se_pct": 0.0446,
+            "skill_t": 0.44,
+            "drift_pct": 0.0929,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0509,
+            "skill_se_pct": 0.0751,
+            "skill_t": 0.68,
+            "drift_pct": 0.1356,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0442,
+            "skill_se_pct": 0.102,
+            "skill_t": 0.43,
+            "drift_pct": 0.2343,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0784,
+            "skill_se_pct": 0.1631,
+            "skill_t": 0.48,
+            "drift_pct": 0.4345,
+            "n_long": 1233,
+            "n_short": 1108
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.0049,
+            "skill_se_pct": 0.2413,
+            "skill_t": -0.02,
+            "drift_pct": 0.8975,
+            "n_long": 1233,
+            "n_short": 1108
+          }
+        ],
+        "SOLUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0179,
+            "skill_se_pct": 0.0154,
+            "skill_t": -1.16,
+            "drift_pct": 0.0075,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0057,
+            "skill_se_pct": 0.0217,
+            "skill_t": -0.26,
+            "drift_pct": 0.0006,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0009,
+            "skill_se_pct": 0.0315,
+            "skill_t": -0.03,
+            "drift_pct": 0.0334,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0176,
+            "skill_se_pct": 0.0554,
+            "skill_t": -0.32,
+            "drift_pct": 0.0504,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0292,
+            "skill_se_pct": 0.072,
+            "skill_t": -0.41,
+            "drift_pct": 0.0902,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0262,
+            "skill_se_pct": 0.1181,
+            "skill_t": 0.22,
+            "drift_pct": 0.1528,
+            "n_long": 1221,
+            "n_short": 1161
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.071,
+            "skill_se_pct": 0.1654,
+            "skill_t": 0.43,
+            "drift_pct": 0.2463,
+            "n_long": 1221,
+            "n_short": 1161
+          }
+        ],
+        "SUIUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0121,
+            "skill_se_pct": 0.0209,
+            "skill_t": -0.58,
+            "drift_pct": 0.018,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0108,
+            "skill_se_pct": 0.0278,
+            "skill_t": 0.39,
+            "drift_pct": 0.0108,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.0241,
+            "skill_se_pct": 0.042,
+            "skill_t": 0.57,
+            "drift_pct": 0.0604,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0324,
+            "skill_se_pct": 0.0712,
+            "skill_t": 0.45,
+            "drift_pct": 0.1188,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0407,
+            "skill_se_pct": 0.0948,
+            "skill_t": 0.43,
+            "drift_pct": 0.1957,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.1998,
+            "skill_se_pct": 0.1502,
+            "skill_t": 1.33,
+            "drift_pct": 0.3773,
+            "n_long": 1246,
+            "n_short": 1020
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.0057,
+            "skill_se_pct": 0.2277,
+            "skill_t": -0.02,
+            "drift_pct": 0.6872,
+            "n_long": 1246,
+            "n_short": 1020
+          }
+        ],
+        "TAOUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0343,
+            "skill_se_pct": 0.0235,
+            "skill_t": -1.46,
+            "drift_pct": -0.026,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0368,
+            "skill_se_pct": 0.0323,
+            "skill_t": -1.14,
+            "drift_pct": -0.0068,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0381,
+            "skill_se_pct": 0.0474,
+            "skill_t": -0.81,
+            "drift_pct": -0.0383,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0789,
+            "skill_se_pct": 0.0831,
+            "skill_t": -0.95,
+            "drift_pct": -0.0341,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.1251,
+            "skill_se_pct": 0.1075,
+            "skill_t": -1.16,
+            "drift_pct": 0.0036,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.0442,
+            "skill_se_pct": 0.1878,
+            "skill_t": -0.24,
+            "drift_pct": 0.042,
+            "n_long": 1230,
+            "n_short": 1051
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.1986,
+            "skill_se_pct": 0.2778,
+            "skill_t": -0.72,
+            "drift_pct": 0.1081,
+            "n_long": 1230,
+            "n_short": 1051
+          }
+        ],
+        "TIAUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": 0.0154,
+            "skill_se_pct": 0.0252,
+            "skill_t": 0.61,
+            "drift_pct": 0.0391,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 2,
+            "skill_pct": 0.0085,
+            "skill_se_pct": 0.0339,
+            "skill_t": 0.25,
+            "drift_pct": 0.027,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 4,
+            "skill_pct": 0.035,
+            "skill_se_pct": 0.048,
+            "skill_t": 0.73,
+            "drift_pct": 0.0679,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0531,
+            "skill_se_pct": 0.0794,
+            "skill_t": 0.67,
+            "drift_pct": 0.0819,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.1123,
+            "skill_se_pct": 0.1045,
+            "skill_t": 1.07,
+            "drift_pct": 0.1714,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.2611,
+            "skill_se_pct": 0.1734,
+            "skill_t": 1.51,
+            "drift_pct": 0.2745,
+            "n_long": 1261,
+            "n_short": 1075
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.1584,
+            "skill_se_pct": 0.2569,
+            "skill_t": 0.62,
+            "drift_pct": 0.6138,
+            "n_long": 1261,
+            "n_short": 1075
+          }
+        ],
+        "UNIUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0371,
+            "skill_se_pct": 0.0218,
+            "skill_t": -1.7,
+            "drift_pct": 0.0122,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0348,
+            "skill_se_pct": 0.0299,
+            "skill_t": -1.16,
+            "drift_pct": -0.0098,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0167,
+            "skill_se_pct": 0.0453,
+            "skill_t": -0.37,
+            "drift_pct": 0.0149,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 8,
+            "skill_pct": 0.0364,
+            "skill_se_pct": 0.0764,
+            "skill_t": 0.48,
+            "drift_pct": 0.0094,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 12,
+            "skill_pct": 0.0491,
+            "skill_se_pct": 0.1022,
+            "skill_t": 0.48,
+            "drift_pct": 0.0355,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0513,
+            "skill_se_pct": 0.1711,
+            "skill_t": 0.3,
+            "drift_pct": 0.0519,
+            "n_long": 1261,
+            "n_short": 1085
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.2618,
+            "skill_se_pct": 0.1968,
+            "skill_t": 1.33,
+            "drift_pct": 0.1287,
+            "n_long": 1261,
+            "n_short": 1085
+          }
+        ],
+        "WLDUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0532,
+            "skill_se_pct": 0.0305,
+            "skill_t": -1.75,
+            "drift_pct": -0.0155,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0689,
+            "skill_se_pct": 0.0414,
+            "skill_t": -1.67,
+            "drift_pct": -0.0452,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.1048,
+            "skill_se_pct": 0.0612,
+            "skill_t": -1.71,
+            "drift_pct": -0.0497,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0888,
+            "skill_se_pct": 0.0972,
+            "skill_t": -0.91,
+            "drift_pct": -0.0014,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.1292,
+            "skill_se_pct": 0.1354,
+            "skill_t": -0.95,
+            "drift_pct": 0.0491,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.11,
+            "skill_se_pct": 0.2602,
+            "skill_t": -0.42,
+            "drift_pct": 0.0621,
+            "n_long": 1294,
+            "n_short": 1010
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.4488,
+            "skill_se_pct": 0.5115,
+            "skill_t": -0.88,
+            "drift_pct": 0.1623,
+            "n_long": 1294,
+            "n_short": 1010
+          }
+        ],
+        "XLMUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0128,
+            "skill_se_pct": 0.0194,
+            "skill_t": -0.66,
+            "drift_pct": 0.0154,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0053,
+            "skill_se_pct": 0.0274,
+            "skill_t": -0.19,
+            "drift_pct": 0.0078,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0104,
+            "skill_se_pct": 0.0426,
+            "skill_t": -0.24,
+            "drift_pct": 0.0456,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0282,
+            "skill_se_pct": 0.0676,
+            "skill_t": -0.42,
+            "drift_pct": 0.0624,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0439,
+            "skill_se_pct": 0.094,
+            "skill_t": -0.47,
+            "drift_pct": 0.1072,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0499,
+            "skill_se_pct": 0.1486,
+            "skill_t": 0.34,
+            "drift_pct": 0.1908,
+            "n_long": 1314,
+            "n_short": 981
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.0226,
+            "skill_se_pct": 0.2532,
+            "skill_t": 0.09,
+            "drift_pct": 0.2617,
+            "n_long": 1314,
+            "n_short": 981
+          }
+        ],
+        "XRPUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0182,
+            "skill_se_pct": 0.0142,
+            "skill_t": -1.28,
+            "drift_pct": -0.0008,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0266,
+            "skill_se_pct": 0.02,
+            "skill_t": -1.33,
+            "drift_pct": 0.004,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.0089,
+            "skill_se_pct": 0.0307,
+            "skill_t": -0.29,
+            "drift_pct": 0.0395,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.0458,
+            "skill_se_pct": 0.0525,
+            "skill_t": -0.87,
+            "drift_pct": 0.066,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.0498,
+            "skill_se_pct": 0.0722,
+            "skill_t": -0.69,
+            "drift_pct": 0.129,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 24,
+            "skill_pct": 0.0448,
+            "skill_se_pct": 0.111,
+            "skill_t": 0.4,
+            "drift_pct": 0.2417,
+            "n_long": 1256,
+            "n_short": 1028
+          },
+          {
+            "hours": 48,
+            "skill_pct": 0.0117,
+            "skill_se_pct": 0.1574,
+            "skill_t": 0.07,
+            "drift_pct": 0.4434,
+            "n_long": 1256,
+            "n_short": 1028
+          }
+        ],
+        "ZECUSDT": [
+          {
+            "hours": 1,
+            "skill_pct": -0.0635,
+            "skill_se_pct": 0.0344,
+            "skill_t": -1.85,
+            "drift_pct": -0.1031,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 2,
+            "skill_pct": -0.0713,
+            "skill_se_pct": 0.046,
+            "skill_t": -1.55,
+            "drift_pct": -0.0818,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 4,
+            "skill_pct": -0.2381,
+            "skill_se_pct": 0.0681,
+            "skill_t": -3.5,
+            "drift_pct": -0.2406,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 8,
+            "skill_pct": -0.3889,
+            "skill_se_pct": 0.1245,
+            "skill_t": -3.12,
+            "drift_pct": -0.3308,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 12,
+            "skill_pct": -0.5647,
+            "skill_se_pct": 0.1776,
+            "skill_t": -3.18,
+            "drift_pct": -0.4734,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 24,
+            "skill_pct": -0.8709,
+            "skill_se_pct": 0.3156,
+            "skill_t": -2.76,
+            "drift_pct": -1.0029,
+            "n_long": 1174,
+            "n_short": 1178
+          },
+          {
+            "hours": 48,
+            "skill_pct": -0.8319,
+            "skill_se_pct": 0.45,
+            "skill_t": -1.85,
+            "drift_pct": -2.1243,
+            "n_long": 1174,
+            "n_short": 1178
+          }
+        ]
+      }
+    }
+  ],
+  "elapsed_sec": 21.2
+}

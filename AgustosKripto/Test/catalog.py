@@ -42,6 +42,7 @@ _ISLEMLER_POLY: list[tuple[str, str, str]] = [
     ("analiz6",    "A6",    "6. Analiz · MACD+RSI"),
     ("analiz6_v2", "A6V2",  "6. Analiz V2 · BTC+ETH"),
     ("analiz6_v3", "A6V3",  "6. Analiz V3 · BTC/ETH A6 · SOL A2"),
+    ("melez",      "MELEZ", "A2#05 X A6V3 MELEZ · BTC MACD Div · diğer Mean Rev"),
     ("analiz15",   "A15",   "15. Analiz · BTC A6 · ETH A8 · SOL A2"),
     ("b1_01",      "B1#01", "B1#01 · en iyi motor"),
     ("b1_02",      "B1#02", "B1#02 · BTC A15 · ETH A6 · SOL A2#01"),
@@ -93,4 +94,29 @@ for book in ALGOS_V1:
         "id": book["id"],
         "panel": "v1",
         "kind": book.get("kind"),
+    })
+
+
+# ── PRO defterleri ───────────────────────────────────────────
+# Dashboard "Algoritma Durumu" en iyi 4'ü (A2#05 · A6V3 · B1#03 MUM · MELEZ)
+# aynı sinyallerle ama kripto'ya uygun çıkış rejimiyle: saatlik zorunlu kapanış
+# yok, pozisyon sinyal dönene / ATR stopa / süre sınırına kadar tutulur ve
+# `edge_gate` ölçülen kenarı komisyonu aşmayan (defter, coin) çiftini hiç
+# açmaz. Orijinal defterler dokunulmaz — ikisi yan yana birikip farkı gösterir.
+PRO_SOURCE_UIDS = ["a2_05", "analiz6_v3", "b1_mum", "melez"]
+
+_by_uid = {b["uid"]: b for b in ALL_BOOKS}
+for _uid in PRO_SOURCE_UIDS:
+    _base = _by_uid.get(_uid)
+    if not _base:
+        continue
+    ALL_BOOKS.append({
+        **_base,
+        "uid": f"pro_{_uid}",
+        "book_key": f"test_pro_{_uid}",
+        "name": f"{_base['name']} PRO",
+        "title": f"{_base.get('title') or _base['name']} · kenar kapılı, saatlik kapanış yok",
+        "category": "Poly→Kripto PRO",
+        "mode": "pro",
+        "pro_of": _uid,
     })
