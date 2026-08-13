@@ -1,6 +1,28 @@
 {
   "balance": 448.77,
-  "open_positions": [],
+  "open_positions": [
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 75.7,
+      "entry_time_tr": "2026-08-13T14:05:12.134124+03:00",
+      "entry_hour_tr": 14,
+      "entry_dow": 3,
+      "entry_is_weekend": false,
+      "amount": 12.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": false,
+      "algo_signal": "DOWN",
+      "algo_name": "MACD Hist. Div",
+      "pm_slug": "solana-up-or-down-august-13-2026-7am-et",
+      "pm_title": "Solana Up or Down - August 13, 7AM ET",
+      "pm_token_dir": "DOWN",
+      "pm_entry_price": 0.5,
+      "pm_spent": 12.0,
+      "pm_size": 24.0,
+      "to_win": 24.0
+    }
+  ],
   "total_pnl": 148.77,
   "balance_reset_at_tr": "2026-08-10T00:33:03.974396+03:00",
   "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş korundu"

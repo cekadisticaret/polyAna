@@ -2,7 +2,7 @@
 """A2#02 RSI Diverjansı (14) Katı LIVE — gerçek Polymarket $4–5–6.
 
 Sanal A2#02 ayrı devam eder. Env: PM_A2_02_LIVE_ENABLED=true
-Cron: close :02 · open :07
+Cron: close :02 · open :05+10sn (sanal :05:00 sonrası)
 Dashboard: a2_02_live aç/kapa
 """
 from __future__ import annotations

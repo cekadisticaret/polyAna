@@ -2,7 +2,7 @@
 """A2#06 Z-Score Mean Reversion LIVE — gerçek Polymarket $4–5–6.
 
 Sanal A2#06 ayrı devam eder. Env: PM_A2_06_LIVE_ENABLED=true
-Cron: close :02 · open :07
+Cron: close :02 · open :05+10sn (sanal :05:00 sonrası)
 Dashboard: a2_06_live aç/kapa (varsayılan kapalı)
 """
 from __future__ import annotations

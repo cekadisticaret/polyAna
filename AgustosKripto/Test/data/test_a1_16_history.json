@@ -6874,5 +6874,46 @@
     "win": false,
     "close_reason": "4h_close",
     "book": "A1#16 · ATR Momentum Breakout"
+  },
+  {
+    "symbol": "WLDUSDT",
+    "side": "LONG",
+    "signal": "UP",
+    "algo": "A1#16",
+    "score": 60.0,
+    "interval": "4h",
+    "qty": 1778.304683,
+    "leverage": 6,
+    "margin_usd": 100.0,
+    "entry_price": 0.3374,
+    "notional": 600.0,
+    "entry_fee": 0.3,
+    "entry_time_tr": "2026-08-13T11:05:23.861121+03:00",
+    "slot": "2026-08-13 11:00",
+    "virtual": true,
+    "atr": 0.00900108,
+    "atr_usd": 16.006657,
+    "atr_period": 14,
+    "peak_upnl": 17.5296,
+    "stop_upnl": 8.003329,
+    "stop_level": 1,
+    "lock_armed": true,
+    "lock_history": [
+      {
+        "level": 1,
+        "ts": "2026-08-13T12:54:05.611602+03:00",
+        "stop_upnl": 8.003329,
+        "price": 0.3474
+      }
+    ],
+    "exit_price": 0.3422,
+    "exit_time_tr": "2026-08-13T13:58:06.208342+03:00",
+    "pnl_gross": 8.5359,
+    "exit_fee": 0.304268,
+    "commission": 0.604268,
+    "pnl": 7.9316,
+    "win": true,
+    "close_reason": "atr_stop",
+    "book": "A1#16 · ATR Momentum Breakout"
   }
 ]

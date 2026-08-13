@@ -1,5 +1,5 @@
 {
-  "balance": 91.22,
+  "balance": 90.65,
   "deposit": 300.0,
   "open_positions": [
     {
@@ -21,8 +21,8 @@
       "atr": 0.00082653,
       "atr_usd": 3.246381,
       "atr_period": 14,
-      "peak_upnl": 6.6556,
-      "stop_upnl": 3.409219,
+      "peak_upnl": 7.3629,
+      "stop_upnl": 4.116519,
       "stop_level": 1,
       "lock_armed": true,
       "lock_history": [
@@ -41,19 +41,19 @@
       "algo": "A1#39 H1 Profesyonel Kombinasyon",
       "score": 1,
       "interval": "1h",
-      "qty": 530.785563,
+      "qty": 531.914894,
       "leverage": 10,
       "margin_usd": 30.0,
-      "entry_price": 0.5652,
+      "entry_price": 0.564,
       "notional": 300.0,
       "entry_fee": 0.15,
-      "entry_time_tr": "2026-08-13T12:05:31.275714+03:00",
-      "slot": "2026-08-13 12:00",
+      "entry_time_tr": "2026-08-13T14:05:37.079816+03:00",
+      "slot": "2026-08-13 14:00",
       "virtual": true,
-      "atr": 0.00338584,
-      "atr_usd": 1.797153,
+      "atr": 0.00319906,
+      "atr_usd": 1.70163,
       "atr_period": 14,
-      "peak_upnl": 0.8683,
+      "peak_upnl": 0.3918,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -72,11 +72,11 @@
       "entry_price": 6.512,
       "notional": 300.0,
       "entry_fee": 0.15,
-      "entry_time_tr": "2026-08-13T12:05:31.741558+03:00",
-      "slot": "2026-08-13 12:00",
+      "entry_time_tr": "2026-08-13T14:05:37.547644+03:00",
+      "slot": "2026-08-13 14:00",
       "virtual": true,
-      "atr": 0.0561775,
-      "atr_usd": 2.58803,
+      "atr": 0.05349126,
+      "atr_usd": 2.464278,
       "atr_period": 14,
       "peak_upnl": 0.0,
       "stop_upnl": null,
@@ -85,8 +85,8 @@
       "lock_history": []
     }
   ],
-  "total_pnl": -208.7479,
-  "total_commission": 189.272773,
-  "updated_at_tr": "2026-08-13T12:44:04.708632+03:00",
-  "last_open_slot": "2026-08-13 12:00"
+  "total_pnl": -209.3099,
+  "total_commission": 190.472455,
+  "updated_at_tr": "2026-08-13T14:32:05.324268+03:00",
+  "last_open_slot": "2026-08-13 14:00"
 }

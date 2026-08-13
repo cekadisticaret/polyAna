@@ -3908,5 +3908,28 @@
     "pm_entry_price": 0.505,
     "to_win": 39.6,
     "pm_slug": "ethereum-up-or-down-august-13-2026-4am-et"
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 76.12,
+    "exit_price": 75.7,
+    "entry_time_tr": "2026-08-13T13:05:10.657572+03:00",
+    "entry_hour_tr": 13,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 14.0,
+    "exit_time_tr": "2026-08-13T14:02:15.116622+03:00",
+    "pnl": -14.0,
+    "algo_signal": "UP",
+    "algo_name": "Poly Predictor",
+    "algo_ok": false,
+    "pm_spent": 14.0,
+    "pm_size": 56.0,
+    "pm_entry_price": 0.25,
+    "to_win": 56.0,
+    "pm_slug": "solana-up-or-down-august-13-2026-6am-et"
   }
 ]

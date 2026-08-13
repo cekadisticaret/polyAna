@@ -6,7 +6,7 @@ Aynı sinyal kaynağı: /tmp/algo_signals_v2.json → algo 16 (Supertrend).
 
 Env: PM_A2_16_LIVE_ENABLED=true
 Dashboard: a2_16_live aç/kapa + a2_16 miktarları (DÜŞ/ORTA/YÜK)
-Cron: close :02 · open :07 (algo_signals_v2 :05 sonrası)
+Cron: close :02 · open :05+10sn (sanal :05:00 sonrası)
 """
 from __future__ import annotations
 

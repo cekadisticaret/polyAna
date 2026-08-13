@@ -1,9 +1,35 @@
 {
-  "balance": 254.8,
+  "balance": 252.52,
   "deposit": 300.0,
-  "open_positions": [],
-  "total_pnl": -45.159,
-  "total_commission": 39.519141,
-  "updated_at_tr": "2026-08-13T12:02:11.041786+03:00",
-  "last_open_slot": "2026-08-13 11:00"
+  "open_positions": [
+    {
+      "symbol": "ETHUSDT",
+      "side": "LONG",
+      "signal": "UP",
+      "algo": "A10",
+      "score": 1.0,
+      "interval": "1h",
+      "qty": 0.119535,
+      "leverage": 15,
+      "margin_usd": 15.0,
+      "entry_price": 1882.29,
+      "notional": 225.0,
+      "entry_fee": 0.1125,
+      "entry_time_tr": "2026-08-13T14:06:02.235583+03:00",
+      "slot": "2026-08-13 14:00",
+      "virtual": true,
+      "atr": 8.26087891,
+      "atr_usd": 0.987466,
+      "atr_period": 14,
+      "peak_upnl": 0.0,
+      "stop_upnl": null,
+      "stop_level": 0,
+      "lock_armed": false,
+      "lock_history": []
+    }
+  ],
+  "total_pnl": -47.4315,
+  "total_commission": 40.193342,
+  "updated_at_tr": "2026-08-13T14:32:02.815970+03:00",
+  "last_open_slot": "2026-08-13 14:00"
 }

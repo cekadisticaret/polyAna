@@ -1973,5 +1973,30 @@
     "pm_slug": "ethereum-up-or-down-august-12-2026-10pm-et",
     "hot_hour_boost": false,
     "cold_hour_cut": false
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 1889.01,
+    "exit_price": 1882.29,
+    "entry_time_tr": "2026-08-13T13:06:12.386400+03:00",
+    "entry_hour_tr": 13,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 11.2,
+    "exit_time_tr": "2026-08-13T14:02:18.932657+03:00",
+    "pnl": -11.2,
+    "algo_signal": "UP",
+    "algo_name": "Pairs Trading",
+    "algo_num": 15,
+    "pm_spent": 11.2,
+    "pm_size": 60.54,
+    "pm_entry_price": 0.185,
+    "to_win": 60.54,
+    "pm_slug": "ethereum-up-or-down-august-13-2026-6am-et",
+    "hot_hour_boost": false,
+    "cold_hour_cut": true
   }
 ]

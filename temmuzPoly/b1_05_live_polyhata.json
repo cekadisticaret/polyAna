@@ -118,5 +118,11 @@
     "symbol": "83196612446908141895",
     "hata_turu": "order_basarisiz",
     "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5267500'}]"
+  },
+  {
+    "zaman": "2026-08-13T14:06:53.616463+03:00",
+    "symbol": "73136542471099517026",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4370520'}]"
   }
 ]

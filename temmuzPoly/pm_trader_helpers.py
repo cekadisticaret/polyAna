@@ -134,7 +134,7 @@ def _is_algo_islemler_label(label: str) -> bool:
     u = label.strip().upper()
     if u == "A2" or u.startswith("A2#"):
         return True
-    for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#"):
+    for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#", "C1#"):
         if label.startswith(prefix):
             return True
     return False

@@ -1,5 +1,5 @@
 {
-  "balance": 887.03,
+  "balance": 886.62,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -53,31 +53,6 @@
       "lock_history": []
     },
     {
-      "symbol": "INJUSDT",
-      "side": "LONG",
-      "signal": "UP",
-      "algo": "MELEZ",
-      "score": 50.0,
-      "interval": "1h",
-      "qty": 131.377272,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 4.567,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-13T12:05:15.588978+03:00",
-      "slot": "2026-08-13 12:00",
-      "virtual": true,
-      "atr": 0.03998315,
-      "atr_usd": 5.252877,
-      "atr_period": 14,
-      "peak_upnl": 0.0,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
-    },
-    {
       "symbol": "KAITOUSDT",
       "side": "LONG",
       "signal": "UP",
@@ -101,11 +76,36 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
+    },
+    {
+      "symbol": "ETHUSDT",
+      "side": "LONG",
+      "signal": "UP",
+      "algo": "MELEZ",
+      "score": 100.74,
+      "interval": "1h",
+      "qty": 0.318761,
+      "leverage": 6,
+      "margin_usd": 100.0,
+      "entry_price": 1882.29,
+      "notional": 600.0,
+      "entry_fee": 0.3,
+      "entry_time_tr": "2026-08-13T14:05:20.109927+03:00",
+      "slot": "2026-08-13 14:00",
+      "virtual": true,
+      "atr": 8.22445034,
+      "atr_usd": 2.621631,
+      "atr_period": 14,
+      "peak_upnl": 0.0,
+      "stop_upnl": null,
+      "stop_level": 0,
+      "lock_armed": false,
+      "lock_history": []
     }
   ],
-  "total_pnl": -112.9668,
-  "total_commission": 29.386869,
-  "updated_at_tr": "2026-08-13T12:44:04.768863+03:00",
-  "last_open_slot": "2026-08-13 12:00",
+  "total_pnl": -113.3782,
+  "total_commission": 30.587263,
+  "updated_at_tr": "2026-08-13T14:32:05.218704+03:00",
+  "last_open_slot": "2026-08-13 14:00",
   "atr_skip_syms": []
 }

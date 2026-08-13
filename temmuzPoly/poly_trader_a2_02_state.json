@@ -1,6 +1,29 @@
 {
   "balance": 569.12,
-  "open_positions": [],
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 63628.9,
+      "entry_time_tr": "2026-08-13T14:05:11.486877+03:00",
+      "entry_hour_tr": 14,
+      "entry_dow": 3,
+      "entry_is_weekend": false,
+      "amount": 16.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": false,
+      "algo_signal": "UP",
+      "algo_name": "RSI Diverjansı (14) Katı",
+      "algo_num": 2,
+      "pm_slug": "bitcoin-up-or-down-august-13-2026-7am-et",
+      "pm_title": "Bitcoin Up or Down - August 13, 7AM ET",
+      "pm_token_dir": "UP",
+      "pm_entry_price": 0.535,
+      "pm_spent": 16.0,
+      "pm_size": 29.91,
+      "to_win": 29.91
+    }
+  ],
   "total_pnl": 269.12,
   "balance_reset_at_tr": "2026-08-10T00:33:03.974396+03:00",
   "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş korundu"

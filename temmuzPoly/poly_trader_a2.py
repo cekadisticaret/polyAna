@@ -3,7 +3,7 @@
 
 Modlar:
   close [NN|all]  → :02 önceki saat sonuçları
-  open  [NN|all]  → :06 yeni işlemler (algo_signals_v2 sonrası)
+  open  [NN|all]  → :05:00 yeni işlemler (algo_signals_v2 :04:40 sonrası)
   weekly [NN|all] → haftalık özet
 
 Örnek:

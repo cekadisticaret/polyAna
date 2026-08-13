@@ -10,7 +10,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from flask import Flask, jsonify, make_response, render_template_string, request, session, redirect, url_for
@@ -45,6 +45,7 @@ _HEATMAP_SYMS = {
     "b1_mum": ["BTC", "ETH", "SOL"],
     "b1_04": ["BTC", "ETH", "SOL"],
     "b1_05": ["BTC", "ETH", "SOL"],
+    "c101": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
@@ -123,14 +124,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
+    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
     "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -154,6 +155,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "b1_mum":     "B1#03 MUM ANALİZ",
     "b1_04":      "B1#04",
     "b1_05":      "B1#05",
+    "c101":       "C1#01 · OPUS-OHLCV",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -179,14 +181,14 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz6": 300, "analiz6_v2": 300,
     "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300, "b1_mum": 300,
-    "b1_04": 300, "melez": 300, "b1_05": 300,
+    "b1_04": 300, "melez": 300, "b1_05": 300, "c101": 500,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -237,6 +239,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "b1_mum": "B1#03 MUM",
     "b1_04": "B1#04",
     "b1_05": "B1#05",
+    "c101": "C1#01",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -263,7 +266,7 @@ for _num, _name, *_rest in _A2_META:
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
 ] + _A2_KEYS
 
 _HEATMAP_ORDER.extend(_A2_KEYS)
@@ -285,6 +288,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("b1_mum",     "B1#03 MUM ANALİZ",      300,  "Sonnet mum pattern confluence · 1h · ±15"),
     ("b1_04",      "B1#04",                 300,  "Edge-ağırlıklı küme konsensüsü · 23 motor"),
     ("b1_05",      "B1#05",                 300,  "Coin başına en iyi motor · MUM+MELEZ dahil"),
+    ("c101",       "C1#01 · OPUS-OHLCV",    500,  "PTB+volatilite olasılık · defter derinliği/funding/OI · çeyrek Kelly"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
@@ -3352,7 +3356,69 @@ def _mirror_market(slug: str) -> dict:
     return out
 
 
-def _mirror_rows(key: str, *, with_market: bool) -> list[dict]:
+def _mirror_slot_fields(entry_hour: int) -> dict:
+    """İST saatlik slot — :05 open cron, ertesi saat :02 close."""
+    nh = (entry_hour + 1) % 24
+    return {
+        "entry_hour_tr": entry_hour,
+        "slot_tr": f"{entry_hour:02d}:05-{nh:02d}:02",
+        "slot_open_tr": f"{entry_hour:02d}:05",
+        "slot_close_tr": f"{nh:02d}:02",
+        "prediction_tr": f"{entry_hour:02d}:00-{nh:02d}:00",
+    }
+
+
+def _mirror_active_slot(now_tr: datetime | None = None) -> dict:
+    """Şu an mirror'lanabilir slot. :02–:04 arası waiting_open (liste boş)."""
+    now_tr = now_tr or datetime.now(_TZ_TR)
+    h, m = now_tr.hour, now_tr.minute
+    if m >= 5:
+        slot_h, slot_date = h, now_tr.date()
+        status = "active"
+    elif m < 2:
+        if h == 0:
+            slot_h = 23
+            slot_date = (now_tr - timedelta(days=1)).date()
+        else:
+            slot_h, slot_date = h - 1, now_tr.date()
+        status = "active"
+    else:
+        slot_h, slot_date = h, now_tr.date()
+        status = "waiting_open"
+    out = {
+        "status": status,
+        "slot_date_tr": slot_date.isoformat(),
+        **_mirror_slot_fields(slot_h),
+    }
+    if status == "waiting_open":
+        out["message"] = (
+            f"{slot_h:02d}:02 close sonrası, {slot_h:02d}:05 open öncesi — henüz yeni slot yok"
+        )
+    return out
+
+
+def _mirror_pos_entry_hour(p: dict) -> tuple[int | None, date | None]:
+    eh = p.get("entry_hour_tr")
+    try:
+        et = datetime.fromisoformat(str(p.get("entry_time_tr")).replace("Z", "+00:00"))
+        et_tr = et.astimezone(_TZ_TR)
+    except Exception:
+        return (int(eh) if eh is not None else None), None
+    if eh is None:
+        eh = et_tr.hour
+    return int(eh), et_tr.date()
+
+
+def _mirror_pos_matches_slot(p: dict, slot: dict) -> bool:
+    if slot.get("status") != "active":
+        return False
+    eh, ed = _mirror_pos_entry_hour(p)
+    if eh is None or ed is None:
+        return False
+    return eh == slot["entry_hour_tr"] and ed.isoformat() == slot["slot_date_tr"]
+
+
+def _mirror_rows(key: str, *, with_market: bool, current_only: bool = True) -> list[dict]:
     spath = _trader_state_path(key)
     if not os.path.exists(spath):
         return []
@@ -3363,11 +3429,16 @@ def _mirror_rows(key: str, *, with_market: bool) -> list[dict]:
         return []
     allowed = set(_allowed_syms_for(key))
     now = datetime.now(_TZ_TR)
+    active_slot = _mirror_active_slot(now)
     rows: list[dict] = []
     for p in state.get("open_positions") or []:
         sym_raw = p.get("symbol") or ""
         sym = sym_raw.replace("USDT", "")
         if sym and allowed and sym not in allowed:
+            continue
+        eh, _ed = _mirror_pos_entry_hour(p)
+        in_active = _mirror_pos_matches_slot(p, active_slot)
+        if current_only and not in_active:
             continue
         direction = str(p.get("pm_token_dir") or p.get("predicted_dir") or "").upper()
         up = direction in ("UP", "LONG")
@@ -3384,18 +3455,19 @@ def _mirror_rows(key: str, *, with_market: bool) -> list[dict]:
             "pm_entry_price": p.get("pm_entry_price"),
             "pm_size": p.get("pm_size"),
             "entry_time_tr": p.get("entry_time_tr"),
+            "is_current_slot": in_active,
+            "stale": not in_active,
         }
+        if eh is not None:
+            row.update(_mirror_slot_fields(eh))
         # sinyalin yaşı: bu projede ölçülen en pahalı kalem gecikme kaynaklı kayma
         try:
-            t0 = datetime.fromisoformat(str(p.get("entry_time_tr")))
-            row["age_sec"] = int((now - t0).total_seconds())
-            # kapanış hata verirse önceki saatten kalan pozisyon burada görünür;
-            # aynalayan taraf bunu yanlışlıkla açmasın
-            row["is_current_slot"] = (t0.astimezone(_TZ_TR).hour == now.hour
-                                      and t0.astimezone(_TZ_TR).date() == now.date())
+            t0 = datetime.fromisoformat(str(p.get("entry_time_tr")).replace("Z", "+00:00"))
+            if t0.tzinfo is None:
+                t0 = t0.replace(tzinfo=_TZ_TR)
+            row["age_sec"] = int((now - t0.astimezone(_TZ_TR)).total_seconds())
         except Exception:
             row["age_sec"] = None
-            row["is_current_slot"] = None
         if with_market and row["pm_slug"]:
             mk = _mirror_market(row["pm_slug"])
             row["pm_token_id"]  = mk.get("up_token") if up else mk.get("down_token")
@@ -3413,7 +3485,7 @@ def _mirror_rows(key: str, *, with_market: bool) -> list[dict]:
     return rows
 
 
-def _mirror_book_row(key: str) -> dict:
+def _mirror_book_row(key: str, *, open_count: int | None = None) -> dict:
     """Defter özeti — /algoritma-islemler ile aynı metrikler (bakiye, net PnL, WR)."""
     init_bal = float(_OVERVIEW_INIT_BAL.get(key, 300) or 300)
     row = _build_single_poly_book(key)
@@ -3426,7 +3498,8 @@ def _mirror_book_row(key: str) -> dict:
             "book": key,
             "short": row.get("name") or _OVERVIEW_SHORT_LABELS.get(key, key),
             "label": row.get("label") or _ANALYSIS_LABELS.get(key, key),
-            "open": int(row.get("open_count") or 0),
+            "open": open_count if open_count is not None else int(row.get("open_count") or 0),
+            "open_total": int(row.get("open_count") or 0),
             "initial_balance": init_bal,
             "sanal_balance": sanal_bal,
             "balance": sanal_bal,
@@ -3437,11 +3510,13 @@ def _mirror_book_row(key: str) -> dict:
             "losses": hist_n - wins,
             "wr": row.get("wr"),
         }
+    n_open = open_count if open_count is not None else 0
     return {
         "book": key,
         "short": _OVERVIEW_SHORT_LABELS.get(key, key),
         "label": _ANALYSIS_LABELS.get(key, key),
-        "open": len(_mirror_rows(key, with_market=False)),
+        "open": n_open,
+        "open_total": n_open,
         "initial_balance": init_bal,
         "sanal_balance": init_bal,
         "balance": init_bal,
@@ -3459,7 +3534,13 @@ def api_mirror_index():
     """Defter listesi — /algoritma-islemler ile aynı sıra: bakiye → net PnL → WR."""
     if not _mirror_token_ok():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
-    books = [_mirror_book_row(k) for k in _ALGO_ISLEMLER_KEYS]
+    now = datetime.now(_TZ_TR)
+    slot = _mirror_active_slot(now)
+    include_all = (request.args.get("all") or "").lower() in ("1", "true", "yes")
+    books = []
+    for k in _ALGO_ISLEMLER_KEYS:
+        n_slot = len(_mirror_rows(k, with_market=False, current_only=not include_all))
+        books.append(_mirror_book_row(k, open_count=n_slot))
     books.sort(key=lambda b: (
         float(b.get("balance") or 0),
         float(b.get("total_pnl") or 0),
@@ -3467,9 +3548,11 @@ def api_mirror_index():
     ), reverse=True)
     return jsonify({
         "ok": True,
-        "server_time_tr": datetime.now(_TZ_TR).isoformat(timespec="seconds"),
+        "server_time_tr": now.isoformat(timespec="seconds"),
+        "active_slot": slot,
         "count": len(books),
         "sort": "balance_desc,total_pnl_desc,wr_desc",
+        "filter": "all" if include_all else "current_slot",
         "books": books,
     })
 
@@ -3484,14 +3567,17 @@ def api_mirror_book(book_id: str):
         return jsonify({"ok": False, "error": "not found",
                         "hint": "defter listesi: /poly/api/mirror"}), 404
     with_market = (request.args.get("market") or "1").lower() not in ("0", "false", "no")
-    rows = _mirror_rows(key, with_market=with_market)
+    include_all = (request.args.get("all") or "").lower() in ("1", "true", "yes")
+    rows = _mirror_rows(key, with_market=with_market, current_only=not include_all)
     now = datetime.now(_TZ_TR)
-    info = _mirror_book_row(key)
+    slot = _mirror_active_slot(now)
+    info = _mirror_book_row(key, open_count=len(rows))
     return jsonify({
         "ok": True,
         **info,
         "server_time_tr": now.isoformat(timespec="seconds"),
-        "slot_hour_tr": now.hour,
+        "active_slot": slot,
+        "filter": "all" if include_all else "current_slot",
         "count": len(rows),
         "positions": rows,
     })

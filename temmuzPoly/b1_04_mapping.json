@@ -34,12 +34,12 @@
   "edges": {
     "analiz1": {
       "label": "A1",
-      "n": 61,
-      "wr": 50.8,
-      "breakeven": 50.1,
-      "shrunk_wr": 50.5,
-      "edge": 0.0041,
-      "weight": 0.0041
+      "n": 62,
+      "wr": 50.0,
+      "breakeven": 49.7,
+      "shrunk_wr": 49.9,
+      "edge": 0.0018,
+      "weight": 0.0018
     },
     "analiz6": {
       "label": "A6",
@@ -62,29 +62,29 @@
     "analiz6_v3": {
       "label": "A6V3",
       "n": 150,
-      "wr": 54.7,
-      "breakeven": 48.5,
-      "shrunk_wr": 53.1,
-      "edge": 0.0462,
-      "weight": 0.0462
+      "wr": 54.0,
+      "breakeven": 48.4,
+      "shrunk_wr": 52.6,
+      "edge": 0.0422,
+      "weight": 0.0422
     },
     "analiz15": {
       "label": "A15",
-      "n": 91,
-      "wr": 49.5,
-      "breakeven": 48.2,
-      "shrunk_wr": 49.0,
-      "edge": 0.0083,
-      "weight": 0.0083
+      "n": 92,
+      "wr": 48.9,
+      "breakeven": 47.9,
+      "shrunk_wr": 48.6,
+      "edge": 0.0064,
+      "weight": 0.0064
     },
     "b1_mum": {
       "label": "B1#03",
-      "n": 108,
-      "wr": 59.3,
-      "breakeven": 51.8,
-      "shrunk_wr": 56.9,
-      "edge": 0.0509,
-      "weight": 0.0509
+      "n": 111,
+      "wr": 60.4,
+      "breakeven": 51.7,
+      "shrunk_wr": 57.7,
+      "edge": 0.0594,
+      "weight": 0.0594
     },
     "a2_02": {
       "label": "A2#02",
@@ -98,136 +98,136 @@
     "a2_03": {
       "label": "A2#03",
       "n": 150,
-      "wr": 46.7,
-      "breakeven": 50.4,
-      "shrunk_wr": 47.6,
-      "edge": -0.0281,
+      "wr": 44.7,
+      "breakeven": 50.1,
+      "shrunk_wr": 46.0,
+      "edge": -0.0406,
       "weight": 0.0
     },
     "a2_04": {
       "label": "A2#04",
       "n": 150,
-      "wr": 46.7,
-      "breakeven": 50.4,
-      "shrunk_wr": 47.6,
-      "edge": -0.0281,
+      "wr": 44.7,
+      "breakeven": 50.1,
+      "shrunk_wr": 46.0,
+      "edge": -0.0406,
       "weight": 0.0
     },
     "a2_05": {
       "label": "A2#05",
       "n": 150,
-      "wr": 53.3,
-      "breakeven": 50.5,
-      "shrunk_wr": 52.6,
-      "edge": 0.0212,
-      "weight": 0.0212
+      "wr": 54.0,
+      "breakeven": 50.6,
+      "shrunk_wr": 53.1,
+      "edge": 0.0255,
+      "weight": 0.0255
     },
     "a2_06": {
       "label": "A2#06",
       "n": 150,
-      "wr": 53.3,
-      "breakeven": 50.5,
-      "shrunk_wr": 52.6,
-      "edge": 0.0212,
-      "weight": 0.0212
+      "wr": 54.0,
+      "breakeven": 50.6,
+      "shrunk_wr": 53.1,
+      "edge": 0.0255,
+      "weight": 0.0255
     },
     "a2_07": {
       "label": "A2#07",
       "n": 150,
-      "wr": 53.3,
-      "breakeven": 50.5,
-      "shrunk_wr": 52.6,
-      "edge": 0.0212,
-      "weight": 0.0212
+      "wr": 54.0,
+      "breakeven": 50.6,
+      "shrunk_wr": 53.1,
+      "edge": 0.0255,
+      "weight": 0.0255
     },
     "a2_08": {
       "label": "A2#08",
       "n": 150,
-      "wr": 48.7,
-      "breakeven": 50.6,
-      "shrunk_wr": 49.1,
-      "edge": -0.0142,
+      "wr": 49.3,
+      "breakeven": 50.5,
+      "shrunk_wr": 49.6,
+      "edge": -0.0085,
       "weight": 0.0
     },
     "a2_09": {
       "label": "A2#09",
       "n": 150,
-      "wr": 57.3,
-      "breakeven": 49.2,
-      "shrunk_wr": 55.3,
-      "edge": 0.0611,
-      "weight": 0.0611
+      "wr": 56.0,
+      "breakeven": 48.5,
+      "shrunk_wr": 54.1,
+      "edge": 0.0561,
+      "weight": 0.0561
     },
     "a2_10": {
       "label": "A2#10",
       "n": 150,
       "wr": 52.7,
-      "breakeven": 49.8,
-      "shrunk_wr": 52.0,
-      "edge": 0.0212,
-      "weight": 0.0212
+      "breakeven": 49.1,
+      "shrunk_wr": 51.8,
+      "edge": 0.0264,
+      "weight": 0.0264
     },
     "a2_11": {
       "label": "A2#11",
       "n": 150,
       "wr": 52.7,
-      "breakeven": 49.8,
-      "shrunk_wr": 52.0,
-      "edge": 0.0212,
-      "weight": 0.0212
+      "breakeven": 49.1,
+      "shrunk_wr": 51.8,
+      "edge": 0.0264,
+      "weight": 0.0264
     },
     "a2_12": {
       "label": "A2#12",
       "n": 150,
       "wr": 52.0,
       "breakeven": 50.6,
-      "shrunk_wr": 51.6,
-      "edge": 0.0108,
-      "weight": 0.0108
+      "shrunk_wr": 51.7,
+      "edge": 0.0102,
+      "weight": 0.0102
     },
     "a2_13": {
       "label": "A2#13",
       "n": 150,
       "wr": 54.7,
-      "breakeven": 48.5,
+      "breakeven": 48.2,
       "shrunk_wr": 53.1,
-      "edge": 0.046,
-      "weight": 0.046
+      "edge": 0.0484,
+      "weight": 0.0484
     },
     "a2_14": {
       "label": "A2#14",
       "n": 150,
-      "wr": 54.7,
-      "breakeven": 49.1,
-      "shrunk_wr": 53.3,
-      "edge": 0.042,
-      "weight": 0.042
+      "wr": 54.0,
+      "breakeven": 48.8,
+      "shrunk_wr": 52.7,
+      "edge": 0.0389,
+      "weight": 0.0389
     },
     "a2_15": {
       "label": "A2#15",
-      "n": 79,
-      "wr": 51.9,
-      "breakeven": 48.8,
-      "shrunk_wr": 50.7,
-      "edge": 0.0187,
-      "weight": 0.0187
+      "n": 80,
+      "wr": 51.2,
+      "breakeven": 48.5,
+      "shrunk_wr": 50.2,
+      "edge": 0.0171,
+      "weight": 0.0171
     },
     "a2_16": {
       "label": "A2#16",
       "n": 150,
-      "wr": 43.3,
-      "breakeven": 49.0,
-      "shrunk_wr": 44.7,
-      "edge": -0.0422,
+      "wr": 42.7,
+      "breakeven": 49.1,
+      "shrunk_wr": 44.3,
+      "edge": -0.0479,
       "weight": 0.0
     },
     "a2_17": {
       "label": "A2#17",
       "n": 150,
       "wr": 43.3,
-      "breakeven": 48.9,
-      "shrunk_wr": 44.7,
-      "edge": -0.0419,
+      "breakeven": 49.1,
+      "shrunk_wr": 44.8,
+      "edge": -0.0432,
       "weight": 0.0
     }
   }

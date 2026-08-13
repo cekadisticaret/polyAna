@@ -26,7 +26,11 @@ ALGO_ISLEMLER_KEYS = [
     "analiz1", "analiz2",
     "analiz6", "analiz6_v2", "analiz6_v3", "analiz15",
     "b1_01", "b1_02", "b1_mum",
+    "c101",
 ] + [f"a2_{i:02d}" for i in range(1, 18)]
+
+# Varsayılan $300 dışında başlayan defterler
+_BALANCE_OVERRIDE = {"c101": 500.0}
 
 _STANDALONE_CLOSE = [
     "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15",
@@ -55,7 +59,6 @@ def _run_close_all() -> None:
 def _reset_balances(now_tr: datetime) -> tuple[int, int]:
     reset_n = 0
     cleared_open = 0
-    note = "algoritma-islemler toplu reset $300 — geçmiş korundu"
     for key in ALGO_ISLEMLER_KEYS:
         path = _state_path(key)
         if not os.path.exists(path):
@@ -65,18 +68,21 @@ def _reset_balances(now_tr: datetime) -> tuple[int, int]:
                 state = json.load(f)
         except Exception:
             continue
+        bal = _BALANCE_OVERRIDE.get(key, _BALANCE)
         cleared_open += len(state.get("open_positions") or [])
-        state["balance"] = _BALANCE
+        state["balance"] = bal
         state["open_positions"] = []
         state["total_pnl"] = 0.0
         state["balance_reset_at_tr"] = now_tr.isoformat()
-        state["balance_reset_note"] = note
+        state["balance_reset_note"] = (
+            f"algoritma-islemler toplu reset ${bal:.0f} — geçmiş korundu"
+        )
         state.pop("defer_cleared_at_tr", None)
         state.pop("defer_note", None)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2, ensure_ascii=False)
         reset_n += 1
-        print(f"  reset {key} → ${_BALANCE:.0f}")
+        print(f"  reset {key} → ${bal:.0f}")
     return reset_n, cleared_open
 
 

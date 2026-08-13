@@ -2,7 +2,7 @@
 """
 algo_signals.py — 36 algoritma için BTC/ETH/SOL saatlik sinyal üretici
 (21 teknik + 15 gelişmiş algoritma)
-Her :05'te cron ile çalışır, /tmp/algo_signals.json'a kaydeder
+Her :04:40'ta cron ile çalışır (4 * * * * sleep 40), /tmp/algo_signals.json'a kaydeder
 """
 import json, requests, datetime, math, os
 

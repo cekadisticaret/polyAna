@@ -1,5 +1,5 @@
 {
-  "balance": 576.11,
+  "balance": 574.74,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -35,61 +35,109 @@
       ]
     },
     {
-      "symbol": "ATOMUSDT",
-      "side": "LONG",
-      "signal": "UP",
+      "symbol": "ENAUSDT",
+      "side": "SHORT",
+      "signal": "DOWN",
       "algo": "A1#02",
-      "score": 33.56,
-      "interval": "1h",
-      "qty": 425.531915,
+      "score": 28.67,
+      "interval": "4h",
+      "qty": 6935.61438,
       "leverage": 6,
       "margin_usd": 100.0,
-      "entry_price": 1.41,
+      "entry_price": 0.08651,
       "notional": 600.0,
       "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-13T12:05:26.227389+03:00",
+      "entry_time_tr": "2026-08-13T12:50:21.067156+03:00",
       "slot": "2026-08-13 12:00",
       "virtual": true,
-      "atr": 0.00873637,
-      "atr_usd": 3.717604,
+      "atr": 0.00193886,
+      "atr_usd": 13.447192,
       "atr_period": 14,
-      "peak_upnl": 1.9519,
+      "peak_upnl": 4.2573,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
     },
     {
-      "symbol": "LTCUSDT",
+      "symbol": "AVAXUSDT",
       "side": "LONG",
       "signal": "UP",
       "algo": "A1#02",
-      "score": 31.59,
+      "score": 43.97,
       "interval": "1h",
-      "qty": 13.377926,
+      "qty": 92.137592,
       "leverage": 6,
       "margin_usd": 100.0,
-      "entry_price": 44.85,
+      "entry_price": 6.512,
       "notional": 600.0,
       "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-13T12:05:26.227584+03:00",
-      "slot": "2026-08-13 12:00",
+      "entry_time_tr": "2026-08-13T14:05:30.824799+03:00",
+      "slot": "2026-08-13 14:00",
       "virtual": true,
-      "atr": 0.16231725,
-      "atr_usd": 2.171468,
+      "atr": 0.05349126,
+      "atr_usd": 4.928556,
       "atr_period": 14,
-      "peak_upnl": 0.336,
+      "peak_upnl": 0.0,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
+    },
+    {
+      "symbol": "ATOMUSDT",
+      "side": "LONG",
+      "signal": "UP",
+      "algo": "A1#02",
+      "score": 34.32,
+      "interval": "1h",
+      "qty": 424.62845,
+      "leverage": 6,
+      "margin_usd": 100.0,
+      "entry_price": 1.413,
+      "notional": 600.0,
+      "entry_fee": 0.3,
+      "entry_time_tr": "2026-08-13T14:05:30.824991+03:00",
+      "slot": "2026-08-13 14:00",
+      "virtual": true,
+      "atr": 0.00863483,
+      "atr_usd": 3.666593,
+      "atr_period": 14,
+      "peak_upnl": 18.0744,
+      "stop_upnl": 14.407807,
+      "stop_level": 5,
+      "lock_armed": true,
+      "lock_history": [
+        {
+          "level": 1,
+          "ts": "2026-08-13T14:16:05.301485+03:00",
+          "stop_upnl": 1.833297,
+          "price": 1.424
+        },
+        {
+          "level": 2,
+          "ts": "2026-08-13T14:20:08.965327+03:00",
+          "stop_upnl": 5.495007,
+          "price": 1.436
+        },
+        {
+          "level": 3,
+          "ts": "2026-08-13T14:24:07.136772+03:00",
+          "stop_upnl": 8.465907,
+          "price": 1.443
+        },
+        {
+          "level": 5,
+          "ts": "2026-08-13T14:26:06.347444+03:00",
+          "stop_upnl": 12.710007,
+          "price": 1.453
+        }
+      ]
     }
   ],
-  "total_pnl": -423.9116,
-  "total_commission": 217.855538,
-  "updated_at_tr": "2026-08-13T12:44:05.163153+03:00",
-  "last_open_slot": "2026-08-13 12:00",
-  "atr_skip_syms": [
-    "AVAXUSDT"
-  ]
+  "total_pnl": -425.2886,
+  "total_commission": 220.256049,
+  "updated_at_tr": "2026-08-13T14:32:05.744754+03:00",
+  "last_open_slot": "2026-08-13 14:00",
+  "atr_skip_syms": []
 }
