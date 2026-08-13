@@ -30,10 +30,11 @@ from pm_trader_helpers import (
     SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause, resolve_open_slot_gates, pm_hourly_profit_entry_ok,
     pm_tg_stake,
 )
+from telegram_poly_channels import chat_analiz1
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
-CHAT_ID   = "830754964"
+CHAT_ID   = chat_analiz1()  # yalnız 1. ANALİZ — TELEGRAM_ANALIZ1_CHAT_ID
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR          = os.path.dirname(os.path.abspath(__file__))

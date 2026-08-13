@@ -27,18 +27,22 @@ _LABEL_GROUPS = {
     "15. ANALİZ LIVE": "analiz15_live",
     "6. ANALİZ V2 LIVE": "analiz6_v2_live",
     "6. ANALİZ V3 LIVE": "analiz6_v3_live",
+    "B1#05 Live": "b1_05_live",
+    "B1#03 MUM Live": "b1_mum_live",
 }
 _VALID_GROUPS = frozenset({
     "analiz5", "analiz2", "analiz10", "analiz6_live", "analiz6_v2_live", "analiz6_v3_live",
     "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live",
-    "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live",
+    "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live", "b1_05_live", "b1_mum_live",
 })
 # 15M 309 Live kaldırıldı
 _WEEKEND_GROUPS = (
     "analiz5", "analiz2", "analiz10", "analiz6_live", "analiz6_v2_live", "analiz6_v3_live",
     "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live",
-    "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live",
+    "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live", "b1_05_live", "b1_mum_live",
 )
+# Varsayılan açık olanlar; listede olmayan her grup varsayılan KAPALI
+_DEFAULT_OPEN_GROUPS = frozenset({"analiz5", "analiz2", "analiz10"})
 
 
 def _load_control() -> dict:
@@ -59,6 +63,8 @@ def _load_control() -> dict:
         "analiz15_live_paused": True,
         "analiz6_v2_live_paused": True,
         "analiz6_v3_live_paused": True,
+        "b1_05_live_paused": True,
+        "b1_mum_live_paused": True,
         "a3a8_signal_strict": True,
         "updated_at_tr": "",
         "updated_by": "",
@@ -113,7 +119,8 @@ def is_group_paused(group: str) -> bool:
     key = f"{group}_paused"
     if key in c:
         return bool(c.get(key))
-    return False
+    # Anahtarı hiç tanımlı olmayan grup gerçek parayla açık sayılmamalı
+    return group not in _DEFAULT_OPEN_GROUPS
 
 
 def is_pm_open_paused() -> bool:
@@ -122,43 +129,21 @@ def is_pm_open_paused() -> bool:
 
 
 def get_pm_system_control() -> dict:
+    """Tüm grup anahtarları + türetilmiş toplu durum.
+
+    Anahtar listesi `_VALID_GROUPS`'tan üretilir; yeni Live defteri eklenince
+    burada ayrıca elle satır açmak gerekmez (2026-08-12'de dashboard'daki kopya
+    liste tam bu yüzden bir defteri atlayıp ana şalteri çevirmişti).
+    """
     c = _load_control()
-    a5 = bool(c.get("analiz5_paused"))
-    a2 = bool(c.get("analiz2_paused"))
-    a10 = bool(c.get("analiz10_paused"))
-    a6l = bool(c.get("analiz6_live_paused", True))
-    a6v2l = bool(c.get("analiz6_v2_live_paused", True))
-    a6v3l = bool(c.get("analiz6_v3_live_paused", True))
-    a2_16l = bool(c.get("a2_16_live_paused", True))
-    a2_02l = bool(c.get("a2_02_live_paused", True))
-    a2_08l = bool(c.get("a2_08_live_paused", True))
-    a2_03l = bool(c.get("a2_03_live_paused", True))
-    a2_04l = bool(c.get("a2_04_live_paused", True))
-    a2_05l = bool(c.get("a2_05_live_paused", True))
-    a2_06l = bool(c.get("a2_06_live_paused", True))
-    a2_07l = bool(c.get("a2_07_live_paused", True))
-    a15l = bool(c.get("analiz15_live_paused", True))
+    paused = {
+        g: bool(c.get(f"{g}_paused", g not in _DEFAULT_OPEN_GROUPS))
+        for g in _VALID_GROUPS
+    }
     strict = bool(c.get("a3a8_signal_strict", True))
-    all_paused = (
-        a5 and a2 and a10 and a6l and a6v2l and a6v3l and a2_16l and a2_02l and a2_08l
-        and a2_03l and a2_04l and a2_05l and a2_06l and a2_07l and a15l
-    )
+    all_paused = all(paused.values())
     return {
-        "analiz5_paused": a5,
-        "analiz2_paused": a2,
-        "analiz10_paused": a10,
-        "analiz6_live_paused": a6l,
-        "analiz6_v2_live_paused": a6v2l,
-        "analiz6_v3_live_paused": a6v3l,
-        "a2_16_live_paused": a2_16l,
-        "a2_02_live_paused": a2_02l,
-        "a2_08_live_paused": a2_08l,
-        "a2_03_live_paused": a2_03l,
-        "a2_04_live_paused": a2_04l,
-        "a2_05_live_paused": a2_05l,
-        "a2_06_live_paused": a2_06l,
-        "a2_07_live_paused": a2_07l,
-        "analiz15_live_paused": a15l,
+        **{f"{g}_paused": v for g, v in paused.items()},
         "a3a8_signal_strict": strict,
         "a3a8_signal_mode": "strict" if strict else "loose",
         "a3a8_signal_mode_label": "sıkı (filtreli)" if strict else "gevşek (her saat)",

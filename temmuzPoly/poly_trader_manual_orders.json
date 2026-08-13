@@ -432,5 +432,12 @@
     "symbol": "BTCUSDT",
     "dir": "UP",
     "registered_at": "2026-08-08T20:44:22.804603+03:00"
+  },
+  {
+    "pm_order_id": "0x4883e8e9397d13a35269d3845aa24a1a380f46a1433fa6e7bc5190650eacae49",
+    "pm_slug": "solana-up-or-down-august-11-2026-7am-et",
+    "symbol": "SOLUSDT",
+    "dir": "DOWN",
+    "registered_at": "2026-08-11T14:49:42.148958+03:00"
   }
 ]

@@ -23,6 +23,7 @@ if os.path.exists(_ENV_FILE):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 from pm_trader_helpers import pm_get_balance
+from telegram_poly_channels import chat_pm_live
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 DATA_FILE = os.path.join(_DIR, "pm_balance_hourly.json")
@@ -30,7 +31,7 @@ MAX_RECORDS = 8760  # ~1 yıl
 
 # A1 Live / PolyAktif bot
 BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
-CHAT_ID = "830754964"
+CHAT_ID = chat_pm_live()
 
 
 def _portfolio() -> tuple[float, float, float] | None:

@@ -67,11 +67,12 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/btc_5m_105_algo.py` | 5M ortak sinyal motoru (15M adaptörleri; 4-algo + MR veto) |
 | `temmuzPoly/poly_trader_5m_common.py` | 5M BTC ortak yardımcılar (Binance, 4-algo, PM emir) |
 | `temmuzPoly/pm_trader_helpers.py` | PM emir + sanal kotasyon; gerçek PM WR giriş (`load_pm_live_amounts` / `analiz5_settings.json`); slot tutarı: zayıf saat -%30, hot-hour büyütme **kapalı** (`HOT_HOUR_BOOST=1.0`) |
+| `temmuzPoly/telegram_poly_channels.py` | Poly TG kanal yönlendirme — `TELEGRAM_ANALIZ1_CHAT_ID` yalnızca 1. ANALİZ; diğer trader'lar `TELEGRAM_POLY_TRADERS_CHAT_ID` / `TELEGRAM_PM_LIVE_CHAT_ID` vb. (analiz1 kanalına asla düşmez) |
 | `temmuzPoly/pm_manual_sync.py` | Manuel PM — Polymarket activity → manual state senkron (5/15dk + saatlik) |
 | `temmuzPoly/poly_trader_manual.py` | Manuel PM slot-sonu otomatik settle (`close`) — 5m/15m/1h |
 | `temmuzPoly/pm_orphan_sync.py` | Ghost PM — zincirde açık ama state'te yok pozisyonları live trader'a yazar (trader sembol allowlist) |
 | `temmuzPoly/pm_poly_history.py` | Polymarket data-api activity → slug bazlı gerçek PM geçmişi + açık (bekleyen) işlemler |
-| `temmuzPoly/pm_balance_guard.py` | PM USDC bakiye + `pm_system_control.json` dashboard açılış anahtarı (A1 Live · A2 ayrı; sanal trader'lar etkilenmez) |
+| `temmuzPoly/pm_balance_guard.py` | PM USDC bakiye + `pm_system_control.json` dashboard açılış anahtarı (A1 Live · A2 ayrı; sanal trader'lar etkilenmez). Geçerli grup listesi `_VALID_GROUPS` — **15 Live anahtarının tek doğru kaynağı**, dashboard bu listeye göre doğrular |
 | `temmuzPoly/pm_weekend_sync.py` | Cum 22:00 / Pzt 11:00 İST — A1 Live + A2 dashboard anahtarlarını otomatik kapat/aç |
 | `temmuzPoly/btc_analiz1_algo.py` | 1. Analiz tam algoritma (standalone kopya, poly_predictor ile aynı) |
 | `temmuzPoly/poly_trader_analiz1.py` | 1. Analiz sanal (BTC+SOL); $12-16-20 WR; PM net kazanç ≥%50 yoksa giriş yok; top-3 saatte +%50; 12:00 yarı; **hafta sonu da açık** |
@@ -80,9 +81,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/backtest_common.py` | 1Y walk-forward backtest ortak yardımcılar |
 | `temmuzPoly/backtest_analiz2.py` | 2. Analiz 1Y walk-forward backtest (SOL, predict motoru) |
 | `temmuzPoly/backtest_analiz1.py` | 1. Analiz 1Y walk-forward backtest (BTC+SOL, predict motoru) |
-| `temmuzPoly/backtest_analiz_suite.py` | 4/10. Analiz 1Y backtest ($1000, algo import — canlıya dokunmaz) |
-| `temmuzPoly/backtest_analiz3_8.py` | 3/8. Analiz 1Y backtest (BTC+SOL+ETH, $300, `--telegram`) |
-| `temmuzPoly/poly_trader_analiz4.py` | 4. Analiz sanal (BTC+ETH); Cum 22:00–Pzt 11:00 open kapalı; TG ana bot |
+| `temmuzPoly/backtest_analiz_suite.py` | 10. Analiz 1Y backtest ($1000, algo import — canlıya dokunmaz) |
 | `temmuzPoly/analiz15_signal.py` | 15. Analiz sinyal — BTC→A6 MACD, ETH→A8 Jesse, SOL→A2 predictor |
 | `temmuzPoly/poly_trader_analiz15.py` | 15. Analiz sanal (BTC+ETH+SOL); Cum 22:00–Pzt 11:00 open kapalı; TG A4 botu; $300 |
 | `temmuzPoly/backtest_algo_catalog.py` | 78 algo 1Y yön backtest (BTC+ETH+SOL 1h) → `backtest_algo_catalog_1y.json` |
@@ -103,6 +102,11 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/poly_trader_b1_04.py` | B1#04 sanal — 23 birincil motorun edge-ağırlıklı küme konsensüsü ($300); :02 close / :07 open |
 | `temmuzPoly/b1_04_signal.py` | B1#04 karar motoru — kopya defterleri tek oya indirir, oyları başabaşa göre ölçülmüş edge ile ağırlıklandırır; eşik `B1_04_MIN_EDGE` (varsayılan **0.0** = oylama yön gösterince gir) |
 | `temmuzPoly/b1_04_backfill.py` | B1#04 geçmişini A2#05 slotlarında walk-forward simüle edip doldurur (`--write`); kayıtlar `backfill: true` |
+| `temmuzPoly/poly_trader_b1_05.py` | **B1#05** sanal — coin başına en iyi motor ($300); B1#01 iskeletini import edip globalleri yönlendirir (B1#01 dosyası dokunulmaz); :02 close / :06 open · URL `/algoritma-islemler/b1_05` |
+| `temmuzPoly/b1_05_signal.py` | B1#05 eşleme motoru — B1#01 ile aynı fikir ama havuzda **b1_mum + melez** da var (dashboard "coin başına en iyi" kartıyla birebir); türev defterler (b1_01/02/04/05, analiz2) havuz dışı; eşleme her open turunda yeniden hesaplanır → `b1_05_mapping.json` |
+| `temmuzPoly/b1_05_backfill.py` | B1#05 geçmişini A2#05 slotlarında walk-forward doldurur (`--write`); seçilen motorun o slottaki gerçek kaydından yön/fiyat/sonuç alır, motor o slotta işlem açmamışsa atlar; `algo_name` = `B1#05←<motor>` (motor bazlı isabet dökümü için) |
+| `temmuzPoly/poly_trader_b1_05_live.py` | **B1#05 Live** — gerçek PM, kademe `/ayarlar` → İşlem Miktarları'ndan ayarlanır (varsayılan $4/5/6); sanal B1#05'i aynalar (bağımsız sinyal yok); tek otorite dashboard Ayarlar anahtarı, **varsayılan kapalı**; :02+:12 close / **:06:30** open (`sleep 30`; sanal :06 sonrası); `min_profit_ratio=None` → PM kâr kapısı yok, **sanal ne açarsa aynısı**. ⚠️ Backfill kenar bulamadı — kademe bilerek en düşük |
+| `temmuzPoly/poly_trader_b1_mum_live.py` | **B1#03 MUM Live** — gerçek PM, kademe `/ayarlar` (varsayılan $6/8/10); sanal B1#03 MUM'u aynalar; dashboard anahtarı, **varsayılan kapalı**; :02+:12 close / :06 open (sanal :05 state sonrası) |
 | `temmuzPoly/algo_islemler_fresh_start.py` | Algoritma-islemler close + bakiye $300 sıfırla (cron open bekler) |
 | `temmuzPoly/algo_islemler_defer_to_next_hour.py` | (ops) open erteleme — normalde kullanma |
 | `temmuzPoly/b1_02_signal.py` | B1#02 sabit sembol→motor eşlemesi |
@@ -133,7 +137,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/poly_trader_a2_08_live.py` | A2#08 Williams Live — $4/5/6; sanal #08 ayrı; ayarlar aç/kapa |
 | `temmuzPoly/poly_trader_a2_03_live.py` | A2#03 Stoch RSI Live — $4/5/6; sanal #03 ayrı; ayarlar aç/kapa (varsayılan kapalı) |
 | `temmuzPoly/poly_trader_a2_04_live.py` | A2#04 Schaff Live — $4/5/6; sanal #04 ayrı; ayarlar aç/kapa (varsayılan kapalı) |
-| `temmuzPoly/poly_a2_algo_live_core.py` | A2 Live çekirdeği — sanal defter mirror/sync (309 gibi); open :07 |
+| `temmuzPoly/poly_a2_algo_live_core.py` | A2 Live çekirdeği — sanal defter mirror/sync (309 gibi); open :07; `A2LiveSpec.min_profit_ratio` ile PM kâr kapısı defter bazlı (`None` = tam ayna) |
 | `temmuzPoly/poly_trader_a2_05_live.py` | A2#05 Mean Rev Live — sanal #05 ile birebir sync; $4/5/6; ayarlar aç/kapa |
 | `temmuzPoly/poly_trader_a2_06_live.py` | A2#06 Z-Score MR Live — $4/5/6; sanal #06 ayrı; ayarlar aç/kapa (varsayılan kapalı) |
 | `temmuzPoly/poly_trader_a2_07_live.py` | A2#07 Hurst Live — $4/5/6; sanal #07 ayrı; ayarlar aç/kapa (varsayılan kapalı) |
@@ -156,8 +160,6 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `temmuzPoly/poly_trader_analiz2.py close/open` — 2. Analiz **SOL only** sanal ($300, $12-16-20 WR); open Cum 22:00–Paz 18:00 İST kapalı
 - `temmuzPoly/poly_trader_analiz2_live.py close/open` — 2. Analiz **canlı PM** SOL $6-7-8 WR (`PM_ANALIZ2_REAL_ENABLED`; :02/:05; hafta sonu dashboard anahtarı)
 - `temmuzPoly/poly_trader_analiz2.py weekly` — Cumartesi 21:00 haftalık 2 ısı haritası
-- `temmuzPoly/poly_trader_analiz4.py close/open` — 4. Analiz çoklu-algo **sanal** (BTC+ETH); Cum 22:00–Pzt 11:00 open kapalı
-- `temmuzPoly/poly_trader_analiz4.py weekly` — Cumartesi 21:00 haftalık 4 ısı haritası
 - `temmuzPoly/poly_trader_analiz6.py close/open` — 6. Analiz sanal; **open** aynı adayda A6 Live gerçek PM dener (`PM_ANALIZ6_LIVE_ENABLED` + dashboard)
 - `temmuzPoly/poly_trader_analiz6_v2.py close/open` — 6. Analiz V2 sanal (BTC+ETH); A6 ile aynı indikatör; SOL yok; Live yok
 - `temmuzPoly/poly_trader_analiz6_live.py close` — A6 Live kapanış :02; open sanal A6 open ile tetiklenir
@@ -206,7 +208,54 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 # YOK (disk/crontab): `polyManuel/sol_bot.py`, `temmuzPoly/poly_trader.py`
 
 ## Sürekli Çalışan Servisler
-- `web/poly_dashboard.py` — port **5050**; PID izle; yeniden başlatmak için: `nohup python3 /root/aiProject/web/poly_dashboard.py > /tmp/poly_dashboard.log 2>&1 &`
+- `web/poly_dashboard.py` — port **5050**; `systemctl restart poly-dashboard.service` (PID izlemek için: `pgrep -af poly_dashboard.py`)
+
+### Ayarlar Live anahtarları (`/ayarlar`)
+- 15 satır, `pm_balance_guard._VALID_GROUPS` ile birebir: A1 · A2 · A10 · A6 · A6V2 · A6V3 · A2#16 · A2#02 · A2#03 · A2#04 · A2#05 · A2#06 · A2#07 · A2#08 · A15
+- `POST /poly/api/pm-system` **grup adı geldiyse asla ana şaltere düşmez**; bilinmeyen ad `400` döner. Grup adı hiç yoksa (eski çağrı) ana şalter çalışır — hepsini birlikte çevirir
+- **2026-08-12 hatası:** POST'ta ayrı bir sabit grup listesi vardı ve `analiz6_v2_live` / `analiz6_v3_live` bu listede yoktu. A6V3'e basınca istek `else` dalına düşüp `toggle_pm_open_paused()` çağırıyor, yani **15 Live defterin hepsini birlikte** açıp kapatıyordu. Liste kaldırıldı; doğrulama tek kaynağa (`_VALID_GROUPS`) bağlandı. A2#16 ve A2#02'nin ayar satırı da yoktu (kaza ile kapanıp geri açılamıyorlardı) — eklendi
+
+## Ayna API — dış sunucu (2026-08-13)
+Başka bir sunucunun ":06'da A6V3 ne açtı?" diye sorup aynı işlemi kendi tarafında açması için **salt okunur** uç. Emir tetiklemez, hiçbir state dosyasına yazmaz.
+
+| Uç | Ne döner |
+|---|---|
+| `GET /poly/api/mirror` | 29 defter — bakiye → net PnL → WR sırası; her satırda `sanal_balance`, `initial_balance` ($300), `total_pnl`, `wr`, `trades` |
+| `GET /poly/api/mirror/<defter>` | Açık pozisyonlar + aynı defterin `sanal_balance` / WR özeti |
+
+- **Kimlik:** `X-Mirror-Token` başlığı (ya da `?token=`), `.env` → `MIRROR_API_TOKEN`, `secrets.compare_digest`. **Token tanımlı değilse uç tamamen kapalı** (`401`) — yanlışlıkla açık kalmaz.
+- **Defter adı esnek:** `a6v3` · `A6V3` · `analiz6_v3` · `b1#05` · `a2#05` · `5` hepsi çözülür. Takma adlar `_OVERVIEW_SHORT_LABELS`'tan **türetilir** (`_ALGO_SHORT_ALIASES`), elle ikinci liste tutulmaz — yeni defter eklenince kısa adı kendiliğinden çalışır.
+- **Pozisyon alanları:** `symbol` · `dir` · `amount_usd` · `pm_slug` · `pm_title` · `pm_entry_price` (sanalın gördüğü fiyat) · `pm_size` · `entry_time_tr`. `?market=1` (varsayılan) ile Gamma'dan ek olarak **`pm_token_id`** (doğrudan emir için), `pm_price_now`, `pm_price_drift_pct`, `pm_tick_size`, `pm_neg_risk`. Gamma cevabı 45 sn cache'lenir; hata olursa `pm_market_error` gelir, çekirdek alanlar yine döner.
+- **`is_current_slot`:** pozisyon içinde bulunulan saate mi ait. Kapanış hata verip önceki saatten pozisyon kalırsa aynalayan taraf onu yanlışlıkla açmasın diye. `age_sec` de var — bu projede gecikme kaynaklı kaymanın bedeli ölçüldü (59 sn = %34 pahalı giriş), aynalayan taraf yaşa bakıp vazgeçebilmeli.
+- Kod: `poly_dashboard.py::_mirror_token_ok` · `_mirror_market` · `_mirror_rows` + iki rota.
+
+## CoptC — bağımsız kopya (2026-08-12)
+`CoptC/` bu projeden **tamamen bağımsız**, başka sunucuya taşınmak için hazırlanmış bir paket: **B1#05**, **B1#03 MUM** ve **A1** (her biri sanal + gerçek PM) + kendi dashboard'u. Ana proje ile hiçbir dosya paylaşmaz — cron/servis/veri yolları ayrı.
+
+| Yol | Ne yapar |
+|---|---|
+| `CoptC/runner.py` | Tek giriş: `close` (:02) · `open` (:05) · `live-open` (:06) · `settle` (:12) · `status` |
+| `CoptC/poly/` | 33 motor/trader modülü + 46 state/history JSON (temmuzPoly düzeninin kopyası) |
+| `CoptC/poly/pool_tracker.py` | B1#05'in aday havuzundaki 22 defteri her saat gölge notlar — eşleme donmasın |
+| `CoptC/poly/poly_trader_analiz1.py` · `poly_trader_analiz5.py` | A1 sanal (BTC+SOL, $12/16/20) + A1 Live (gerçek PM, `a1_amount_*`) |
+| `CoptC/Sonnet/candle_pattern_engine1.py` | B1#03 MUM'un mum motoru (`importlib` ile dinamik yükleniyor) |
+| `CoptC/web/dashboard.py` · `api.py` | Panel, port **5060**, defter sekmeli + para çekme kartı |
+| `CoptC/poly/pm_transfer.py` | Bridge + relayer transferi (ana projeden kopya, gömülü sır yok) |
+| `CoptC/deploy/` | `crontab.txt` + `coptc-dashboard.service` |
+
+- **Çakışma önlemi:** kopyalardaki `/tmp/algo_signals*.json` → `/tmp/coptc_*` olarak ayrıldı; aynı makinede iki proje birlikte koşarsa sinyal dosyaları birbirini ezmez.
+- **Cron sadeleşti:** `runner.py open` a2 sinyallerini kendi ürettiği için B1#05 artık ana projedeki `:06`/`:06:30` gecikmesini beklemiyor — ikisi de `:05` sanal, `:06` live.
+- **Güvenlik:** üç Live defteri de **kapalı** kurulur (`CoptC/poly/pm_system_control.json`), `.env` yoksa `POLY_DRY_RUN=true` ile emir gitmez, panelde `COPTC_PASSWORD` ile oturum koruması var.
+- **A1 dahil edildi (2026-08-13):** Sanal `poly_trader_analiz1.py` + gerçek PM `poly_trader_analiz5.py` (isim ana projeden miras; A1'in canlısı "analiz5" dosyasında). Diğer iki defterden **yapısal farkı**: A1 Live sanalı aynalamıyor, `poly_predictor_analysis.predict()` ile kendi sinyalini çözüyor — bu yüzden `:06`'yı beklemesi anlamsız, `runner.py open` içinde `:05`'te sanalın hemen ardından koşuyor (beklemek yalnız giriş fiyatını kötüleştirirdi). Semboller BTC+SOL (ETH yok), sanal kademe kod içinde sabit **$12/16/20**, gerçek PM kademesi panelden **`a1_amount_*`** ($10/12/14 kurulur) — yani paneldeki tutar kartı A1 sekmesinde yalnız canlıyı etkiler.
+- **A1 Live geçmişi taşındı (296 işlem), sıfırlanmadı:** `resolve_open_slot_gates(history, …)` defterin **kendi** geçmişinden zayıf-saat kesintisini (−%30) hesaplıyor; sıfırlansaydı kapı körleşirdi. Bedeli: panelde "live" geçmiş/saat ızgarası eski cüzdanın 08-05'e kadarki işlemlerini gösteriyor. B1#05/MUM Live'lar zaten boştu, onlar sıfır başlıyor.
+- **`analiz5` fail-open açığı kapatıldı:** ana projede `_DEFAULT_OPEN_GROUPS = {analiz5, analiz2, analiz10}`, yani `pm_system_control.json` yoksa/anahtar eksikse **açık** dönüyordu — yeni sunucuda kontrol dosyası oluşmadan A1 Live gerçek para açabilirdi. CoptC'de küme boşaltıldı + `_load_control` varsayılanları `True` yapıldı; anahtarsız durum test edildi, üçü de `paused=True`.
+- **`:05` / `:06` yarışı kilitle çözüldü:** açılış turu artık 4 trader koşuyor (A1 sanal + A1 Live + MUM + B1#05), 60 sn'yi aşarsa `:06`'daki aynalama yarım sanal state'i kopyalardı. `runner.py::_open_gate` (`fcntl.flock`) — açılış kilidi tutar, `live-open` en fazla **45 sn** bekler, dolarsa yine de devam eder (beklemek atlamaktan iyi).
+- **Devredilmeyenler:** live state/history sıfır başlar (yeni cüzdan); sanal defterler geçmişi + bakiyeyi korur, açık pozisyonlar ana projede bırakıldı.
+- `poly_trader_b1_01.py` kopyasında kalan 6 sabit `[15. ANALİZ …]` log etiketi `LABEL` değişkenine bağlandı (B1#05 kapanışta yanlış defter adı yazıyordu).
+- **Panelden para çekme (2026-08-13):** CoptC dashboard'unun altındaki kart `relay_send_erc20` ile proxy cüzdandan gasless ERC-20 gönderir. Ana projede bu fonksiyon API'de var ama UI'da bilerek buton yoktu (CLI'a bırakılmıştı); CoptC'de butona bağlandı. Katmanlar: panel parolası **zorunlu** (parolasızsa uç `403`), `COPTC_WITHDRAW_CODE` her gönderimde istenir (5 hatada 15 dk kilit, `secrets.compare_digest`), adres biçimi + tutar ≤ bakiye + proxy/`POLY_FUNDER` eşleşme kontrolü, her deneme `poly/withdraw_log.jsonl`'a yazılır (**kod asla kaydedilmez**). `POLY_DRY_RUN` alım-satım bayrağı olduğu için yalnız gönderim çağrısı boyunca geçici olarak devre dışı bırakılır — global ayar değişmez.
+- **`.env` boş değer tuzağı:** `os.getenv("COPTC_SECRET", <varsayılan>)` anahtar tanımlı ama boşken boş string döndürüyor, varsayılan devreye girmiyordu → Flask "no secret key" ile **girişi tamamen kırıyordu**. `getenv(...) or <varsayılan>` kalıbına geçildi (`COPTC_SECRET`, `COPTC_PORT`, `COPTC_PASSWORD`).
+- **Telegram tamamen kapalı (2026-08-13):** `COPTC_TELEGRAM` ana şalteri, varsayılan **off**. 11 gönderim fonksiyonunun (7 dosya, `tg_send` · `tg_send_photo` · `tg_send_pm_live` · `_tg_send_raw`) hepsinde **ilk ifade** olarak kapı duruyor; şalter açılmadıkça token doldurulsa bile ağa çıkmaz, `.env` hiç yoksa da varsayılan kapalı (fail-closed). Açmak için `COPTC_TELEGRAM=on` + kanal/token değişkenleri. Dışa çıkan adres denetimi: Binance kline, PM gamma/clob/relayer/bridge, alternative.me — başka bildirim kanalı (discord/slack/twitter/mail) yok.
+- **Telegram sırları temizlendi:** ana projede bot token'ları 8 kaynak dosyaya düz metin gömülü (`pm_trader_helpers.py`, `poly_a2_algo_trader_core.py`, `poly_trader_analiz6{,_v2}.py`, `poly_trader_b1_{01,mum}.py`, `backtest_analiz2.py`, `telegram_poly_channels.py` varsayılan chat id). CoptC kopyalarında hepsi boşaltıldı, gönderim fonksiyonlarına "token yoksa sessizce çık" kapısı eklendi. Yeni sunucuda TG istenirse `.env` üzerinden ve **ayrı kanalla** verilmeli. *Ana projedeki gömülü token'lar olduğu gibi duruyor — ayrıca ele alınmalı.*
 
 ## Telegram
 Kök `telegram_config.py`: `BOT_TOKEN`, `CHAT_ID` (varsayılan). İsteğe bağlı `CHAT_ID_BIST_HOUR` (saatlik analiz) ve `CHAT_ID_BIST_SIGNAL` (`bist_signal_hunter` — güçlü AL, örn. 15DakikaYapayZeka; boşsa `CHAT_ID`) ile kanallar ayrılır; hedef `@ad` veya `-100…` grup/kanal ID.

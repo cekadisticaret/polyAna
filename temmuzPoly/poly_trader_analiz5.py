@@ -36,9 +36,11 @@ if os.path.exists(_ENV_FILE):
                 _k, _, _v = _line.partition("=")
                 os.environ.setdefault(_k.strip(), _v.strip())
 
+from telegram_poly_channels import chat_pm_live
+
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
-CHAT_ID   = "830754964"
+CHAT_ID   = chat_pm_live()  # PolyAktif — 1. ANALİZ kanalından ayrı
 LABEL     = "A1 LIVE"
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 

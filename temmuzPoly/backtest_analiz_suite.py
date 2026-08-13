@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-4 / 10. Analiz — 1Y walk-forward backtest
+10. Analiz — 1Y walk-forward backtest
 
 Canlı trader ve algo dosyalarına DOKUNULMAZ; sadece import edilir.
 Varsayılan: $1000 · 2025-07-17 · bugün
 
-  python3 temmuzPoly/backtest_analiz_suite.py --all --telegram
-  python3 temmuzPoly/backtest_analiz_suite.py --analiz 4
+  python3 temmuzPoly/backtest_analiz_suite.py --telegram
+  python3 temmuzPoly/backtest_analiz_suite.py --analiz 10
 """
 from __future__ import annotations
 
@@ -41,29 +41,6 @@ BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
 CHAT_ID = "830754964"
 
 
-# ── Analiz 4 sinyal (poly_trader_analiz4 algo fonksiyonları) ──
-def signal_analiz4(sym, kslice, open_ms, history, amount_fn):
-    from poly_trader_analiz4 import (
-        algo_trend, algo_mr, algo_orderflow, algo_funding,
-        AMOUNT_STRONG, AMOUNT_MODERATE,
-    )
-    klines = to_a4_klines(kslice)
-    v1, _ = algo_trend(klines)
-    v2, _ = algo_mr(klines)
-    v3, _ = algo_orderflow(klines, NEUTRAL_OB)
-    v4, _ = algo_funding(0.0)
-    score = v1 + v2 + v3 + v4
-    amount = AMOUNT_STRONG if abs(score) >= 3 else AMOUNT_MODERATE if abs(score) == 2 else 0.0
-    if amount <= 0 or score == 0:
-        return None
-    return {
-        "predicted_dir": "UP" if score > 0 else "DOWN",
-        "amount": amount,
-        "entry_price": kslice[-1]["close"],
-        "extra": {"score": score},
-    }
-
-
 # ── Analiz 10 sinyal (poly_analiz_dual_core + predict) ──
 async def signal_analiz10(sym, kslice, open_ms, history, amount_fn):
     from poly_analiz_dual_core import (
@@ -96,13 +73,6 @@ async def signal_analiz10(sym, kslice, open_ms, history, amount_fn):
 
 
 ANALIZ_CONFIG = {
-    4: {
-        "label": "4. ANALİZ",
-        "symbols": ["BTCUSDT", "ETHUSDT"],
-        "signal": signal_analiz4,
-        "min_bars": 60,
-        "out": "backtest_analiz4_1y.json",
-    },
     10: {
         "label": "10. ANALİZ",
         "symbols": ["BTCUSDT", "SOLUSDT"],
@@ -142,7 +112,7 @@ def build_tg_report(results: list[dict]) -> str:
     sep = "━" * 28
     parts = [
         sep,
-        "📊 <b>1Y BACKTEST — Analiz 4 / 10</b>",
+        "📊 <b>1Y BACKTEST — Analiz 10</b>",
         f"${results[0]['initial_balance']:.0f} · 17 Tem 2025 → bugün",
         "<i>Algo dosyaları değiştirilmedi · OB/funding nötr sim.</i>",
         "",
@@ -168,30 +138,25 @@ def build_tg_report(results: list[dict]) -> str:
 
 async def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--analiz", type=int, choices=[4, 10], help="Tek analiz")
-    p.add_argument("--all", action="store_true", help="4+10 hepsi")
+    p.add_argument("--analiz", type=int, choices=[10], help="Tek analiz (yalnız 10)")
     p.add_argument("--balance", type=float, default=INITIAL_BALANCE)
     p.add_argument("--start", default="2025-07-17")
     p.add_argument("--telegram", action="store_true")
     args = p.parse_args()
 
-    if not args.analiz and not args.all:
-        args.all = True
-
     y, m, d = map(int, args.start.split("-"))
     start = datetime(y, m, d, 0, 0, 0, tzinfo=_TZ_TR)
 
-    ids = [4, 10] if args.all else [args.analiz]
+    aid = args.analiz or 10
     t0 = time.time()
     results = []
-    for aid in ids:
-        r = await run_one(aid, start, args.balance)
-        print_summary(r)
-        out = os.path.join(_DIR, ANALIZ_CONFIG[aid]["out"])
-        with open(out, "w") as f:
-            json.dump(r, f, indent=2, ensure_ascii=False)
-        print(f"→ {out}")
-        results.append(r)
+    r = await run_one(aid, start, args.balance)
+    print_summary(r)
+    out = os.path.join(_DIR, ANALIZ_CONFIG[aid]["out"])
+    with open(out, "w") as f:
+        json.dump(r, f, indent=2, ensure_ascii=False)
+    print(f"→ {out}")
+    results.append(r)
 
     print(f"\nToplam süre: {time.time()-t0:.0f}s")
     if args.telegram and results:

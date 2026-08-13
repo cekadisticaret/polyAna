@@ -25,9 +25,10 @@ if os.path.exists(_ENV_FILE):
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, predict_status, _fetch_klines
 from pm_trader_helpers import apply_pm_quote, sanal_pnl, sanal_close_balance, pm_tg_stake, pm_history_extras, pm_stake_fields, pm_hourly_profit_entry_ok, SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, resolve_slot_trade_amount, slot_amount_log, skip_if_weekend_pause, resolve_open_slot_gates
+from telegram_poly_channels import chat_analiz10
 
 BOT_TOKEN = "8722131600:AAH8eg11cvm1xU0KiKEjzCIVsc-RSgkZi4Y"
-CHAT_ID = "830754964"
+CHAT_ID = chat_analiz10()  # 10. ANALİZ + kripto algo notify — analiz1 kanalından ayrı
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _DAYS_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
@@ -319,6 +320,9 @@ def save_history(cfg: DualConfig, history: list) -> None:
 
 
 def tg_send(text: str) -> None:
+    if not CHAT_ID:
+        print("[TG] 10. ANALİZ kanalı tanımlı değil (TELEGRAM_ANALIZ10_CHAT_ID) — atlandı")
+        return
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         body = urllib.parse.urlencode({
@@ -331,6 +335,8 @@ def tg_send(text: str) -> None:
 
 
 def tg_send_photo(path: str, caption: str = "") -> None:
+    if not CHAT_ID:
+        return
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
     try:
         with open(path, "rb") as f:

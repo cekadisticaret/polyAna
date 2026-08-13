@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analiz sinyal sarmalayıcıları — A1 A2 A3 A8 A4 A10 A6(Supertrend).
+"""Analiz sinyal sarmalayıcıları — A1 A2 A3 A8 A10 A6(Supertrend).
 
 Poly trader dosyalarına dokunulmaz; temmuzPoly / freqtrade / jesse import.
 A3 → freqtrade/.venv (talib), A8 → jesse/.venv (jesse) — sistem python'da yok.
@@ -28,7 +28,6 @@ ANALIZ_META = [
     {"id": "a2", "name": "A2", "title": "2. Analiz (SOL motor)"},
     {"id": "a3", "name": "A3", "title": "3. Analiz Freqtrade"},
     {"id": "a8", "name": "A8", "title": "8. Analiz Jesse"},
-    {"id": "a4", "name": "A4", "title": "4. Analiz"},
     {"id": "a10", "name": "A10", "title": "10. Analiz Dual"},
     {"id": "a6", "name": "A6", "title": "Supertrend · $10×15x · max 4 · alt (BTC/ETH yok)"},
 ]
@@ -147,19 +146,6 @@ def signal_a8(symbol: str, kl: list) -> str:
     return _venv_batch("a8", [symbol]).get(symbol, "NEUTRAL")
 
 
-def signal_a4(symbol: str, kl: list) -> str:
-    try:
-        from poly_trader_analiz4 import analyze
-        r = analyze(symbol)
-        if not r:
-            return "NEUTRAL"
-        d = r.get("predicted_dir")
-        return d if d in ("UP", "DOWN") else "NEUTRAL"
-    except Exception as e:
-        print(f"[Analizler A4] {symbol}: {e}")
-        return "NEUTRAL"
-
-
 def signal_a10(symbol: str, kl: list) -> str:
     try:
         from poly_analiz_dual_core import CONFIG_A10, evaluate_symbol
@@ -254,7 +240,6 @@ _HANDLERS: dict[str, Callable] = {
     "a2": signal_a2,
     "a3": signal_a3,
     "a8": signal_a8,
-    "a4": signal_a4,
     "a10": signal_a10,
     "a6": signal_a6,
 }

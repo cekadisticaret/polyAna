@@ -33,10 +33,11 @@ from pm_trader_helpers import (
     resolve_slot_trade_amount, slot_amount_log,
     skip_if_weekend_pause, resolve_open_slot_gates,
 )
+from telegram_poly_channels import chat_poly_traders
 
 # ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
-CHAT_ID   = "830754964"
+CHAT_ID   = chat_poly_traders()  # 1. ANALİZ kanalından ayrı
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _ET_ZONE  = ZoneInfo("America/New_York")
 
@@ -186,6 +187,9 @@ def _credit_on_close(state: dict, pos: dict, win: bool, pnl: float) -> None:
 
 # ── Telegram ─────────────────────────────────────────────────
 def tg_send(text: str) -> None:
+    if not CHAT_ID:
+        print("[TG] Poly trader kanalı tanımlı değil — atlandı")
+        return
     try:
         url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         body = urllib.parse.urlencode({
@@ -199,6 +203,8 @@ def tg_send(text: str) -> None:
 
 
 def tg_send_photo(path: str, caption: str = "") -> None:
+    if not CHAT_ID:
+        return
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
     try:
         with open(path, "rb") as f:

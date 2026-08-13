@@ -1,0 +1,30 @@
+{
+  "balance": 397.46,
+  "open_positions": [
+    {
+      "symbol": "ETHUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 1889.18,
+      "entry_time_tr": "2026-08-13T12:06:04.205036+03:00",
+      "entry_hour_tr": 12,
+      "entry_dow": 3,
+      "entry_is_weekend": false,
+      "amount": 20.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": false,
+      "algo_signal": "DOWN",
+      "algo_name": "B1#05←B1#03 MUM · skor -49 · 3 asker/karga — Fiyat 0.15% mesafede guclu destege yakin (strength=27.5) | Fiyat 0.04% mesafede guclu dirence yakin (strength=55.0)",
+      "pm_slug": "ethereum-up-or-down-august-13-2026-5am-et",
+      "pm_title": "Ethereum Up or Down - August 13, 5AM ET",
+      "pm_token_dir": "DOWN",
+      "pm_entry_price": 0.515,
+      "pm_spent": 20.0,
+      "pm_size": 38.83,
+      "to_win": 38.83
+    }
+  ],
+  "total_pnl": 97.46,
+  "backfilled_at": "2026-08-12T13:39:18.838075",
+  "backfill_from": "2026-08-10T01:06:02.782720+03:00",
+  "backfill_to": "2026-08-12T15:06:06.005798+03:00"
+}

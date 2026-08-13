@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Son 7 gün — saatlik A1/A2/A4/A6/A10/A15 + A2 Top17 başarılı slot ısı haritası → Telegram.
+"""Son 7 gün — saatlik A1/A2/A6/A10/A15 + A2 Top17 başarılı slot ısı haritası → Telegram.
 
 15m trader'lar (110, 15M A2 vb.) dahil edilmez.
 
@@ -24,7 +24,7 @@ _TZ = ZoneInfo("Europe/Istanbul")
 _DAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 OUT_IMG = "/tmp/poly_weekly_slot_heatmap_all.png"
 
-# .env — A15 ile aynı kanal (A4 bot)
+# .env — B1/A6/A15 ile aynı Telegram kanalı
 _ENV = _ROOT / ".env"
 if _ENV.is_file():
     for _line in _ENV.read_text(encoding="utf-8").splitlines():
@@ -33,21 +33,19 @@ if _ENV.is_file():
             _k, _, _v = _line.partition("=")
             os.environ.setdefault(_k.strip(), _v.strip())
 
-# A15 / A4 Telegram kanalı
+from telegram_poly_channels import chat_analiz4
+
+# B1/A6/A15 Telegram kanalı (chat_analiz4 bot)
 BOT_TOKEN = os.getenv(
     "TELEGRAM_ANALIZ4_BOT_TOKEN",
     "8630483764:AAFmAmG4nHAGb238wpavlWgMjJZDvIy4DzE",
 )
-CHAT_ID = os.getenv(
-    "TELEGRAM_ANALIZ4_CHAT_ID",
-    os.getenv("TELEGRAM_CHAT", "830754964"),
-)
+CHAT_ID = chat_analiz4()
 
 # Saatlik sanal kitaplar (+ A2 Top17). 15m (110 vb.) yok.
 BOOKS: list[tuple[str, Path]] = [
     ("A1", _DIR / "poly_trader_analiz1_history.json"),
     ("A2", _DIR / "poly_trader_analiz2_history.json"),
-    ("A4", _DIR / "poly_trader_analiz4_history.json"),
     ("A6", _DIR / "poly_trader_analiz6_history.json"),
     ("A10", _DIR / "poly_trader_analiz10_history.json"),
     ("A15", _DIR / "poly_trader_analiz15_history.json"),
@@ -55,7 +53,7 @@ BOOKS: list[tuple[str, Path]] = [
 for i in range(1, 18):
     BOOKS.append((f"#{i:02d}", _DIR / f"poly_trader_a2_{i:02d}_history.json"))
 
-CORE_LABELS = ["A1", "A2", "A4", "A6", "A10", "A15"]
+CORE_LABELS = ["A1", "A2", "A6", "A10", "A15"]
 
 
 def _load_history(path: Path) -> list[dict]:
@@ -343,7 +341,7 @@ def main() -> None:
         return
     caption = (
         f"📊 Son {days} gün başarılı slot haritası — {datetime.now(_TZ).strftime('%d.%m.%Y %H:%M')} İST\n"
-        f"A1 A2 A4 A6 A10 A15 · A2 Top17 (saatlik; 15m yok)"
+        f"A1 A2 A6 A10 A15 · A2 Top17 (saatlik; 15m yok)"
     )
     tg_send_photo(str(path), caption)
     # Telegram mesaj limiti ~4096; gerekirse kısalt

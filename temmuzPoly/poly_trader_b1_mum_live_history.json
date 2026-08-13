@@ -1,0 +1,23 @@
+[
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 75.84,
+    "exit_price": 75.77,
+    "entry_time_tr": "2026-08-12T22:07:05.011250+03:00",
+    "entry_hour_tr": 22,
+    "entry_dow": 2,
+    "amount": 8.0,
+    "pnl": -8.52,
+    "pm_live": true,
+    "exit_time_tr": "2026-08-12T23:02:10.447770+03:00",
+    "pm_spent": 8.52,
+    "pm_size": 12.0,
+    "pm_slug": "solana-up-or-down-august-12-2026-3pm-et",
+    "algo_name": "Sonnet mum confluence (1h · ±15 eşik)",
+    "algo_num": 0,
+    "settle_source": "pm"
+  }
+]

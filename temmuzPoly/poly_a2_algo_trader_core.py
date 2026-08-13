@@ -50,7 +50,7 @@ _DEFAULT_A2_TOKEN = os.getenv(
 )
 _DEFAULT_A2_CHAT = os.getenv(
     "TELEGRAM_ANALIZ9_CHAT_ID",
-    os.getenv("TELEGRAM_CHAT", "830754964"),
+    os.getenv("TELEGRAM_POLY_TRADERS_CHAT_ID", os.getenv("TELEGRAM_CHAT", "")),
 )
 BOT_TOKEN = os.getenv("TELEGRAM_A2_BOT_TOKEN", _DEFAULT_A2_TOKEN)
 CHAT_ID = os.getenv("TELEGRAM_A2_CHAT_ID", _DEFAULT_A2_CHAT)
@@ -61,7 +61,7 @@ _ALFA_BOT_TOKEN = os.getenv(
     "TELEGRAM_ALFA_BOT_TOKEN",
     "8256912678:AAFWEoRWO7Z0siK_c4Dm5XjgtBKmh-wmF8E",
 )
-_ALFA_CHAT_ID = os.getenv("TELEGRAM_ALFA_CHAT_ID") or os.getenv("TELEGRAM_CHAT") or "830754964"
+_ALFA_CHAT_ID = os.getenv("TELEGRAM_ALFA_CHAT_ID") or os.getenv("TELEGRAM_POLY_TRADERS_CHAT_ID") or os.getenv("TELEGRAM_CHAT") or ""
 
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 
@@ -164,6 +164,10 @@ def tg_send_for_cfg(cfg: A2Config | None, text: str) -> None:
 
 def _tg_send_raw(text: str, token: str, chat_id: str, log_label: str) -> None:
     """Telegram — 4096 limit; uzun özetleri parçala."""
+    from telegram_poly_channels import ANALIZ1_CHAT_ID
+    if not chat_id or chat_id == ANALIZ1_CHAT_ID:
+        print(f"[{log_label}] kanal tanımlı değil veya 1. ANALİZ kanalı — atlandı")
+        return
     max_len = 3900
     chunks: list[str] = []
     if len(text) <= max_len:

@@ -1,5 +1,5 @@
 {
-  "balance": 962.4,
+  "balance": 918.02,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -7,19 +7,19 @@
       "side": "LONG",
       "signal": "UP",
       "algo": "A15",
-      "score": -3.55,
-      "interval": "1h",
-      "qty": 0.009337,
+      "score": 26.22,
+      "interval": "4h",
+      "qty": 0.0094,
       "leverage": 6,
       "margin_usd": 100.0,
-      "entry_price": 64260.9,
+      "entry_price": 63833.0,
       "notional": 600.0,
       "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-11T13:10:08.120973+03:00",
-      "slot": "2026-08-11 13:00",
+      "entry_time_tr": "2026-08-13T11:05:13.339582+03:00",
+      "slot": "2026-08-13 11:00",
       "virtual": true,
-      "atr": 175.77576437,
-      "atr_usd": 1.641207,
+      "atr": 416.65890775,
+      "atr_usd": 3.916397,
       "atr_period": 14,
       "peak_upnl": 0.0,
       "stop_upnl": null,
@@ -28,9 +28,9 @@
       "lock_history": []
     }
   ],
-  "total_pnl": -37.6993,
-  "total_commission": 44.888977,
-  "updated_at_tr": "2026-08-11T13:50:06.027878+03:00",
-  "last_open_slot": "2026-08-11 10:00",
+  "total_pnl": -82.0975,
+  "total_commission": 86.288265,
+  "updated_at_tr": "2026-08-13T12:44:04.775320+03:00",
+  "last_open_slot": "2026-08-13 11:00",
   "atr_skip_syms": []
 }

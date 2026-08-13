@@ -2376,5 +2376,31 @@
     "exit_time_tr": "2026-08-08T20:47:39.969656+03:00",
     "pnl": 0.0,
     "pm_live": true
+  },
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "binance_actual": "UP",
+    "win": false,
+    "pm_win": null,
+    "settle_source": "worthless",
+    "entry_price": 75.91,
+    "exit_price": 76.11,
+    "entry_time_tr": "2026-08-11T14:49:42.147053+03:00",
+    "entry_hour_tr": 14,
+    "entry_dow": 1,
+    "entry_is_weekend": false,
+    "score": 0,
+    "amount": 3.0,
+    "pm_spent": 3.0,
+    "pm_size": 76.48,
+    "pm_entry_price": 0.06,
+    "pm_order_id": "0x4883e8e9397d13a35269d3845aa24a1a380f46a1433fa6e7bc5190650eacae49",
+    "pm_slug": "solana-up-or-down-august-11-2026-7am-et",
+    "pm_token_dir": "DOWN",
+    "exit_time_tr": "2026-08-11T15:07:07.326136+03:00",
+    "pnl": -3.0,
+    "pm_live": true
   }
 ]

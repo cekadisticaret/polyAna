@@ -25,7 +25,8 @@ DASH_BASE = "http://127.0.0.1:5050"
 ANALYST_TOKEN = os.environ.get("ANALYST_API_TOKEN", "")
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 TG_TOKEN = os.environ.get("TELEGRAM_ANALIST_BOT_TOKEN", "")
-TG_CHAT = os.environ.get("TELEGRAM_ANALIST_CHAT_ID", "")
+from telegram_poly_channels import chat_analist
+TG_CHAT = chat_analist()  # 1. ANALİZ kanalına düşmez
 CLAUDE_MODEL = "claude-sonnet-5"
 _TELEGRAM_LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analyst_telegram_log.jsonl")
 _TELEGRAM_LOG_MAX_LINES = 500

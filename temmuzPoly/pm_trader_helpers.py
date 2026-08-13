@@ -55,17 +55,22 @@ def _pm_order_not_ready(err: str | None) -> bool:
         "please retry" in low and ("425" in low or "not ready" in low)
     )
 
-# Gerçek PM trader'lar — A1 Live / A2 Live aynı Telegram kanalı
+# Gerçek PM trader'lar — A1 Live / A2 Live aynı Telegram kanalı (TELEGRAM_PM_LIVE_CHAT_ID)
 PM_LIVE_TG_TOKEN = "8529258517:AAHuVn1VFftXK7RR2Z1w3UqyHGuHNDXDYI4"
-PM_LIVE_TG_CHAT = "830754964"
+PM_LIVE_TG_CHAT = "830754964"  # geriye uyumluluk; tg_send_pm_live chat_pm_live() kullanır
 
 
 def tg_send_pm_live(text: str, *, label: str = "PM") -> bool:
     """A1 Live ile aynı PolyAktif bot + chat."""
+    from telegram_poly_channels import chat_pm_live
+    chat_id = chat_pm_live()
+    if not chat_id:
+        print(f"[{label} TG] PM live kanalı tanımlı değil (TELEGRAM_PM_LIVE_CHAT_ID) — atlandı")
+        return False
     try:
         url = f"https://api.telegram.org/bot{PM_LIVE_TG_TOKEN}/sendMessage"
         data = json.dumps({
-            "chat_id": PM_LIVE_TG_CHAT,
+            "chat_id": chat_id,
             "text": text,
             "parse_mode": "HTML",
         }).encode()
@@ -135,7 +140,7 @@ def _is_algo_islemler_label(label: str) -> bool:
     return False
 
 _SANAL_WEEKEND_LABELS = frozenset({
-    "4. ANALİZ", "10. ANALİZ",
+    "10. ANALİZ",
     "15M 110 SOL",
     "15M 309 Squeeze Mom",
     "15M 316 Supertrend",
@@ -322,6 +327,9 @@ _PM_LIVE_AMOUNT_DEFAULTS: dict[str, tuple[float, float, float]] = {
     "a2_06": (4.0, 5.0, 6.0),
     "a2_07": (4.0, 5.0, 6.0),
     "a15": (12.0, 16.0, 20.0),
+    # B1#05 backfill'de kenar bulunamadı (edge +0,6 puan) — en düşük kademe
+    "b1_05": (4.0, 5.0, 6.0),
+    "b1_mum": (6.0, 8.0, 10.0),
 }
 
 

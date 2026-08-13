@@ -44,8 +44,9 @@ from pm_trader_helpers import (
 
 # ── Config ────────────────────────────────────────────────────
 # TG: 15. Analiz ile aynı kanal (A4 botu)
+from telegram_poly_channels import chat_analiz4
 BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "8630483764:AAFmAmG4nHAGb238wpavlWgMjJZDvIy4DzE")
-CHAT_ID   = os.getenv("TELEGRAM_ANALIZ4_CHAT_ID", os.getenv("TELEGRAM_CHAT", "830754964"))
+CHAT_ID   = chat_analiz4()
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR          = os.path.dirname(os.path.abspath(__file__))

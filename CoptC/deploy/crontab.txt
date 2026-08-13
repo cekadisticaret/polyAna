@@ -1,0 +1,17 @@
+# CoptC — crontab -e ile ekle. Saatler UTC (sunucu saatine göre teyit et).
+# COPTC yolunu kendi kurulumuna göre değiştir.
+
+COPTC=/opt/CoptC
+
+# :02  önce gerçek PM settle, sonra sanal kapanış, sonra havuz notlama
+2  * * * * cd $COPTC && python3 runner.py close     >> /tmp/coptc.log 2>&1
+
+# :05  A1 sanal + A1 Live (kendi motoru) → a2 sinyalleri → MUM + B1#05 sanal → havuz kaydı
+5  * * * * cd $COPTC && python3 runner.py open      >> /tmp/coptc.log 2>&1
+
+# :06  sanal state'i gerçek Polymarket'e aynala (Live kapalıysa hiçbir şey yapmaz)
+#      :05 turu uzarsa dosya kilidiyle bitmesini bekler (en fazla 45 sn)
+6  * * * * cd $COPTC && python3 runner.py live-open >> /tmp/coptc.log 2>&1
+
+# :12  PM sonucu geciktiğinde kapanış tekrarı
+12 * * * * cd $COPTC && python3 runner.py settle    >> /tmp/coptc.log 2>&1

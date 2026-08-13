@@ -1,0 +1,14 @@
+flask==3.1.3
+aiohttp==3.13.3
+numpy==2.4.3
+requests==2.32.5
+py_clob_client_v2==1.0.2
+
+# para çekme (dashboard → Polymarket relayer)
+web3==7.14.1
+eth-account==0.13.7
+py-builder-relayer-client==0.0.2
+py-builder-signing-sdk==0.0.2
+
+# yalnız haftalık ısı haritası görseli için — cron'da weekly kullanmıyorsan gerekmez
+matplotlib==3.10.8

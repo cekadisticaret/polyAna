@@ -1,0 +1,23 @@
+# Heavy / generated — keep remote extension host light
+backups/
+jesse/
+freqtrade/
+**/node_modules/
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.log
+**/*.tar.gz
+**/*.zip
+**/*.lock
+
+# Runtime state/history dumps (change every cron tick)
+AgustosKripto/**/data/
+temmuzPoly/**/*_state.json
+temmuzPoly/**/*_history.json
+temmuzPoly/**/*_live_state.json
+temmuzPoly/**/*_live_history.json
+2.Poly/data/
+crypto-news-monitor/data/
+twitter_bot/data/
+web/**/static/charts/
