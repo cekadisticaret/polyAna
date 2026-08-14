@@ -1,35 +1,9 @@
 {
-  "balance": 458.91,
-  "open_positions": [
-    {
-      "symbol": "SOLUSDT",
-      "predicted_dir": "UP",
-      "entry_price": 75.24,
-      "entry_time_tr": "2026-08-14T21:05:11.362486+03:00",
-      "entry_hour_tr": 21,
-      "entry_dow": 4,
-      "entry_is_weekend": false,
-      "amount": 20.0,
-      "hot_hour_boost": false,
-      "cold_hour_cut": false,
-      "algo_signal": "UP",
-      "algo_name": "Mean Reversion (Z-Score)",
-      "algo_num": 5,
-      "pm_slug": "solana-up-or-down-august-14-2026-2pm-et",
-      "pm_title": "Solana Up or Down - August 14, 2PM ET",
-      "pm_token_dir": "UP",
-      "pm_entry_price": 0.34,
-      "pm_quote_src": "ask",
-      "pm_mid_price": 0.245,
-      "pm_fee": 0.92394,
-      "pm_spent": 20.0,
-      "pm_size": 58.82,
-      "to_win": 58.82
-    }
-  ],
-  "total_pnl": 158.91,
-  "balance_reset_at_tr": "2026-08-10T00:33:03.974396+03:00",
-  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş korundu",
+  "balance": 300.0,
+  "open_positions": [],
+  "total_pnl": 0.0,
+  "balance_reset_at_tr": "2026-08-14T21:51:02.793385+03:00",
+  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş arşivlendi",
   "fee_backfill_at": "2026-08-14T14:52:52.996419+03:00",
   "fee_backfill_total": 156.77
 }

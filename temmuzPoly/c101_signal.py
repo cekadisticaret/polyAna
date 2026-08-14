@@ -40,12 +40,7 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 _BASELINE_FILE = os.path.join(_DIR, "c101_depth_baseline.json")
 
 # ── Model parametreleri ───────────────────────────────────────
-# Model ile piyasa arasında gereken en az fark. 5 puanken kotasyon Gamma'nın
-# bayat son-işlem fiyatıydı ve kenar şişik ölçülüyordu; gerçek CLOB ask'e
-# geçince (2026-08-14) dağılım çöktü ve 18 değerlendirmede yalnız 1 tanesi
-# eşiği geçti. 3 puan, komisyon (0,50 civarında ~1,75 puan) düşüldükten sonra
-# hâlâ ~2,4 puan pay bırakıyor. Örneklem küçük — veri arttıkça yeniden bak.
-EDGE_MIN = float(os.environ.get("C101_EDGE_MIN") or 0.03)
+EDGE_MIN = 0.05          # model ile piyasa arasında en az 5 puan fark (C1#01 varsayılanı)
 PRICE_FLOOR = 0.10       # bu bandın dışında normal dağılım varsayımı kırılır
 PRICE_CEIL = 0.90
 TILT_CAP = 0.05          # yön eğiminin toplam üst sınırı
@@ -271,8 +266,14 @@ def fair_probability(symbol: str, now_tr: datetime, *, update_baseline: bool = T
     }
 
 
-def evaluate(model: dict, pm_up_price: float, pm_down_price: float) -> dict:
-    """Model olasılığını piyasa fiyatıyla karşılaştır → yön, kenar, Kelly oranı."""
+def evaluate(model: dict, pm_up_price: float, pm_down_price: float,
+             *, edge_min: float | None = None) -> dict:
+    """Model olasılığını piyasa fiyatıyla karşılaştır → yön, kenar, Kelly oranı.
+
+    `edge_min` verilmezse modül varsayılanı (C1#01) kullanılır. C1#01 V2 kendi
+    eşiğini geçer; iki defter aynı motoru paylaşıp farklı kapı uygular.
+    """
+    edge_min = EDGE_MIN if edge_min is None else edge_min
     p_up = model["p_up"]
     edge_up = p_up - pm_up_price
     edge_down = (1.0 - p_up) - pm_down_price
@@ -285,8 +286,8 @@ def evaluate(model: dict, pm_up_price: float, pm_down_price: float) -> dict:
     reason = ""
     if not (PRICE_FLOOR <= price <= PRICE_CEIL):
         reason = f"fiyat {price:.2f} güven bandı dışında [{PRICE_FLOOR}-{PRICE_CEIL}]"
-    elif edge < EDGE_MIN:
-        reason = f"kenar +{edge*100:.1f} puan < {EDGE_MIN*100:.0f} puan eşiği"
+    elif edge < edge_min:
+        reason = f"kenar {edge*100:+.1f} puan < {edge_min*100:.0f} puan eşiği"
 
     # Binary Kelly: f = (P − p) / (1 − p)
     kelly = (edge / (1.0 - price)) if price < 1.0 else 0.0

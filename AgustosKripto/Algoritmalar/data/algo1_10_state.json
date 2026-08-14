@@ -1,39 +1,7 @@
 {
-  "balance": 119.4,
+  "balance": 119.85,
   "deposit": 300.0,
   "open_positions": [
-    {
-      "symbol": "LTCUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A1#10 Volume Profile (POC)",
-      "score": 1,
-      "interval": "1h",
-      "qty": 6.811989,
-      "leverage": 10,
-      "margin_usd": 30.0,
-      "entry_price": 44.04,
-      "notional": 300.0,
-      "entry_fee": 0.15,
-      "entry_time_tr": "2026-08-14T20:05:14.915630+03:00",
-      "slot": "2026-08-14 20:00",
-      "virtual": true,
-      "atr": 0.18122371,
-      "atr_usd": 1.234494,
-      "atr_period": 14,
-      "peak_upnl": 1.5401,
-      "stop_upnl": 0.617247,
-      "stop_level": 1,
-      "lock_armed": true,
-      "lock_history": [
-        {
-          "level": 1,
-          "ts": "2026-08-14T20:52:03.952722+03:00",
-          "stop_upnl": 0.617247,
-          "price": 43.81
-        }
-      ]
-    },
     {
       "symbol": "ADAUSDT",
       "side": "SHORT",
@@ -53,7 +21,7 @@
       "atr": 0.00141826,
       "atr_usd": 2.366402,
       "atr_period": 14,
-      "peak_upnl": 1.5363,
+      "peak_upnl": 1.8702,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -78,11 +46,18 @@
       "atr": 0.00402417,
       "atr_usd": 1.583697,
       "atr_period": 14,
-      "peak_upnl": 0.7237,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
+      "peak_upnl": 2.0625,
+      "stop_upnl": 0.791848,
+      "stop_level": 1,
+      "lock_armed": true,
+      "lock_history": [
+        {
+          "level": 1,
+          "ts": "2026-08-14T21:46:04.468203+03:00",
+          "stop_upnl": 0.791848,
+          "price": 0.7575
+        }
+      ]
     },
     {
       "symbol": "INJUSDT",
@@ -103,15 +78,15 @@
       "atr": 0.05738444,
       "atr_usd": 4.015706,
       "atr_period": 14,
-      "peak_upnl": 0.0,
+      "peak_upnl": 2.3605,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
     }
   ],
-  "total_pnl": -180.4554,
-  "total_commission": 186.570778,
-  "updated_at_tr": "2026-08-14T21:16:03.782179+03:00",
+  "total_pnl": -180.0057,
+  "total_commission": 186.870403,
+  "updated_at_tr": "2026-08-14T21:52:04.515278+03:00",
   "last_open_slot": "2026-08-14 21:00"
 }

@@ -5,6 +5,7 @@ import sys
 import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
+from decimal import ROUND_DOWN, Decimal
 from zoneinfo import ZoneInfo
 
 _PM_CLOB_HOST = "https://clob.polymarket.com"
@@ -538,42 +539,128 @@ def pm_taker_fee(size: float, price: float, rate: float = PM_TAKER_FEE_RATE) -> 
     return round(size * rate * price * (1.0 - price), 5)
 
 
-_PM_ASK_CACHE: dict[str, tuple[float, float | None]] = {}
-_PM_ASK_TTL = 20.0
+_PM_BOOK_CACHE: dict[str, tuple[float, dict | None]] = {}
+_PM_BOOK_TTL = 20.0
+
+# Borsa varsayılanları — emir defteri kendi değerini bildirirse o kullanılır.
+PM_MIN_ORDER_SIZE = 5.0
+PM_TICK_SIZE = 0.01
 
 
-def pm_best_ask(token_id: str) -> float | None:
-    """CLOB emir defterinden gerçek en iyi satış fiyatı — Gamma mid'i değil.
+def pm_order_book(token_id: str) -> dict | None:
+    """CLOB emir defteri — ask seviyeleri artan fiyat sırasında, borsa limitleriyle.
 
     A2 gibi tek süreçte onlarca defter koşturan çağrılar aynı token'ı tekrar tekrar
     sorduğu için sonuç kısa süre önbelleklenir.
+
+    Döner: `{"asks": [(fiyat, adet), …], "min_order_size": …, "tick_size": …}`
     """
     if not token_id:
         return None
-    hit = _PM_ASK_CACHE.get(token_id)
-    if hit and (time.time() - hit[0]) < _PM_ASK_TTL:
+    hit = _PM_BOOK_CACHE.get(token_id)
+    if hit and (time.time() - hit[0]) < _PM_BOOK_TTL:
         return hit[1]
     try:
         req = urllib.request.Request(
             f"{_PM_CLOB_BOOK_URL}?token_id={token_id}", headers=_PM_HEADERS,
         )
         with urllib.request.urlopen(req, timeout=10) as r:
-            book = json.load(r)
+            raw = json.load(r)
     except Exception as e:
         print(f"[PM] Emir defteri hatası ({token_id[:16]}): {e}", file=sys.stderr)
-        _PM_ASK_CACHE[token_id] = (time.time(), None)
+        _PM_BOOK_CACHE[token_id] = (time.time(), None)
         return None
-    asks = []
-    for a in book.get("asks") or []:
+    levels = []
+    for a in raw.get("asks") or []:
         try:
-            p = float(a["price"])
-            if 0.0 < p < 1.0:
-                asks.append(p)
+            p, s = float(a["price"]), float(a["size"])
         except (KeyError, TypeError, ValueError):
             continue
-    best = min(asks) if asks else None
-    _PM_ASK_CACHE[token_id] = (time.time(), best)
-    return best
+        if 0.0 < p < 1.0 and s > 0:
+            levels.append((p, s))
+    levels.sort(key=lambda x: x[0])
+    out = None
+    if levels:
+        try:
+            mins = float(raw.get("min_order_size") or PM_MIN_ORDER_SIZE)
+        except (TypeError, ValueError):
+            mins = PM_MIN_ORDER_SIZE
+        try:
+            tick = float(raw.get("tick_size") or PM_TICK_SIZE)
+        except (TypeError, ValueError):
+            tick = PM_TICK_SIZE
+        out = {"asks": levels, "min_order_size": mins, "tick_size": tick}
+    _PM_BOOK_CACHE[token_id] = (time.time(), out)
+    return out
+
+
+def pm_best_ask(token_id: str) -> float | None:
+    """En iyi (en ucuz) satış fiyatı. Tek adetlik referans; dolum için `pm_sanal_fill`."""
+    book = pm_order_book(token_id)
+    return book["asks"][0][0] if book else None
+
+
+def pm_book_vwap(token_id: str, amount_usd: float) -> tuple[float | None, bool]:
+    """`amount_usd`'lik alımın emir defteri yürünerek bulunan ortalama fiyatı.
+
+    Canlıdaki `client.calculate_market_price(..., BUY, amount, FAK)` ile aynı işi
+    yapar: en ucuz seviyeden başlayıp para bitene kadar seviyeleri tüketir. Büyük
+    emir ince defteri yürüdüğü için en iyi ask'ten pahalıya gelebilir.
+
+    Döner: `(vwap, defter_yetersiz_mi)`.
+    """
+    book = pm_order_book(token_id)
+    if not book or amount_usd <= 0:
+        return None, False
+    remaining, shares, cost = float(amount_usd), 0.0, 0.0
+    for price, size in book["asks"]:
+        if remaining <= 1e-9:
+            break
+        take = min(size, remaining / price)
+        shares += take
+        cost += take * price
+        remaining -= take * price
+    if shares <= 0:
+        return None, False
+    return cost / shares, remaining > 0.01
+
+
+def pm_sanal_fill(token_id: str, amount_usd: float,
+                  fallback_price: float | None = None) -> dict | None:
+    """Sanal defterin dolumu — canlı `pm_place_order` ile **birebir aynı** formül.
+
+    Sanal ile canlı arasındaki sapmanın sebebi buydu: sanal `amount/en_iyi_ask`
+    diyordu, canlı ise derinlik VWAP'ını 2 haneye yuvarlayıp borsa minimumuna
+    tamamlıyordu. Ölçüldü (2026-08-14, $10 kademe): ETH'de en iyi ask 0,160 iken
+    canlının ödediği 0,17 (%6 pahalı), SOL'da 0,140 → 0,15 (%7). Aynı sinyal
+    sanalda kârlı, canlıda zararlı görünüyordu.
+
+    Defter okunamazsa `fallback_price` (Gamma mid) ile aynı yuvarlama uygulanır.
+    """
+    if amount_usd <= 0:
+        return None
+    book = pm_order_book(token_id)
+    if book:
+        vwap, short = pm_book_vwap(token_id, amount_usd)
+        mins, src = book["min_order_size"], "book"
+    else:
+        vwap, short, mins, src = fallback_price, False, PM_MIN_ORDER_SIZE, "mid"
+    if vwap is None or not (0.0 < vwap < 1.0):
+        return None
+
+    # Buradan aşağısı pm_place_order'ın kopyası — kasıtlı olarak satır satır aynı.
+    price = max(0.02, min(0.98, round(vwap, 2)))
+    raw_sz = float(Decimal(str(amount_usd / price)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+    size, price = pm_fit_buy(max(mins, raw_sz), price)
+    spent = round(size * price, 2)
+    return {
+        "price": price,
+        "size": size,
+        "spent": spent,
+        "vwap": round(vwap, 4),
+        "src": src,
+        "book_short": short,
+    }
 
 
 def pm_fit_buy(size: float, price: float, min_shares: float = 5.0) -> tuple[float, float]:
@@ -837,7 +924,13 @@ def pm_resolve_pnl(pos: dict) -> tuple[bool | None, float, str]:
 
 
 def pm_sanal_quote(symbol: str, direction: str, amount_usd: float, now: datetime) -> dict | None:
-    """1h PM sanal kotasyonu (emir yok) — gerçek CLOB ask'inden, taker ücreti dahil."""
+    """1h PM sanal kotasyonu (emir yok) — canlı emirle aynı dolum ve ücret hesabı.
+
+    Amaç: sanalda kârlı görünen bir defter canlıya alındığında da kârlı olsun.
+    Bunun için giriş fiyatı, adet ve harcama `pm_sanal_fill` üzerinden canlı
+    `pm_place_order` ile aynı formülle bulunur; üstüne PM taker ücreti eklenir.
+    Kazanç tarafı zaten gerçek: kazanan her adet tam $1 öder (`to_win = size`).
+    """
     et_hour = (now - timedelta(hours=4)).hour
     pm = pm_find_market(symbol, et_hour, now)
     if not pm or pm.get("closed"):
@@ -847,19 +940,19 @@ def pm_sanal_quote(symbol: str, direction: str, amount_usd: float, now: datetime
         return None
     mid = float(op[0]) if direction == "UP" else float(op[1])
     token = pm["up_token"] if direction == "UP" else pm["down_token"]
-    ask = pm_best_ask(token)
-    # Gerçekte alım ask'ten olur; defter okunamazsa Gamma mid'ine düş.
-    tp = ask if ask is not None else mid
+    fill = pm_sanal_fill(token, amount_usd, fallback_price=mid)
+    if not fill:
+        return None
+    tp, size, spent = fill["price"], fill["size"], fill["spent"]
     if not (0.02 <= tp <= 0.98):
         return None
-    size = round(amount_usd / tp, 2)
-    spent = round(size * tp, 2)
     return {
         "pm_slug": pm["slug"],
         "pm_title": pm.get("title", ""),
         "pm_token_dir": direction,
         "pm_entry_price": tp,
-        "pm_quote_src": "ask" if ask is not None else "mid",
+        "pm_quote_src": fill["src"],
+        "pm_fill_vwap": fill["vwap"],
         "pm_mid_price": round(mid, 4),
         "pm_fee": pm_taker_fee(size, tp),
         "pm_spent": spent,

@@ -71,7 +71,7 @@
       "atr": 0.00178247,
       "atr_usd": 12.464816,
       "atr_period": 14,
-      "peak_upnl": 0.0,
+      "peak_upnl": 0.7979,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -96,7 +96,7 @@
       "atr": 0.00089719,
       "atr_usd": 3.370786,
       "atr_period": 14,
-      "peak_upnl": 0.039,
+      "peak_upnl": 1.4674,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -105,7 +105,7 @@
   ],
   "total_pnl": -235.6777,
   "total_commission": 216.804668,
-  "updated_at_tr": "2026-08-14T21:16:05.095243+03:00",
+  "updated_at_tr": "2026-08-14T21:52:05.041838+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

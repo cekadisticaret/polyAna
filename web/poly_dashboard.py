@@ -46,6 +46,7 @@ _HEATMAP_SYMS = {
     "b1_04": ["BTC", "ETH", "SOL"],
     "b1_05": ["BTC", "ETH", "SOL"],
     "c101": ["BTC", "ETH", "SOL"],
+    "c101_v2": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
@@ -123,14 +124,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
+    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
     "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -155,6 +156,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "b1_04":      "B1#04",
     "b1_05":      "B1#05",
     "c101":       "C1#01 · OPUS-OHLCV",
+    "c101_v2":    "C1#01 V2 · GERÇEK ASK",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -178,13 +180,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "analiz1": 300, "analiz2": 300, "analiz6": 300, "analiz6_v2": 300,
     "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300, "b1_mum": 300,
-    "b1_04": 300, "melez": 300, "b1_05": 300, "c101": 500,
+    "b1_04": 300, "melez": 300, "b1_05": 300, "c101": 300, "c101_v2": 300,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -236,6 +238,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "b1_04": "B1#04",
     "b1_05": "B1#05",
     "c101": "C1#01",
+    "c101_v2": "C1#01 V2",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -258,16 +261,25 @@ for _num, _name, *_rest in _A2_META:
     _OVERVIEW_INIT_BAL[_a2k] = 300
     _OVERVIEW_SHORT_LABELS[_a2k] = f"A2#{_num:02d}"
 
+# A2#05 V2 — A2#05 ile birebir aynı sinyal, tek farkı 0,40 giriş fiyatı tabanı.
+# Bilerek _A2_KEYS'e eklenmiyor: "A2 Top-17" listeleri 17 kalsın, bu yalnız
+# algoritma-işlemler defteri olarak görünsün.
+_A2_05_V2 = "a2_05_v2"
+_HEATMAP_SYMS[_A2_05_V2] = ["BTC", "ETH", "SOL"]
+_ANALYSIS_LABELS[_A2_05_V2] = "A2#05 V2 · FİYAT TABANI"
+_OVERVIEW_INIT_BAL[_A2_05_V2] = 300
+_OVERVIEW_SHORT_LABELS[_A2_05_V2] = "A2#05 V2"
+
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101",
-] + _A2_KEYS
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
+] + _A2_KEYS + [_A2_05_V2]
 
-_HEATMAP_ORDER.extend(_A2_KEYS)
-_OVERVIEW_ACTIVE_ORDER.extend(_A2_KEYS)
-_HISTORY_ORDER.extend(_A2_KEYS)
-_ANALYSIS_ORDER.extend(_A2_KEYS)
+_HEATMAP_ORDER.extend(_A2_KEYS + [_A2_05_V2])
+_OVERVIEW_ACTIVE_ORDER.extend(_A2_KEYS + [_A2_05_V2])
+_HISTORY_ORDER.extend(_A2_KEYS + [_A2_05_V2])
+_ANALYSIS_ORDER.extend(_A2_KEYS + [_A2_05_V2])
 
 # Analizler sayfası kayıtları (A2 dahil)
 _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
@@ -283,7 +295,9 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("b1_mum",     "B1#03 MUM ANALİZ",      300,  "Sonnet mum pattern confluence · 1h · ±15"),
     ("b1_04",      "B1#04",                 300,  "Edge-ağırlıklı küme konsensüsü · 23 motor"),
     ("b1_05",      "B1#05",                 300,  "Coin başına en iyi motor · MUM+MELEZ dahil"),
-    ("c101",       "C1#01 · OPUS-OHLCV",    500,  "PTB+volatilite olasılık · defter derinliği/funding/OI · çeyrek Kelly"),
+    ("c101",       "C1#01 · OPUS-OHLCV",    300,  "PTB+volatilite olasılık · Gamma mid kotasyonu · 5 puan kenar eşiği"),
+    ("c101_v2",    "C1#01 V2 · GERÇEK ASK", 300,  "Aynı model, CLOB best_ask kotasyonu · 3 puan kenar eşiği"),
+    ("a2_05_v2",   "A2#05 V2 · FİYAT TABANI", 300, "A2#05 sinyali + 0,40 altı bileti alma kuralı"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)

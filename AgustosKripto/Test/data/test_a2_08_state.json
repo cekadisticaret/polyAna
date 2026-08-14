@@ -1,5 +1,5 @@
 {
-  "balance": 630.26,
+  "balance": 632.69,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -21,8 +21,8 @@
       "atr": 0.02901119,
       "atr_usd": 11.186835,
       "atr_period": 14,
-      "peak_upnl": 17.9183,
-      "stop_upnl": 6.731465,
+      "peak_upnl": 20.6188,
+      "stop_upnl": 9.431965,
       "stop_level": 1,
       "lock_armed": true,
       "lock_history": [
@@ -31,38 +31,6 @@
           "ts": "2026-08-14T16:22:05.436376+03:00",
           "stop_upnl": 5.593418,
           "price": 1.524
-        }
-      ]
-    },
-    {
-      "symbol": "BNBUSDT",
-      "side": "LONG",
-      "signal": "UP",
-      "algo": "A2#08",
-      "score": 33.15,
-      "interval": "1h",
-      "qty": 0.993164,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 604.13,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T18:05:25.143480+03:00",
-      "slot": "2026-08-14 18:00",
-      "virtual": true,
-      "atr": 1.93263161,
-      "atr_usd": 1.91942,
-      "atr_period": 14,
-      "peak_upnl": 2.7949,
-      "stop_upnl": 0.95971,
-      "stop_level": 1,
-      "lock_armed": true,
-      "lock_history": [
-        {
-          "level": 1,
-          "ts": "2026-08-14T18:40:06.739153+03:00",
-          "stop_upnl": 0.95971,
-          "price": 606.74
         }
       ]
     },
@@ -110,6 +78,31 @@
       "atr": 0.00237341,
       "atr_usd": 4.688985,
       "atr_period": 14,
+      "peak_upnl": 0.1899,
+      "stop_upnl": null,
+      "stop_level": 0,
+      "lock_armed": false,
+      "lock_history": []
+    },
+    {
+      "symbol": "BNBUSDT",
+      "side": "LONG",
+      "signal": "UP",
+      "algo": "A2#08",
+      "score": 41.04,
+      "interval": "1h",
+      "qty": 0.98881,
+      "leverage": 6,
+      "margin_usd": 100.0,
+      "entry_price": 606.79,
+      "notional": 600.0,
+      "entry_fee": 0.3,
+      "entry_time_tr": "2026-08-14T21:40:19.505586+03:00",
+      "slot": "2026-08-14 21:00",
+      "virtual": true,
+      "atr": 1.99198254,
+      "atr_usd": 1.969692,
+      "atr_period": 14,
       "peak_upnl": 0.0,
       "stop_upnl": null,
       "stop_level": 0,
@@ -117,9 +110,9 @@
       "lock_history": []
     }
   ],
-  "total_pnl": -369.717,
-  "total_commission": 370.786336,
-  "updated_at_tr": "2026-08-14T21:16:05.140095+03:00",
+  "total_pnl": -367.286,
+  "total_commission": 371.987658,
+  "updated_at_tr": "2026-08-14T21:52:05.097494+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

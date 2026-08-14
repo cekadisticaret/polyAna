@@ -1,39 +1,7 @@
 {
-  "balance": 305.35,
+  "balance": 305.57,
   "deposit": 300.0,
   "open_positions": [
-    {
-      "symbol": "LTCUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A6",
-      "score": 9.1192,
-      "interval": "1h",
-      "qty": 3.405995,
-      "leverage": 15,
-      "margin_usd": 10.0,
-      "entry_price": 44.04,
-      "notional": 150.0,
-      "entry_fee": 0.075,
-      "entry_time_tr": "2026-08-14T20:05:54.997070+03:00",
-      "slot": "2026-08-14 20:00",
-      "virtual": true,
-      "atr": 0.18122371,
-      "atr_usd": 0.617247,
-      "atr_period": 14,
-      "peak_upnl": 0.8042,
-      "stop_upnl": 0.308623,
-      "stop_level": 1,
-      "lock_armed": true,
-      "lock_history": [
-        {
-          "level": 1,
-          "ts": "2026-08-14T20:56:03.058901+03:00",
-          "stop_upnl": 0.308623,
-          "price": 43.79
-        }
-      ]
-    },
     {
       "symbol": "ARBUSDT",
       "side": "SHORT",
@@ -53,7 +21,7 @@
       "atr": 0.00062587,
       "atr_usd": 1.25058,
       "atr_period": 14,
-      "peak_upnl": 0.5496,
+      "peak_upnl": 0.9696,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -78,7 +46,7 @@
       "atr": 0.06600819,
       "atr_usd": 1.110626,
       "atr_period": 14,
-      "peak_upnl": 0.3213,
+      "peak_upnl": 0.3551,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -110,8 +78,8 @@
       "lock_history": []
     }
   ],
-  "total_pnl": 5.3478,
-  "total_commission": 47.823417,
-  "updated_at_tr": "2026-08-14T21:16:02.453217+03:00",
+  "total_pnl": 5.5727,
+  "total_commission": 47.97323,
+  "updated_at_tr": "2026-08-14T21:52:02.134835+03:00",
   "last_open_slot": "2026-08-14 21:00"
 }

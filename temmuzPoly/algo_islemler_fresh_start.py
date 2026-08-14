@@ -22,31 +22,44 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 _BALANCE = 300.0
 
+# poly_dashboard._ALGO_ISLEMLER_KEYS ile birebir aynı olmalı. Dashboard'ı buradan
+# import etmek Flask'ı da çekeceği için liste elle tutuluyor; yeni defter eklerken
+# --check ile tutarlılığı doğrula.
 ALGO_ISLEMLER_KEYS = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "analiz15",
-    "b1_01", "b1_02", "b1_mum",
-    "c101",
-] + [f"a2_{i:02d}" for i in range(1, 18)]
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15",
+    "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
+    "c101", "c101_v2",
+] + [f"a2_{i:02d}" for i in range(1, 18)] + ["a2_05_v2"]
 
-# Varsayılan $300 dışında başlayan defterler
-_BALANCE_OVERRIDE = {"c101": 500.0}
+# Dosya adı defter anahtarından farklı olanlar
+_STATE_FILE_KEY = {"melez": "analiz6_v4"}
 
+# Kendi `close` moduyla koşan defterler (A2 Top-17 toplu kapanıyor, ayrı)
 _STANDALONE_CLOSE = [
     "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15",
-    "b1_01", "b1_02", "b1_mum",
+    "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
+    "melez", "c101", "c101_v2", "a2_05_v2",
 ]
+
+# Betik adı defter anahtarından farklı olanlar
+_CLOSE_SCRIPT = {"melez": "poly_trader_analiz6_v4.py"}
 
 
 def _state_path(key: str) -> str:
-    return os.path.join(_DIR, f"poly_trader_{key}_state.json")
+    return os.path.join(_DIR, f"poly_trader_{_STATE_FILE_KEY.get(key, key)}_state.json")
+
+
+def _history_path(key: str) -> str:
+    return os.path.join(_DIR, f"poly_trader_{_STATE_FILE_KEY.get(key, key)}_history.json")
 
 
 def _run_close_all() -> None:
     py = sys.executable
     for key in _STANDALONE_CLOSE:
-        script = os.path.join(_DIR, f"poly_trader_{key}.py")
+        script = os.path.join(_DIR, _CLOSE_SCRIPT.get(key, f"poly_trader_{key}.py"))
         if not os.path.isfile(script):
+            print(f"[close] {key} — betik yok, atlandı ({os.path.basename(script)})")
             continue
         print(f"[close] {key} …")
         subprocess.run([py, script, "close"], cwd=_DIR, check=False)
@@ -56,52 +69,93 @@ def _run_close_all() -> None:
         subprocess.run([py, a2, "close", "all"], cwd=_DIR, check=False)
 
 
-def _reset_balances(now_tr: datetime) -> tuple[int, int]:
+def _archive_history(key: str, stamp: str) -> int:
+    """Geçmişi tarihli klasöre taşı, defteri boş bırak. Silme yok, taşıma var."""
+    path = _history_path(key)
+    if not os.path.exists(path):
+        return 0
+    try:
+        with open(path, encoding="utf-8") as f:
+            hist = json.load(f)
+    except Exception:
+        return 0
+    n = len(hist) if isinstance(hist, list) else 0
+    if not n:
+        return 0
+    arc_dir = os.path.join(_DIR, f"_archive_{stamp}")
+    os.makedirs(arc_dir, exist_ok=True)
+    with open(os.path.join(arc_dir, os.path.basename(path)), "w", encoding="utf-8") as f:
+        json.dump(hist, f, indent=2, ensure_ascii=False)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump([], f)
+    return n
+
+
+def _reset_balances(now_tr: datetime, wipe_history: bool = False) -> tuple[int, int, int]:
     reset_n = 0
     cleared_open = 0
+    archived = 0
+    stamp = now_tr.strftime("%Y%m%d_%H%M")
     for key in ALGO_ISLEMLER_KEYS:
         path = _state_path(key)
         if not os.path.exists(path):
+            print(f"  ATLANDI {key} — state dosyası yok ({os.path.basename(path)})")
             continue
         try:
             with open(path, encoding="utf-8") as f:
                 state = json.load(f)
         except Exception:
+            print(f"  ATLANDI {key} — state okunamadı")
             continue
-        bal = _BALANCE_OVERRIDE.get(key, _BALANCE)
+        if wipe_history:
+            archived += _archive_history(key, stamp)
         cleared_open += len(state.get("open_positions") or [])
-        state["balance"] = bal
+        state["balance"] = _BALANCE
         state["open_positions"] = []
         state["total_pnl"] = 0.0
         state["balance_reset_at_tr"] = now_tr.isoformat()
         state["balance_reset_note"] = (
-            f"algoritma-islemler toplu reset ${bal:.0f} — geçmiş korundu"
+            f"algoritma-islemler toplu reset ${_BALANCE:.0f} — "
+            + ("geçmiş arşivlendi" if wipe_history else "geçmiş korundu")
         )
         state.pop("defer_cleared_at_tr", None)
         state.pop("defer_note", None)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2, ensure_ascii=False)
         reset_n += 1
-        print(f"  reset {key} → ${bal:.0f}")
-    return reset_n, cleared_open
+        print(f"  reset {key} → ${_BALANCE:.0f}")
+    return reset_n, cleared_open, archived
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Algoritma-islemler fresh start ($300)")
     parser.add_argument("--reset-only", action="store_true", help="close atla, sadece bakiye sıfırla")
+    parser.add_argument("--wipe-history", action="store_true",
+                        help="geçmişi _archive_<tarih>/ klasörüne taşıyıp defteri boşalt")
+    parser.add_argument("--check", action="store_true",
+                        help="hiçbir şey yazma; hangi defterin dosyası var/yok göster")
     args = parser.parse_args()
 
     sys.path.insert(0, _DIR)
+
+    if args.check:
+        eksik = [k for k in ALGO_ISLEMLER_KEYS if not os.path.exists(_state_path(k))]
+        print(f"{len(ALGO_ISLEMLER_KEYS)} defter tanımlı, {len(eksik)} tanesinin state dosyası yok")
+        for k in eksik:
+            print(f"  EKSİK {k} → {os.path.basename(_state_path(k))}")
+        return
+
     from pm_balance_guard import clear_algo_islemler_open_after
     clear_algo_islemler_open_after(source="algo_islemler_fresh_start")
 
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     if not args.reset_only:
         _run_close_all()
-    reset_n, cleared = _reset_balances(now_tr)
+    reset_n, cleared, archived = _reset_balances(now_tr, wipe_history=args.wipe_history)
     nxt = (now_tr.hour + 1) % 24
+    arc = f"\n  Arşivlenen işlem: {archived}" if args.wipe_history else ""
     print(
-        f"\n✓ {reset_n} defter → ${_BALANCE:.0f}  |  kalan açık temizlendi: {cleared}\n"
+        f"\n✓ {reset_n} defter → ${_BALANCE:.0f}  |  kalan açık temizlendi: {cleared}{arc}\n"
         f"  Sonraki otomatik open: ~{nxt:02d}:05–:06 İST (cron)\n"
         f"  Manuel open çalıştırılmadı."
     )

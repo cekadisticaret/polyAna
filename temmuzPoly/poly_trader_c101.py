@@ -42,7 +42,7 @@ sys.path.insert(0, _DIR)
 
 from c101_signal import SYMBOLS, evaluate, fair_probability, stake_for  # noqa: E402
 from pm_trader_helpers import (  # noqa: E402
-    pm_best_ask, pm_find_market, pm_sanal_settle_trade, pm_sanal_slot_candle,
+    pm_find_market, pm_sanal_settle_trade, pm_sanal_slot_candle,
     pm_taker_fee, skip_if_weekend_pause,
 )
 from telegram_poly_channels import chat_analiz4  # noqa: E402
@@ -57,8 +57,8 @@ CALIB_FILE = os.path.join(_DIR, "c101_calibration.jsonl")
 LABEL = "C1#01"
 BOOK_KEY = "c101"
 ALGO_NAME = "OPUS-OHLCV · PTB + volatilite adil fiyat"
-# Diğer sanal defterler $300; bu defter Kelly kademelendirmesi için $500 ile başlar
-INITIAL_BALANCE = 500.0
+# Tüm algoritma-islemler defterleriyle aynı çizgi (14.08.2026 toplu sıfırlama)
+INITIAL_BALANCE = 300.0
 COMPARE_KEY = "a2_05"
 
 
@@ -144,10 +144,10 @@ def _wr(wins: int, total: int) -> str:
 def pm_prices(symbol: str, now_utc: datetime) -> dict | None:
     """Saatlik PM piyasasının iki taraf fiyatı — modelin karşılaştırma hedefi.
 
-    Kenar ancak **gerçekten ödenecek fiyata** karşı ölçülürse anlamlı, o yüzden
-    her iki tarafın CLOB best_ask'i kullanılır. Gamma `outcomePrices` son işlem
-    fiyatı; saat başında bayat kalıp ask'ten 10+ puan sapabiliyor ve modele
-    olmayan bir kenar gösteriyor. Defter okunamazsa mid'e düşülür.
+    Kaynak Gamma `outcomePrices` (son işlem fiyatı). Bu fiyattan alım
+    yapılamayabilir; kenar ölçümü bu yüzden iyimserdir. Gerçek CLOB ask'e karşı
+    ölçen sürüm **C1#01 V2** (`poly_trader_c101_v2.py`) — ikisi bilerek paralel
+    koşuyor, hangisinin daha isabetli olduğu kalibrasyon günlüğünden ölçülecek.
     """
     et_hour = (now_utc - timedelta(hours=4)).hour
     pm = pm_find_market(symbol, et_hour, now_utc)
@@ -157,13 +157,9 @@ def pm_prices(symbol: str, now_utc: datetime) -> dict | None:
     if len(op) < 2:
         return None
     try:
-        up_mid, down_mid = float(op[0]), float(op[1])
+        up_p, down_p = float(op[0]), float(op[1])
     except (ValueError, TypeError):
         return None
-    up_ask = pm_best_ask(pm["up_token"])
-    down_ask = pm_best_ask(pm["down_token"])
-    up_p = up_ask if up_ask is not None else up_mid
-    down_p = down_ask if down_ask is not None else down_mid
     if not (0.01 < up_p < 0.99 and 0.01 < down_p < 0.99):
         return None
     return {
@@ -171,9 +167,9 @@ def pm_prices(symbol: str, now_utc: datetime) -> dict | None:
         "title": pm.get("title", ""),
         "up": up_p,
         "down": down_p,
-        "quote_src": "ask" if (up_ask is not None and down_ask is not None) else "mid",
-        "up_mid": round(up_mid, 4),
-        "down_mid": round(down_mid, 4),
+        "quote_src": "mid",
+        "up_mid": round(up_p, 4),
+        "down_mid": round(down_p, 4),
         "overround": round(up_p + down_p - 1.0, 4),
     }
 

@@ -14355,5 +14355,46 @@
     "win": false,
     "close_reason": "1h_close",
     "book": "A1#10 Volume Profile (POC)"
+  },
+  {
+    "symbol": "LTCUSDT",
+    "side": "SHORT",
+    "signal": "DOWN",
+    "algo": "A1#10 Volume Profile (POC)",
+    "score": 1,
+    "interval": "1h",
+    "qty": 6.811989,
+    "leverage": 10,
+    "margin_usd": 30.0,
+    "entry_price": 44.04,
+    "notional": 300.0,
+    "entry_fee": 0.15,
+    "entry_time_tr": "2026-08-14T20:05:14.915630+03:00",
+    "slot": "2026-08-14 20:00",
+    "virtual": true,
+    "atr": 0.18122371,
+    "atr_usd": 1.234494,
+    "atr_period": 14,
+    "peak_upnl": 1.5401,
+    "stop_upnl": 0.617247,
+    "stop_level": 1,
+    "lock_armed": true,
+    "lock_history": [
+      {
+        "level": 1,
+        "ts": "2026-08-14T20:52:03.952722+03:00",
+        "stop_upnl": 0.617247,
+        "price": 43.81
+      }
+    ],
+    "exit_price": 43.93,
+    "exit_time_tr": "2026-08-14T21:28:03.905818+03:00",
+    "pnl_gross": 0.7493,
+    "exit_fee": 0.149625,
+    "commission": 0.299625,
+    "pnl": 0.4497,
+    "win": true,
+    "close_reason": "atr_stop",
+    "book": "A1#10 Volume Profile (POC)"
   }
 ]

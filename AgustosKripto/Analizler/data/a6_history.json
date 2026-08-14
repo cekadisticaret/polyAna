@@ -11095,5 +11095,46 @@
     "win": true,
     "close_reason": "1h_close",
     "book": "A6 Supertrend · $10×15x · max 4 · alt (BTC/ETH yok)"
+  },
+  {
+    "symbol": "LTCUSDT",
+    "side": "SHORT",
+    "signal": "DOWN",
+    "algo": "A6",
+    "score": 9.1192,
+    "interval": "1h",
+    "qty": 3.405995,
+    "leverage": 15,
+    "margin_usd": 10.0,
+    "entry_price": 44.04,
+    "notional": 150.0,
+    "entry_fee": 0.075,
+    "entry_time_tr": "2026-08-14T20:05:54.997070+03:00",
+    "slot": "2026-08-14 20:00",
+    "virtual": true,
+    "atr": 0.18122371,
+    "atr_usd": 0.617247,
+    "atr_period": 14,
+    "peak_upnl": 0.8042,
+    "stop_upnl": 0.308623,
+    "stop_level": 1,
+    "lock_armed": true,
+    "lock_history": [
+      {
+        "level": 1,
+        "ts": "2026-08-14T20:56:03.058901+03:00",
+        "stop_upnl": 0.308623,
+        "price": 43.79
+      }
+    ],
+    "exit_price": 43.93,
+    "exit_time_tr": "2026-08-14T21:28:02.278068+03:00",
+    "pnl_gross": 0.3747,
+    "exit_fee": 0.074813,
+    "commission": 0.149813,
+    "pnl": 0.2249,
+    "win": true,
+    "close_reason": "atr_stop",
+    "book": "A6 Supertrend · $10×15x · max 4 · alt (BTC/ETH yok)"
   }
 ]

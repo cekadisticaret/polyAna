@@ -7161,5 +7161,46 @@
     "win": false,
     "close_reason": "1h_close",
     "book": "A3 3. Analiz Freqtrade"
+  },
+  {
+    "symbol": "LTCUSDT",
+    "side": "SHORT",
+    "signal": "DOWN",
+    "algo": "A3",
+    "score": 1.0,
+    "interval": "1h",
+    "qty": 5.108992,
+    "leverage": 15,
+    "margin_usd": 15.0,
+    "entry_price": 44.04,
+    "notional": 225.0,
+    "entry_fee": 0.1125,
+    "entry_time_tr": "2026-08-14T20:05:36.274061+03:00",
+    "slot": "2026-08-14 20:00",
+    "virtual": true,
+    "atr": 0.18122371,
+    "atr_usd": 0.92587,
+    "atr_period": 14,
+    "peak_upnl": 1.2062,
+    "stop_upnl": 0.462935,
+    "stop_level": 1,
+    "lock_armed": true,
+    "lock_history": [
+      {
+        "level": 1,
+        "ts": "2026-08-14T20:56:02.968448+03:00",
+        "stop_upnl": 0.462935,
+        "price": 43.79
+      }
+    ],
+    "exit_price": 43.93,
+    "exit_time_tr": "2026-08-14T21:28:02.213068+03:00",
+    "pnl_gross": 0.562,
+    "exit_fee": 0.112219,
+    "commission": 0.224719,
+    "pnl": 0.3373,
+    "win": true,
+    "close_reason": "atr_stop",
+    "book": "A3 3. Analiz Freqtrade"
   }
 ]

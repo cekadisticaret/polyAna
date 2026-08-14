@@ -1,42 +1,9 @@
 {
-  "balance": 169.75,
+  "balance": 170.09,
   "deposit": 300.0,
-  "open_positions": [
-    {
-      "symbol": "LTCUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A8",
-      "score": 1.0,
-      "interval": "1h",
-      "qty": 5.108992,
-      "leverage": 15,
-      "margin_usd": 15.0,
-      "entry_price": 44.04,
-      "notional": 225.0,
-      "entry_fee": 0.1125,
-      "entry_time_tr": "2026-08-14T20:05:36.275731+03:00",
-      "slot": "2026-08-14 20:00",
-      "virtual": true,
-      "atr": 0.18122371,
-      "atr_usd": 0.92587,
-      "atr_period": 14,
-      "peak_upnl": 1.2062,
-      "stop_upnl": 0.462935,
-      "stop_level": 1,
-      "lock_armed": true,
-      "lock_history": [
-        {
-          "level": 1,
-          "ts": "2026-08-14T20:56:02.999579+03:00",
-          "stop_upnl": 0.462935,
-          "price": 43.79
-        }
-      ]
-    }
-  ],
-  "total_pnl": -130.2729,
-  "total_commission": 109.608302,
-  "updated_at_tr": "2026-08-14T21:16:02.429891+03:00",
+  "open_positions": [],
+  "total_pnl": -129.9356,
+  "total_commission": 109.833021,
+  "updated_at_tr": "2026-08-14T21:28:02.238478+03:00",
   "last_open_slot": "2026-08-14 20:00"
 }

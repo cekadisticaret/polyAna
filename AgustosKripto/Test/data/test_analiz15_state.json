@@ -26,11 +26,36 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
+    },
+    {
+      "symbol": "SOLUSDT",
+      "side": "LONG",
+      "signal": "UP",
+      "algo": "A15",
+      "score": 56.74,
+      "interval": "4h",
+      "qty": 7.989348,
+      "leverage": 6,
+      "margin_usd": 100.0,
+      "entry_price": 75.1,
+      "notional": 600.0,
+      "entry_fee": 0.3,
+      "entry_time_tr": "2026-08-14T21:20:09.019908+03:00",
+      "slot": "2026-08-14 21:00",
+      "virtual": true,
+      "atr": 0.79158912,
+      "atr_usd": 6.324281,
+      "atr_period": 14,
+      "peak_upnl": 0.0,
+      "stop_upnl": null,
+      "stop_level": 0,
+      "lock_armed": false,
+      "lock_history": []
     }
   ],
   "total_pnl": -126.415,
   "total_commission": 116.282776,
-  "updated_at_tr": "2026-08-14T21:16:04.879955+03:00",
+  "updated_at_tr": "2026-08-14T21:52:04.748127+03:00",
   "last_open_slot": "2026-08-14 18:00",
   "atr_skip_syms": []
 }

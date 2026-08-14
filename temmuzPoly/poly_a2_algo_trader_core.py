@@ -74,6 +74,10 @@ class A2Config:
     algo_name: str
     state_file: str
     history_file: str
+    # Aşağıdaki ikisinin varsayılanı mevcut 17 A2 defterinin davranışıdır; türev
+    # defterler (ör. A2#05 V2) aynı sinyali farklı kurallarla koşturmak için ezer.
+    min_entry_price: float | None = None   # None = fiyat tabanı yok
+    live_mirror: bool = True               # False = gerçek para aynası hiç çağrılmaz
 
 
 def _symbol_wr_amount(cfg: A2Config, history: list, symbol: str) -> float:
@@ -375,11 +379,18 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
         if not ok:
             print(f"[{cfg.label} open] {sym} — {skip_msg}")
             continue
+        if cfg.min_entry_price is not None:
+            entry_px = pos.get("pm_entry_price")
+            if entry_px is None or float(entry_px) < cfg.min_entry_price:
+                print(f"[{cfg.label} open] {sym} — bilet {entry_px} < "
+                      f"{cfg.min_entry_price} fiyat tabanı, atlandı")
+                continue
         state["open_positions"].append(pos)
         live_tag = ""
         try:
             from poly_a2_algo_live_core import get_live_spec, mirror_open_from_sanal
-            live_spec = get_live_spec(cfg.algo_num)
+            # Türev defterler asıl defterin gerçek para aynasını tetiklemesin.
+            live_spec = get_live_spec(cfg.algo_num) if cfg.live_mirror else None
             if live_spec:
                 live_pos, live_err = await mirror_open_from_sanal(
                     live_spec, pos, entry_price=c["entry_price"], now_tr=now_tr,
