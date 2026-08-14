@@ -21,7 +21,7 @@
       "atr": 0.02799523,
       "atr_usd": 41.825545,
       "atr_period": 14,
-      "peak_upnl": 0.0,
+      "peak_upnl": 4.7812,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -73,7 +73,7 @@
       "atr": 0.00439614,
       "atr_usd": 7.771606,
       "atr_period": 14,
-      "peak_upnl": 0.4612,
+      "peak_upnl": 1.8762,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -99,17 +99,24 @@
       "atr": 0.00403519,
       "atr_usd": 2.427427,
       "atr_period": 14,
-      "peak_upnl": 2.0482,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": [],
+      "peak_upnl": 4.6362,
+      "stop_upnl": 2.208773,
+      "stop_level": 1,
+      "lock_armed": true,
+      "lock_history": [
+        {
+          "level": 1,
+          "ts": "2026-08-15T01:26:06.713857+03:00",
+          "stop_upnl": 2.208773,
+          "price": 0.9887
+        }
+      ],
       "loss_stop_atr": 6.0
     }
   ],
   "total_pnl": -0.4039,
   "total_commission": 2.399003,
-  "updated_at_tr": "2026-08-15T01:20:09.497439+03:00",
+  "updated_at_tr": "2026-08-15T01:46:05.994201+03:00",
   "last_open_slot": "",
   "balance_reset_at_tr": "2026-08-15T00:43:12.448146+03:00",
   "balance_reset_note": "Kripto Test bakiye reset $1000 — geçmiş korundu",

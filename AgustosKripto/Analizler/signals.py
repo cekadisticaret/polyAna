@@ -120,7 +120,7 @@ def prefetch_a3_a8(symbols: list[str]) -> None:
 def signal_a1(symbol: str, kl: list) -> str:
     try:
         from poly_predictor_analysis import predict
-        pred = asyncio.run(predict(symbol, kill_zone=False))
+        pred = asyncio.run(predict(symbol))
         return _dir_from_pred(pred) or "NEUTRAL"
     except Exception as e:
         print(f"[Analizler A1] {symbol}: {e}")

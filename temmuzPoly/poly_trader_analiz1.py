@@ -280,7 +280,7 @@ async def run_open() -> None:
     # Tüm sembolleri tahmin et
     candidates = []
     for sym in SYMBOLS:
-        pred_obj = await predict(sym, kill_zone=False)
+        pred_obj = await predict(sym)
         if pred_obj is None:
             continue
         candidates.append({"sym": sym, "pred_obj": pred_obj})

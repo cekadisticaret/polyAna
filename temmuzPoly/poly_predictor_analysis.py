@@ -7,7 +7,7 @@ Yedek (önceki prod v5): lab/backups/30-05-2026/poly_predictor_analysis_prod_v5_
 Strateji: Simetrik MR (UP + DOWN mean-reversion).
   - _MR_UP_GATE   = 45  (oversold → UP reversal)
   - _MR_DOWN_GATE = 40  (overbought → DOWN reversal)
-  - Kill Zone (ET 9–11): yalnızca A2 — predict(kill_zone=True); A1/A1 Live kill_zone=False
+  - Kill Zone (ET 9–11): gate 62/55; predict(kill_zone=False) ile kapatılabilir (varsayılan açık)
   - RSI(5), 8-mum MR, streak reversal, CVD teyidi, 30dk CVD flow
   - Trend-takip park edildi (backtest'te sinyali seyreltti)
 
@@ -788,7 +788,7 @@ def _liquidity_sweep_score(klines: list[dict]) -> tuple[int, int]:
 
 
 def _resolve_mr_gates(kill_zone: bool, ref_ms: int | None = None) -> tuple[int, int]:
-    """A1: kill_zone=False → her zaman 45/40. A2: kill_zone=True → ET 9–11'de 62/55."""
+    """kill_zone=False → her zaman 45/40. Varsayılan True → ET 9–11'de 62/55."""
     if not kill_zone:
         return 45, 40
     if ref_ms is None:
@@ -863,7 +863,7 @@ async def predict(symbol: str, *, preloaded: dict | None = None, kill_zone: bool
     _ADX_TREND_THRESHOLD = 999
     _TREND_GATE = 999
 
-    # Katman 3: Kill Zone — yalnızca kill_zone=True (A2); A1/A1 Live kill_zone=False
+    # Katman 3: Kill Zone — ET 9–11 gate sıkılaştırma (kill_zone=False ile devre dışı)
     _ref_ms = _slot_utc_ms if _slot_utc_ms is not None else int(datetime.now(timezone.utc).timestamp() * 1000)
     _MR_UP_GATE, _MR_DOWN_GATE = _resolve_mr_gates(kill_zone, _ref_ms)
 

@@ -71,7 +71,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `jesse/analiz8_signal.py` | Jesse indicators → PM UP/DOWN sinyal motoru |
 | `5M110Analiz/` | FeatureEngine v2 indikatör kütüphanesi (110/111/210 adaptörleri) |
 | `5M110Analiz/predictor.py` | composite_signal → UP/DOWN (gate ±15; algo kütüphanesine dokunmaz) |
-| `temmuzPoly/poly_predictor_analysis.py` | A1/A2 ortak `predict`; Kill Zone yalnızca A2 (`kill_zone=True`) |
+| `temmuzPoly/poly_predictor_analysis.py` | A1/A2 ortak `predict`; Kill Zone (ET 9–11, gate 62/55) varsayılan açık |
 | `temmuzPoly/btc_5m_105_algo.py` | 5M ortak sinyal motoru (15M adaptörleri; 4-algo + MR veto) |
 | `temmuzPoly/poly_trader_5m_common.py` | 5M BTC ortak yardımcılar (Binance, 4-algo, PM emir) |
 | `temmuzPoly/pm_trader_helpers.py` | PM emir + sanal kotasyon. **Sanal dolum canlı emirle birebir aynı formül** (`pm_sanal_fill`): `pm_order_book` (CLOB defteri, 20 sn önbellek, borsanın `min_order_size`/`tick_size`'ı) → `pm_book_vwap` (derinlik yürüyüşü) → 2 haneye yuvarla → min adet → `pm_fit_buy`. 63 senaryoda canlı `pm_place_order` ile sıfır sapma. **PM taker ücreti** `fee = C×0,07×p×(1−p)` (`pm_taker_fee`) tüm P&L'den düşülür; gerçek PM WR giriş (`load_pm_live_amounts` / `analiz5_settings.json`); slot tutarı: zayıf saat -%30, hot-hour büyütme **kapalı** (`HOT_HOUR_BOOST=1.0`) |

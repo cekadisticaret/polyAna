@@ -1,1 +1,37 @@
-[]
+[
+  {
+    "symbol": "HYPEUSDT",
+    "side": "LONG",
+    "signal": "UP",
+    "algo": "JARVIS_V1",
+    "score": 50.0,
+    "interval": "1h",
+    "qty": 10.634338,
+    "leverage": 6,
+    "margin_usd": 100.0,
+    "entry_price": 56.421,
+    "notional": 600.0,
+    "entry_fee": 0.3,
+    "entry_time_tr": "2026-08-15T01:10:29.945194+03:00",
+    "slot": "2026-08-15 01:00",
+    "virtual": true,
+    "atr": 0.43369277,
+    "atr_usd": 4.612036,
+    "atr_period": 14,
+    "peak_upnl": 0.0,
+    "stop_upnl": null,
+    "stop_level": 0,
+    "lock_armed": false,
+    "lock_history": [],
+    "loss_stop_atr": 6.0,
+    "exit_price": 56.104,
+    "exit_time_tr": "2026-08-15T01:30:55.638883+03:00",
+    "pnl_gross": -3.3711,
+    "exit_fee": 0.298314,
+    "commission": 0.598314,
+    "pnl": -3.9694,
+    "win": false,
+    "close_reason": "signal_reversal",
+    "book": "JARVIS_V1 · JARVIS V1 · lider analiz motor seçimi · ARB→A1#33 · OP→B1#03 · max 10"
+  }
+]

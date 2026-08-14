@@ -519,7 +519,7 @@ def _bollinger(closes: list[float], period: int = 20, mult: float = 2.0) -> tupl
 # ── Tam sembol analizi (poly_predictor_analysis motoru) ───────
 async def analyze(symbol: str) -> dict | None:
     try:
-        pred_obj = await predict(symbol, kill_zone=False)
+        pred_obj = await predict(symbol)
     except Exception as e:
         print(f"[A1 LIVE] {symbol} predict hatası: {e}", file=sys.stderr)
         return None

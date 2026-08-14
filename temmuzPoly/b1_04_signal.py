@@ -213,7 +213,7 @@ async def _signal_from_book(key: str, symbol: str) -> tuple[str | None, float | 
             return await mum_resolve(symbol)
         if key == "analiz1":
             from poly_predictor_analysis import predict
-            pred = await predict(symbol, kill_zone=False)
+            pred = await predict(symbol)
             if pred is None:
                 return None, None, "A1 predictor"
             price = getattr(pred, "current_price", None) or getattr(pred, "entry_price", None)

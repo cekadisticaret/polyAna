@@ -192,7 +192,7 @@ async def run_backtest(
                 continue
 
             pa._slot_utc_ms = open_ms
-            pred = await predict(sym, preloaded=_neutral_preloaded(kslice), kill_zone=False)
+            pred = await predict(sym, preloaded=_neutral_preloaded(kslice))
             if pred is None:
                 skipped += 1
                 continue

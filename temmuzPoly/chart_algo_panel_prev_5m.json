@@ -1,42 +1,42 @@
 {
-  "window_start": 1786746000,
+  "window_start": 1786747500,
   "v1": {
     "BTC": {
-      "UP": 6,
-      "DOWN": 19,
-      "NEUTRAL": 9,
+      "UP": 10,
+      "DOWN": 9,
+      "NEUTRAL": 15,
       "total": 34
     },
     "ETH": {
-      "UP": 7,
-      "DOWN": 16,
+      "UP": 15,
+      "DOWN": 8,
       "NEUTRAL": 11,
       "total": 34
     },
     "SOL": {
-      "UP": 5,
-      "DOWN": 18,
-      "NEUTRAL": 11,
+      "UP": 6,
+      "DOWN": 14,
+      "NEUTRAL": 14,
       "total": 34
     }
   },
   "v2": {
     "BTC": {
-      "UP": 12,
-      "DOWN": 3,
-      "NEUTRAL": 2,
+      "UP": 5,
+      "DOWN": 7,
+      "NEUTRAL": 5,
       "total": 17
     },
     "ETH": {
-      "UP": 10,
-      "DOWN": 4,
+      "UP": 4,
+      "DOWN": 10,
       "NEUTRAL": 3,
       "total": 17
     },
     "SOL": {
-      "UP": 11,
-      "DOWN": 2,
-      "NEUTRAL": 4,
+      "UP": 10,
+      "DOWN": 5,
+      "NEUTRAL": 2,
       "total": 17
     }
   }
