@@ -46,7 +46,7 @@
       "atr": 0.09076892,
       "atr_usd": 16.83504,
       "atr_period": 14,
-      "peak_upnl": 10.3483,
+      "peak_upnl": 11.0905,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -71,11 +71,18 @@
       "atr": 0.75444626,
       "atr_usd": 5.987669,
       "atr_period": 14,
-      "peak_upnl": 4.7995,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
+      "peak_upnl": 6.1494,
+      "stop_upnl": 2.993835,
+      "stop_level": 1,
+      "lock_armed": true,
+      "lock_history": [
+        {
+          "level": 1,
+          "ts": "2026-08-14T22:02:16.191262+03:00",
+          "stop_upnl": 2.993835,
+          "price": 74.77
+        }
+      ]
     },
     {
       "symbol": "ZECUSDT",
@@ -105,7 +112,7 @@
   ],
   "total_pnl": -166.8151,
   "total_commission": 163.985196,
-  "updated_at_tr": "2026-08-14T21:58:04.325880+03:00",
+  "updated_at_tr": "2026-08-14T22:04:04.857670+03:00",
   "last_open_slot": "2026-08-14 20:00",
   "atr_skip_syms": []
 }

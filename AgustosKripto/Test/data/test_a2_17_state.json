@@ -1,5 +1,5 @@
 {
-  "balance": 863.64,
+  "balance": 866.91,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -53,8 +53,8 @@
       "atr": 0.07819269,
       "atr_usd": 13.551592,
       "atr_period": 14,
-      "peak_upnl": 48.9915,
-      "stop_upnl": 35.439908,
+      "peak_upnl": 49.6851,
+      "stop_upnl": 36.133508,
       "stop_level": 1,
       "lock_armed": true,
       "lock_history": [
@@ -90,36 +90,11 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
-    },
-    {
-      "symbol": "ONDOUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A2#17",
-      "score": 45.4,
-      "interval": "1h",
-      "qty": 1841.055539,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 0.3259,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:24.505057+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.00278334,
-      "atr_usd": 5.12429,
-      "atr_period": 14,
-      "peak_upnl": 3.2681,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
     }
   ],
-  "total_pnl": -136.392,
-  "total_commission": 229.503473,
-  "updated_at_tr": "2026-08-14T21:58:04.944072+03:00",
+  "total_pnl": -133.1239,
+  "total_commission": 230.10154,
+  "updated_at_tr": "2026-08-14T22:04:05.378302+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

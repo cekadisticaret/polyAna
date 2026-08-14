@@ -1,5 +1,5 @@
 {
-  "balance": 754.69,
+  "balance": 753.71,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -76,36 +76,11 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
-    },
-    {
-      "symbol": "NEARUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A1#06",
-      "score": 33.81,
-      "interval": "1h",
-      "qty": 376.411543,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 1.594,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:24.595407+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.01261408,
-      "atr_usd": 4.748086,
-      "atr_period": 14,
-      "peak_upnl": 0.0,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
     }
   ],
-  "total_pnl": -245.2819,
-  "total_commission": 331.743783,
-  "updated_at_tr": "2026-08-14T21:58:05.046016+03:00",
+  "total_pnl": -246.2585,
+  "total_commission": 332.343971,
+  "updated_at_tr": "2026-08-14T22:04:05.499141+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

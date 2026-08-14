@@ -1,5 +1,5 @@
 {
-  "balance": 826.83,
+  "balance": 826.05,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -76,36 +76,11 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
-    },
-    {
-      "symbol": "WLDUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A1#11",
-      "score": 66.01,
-      "interval": "1h",
-      "qty": 1749.781277,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 0.3429,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:24.676766+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.00450538,
-      "atr_usd": 7.883437,
-      "atr_period": 14,
-      "peak_upnl": 0.0,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
     }
   ],
-  "total_pnl": -173.1349,
-  "total_commission": 171.191659,
-  "updated_at_tr": "2026-08-14T21:58:05.171081+03:00",
+  "total_pnl": -173.91,
+  "total_commission": 171.791746,
+  "updated_at_tr": "2026-08-14T22:04:05.637725+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

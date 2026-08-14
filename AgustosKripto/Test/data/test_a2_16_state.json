@@ -1,5 +1,5 @@
 {
-  "balance": 722.82,
+  "balance": 725.09,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -21,8 +21,8 @@
       "atr": 0.02901119,
       "atr_usd": 11.186835,
       "atr_period": 14,
-      "peak_upnl": 21.0046,
-      "stop_upnl": 9.817765,
+      "peak_upnl": 22.9337,
+      "stop_upnl": 11.746865,
       "stop_level": 1,
       "lock_armed": true,
       "lock_history": [
@@ -53,7 +53,7 @@
       "atr": 0.00529113,
       "atr_usd": 10.463675,
       "atr_period": 14,
-      "peak_upnl": 1.7743,
+      "peak_upnl": 2.5657,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -83,36 +83,11 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
-    },
-    {
-      "symbol": "ZECUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A2#16",
-      "score": 41.6,
-      "interval": "1h",
-      "qty": 1.22414,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 490.14,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:24.487392+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 4.24429442,
-      "atr_usd": 5.195611,
-      "atr_period": 14,
-      "peak_upnl": 3.8213,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
     }
   ],
-  "total_pnl": -277.1313,
-  "total_commission": 186.745183,
-  "updated_at_tr": "2026-08-14T21:58:04.924683+03:00",
+  "total_pnl": -274.8654,
+  "total_commission": 187.343751,
+  "updated_at_tr": "2026-08-14T22:04:05.355537+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

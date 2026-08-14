@@ -1,32 +1,7 @@
 {
-  "balance": 873.72,
+  "balance": 872.14,
   "deposit": 1000.0,
   "open_positions": [
-    {
-      "symbol": "BTCUSDT",
-      "side": "LONG",
-      "signal": "UP",
-      "algo": "A15",
-      "score": 19.31,
-      "interval": "1h",
-      "qty": 0.009523,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 63002.8,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:10:07.884408+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 239.48130417,
-      "atr_usd": 2.280673,
-      "atr_period": 14,
-      "peak_upnl": 0.0,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
-    },
     {
       "symbol": "SOLUSDT",
       "side": "LONG",
@@ -53,9 +28,9 @@
       "lock_history": []
     }
   ],
-  "total_pnl": -126.415,
-  "total_commission": 116.282776,
-  "updated_at_tr": "2026-08-14T21:58:04.371708+03:00",
+  "total_pnl": -127.9935,
+  "total_commission": 116.882274,
+  "updated_at_tr": "2026-08-14T22:04:04.894896+03:00",
   "last_open_slot": "2026-08-14 18:00",
   "atr_skip_syms": []
 }

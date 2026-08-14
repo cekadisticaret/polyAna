@@ -1,5 +1,5 @@
 {
-  "balance": 764.28,
+  "balance": 765.82,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -76,36 +76,11 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
-    },
-    {
-      "symbol": "XLMUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A2#06",
-      "score": 53.16,
-      "interval": "1h",
-      "qty": 3757.044458,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 0.1597,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:24.306476+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.00089719,
-      "atr_usd": 3.370786,
-      "atr_period": 14,
-      "peak_upnl": 1.4674,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
     }
   ],
-  "total_pnl": -235.6777,
-  "total_commission": 216.804668,
-  "updated_at_tr": "2026-08-14T21:58:04.655502+03:00",
+  "total_pnl": -234.1351,
+  "total_commission": 217.403597,
+  "updated_at_tr": "2026-08-14T22:04:05.096825+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

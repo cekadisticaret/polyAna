@@ -1,5 +1,5 @@
 {
-  "balance": 846.7,
+  "balance": 845.92,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -21,8 +21,8 @@
       "atr": 0.03079691,
       "atr_usd": 11.875414,
       "atr_period": 14,
-      "peak_upnl": 21.0046,
-      "stop_upnl": 9.129186,
+      "peak_upnl": 22.9337,
+      "stop_upnl": 11.058286,
       "stop_level": 1,
       "lock_armed": true,
       "lock_history": [
@@ -90,36 +90,11 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
-    },
-    {
-      "symbol": "WLDUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "MELEZ",
-      "score": 87.22,
-      "interval": "1h",
-      "qty": 1749.781277,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 0.3429,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:13.141822+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.00450538,
-      "atr_usd": 7.883437,
-      "atr_period": 14,
-      "peak_upnl": 0.0,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
     }
   ],
-  "total_pnl": -153.2653,
-  "total_commission": 69.562974,
-  "updated_at_tr": "2026-08-14T21:58:04.361056+03:00",
+  "total_pnl": -154.0404,
+  "total_commission": 70.163061,
+  "updated_at_tr": "2026-08-14T22:04:04.886726+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

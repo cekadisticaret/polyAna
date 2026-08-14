@@ -1,5 +1,5 @@
 {
-  "balance": 671.73,
+  "balance": 667.94,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -46,7 +46,7 @@
       "atr": 0.02802987,
       "atr_usd": 41.515482,
       "atr_period": 14,
-      "peak_upnl": 8.2911,
+      "peak_upnl": 15.5523,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -76,36 +76,11 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
-    },
-    {
-      "symbol": "ATOMUSDT",
-      "side": "LONG",
-      "signal": "UP",
-      "algo": "A2#09",
-      "score": 62.02,
-      "interval": "1h",
-      "qty": 398.406375,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 1.506,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:30:22.102855+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.01713181,
-      "atr_usd": 6.825422,
-      "atr_period": 14,
-      "peak_upnl": 0.0,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
     }
   ],
-  "total_pnl": -328.2578,
-  "total_commission": 234.435983,
-  "updated_at_tr": "2026-08-14T21:58:04.738850+03:00",
+  "total_pnl": -332.0435,
+  "total_commission": 235.034389,
+  "updated_at_tr": "2026-08-14T22:04:05.170000+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

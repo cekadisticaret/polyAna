@@ -14,9 +14,9 @@
   "analiz15_live_paused": true,
   "analiz6_v2_live_paused": true,
   "analiz6_v3_live_paused": true,
-  "b1_05_live_paused": false,
+  "b1_05_live_paused": true,
   "b1_mum_live_paused": true,
   "a3a8_signal_strict": true,
-  "updated_at_tr": "2026-08-14T21:51:02.793049+03:00",
-  "updated_by": "algo_islemler_fresh_start"
+  "updated_at_tr": "2026-08-14T22:00:02.267413+03:00",
+  "updated_by": "weekend_cron"
 }

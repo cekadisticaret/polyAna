@@ -1,89 +1,7 @@
 {
-  "balance": 737.62,
+  "balance": 740.7,
   "deposit": 1000.0,
   "open_positions": [
-    {
-      "symbol": "AAVEUSDT",
-      "side": "LONG",
-      "signal": "UP",
-      "algo": "A2#12",
-      "score": 35.45,
-      "interval": "1h",
-      "qty": 7.046389,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 85.15,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T18:05:25.220406+03:00",
-      "slot": "2026-08-14 18:00",
-      "virtual": true,
-      "atr": 0.63097901,
-      "atr_usd": 4.446123,
-      "atr_period": 14,
-      "peak_upnl": 11.0207,
-      "stop_upnl": 6.574577,
-      "stop_level": 1,
-      "lock_armed": true,
-      "lock_history": [
-        {
-          "level": 1,
-          "ts": "2026-08-14T18:38:05.261470+03:00",
-          "stop_upnl": 2.223062,
-          "price": 85.93
-        }
-      ]
-    },
-    {
-      "symbol": "ENAUSDT",
-      "side": "LONG",
-      "signal": "UP",
-      "algo": "A2#12",
-      "score": 62.03,
-      "interval": "1h",
-      "qty": 7165.034631,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 0.08374,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:24.432940+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.0007375,
-      "atr_usd": 5.284224,
-      "atr_period": 14,
-      "peak_upnl": 0.9755,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
-    },
-    {
-      "symbol": "OPUSDT",
-      "side": "LONG",
-      "signal": "UP",
-      "algo": "A2#12",
-      "score": 35.53,
-      "interval": "1h",
-      "qty": 7001.166861,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 0.0857,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:24.433165+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.00077928,
-      "atr_usd": 5.455891,
-      "atr_period": 14,
-      "peak_upnl": 1.4994,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
-    },
     {
       "symbol": "INJUSDT",
       "side": "LONG",
@@ -110,11 +28,12 @@
       "lock_history": []
     }
   ],
-  "total_pnl": -262.2892,
-  "total_commission": 315.677159,
-  "updated_at_tr": "2026-08-14T21:58:04.819885+03:00",
+  "total_pnl": -259.2052,
+  "total_commission": 317.479602,
+  "updated_at_tr": "2026-08-14T22:04:05.236842+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": [
+    "AAVEUSDT",
     "ADAUSDT"
   ]
 }

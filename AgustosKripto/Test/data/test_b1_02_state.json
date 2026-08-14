@@ -1,5 +1,5 @@
 {
-  "balance": 806.54,
+  "balance": 801.47,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -21,8 +21,8 @@
       "atr": 0.01852034,
       "atr_usd": 7.141521,
       "atr_period": 14,
-      "peak_upnl": 21.0046,
-      "stop_upnl": 13.863079,
+      "peak_upnl": 22.9337,
+      "stop_upnl": 15.792179,
       "stop_level": 1,
       "lock_armed": true,
       "lock_history": [
@@ -86,22 +86,22 @@
     },
     {
       "symbol": "XRPUSDT",
-      "side": "LONG",
-      "signal": "UP",
+      "side": "SHORT",
+      "signal": "DOWN",
       "algo": "B1#02",
-      "score": 82.91,
+      "score": 67.04,
       "interval": "4h",
-      "qty": 596.302922,
+      "qty": 600.781015,
       "leverage": 6,
       "margin_usd": 100.0,
-      "entry_price": 1.0062,
+      "entry_price": 0.9987,
       "notional": 600.0,
       "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T20:05:24.101161+03:00",
-      "slot": "2026-08-14 20:00",
+      "entry_time_tr": "2026-08-14T22:00:29.923068+03:00",
+      "slot": "2026-08-14 22:00",
       "virtual": true,
-      "atr": 0.00959503,
-      "atr_usd": 5.721542,
+      "atr": 0.00978788,
+      "atr_usd": 5.880374,
       "atr_period": 14,
       "peak_upnl": 0.0,
       "stop_upnl": null,
@@ -110,9 +110,9 @@
       "lock_history": []
     }
   ],
-  "total_pnl": -193.4688,
-  "total_commission": 321.150277,
-  "updated_at_tr": "2026-08-14T21:58:04.409814+03:00",
+  "total_pnl": -198.5389,
+  "total_commission": 321.748041,
+  "updated_at_tr": "2026-08-14T22:04:04.932425+03:00",
   "last_open_slot": "2026-08-14 20:00",
   "atr_skip_syms": []
 }

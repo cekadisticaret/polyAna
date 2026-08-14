@@ -1,5 +1,5 @@
 {
-  "balance": 1117.76,
+  "balance": 1118.51,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -21,8 +21,8 @@
       "atr": 0.07819269,
       "atr_usd": 13.551592,
       "atr_period": 14,
-      "peak_upnl": 48.9915,
-      "stop_upnl": 35.439908,
+      "peak_upnl": 49.6851,
+      "stop_upnl": 36.133508,
       "stop_level": 1,
       "lock_armed": true,
       "lock_history": [
@@ -53,7 +53,7 @@
       "atr": 0.00529113,
       "atr_usd": 10.463675,
       "atr_period": 14,
-      "peak_upnl": 1.7743,
+      "peak_upnl": 2.5657,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -78,41 +78,16 @@
       "atr": 0.00185164,
       "atr_usd": 6.936707,
       "atr_period": 14,
-      "peak_upnl": 3.1856,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
-    },
-    {
-      "symbol": "KAITOUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A1#37",
-      "score": 68.14,
-      "interval": "1h",
-      "qty": 1500.750375,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 0.3998,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:43.006089+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.00851627,
-      "atr_usd": 12.780796,
-      "atr_period": 14,
-      "peak_upnl": 0.6012,
+      "peak_upnl": 3.8977,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
     }
   ],
-  "total_pnl": 117.7462,
-  "total_commission": 157.922016,
-  "updated_at_tr": "2026-08-14T21:58:05.582615+03:00",
+  "total_pnl": 118.4976,
+  "total_commission": 158.521341,
+  "updated_at_tr": "2026-08-14T22:04:06.036995+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }

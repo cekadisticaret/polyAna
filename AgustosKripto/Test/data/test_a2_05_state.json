@@ -1,5 +1,5 @@
 {
-  "balance": 664.16,
+  "balance": 661.67,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -76,36 +76,11 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
-    },
-    {
-      "symbol": "LINKUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A2#05",
-      "score": 52.12,
-      "interval": "1h",
-      "qty": 67.302299,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 8.915,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T21:05:24.293553+03:00",
-      "slot": "2026-08-14 21:00",
-      "virtual": true,
-      "atr": 0.06600819,
-      "atr_usd": 4.442503,
-      "atr_period": 14,
-      "peak_upnl": 1.5548,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
     }
   ],
-  "total_pnl": -335.8493,
-  "total_commission": 209.86883,
-  "updated_at_tr": "2026-08-14T21:58:04.634713+03:00",
+  "total_pnl": -338.3347,
+  "total_commission": 210.469772,
+  "updated_at_tr": "2026-08-14T22:04:05.076800+03:00",
   "last_open_slot": "2026-08-14 21:00",
   "atr_skip_syms": []
 }
