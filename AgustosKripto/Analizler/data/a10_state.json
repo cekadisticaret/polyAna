@@ -1,25 +1,25 @@
 {
-  "balance": 252.52,
+  "balance": 248.3,
   "deposit": 300.0,
   "open_positions": [
     {
-      "symbol": "ETHUSDT",
+      "symbol": "AVAXUSDT",
       "side": "LONG",
       "signal": "UP",
       "algo": "A10",
       "score": 1.0,
       "interval": "1h",
-      "qty": 0.119535,
+      "qty": 35.399622,
       "leverage": 15,
       "margin_usd": 15.0,
-      "entry_price": 1882.29,
+      "entry_price": 6.356,
       "notional": 225.0,
       "entry_fee": 0.1125,
-      "entry_time_tr": "2026-08-13T14:06:02.235583+03:00",
-      "slot": "2026-08-13 14:00",
+      "entry_time_tr": "2026-08-14T15:05:59.007340+03:00",
+      "slot": "2026-08-14 15:00",
       "virtual": true,
-      "atr": 8.26087891,
-      "atr_usd": 0.987466,
+      "atr": 0.03726516,
+      "atr_usd": 1.319173,
       "atr_period": 14,
       "peak_upnl": 0.0,
       "stop_upnl": null,
@@ -28,8 +28,8 @@
       "lock_history": []
     }
   ],
-  "total_pnl": -47.4315,
-  "total_commission": 40.193342,
-  "updated_at_tr": "2026-08-13T14:32:02.815970+03:00",
-  "last_open_slot": "2026-08-13 14:00"
+  "total_pnl": -51.6619,
+  "total_commission": 42.668036,
+  "updated_at_tr": "2026-08-14T15:28:02.265593+03:00",
+  "last_open_slot": "2026-08-14 15:00"
 }

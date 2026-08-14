@@ -27,7 +27,6 @@ _TRADER_STATE = {
     "analiz2_live": os.path.join(_DIR, "poly_trader_analiz2_live_state.json"),
     "analiz6_live": os.path.join(_DIR, "poly_trader_analiz6_live_state.json"),
     "analiz10_live": os.path.join(_DIR, "poly_trader_analiz10_live_state.json"),
-    "15m_309_live": os.path.join(_DIR, "poly_trader_15m_309_live_state.json"),
     "manual": os.path.join(_DIR, "poly_trader_manual_state.json"),
 }
 
@@ -37,7 +36,6 @@ _TRADER_SYMBOLS: dict[str, frozenset[str] | None] = {
     "analiz2_live": frozenset({"SOLUSDT"}),
     "analiz6_live": frozenset({"BTCUSDT", "SOLUSDT", "ETHUSDT"}),
     "analiz10_live": frozenset({"BTCUSDT", "SOLUSDT"}),
-    "15m_309_live": frozenset({"BTCUSDT", "SOLUSDT", "ETHUSDT"}),
     "manual": None,
 }
 
@@ -156,9 +154,10 @@ def _15m_period_open(slug: str, now_ts: float | None = None) -> bool:
 
 def _guess_trader(slug: str, states: dict[str, dict]) -> str | None:
     slug_l = (slug or "").lower()
-    # 15m updown — saatlik ET slot yok; 309 Live'a bağla
+    # 15m updown — saatlik ET slot yok ve 15M defterleri kaldırıldı (2026-08-14);
+    # sahibi belirlenemez, atanmadan bırakılır.
     if "updown-15m" in slug_l or _15M_TS.search(slug_l):
-        return "15m_309_live"
+        return None
     slot = _hour_slot(slug)
     if not slot:
         return None

@@ -42,8 +42,8 @@ sys.path.insert(0, _DIR)
 
 from c101_signal import SYMBOLS, evaluate, fair_probability, stake_for  # noqa: E402
 from pm_trader_helpers import (  # noqa: E402
-    pm_find_market, pm_sanal_settle_trade, pm_sanal_slot_candle,
-    skip_if_weekend_pause,
+    pm_best_ask, pm_find_market, pm_sanal_settle_trade, pm_sanal_slot_candle,
+    pm_taker_fee, skip_if_weekend_pause,
 )
 from telegram_poly_channels import chat_analiz4  # noqa: E402
 
@@ -142,7 +142,13 @@ def _wr(wins: int, total: int) -> str:
 
 # ── PM kotasyonu ──────────────────────────────────────────────
 def pm_prices(symbol: str, now_utc: datetime) -> dict | None:
-    """Saatlik PM piyasasının iki taraf fiyatı — modelin karşılaştırma hedefi."""
+    """Saatlik PM piyasasının iki taraf fiyatı — modelin karşılaştırma hedefi.
+
+    Kenar ancak **gerçekten ödenecek fiyata** karşı ölçülürse anlamlı, o yüzden
+    her iki tarafın CLOB best_ask'i kullanılır. Gamma `outcomePrices` son işlem
+    fiyatı; saat başında bayat kalıp ask'ten 10+ puan sapabiliyor ve modele
+    olmayan bir kenar gösteriyor. Defter okunamazsa mid'e düşülür.
+    """
     et_hour = (now_utc - timedelta(hours=4)).hour
     pm = pm_find_market(symbol, et_hour, now_utc)
     if not pm or pm.get("closed"):
@@ -151,9 +157,13 @@ def pm_prices(symbol: str, now_utc: datetime) -> dict | None:
     if len(op) < 2:
         return None
     try:
-        up_p, down_p = float(op[0]), float(op[1])
+        up_mid, down_mid = float(op[0]), float(op[1])
     except (ValueError, TypeError):
         return None
+    up_ask = pm_best_ask(pm["up_token"])
+    down_ask = pm_best_ask(pm["down_token"])
+    up_p = up_ask if up_ask is not None else up_mid
+    down_p = down_ask if down_ask is not None else down_mid
     if not (0.01 < up_p < 0.99 and 0.01 < down_p < 0.99):
         return None
     return {
@@ -161,6 +171,9 @@ def pm_prices(symbol: str, now_utc: datetime) -> dict | None:
         "title": pm.get("title", ""),
         "up": up_p,
         "down": down_p,
+        "quote_src": "ask" if (up_ask is not None and down_ask is not None) else "mid",
+        "up_mid": round(up_mid, 4),
+        "down_mid": round(down_mid, 4),
         "overround": round(up_p + down_p - 1.0, 4),
     }
 
@@ -249,6 +262,9 @@ def run_open() -> None:
             "pm_spent": round(size * price, 2),
             "pm_size": size,
             "to_win": size,
+            "pm_fee": pm_taker_fee(size, price),
+            "pm_quote_src": mkt.get("quote_src", "mid"),
+            "pm_mid_price": mkt.get("up_mid") if ev["direction"] == "UP" else mkt.get("down_mid"),
             # C101'e özgü teşhis alanları
             "c101_p_model": ev["p_model"],
             "c101_pm_price": price,
@@ -364,7 +380,8 @@ def run_close() -> None:
             "algo_name": pos.get("algo_name", ALGO_NAME),
             "algo_ok": (pos.get("algo_signal") == actual) if pos.get("algo_signal") else None,
         }
-        for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug"):
+        for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug",
+                  "pm_fee", "pm_quote_src", "pm_mid_price"):
             if pos.get(k) is not None:
                 rec[k] = pos[k]
         for k in list(pos):

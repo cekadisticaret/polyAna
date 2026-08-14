@@ -52,8 +52,6 @@ _HEATMAP_SYMS = {
     "analiz5":  ["BTC", "SOL"],
     "analiz8":  ["BTC", "SOL", "ETH"],
     "analiz10": ["BTC", "SOL"],
-    "5m_sol_110": ["SOL"],
-    "15m_309_live": ["BTC", "ETH", "SOL"],
     "a2_16_live": ["BTC", "ETH", "SOL"],
     "a2_02_live": ["BTC", "ETH", "SOL"],
     "a2_08_live": ["BTC", "ETH", "SOL"],
@@ -94,7 +92,6 @@ _LIVE_PM_ANALYSES = frozenset({
     "analiz10_live", # A10 Live → analiz10
     "analiz6_live",  # A6 Live → analiz6
     "analiz8_live",  # A8 Live → analiz8
-    "15m_309_live",  # 15M 309 Live → 15m_309 sanal
     "a2_16_live",    # A2#16 Live → a2_16 sanal
     "a2_02_live",    # A2#02 Live → a2_02 sanal
     "a2_08_live",    # A2#08 Live → a2_08 sanal
@@ -118,7 +115,9 @@ _REMOVED_ANALYSES = frozenset({
     "5m_btc_107", "5m_sol_111", "5m_sol_109", "analiz8_live",
     "5m_sol_112", "5m_sol_113", "5m_sol_114", "cem", "5m_sol_210",
     "alfa",
-    "analiz3", "analiz8", "5m_sol_110", "15m_309", "15m_316", "15m_317",
+    "analiz3", "analiz8",
+    # 15M/5M defterleri tamamen kaldırıldı (2026-08-14) — dosyaları da silindi
+    "5m_sol_110", "15m_309", "15m_316", "15m_317", "15m_309_live",
 })
 
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
@@ -159,11 +158,9 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
-    "5m_sol_110": "15M 110 SOL",
     "analiz2_live": "A2 Live",
     "analiz10_live": "A10 Live",
     "analiz6_live": "A6 Live",
-    "15m_309_live": "15M 309 Live",
     "a2_16_live": "A2#16 Supertrend Live",
     "a2_02_live": "A2#02 RSI Div Live",
     "a2_08_live": "A2#08 Williams Live",
@@ -185,7 +182,6 @@ _OVERVIEW_ACTIVE_ORDER = [
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
-    "15m_309_live": None,
     "analiz1": 300, "analiz2": 300, "analiz6": 300, "analiz6_v2": 300,
     "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300, "b1_mum": 300,
     "b1_04": 300, "melez": 300, "b1_05": 300, "c101": 500,
@@ -243,7 +239,6 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
-    "5m_sol_110": "110",
 }
 _PM_BALANCE_HOURLY_FILE = os.path.join(_DIR_POLY, "pm_balance_hourly.json")
 _OVERVIEW_CHART_BASE = 300
@@ -784,7 +779,6 @@ _LIVE_OVERVIEW_SYSTEMS = [
     ("analiz6_live", "A6 Live", "analiz6_live_paused"),
     ("analiz6_v2_live", "A6V2 Live", "analiz6_v2_live_paused"),
     ("analiz6_v3_live", "A6V3 Live", "analiz6_v3_live_paused"),
-    ("15m_309_live", "15M 309 Live", "15m_309_live_paused"),
     ("a2_16_live", "A2#16 Supertrend Live", "a2_16_live_paused"),
     ("a2_02_live", "A2#02 RSI Div Live", "a2_02_live_paused"),
     ("a2_08_live", "A2#08 Williams Live", "a2_08_live_paused"),
@@ -1154,7 +1148,6 @@ _PM_POSITION_SOURCES = [
     ("analiz6_live", "A6 Live"),
     ("analiz6_v2_live", "A6V2 Live"),
     ("analiz6_v3_live", "A6V3 Live"),
-    ("15m_309_live", "15M 309 Live"),
     ("a2_16_live", "A2#16 Supertrend Live"),
     ("a2_02_live", "A2#02 RSI Div Live"),
     ("a2_08_live", "A2#08 Williams Live"),
@@ -1167,7 +1160,6 @@ _PM_POSITION_SOURCES = [
     ("b1_05_live", "B1#05 Live"),
     ("b1_mum_live", "B1#03 MUM Live"),
     ("manual", "Manuel"),
-    ("5m_sol_110", "15M 110 SOL"),
 ]
 _HOURLY_PM_ANALYSES = frozenset({
     "analiz5", "analiz2_live", "analiz10_live", "analiz6_live",
@@ -1176,7 +1168,7 @@ _HOURLY_PM_ANALYSES = frozenset({
     "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live",
     "b1_05_live", "b1_mum_live", "manual",
 })
-_15M_PM_ANALYSES = frozenset({"5m_sol_110", "15m_309_live"})
+_15M_PM_ANALYSES: frozenset[str] = frozenset()
 
 
 def _manual_timeframe(pos: dict) -> str:
@@ -1802,34 +1794,6 @@ def _filter_systems_min_trades(
 
 def _harita_tabs_filtered() -> list[tuple[str, str]]:
     return _filter_systems_min_trades(_HARITA_TAB_ANALYSES, heatmap=True)
-
-
-_HEATMAP_110_STRONG_MIN = 3
-_HEATMAP_110_SLOT_TOP_N = 5
-
-
-def _heatmap_slot_insights(cells: list, *, min_trades: int = _HEATMAP_110_STRONG_MIN, n: int = _HEATMAP_110_SLOT_TOP_N) -> dict:
-    """≥min_trades hücrelerden en iyi/kötü n slot (110 harita sekmesi)."""
-    strong = [c for c in cells if c.get("t", 0) >= min_trades]
-    if not strong:
-        return {"min_trades": min_trades, "strong_count": 0, "best": [], "worst": []}
-
-    def _sort_key(c):
-        return (c.get("wr", 0), c.get("t", 0))
-
-    best = sorted(strong, key=_sort_key, reverse=True)[:n]
-    worst = sorted(strong, key=_sort_key)[:n]
-    fmt = lambda c: {
-        "dow": c["dow"], "day": c["day"], "hour": c["hour"],
-        "wr": c["wr"], "w": c["w"], "t": c["t"],
-        "label": f'{c["day"]} {c["hour"]:02d}:00',
-    }
-    return {
-        "min_trades": min_trades,
-        "strong_count": len(strong),
-        "best": [fmt(c) for c in best],
-        "worst": [fmt(c) for c in worst],
-    }
 
 
 def _harita_tabs_html(tabs: list[tuple[str, str]] | None = None) -> str:
@@ -2563,9 +2527,6 @@ def api_heatmap():
         "sym_breakdown": sym_breakdown,
         "allowed_syms": allowed_syms,
     }
-    if analiz_key == "5m_sol_110":
-        payload["slot_insights"] = _heatmap_slot_insights(cells)
-        payload["strong_min_trades"] = _HEATMAP_110_STRONG_MIN
     return jsonify(payload)
 
 @app.route("/poly/api/heatmap/detail")
@@ -3218,23 +3179,41 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
     return row
 
 
+# Listede bakiyesi bu eşiğin altında kalan defter gösterilmez. Detay sayfası
+# (/algoritma-islemler/<defter>) doğrudan URL ile hâlâ açılır.
+_ALGO_ISLEMLER_MIN_BALANCE = 300.0
+
+
 def _build_a2_poly_books() -> dict:
-    """Poly sanal A6 + A2 Top-17 defterleri — bakiyeye göre sıralı."""
+    """Poly sanal A6 + A2 Top-17 defterleri — bakiyeye göre sıralı, eşik altı gizli."""
     books = []
+    hidden = []
     for key in _ALGO_ISLEMLER_KEYS:
         row = _build_single_poly_book(key)
-        if row:
-            books.append(row)
+        if not row:
+            continue
+        if float(row.get("balance") or 0) < _ALGO_ISLEMLER_MIN_BALANCE:
+            hidden.append({
+                "id": row.get("id") or key,
+                "label": _OVERVIEW_SHORT_LABELS.get(key, key),
+                "balance": round(float(row.get("balance") or 0), 2),
+            })
+            continue
+        books.append(row)
     books.sort(key=lambda b: (
         float(b.get("balance") or 0),
         float(b.get("total_pnl") or 0),
         float(b.get("wr") or -1),
     ), reverse=True)
+    hidden.sort(key=lambda b: -b["balance"])
     return {
         "ok": True,
         "panel_filter": "poly_algo",
         "books": books,
         "count": len(books),
+        "min_balance": _ALGO_ISLEMLER_MIN_BALANCE,
+        "hidden_count": len(hidden),
+        "hidden": hidden,
         "total_balance": round(sum(float(b.get("balance") or 0) for b in books), 2),
         "total_pnl": round(sum(float(b.get("total_pnl") or 0) for b in books), 2),
         "total_open": sum(int(b.get("open_count") or 0) for b in books),
@@ -11939,8 +11918,6 @@ HARITA_HTML = r"""<!DOCTYPE html>
   .hm-table th { font-size:10px; color:#666; font-weight:600; padding:3px 2px; text-align:center; }
   .hm-table td { width:44px; height:44px; border-radius:7px; text-align:center; vertical-align:middle;
                  font-size:10px; font-weight:700; cursor:default; position:relative; }
-  .hm-table td.hm-strong { box-shadow: 0 0 0 2px #c8f135, 0 0 8px rgba(200,241,53,.35); }
-  .hm-table td.hm-strong:hover { box-shadow: 0 0 0 2px #eaff6a, 0 0 12px rgba(200,241,53,.5); }
   .hm-slot-card { background:#111; border:1px solid #1f1f1f; border-radius:10px; padding:10px 12px;
                   display:flex; justify-content:space-between; align-items:center; gap:10px; }
   .hm-slot-card.clickable { cursor:pointer; }
@@ -11988,7 +11965,6 @@ HARITA_HTML = r"""<!DOCTYPE html>
     <div id="hm-breakdown"></div>
   </div>
 
-  <div id="hm-slots-110" style="display:none;margin-bottom:16px"></div>
 
   <div class="section-wrap" style="overflow-x:auto;padding:20px 16px">
     <div id="heatmap-grid" style="min-width:700px"></div>
@@ -12002,7 +11978,6 @@ HARITA_HTML = r"""<!DOCTYPE html>
     <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#78350f;border-radius:3px;display:inline-block"></span>40–50%</span>
     <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#450a0a;border-radius:3px;display:inline-block"></span>&lt;40%</span>
     <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#1a1a1a;border-radius:3px;display:inline-block;border:1px solid #333"></span>Veri yok</span>
-    <span id="hm-legend-strong" style="display:none;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#14532d;border-radius:3px;display:inline-block;box-shadow:0 0 0 2px #c8f135"></span>≥3 işlem (110)</span>
   </div>
 </div>
 </div>
@@ -12023,58 +11998,10 @@ HARITA_HTML = r"""<!DOCTYPE html>
 <script>
 const _ANALIZ_LABELS = {{ harita_labels|safe }};
 const _HEATMAP_SYMS_MAP = {{ harita_heatmap_syms|safe }};
-const _HM_110_KEY = '5m_sol_110';
-const _HM_STRONG_MIN = 3;
-let _data = null, _sym = 'ALL', _analiz = '{{ harita_default_analiz }}', _slotInsights = null;
+let _data = null, _sym = 'ALL', _analiz = '{{ harita_default_analiz }}';
 
 function hmColor(wr,t,o){ if(o&&!t)return'#1e3a8a'; if(!t&&!o)return'#1a1a1a'; if(wr>=70)return'#166534'; if(wr>=55)return'#14532d'; if(wr>=50)return'#365314'; if(wr>=40)return'#78350f'; return'#450a0a'; }
 function hmTxt(wr,t,o){ if(o&&!t)return'#93c5fd'; if(!t&&!o)return'#333'; if(wr>=55)return'#4ade80'; if(wr>=50)return'#c8f135'; if(wr>=40)return'#fbbf24'; return'#f87171'; }
-function isHm110Strong(t){ return _analiz === _HM_110_KEY && t >= _HM_STRONG_MIN; }
-
-function renderSlotInsights(insights) {
-  const el = document.getElementById('hm-slots-110');
-  const legend = document.getElementById('hm-legend-strong');
-  const is110 = _analiz === _HM_110_KEY;
-  if (legend) legend.style.display = is110 ? 'inline-flex' : 'none';
-  if (!el) return;
-  if (!is110 || !insights || !insights.strong_count) {
-    el.style.display = 'none';
-    el.innerHTML = '';
-    return;
-  }
-  _slotInsights = insights;
-  const medals = ['🥇','🥈','🥉','4.','5.'];
-  const row = (sl, i, worst) => {
-    const wrColor = worst
-      ? (sl.wr < 40 ? '#f87171' : sl.wr < 50 ? '#fbbf24' : '#ca8a04')
-      : (sl.wr >= 70 ? '#4ade80' : sl.wr >= 55 ? '#a3e635' : '#c8f135');
-    return `<div class="hm-slot-card clickable" onclick="openPopup(${sl.dow},${sl.hour})">
-      <div>
-        <div style="font-size:12px;font-weight:800">${medals[i] || (i+1)+'.'} ${sl.label}</div>
-        <div style="font-size:10px;color:#666;margin-top:2px">${sl.w}K / ${sl.t} işlem</div>
-      </div>
-      <div style="font-size:15px;font-weight:800;color:${wrColor}">${sl.wr}%</div>
-    </div>`;
-  };
-  el.style.display = 'block';
-  el.innerHTML = `<div class="section-wrap" style="margin:0;padding:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:13px;font-weight:700;color:#aaa">110 — güvenilir slotlar (≥${insights.min_trades} işlem · ${insights.strong_count} hücre)</div>
-      <div style="font-size:11px;color:#555">Sarı çerçeve = ≥${insights.min_trades} işlem</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div>
-        <div style="font-size:11px;color:#4ade80;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">En iyi 5 slot</div>
-        <div style="display:flex;flex-direction:column;gap:6px">${(insights.best||[]).map((s,i)=>row(s,i,false)).join('') || '<div style="color:#555;font-size:12px">Veri yok</div>'}</div>
-      </div>
-      <div>
-        <div style="font-size:11px;color:#f87171;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">En kötü 5 slot</div>
-        <div style="display:flex;flex-direction:column;gap:6px">${(insights.worst||[]).map((s,i)=>row(s,i,true)).join('') || '<div style="color:#555;font-size:12px">Veri yok</div>'}</div>
-      </div>
-    </div>
-  </div>`;
-}
-
 async function load() {
   try {
     const r = await fetch(`/poly/api/heatmap?sym=${_sym}&analiz=${_analiz}`);
@@ -12082,20 +12009,17 @@ async function load() {
     if (!d || !Array.isArray(d.cells)) {
       _data = [];
       renderSummary({total:0,wins:0,losses:0,wr:0,pnl:0,spent:0}, []);
-      renderSlotInsights(null);
       renderGrid([]);
       return;
     }
     _data = d.cells;
     renderSummary(d.summary || {total:0,wins:0,losses:0,wr:0,pnl:0,spent:0}, d.sym_breakdown || []);
-    renderSlotInsights(d.slot_insights || null);
     renderGrid(_data);
     const lbl = _ANALIZ_LABELS[_analiz] || _analiz;
     const openN = d.summary?.open || 0;
     document.getElementById('hm-subtitle').textContent = `${lbl} — gün × saat (${d.summary?.total || 0} kapalı${openN ? ', '+openN+' açık' : ''}, ${d.cells.length} hücre)`;
   } catch (e) {
     console.error('harita load', e);
-    renderSlotInsights(null);
     renderGrid([]);
   }
 }
@@ -12103,7 +12027,7 @@ async function load() {
 function setAnaliz(btn, key) {
   document.querySelectorAll('.hm-analiz-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  _analiz = key; _data = null; _slotInsights = null;
+  _analiz = key; _data = null;
   updateHmSymFilters();
   load();
 }
@@ -12191,12 +12115,10 @@ function renderGrid(cells) {
     h+=`<tr><td class="hm-day">${day}</td>`;
     hours.forEach(hr=>{
       const c=lk[`${dow}_${hr}`]; const wr=c?c.wr:0; const t=c?c.t:0; const o=c?(c.open||0):0;
-      const strong = isHm110Strong(t);
-      const tip=t?`${day} ${hr.toString().padStart(2,'0')}:00 — ${wr}% (${c.w}/${t})${strong?' · ≥3 işlem':''}`:o?`${day} ${hr.toString().padStart(2,'0')}:00 — ${o} açık poz`: 'Veri yok';
+      const tip=t?`${day} ${hr.toString().padStart(2,'0')}:00 — ${wr}% (${c.w}/${t})`:o?`${day} ${hr.toString().padStart(2,'0')}:00 — ${o} açık poz`: 'Veri yok';
       const txt=t?`${wr}%<br><span style="font-size:8px;opacity:.7">${t}${o?('+'+o):''}</span>`:(o?`⏳<br><span style="font-size:8px;opacity:.7">${o}</span>`:'');
       const clickable = (t || o) ? `onclick="openPopup(${dow},${hr})" style="cursor:pointer;` : 'style="';
-      const strongCls = strong ? ' class="hm-strong"' : '';
-      h+=`<td${strongCls} ${clickable}background:${hmColor(wr,t,o)};color:${hmTxt(wr,t,o)};border:2px solid #0d0d0d" data-tip="${tip}">${txt}</td>`;
+      h+=`<td ${clickable}background:${hmColor(wr,t,o)};color:${hmTxt(wr,t,o)};border:2px solid #0d0d0d" data-tip="${tip}">${txt}</td>`;
     });
     h+='</tr>';
   });
@@ -14018,7 +13940,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz6:'6. Analiz',analiz15:'15. Analiz',analiz10:'10. Analiz','5m_sol_110':'15M 110 SOL'})[analiz] || analiz;
+  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz6:'6. Analiz',analiz15:'15. Analiz',analiz10:'10. Analiz'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {
@@ -14338,6 +14260,12 @@ body{
 .book-card .br b{font-size:16px}
 .book-card .pos{color:var(--green)}.book-card .neg{color:var(--red)}
 .book-opens{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.45}
+.book-hidden-note{
+  margin-top:14px;padding:10px 14px;border:1px dashed var(--line);border-radius:12px;
+  font-size:11px;color:var(--muted);line-height:1.7;
+}
+.book-hidden-note a{color:var(--muted);text-decoration:none;border-bottom:1px dotted rgba(255,255,255,.25)}
+.book-hidden-note a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 .algo-live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#39ff8e;margin-right:6px;box-shadow:0 0 6px rgba(57,255,142,.85);vertical-align:middle;animation:algoLivePulse 1.6s ease-in-out infinite}
 @keyframes algoLivePulse{0%,100%{opacity:1}50%{opacity:.45}}
 .positions{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
@@ -14606,7 +14534,16 @@ function histRow(t){
     <div class="hist-pnl ${win ? 'win' : 'loss'}">${win ? '✓' : '✗'} ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</div>
   </div>`;
 }
-function renderBooks(books){
+function hiddenNote(meta){
+  const n = Number(meta && meta.hidden_count || 0);
+  if(!n) return '';
+  const min = Number(meta.min_balance || 300).toFixed(0);
+  const names = (meta.hidden||[]).map(h =>
+    `<a href="/algoritma-islemler/${encodeURIComponent(h.id)}">${h.label}</a> $${Number(h.balance||0).toFixed(0)}`
+  ).join(' · ');
+  return `<div class="book-hidden-note">${n} defter gizli — bakiye $${min} altı${names ? ': ' + names : ''}</div>`;
+}
+function renderBooks(books, meta){
   const el = document.getElementById('algo-books');
   const sorted = (books||[]).slice().sort((a,b)=>{
     const ba = Number(a.balance||0), bb = Number(b.balance||0);
@@ -14616,7 +14553,7 @@ function renderBooks(books){
     return Number(b.wr||-1) - Number(a.wr||-1);
   });
   if(!sorted.length){
-    el.innerHTML = '<div class="empty">defter yok</div>';
+    el.innerHTML = '<div class="empty">eşiği geçen defter yok</div>' + hiddenNote(meta);
     return;
   }
   el.innerHTML = '<div class="book-grid">' + sorted.map(b => {
@@ -14639,7 +14576,7 @@ function renderBooks(books){
       <div class="br"><span>Anlık net</span><b class="${upnl>=0?'pos':'neg'}">${upnl>=0?'+':''}${upnl.toFixed(2)}</b></div>
       <div class="book-opens">${b.open_count||0} açık · ${opens}</div>
     </a>`;
-  }).join('') + '</div>';
+  }).join('') + '</div>' + hiddenNote(meta);
 }
 function findBook(books, id){
   const key = String(id||'').toLowerCase();
@@ -14725,8 +14662,9 @@ async function load(){
       'Σ $' + Number(d.total_balance||0).toFixed(0)
       + ' · Net P&L ' + (pnl>=0?'+':'') + Number(pnl).toFixed(1)
       + ' · ' + histSum + ' işlem'
-      + ' · açık ' + (d.total_open||0);
-    renderBooks(books);
+      + ' · açık ' + (d.total_open||0)
+      + (d.hidden_count ? ' · ' + d.hidden_count + ' gizli' : '');
+    renderBooks(books, d);
   } catch(e){
     console.error(e);
     const el = DETAIL_ID ? document.getElementById('detail-positions') : document.getElementById('algo-books');

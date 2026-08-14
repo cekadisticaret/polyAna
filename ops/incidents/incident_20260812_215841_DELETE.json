@@ -1,0 +1,111 @@
+{
+  "ts_tr": "2026-08-12 21:58:41 +03",
+  "kind": "DELETE",
+  "path": "/root/aiProject/temmuzPoly/poly_trader_analiz4.py",
+  "paths": [
+    "/root/aiProject/temmuzPoly/poly_trader_analiz4.py"
+  ],
+  "watcher_pid": 769,
+  "processes": [
+    {
+      "pid": 775,
+      "ppid": "1",
+      "uid": "0",
+      "exe": "/opt/digitalocean/bin/droplet-agent",
+      "cwd": "/",
+      "cmd": "/opt/digitalocean/bin/droplet-agent"
+    },
+    {
+      "pid": 847,
+      "ppid": "1",
+      "uid": "0",
+      "exe": "/usr/bin/python3.12",
+      "cwd": "/",
+      "cmd": "/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal"
+    },
+    {
+      "pid": 1057960,
+      "ppid": "1057843",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/multiplex-server/e0e6952a313d583840d50b387ab40c7bba7e66b79d95be1f22b3e7fc0706ae74.js a647e33e-e2b4-4f4b-86d9-2567c81c6286 0"
+    },
+    {
+      "pid": 1057986,
+      "ppid": "1057843",
+      "uid": "0",
+      "exe": "/usr/bin/dash",
+      "cwd": "/root",
+      "cmd": "sh /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/bin/cursor-server --start-server --host 127.0.0.1 --port 0 --connection-token-file /run/user/0/cursor-remote-code.token.6ca0869f6193ac0d40fa6ae74ed01260 --teleme"
+    },
+    {
+      "pid": 1057995,
+      "ppid": "1057986",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/server-main.js --start-server --host 127.0.0.1 --port 0 --connection-token-file"
+    },
+    {
+      "pid": 1058050,
+      "ppid": "1057995",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out"
+    },
+    {
+      "pid": 1058080,
+      "ppid": "1057995",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher"
+    },
+    {
+      "pid": 1058185,
+      "ppid": "1058050",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root/aiProject",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProc"
+    },
+    {
+      "pid": 1061634,
+      "ppid": "1057995",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=ptyHost --logsPath /root/.cursor-server/data/logs/2026081"
+    },
+    {
+      "pid": 1066498,
+      "ppid": "1058050",
+      "uid": "0",
+      "exe": "/usr/bin/bash",
+      "cwd": "/root/aiProject/temmuzPoly",
+      "cmd": "/bin/bash -O extglob -c snap=$(command cat <&3) && builtin shopt -s extglob && builtin eval -- \"$snap\" && { builtin set +u 2>/dev/null || true; builtin eval \"${__CURSOR_SANDBOX_ENV_RESTORE:-}\" 2>/dev/null; builtin export PWD=\"$(builtin pwd)"
+    },
+    {
+      "pid": 1067154,
+      "ppid": "1",
+      "uid": "0",
+      "exe": "/usr/bin/python3.12",
+      "cwd": "/root/aiProject",
+      "cmd": "/usr/bin/python3 /root/aiProject/web/poly_dashboard.py"
+    }
+  ],
+  "git_status_short": "M .cursor/rules/cron-and-ops.mdc\n M AgustosKripto/Algoritmalar/data/algo1_02_history.json\n M AgustosKripto/Algoritmalar/data/algo1_02_state.json\n M AgustosKripto/Algoritmalar/data/algo1_03_history.json\n M AgustosKripto/Algoritmalar/data/algo1_03_state.json\n M AgustosKripto/Algoritmalar/data/algo1_04_history.json\n M AgustosKripto/Algoritmalar/data/algo1_04_state.json\n M AgustosKripto/Algoritmalar/data/algo1_05_history.json\n M AgustosKripto/Algoritmalar/data/algo1_05_state.json\n M AgustosKripto/Algoritmalar/data/algo1_06_history.json\n M AgustosKripto/Algoritmalar/data/algo1_06_state.json\n M AgustosKripto/Algoritmalar/data/algo1_07_history.json\n M AgustosKripto/Algoritmalar/data/algo1_07_state.json\n M AgustosKripto/Algoritmalar/data/algo1_08_history.json\n M AgustosKripto/Algoritmalar/data/algo1_08_state.json\n M AgustosKripto/Algoritmalar/data/algo1_09_history.json\n M AgustosKripto/Algoritmalar/data/algo1_09_state.json\n M AgustosKripto/Algoritmalar/data/algo1_10_history.json\n M AgustosKripto/Algoritmalar/data/algo1_10_state.json\n M AgustosKripto/Algoritmalar/data/algo1_11_history.json\n M AgustosKripto/Algoritmalar/data/algo1_11_state.json\n M AgustosKripto/Algoritmalar/data/algo1_12_history.json\n M AgustosKripto/Algoritmalar/data/algo1_12_state.json\n M AgustosKripto/Algoritmalar/data/algo1_16_history.json\n M AgustosKripto/Algoritmalar/data/algo1_16_state.json\n M AgustosKripto/Algoritmalar/data/algo1_17_history.json\n M AgustosKripto/Algoritmalar/data/algo1_17_state.json\n M AgustosKripto/Algoritmalar/data/algo1_18_history.json\n M AgustosKripto/Algoritmalar/data/algo1_18_state.json\n M AgustosKripto/Algoritmalar/data/algo1_19_history.json\n M AgustosKripto/Algoritmalar/data/algo1_19_state.json\n M AgustosKripto/Algoritmalar/data/algo1_20_history.json\n M AgustosKripto/Algoritmalar/data/algo1_20_state.json\n M AgustosKripto/Algoritmalar/data/algo1_21_history.json\n M AgustosKripto/Algoritmalar/data/algo1_21_state.json\n M AgustosKripto/Algoritmalar/data/algo1_25_history.json\n M AgustosKripto/Algoritmalar/data/algo1_25_state.json\n M AgustosKripto/Algoritmalar/data/algo1_26_history.json\n M AgustosKripto/Algoritmalar/data/algo1_26_state.json\n M AgustosKripto/Algoritmalar/data/algo1_27_history.json\n M AgustosKripto/Algoritmalar/data/algo1_27_state.json\n M AgustosKripto/Algoritmalar/data/algo1_28_history.json\n M AgustosKripto/Algoritmalar/data/algo1_28_state.json\n M AgustosKripto/Algoritmalar/data/algo1_29_history.json\n M AgustosKripto/Algoritmalar/data/algo1_29_state.json\n M AgustosKripto/Algoritmalar/data/algo1_30_history.json\n M AgustosKripto/Algoritmalar/data/algo1_30_state.json\n M AgustosKripto/Algoritmalar/data/algo1_31_history.json\n M AgustosKripto/Algoritmalar/data/algo1_31_state.json\n M AgustosKripto/Algoritmalar/data/algo1_32_history.json\n M AgustosKripto/Algoritmalar/data/algo1_32_state.json\n M AgustosKripto/Algoritmalar/data/algo1_33_history.json\n M AgustosKripto/Algoritmalar/data/algo1_33_state.json\n M AgustosKripto/Algoritmalar/data/algo1_34_history.json\n M AgustosKripto/Algoritmalar/data/algo1_34_state.json\n M AgustosKripto/Algoritmalar/data/algo1_35_history.json\n M AgustosKripto/Algoritmalar/data/algo1_35_state.json\n M AgustosKripto/Algoritmalar/data/algo1_36_history.json\n M AgustosKripto/Algoritmalar/data/algo1_36_state.json\n M AgustosKripto/Algoritmalar/data/algo1_37_history.json\n M AgustosKripto/Algoritmalar/data/algo1_37_state.json\n M AgustosKripto/Algoritmalar/data/algo1_38_history.json\n M AgustosKripto/Algoritmalar/data/algo1_38_state.json\n M AgustosKripto/Algoritmalar/data/algo1_39_history.json\n M AgustosKripto/Algoritmalar/data/algo1_39_state.json\n M AgustosKripto/Algoritmalar/data/algo_01_history.json\n M AgustosKripto/Algoritmalar/data/algo_01_state.json\n M AgustosKripto/Algoritmalar/data/algo_02_history.json\n M AgustosKripto/Algoritmalar/data/algo_02_state.json\n M AgustosKripto/Algoritmalar/data/algo_03_history.json\n M AgustosKripto/Algoritmalar/data/algo_03_state.json\n M AgustosKripto/Algoritmalar/data/algo_04_history.json\n M AgustosKripto/Algoritmalar/data/algo_04_state.json\n M AgustosKripto/Algoritmalar/data/algo_05_history.json\n M AgustosKripto/Algoritmalar/data/algo_05_state.json\n M AgustosKripto/Algoritmalar/data/algo_06_history.json\n M AgustosKripto/Algoritmalar/data/algo_06_state.json\n M AgustosKripto/Algoritmalar/data/algo_07_history.json\n M AgustosKripto/Algoritmalar/data/algo_07_state.json\n M AgustosKripto/Algoritmalar/data/algo_08_history.json\n M AgustosKripto/Algoritmalar/data/algo_08_state.json\n M AgustosKripto/Algoritmalar/data/algo_09_history.json\n M AgustosKripto/Algoritmalar/data/algo_09_state.json\n M AgustosKripto/Algoritmalar/data/algo_10_history.json\n M AgustosKripto/Algoritmalar/data/algo_10_state.json\n M AgustosKripto/Algoritmalar/data/algo_11_history.json\n M AgustosKripto/Algoritmalar/data/algo_11_state.json\n M AgustosKripto/Algoritmalar/data/algo_12_history.json\n M AgustosKripto/Algoritmalar/data/algo_12_state.json\n M AgustosKripto/Algoritmalar/data/algo_13_history.json\n M AgustosKripto/Algoritmalar/data/algo_13_state.json\n M AgustosKripto/Algoritmalar/data/algo_14_history.json\n M AgustosKripto/Algoritmalar/data/algo_14_state.json\n M AgustosKripto/Algoritmalar/data/algo_15_history.json\n M AgustosKripto/Algoritmalar/data/algo_15_state.json\n M AgustosKripto/Algoritmalar/data/algo_16_history.json\n M AgustosKripto/Algoritmalar/data/algo_16_state.json\n M AgustosKripto/Algoritmalar/data/algo_17_history.json\n M AgustosKripto/Algoritmalar/data/algo_17_state.json\n M AgustosKripto/Analizler/data/a10_history.json\n M AgustosKripto/Analizler/data/a10_state.json\n M AgustosKripto/Analizler/data/a1_history.json\n M AgustosKripto/Analizler/data/a1_state.json\n M AgustosKripto/Analizler/data/a2_history.json\n M AgustosKripto/Analizler/data/a2_state.json\n M AgustosKripto/Analizler/data/a3_history.json\n M AgustosKripto/Analizler/data/a3_state.json\n M AgustosKripto/Analizler/data/a4_history.json\n M AgustosKripto/Analizler/data/a4_state.json\n M AgustosKripto/Analizler/data/a6_history.json\n M AgustosKripto/Analizler/data/a6_state.json\n M AgustosKripto/Analizler/data/a8_history.json\n M AgustosKripto/Analizler/data/a8_state.json\n M AgustosKripto/Test/data/test_a1_01_state.json\n M AgustosKripto/Test/data/test_a1_02_history.json\n M AgustosKripto/Test/data/test_a1_02_state.json\n M AgustosKripto/Test/data/test_a1_03_history.json\n M AgustosKripto/Test/data/test_a1_03_state.json\n M AgustosKripto/Test/data/test_a1_04_history.json\n M AgustosKripto/Test/data/test_a1_04_state.json\n M AgustosKripto/Test/data/test_a1_05_history.json\n M AgustosKripto/Test/data/test_a1_05_state.json\n M AgustosKripto/Test/data/test_a1_06_history.json\n M AgustosKripto/Test/data/test_a1_06_state.json\n M AgustosKripto/Test/data/test_a1_07_history.json\n M AgustosKripto/Test/data/test_a1_07_state.json\n M AgustosKripto/Test/data/test_a1_08_history.json\n M AgustosKripto/Test/data/test_a1_08_state.json\n M AgustosKripto/Test/data/test_a1_09_history.json\n M AgustosKripto/Test/data/test_a1_09_state.json\n M AgustosKripto/Test/data/test_a1_10_history.json\n M AgustosKripto/Test/data/test_a1_10_state.json\n M AgustosKripto/Test/data/test_a1_11_history.json\n M AgustosKripto/Test/data/test_a1_11_state.json\n M AgustosKripto/Test/data/test_a1_12_history.json\n M AgustosKripto/Test/data/test_a1_12_state.json\n M AgustosKripto/Test/data/test_a1_15_state.json\n M AgustosKripto/Test/data/test_a1_16_history.json\n M AgustosKripto/Test/data/test_a1_16_state.json\n M AgustosKripto/Test/data/test_a1_17_history.json\n M AgustosKripto/Test/data/test_a1_17_state.json\n M AgustosKripto/Test/data/test_a1_18_history.json\n M AgustosKripto/Test/data/test_a1_18_state.json\n M AgustosKripto/Test/data/test_a1_19_history.json\n M AgustosKripto/Test/data/test_a1_19_state.json\n M AgustosKripto/Test/data/test_a1_20_history.json\n M AgustosKripto/Test/data/test_a1_20_state.json\n M AgustosKripto/Test/data/test_a1_21_history.json\n M AgustosKripto/Test/data/test_a1_21_state.json\n M AgustosKripto/Test/data/test_a1_25_history.json\n M A",
+  "git_status_deleted": "bash: line 1: rg: command not found",
+  "audit": "----\ntype=PROCTITLE msg=audit(08/12/26 18:54:32.481:240991) : proctitle=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 - \ntype=PATH msg=audit(08/12/26 18:54:32.481:240991) : item=1 name=/root/aiProject/temmuzPoly/pm_trader_helpers.py inode=526810 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=NORMAL cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 \ntype=PATH msg=audit(08/12/26 18:54:32.481:240991) : item=0 name=/root/aiProject/temmuzPoly/ inode=525531 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 \ntype=CWD msg=audit(08/12/26 18:54:32.481:240991) : cwd=/root \ntype=SYSCALL msg=audit(08/12/26 18:54:32.481:240991) : arch=x86_64 syscall=openat success=yes exit=47 a0=AT_FDCWD a1=0x79496c013430 a2=O_WRONLY|O_CREAT|O_NOFOLLOW|O_CLOEXEC a3=0x1b6 items=2 ppid=1057995 pid=1058050 auid=root uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=(none) ses=27522 comm=libuv-worker exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node subj=unconfined key=aiproject_del \n----\ntype=PROCTITLE msg=audit(08/12/26 18:54:33.907:240992) : proctitle=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 - \ntype=PATH msg=audit(08/12/26 18:54:33.907:240992) : item=1 name=/root/aiProject/temmuzPoly/pm_trader_helpers.py inode=526810 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=NORMAL cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 \ntype=PATH msg=audit(08/12/26 18:54:33.907:240992) : item=0 name=/root/aiProject/temmuzPoly/ inode=525531 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 \ntype=CWD msg=audit(08/12/26 18:54:33.907:240992) : cwd=/root \ntype=SYSCALL msg=audit(08/12/26 18:54:33.907:240992) : arch=x86_64 syscall=openat success=yes exit=47 a0=AT_FDCWD a1=0x794eb40f37f0 a2=O_WRONLY|O_CREAT|O_NOFOLLOW|O_CLOEXEC a3=0x1b6 items=2 ppid=1057995 pid=1058050 auid=root uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=(none) ses=27522 comm=libuv-worker exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node subj=unconfined key=aiproject_del \n----\ntype=PROCTITLE msg=audit(08/12/26 18:56:38.039:241060) : proctitle=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 - \ntype=PATH msg=audit(08/12/26 18:56:38.039:241060) : item=1 name=/root/aiProject/PROJECT.md inode=526148 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=NORMAL cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 \ntype=PATH msg=audit(08/12/26 18:56:38.039:241060) : item=0 name=/root/aiProject/ inode=537758 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 \ntype=CWD msg=audit(08/12/26 18:56:38.039:241060) : cwd=/root \ntype=SYSCALL msg=audit(08/12/26 18:56:38.039:241060) : arch=x86_64 syscall=openat success=yes exit=47 a0=AT_FDCWD a1=0x794eb668be60 a2=O_WRONLY|O_CREAT|O_NOFOLLOW|O_CLOEXEC a3=0x1b6 items=2 ppid=1057995 pid=1058050 auid=root uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=(none) ses=27522 comm=libuv-worker exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node subj=unconfined key=aiproject_del",
+  "w_who": "system boot  2026-08-08 21:23\n           run-level 5  2026-08-08 21:23\nLOGIN      ttyS0        2026-08-08 21:23               869 id=tyS0\nLOGIN      tty1         2026-08-08 21:23               891 id=tty1",
+  "last_logins": "reboot   system boot  6.8.0-137-generi Sat Aug  8 21:23   still running\nreboot   system boot  6.8.0-137-generi Sat Aug  8 18:12 - 21:20  (03:07)\nroot     pts/0        162.243.188.66   Wed Apr  1 02:48 - 03:06  (00:18)\nroot     pts/0        31.143.164.218   Tue Mar 31 13:52 - 13:55  (00:03)\nroot     pts/0        198.211.111.194  Tue Mar 24 10:09 - 10:10  (00:01)\nroot     pts/0        162.243.188.66   Tue Mar 24 09:40 - 09:44  (00:03)\nroot     pts/0        95.70.209.54     Thu Mar 19 20:57 - 20:57  (00:00)\nreboot   system boot  6.8.0-106-generi Thu Mar 19 20:56 - 18:12 (141+21:15)\n\nwtmp begins Sun Mar 15 14:43:08 2026",
+  "dashboard_log_tail": "95.70.223.152 - - [12/Aug/2026 18:57:49] \"GET /poly/api/pm-profit HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:57:59] \"GET /poly/api/symbol_stats HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:57:59] \"GET /poly/api/stats HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:00] \"GET /poly/api/data HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:00] \"GET /poly/api/pm-profit HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:09] \"GET /poly/api/symbol_stats HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:09] \"GET /poly/api/data HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:09] \"GET /poly/api/stats HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:10] \"GET /poly/api/pm-profit HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:19] \"GET /poly/api/balance-history?interval=1h HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:19] \"GET /poly/api/pm-profit HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:19] \"GET /poly/api/active-algos HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:19] \"GET /poly/api/symbol_stats HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:20] \"GET /poly/api/stats HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:20] \"GET /poly/api/data HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:20] \"GET /poly/api/pm-profit HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:23] \"GET /poly/api/positions-live HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:23] \"GET /poly/api/positions-live HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:24] \"GET /poly/api/positions-live HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:25] \"GET /poly/api/positions-live HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:26] \"GET /poly/api/positions-live HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:27] \"GET /poly/api/positions-live HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:28] \"GET /poly/api/symbol_stats HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:28] \"GET /poly/api/positions-live HTTP/1.1\" 200 -\n[py_clob_client_v2] request error status=400 url=https://clob.polymarket.com/auth/api-key body={\"error\":\"Could not create api key\"}\n\n95.70.223.152 - - [12/Aug/2026 18:58:29] \"GET /poly/api/stats HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:29] \"GET /poly/api/data HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:29] \"GET /poly/api/pm-profit HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:29] \"GET /poly/api/positions-live HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:30] \"GET /poly/api/positions-live HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:31] \"GET /poly/grafik?sym=SOLUSDT&tf=1h HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:31] \"GET /poly/api/pm-profit HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:32] \"GET /poly/api/trade-desk/spot?timeframe=1h&symbol=SOLUSDT HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:32] \"GET /poly/api/trade-desk HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:32] \"GET /poly/api/trade-desk/chart?timeframe=1h&symbol=SOLUSDT&algo=off&gate=15&price_tf=1m&limit=120&_=1786561111352 HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:35] \"GET /poly/api/trade-desk/spot?timeframe=1h&symbol=SOLUSDT HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:37] \"GET /poly/api/trade-desk/chart?timeframe=1h&symbol=SOLUSDT&algo=off&gate=15&price_tf=1m&limit=120&_=1786561116354 HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:38] \"GET /poly/api/trade-desk/spot?timeframe=1h&symbol=SOLUSDT HTTP/1.1\" 200 -\n95.70.223.152 - - [12/Aug/2026 18:58:41] \"GET /poly/api/trade-desk/spot?timeframe=1h&symbol=SOLUSDT HTTP/1.1\" 200 -",
+  "extra": {
+    "kinds": [
+      "DELETE"
+    ],
+    "critical": false
+  }
+}

@@ -31,7 +31,7 @@ from poly_predictor_analysis import _fetch_klines
 from b1_04_signal import SYMBOLS, resolve_live_signal, engine_label
 from pm_trader_helpers import (
     apply_pm_quote, slot_amount_log, sanal_pnl,
-    symbol_wr_amount_for_book,
+    symbol_wr_amount_for_book, pm_sanal_settle_trade, pm_sanal_slot_candle,
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
     SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause, resolve_open_slot_gates,
 )
@@ -170,18 +170,19 @@ async def run_close() -> None:
     failed_pos = []
 
     for pos in list(state["open_positions"]):
-        klines = await _fetch_klines(pos["symbol"], "1h", 2)
-        if not klines:
+        candle = pm_sanal_slot_candle(pos["symbol"], pos["entry_time_tr"])
+        if not candle:
             failed_pos.append(pos)
             continue
-        current_price = klines[-1]["close"]
-
-        entry = pos["entry_price"]
+        hour_open, hour_close = candle
+        settled = pm_sanal_settle_trade(pos, hour_open, hour_close)
+        current_price = settled["exit_price"]
+        entry = settled["entry_price"]
         pred = pos["predicted_dir"]
         amount = pos.get("amount", TRADE_AMOUNT)
-        actual = "UP" if current_price >= entry else "DOWN"
-        win = (pred == actual)
-        pnl = sanal_pnl(pos, win)
+        actual = settled["actual_dir"]
+        win = settled["win"]
+        pnl = settled["pnl"]
         toplam_pnl += pnl
 
         state["balance"] = round(state["balance"] + pnl, 2)
@@ -207,6 +208,7 @@ async def run_close() -> None:
             "consensus_net":    pos.get("consensus_net"),
         }
         for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug",
+                  "pm_fee", "pm_quote_src", "pm_mid_price",
                   "hot_hour_boost", "cold_hour_cut"):
             if pos.get(k) is not None:
                 rec[k] = pos[k]

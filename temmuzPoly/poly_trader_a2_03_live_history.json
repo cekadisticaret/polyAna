@@ -22,8 +22,9 @@
     "pm_slug": "ethereum-up-or-down-august-4-2026-7pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-05T02:11:33.988920+03:00",
-    "pnl": -2.36,
-    "pm_live": true
+    "pnl": -2.55,
+    "pm_live": true,
+    "pm_fee": 0.18542
   },
   {
     "symbol": "BTCUSDT",
@@ -48,8 +49,9 @@
     "pm_slug": "bitcoin-up-or-down-august-4-2026-7pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-05T02:28:01.343881+03:00",
-    "pnl": 0.84,
-    "pm_live": true
+    "pnl": 0.63,
+    "pm_live": true,
+    "pm_fee": 0.20992
   },
   {
     "symbol": "SOLUSDT",
@@ -94,8 +96,9 @@
     "pm_slug": "bitcoin-up-or-down-august-4-2026-8pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-05T03:29:11.420393+03:00",
-    "pnl": -2.72,
-    "pm_live": true
+    "pnl": -3.0,
+    "pm_live": true,
+    "pm_fee": 0.27739
   },
   {
     "symbol": "ETHUSDT",
@@ -120,8 +123,9 @@
     "pm_slug": "ethereum-up-or-down-august-4-2026-8pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-05T03:29:13.363666+03:00",
-    "pnl": -2.88,
-    "pm_live": true
+    "pnl": -3.1,
+    "pm_live": true,
+    "pm_fee": 0.2184
   },
   {
     "symbol": "SOLUSDT",
@@ -146,8 +150,9 @@
     "pm_slug": "solana-up-or-down-august-4-2026-8pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-05T03:29:17.673190+03:00",
-    "pnl": -4.19,
-    "pm_live": true
+    "pnl": -4.42,
+    "pm_live": true,
+    "pm_fee": 0.23474
   },
   {
     "symbol": "BTCUSDT",
@@ -532,8 +537,9 @@
     "pm_slug": "bitcoin-up-or-down-august-5-2026-4am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-05T12:25:09.510788+03:00",
-    "pnl": -6.0,
-    "pm_live": true
+    "pnl": -6.21,
+    "pm_live": true,
+    "pm_fee": 0.21
   },
   {
     "symbol": "ETHUSDT",
@@ -558,7 +564,8 @@
     "pm_slug": "ethereum-up-or-down-august-5-2026-4am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-05T12:25:12.518914+03:00",
-    "pnl": -6.09,
-    "pm_live": true
+    "pnl": -6.34,
+    "pm_live": true,
+    "pm_fee": 0.24725
   }
 ]

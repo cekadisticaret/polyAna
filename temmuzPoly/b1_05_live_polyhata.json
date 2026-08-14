@@ -124,5 +124,257 @@
     "symbol": "73136542471099517026",
     "hata_turu": "order_basarisiz",
     "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4370520'}]"
+  },
+  {
+    "zaman": "2026-08-13T15:06:53.602965+03:00",
+    "symbol": "70529055648658555624",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5170530'}]"
+  },
+  {
+    "zaman": "2026-08-13T15:07:14.092751+03:00",
+    "symbol": "38173673158180648852",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5476770'}]"
+  },
+  {
+    "zaman": "2026-08-13T17:06:52.311759+03:00",
+    "symbol": "54125630892000404800",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5462390'}]"
+  },
+  {
+    "zaman": "2026-08-13T18:06:53.533105+03:00",
+    "symbol": "98527416419017052280",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4140000'}]"
+  },
+  {
+    "zaman": "2026-08-13T18:07:14.245974+03:00",
+    "symbol": "10909022515596628360",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5170530'}]"
+  },
+  {
+    "zaman": "2026-08-13T18:07:34.648970+03:00",
+    "symbol": "51862552790579448143",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5405660'}]"
+  },
+  {
+    "zaman": "2026-08-13T19:06:53.669320+03:00",
+    "symbol": "55263175388452561351",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4386570'}]"
+  },
+  {
+    "zaman": "2026-08-13T19:07:14.077394+03:00",
+    "symbol": "10516722765959759594",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5284410'}]"
+  },
+  {
+    "zaman": "2026-08-13T20:06:52.929249+03:00",
+    "symbol": "66033449543042210477",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5410180'}]"
+  },
+  {
+    "zaman": "2026-08-13T21:06:52.890210+03:00",
+    "symbol": "42525995086636960902",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4346470'}]"
+  },
+  {
+    "zaman": "2026-08-14T00:06:53.387635+03:00",
+    "symbol": "24174396736818088727",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5795300'}]"
+  },
+  {
+    "zaman": "2026-08-14T01:06:53.027696+03:00",
+    "symbol": "70093838222165133754",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5479430'}]"
+  },
+  {
+    "zaman": "2026-08-14T01:07:13.650978+03:00",
+    "symbol": "87984096161395265570",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5527630'}]"
+  },
+  {
+    "zaman": "2026-08-14T02:06:53.186282+03:00",
+    "symbol": "62053224507259300394",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5097670'}]"
+  },
+  {
+    "zaman": "2026-08-14T03:06:53.444311+03:00",
+    "symbol": "10491731710806625385",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4198200'}]"
+  },
+  {
+    "zaman": "2026-08-14T03:07:13.775802+03:00",
+    "symbol": "62449604966066010698",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5295180'}]"
+  },
+  {
+    "zaman": "2026-08-14T05:06:53.182008+03:00",
+    "symbol": "64623431509499455993",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5582420'}]"
+  },
+  {
+    "zaman": "2026-08-14T06:06:53.196873+03:00",
+    "symbol": "32637816141247033567",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4296490'}]"
+  },
+  {
+    "zaman": "2026-08-14T06:07:13.523146+03:00",
+    "symbol": "54463421240492116440",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5392140'}]"
+  },
+  {
+    "zaman": "2026-08-14T07:06:52.419295+03:00",
+    "symbol": "96089959253295124314",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4462780'}]"
+  },
+  {
+    "zaman": "2026-08-14T07:07:12.770171+03:00",
+    "symbol": "42652483463880967037",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5483810'}]"
+  },
+  {
+    "zaman": "2026-08-14T07:07:33.138166+03:00",
+    "symbol": "77277884311363185551",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5070000'}]"
+  },
+  {
+    "zaman": "2026-08-14T08:06:52.635778+03:00",
+    "symbol": "84550124328461716791",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4205920'}]"
+  },
+  {
+    "zaman": "2026-08-14T08:07:13.054539+03:00",
+    "symbol": "59513864728437731237",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5170530'}]"
+  },
+  {
+    "zaman": "2026-08-14T09:06:53.105271+03:00",
+    "symbol": "90215454793915324513",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4244730'}]"
+  },
+  {
+    "zaman": "2026-08-14T09:07:13.499222+03:00",
+    "symbol": "23602808462723978092",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5335620'}]"
+  },
+  {
+    "zaman": "2026-08-14T10:06:53.397968+03:00",
+    "symbol": "37909230364870535391",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4356060'}]"
+  },
+  {
+    "zaman": "2026-08-14T10:07:13.774023+03:00",
+    "symbol": "58195995986612448245",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5148070'}]"
+  },
+  {
+    "zaman": "2026-08-14T10:07:34.152904+03:00",
+    "symbol": "78483659886997075405",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5483810'}]"
+  },
+  {
+    "zaman": "2026-08-14T11:06:52.768431+03:00",
+    "symbol": "88238038335300133849",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4248530'}]"
+  },
+  {
+    "zaman": "2026-08-14T11:07:13.177820+03:00",
+    "symbol": "96058987217392963304",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5639870'}]"
+  },
+  {
+    "zaman": "2026-08-14T11:07:33.565658+03:00",
+    "symbol": "24717204690332713769",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5483810'}]"
+  },
+  {
+    "zaman": "2026-08-14T12:06:53.107964+03:00",
+    "symbol": "26526322007388219706",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5255490'}]"
+  },
+  {
+    "zaman": "2026-08-14T13:06:53.322575+03:00",
+    "symbol": "86045881302134317233",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4386570'}]"
+  },
+  {
+    "zaman": "2026-08-14T13:07:13.790697+03:00",
+    "symbol": "11305508620070756913",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5145840'}]"
+  },
+  {
+    "zaman": "2026-08-14T13:07:34.199957+03:00",
+    "symbol": "62302325900296563709",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5214240'}]"
+  },
+  {
+    "zaman": "2026-08-14T14:06:52.755865+03:00",
+    "symbol": "40740622498121717146",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4219940'}]"
+  },
+  {
+    "zaman": "2026-08-14T14:07:13.148730+03:00",
+    "symbol": "86234752122224357738",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5474370'}]"
+  },
+  {
+    "zaman": "2026-08-14T14:07:33.580401+03:00",
+    "symbol": "99506373396428879213",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5249020'}]"
+  },
+  {
+    "zaman": "2026-08-14T15:06:53.529127+03:00",
+    "symbol": "40346322024703350107",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4168000'}]"
+  },
+  {
+    "zaman": "2026-08-14T15:07:13.943467+03:00",
+    "symbol": "44532595681282286356",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5234040'}]"
+  },
+  {
+    "zaman": "2026-08-14T15:07:34.416873+03:00",
+    "symbol": "40608546482698849605",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5150280'}]"
   }
 ]

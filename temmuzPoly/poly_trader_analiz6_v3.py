@@ -219,7 +219,8 @@ async def run_close() -> None:
             "algo_name":        pos.get("algo_name", ALGO_NAME),
             "algo_ok":          (pos.get("algo_signal") == actual) if pos.get("algo_signal") else None,
         }
-        for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug"):
+        for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug",
+                  "pm_fee", "pm_quote_src", "pm_mid_price"):
             if pos.get(k) is not None:
                 rec[k] = pos[k]
         history.append(rec)

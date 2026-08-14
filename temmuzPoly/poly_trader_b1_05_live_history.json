@@ -43,8 +43,9 @@
     "pm_slug": "ethereum-up-or-down-august-12-2026-5pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-13T00:39:08.813645+03:00",
-    "pnl": 3.0,
-    "pm_live": true
+    "pnl": 2.87,
+    "pm_live": true,
+    "pm_fee": 0.13041
   },
   {
     "symbol": "BTCUSDT",

@@ -1,5 +1,7 @@
 {
   "balance": 0.0,
   "open_positions": [],
-  "total_pnl": -76.82
+  "total_pnl": -89.56,
+  "fee_backfill_at": "2026-08-14T14:52:53.005188+03:00",
+  "fee_backfill_total": 12.74
 }

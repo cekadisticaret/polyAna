@@ -1,0 +1,57 @@
+Zaman: 2026-08-12 21:58:41 +03
+Tür: DELETE
+Path: /root/aiProject/temmuzPoly/poly_trader_analiz4.py
+
+=== Process şüpheliler ===
+pid=775 ppid=1 uid=0 exe=/opt/digitalocean/bin/droplet-agent
+  cmd=/opt/digitalocean/bin/droplet-agent
+  cwd=/
+pid=847 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+  cwd=/
+pid=1057960 ppid=1057843 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/multiplex-server/e0e6952a313d583840d50b387ab40c7bba7e66b79d95be1f22b3e7fc0706ae74.js a647e33e-e2b4-4f4b-86d9-2567c81c6286 0
+  cwd=/root
+pid=1057986 ppid=1057843 uid=0 exe=/usr/bin/dash
+  cmd=sh /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/bin/cursor-server --start-server --host 127.0.0.1 --port 0 --connection-token-file /run/user/0/cursor-remote-code.token.6ca0869f6193ac0d40fa6ae74ed01260 --teleme
+  cwd=/root
+pid=1057995 ppid=1057986 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/server-main.js --start-server --host 127.0.0.1 --port 0 --connection-token-file
+  cwd=/root
+pid=1058050 ppid=1057995 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out
+  cwd=/root
+pid=1058080 ppid=1057995 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=1058185 ppid=1058050 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProc
+  cwd=/root/aiProject
+pid=1061634 ppid=1057995 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=ptyHost --logsPath /root/.cursor-server/data/logs/2026081
+  cwd=/root
+pid=1066498 ppid=1058050 uid=0 exe=/usr/bin/bash
+  cmd=/bin/bash -O extglob -c snap=$(command cat <&3) && builtin shopt -s extglob && builtin eval -- "$snap" && { builtin set +u 2>/dev/null || true; builtin eval "${__CURSOR_SANDBOX_ENV_RESTORE:-}" 2>/dev/null; builtin export PWD="$(builtin pwd)
+  cwd=/root/aiProject/temmuzPoly
+pid=1067154 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /root/aiProject/web/poly_dashboard.py
+  cwd=/root/aiProject
+
+=== git status (D) ===
+bash: line 1: rg: command not found
+
+=== audit ===
+----
+type=PROCTITLE msg=audit(08/12/26 18:54:32.481:240991) : proctitle=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 - 
+type=PATH msg=audit(08/12/26 18:54:32.481:240991) : item=1 name=/root/aiProject/temmuzPoly/pm_trader_helpers.py inode=526810 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=NORMAL cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=PATH msg=audit(08/12/26 18:54:32.481:240991) : item=0 name=/root/aiProject/temmuzPoly/ inode=525531 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=CWD msg=audit(08/12/26 18:54:32.481:240991) : cwd=/root 
+type=SYSCALL msg=audit(08/12/26 18:54:32.481:240991) : arch=x86_64 syscall=openat success=yes exit=47 a0=AT_FDCWD a1=0x79496c013430 a2=O_WRONLY|O_CREAT|O_NOFOLLOW|O_CLOEXEC a3=0x1b6 items=2 ppid=1057995 pid=1058050 auid=root uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=(none) ses=27522 comm=libuv-worker exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node subj=unconfined key=aiproject_del 
+----
+type=PROCTITLE msg=audit(08/12/26 18:54:33.907:240992) : proctitle=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 - 
+type=PATH msg=audit(08/12/26 18:54:33.907:240992) : item=1 name=/root/aiProject/temmuzPoly/pm_trader_helpers.py inode=526810 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=NORMAL cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=PATH msg=audit(08/12/26 18:54:33.907:240992) : item=0 name=/root/aiProject/temmuzPoly/ inode=525531 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=CWD msg=audit(08/12/26 18:54:33.907:240992) : cwd=/root 
+type=SYSCALL msg=audit(08/12/2
+
+Tam JSON: /root/aiProject/ops/incidents/incident_20260812_215841_DELETE.json

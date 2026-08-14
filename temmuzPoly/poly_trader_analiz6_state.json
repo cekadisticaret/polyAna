@@ -1,29 +1,34 @@
 {
-  "balance": 448.77,
+  "balance": 208.01,
   "open_positions": [
     {
-      "symbol": "SOLUSDT",
-      "predicted_dir": "DOWN",
-      "entry_price": 75.7,
-      "entry_time_tr": "2026-08-13T14:05:12.134124+03:00",
-      "entry_hour_tr": 14,
-      "entry_dow": 3,
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 62837.4,
+      "entry_time_tr": "2026-08-14T15:05:09.873181+03:00",
+      "entry_hour_tr": 15,
+      "entry_dow": 4,
       "entry_is_weekend": false,
-      "amount": 12.0,
+      "amount": 20.0,
       "hot_hour_boost": false,
       "cold_hour_cut": false,
-      "algo_signal": "DOWN",
+      "algo_signal": "UP",
       "algo_name": "MACD Hist. Div",
-      "pm_slug": "solana-up-or-down-august-13-2026-7am-et",
-      "pm_title": "Solana Up or Down - August 13, 7AM ET",
-      "pm_token_dir": "DOWN",
+      "pm_slug": "bitcoin-up-or-down-august-14-2026-8am-et",
+      "pm_title": "Bitcoin Up or Down - August 14, 8AM ET",
+      "pm_token_dir": "UP",
       "pm_entry_price": 0.5,
-      "pm_spent": 12.0,
-      "pm_size": 24.0,
-      "to_win": 24.0
+      "pm_quote_src": "ask",
+      "pm_mid_price": 0.425,
+      "pm_fee": 0.7,
+      "pm_spent": 20.0,
+      "pm_size": 40.0,
+      "to_win": 40.0
     }
   ],
-  "total_pnl": 148.77,
+  "total_pnl": -91.99,
   "balance_reset_at_tr": "2026-08-10T00:33:03.974396+03:00",
-  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş korundu"
+  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş korundu",
+  "fee_backfill_at": "2026-08-14T14:52:53.198488+03:00",
+  "fee_backfill_total": 103.56
 }

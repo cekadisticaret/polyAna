@@ -12,7 +12,7 @@
     "entry_is_weekend": true,
     "amount": 16.0,
     "exit_time_tr": "2026-08-08T19:02:39.524172+03:00",
-    "pnl": -16.0,
+    "pnl": -16.6,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -20,7 +20,8 @@
     "pm_size": 34.41,
     "pm_entry_price": 0.465,
     "to_win": 34.41,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-11am-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-11am-et",
+    "pm_fee": 0.59922
   },
   {
     "symbol": "BTCUSDT",
@@ -35,7 +36,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-08T22:02:20.717212+03:00",
-    "pnl": -12.0,
+    "pnl": -12.38,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -43,7 +44,8 @@
     "pm_size": 22.02,
     "pm_entry_price": 0.545,
     "to_win": 22.02,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-1pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-1pm-et",
+    "pm_fee": 0.38223
   },
   {
     "symbol": "ETHUSDT",
@@ -58,7 +60,7 @@
     "entry_is_weekend": true,
     "amount": 16.0,
     "exit_time_tr": "2026-08-08T22:02:20.717212+03:00",
-    "pnl": -16.0,
+    "pnl": -16.57,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -66,7 +68,8 @@
     "pm_size": 32.32,
     "pm_entry_price": 0.495,
     "to_win": 32.32,
-    "pm_slug": "ethereum-up-or-down-august-8-2026-1pm-et"
+    "pm_slug": "ethereum-up-or-down-august-8-2026-1pm-et",
+    "pm_fee": 0.56554
   },
   {
     "symbol": "ETHUSDT",
@@ -81,7 +84,7 @@
     "entry_is_weekend": true,
     "amount": 16.0,
     "exit_time_tr": "2026-08-08T22:02:20.717212+03:00",
-    "pnl": 12.32,
+    "pnl": 11.83,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -89,7 +92,8 @@
     "pm_size": 28.32,
     "pm_entry_price": 0.565,
     "to_win": 28.32,
-    "pm_slug": "ethereum-up-or-down-august-8-2026-2pm-et"
+    "pm_slug": "ethereum-up-or-down-august-8-2026-2pm-et",
+    "pm_fee": 0.48722
   },
   {
     "symbol": "BTCUSDT",
@@ -104,7 +108,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-08T23:02:25.500890+03:00",
-    "pnl": -12.0,
+    "pnl": -12.42,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -112,7 +116,8 @@
     "pm_size": 23.76,
     "pm_entry_price": 0.505,
     "to_win": 23.76,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-3pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-3pm-et",
+    "pm_fee": 0.41576
   },
   {
     "symbol": "ETHUSDT",
@@ -127,7 +132,7 @@
     "entry_is_weekend": true,
     "amount": 16.0,
     "exit_time_tr": "2026-08-08T23:02:25.500890+03:00",
-    "pnl": 19.96,
+    "pnl": 19.34,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -135,7 +140,8 @@
     "pm_size": 35.96,
     "pm_entry_price": 0.445,
     "to_win": 35.96,
-    "pm_slug": "ethereum-up-or-down-august-8-2026-3pm-et"
+    "pm_slug": "ethereum-up-or-down-august-8-2026-3pm-et",
+    "pm_fee": 0.62169
   },
   {
     "symbol": "BTCUSDT",
@@ -150,7 +156,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T00:02:21.139850+03:00",
-    "pnl": -12.0,
+    "pnl": -12.47,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -158,7 +164,8 @@
     "pm_size": 26.97,
     "pm_entry_price": 0.445,
     "to_win": 26.97,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-4pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-4pm-et",
+    "pm_fee": 0.46626
   },
   {
     "symbol": "ETHUSDT",
@@ -173,7 +180,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T00:02:21.139850+03:00",
-    "pnl": 22.11,
+    "pnl": 21.37,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -181,7 +188,8 @@
     "pm_size": 42.11,
     "pm_entry_price": 0.475,
     "to_win": 42.11,
-    "pm_slug": "ethereum-up-or-down-august-8-2026-4pm-et"
+    "pm_slug": "ethereum-up-or-down-august-8-2026-4pm-et",
+    "pm_fee": 0.73508
   },
   {
     "symbol": "BTCUSDT",
@@ -196,7 +204,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T01:02:22.827179+03:00",
-    "pnl": 12.74,
+    "pnl": 12.31,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -204,7 +212,8 @@
     "pm_size": 24.74,
     "pm_entry_price": 0.485,
     "to_win": 24.74,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-5pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-5pm-et",
+    "pm_fee": 0.43256
   },
   {
     "symbol": "ETHUSDT",
@@ -219,7 +228,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T01:02:22.827179+03:00",
-    "pnl": -20.0,
+    "pnl": -20.82,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -227,7 +236,8 @@
     "pm_size": 48.19,
     "pm_entry_price": 0.415,
     "to_win": 48.19,
-    "pm_slug": "ethereum-up-or-down-august-8-2026-5pm-et"
+    "pm_slug": "ethereum-up-or-down-august-8-2026-5pm-et",
+    "pm_fee": 0.81895
   },
   {
     "symbol": "BTCUSDT",
@@ -242,7 +252,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T02:02:19.579899+03:00",
-    "pnl": 12.24,
+    "pnl": 11.82,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -250,7 +260,8 @@
     "pm_size": 24.24,
     "pm_entry_price": 0.495,
     "to_win": 24.24,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-6pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-6pm-et",
+    "pm_fee": 0.42416
   },
   {
     "symbol": "ETHUSDT",
@@ -265,7 +276,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T02:02:19.579899+03:00",
-    "pnl": 17.38,
+    "pnl": 16.73,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -273,7 +284,8 @@
     "pm_size": 37.38,
     "pm_entry_price": 0.535,
     "to_win": 37.38,
-    "pm_slug": "ethereum-up-or-down-august-8-2026-6pm-et"
+    "pm_slug": "ethereum-up-or-down-august-8-2026-6pm-et",
+    "pm_fee": 0.65094
   },
   {
     "symbol": "BTCUSDT",
@@ -288,7 +300,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T03:02:20.096592+03:00",
-    "pnl": -12.0,
+    "pnl": -12.42,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -296,7 +308,8 @@
     "pm_size": 23.76,
     "pm_entry_price": 0.505,
     "to_win": 23.76,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-7pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-7pm-et",
+    "pm_fee": 0.41576
   },
   {
     "symbol": "BTCUSDT",
@@ -311,7 +324,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T04:02:09.839301+03:00",
-    "pnl": -12.0,
+    "pnl": -12.42,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -319,7 +332,8 @@
     "pm_size": 24.0,
     "pm_entry_price": 0.5,
     "to_win": 24.0,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-8pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-8pm-et",
+    "pm_fee": 0.42
   },
   {
     "symbol": "ETHUSDT",
@@ -334,7 +348,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T05:02:08.459943+03:00",
-    "pnl": -20.0,
+    "pnl": -20.61,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -342,7 +356,8 @@
     "pm_size": 35.4,
     "pm_entry_price": 0.565,
     "to_win": 35.4,
-    "pm_slug": "ethereum-up-or-down-august-8-2026-9pm-et"
+    "pm_slug": "ethereum-up-or-down-august-8-2026-9pm-et",
+    "pm_fee": 0.60903
   },
   {
     "symbol": "BTCUSDT",
@@ -357,7 +372,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T06:02:09.500289+03:00",
-    "pnl": 14.37,
+    "pnl": 13.91,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -365,7 +380,8 @@
     "pm_size": 26.37,
     "pm_entry_price": 0.455,
     "to_win": 26.37,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-10pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-10pm-et",
+    "pm_fee": 0.45774
   },
   {
     "symbol": "BTCUSDT",
@@ -380,7 +396,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T07:02:10.104692+03:00",
-    "pnl": 9.62,
+    "pnl": 9.25,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -388,7 +404,8 @@
     "pm_size": 21.62,
     "pm_entry_price": 0.555,
     "to_win": 21.62,
-    "pm_slug": "bitcoin-up-or-down-august-8-2026-11pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-8-2026-11pm-et",
+    "pm_fee": 0.37377
   },
   {
     "symbol": "BTCUSDT",
@@ -403,7 +420,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T08:02:09.387210+03:00",
-    "pnl": -12.0,
+    "pnl": -12.45,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -411,7 +428,8 @@
     "pm_size": 25.81,
     "pm_entry_price": 0.465,
     "to_win": 25.81,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-12am-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-12am-et",
+    "pm_fee": 0.44946
   },
   {
     "symbol": "BTCUSDT",
@@ -426,7 +444,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T10:02:09.492636+03:00",
-    "pnl": 10.43,
+    "pnl": 10.04,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -434,7 +452,8 @@
     "pm_size": 22.43,
     "pm_entry_price": 0.535,
     "to_win": 22.43,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-2am-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-2am-et",
+    "pm_fee": 0.3906
   },
   {
     "symbol": "ETHUSDT",
@@ -449,7 +468,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T10:02:09.492636+03:00",
-    "pnl": 18.83,
+    "pnl": 18.15,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -457,7 +476,8 @@
     "pm_size": 38.83,
     "pm_entry_price": 0.515,
     "to_win": 38.83,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-2am-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-2am-et",
+    "pm_fee": 0.67891
   },
   {
     "symbol": "ETHUSDT",
@@ -472,7 +492,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T13:02:08.957408+03:00",
-    "pnl": -20.0,
+    "pnl": -20.71,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -480,7 +500,8 @@
     "pm_size": 40.4,
     "pm_entry_price": 0.495,
     "to_win": 40.4,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-5am-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-5am-et",
+    "pm_fee": 0.70693
   },
   {
     "symbol": "BTCUSDT",
@@ -495,7 +516,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T15:02:18.969561+03:00",
-    "pnl": -12.0,
+    "pnl": -12.5,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -503,7 +524,8 @@
     "pm_size": 29.63,
     "pm_entry_price": 0.405,
     "to_win": 29.63,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-7am-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-7am-et",
+    "pm_fee": 0.49981
   },
   {
     "symbol": "ETHUSDT",
@@ -518,7 +540,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T15:02:18.969561+03:00",
-    "pnl": 18.46,
+    "pnl": 17.79,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -526,7 +548,8 @@
     "pm_size": 38.46,
     "pm_entry_price": 0.52,
     "to_win": 38.46,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-7am-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-7am-et",
+    "pm_fee": 0.67197
   },
   {
     "symbol": "BTCUSDT",
@@ -541,7 +564,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T16:02:10.676331+03:00",
-    "pnl": 20.88,
+    "pnl": 20.35,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -549,7 +572,8 @@
     "pm_size": 32.88,
     "pm_entry_price": 0.365,
     "to_win": 32.88,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-8am-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-8am-et",
+    "pm_fee": 0.53345
   },
   {
     "symbol": "ETHUSDT",
@@ -564,7 +588,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T17:02:10.667081+03:00",
-    "pnl": -20.0,
+    "pnl": -20.96,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -572,7 +596,8 @@
     "pm_size": 63.49,
     "pm_entry_price": 0.315,
     "to_win": 63.49,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-9am-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-9am-et",
+    "pm_fee": 0.95897
   },
   {
     "symbol": "BTCUSDT",
@@ -587,7 +612,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T18:02:09.967576+03:00",
-    "pnl": 16.92,
+    "pnl": 16.43,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -595,7 +620,8 @@
     "pm_size": 28.92,
     "pm_entry_price": 0.415,
     "to_win": 28.92,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-10am-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-10am-et",
+    "pm_fee": 0.49147
   },
   {
     "symbol": "BTCUSDT",
@@ -610,7 +636,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T19:02:11.035205+03:00",
-    "pnl": -12.0,
+    "pnl": -12.53,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -618,7 +644,8 @@
     "pm_size": 32.0,
     "pm_entry_price": 0.375,
     "to_win": 32.0,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-11am-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-11am-et",
+    "pm_fee": 0.525
   },
   {
     "symbol": "BTCUSDT",
@@ -633,7 +660,7 @@
     "entry_is_weekend": true,
     "amount": 12.0,
     "exit_time_tr": "2026-08-09T20:02:09.653463+03:00",
-    "pnl": -12.0,
+    "pnl": -12.37,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -641,7 +668,8 @@
     "pm_size": 21.62,
     "pm_entry_price": 0.555,
     "to_win": 21.62,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-12pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-12pm-et",
+    "pm_fee": 0.37377
   },
   {
     "symbol": "ETHUSDT",
@@ -656,7 +684,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T21:02:11.241918+03:00",
-    "pnl": 18.1,
+    "pnl": 17.43,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -664,7 +692,8 @@
     "pm_size": 38.1,
     "pm_entry_price": 0.525,
     "to_win": 38.1,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-1pm-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-1pm-et",
+    "pm_fee": 0.66508
   },
   {
     "symbol": "ETHUSDT",
@@ -679,7 +708,7 @@
     "entry_is_weekend": true,
     "amount": 20.0,
     "exit_time_tr": "2026-08-09T22:02:09.951941+03:00",
-    "pnl": 23.96,
+    "pnl": 23.2,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -687,7 +716,8 @@
     "pm_size": 43.96,
     "pm_entry_price": 0.455,
     "to_win": 43.96,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-2pm-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-2pm-et",
+    "pm_fee": 0.76307
   },
   {
     "symbol": "ETHUSDT",
@@ -702,7 +732,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T00:33:06.779326+03:00",
-    "pnl": -20.0,
+    "pnl": -21.18,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -710,7 +740,8 @@
     "pm_size": 129.03,
     "pm_entry_price": 0.155,
     "to_win": 129.03,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-5pm-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-5pm-et",
+    "pm_fee": 1.18298
   },
   {
     "symbol": "BTCUSDT",
@@ -725,7 +756,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T02:02:10.400195+03:00",
-    "pnl": 24.92,
+    "pnl": 24.35,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -733,7 +764,8 @@
     "pm_size": 36.92,
     "pm_entry_price": 0.325,
     "to_win": 36.92,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-6pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-6pm-et",
+    "pm_fee": 0.56695
   },
   {
     "symbol": "ETHUSDT",
@@ -748,7 +780,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T02:02:10.400195+03:00",
-    "pnl": 37.97,
+    "pnl": 37.05,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -756,7 +788,8 @@
     "pm_size": 57.97,
     "pm_entry_price": 0.345,
     "to_win": 57.97,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-6pm-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-6pm-et",
+    "pm_fee": 0.91698
   },
   {
     "symbol": "BTCUSDT",
@@ -771,7 +804,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T03:02:11.614278+03:00",
-    "pnl": 8.87,
+    "pnl": 8.51,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -779,7 +812,8 @@
     "pm_size": 20.87,
     "pm_entry_price": 0.575,
     "to_win": 20.87,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-7pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-7pm-et",
+    "pm_fee": 0.35701
   },
   {
     "symbol": "BTCUSDT",
@@ -794,7 +828,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T04:02:10.781113+03:00",
-    "pnl": -12.0,
+    "pnl": -12.47,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -802,7 +836,8 @@
     "pm_size": 27.59,
     "pm_entry_price": 0.435,
     "to_win": 27.59,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-8pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-8pm-et",
+    "pm_fee": 0.47467
   },
   {
     "symbol": "BTCUSDT",
@@ -817,7 +852,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T05:02:13.061842+03:00",
-    "pnl": -12.0,
+    "pnl": -12.42,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -825,7 +860,8 @@
     "pm_size": 24.24,
     "pm_entry_price": 0.495,
     "to_win": 24.24,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-9pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-9pm-et",
+    "pm_fee": 0.42416
   },
   {
     "symbol": "ETHUSDT",
@@ -840,7 +876,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T05:02:13.061842+03:00",
-    "pnl": 18.83,
+    "pnl": 18.15,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -848,7 +884,8 @@
     "pm_size": 38.83,
     "pm_entry_price": 0.515,
     "to_win": 38.83,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-9pm-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-9pm-et",
+    "pm_fee": 0.67891
   },
   {
     "symbol": "ETHUSDT",
@@ -863,7 +900,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T06:02:10.016062+03:00",
-    "pnl": 17.38,
+    "pnl": 16.73,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -871,7 +908,8 @@
     "pm_size": 37.38,
     "pm_entry_price": 0.535,
     "to_win": 37.38,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-10pm-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-10pm-et",
+    "pm_fee": 0.65094
   },
   {
     "symbol": "BTCUSDT",
@@ -886,7 +924,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T07:02:11.911181+03:00",
-    "pnl": 9.62,
+    "pnl": 9.25,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -894,7 +932,8 @@
     "pm_size": 21.62,
     "pm_entry_price": 0.555,
     "to_win": 21.62,
-    "pm_slug": "bitcoin-up-or-down-august-9-2026-11pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-9-2026-11pm-et",
+    "pm_fee": 0.37377
   },
   {
     "symbol": "ETHUSDT",
@@ -909,7 +948,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T07:02:11.911181+03:00",
-    "pnl": 19.6,
+    "pnl": 18.91,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -917,7 +956,8 @@
     "pm_size": 39.6,
     "pm_entry_price": 0.505,
     "to_win": 39.6,
-    "pm_slug": "ethereum-up-or-down-august-9-2026-11pm-et"
+    "pm_slug": "ethereum-up-or-down-august-9-2026-11pm-et",
+    "pm_fee": 0.69293
   },
   {
     "symbol": "ETHUSDT",
@@ -932,7 +972,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T10:02:11.592173+03:00",
-    "pnl": -20.0,
+    "pnl": -20.71,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -940,7 +980,8 @@
     "pm_size": 40.82,
     "pm_entry_price": 0.49,
     "to_win": 40.82,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-2am-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-2am-et",
+    "pm_fee": 0.71406
   },
   {
     "symbol": "BTCUSDT",
@@ -955,7 +996,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T11:02:10.990320+03:00",
-    "pnl": -12.0,
+    "pnl": -12.51,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -963,7 +1004,8 @@
     "pm_size": 30.38,
     "pm_entry_price": 0.395,
     "to_win": 30.38,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-3am-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-3am-et",
+    "pm_fee": 0.5082
   },
   {
     "symbol": "BTCUSDT",
@@ -978,7 +1020,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T12:02:10.326333+03:00",
-    "pnl": 6.32,
+    "pnl": 6.03,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -986,7 +1028,8 @@
     "pm_size": 18.32,
     "pm_entry_price": 0.655,
     "to_win": 18.32,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-4am-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-4am-et",
+    "pm_fee": 0.28979
   },
   {
     "symbol": "BTCUSDT",
@@ -1001,7 +1044,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T13:02:11.136154+03:00",
-    "pnl": -12.0,
+    "pnl": -12.5,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1009,7 +1052,8 @@
     "pm_size": 29.63,
     "pm_entry_price": 0.405,
     "to_win": 29.63,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-5am-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-5am-et",
+    "pm_fee": 0.49981
   },
   {
     "symbol": "BTCUSDT",
@@ -1024,7 +1068,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T14:02:11.685117+03:00",
-    "pnl": -12.0,
+    "pnl": -12.43,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1032,7 +1076,8 @@
     "pm_size": 24.49,
     "pm_entry_price": 0.49,
     "to_win": 24.49,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-6am-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-6am-et",
+    "pm_fee": 0.4284
   },
   {
     "symbol": "BTCUSDT",
@@ -1047,7 +1092,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T15:02:12.089250+03:00",
-    "pnl": -12.0,
+    "pnl": -12.42,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1055,7 +1100,8 @@
     "pm_size": 24.24,
     "pm_entry_price": 0.495,
     "to_win": 24.24,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-7am-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-7am-et",
+    "pm_fee": 0.42416
   },
   {
     "symbol": "BTCUSDT",
@@ -1070,7 +1116,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T17:02:10.798805+03:00",
-    "pnl": 11.76,
+    "pnl": 11.34,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1078,7 +1124,8 @@
     "pm_size": 23.76,
     "pm_entry_price": 0.505,
     "to_win": 23.76,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-9am-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-9am-et",
+    "pm_fee": 0.41576
   },
   {
     "symbol": "ETHUSDT",
@@ -1093,7 +1140,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T17:02:10.798805+03:00",
-    "pnl": -20.0,
+    "pnl": -20.65,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -1101,7 +1148,8 @@
     "pm_size": 37.38,
     "pm_entry_price": 0.535,
     "to_win": 37.38,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-9am-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-9am-et",
+    "pm_fee": 0.65094
   },
   {
     "symbol": "BTCUSDT",
@@ -1116,7 +1164,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T18:02:10.770665+03:00",
-    "pnl": -12.0,
+    "pnl": -12.45,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1124,7 +1172,8 @@
     "pm_size": 26.09,
     "pm_entry_price": 0.46,
     "to_win": 26.09,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-10am-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-10am-et",
+    "pm_fee": 0.45365
   },
   {
     "symbol": "ETHUSDT",
@@ -1139,7 +1188,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T18:02:10.770665+03:00",
-    "pnl": -20.0,
+    "pnl": -20.64,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -1147,7 +1196,8 @@
     "pm_size": 36.7,
     "pm_entry_price": 0.545,
     "to_win": 36.7,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-10am-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-10am-et",
+    "pm_fee": 0.63705
   },
   {
     "symbol": "BTCUSDT",
@@ -1162,7 +1212,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T19:02:10.600763+03:00",
-    "pnl": 16.92,
+    "pnl": 16.43,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1170,7 +1220,8 @@
     "pm_size": 28.92,
     "pm_entry_price": 0.415,
     "to_win": 28.92,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-11am-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-11am-et",
+    "pm_fee": 0.49147
   },
   {
     "symbol": "ETHUSDT",
@@ -1185,7 +1236,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T19:02:10.600763+03:00",
-    "pnl": -20.0,
+    "pnl": -20.85,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -1193,7 +1244,8 @@
     "pm_size": 50.63,
     "pm_entry_price": 0.395,
     "to_win": 50.63,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-11am-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-11am-et",
+    "pm_fee": 0.84695
   },
   {
     "symbol": "BTCUSDT",
@@ -1208,7 +1260,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T20:02:09.010383+03:00",
-    "pnl": 12.24,
+    "pnl": 11.82,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1216,7 +1268,8 @@
     "pm_size": 24.24,
     "pm_entry_price": 0.495,
     "to_win": 24.24,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-12pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-12pm-et",
+    "pm_fee": 0.42416
   },
   {
     "symbol": "ETHUSDT",
@@ -1231,7 +1284,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T20:02:09.010383+03:00",
-    "pnl": -20.0,
+    "pnl": -20.64,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -1239,7 +1292,8 @@
     "pm_size": 36.7,
     "pm_entry_price": 0.545,
     "to_win": 36.7,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-12pm-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-12pm-et",
+    "pm_fee": 0.63705
   },
   {
     "symbol": "BTCUSDT",
@@ -1254,7 +1308,7 @@
     "entry_is_weekend": false,
     "amount": 8.4,
     "exit_time_tr": "2026-08-10T21:02:10.351744+03:00",
-    "pnl": -8.4,
+    "pnl": -8.7,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1262,7 +1316,8 @@
     "pm_size": 17.32,
     "pm_entry_price": 0.485,
     "to_win": 17.32,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-1pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-1pm-et",
+    "pm_fee": 0.30283
   },
   {
     "symbol": "ETHUSDT",
@@ -1277,7 +1332,7 @@
     "entry_is_weekend": false,
     "amount": 14.0,
     "exit_time_tr": "2026-08-10T21:02:10.351744+03:00",
-    "pnl": 18.18,
+    "pnl": 17.63,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1285,7 +1340,8 @@
     "pm_size": 32.18,
     "pm_entry_price": 0.435,
     "to_win": 32.18,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-1pm-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-1pm-et",
+    "pm_fee": 0.55363
   },
   {
     "symbol": "BTCUSDT",
@@ -1300,7 +1356,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-10T22:02:10.225367+03:00",
-    "pnl": 13.26,
+    "pnl": 12.82,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1308,7 +1364,8 @@
     "pm_size": 25.26,
     "pm_entry_price": 0.475,
     "to_win": 25.26,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-2pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-2pm-et",
+    "pm_fee": 0.44094
   },
   {
     "symbol": "ETHUSDT",
@@ -1323,7 +1380,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T22:02:10.225367+03:00",
-    "pnl": -20.0,
+    "pnl": -20.65,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -1331,7 +1388,8 @@
     "pm_size": 37.38,
     "pm_entry_price": 0.535,
     "to_win": 37.38,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-2pm-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-2pm-et",
+    "pm_fee": 0.65094
   },
   {
     "symbol": "ETHUSDT",
@@ -1346,7 +1404,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-10T23:02:08.940269+03:00",
-    "pnl": 14.19,
+    "pnl": 13.61,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1354,7 +1412,8 @@
     "pm_size": 34.19,
     "pm_entry_price": 0.585,
     "to_win": 34.19,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-3pm-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-3pm-et",
+    "pm_fee": 0.58103
   },
   {
     "symbol": "ETHUSDT",
@@ -1369,7 +1428,7 @@
     "entry_is_weekend": false,
     "amount": 25.0,
     "exit_time_tr": "2026-08-11T02:02:09.674878+03:00",
-    "pnl": 16.67,
+    "pnl": 15.97,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1377,7 +1436,8 @@
     "pm_size": 41.67,
     "pm_entry_price": 0.6,
     "to_win": 41.67,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-6pm-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-6pm-et",
+    "pm_fee": 0.70006
   },
   {
     "symbol": "BTCUSDT",
@@ -1392,7 +1452,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T03:02:10.943022+03:00",
-    "pnl": -12.0,
+    "pnl": -12.41,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1400,7 +1460,8 @@
     "pm_size": 23.3,
     "pm_entry_price": 0.515,
     "to_win": 23.3,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-7pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-7pm-et",
+    "pm_fee": 0.40738
   },
   {
     "symbol": "ETHUSDT",
@@ -1415,7 +1476,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T03:02:10.943022+03:00",
-    "pnl": -20.0,
+    "pnl": -20.67,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -1423,7 +1484,8 @@
     "pm_size": 38.1,
     "pm_entry_price": 0.525,
     "to_win": 38.1,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-7pm-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-7pm-et",
+    "pm_fee": 0.66508
   },
   {
     "symbol": "BTCUSDT",
@@ -1438,7 +1500,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T04:02:10.335809+03:00",
-    "pnl": 19.17,
+    "pnl": 18.65,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1446,7 +1508,8 @@
     "pm_size": 31.17,
     "pm_entry_price": 0.385,
     "to_win": 31.17,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-8pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-8pm-et",
+    "pm_fee": 0.51662
   },
   {
     "symbol": "ETHUSDT",
@@ -1461,7 +1524,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T04:02:10.335809+03:00",
-    "pnl": 19.6,
+    "pnl": 18.91,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1469,7 +1532,8 @@
     "pm_size": 39.6,
     "pm_entry_price": 0.505,
     "to_win": 39.6,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-8pm-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-8pm-et",
+    "pm_fee": 0.69293
   },
   {
     "symbol": "ETHUSDT",
@@ -1484,7 +1548,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T05:02:09.297236+03:00",
-    "pnl": 23.48,
+    "pnl": 22.72,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1492,7 +1556,8 @@
     "pm_size": 43.48,
     "pm_entry_price": 0.46,
     "to_win": 43.48,
-    "pm_slug": "ethereum-up-or-down-august-10-2026-9pm-et"
+    "pm_slug": "ethereum-up-or-down-august-10-2026-9pm-et",
+    "pm_fee": 0.75603
   },
   {
     "symbol": "BTCUSDT",
@@ -1507,7 +1572,7 @@
     "entry_is_weekend": false,
     "amount": 25.0,
     "exit_time_tr": "2026-08-11T07:02:11.096879+03:00",
-    "pnl": 17.02,
+    "pnl": 16.31,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1515,7 +1580,8 @@
     "pm_size": 42.02,
     "pm_entry_price": 0.595,
     "to_win": 42.02,
-    "pm_slug": "bitcoin-up-or-down-august-10-2026-11pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-10-2026-11pm-et",
+    "pm_fee": 0.7088
   },
   {
     "symbol": "BTCUSDT",
@@ -1530,7 +1596,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T08:02:10.573917+03:00",
-    "pnl": -12.0,
+    "pnl": -12.42,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1538,7 +1604,8 @@
     "pm_size": 23.76,
     "pm_entry_price": 0.505,
     "to_win": 23.76,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-12am-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-12am-et",
+    "pm_fee": 0.41576
   },
   {
     "symbol": "BTCUSDT",
@@ -1553,7 +1620,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T09:02:11.883173+03:00",
-    "pnl": -12.0,
+    "pnl": -12.4,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1561,7 +1628,8 @@
     "pm_size": 23.08,
     "pm_entry_price": 0.52,
     "to_win": 23.08,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-1am-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-1am-et",
+    "pm_fee": 0.40325
   },
   {
     "symbol": "ETHUSDT",
@@ -1576,7 +1644,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T09:02:11.883173+03:00",
-    "pnl": -20.0,
+    "pnl": -20.72,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -1584,7 +1652,8 @@
     "pm_size": 41.24,
     "pm_entry_price": 0.485,
     "to_win": 41.24,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-1am-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-1am-et",
+    "pm_fee": 0.72105
   },
   {
     "symbol": "BTCUSDT",
@@ -1599,7 +1668,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T10:02:11.233543+03:00",
-    "pnl": -12.0,
+    "pnl": -12.41,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1607,7 +1676,8 @@
     "pm_size": 23.3,
     "pm_entry_price": 0.515,
     "to_win": 23.3,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-2am-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-2am-et",
+    "pm_fee": 0.40738
   },
   {
     "symbol": "ETHUSDT",
@@ -1622,7 +1692,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T10:02:11.233543+03:00",
-    "pnl": 18.1,
+    "pnl": 17.43,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1630,7 +1700,8 @@
     "pm_size": 38.1,
     "pm_entry_price": 0.525,
     "to_win": 38.1,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-2am-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-2am-et",
+    "pm_fee": 0.66508
   },
   {
     "symbol": "BTCUSDT",
@@ -1645,7 +1716,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T11:02:10.349090+03:00",
-    "pnl": 8.87,
+    "pnl": 8.51,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1653,7 +1724,8 @@
     "pm_size": 20.87,
     "pm_entry_price": 0.575,
     "to_win": 20.87,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-3am-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-3am-et",
+    "pm_fee": 0.35701
   },
   {
     "symbol": "ETHUSDT",
@@ -1668,7 +1740,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T11:02:10.349090+03:00",
-    "pnl": 18.1,
+    "pnl": 17.43,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1676,7 +1748,8 @@
     "pm_size": 38.1,
     "pm_entry_price": 0.525,
     "to_win": 38.1,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-3am-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-3am-et",
+    "pm_fee": 0.66508
   },
   {
     "symbol": "BTCUSDT",
@@ -1691,7 +1764,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T12:02:12.031292+03:00",
-    "pnl": 8.17,
+    "pnl": 7.83,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1699,7 +1772,8 @@
     "pm_size": 20.17,
     "pm_entry_price": 0.595,
     "to_win": 20.17,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-4am-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-4am-et",
+    "pm_fee": 0.34023
   },
   {
     "symbol": "BTCUSDT",
@@ -1714,7 +1788,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T13:02:12.449605+03:00",
-    "pnl": 13.81,
+    "pnl": 13.36,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1722,7 +1796,8 @@
     "pm_size": 25.81,
     "pm_entry_price": 0.465,
     "to_win": 25.81,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-5am-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-5am-et",
+    "pm_fee": 0.44946
   },
   {
     "symbol": "BTCUSDT",
@@ -1737,7 +1812,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T14:02:12.446193+03:00",
-    "pnl": -12.0,
+    "pnl": -12.51,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1745,7 +1820,8 @@
     "pm_size": 30.38,
     "pm_entry_price": 0.395,
     "to_win": 30.38,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-6am-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-6am-et",
+    "pm_fee": 0.5082
   },
   {
     "symbol": "BTCUSDT",
@@ -1760,7 +1836,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T15:02:12.118094+03:00",
-    "pnl": 12.24,
+    "pnl": 11.82,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1768,7 +1844,8 @@
     "pm_size": 24.24,
     "pm_entry_price": 0.495,
     "to_win": 24.24,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-7am-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-7am-et",
+    "pm_fee": 0.42416
   },
   {
     "symbol": "BTCUSDT",
@@ -1783,7 +1860,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T16:02:12.588278+03:00",
-    "pnl": -12.0,
+    "pnl": -12.39,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1791,7 +1868,8 @@
     "pm_size": 22.43,
     "pm_entry_price": 0.535,
     "to_win": 22.43,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-8am-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-8am-et",
+    "pm_fee": 0.3906
   },
   {
     "symbol": "ETHUSDT",
@@ -1806,7 +1884,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T18:02:11.597914+03:00",
-    "pnl": 20.0,
+    "pnl": 19.3,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1814,7 +1892,8 @@
     "pm_size": 40.0,
     "pm_entry_price": 0.5,
     "to_win": 40.0,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-10am-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-10am-et",
+    "pm_fee": 0.7
   },
   {
     "symbol": "ETHUSDT",
@@ -1829,7 +1908,7 @@
     "entry_is_weekend": false,
     "amount": 14.0,
     "exit_time_tr": "2026-08-11T19:02:11.232509+03:00",
-    "pnl": -14.0,
+    "pnl": -14.4,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -1837,7 +1916,8 @@
     "pm_size": 23.73,
     "pm_entry_price": 0.59,
     "to_win": 23.73,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-11am-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-11am-et",
+    "pm_fee": 0.40182
   },
   {
     "symbol": "BTCUSDT",
@@ -1852,7 +1932,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T20:02:18.931751+03:00",
-    "pnl": 14.97,
+    "pnl": 14.5,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1860,7 +1940,8 @@
     "pm_size": 26.97,
     "pm_entry_price": 0.445,
     "to_win": 26.97,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-12pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-12pm-et",
+    "pm_fee": 0.46626
   },
   {
     "symbol": "ETHUSDT",
@@ -1875,7 +1956,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T20:02:18.931751+03:00",
-    "pnl": 13.9,
+    "pnl": 13.33,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1883,7 +1964,8 @@
     "pm_size": 33.9,
     "pm_entry_price": 0.59,
     "to_win": 33.9,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-12pm-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-12pm-et",
+    "pm_fee": 0.57403
   },
   {
     "symbol": "BTCUSDT",
@@ -1898,7 +1980,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T21:02:11.355947+03:00",
-    "pnl": -12.0,
+    "pnl": -12.47,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1906,7 +1988,8 @@
     "pm_size": 26.97,
     "pm_entry_price": 0.445,
     "to_win": 26.97,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-1pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-1pm-et",
+    "pm_fee": 0.46626
   },
   {
     "symbol": "ETHUSDT",
@@ -1921,7 +2004,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T21:02:11.355947+03:00",
-    "pnl": -20.0,
+    "pnl": -20.67,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -1929,7 +2012,8 @@
     "pm_size": 38.46,
     "pm_entry_price": 0.52,
     "to_win": 38.46,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-1pm-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-1pm-et",
+    "pm_fee": 0.67197
   },
   {
     "symbol": "BTCUSDT",
@@ -1944,7 +2028,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T22:02:10.886684+03:00",
-    "pnl": 13.26,
+    "pnl": 12.82,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -1952,7 +2036,8 @@
     "pm_size": 25.26,
     "pm_entry_price": 0.475,
     "to_win": 25.26,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-2pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-2pm-et",
+    "pm_fee": 0.44094
   },
   {
     "symbol": "ETHUSDT",
@@ -1967,7 +2052,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T22:02:10.886684+03:00",
-    "pnl": 18.83,
+    "pnl": 18.15,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -1975,7 +2060,8 @@
     "pm_size": 38.83,
     "pm_entry_price": 0.515,
     "to_win": 38.83,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-2pm-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-2pm-et",
+    "pm_fee": 0.67891
   },
   {
     "symbol": "BTCUSDT",
@@ -1990,7 +2076,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-11T23:02:10.416651+03:00",
-    "pnl": -12.0,
+    "pnl": -12.42,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -1998,7 +2084,8 @@
     "pm_size": 23.76,
     "pm_entry_price": 0.505,
     "to_win": 23.76,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-3pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-3pm-et",
+    "pm_fee": 0.41576
   },
   {
     "symbol": "ETHUSDT",
@@ -2013,7 +2100,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-11T23:02:10.416651+03:00",
-    "pnl": 21.67,
+    "pnl": 20.94,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2021,7 +2108,8 @@
     "pm_size": 41.67,
     "pm_entry_price": 0.48,
     "to_win": 41.67,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-3pm-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-3pm-et",
+    "pm_fee": 0.72806
   },
   {
     "symbol": "BTCUSDT",
@@ -2036,7 +2124,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T04:02:10.116260+03:00",
-    "pnl": 11.3,
+    "pnl": 10.89,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2044,7 +2132,8 @@
     "pm_size": 23.3,
     "pm_entry_price": 0.515,
     "to_win": 23.3,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-8pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-8pm-et",
+    "pm_fee": 0.40738
   },
   {
     "symbol": "ETHUSDT",
@@ -2059,7 +2148,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-12T04:02:10.116260+03:00",
-    "pnl": 19.22,
+    "pnl": 18.53,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2067,7 +2156,8 @@
     "pm_size": 39.22,
     "pm_entry_price": 0.51,
     "to_win": 39.22,
-    "pm_slug": "ethereum-up-or-down-august-11-2026-8pm-et"
+    "pm_slug": "ethereum-up-or-down-august-11-2026-8pm-et",
+    "pm_fee": 0.68608
   },
   {
     "symbol": "BTCUSDT",
@@ -2082,7 +2172,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T05:02:09.413451+03:00",
-    "pnl": 17.63,
+    "pnl": 17.13,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2090,7 +2180,8 @@
     "pm_size": 29.63,
     "pm_entry_price": 0.405,
     "to_win": 29.63,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-9pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-9pm-et",
+    "pm_fee": 0.49981
   },
   {
     "symbol": "BTCUSDT",
@@ -2105,7 +2196,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T06:02:10.530229+03:00",
-    "pnl": -12.0,
+    "pnl": -12.45,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -2113,7 +2204,8 @@
     "pm_size": 26.09,
     "pm_entry_price": 0.46,
     "to_win": 26.09,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-10pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-10pm-et",
+    "pm_fee": 0.45365
   },
   {
     "symbol": "BTCUSDT",
@@ -2128,7 +2220,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T07:02:08.611834+03:00",
-    "pnl": 12.24,
+    "pnl": 11.82,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2136,7 +2228,8 @@
     "pm_size": 24.24,
     "pm_entry_price": 0.495,
     "to_win": 24.24,
-    "pm_slug": "bitcoin-up-or-down-august-11-2026-11pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-11-2026-11pm-et",
+    "pm_fee": 0.42416
   },
   {
     "symbol": "BTCUSDT",
@@ -2151,7 +2244,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T08:02:10.780664+03:00",
-    "pnl": -12.0,
+    "pnl": -12.43,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -2159,7 +2252,8 @@
     "pm_size": 24.74,
     "pm_entry_price": 0.485,
     "to_win": 24.74,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-12am-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-12am-et",
+    "pm_fee": 0.43256
   },
   {
     "symbol": "ETHUSDT",
@@ -2174,7 +2268,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-12T10:02:09.461780+03:00",
-    "pnl": 12.0,
+    "pnl": 11.47,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2182,7 +2276,8 @@
     "pm_size": 32.0,
     "pm_entry_price": 0.625,
     "to_win": 32.0,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-2am-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-2am-et",
+    "pm_fee": 0.525
   },
   {
     "symbol": "ETHUSDT",
@@ -2197,7 +2292,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-12T11:02:11.760571+03:00",
-    "pnl": -20.0,
+    "pnl": -20.74,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -2205,7 +2300,8 @@
     "pm_size": 42.11,
     "pm_entry_price": 0.475,
     "to_win": 42.11,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-3am-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-3am-et",
+    "pm_fee": 0.73508
   },
   {
     "symbol": "BTCUSDT",
@@ -2220,7 +2316,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T12:02:12.732506+03:00",
-    "pnl": -12.0,
+    "pnl": -12.43,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -2228,7 +2324,8 @@
     "pm_size": 24.49,
     "pm_entry_price": 0.49,
     "to_win": 24.49,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-4am-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-4am-et",
+    "pm_fee": 0.4284
   },
   {
     "symbol": "BTCUSDT",
@@ -2243,7 +2340,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T14:02:21.726036+03:00",
-    "pnl": 13.0,
+    "pnl": 12.56,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2251,7 +2348,8 @@
     "pm_size": 25.0,
     "pm_entry_price": 0.48,
     "to_win": 25.0,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-6am-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-6am-et",
+    "pm_fee": 0.4368
   },
   {
     "symbol": "ETHUSDT",
@@ -2266,7 +2364,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-12T14:02:21.726036+03:00",
-    "pnl": -20.0,
+    "pnl": -20.84,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -2274,7 +2372,8 @@
     "pm_size": 50.0,
     "pm_entry_price": 0.4,
     "to_win": 50.0,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-6am-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-6am-et",
+    "pm_fee": 0.84
   },
   {
     "symbol": "BTCUSDT",
@@ -2289,7 +2388,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T15:02:12.100643+03:00",
-    "pnl": 12.24,
+    "pnl": 11.82,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2297,7 +2396,8 @@
     "pm_size": 24.24,
     "pm_entry_price": 0.495,
     "to_win": 24.24,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-7am-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-7am-et",
+    "pm_fee": 0.42416
   },
   {
     "symbol": "ETHUSDT",
@@ -2312,7 +2412,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-12T15:02:12.100643+03:00",
-    "pnl": -20.0,
+    "pnl": -20.64,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -2320,7 +2420,8 @@
     "pm_size": 36.7,
     "pm_entry_price": 0.545,
     "to_win": 36.7,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-7am-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-7am-et",
+    "pm_fee": 0.63705
   },
   {
     "symbol": "BTCUSDT",
@@ -2335,7 +2436,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T16:02:13.494868+03:00",
-    "pnl": -12.0,
+    "pnl": -12.47,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -2343,7 +2444,8 @@
     "pm_size": 26.97,
     "pm_entry_price": 0.445,
     "to_win": 26.97,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-8am-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-8am-et",
+    "pm_fee": 0.46626
   },
   {
     "symbol": "ETHUSDT",
@@ -2358,7 +2460,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-12T16:02:13.494868+03:00",
-    "pnl": 17.74,
+    "pnl": 17.08,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2366,7 +2468,8 @@
     "pm_size": 37.74,
     "pm_entry_price": 0.53,
     "to_win": 37.74,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-8am-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-8am-et",
+    "pm_fee": 0.65807
   },
   {
     "symbol": "BTCUSDT",
@@ -2381,7 +2484,7 @@
     "entry_is_weekend": false,
     "amount": 8.4,
     "exit_time_tr": "2026-08-12T19:02:10.591067+03:00",
-    "pnl": -8.4,
+    "pnl": -8.73,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -2389,7 +2492,8 @@
     "pm_size": 19.31,
     "pm_entry_price": 0.435,
     "to_win": 19.31,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-11am-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-11am-et",
+    "pm_fee": 0.33221
   },
   {
     "symbol": "ETHUSDT",
@@ -2404,7 +2508,7 @@
     "entry_is_weekend": false,
     "amount": 14.0,
     "exit_time_tr": "2026-08-12T19:02:10.591067+03:00",
-    "pnl": 11.45,
+    "pnl": 11.01,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2412,7 +2516,8 @@
     "pm_size": 25.45,
     "pm_entry_price": 0.55,
     "to_win": 25.45,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-11am-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-11am-et",
+    "pm_fee": 0.44092
   },
   {
     "symbol": "BTCUSDT",
@@ -2427,7 +2532,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T20:02:11.683154+03:00",
-    "pnl": -12.0,
+    "pnl": -12.45,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -2435,7 +2540,8 @@
     "pm_size": 25.81,
     "pm_entry_price": 0.465,
     "to_win": 25.81,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-12pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-12pm-et",
+    "pm_fee": 0.44946
   },
   {
     "symbol": "BTCUSDT",
@@ -2450,7 +2556,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T21:02:10.673386+03:00",
-    "pnl": 15.59,
+    "pnl": 15.12,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2458,7 +2564,8 @@
     "pm_size": 27.59,
     "pm_entry_price": 0.435,
     "to_win": 27.59,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-1pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-1pm-et",
+    "pm_fee": 0.47467
   },
   {
     "symbol": "ETHUSDT",
@@ -2473,7 +2580,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-12T21:02:10.673386+03:00",
-    "pnl": -20.0,
+    "pnl": -20.67,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -2481,7 +2588,8 @@
     "pm_size": 38.1,
     "pm_entry_price": 0.525,
     "to_win": 38.1,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-1pm-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-1pm-et",
+    "pm_fee": 0.66508
   },
   {
     "symbol": "BTCUSDT",
@@ -2496,7 +2604,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-12T22:02:11.780470+03:00",
-    "pnl": 13.26,
+    "pnl": 12.82,
     "algo_signal": "DOWN",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2504,7 +2612,8 @@
     "pm_size": 25.26,
     "pm_entry_price": 0.475,
     "to_win": 25.26,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-2pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-2pm-et",
+    "pm_fee": 0.44094
   },
   {
     "symbol": "ETHUSDT",
@@ -2519,7 +2628,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T00:02:11.087939+03:00",
-    "pnl": 10.08,
+    "pnl": 9.61,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2527,7 +2636,8 @@
     "pm_size": 30.08,
     "pm_entry_price": 0.665,
     "to_win": 30.08,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-4pm-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-4pm-et",
+    "pm_fee": 0.46908
   },
   {
     "symbol": "ETHUSDT",
@@ -2542,7 +2652,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T02:02:11.472225+03:00",
-    "pnl": 11.01,
+    "pnl": 10.51,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2550,7 +2660,8 @@
     "pm_size": 31.01,
     "pm_entry_price": 0.645,
     "to_win": 31.01,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-6pm-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-6pm-et",
+    "pm_fee": 0.49704
   },
   {
     "symbol": "BTCUSDT",
@@ -2565,7 +2676,7 @@
     "entry_is_weekend": false,
     "amount": 8.4,
     "exit_time_tr": "2026-08-13T03:02:11.878112+03:00",
-    "pnl": 10.27,
+    "pnl": 9.95,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2573,7 +2684,8 @@
     "pm_size": 18.67,
     "pm_entry_price": 0.45,
     "to_win": 18.67,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-7pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-7pm-et",
+    "pm_fee": 0.32346
   },
   {
     "symbol": "BTCUSDT",
@@ -2588,7 +2700,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-13T04:02:11.209630+03:00",
-    "pnl": 11.53,
+    "pnl": 11.12,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2596,7 +2708,8 @@
     "pm_size": 23.53,
     "pm_entry_price": 0.51,
     "to_win": 23.53,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-8pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-8pm-et",
+    "pm_fee": 0.41161
   },
   {
     "symbol": "ETHUSDT",
@@ -2611,7 +2724,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T04:02:11.209630+03:00",
-    "pnl": 23.96,
+    "pnl": 23.2,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2619,7 +2732,8 @@
     "pm_size": 43.96,
     "pm_entry_price": 0.455,
     "to_win": 43.96,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-8pm-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-8pm-et",
+    "pm_fee": 0.76307
   },
   {
     "symbol": "BTCUSDT",
@@ -2634,7 +2748,7 @@
     "entry_is_weekend": false,
     "amount": 16.0,
     "exit_time_tr": "2026-08-13T05:02:11.489945+03:00",
-    "pnl": -16.0,
+    "pnl": -16.57,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -2642,7 +2756,8 @@
     "pm_size": 32.32,
     "pm_entry_price": 0.495,
     "to_win": 32.32,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-9pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-9pm-et",
+    "pm_fee": 0.56554
   },
   {
     "symbol": "ETHUSDT",
@@ -2657,7 +2772,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T05:02:11.489945+03:00",
-    "pnl": -20.0,
+    "pnl": -20.87,
     "algo_signal": "UP",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -2665,7 +2780,8 @@
     "pm_size": 53.33,
     "pm_entry_price": 0.375,
     "to_win": 53.33,
-    "pm_slug": "ethereum-up-or-down-august-12-2026-9pm-et"
+    "pm_slug": "ethereum-up-or-down-august-12-2026-9pm-et",
+    "pm_fee": 0.87495
   },
   {
     "symbol": "BTCUSDT",
@@ -2680,7 +2796,7 @@
     "entry_is_weekend": false,
     "amount": 12.0,
     "exit_time_tr": "2026-08-13T07:02:11.688656+03:00",
-    "pnl": 12.24,
+    "pnl": 11.82,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2688,7 +2804,8 @@
     "pm_size": 24.24,
     "pm_entry_price": 0.495,
     "to_win": 24.24,
-    "pm_slug": "bitcoin-up-or-down-august-12-2026-11pm-et"
+    "pm_slug": "bitcoin-up-or-down-august-12-2026-11pm-et",
+    "pm_fee": 0.42416
   },
   {
     "symbol": "BTCUSDT",
@@ -2703,7 +2820,7 @@
     "entry_is_weekend": false,
     "amount": 11.2,
     "exit_time_tr": "2026-08-13T08:02:12.057408+03:00",
-    "pnl": 11.43,
+    "pnl": 11.03,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2711,7 +2828,8 @@
     "pm_size": 22.63,
     "pm_entry_price": 0.495,
     "to_win": 22.63,
-    "pm_slug": "bitcoin-up-or-down-august-13-2026-12am-et"
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-12am-et",
+    "pm_fee": 0.39599
   },
   {
     "symbol": "BTCUSDT",
@@ -2726,7 +2844,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T09:02:12.773117+03:00",
-    "pnl": 20.4,
+    "pnl": 19.69,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2734,7 +2852,8 @@
     "pm_size": 40.4,
     "pm_entry_price": 0.495,
     "to_win": 40.4,
-    "pm_slug": "bitcoin-up-or-down-august-13-2026-1am-et"
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-1am-et",
+    "pm_fee": 0.70693
   },
   {
     "symbol": "BTCUSDT",
@@ -2749,7 +2868,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T10:02:12.402078+03:00",
-    "pnl": 23.01,
+    "pnl": 22.26,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": true,
@@ -2757,7 +2876,8 @@
     "pm_size": 43.01,
     "pm_entry_price": 0.465,
     "to_win": 43.01,
-    "pm_slug": "bitcoin-up-or-down-august-13-2026-2am-et"
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-2am-et",
+    "pm_fee": 0.74899
   },
   {
     "symbol": "ETHUSDT",
@@ -2772,7 +2892,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T10:02:12.402078+03:00",
-    "pnl": -20.0,
+    "pnl": -20.48,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": false,
@@ -2780,7 +2900,8 @@
     "pm_size": 30.3,
     "pm_entry_price": 0.66,
     "to_win": 30.3,
-    "pm_slug": "ethereum-up-or-down-august-13-2026-2am-et"
+    "pm_slug": "ethereum-up-or-down-august-13-2026-2am-et",
+    "pm_fee": 0.47595
   },
   {
     "symbol": "BTCUSDT",
@@ -2795,7 +2916,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T11:02:12.011585+03:00",
-    "pnl": -20.0,
+    "pnl": -20.97,
     "algo_signal": "UP",
     "algo_name": "MACD Hist. Div",
     "algo_ok": false,
@@ -2803,7 +2924,8 @@
     "pm_size": 65.57,
     "pm_entry_price": 0.305,
     "to_win": 65.57,
-    "pm_slug": "bitcoin-up-or-down-august-13-2026-3am-et"
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-3am-et",
+    "pm_fee": 0.97294
   },
   {
     "symbol": "ETHUSDT",
@@ -2818,7 +2940,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T11:02:12.011585+03:00",
-    "pnl": 11.01,
+    "pnl": 10.51,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2826,7 +2948,8 @@
     "pm_size": 31.01,
     "pm_entry_price": 0.645,
     "to_win": 31.01,
-    "pm_slug": "ethereum-up-or-down-august-13-2026-3am-et"
+    "pm_slug": "ethereum-up-or-down-august-13-2026-3am-et",
+    "pm_fee": 0.49704
   },
   {
     "symbol": "ETHUSDT",
@@ -2841,7 +2964,7 @@
     "entry_is_weekend": false,
     "amount": 20.0,
     "exit_time_tr": "2026-08-13T12:02:14.633144+03:00",
-    "pnl": 19.6,
+    "pnl": 18.91,
     "algo_signal": "DOWN",
     "algo_name": "RSI Divergence",
     "algo_ok": true,
@@ -2849,6 +2972,487 @@
     "pm_size": 39.6,
     "pm_entry_price": 0.505,
     "to_win": 39.6,
-    "pm_slug": "ethereum-up-or-down-august-13-2026-4am-et"
+    "pm_slug": "ethereum-up-or-down-august-13-2026-4am-et",
+    "pm_fee": 0.69293
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 63458.6,
+    "exit_price": 63669.2,
+    "entry_time_tr": "2026-08-13T15:05:09.179322+03:00",
+    "entry_hour_tr": 15,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-13T16:02:12.728674+03:00",
+    "pnl": -20.57,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": false,
+    "pm_spent": 20.0,
+    "pm_size": 33.9,
+    "pm_entry_price": 0.59,
+    "to_win": 33.9,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-8am-et",
+    "pm_fee": 0.57403
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 63669.2,
+    "exit_price": 63699.9,
+    "entry_time_tr": "2026-08-13T16:05:08.714073+03:00",
+    "entry_hour_tr": 16,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-13T17:02:12.347442+03:00",
+    "pnl": 20.52,
+    "algo_signal": "UP",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": true,
+    "pm_spent": 20.0,
+    "pm_size": 41.24,
+    "pm_entry_price": 0.485,
+    "to_win": 41.24,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-9am-et",
+    "pm_fee": 0.72105
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 63700.0,
+    "exit_price": 63835.6,
+    "entry_time_tr": "2026-08-13T17:05:08.919562+03:00",
+    "entry_hour_tr": 17,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-13T18:02:13.367573+03:00",
+    "pnl": -20.75,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": false,
+    "pm_spent": 20.0,
+    "pm_size": 43.01,
+    "pm_entry_price": 0.465,
+    "to_win": 43.01,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-10am-et",
+    "pm_fee": 0.74899
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 63835.7,
+    "exit_price": 63385.0,
+    "entry_time_tr": "2026-08-13T18:05:08.837020+03:00",
+    "entry_hour_tr": 18,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 14.0,
+    "exit_time_tr": "2026-08-13T19:02:10.689934+03:00",
+    "pnl": -14.33,
+    "algo_signal": "UP",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": false,
+    "pm_spent": 14.0,
+    "pm_size": 21.05,
+    "pm_entry_price": 0.665,
+    "to_win": 21.05,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-11am-et",
+    "pm_fee": 0.32826
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 63385.0,
+    "exit_price": 63139.0,
+    "entry_time_tr": "2026-08-13T19:05:08.503850+03:00",
+    "entry_hour_tr": 19,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 16.0,
+    "exit_time_tr": "2026-08-13T20:02:11.370575+03:00",
+    "pnl": 21.01,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": true,
+    "pm_spent": 16.0,
+    "pm_size": 37.65,
+    "pm_entry_price": 0.425,
+    "to_win": 37.65,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-12pm-et",
+    "pm_fee": 0.64405
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 1879.19,
+    "exit_price": 1873.99,
+    "entry_time_tr": "2026-08-13T19:05:08.503850+03:00",
+    "entry_hour_tr": 19,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-13T20:02:11.370575+03:00",
+    "pnl": -20.67,
+    "algo_signal": "UP",
+    "algo_name": "RSI Divergence",
+    "algo_ok": false,
+    "pm_spent": 20.0,
+    "pm_size": 38.46,
+    "pm_entry_price": 0.52,
+    "to_win": 38.46,
+    "pm_slug": "ethereum-up-or-down-august-13-2026-12pm-et",
+    "pm_fee": 0.67197
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 63138.9,
+    "exit_price": 63121.4,
+    "entry_time_tr": "2026-08-13T20:05:08.129637+03:00",
+    "entry_hour_tr": 20,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-13T21:02:12.404644+03:00",
+    "pnl": 12.51,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": true,
+    "pm_spent": 20.0,
+    "pm_size": 33.06,
+    "pm_entry_price": 0.605,
+    "to_win": 33.06,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-1pm-et",
+    "pm_fee": 0.55304
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 63121.5,
+    "exit_price": 63284.7,
+    "entry_time_tr": "2026-08-13T21:05:08.113790+03:00",
+    "entry_hour_tr": 21,
+    "entry_dow": 3,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-13T22:02:10.904473+03:00",
+    "pnl": -20.69,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": false,
+    "pm_spent": 20.0,
+    "pm_size": 39.6,
+    "pm_entry_price": 0.505,
+    "to_win": 39.6,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-2pm-et",
+    "pm_fee": 0.69293
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 63456.7,
+    "exit_price": 63517.6,
+    "entry_time_tr": "2026-08-14T03:05:08.720072+03:00",
+    "entry_hour_tr": 3,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-14T04:02:11.877935+03:00",
+    "pnl": 21.81,
+    "algo_signal": "UP",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": true,
+    "pm_spent": 20.0,
+    "pm_size": 42.55,
+    "pm_entry_price": 0.47,
+    "to_win": 42.55,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-8pm-et",
+    "pm_fee": 0.74194
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 1885.38,
+    "exit_price": 1888.73,
+    "entry_time_tr": "2026-08-14T03:05:08.720072+03:00",
+    "entry_hour_tr": 3,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-14T04:02:11.877935+03:00",
+    "pnl": -20.69,
+    "algo_signal": "DOWN",
+    "algo_name": "RSI Divergence",
+    "algo_ok": false,
+    "pm_spent": 20.0,
+    "pm_size": 39.6,
+    "pm_entry_price": 0.505,
+    "to_win": 39.6,
+    "pm_slug": "ethereum-up-or-down-august-13-2026-8pm-et",
+    "pm_fee": 0.69293
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 63517.6,
+    "exit_price": 63545.5,
+    "entry_time_tr": "2026-08-14T04:05:08.379625+03:00",
+    "entry_hour_tr": 4,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-14T05:02:10.304502+03:00",
+    "pnl": 18.91,
+    "algo_signal": "UP",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": true,
+    "pm_spent": 20.0,
+    "pm_size": 39.6,
+    "pm_entry_price": 0.505,
+    "to_win": 39.6,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-9pm-et",
+    "pm_fee": 0.69293
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 63545.4,
+    "exit_price": 63437.1,
+    "entry_time_tr": "2026-08-14T05:05:07.546040+03:00",
+    "entry_hour_tr": 5,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-14T06:02:11.340626+03:00",
+    "pnl": -20.72,
+    "algo_signal": "UP",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": false,
+    "pm_spent": 20.0,
+    "pm_size": 41.24,
+    "pm_entry_price": 0.485,
+    "to_win": 41.24,
+    "pm_slug": "bitcoin-up-or-down-august-13-2026-10pm-et",
+    "pm_fee": 0.72105
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 63288.0,
+    "exit_price": 63349.9,
+    "entry_time_tr": "2026-08-14T07:05:07.276860+03:00",
+    "entry_hour_tr": 7,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 14.0,
+    "exit_time_tr": "2026-08-14T08:02:10.469708+03:00",
+    "pnl": -14.68,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": false,
+    "pm_spent": 14.0,
+    "pm_size": 45.9,
+    "pm_entry_price": 0.305,
+    "to_win": 45.9,
+    "pm_slug": "bitcoin-up-or-down-august-14-2026-12am-et",
+    "pm_fee": 0.68108
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 63350.0,
+    "exit_price": 63357.8,
+    "entry_time_tr": "2026-08-14T08:05:08.400652+03:00",
+    "entry_hour_tr": 8,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-14T09:02:10.197966+03:00",
+    "pnl": -20.86,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": false,
+    "pm_spent": 20.0,
+    "pm_size": 51.95,
+    "pm_entry_price": 0.385,
+    "to_win": 51.95,
+    "pm_slug": "bitcoin-up-or-down-august-14-2026-1am-et",
+    "pm_fee": 0.86103
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 1883.91,
+    "exit_price": 1883.08,
+    "entry_time_tr": "2026-08-14T08:05:08.400652+03:00",
+    "entry_hour_tr": 8,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-14T09:02:10.197966+03:00",
+    "pnl": -20.58,
+    "algo_signal": "UP",
+    "algo_name": "RSI Divergence",
+    "algo_ok": false,
+    "pm_spent": 20.0,
+    "pm_size": 34.19,
+    "pm_entry_price": 0.585,
+    "to_win": 34.19,
+    "pm_slug": "ethereum-up-or-down-august-14-2026-1am-et",
+    "pm_fee": 0.58103
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 62944.6,
+    "exit_price": 62888.1,
+    "entry_time_tr": "2026-08-14T10:05:08.495652+03:00",
+    "entry_hour_tr": 10,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 16.0,
+    "exit_time_tr": "2026-08-14T11:02:09.479345+03:00",
+    "pnl": 18.55,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": true,
+    "pm_spent": 16.0,
+    "pm_size": 35.16,
+    "pm_entry_price": 0.455,
+    "to_win": 35.16,
+    "pm_slug": "bitcoin-up-or-down-august-14-2026-3am-et",
+    "pm_fee": 0.61032
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 62888.0,
+    "exit_price": 62904.9,
+    "entry_time_tr": "2026-08-14T11:05:09.038393+03:00",
+    "entry_hour_tr": 11,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-14T12:02:11.076663+03:00",
+    "pnl": -20.71,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": false,
+    "pm_spent": 20.0,
+    "pm_size": 40.4,
+    "pm_entry_price": 0.495,
+    "to_win": 40.4,
+    "pm_slug": "bitcoin-up-or-down-august-14-2026-4am-et",
+    "pm_fee": 0.70693
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 1872.34,
+    "exit_price": 1877.76,
+    "entry_time_tr": "2026-08-14T11:05:09.038393+03:00",
+    "entry_hour_tr": 11,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-14T12:02:11.076663+03:00",
+    "pnl": 11.98,
+    "algo_signal": "UP",
+    "algo_name": "RSI Divergence",
+    "algo_ok": true,
+    "pm_spent": 20.0,
+    "pm_size": 32.52,
+    "pm_entry_price": 0.615,
+    "to_win": 32.52,
+    "pm_slug": "ethereum-up-or-down-august-14-2026-4am-et",
+    "pm_fee": 0.53899
+  },
+  {
+    "symbol": "BTCUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "DOWN",
+    "win": true,
+    "entry_price": 62904.9,
+    "exit_price": 62763.9,
+    "entry_time_tr": "2026-08-14T12:05:07.350050+03:00",
+    "entry_hour_tr": 12,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 16.0,
+    "exit_time_tr": "2026-08-14T13:02:12.379773+03:00",
+    "pnl": 11.35,
+    "algo_signal": "DOWN",
+    "algo_name": "MACD Hist. Div",
+    "algo_ok": true,
+    "pm_spent": 16.0,
+    "pm_size": 27.83,
+    "pm_entry_price": 0.575,
+    "to_win": 27.83,
+    "pm_slug": "bitcoin-up-or-down-august-14-2026-5am-et",
+    "pm_fee": 0.47607
+  },
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "UP",
+    "win": true,
+    "entry_price": 1872.3,
+    "exit_price": 1875.2,
+    "entry_time_tr": "2026-08-14T13:05:09.861741+03:00",
+    "entry_hour_tr": 13,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 20.0,
+    "exit_time_tr": "2026-08-14T14:02:11.545423+03:00",
+    "pnl": 18.15,
+    "algo_signal": "UP",
+    "algo_name": "RSI Divergence",
+    "algo_ok": true,
+    "pm_spent": 20.0,
+    "pm_size": 38.83,
+    "pm_entry_price": 0.515,
+    "to_win": 38.83,
+    "pm_slug": "ethereum-up-or-down-august-14-2026-6am-et",
+    "pm_fee": 0.67891
   }
 ]

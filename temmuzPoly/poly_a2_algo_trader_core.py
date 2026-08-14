@@ -276,7 +276,9 @@ async def run_close(cfg: A2Config, *, notify: bool = True) -> str | None:
             "algo_name": pos.get("algo_name", cfg.algo_name),
             "algo_num": cfg.algo_num,
         }
-        for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug", "hot_hour_boost", "cold_hour_cut"):
+        for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug",
+                  "pm_fee", "pm_quote_src", "pm_mid_price",
+                  "hot_hour_boost", "cold_hour_cut"):
             if pos.get(k) is not None:
                 rec[k] = pos[k]
         history.append(rec)

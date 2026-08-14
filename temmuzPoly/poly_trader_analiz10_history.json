@@ -448,7 +448,7 @@
     "pm_size": 21.0,
     "pm_entry_price": 0.48,
     "pm_order_id": "DRY_RUN",
-    "pnl": -10.08,
+    "pnl": -10.45,
     "exit_time_tr": "2026-07-13T12:00:04.648316+03:00",
     "score_b": -1,
     "conf_a": 0.775,
@@ -461,7 +461,8 @@
     "ind_poly_ok": false,
     "ind_trend_ok": false,
     "ind_mr_ok": null,
-    "ind_of_ok": null
+    "ind_of_ok": null,
+    "pm_fee": 0.36691
   },
   {
     "symbol": "BTCUSDT",
@@ -480,7 +481,7 @@
     "pm_size": 25.0,
     "pm_entry_price": 0.41,
     "pm_order_id": "0x9874cbe270147d7face63837ceeb5d36285cd8c5c318fa662ee66ad28e2557da",
-    "pnl": -10.25,
+    "pnl": -10.67,
     "exit_time_tr": "2026-07-14T08:00:04.425704+03:00",
     "score_b": -1,
     "conf_a": 0.8400000000000001,
@@ -493,7 +494,8 @@
     "ind_poly_ok": false,
     "ind_trend_ok": null,
     "ind_mr_ok": null,
-    "ind_of_ok": false
+    "ind_of_ok": false,
+    "pm_fee": 0.42333
   },
   {
     "symbol": "BTCUSDT",
@@ -512,7 +514,7 @@
     "pm_size": 17.5,
     "pm_entry_price": 0.58,
     "pm_order_id": "0x1280ff32d115db282ee5b5aa0fdf2b4283ee49e081fa9de9a5f6c3d7d1d59b82",
-    "pnl": 7.35,
+    "pnl": 7.05,
     "exit_time_tr": "2026-07-14T09:00:03.918675+03:00",
     "score_b": -1,
     "conf_a": 0.89,
@@ -525,7 +527,8 @@
     "ind_poly_ok": true,
     "ind_trend_ok": null,
     "ind_mr_ok": null,
-    "ind_of_ok": true
+    "ind_of_ok": true,
+    "pm_fee": 0.29841
   },
   {
     "symbol": "SOLUSDT",
@@ -539,7 +542,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 10.0,
-    "pnl": 8.69,
+    "pnl": 8.36,
     "virtual": true,
     "exit_time_tr": "2026-07-17T02:00:04.264857+03:00",
     "score_b": -2,
@@ -559,7 +562,8 @@
     "pm_entry_price": 0.535,
     "to_win": 18.69,
     "pm_slug": "solana-up-or-down-july-16-2026-6pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.32547
   },
   {
     "symbol": "BTCUSDT",
@@ -573,7 +577,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 10.0,
-    "pnl": -10.0,
+    "pnl": -10.38,
     "virtual": true,
     "exit_time_tr": "2026-07-17T09:00:04.743396+03:00",
     "score_b": 1,
@@ -593,7 +597,8 @@
     "pm_entry_price": 0.455,
     "to_win": 21.98,
     "pm_slug": "bitcoin-up-or-down-july-17-2026-1am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.38153
   },
   {
     "symbol": "BTCUSDT",
@@ -607,7 +612,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 10.0,
-    "pnl": -10.0,
+    "pnl": -10.36,
     "virtual": true,
     "exit_time_tr": "2026-07-17T14:00:04.327129+03:00",
     "score_b": -1,
@@ -627,7 +632,8 @@
     "pm_entry_price": 0.485,
     "to_win": 20.62,
     "pm_slug": "bitcoin-up-or-down-july-17-2026-6am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.36053
   },
   {
     "symbol": "BTCUSDT",
@@ -641,7 +647,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 10.0,
-    "pnl": -10.0,
+    "pnl": -10.33,
     "virtual": true,
     "exit_time_tr": "2026-07-17T15:00:04.258381+03:00",
     "score_b": -1,
@@ -661,7 +667,8 @@
     "pm_entry_price": 0.525,
     "to_win": 19.05,
     "pm_slug": "bitcoin-up-or-down-july-17-2026-7am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.33254
   },
   {
     "symbol": "SOLUSDT",
@@ -675,7 +682,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 10.0,
-    "pnl": -10.0,
+    "pnl": -10.33,
     "virtual": true,
     "exit_time_tr": "2026-07-17T15:00:04.258381+03:00",
     "score_b": -1,
@@ -695,7 +702,8 @@
     "pm_entry_price": 0.535,
     "to_win": 18.69,
     "pm_slug": "solana-up-or-down-july-17-2026-7am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.32547
   },
   {
     "symbol": "BTCUSDT",
@@ -709,7 +717,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 10.0,
-    "pnl": 7.7,
+    "pnl": 7.4,
     "virtual": true,
     "exit_time_tr": "2026-07-17T16:00:04.760268+03:00",
     "score_b": -1,
@@ -729,7 +737,8 @@
     "pm_entry_price": 0.565,
     "to_win": 17.7,
     "pm_slug": "bitcoin-up-or-down-july-17-2026-8am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.30452
   },
   {
     "symbol": "SOLUSDT",
@@ -743,7 +752,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 10.0,
-    "pnl": -10.0,
+    "pnl": -10.37,
     "virtual": true,
     "exit_time_tr": "2026-07-17T21:00:05.019240+03:00",
     "score_b": -1,
@@ -763,7 +772,8 @@
     "pm_entry_price": 0.475,
     "to_win": 21.05,
     "pm_slug": "solana-up-or-down-july-17-2026-1pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.36745
   },
   {
     "symbol": "SOLUSDT",
@@ -777,7 +787,7 @@
     "entry_dow": 5,
     "entry_is_weekend": true,
     "amount": 10.0,
-    "pnl": 23.9,
+    "pnl": 23.41,
     "virtual": true,
     "exit_time_tr": "2026-07-18T12:00:05.004309+03:00",
     "score_b": 1,
@@ -797,7 +807,8 @@
     "pm_entry_price": 0.295,
     "to_win": 33.9,
     "pm_slug": "solana-up-or-down-july-18-2026-4am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.49352
   },
   {
     "symbol": "BTCUSDT",
@@ -811,7 +822,7 @@
     "entry_dow": 6,
     "entry_is_weekend": true,
     "amount": 20.0,
-    "pnl": -20.0,
+    "pnl": -20.69,
     "virtual": true,
     "exit_time_tr": "2026-07-19T16:02:05.124777+03:00",
     "score_b": 2,
@@ -831,7 +842,8 @@
     "pm_entry_price": 0.505,
     "to_win": 39.6,
     "pm_slug": "bitcoin-up-or-down-july-19-2026-8am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.69293
   },
   {
     "symbol": "SOLUSDT",
@@ -845,7 +857,7 @@
     "entry_dow": 6,
     "entry_is_weekend": true,
     "amount": 20.0,
-    "pnl": 17.74,
+    "pnl": 17.08,
     "virtual": true,
     "exit_time_tr": "2026-07-19T21:02:04.202590+03:00",
     "score_b": 2,
@@ -865,7 +877,8 @@
     "pm_entry_price": 0.53,
     "to_win": 37.74,
     "pm_slug": "solana-up-or-down-july-19-2026-1pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.65807
   },
   {
     "symbol": "SOLUSDT",
@@ -879,7 +892,7 @@
     "entry_dow": 6,
     "entry_is_weekend": true,
     "amount": 20.0,
-    "pnl": 24.44,
+    "pnl": 23.67,
     "virtual": true,
     "exit_time_tr": "2026-07-19T23:02:04.471159+03:00",
     "score_b": 1,
@@ -899,7 +912,8 @@
     "pm_entry_price": 0.45,
     "to_win": 44.44,
     "pm_slug": "solana-up-or-down-july-19-2026-3pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.76992
   },
   {
     "symbol": "BTCUSDT",
@@ -913,7 +927,7 @@
     "entry_dow": 0,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 22.55,
+    "pnl": 21.89,
     "virtual": true,
     "exit_time_tr": "2026-07-21T00:02:04.789763+03:00",
     "score_b": 2,
@@ -933,7 +947,8 @@
     "pm_entry_price": 0.415,
     "to_win": 38.55,
     "pm_slug": "bitcoin-up-or-down-july-20-2026-4pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.65513
   },
   {
     "symbol": "SOLUSDT",
@@ -947,7 +962,7 @@
     "entry_dow": 1,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.77,
     "virtual": true,
     "exit_time_tr": "2026-07-21T07:02:04.612228+03:00",
     "score_b": -1,
@@ -967,7 +982,8 @@
     "pm_entry_price": 0.31,
     "to_win": 51.61,
     "pm_slug": "solana-up-or-down-july-20-2026-11pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.77276
   },
   {
     "symbol": "SOLUSDT",
@@ -981,7 +997,7 @@
     "entry_dow": 1,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.59,
     "virtual": true,
     "exit_time_tr": "2026-07-21T08:02:04.406296+03:00",
     "score_b": -1,
@@ -1001,7 +1017,8 @@
     "pm_entry_price": 0.47,
     "to_win": 34.04,
     "pm_slug": "solana-up-or-down-july-21-2026-12am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.59356
   },
   {
     "symbol": "SOLUSDT",
@@ -1015,7 +1032,7 @@
     "entry_dow": 1,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.64,
     "virtual": true,
     "exit_time_tr": "2026-07-21T10:02:05.472095+03:00",
     "score_b": -1,
@@ -1035,7 +1052,8 @@
     "pm_entry_price": 0.43,
     "to_win": 37.21,
     "pm_slug": "solana-up-or-down-july-21-2026-2am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.63841
   },
   {
     "symbol": "SOLUSDT",
@@ -1049,7 +1067,7 @@
     "entry_dow": 1,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 15.37,
+    "pnl": 14.82,
     "virtual": true,
     "exit_time_tr": "2026-07-21T11:02:05.042804+03:00",
     "score_b": -1,
@@ -1069,7 +1087,8 @@
     "pm_entry_price": 0.51,
     "to_win": 31.37,
     "pm_slug": "solana-up-or-down-july-21-2026-3am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.54876
   },
   {
     "symbol": "SOLUSDT",
@@ -1083,7 +1102,7 @@
     "entry_dow": 1,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 14.48,
+    "pnl": 13.95,
     "virtual": true,
     "exit_time_tr": "2026-07-21T12:02:05.118104+03:00",
     "score_b": -1,
@@ -1103,7 +1122,8 @@
     "pm_entry_price": 0.525,
     "to_win": 30.48,
     "pm_slug": "solana-up-or-down-july-21-2026-4am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.53207
   },
   {
     "symbol": "BTCUSDT",
@@ -1117,7 +1137,7 @@
     "entry_dow": 1,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 22.55,
+    "pnl": 21.89,
     "virtual": true,
     "exit_time_tr": "2026-07-21T22:02:04.441688+03:00",
     "score_b": 1,
@@ -1137,7 +1157,8 @@
     "pm_entry_price": 0.415,
     "to_win": 38.55,
     "pm_slug": "bitcoin-up-or-down-july-21-2026-2pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.65513
   },
   {
     "symbol": "BTCUSDT",
@@ -1151,7 +1172,7 @@
     "entry_dow": 2,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 22.55,
+    "pnl": 21.89,
     "virtual": true,
     "exit_time_tr": "2026-07-22T03:02:05.587622+03:00",
     "score_b": 2,
@@ -1171,7 +1192,8 @@
     "pm_entry_price": 0.415,
     "to_win": 38.55,
     "pm_slug": "bitcoin-up-or-down-july-21-2026-7pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.65513
   },
   {
     "symbol": "BTCUSDT",
@@ -1185,7 +1207,7 @@
     "entry_dow": 2,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.57,
     "virtual": true,
     "exit_time_tr": "2026-07-22T07:02:04.907004+03:00",
     "score_b": 2,
@@ -1205,7 +1227,8 @@
     "pm_entry_price": 0.495,
     "to_win": 32.32,
     "pm_slug": "bitcoin-up-or-down-july-21-2026-11pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.56554
   },
   {
     "symbol": "SOLUSDT",
@@ -1219,7 +1242,7 @@
     "entry_dow": 2,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.52,
     "virtual": true,
     "exit_time_tr": "2026-07-22T10:02:05.094369+03:00",
     "score_b": 2,
@@ -1239,7 +1262,8 @@
     "pm_entry_price": 0.535,
     "to_win": 29.91,
     "pm_slug": "solana-up-or-down-july-22-2026-2am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.52086
   },
   {
     "symbol": "BTCUSDT",
@@ -1253,7 +1277,7 @@
     "entry_dow": 2,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.54,
     "virtual": true,
     "exit_time_tr": "2026-07-22T11:02:04.933705+03:00",
     "score_b": 1,
@@ -1273,7 +1297,8 @@
     "pm_entry_price": 0.515,
     "to_win": 31.07,
     "pm_slug": "bitcoin-up-or-down-july-22-2026-3am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.54324
   },
   {
     "symbol": "SOLUSDT",
@@ -1287,7 +1312,7 @@
     "entry_dow": 2,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.55,
     "virtual": true,
     "exit_time_tr": "2026-07-22T11:02:04.933705+03:00",
     "score_b": 1,
@@ -1307,7 +1332,8 @@
     "pm_entry_price": 0.505,
     "to_win": 31.68,
     "pm_slug": "solana-up-or-down-july-22-2026-3am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.55434
   },
   {
     "symbol": "BTCUSDT",
@@ -1321,7 +1347,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 12.83,
+    "pnl": 12.33,
     "virtual": true,
     "exit_time_tr": "2026-07-24T01:02:02.906132+03:00",
     "score_b": -2,
@@ -1341,7 +1367,8 @@
     "pm_entry_price": 0.555,
     "to_win": 28.83,
     "pm_slug": "bitcoin-up-or-down-july-23-2026-5pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.49842
   },
   {
     "symbol": "BTCUSDT",
@@ -1355,7 +1382,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.44,
     "virtual": true,
     "exit_time_tr": "2026-07-24T02:02:03.462106+03:00",
     "score_b": -2,
@@ -1375,7 +1402,8 @@
     "pm_entry_price": 0.605,
     "to_win": 26.45,
     "pm_slug": "bitcoin-up-or-down-july-23-2026-6pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.44246
   },
   {
     "symbol": "BTCUSDT",
@@ -1389,7 +1417,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 9.6,
+    "pnl": 9.18,
     "virtual": true,
     "exit_time_tr": "2026-07-24T08:02:03.821009+03:00",
     "score_b": -1,
@@ -1409,7 +1437,8 @@
     "pm_entry_price": 0.625,
     "to_win": 25.6,
     "pm_slug": "bitcoin-up-or-down-july-24-2026-12am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.42
   },
   {
     "symbol": "SOLUSDT",
@@ -1423,7 +1452,7 @@
     "entry_dow": 0,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 13.91,
+    "pnl": 13.39,
     "virtual": true,
     "exit_time_tr": "2026-07-27T09:02:04.799540+03:00",
     "score_b": 1,
@@ -1443,7 +1472,8 @@
     "pm_entry_price": 0.535,
     "to_win": 29.91,
     "pm_slug": "solana-up-or-down-july-27-2026-1am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.52086
   },
   {
     "symbol": "SOLUSDT",
@@ -1457,7 +1487,7 @@
     "entry_dow": 0,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 13.36,
+    "pnl": 12.85,
     "virtual": true,
     "exit_time_tr": "2026-07-27T13:02:04.819905+03:00",
     "score_b": 2,
@@ -1477,7 +1507,8 @@
     "pm_entry_price": 0.545,
     "to_win": 29.36,
     "pm_slug": "solana-up-or-down-july-27-2026-5am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.50964
   },
   {
     "symbol": "BTCUSDT",
@@ -1491,7 +1522,7 @@
     "entry_dow": 0,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 15.68,
+    "pnl": 15.13,
     "virtual": true,
     "exit_time_tr": "2026-07-28T00:02:04.828794+03:00",
     "score_b": -1,
@@ -1511,7 +1542,8 @@
     "pm_entry_price": 0.505,
     "to_win": 31.68,
     "pm_slug": "bitcoin-up-or-down-july-27-2026-4pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.55434
   },
   {
     "symbol": "BTCUSDT",
@@ -1525,7 +1557,7 @@
     "entry_dow": 1,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 12.83,
+    "pnl": 12.33,
     "virtual": true,
     "exit_time_tr": "2026-07-28T11:02:04.382239+03:00",
     "score_b": -1,
@@ -1545,7 +1577,8 @@
     "pm_entry_price": 0.555,
     "to_win": 28.83,
     "pm_slug": "bitcoin-up-or-down-july-28-2026-3am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.49842
   },
   {
     "symbol": "BTCUSDT",
@@ -1559,7 +1592,7 @@
     "entry_dow": 3,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 18.41,
+    "pnl": 17.81,
     "virtual": true,
     "exit_time_tr": "2026-07-30T01:02:04.222402+03:00",
     "score_b": 1,
@@ -1579,7 +1612,8 @@
     "pm_entry_price": 0.465,
     "to_win": 34.41,
     "pm_slug": "bitcoin-up-or-down-july-29-2026-5pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.59922
   },
   {
     "symbol": "SOLUSDT",
@@ -1593,7 +1627,7 @@
     "entry_dow": 3,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 14.48,
+    "pnl": 13.95,
     "virtual": true,
     "exit_time_tr": "2026-07-30T01:02:04.222402+03:00",
     "score_b": 1,
@@ -1613,7 +1647,8 @@
     "pm_entry_price": 0.525,
     "to_win": 30.48,
     "pm_slug": "solana-up-or-down-july-29-2026-5pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.53207
   },
   {
     "symbol": "BTCUSDT",
@@ -1627,7 +1662,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.64,
     "virtual": true,
     "exit_time_tr": "2026-07-31T06:02:04.187031+03:00",
     "score_b": 1,
@@ -1647,7 +1682,8 @@
     "pm_entry_price": 0.425,
     "to_win": 37.65,
     "pm_slug": "bitcoin-up-or-down-july-30-2026-10pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.64405
   },
   {
     "symbol": "SOLUSDT",
@@ -1661,7 +1697,7 @@
     "entry_dow": 4,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 13.91,
+    "pnl": 13.39,
     "virtual": true,
     "exit_time_tr": "2026-07-31T22:02:06.064201+03:00",
     "score_b": -2,
@@ -1681,7 +1717,8 @@
     "pm_entry_price": 0.535,
     "to_win": 29.91,
     "pm_slug": "solana-up-or-down-july-31-2026-2pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.52086
   },
   {
     "symbol": "SOLUSDT",
@@ -1695,7 +1732,7 @@
     "entry_dow": 5,
     "entry_is_weekend": true,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.55,
     "virtual": true,
     "exit_time_tr": "2026-08-01T05:02:06.465504+03:00",
     "score_b": -2,
@@ -1715,7 +1752,8 @@
     "pm_entry_price": 0.505,
     "to_win": 31.68,
     "pm_slug": "solana-up-or-down-july-31-2026-9pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.55434
   },
   {
     "symbol": "SOLUSDT",
@@ -1729,7 +1767,7 @@
     "entry_dow": 5,
     "entry_is_weekend": true,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.65,
     "virtual": true,
     "exit_time_tr": "2026-08-01T06:02:06.140664+03:00",
     "score_b": -2,
@@ -1749,7 +1787,8 @@
     "pm_entry_price": 0.42,
     "to_win": 38.1,
     "pm_slug": "solana-up-or-down-july-31-2026-10pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.64968
   },
   {
     "symbol": "SOLUSDT",
@@ -1763,7 +1802,7 @@
     "entry_dow": 5,
     "entry_is_weekend": true,
     "amount": 11.2,
-    "pnl": -11.2,
+    "pnl": -11.57,
     "virtual": true,
     "exit_time_tr": "2026-08-01T08:02:07.355848+03:00",
     "score_b": -2,
@@ -1783,7 +1822,8 @@
     "pm_entry_price": 0.53,
     "to_win": 21.13,
     "pm_slug": "solana-up-or-down-august-1-2026-12am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.36844
   },
   {
     "symbol": "SOLUSDT",
@@ -1797,7 +1837,7 @@
     "entry_dow": 5,
     "entry_is_weekend": true,
     "amount": 16.0,
-    "pnl": 13.91,
+    "pnl": 13.39,
     "virtual": true,
     "exit_time_tr": "2026-08-01T09:02:07.324247+03:00",
     "score_b": -2,
@@ -1817,7 +1857,8 @@
     "pm_entry_price": 0.535,
     "to_win": 29.91,
     "pm_slug": "solana-up-or-down-august-1-2026-1am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.52086
   },
   {
     "symbol": "SOLUSDT",
@@ -1831,7 +1872,7 @@
     "entry_dow": 0,
     "entry_is_weekend": false,
     "amount": 11.2,
-    "pnl": -11.2,
+    "pnl": -11.61,
     "virtual": true,
     "exit_time_tr": "2026-08-03T11:02:25.064827+03:00",
     "score_b": 2,
@@ -1851,7 +1892,8 @@
     "pm_entry_price": 0.48,
     "to_win": 23.33,
     "pm_slug": "solana-up-or-down-august-3-2026-3am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.40762
   },
   {
     "symbol": "SOLUSDT",
@@ -1865,7 +1907,7 @@
     "entry_dow": 0,
     "entry_is_weekend": false,
     "amount": 22.4,
-    "pnl": -22.4,
+    "pnl": -23.1,
     "virtual": true,
     "exit_time_tr": "2026-08-03T12:02:24.038944+03:00",
     "score_b": 1,
@@ -1885,7 +1927,8 @@
     "pm_entry_price": 0.555,
     "to_win": 40.36,
     "pm_slug": "solana-up-or-down-august-3-2026-4am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.69775
   },
   {
     "symbol": "BTCUSDT",
@@ -1899,7 +1942,7 @@
     "entry_dow": 1,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.62,
     "virtual": true,
     "exit_time_tr": "2026-08-04T02:02:24.061138+03:00",
     "score_b": 1,
@@ -1919,7 +1962,8 @@
     "pm_entry_price": 0.445,
     "to_win": 35.96,
     "pm_slug": "bitcoin-up-or-down-august-3-2026-6pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.62169
   },
   {
     "symbol": "BTCUSDT",
@@ -1933,7 +1977,7 @@
     "entry_dow": 1,
     "entry_is_weekend": false,
     "amount": 11.2,
-    "pnl": 10.98,
+    "pnl": 10.59,
     "virtual": true,
     "exit_time_tr": "2026-08-04T08:02:23.765314+03:00",
     "score_b": 2,
@@ -1953,7 +1997,8 @@
     "pm_entry_price": 0.505,
     "to_win": 22.18,
     "pm_slug": "bitcoin-up-or-down-august-4-2026-12am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.38811
   },
   {
     "symbol": "SOLUSDT",
@@ -1967,7 +2012,7 @@
     "entry_dow": 2,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 13.91,
+    "pnl": 13.39,
     "virtual": true,
     "exit_time_tr": "2026-08-05T05:02:25.428668+03:00",
     "score_b": 1,
@@ -1987,7 +2032,8 @@
     "pm_entry_price": 0.535,
     "to_win": 29.91,
     "pm_slug": "solana-up-or-down-august-4-2026-9pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.52086
   },
   {
     "symbol": "SOLUSDT",
@@ -2001,7 +2047,7 @@
     "entry_dow": 2,
     "entry_is_weekend": false,
     "amount": 22.4,
-    "pnl": 20.27,
+    "pnl": 19.53,
     "virtual": true,
     "exit_time_tr": "2026-08-05T16:02:31.410272+03:00",
     "score_b": 1,
@@ -2021,7 +2067,8 @@
     "pm_entry_price": 0.525,
     "to_win": 42.67,
     "pm_slug": "solana-up-or-down-august-5-2026-8am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.74486
   },
   {
     "symbol": "SOLUSDT",
@@ -2035,7 +2082,7 @@
     "entry_dow": 2,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.56,
     "virtual": true,
     "exit_time_tr": "2026-08-05T17:02:29.318746+03:00",
     "score_b": 2,
@@ -2055,7 +2102,8 @@
     "pm_entry_price": 0.5,
     "to_win": 32.0,
     "pm_slug": "solana-up-or-down-august-5-2026-9am-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.56
   },
   {
     "symbol": "SOLUSDT",
@@ -2069,7 +2117,7 @@
     "entry_dow": 2,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 16.32,
+    "pnl": 15.75,
     "virtual": true,
     "exit_time_tr": "2026-08-05T22:02:29.463086+03:00",
     "score_b": -1,
@@ -2089,7 +2137,8 @@
     "pm_entry_price": 0.495,
     "to_win": 32.32,
     "pm_slug": "solana-up-or-down-august-5-2026-2pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.56554
   },
   {
     "symbol": "BTCUSDT",
@@ -2103,7 +2152,7 @@
     "entry_dow": 3,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": 13.91,
+    "pnl": 13.39,
     "virtual": true,
     "exit_time_tr": "2026-08-06T03:02:30.494954+03:00",
     "score_b": 1,
@@ -2123,7 +2172,8 @@
     "pm_entry_price": 0.535,
     "to_win": 29.91,
     "pm_slug": "bitcoin-up-or-down-august-5-2026-7pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.52086
   },
   {
     "symbol": "BTCUSDT",
@@ -2137,7 +2187,7 @@
     "entry_dow": 3,
     "entry_is_weekend": false,
     "amount": 16.0,
-    "pnl": -16.0,
+    "pnl": -16.53,
     "virtual": true,
     "exit_time_tr": "2026-08-06T04:02:28.718816+03:00",
     "score_b": 1,
@@ -2157,6 +2207,7 @@
     "pm_entry_price": 0.525,
     "to_win": 30.48,
     "pm_slug": "bitcoin-up-or-down-august-5-2026-8pm-et",
-    "tier": "⚡ Bir güçlü bir orta"
+    "tier": "⚡ Bir güçlü bir orta",
+    "pm_fee": 0.53207
   }
 ]

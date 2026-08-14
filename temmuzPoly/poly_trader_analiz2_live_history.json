@@ -21,11 +21,12 @@
     "pm_slug": "solana-up-or-down-july-21-2026-6pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-22T03:02:05.601752+03:00",
-    "pnl": 5.64,
+    "pnl": 5.43,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.2053
   },
   {
     "symbol": "SOLUSDT",
@@ -49,11 +50,12 @@
     "pm_slug": "solana-up-or-down-july-21-2026-8pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-22T04:02:05.674281+03:00",
-    "pnl": -6.12,
+    "pnl": -6.4,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.28274
   },
   {
     "symbol": "SOLUSDT",
@@ -77,11 +79,12 @@
     "pm_slug": "solana-up-or-down-july-21-2026-9pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-22T05:02:05.617347+03:00",
-    "pnl": 4.73,
+    "pnl": 4.54,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.18542
   },
   {
     "symbol": "SOLUSDT",
@@ -108,12 +111,13 @@
     "pm_slug": "solana-up-or-down-july-22-2026-3am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-22T10:32:19.277370+03:00",
-    "pnl": -5.89,
+    "pnl": -6.22,
     "early_exit": true,
     "signal_mode": "standard",
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.33237
   },
   {
     "symbol": "SOLUSDT",
@@ -139,8 +143,9 @@
     "pm_slug": "solana-up-or-down-july-22-2026-7am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-22T14:22:27.663544+03:00",
-    "pnl": -1.98,
-    "early_exit": true
+    "pnl": -2.29,
+    "early_exit": true,
+    "pm_fee": 0.31487
   },
   {
     "symbol": "SOLUSDT",
@@ -166,10 +171,11 @@
     "pm_slug": "solana-up-or-down-july-22-2026-1pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-22T20:32:17.612140+03:00",
-    "pnl": 0.5,
+    "pnl": 0.33,
     "early_exit": true,
     "note": "Zincirde zaten satilmisti; state senkronize",
-    "pm_live": true
+    "pm_live": true,
+    "pm_fee": 0.168
   },
   {
     "symbol": "SOLUSDT",
@@ -193,11 +199,12 @@
     "pm_slug": "solana-up-or-down-july-23-2026-1am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-23T09:02:02.993279+03:00",
-    "pnl": 6.0,
+    "pnl": 5.79,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.21
   },
   {
     "symbol": "SOLUSDT",
@@ -221,11 +228,12 @@
     "pm_slug": "solana-up-or-down-july-23-2026-2am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-23T11:02:04.102370+03:00",
-    "pnl": 6.0,
+    "pnl": 5.79,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.21
   },
   {
     "symbol": "SOLUSDT",
@@ -249,11 +257,12 @@
     "pm_slug": "solana-up-or-down-july-23-2026-3am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-23T11:02:04.102370+03:00",
-    "pnl": -9.12,
+    "pnl": -9.52,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.39581
   },
   {
     "symbol": "SOLUSDT",
@@ -277,11 +286,12 @@
     "pm_slug": "solana-up-or-down-july-23-2026-11am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-23T20:02:03.391537+03:00",
-    "pnl": -6.24,
+    "pnl": -6.51,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.26645
   },
   {
     "symbol": "SOLUSDT",
@@ -305,11 +315,12 @@
     "pm_slug": "solana-up-or-down-july-23-2026-12pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-23T20:02:03.391537+03:00",
-    "pnl": -6.0,
+    "pnl": -6.29,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.294
   },
   {
     "symbol": "SOLUSDT",
@@ -333,11 +344,12 @@
     "pm_slug": "solana-up-or-down-july-23-2026-1pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-23T22:02:03.245399+03:00",
-    "pnl": -6.11,
+    "pnl": -6.32,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.2053
   },
   {
     "symbol": "SOLUSDT",
@@ -361,11 +373,12 @@
     "pm_slug": "solana-up-or-down-july-23-2026-2pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-23T22:02:03.245399+03:00",
-    "pnl": 6.5,
+    "pnl": 6.28,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.2184
   },
   {
     "symbol": "SOLUSDT",
@@ -389,11 +402,12 @@
     "pm_slug": "solana-up-or-down-july-23-2026-3pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-23T23:02:03.317989+03:00",
-    "pnl": -6.0,
+    "pnl": -6.21,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.21
   },
   {
     "symbol": "SOLUSDT",
@@ -417,11 +431,12 @@
     "pm_slug": "solana-up-or-down-july-23-2026-11pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-24T07:02:03.420809+03:00",
-    "pnl": 2.61,
+    "pnl": 2.48,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.12972
   },
   {
     "symbol": "SOLUSDT",
@@ -445,11 +460,12 @@
     "pm_slug": "solana-up-or-down-july-24-2026-7am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-24T15:02:03.663122+03:00",
-    "pnl": -9.0,
+    "pnl": -9.31,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.315
   },
   {
     "symbol": "SOLUSDT",
@@ -473,11 +489,12 @@
     "pm_slug": "solana-up-or-down-july-24-2026-8am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-24T16:02:03.891158+03:00",
-    "pnl": -6.09,
+    "pnl": -6.34,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.24725
   },
   {
     "symbol": "SOLUSDT",
@@ -501,11 +518,12 @@
     "pm_slug": "solana-up-or-down-july-24-2026-2pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-24T22:02:04.401913+03:00",
-    "pnl": -5.04,
+    "pnl": -5.23,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.19404
   },
   {
     "symbol": "SOLUSDT",
@@ -530,8 +548,9 @@
     "pm_slug": "solana-up-or-down-july-26-2026-12pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-26T20:44:15.455864+03:00",
-    "pnl": -6.27,
-    "pm_live": true
+    "pnl": -6.42,
+    "pm_live": true,
+    "pm_fee": 0.14923
   },
   {
     "symbol": "SOLUSDT",
@@ -555,11 +574,12 @@
     "pm_slug": "solana-up-or-down-july-26-2026-6pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-27T02:02:04.095344+03:00",
-    "pnl": -6.0,
+    "pnl": -6.35,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "UP"
+    "ind_ema_vote": "UP",
+    "pm_fee": 0.3528
   },
   {
     "symbol": "SOLUSDT",
@@ -583,11 +603,12 @@
     "pm_slug": "solana-up-or-down-july-26-2026-7pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-27T04:02:04.584271+03:00",
-    "pnl": -6.21,
+    "pnl": -6.41,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "UP"
+    "ind_ema_vote": "UP",
+    "pm_fee": 0.19996
   },
   {
     "symbol": "SOLUSDT",
@@ -611,11 +632,12 @@
     "pm_slug": "solana-up-or-down-july-26-2026-9pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-27T05:02:04.989362+03:00",
-    "pnl": -6.37,
+    "pnl": -6.6,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "UP"
+    "ind_ema_vote": "UP",
+    "pm_fee": 0.22741
   },
   {
     "symbol": "SOLUSDT",
@@ -639,11 +661,12 @@
     "pm_slug": "solana-up-or-down-july-26-2026-10pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-27T06:02:04.877618+03:00",
-    "pnl": 5.29,
+    "pnl": 5.09,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "UP"
+    "ind_ema_vote": "UP",
+    "pm_fee": 0.19996
   },
   {
     "symbol": "SOLUSDT",
@@ -668,8 +691,9 @@
     "pm_slug": "solana-up-or-down-july-27-2026-5am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-27T12:37:10.108514+03:00",
-    "pnl": 7.68,
-    "pm_live": true
+    "pnl": 7.41,
+    "pm_live": true,
+    "pm_fee": 0.26645
   },
   {
     "symbol": "SOLUSDT",
@@ -697,11 +721,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-07-29T12:02:04.901359+03:00",
-    "pnl": 4.73,
+    "pnl": 4.54,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.18873
   },
   {
     "symbol": "SOLUSDT",
@@ -729,11 +754,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-07-29T13:02:05.108657+03:00",
-    "pnl": -6.12,
+    "pnl": -6.33,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.20992
   },
   {
     "symbol": "SOLUSDT",
@@ -761,11 +787,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-07-29T14:02:05.198321+03:00",
-    "pnl": 5.64,
+    "pnl": 5.43,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.20924
   },
   {
     "symbol": "SOLUSDT",
@@ -793,11 +820,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-07-30T01:02:04.256661+03:00",
-    "pnl": 8.85,
+    "pnl": 8.6,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.254
   },
   {
     "symbol": "SOLUSDT",
@@ -825,11 +853,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-07-30T04:02:04.637063+03:00",
-    "pnl": 5.29,
+    "pnl": 5.09,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "DOWN"
+    "ind_ema_vote": "DOWN",
+    "pm_fee": 0.19996
   },
   {
     "symbol": "SOLUSDT",
@@ -857,11 +886,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-07-30T06:02:05.002278+03:00",
-    "pnl": 6.0,
+    "pnl": 5.79,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.21
   },
   {
     "symbol": "SOLUSDT",
@@ -886,8 +916,9 @@
     "pm_slug": "solana-up-or-down-july-30-2026-4am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-30T11:50:32.498063+03:00",
-    "pnl": -6.15,
-    "pm_live": true
+    "pnl": -6.4,
+    "pm_live": true,
+    "pm_fee": 0.254
   },
   {
     "symbol": "SOLUSDT",
@@ -915,11 +946,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-07-30T16:02:05.005254+03:00",
-    "pnl": -6.02,
+    "pnl": -6.26,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.2402
   },
   {
     "symbol": "SOLUSDT",
@@ -947,11 +979,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-07-30T22:02:05.319736+03:00",
-    "pnl": 9.0,
+    "pnl": 8.75,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "UP",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.252
   },
   {
     "symbol": "SOLUSDT",
@@ -976,8 +1009,9 @@
     "pm_slug": "solana-up-or-down-july-30-2026-11pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-31T07:42:23.855578+03:00",
-    "pnl": -6.0,
-    "pm_live": true
+    "pnl": -6.65,
+    "pm_live": true,
+    "pm_fee": 0.64831
   },
   {
     "symbol": "SOLUSDT",
@@ -1005,11 +1039,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-07-31T14:02:06.001658+03:00",
-    "pnl": 6.63,
+    "pnl": 6.4,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.22741
   },
   {
     "symbol": "SOLUSDT",
@@ -1034,8 +1069,9 @@
     "pm_slug": "solana-up-or-down-july-31-2026-2pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-31T23:32:54.022090+03:00",
-    "pnl": -11.34,
-    "pm_live": true
+    "pnl": -11.71,
+    "pm_live": true,
+    "pm_fee": 0.36515
   },
   {
     "symbol": "SOLUSDT",
@@ -1060,8 +1096,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-3am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-03T10:15:17.547730+03:00",
-    "pnl": -0.91,
-    "pm_live": true
+    "pnl": -1.23,
+    "pm_live": true,
+    "pm_fee": 0.31532
   },
   {
     "symbol": "SOLUSDT",
@@ -1089,11 +1126,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-08-03T13:02:25.198092+03:00",
-    "pnl": 7.84,
+    "pnl": 7.56,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.27989
   },
   {
     "symbol": "SOLUSDT",
@@ -1118,8 +1156,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-7am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-03T14:42:11.649698+03:00",
-    "pnl": 12.38,
-    "pm_live": true
+    "pnl": 11.3,
+    "pm_live": true,
+    "pm_fee": 1.07568
   },
   {
     "symbol": "SOLUSDT",
@@ -1144,8 +1183,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-8am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-03T15:07:55.754403+03:00",
-    "pnl": 0.53,
-    "pm_live": true
+    "pnl": 0.22,
+    "pm_live": true,
+    "pm_fee": 0.30839
   },
   {
     "symbol": "SOLUSDT",
@@ -1173,11 +1213,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-08-04T14:02:26.168132+03:00",
-    "pnl": 13.8,
+    "pnl": 13.5,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.29946
   },
   {
     "symbol": "SOLUSDT",
@@ -1202,8 +1243,9 @@
     "pm_slug": "solana-up-or-down-august-4-2026-5pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-05T00:20:47.015751+03:00",
-    "pnl": 25.14,
-    "pm_live": true
+    "pnl": 24.59,
+    "pm_live": true,
+    "pm_fee": 0.55213
   },
   {
     "symbol": "SOLUSDT",
@@ -1231,11 +1273,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-08-05T05:02:25.420868+03:00",
-    "pnl": 6.45,
+    "pnl": 6.19,
     "pm_live": true,
     "ind_rsi_vote": "UP",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.25736
   },
   {
     "symbol": "SOLUSDT",
@@ -1263,11 +1306,12 @@
     "pm_partial_sold_size": null,
     "pm_partial_tp_done": null,
     "exit_time_tr": "2026-08-05T12:02:33.825859+03:00",
-    "pnl": -12.06,
+    "pnl": -12.6,
     "pm_live": true,
     "ind_rsi_vote": "DOWN",
     "ind_macd_vote": "DOWN",
-    "ind_ema_vote": "NEUTRAL"
+    "ind_ema_vote": "NEUTRAL",
+    "pm_fee": 0.54029
   },
   {
     "symbol": "SOLUSDT",
@@ -1292,8 +1336,9 @@
     "pm_slug": "solana-up-or-down-august-5-2026-8am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-05T15:23:32.311080+03:00",
-    "pnl": 4.81,
-    "pm_live": true
+    "pnl": 4.58,
+    "pm_live": true,
+    "pm_fee": 0.22604
   },
   {
     "symbol": "SOLUSDT",
@@ -1318,8 +1363,9 @@
     "pm_slug": "solana-up-or-down-august-5-2026-2pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-05T21:26:15.523790+03:00",
-    "pnl": -0.2,
-    "pm_live": true
+    "pnl": -0.59,
+    "pm_live": true,
+    "pm_fee": 0.39123
   },
   {
     "symbol": "SOLUSDT",
@@ -1344,7 +1390,8 @@
     "pm_slug": "solana-up-or-down-august-5-2026-5pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-06T00:34:30.271175+03:00",
-    "pnl": -3.76,
-    "pm_live": true
+    "pnl": -4.19,
+    "pm_live": true,
+    "pm_fee": 0.42695
   }
 ]

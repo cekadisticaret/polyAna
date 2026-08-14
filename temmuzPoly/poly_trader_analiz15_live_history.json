@@ -22,8 +22,9 @@
     "pm_slug": "bitcoin-up-or-down-august-3-2026-2pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-03T21:39:50.732665+03:00",
-    "pnl": -4.42,
-    "pm_live": true
+    "pnl": -4.87,
+    "pm_live": true,
+    "pm_fee": 0.45336
   },
   {
     "symbol": "SOLUSDT",
@@ -48,8 +49,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-4pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T23:30:32.495129+03:00",
-    "pnl": -0.14,
-    "pm_live": true
+    "pnl": -0.31,
+    "pm_live": true,
+    "pm_fee": 0.17035
   },
   {
     "symbol": "BTCUSDT",
@@ -74,8 +76,9 @@
     "pm_slug": "bitcoin-up-or-down-august-3-2026-4pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T23:53:11.284903+03:00",
-    "pnl": 4.08,
-    "pm_live": true
+    "pnl": 3.93,
+    "pm_live": true,
+    "pm_fee": 0.14851
   },
   {
     "symbol": "SOLUSDT",

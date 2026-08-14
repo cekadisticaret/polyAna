@@ -79,8 +79,9 @@
     "pm_slug": "bitcoin-up-or-down-july-31-2026-4am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-31T11:06:49.534042+03:00",
-    "pnl": 0.31,
-    "pm_live": true
+    "pnl": 0.04,
+    "pm_live": true,
+    "pm_fee": 0.27082
   },
   {
     "symbol": "SOLUSDT",
@@ -105,8 +106,9 @@
     "pm_slug": "solana-up-or-down-july-31-2026-4am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-07-31T12:34:08.763965+03:00",
-    "pnl": -8.0,
-    "pm_live": true
+    "pnl": -8.28,
+    "pm_live": true,
+    "pm_fee": 0.28
   },
   {
     "symbol": "ETHUSDT",
@@ -131,8 +133,9 @@
     "pm_slug": "ethereum-up-or-down-july-31-2026-4am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-07-31T12:34:14.204059+03:00",
-    "pnl": -4.41,
-    "pm_live": true
+    "pnl": -4.52,
+    "pm_live": true,
+    "pm_fee": 0.11422
   },
   {
     "symbol": "BTCUSDT",
@@ -157,8 +160,9 @@
     "pm_slug": "bitcoin-up-or-down-august-3-2026-1am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T09:39:57.457897+03:00",
-    "pnl": -8.03,
-    "pm_live": true
+    "pnl": -8.34,
+    "pm_live": true,
+    "pm_fee": 0.31478
   },
   {
     "symbol": "SOLUSDT",
@@ -183,8 +187,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-1am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T09:40:13.671786+03:00",
-    "pnl": -6.05,
-    "pm_live": true
+    "pnl": -6.29,
+    "pm_live": true,
+    "pm_fee": 0.24009
   },
   {
     "symbol": "SOLUSDT",
@@ -209,8 +214,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-1am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T09:40:18.132387+03:00",
-    "pnl": -6.05,
-    "pm_live": true
+    "pnl": -6.29,
+    "pm_live": true,
+    "pm_fee": 0.24009
   },
   {
     "symbol": "SOLUSDT",
@@ -235,8 +241,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-4am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T11:17:16.157506+03:00",
-    "pnl": 8.51,
-    "pm_live": true
+    "pnl": 8.16,
+    "pm_live": true,
+    "pm_fee": 0.34546
   },
   {
     "symbol": "ETHUSDT",
@@ -261,8 +268,9 @@
     "pm_slug": "ethereum-up-or-down-august-3-2026-4am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T11:17:21.866362+03:00",
-    "pnl": 2.44,
-    "pm_live": true
+    "pnl": 2.16,
+    "pm_live": true,
+    "pm_fee": 0.27915
   },
   {
     "symbol": "BTCUSDT",
@@ -287,8 +295,9 @@
     "pm_slug": "bitcoin-up-or-down-august-3-2026-4am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T11:17:37.558864+03:00",
-    "pnl": 1.91,
-    "pm_live": true
+    "pnl": 1.61,
+    "pm_live": true,
+    "pm_fee": 0.29743
   },
   {
     "symbol": "BTCUSDT",
@@ -313,8 +322,9 @@
     "pm_slug": "bitcoin-up-or-down-august-3-2026-2pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-03T21:39:40.841888+03:00",
-    "pnl": 11.36,
-    "pm_live": true
+    "pnl": 10.14,
+    "pm_live": true,
+    "pm_fee": 1.22059
   },
   {
     "symbol": "SOLUSDT",
@@ -339,8 +349,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-2pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-03T21:40:09.883122+03:00",
-    "pnl": 8.52,
-    "pm_live": true
+    "pnl": 8.29,
+    "pm_live": true,
+    "pm_fee": 0.23463
   },
   {
     "symbol": "ETHUSDT",
@@ -365,8 +376,9 @@
     "pm_slug": "ethereum-up-or-down-august-3-2026-2pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T21:40:09.968979+03:00",
-    "pnl": 7.25,
-    "pm_live": true
+    "pnl": 6.76,
+    "pm_live": true,
+    "pm_fee": 0.49451
   },
   {
     "symbol": "SOLUSDT",
@@ -391,8 +403,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-2pm-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-03T21:41:17.906812+03:00",
-    "pnl": 1.98,
-    "pm_live": true
+    "pnl": 1.85,
+    "pm_live": true,
+    "pm_fee": 0.13476
   },
   {
     "symbol": "ETHUSDT",
@@ -417,8 +430,9 @@
     "pm_slug": "ethereum-up-or-down-august-3-2026-2pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T21:41:18.997607+03:00",
-    "pnl": -3.1,
-    "pm_live": true
+    "pnl": -3.6,
+    "pm_live": true,
+    "pm_fee": 0.49942
   },
   {
     "symbol": "SOLUSDT",
@@ -443,8 +457,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-4pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T23:30:28.953243+03:00",
-    "pnl": -0.27,
-    "pm_live": true
+    "pnl": -0.44,
+    "pm_live": true,
+    "pm_fee": 0.16967
   },
   {
     "symbol": "BTCUSDT",
@@ -469,8 +484,9 @@
     "pm_slug": "bitcoin-up-or-down-august-3-2026-4pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T23:53:06.304195+03:00",
-    "pnl": 16.93,
-    "pm_live": true
+    "pnl": 16.51,
+    "pm_live": true,
+    "pm_fee": 0.42456
   },
   {
     "symbol": "ETHUSDT",
@@ -495,8 +511,9 @@
     "pm_slug": "ethereum-up-or-down-august-3-2026-4pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-03T23:53:08.386630+03:00",
-    "pnl": 14.7,
-    "pm_live": true
+    "pnl": 14.36,
+    "pm_live": true,
+    "pm_fee": 0.33866
   },
   {
     "symbol": "BTCUSDT",
@@ -654,8 +671,9 @@
     "pm_slug": "ethereum-up-or-down-august-4-2026-7pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-05T02:09:38.673565+03:00",
-    "pnl": 15.5,
-    "pm_live": true
+    "pnl": 14.58,
+    "pm_live": true,
+    "pm_fee": 0.91562
   },
   {
     "symbol": "BTCUSDT",
@@ -680,8 +698,9 @@
     "pm_slug": "bitcoin-up-or-down-august-4-2026-7pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-05T02:27:53.034384+03:00",
-    "pnl": 24.2,
-    "pm_live": true
+    "pnl": 23.22,
+    "pm_live": true,
+    "pm_fee": 0.98263
   },
   {
     "symbol": "SOLUSDT",
@@ -934,8 +953,9 @@
     "pm_slug": "bitcoin-up-or-down-august-5-2026-3am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-05T10:20:40.451673+03:00",
-    "pnl": 9.28,
-    "pm_live": true
+    "pnl": 9.02,
+    "pm_live": true,
+    "pm_fee": 0.25805
   },
   {
     "symbol": "SOLUSDT",
@@ -960,8 +980,9 @@
     "pm_slug": "solana-up-or-down-august-5-2026-3am-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-05T10:20:45.073670+03:00",
-    "pnl": 8.72,
-    "pm_live": true
+    "pnl": 8.47,
+    "pm_live": true,
+    "pm_fee": 0.24763
   },
   {
     "symbol": "ETHUSDT",
@@ -1005,7 +1026,8 @@
     "pm_slug": "ethereum-up-or-down-august-5-2026-4pm-et",
     "pm_token_dir": "DOWN",
     "exit_time_tr": "2026-08-05T23:49:02.934726+03:00",
-    "pnl": -1.42,
-    "pm_live": true
+    "pnl": -1.93,
+    "pm_live": true,
+    "pm_fee": 0.50669
   }
 ]

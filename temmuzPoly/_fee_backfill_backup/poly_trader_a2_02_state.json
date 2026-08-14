@@ -1,0 +1,52 @@
+{
+  "balance": 516.79,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 62787.7,
+      "entry_time_tr": "2026-08-14T14:05:07.981570+03:00",
+      "entry_hour_tr": 14,
+      "entry_dow": 4,
+      "entry_is_weekend": false,
+      "amount": 16.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": false,
+      "algo_signal": "UP",
+      "algo_name": "RSI Diverjansı (14) Katı",
+      "algo_num": 2,
+      "pm_slug": "bitcoin-up-or-down-august-14-2026-7am-et",
+      "pm_title": "Bitcoin Up or Down - August 14, 7AM ET",
+      "pm_token_dir": "UP",
+      "pm_entry_price": 0.595,
+      "pm_spent": 16.0,
+      "pm_size": 26.89,
+      "to_win": 26.89
+    },
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 75.35,
+      "entry_time_tr": "2026-08-14T14:05:07.981570+03:00",
+      "entry_hour_tr": 14,
+      "entry_dow": 4,
+      "entry_is_weekend": false,
+      "amount": 16.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": false,
+      "algo_signal": "UP",
+      "algo_name": "RSI Diverjansı (14) Katı",
+      "algo_num": 2,
+      "pm_slug": "solana-up-or-down-august-14-2026-7am-et",
+      "pm_title": "Solana Up or Down - August 14, 7AM ET",
+      "pm_token_dir": "UP",
+      "pm_entry_price": 0.65,
+      "pm_spent": 16.0,
+      "pm_size": 24.62,
+      "to_win": 24.62
+    }
+  ],
+  "total_pnl": 216.79,
+  "balance_reset_at_tr": "2026-08-10T00:33:03.974396+03:00",
+  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş korundu"
+}

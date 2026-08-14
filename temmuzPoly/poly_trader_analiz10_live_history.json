@@ -22,8 +22,9 @@
     "pm_slug": "solana-up-or-down-august-3-2026-3am-et",
     "pm_token_dir": "UP",
     "exit_time_tr": "2026-08-03T10:15:27.437132+03:00",
-    "pnl": 0.78,
-    "pm_live": true
+    "pnl": 0.33,
+    "pm_live": true,
+    "pm_fee": 0.45336
   },
   {
     "symbol": "SOLUSDT",

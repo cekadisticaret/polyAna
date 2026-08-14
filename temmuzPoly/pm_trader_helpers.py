@@ -523,6 +523,59 @@ def pm_find_market(symbol: str, et_hour: int, date_utc) -> dict | None:
     return None
 
 
+_PM_CLOB_BOOK_URL = "https://clob.polymarket.com/book"
+
+# Polymarket taker ücreti: fee = C × rate × p × (1−p), USDC cinsinden, yalnız taker öder.
+# Kripto kategorisi rate = 0.07 (Gamma: feeType=crypto_fees_v2). Ücret p=0.50'de zirve yapar,
+# yani saatlik up/down piyasalarının tam oturduğu bantta en pahalıdır.
+PM_TAKER_FEE_RATE = 0.07
+
+
+def pm_taker_fee(size: float, price: float, rate: float = PM_TAKER_FEE_RATE) -> float:
+    """Alınan `size` adet için PM taker ücreti (USDC)."""
+    if size <= 0 or not (0.0 < price < 1.0):
+        return 0.0
+    return round(size * rate * price * (1.0 - price), 5)
+
+
+_PM_ASK_CACHE: dict[str, tuple[float, float | None]] = {}
+_PM_ASK_TTL = 20.0
+
+
+def pm_best_ask(token_id: str) -> float | None:
+    """CLOB emir defterinden gerçek en iyi satış fiyatı — Gamma mid'i değil.
+
+    A2 gibi tek süreçte onlarca defter koşturan çağrılar aynı token'ı tekrar tekrar
+    sorduğu için sonuç kısa süre önbelleklenir.
+    """
+    if not token_id:
+        return None
+    hit = _PM_ASK_CACHE.get(token_id)
+    if hit and (time.time() - hit[0]) < _PM_ASK_TTL:
+        return hit[1]
+    try:
+        req = urllib.request.Request(
+            f"{_PM_CLOB_BOOK_URL}?token_id={token_id}", headers=_PM_HEADERS,
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            book = json.load(r)
+    except Exception as e:
+        print(f"[PM] Emir defteri hatası ({token_id[:16]}): {e}", file=sys.stderr)
+        _PM_ASK_CACHE[token_id] = (time.time(), None)
+        return None
+    asks = []
+    for a in book.get("asks") or []:
+        try:
+            p = float(a["price"])
+            if 0.0 < p < 1.0:
+                asks.append(p)
+        except (KeyError, TypeError, ValueError):
+            continue
+    best = min(asks) if asks else None
+    _PM_ASK_CACHE[token_id] = (time.time(), best)
+    return best
+
+
 def pm_fit_buy(size: float, price: float, min_shares: float = 5.0) -> tuple[float, float]:
     from decimal import Decimal, ROUND_DOWN
     p = Decimal(str(round(price, 2)))
@@ -742,6 +795,8 @@ def pm_try_open(
         "pm_token_dir": predicted_dir, "pm_size": order["size"],
         "pm_entry_price": order["price"], "pm_order_id": order["order_id"],
         "pm_spent": order["spent"],
+        "pm_fee": pm_taker_fee(order["size"], order["price"]),
+        "pm_quote_src": "fill",
     })
     print(f"[{label}] PM order: {symbol} {predicted_dir} "
           f"{order['size']} shares @ {order['price']} (${order['spent']:.2f})")
@@ -772,7 +827,8 @@ def pm_resolve_pnl(pos: dict) -> tuple[bool | None, float, str]:
                   (pos["pm_token_dir"] == "DOWN" and not up_won)
         pm_spent = pos.get("pm_spent", 0)
         pm_size  = pos.get("pm_size", 0)
-        pnl_val  = round(pm_size - pm_spent, 2) if our_won else round(-pm_spent, 2)
+        fee      = pm_position_fee(pos)
+        pnl_val  = round(pm_size - pm_spent - fee, 2) if our_won else round(-pm_spent - fee, 2)
         extra    = f"  |  🎯PM: {'+'if our_won else ''}{pnl_val:.2f}$"
         return our_won, pnl_val, extra
     except Exception as e:
@@ -781,7 +837,7 @@ def pm_resolve_pnl(pos: dict) -> tuple[bool | None, float, str]:
 
 
 def pm_sanal_quote(symbol: str, direction: str, amount_usd: float, now: datetime) -> dict | None:
-    """1h PM gamma fiyatından sanal kotasyon (emir yok)."""
+    """1h PM sanal kotasyonu (emir yok) — gerçek CLOB ask'inden, taker ücreti dahil."""
     et_hour = (now - timedelta(hours=4)).hour
     pm = pm_find_market(symbol, et_hour, now)
     if not pm or pm.get("closed"):
@@ -789,7 +845,11 @@ def pm_sanal_quote(symbol: str, direction: str, amount_usd: float, now: datetime
     op = pm.get("outcome_prices") or []
     if len(op) < 2:
         return None
-    tp = float(op[0]) if direction == "UP" else float(op[1])
+    mid = float(op[0]) if direction == "UP" else float(op[1])
+    token = pm["up_token"] if direction == "UP" else pm["down_token"]
+    ask = pm_best_ask(token)
+    # Gerçekte alım ask'ten olur; defter okunamazsa Gamma mid'ine düş.
+    tp = ask if ask is not None else mid
     if not (0.02 <= tp <= 0.98):
         return None
     size = round(amount_usd / tp, 2)
@@ -799,6 +859,9 @@ def pm_sanal_quote(symbol: str, direction: str, amount_usd: float, now: datetime
         "pm_title": pm.get("title", ""),
         "pm_token_dir": direction,
         "pm_entry_price": tp,
+        "pm_quote_src": "ask" if ask is not None else "mid",
+        "pm_mid_price": round(mid, 4),
+        "pm_fee": pm_taker_fee(size, tp),
         "pm_spent": spent,
         "pm_size": size,
         "to_win": size,
@@ -856,15 +919,18 @@ def pm_stake_fields(pos: dict) -> tuple[float, float, float]:
 
 
 def pm_payout_fields(pos: dict) -> dict:
-    """PM giriş kotasyonu — kazanırsa toplam ödeme ve net kâr (2× stake yok)."""
+    """PM giriş kotasyonu — kazanırsa toplam ödeme ve taker ücreti düşülmüş net kâr."""
     spent, size, ep = pm_stake_fields(pos)
-    net = round(size - spent, 2) if size > 0 and spent > 0 else None
+    live = size > 0 and spent > 0
+    fee = pm_position_fee(pos) if live else 0.0
     return {
         "pm_spent": round(spent, 2),
         "pm_size": round(size, 2) if size > 0 else 0.0,
         "to_win": round(size, 2) if size > 0 else 0.0,
         "win_payout": round(size, 2) if size > 0 else None,
-        "win_profit": net,
+        "win_profit": round(size - spent - fee, 2) if live else None,
+        "win_profit_gross": round(size - spent, 2) if live else None,
+        "pm_fee": round(fee, 4) if live else None,
         "pm_entry_price": ep if ep > 0 else None,
         "has_pm_quote": bool(size > 0 and ep > 0 and pos.get("pm_slug")),
     }
@@ -915,6 +981,7 @@ def pm_history_extras(pos: dict) -> dict:
     extras: dict = {}
     for k in (
         "pm_spent", "pm_size", "pm_entry_price", "to_win", "token_price", "pm_slug", "pm_order_id", "tier",
+        "pm_fee", "pm_quote_src", "pm_mid_price",
         "pm_spent_original", "pm_partial_received", "pm_partial_sold_size", "pm_partial_tp_done",
     ):
         if pos.get(k) is not None:
@@ -922,10 +989,26 @@ def pm_history_extras(pos: dict) -> dict:
     return extras
 
 
+def pm_position_fee(pos: dict) -> float:
+    """Pozisyonun PM taker ücreti — girişte kaydedildiyse onu, yoksa kotasyondan hesaplar."""
+    rec = pos.get("pm_fee")
+    if rec is not None:
+        try:
+            return round(float(rec), 5)
+        except (TypeError, ValueError):
+            pass
+    spent, size, price = pm_stake_fields(pos)
+    if size <= 0 or spent <= 0:
+        return 0.0
+    return pm_taker_fee(size, price)
+
+
 def sanal_pnl(pos: dict, win: bool) -> float:
+    """Net P&L — PM taker ücreti düşülmüş. Ücret girişte ödenir, sonuçtan bağımsızdır."""
     spent, size, _ = pm_stake_fields(pos)
     if size > 0 and spent > 0:
-        return round(size - spent, 2) if win else round(-spent, 2)
+        fee = pm_position_fee(pos)
+        return round(size - spent - fee, 2) if win else round(-spent - fee, 2)
     if not win:
         return round(-spent, 2) if spent > 0 else 0.0
     return 0.0
@@ -964,9 +1047,18 @@ def pm_sanal_settle_trade(pos: dict, hour_open: float, hour_close: float) -> dic
         "actual_dir": actual,
         "win": win,
         "pnl": pnl,
+        "pm_fee": pm_position_fee(pos),
         "entry_price": hour_open,
         "exit_price": hour_close,
     }
+
+
+def pm_sanal_close_position(pos: dict) -> dict | None:
+    """Açık pozisyonu PM slot mumu ile kapat — None = mum alınamadı."""
+    candle = pm_sanal_slot_candle(pos.get("symbol") or "", pos.get("entry_time_tr") or "")
+    if not candle:
+        return None
+    return pm_sanal_settle_trade(pos, candle[0], candle[1])
 
 
 def pm_realized_pnl(pos: dict, win: bool) -> float:
@@ -1083,7 +1175,8 @@ def pm_updown_sanal_quote(ts: int, direction: str, amount: float, symbol: str, p
 
 def pm_5m_history_extras(pos: dict) -> dict:
     extras: dict = {}
-    for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "token_price", "pm_slug", "pm_order_id"):
+    for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "token_price", "pm_slug", "pm_order_id",
+              "pm_fee", "pm_quote_src", "pm_mid_price"):
         if pos.get(k) is not None:
             extras[k] = pos[k]
     if "pm_spent" not in extras and pos.get("amount") is not None:

@@ -1,0 +1,54 @@
+Zaman: 2026-08-14 15:24:53 +03
+Tür: DELETE
+Path: /root/aiProject/temmuzPoly/poly_15m_a2_algo_trader_core.py
+
+=== Process şüpheliler ===
+pid=775 ppid=1 uid=0 exe=/opt/digitalocean/bin/droplet-agent
+  cmd=/opt/digitalocean/bin/droplet-agent
+  cwd=/
+pid=847 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+  cwd=/
+pid=1560648 ppid=1560531 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/multiplex-server/e0e6952a313d583840d50b387ab40c7bba7e66b79d95be1f22b3e7fc0706ae74.js aa8213a3-75b3-44ba-9536-e11bf8bfa053 0
+  cwd=/root
+pid=1560674 ppid=1560531 uid=0 exe=/usr/bin/dash
+  cmd=sh /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/bin/cursor-server --start-server --host 127.0.0.1 --port 0 --connection-token-file /run/user/0/cursor-remote-code.token.6ca0869f6193ac0d40fa6ae74ed01260 --teleme
+  cwd=/root
+pid=1560682 ppid=1560674 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/server-main.js --start-server --host 127.0.0.1 --port 0 --connection-token-file
+  cwd=/root
+pid=1560743 ppid=1560682 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out
+  cwd=/root
+pid=1560757 ppid=1560682 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=1564446 ppid=1560682 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=ptyHost --logsPath /root/.cursor-server/data/logs/2026081
+  cwd=/root
+pid=1567070 ppid=1560743 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProc
+  cwd=/root/aiProject
+pid=1568585 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /root/aiProject/web/poly_dashboard.py
+  cwd=/root/aiProject
+
+=== git status (D) ===
+bash: line 1: rg: command not found
+
+=== audit ===
+----
+type=PROCTITLE msg=audit(08/14/26 12:19:45.141:341256) : proctitle=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 - 
+type=PATH msg=audit(08/14/26 12:19:45.141:341256) : item=1 name=/root/aiProject/web/poly_dashboard.py inode=607152 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=NORMAL cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=PATH msg=audit(08/14/26 12:19:45.141:341256) : item=0 name=/root/aiProject/web/ inode=525778 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=CWD msg=audit(08/14/26 12:19:45.141:341256) : cwd=/root 
+type=SYSCALL msg=audit(08/14/26 12:19:45.141:341256) : arch=x86_64 syscall=openat success=yes exit=63 a0=AT_FDCWD a1=0x40be2400 a2=O_WRONLY|O_CREAT|O_NOFOLLOW|O_CLOEXEC a3=0x1b6 items=2 ppid=1560682 pid=1560743 auid=root uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=(none) ses=40692 comm=libuv-worker exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node subj=unconfined key=aiproject_del 
+----
+type=PROCTITLE msg=audit(08/14/26 12:19:47.778:341257) : proctitle=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 - 
+type=PATH msg=audit(08/14/26 12:19:47.778:341257) : item=1 name=/root/aiProject/web/poly_dashboard.py inode=607152 dev=fd:01 mode=file,644 ouid=root ogid=root rdev=00:00 nametype=NORMAL cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=PATH msg=audit(08/14/26 12:19:47.778:341257) : item=0 name=/root/aiProject/web/ inode=525778 dev=fd:01 mode=dir,755 ouid=root ogid=root rdev=00:00 nametype=PARENT cap_fp=none cap_fi=none cap_fe=0 cap_fver=0 cap_frootid=0 
+type=CWD msg=audit(08/14/26 12:19:47.778:341257) : cwd=/root 
+type=SYSCALL msg=audit(08/14/26 12:19:47.778:341257) : arch=x86_64 s
+
+Tam JSON: /root/aiProject/ops/incidents/incident_20260814_152453_DELETE.json

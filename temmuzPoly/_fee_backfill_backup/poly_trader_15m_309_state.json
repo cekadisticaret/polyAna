@@ -1,0 +1,50 @@
+{
+  "balance": 472.22,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 62861.1,
+      "entry_time_tr": "2026-08-14T14:45:05.544689+03:00",
+      "entry_period_min": 885,
+      "entry_dow": 4,
+      "entry_hour_tr": 14,
+      "ts_period": 1786707900,
+      "amount": 7.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": true,
+      "algo_name": "Squeeze Momentum (BB+KC)",
+      "algo_num": 309,
+      "virtual": true,
+      "pm_spent": 7.0,
+      "pm_slug": "btc-updown-15m-1786707900",
+      "token_price": 0.505,
+      "pm_entry_price": 0.505,
+      "pm_size": 13.86,
+      "to_win": 13.86
+    },
+    {
+      "symbol": "SOLUSDT",
+      "predicted_dir": "DOWN",
+      "entry_price": 75.5,
+      "entry_time_tr": "2026-08-14T14:45:05.544689+03:00",
+      "entry_period_min": 885,
+      "entry_dow": 4,
+      "entry_hour_tr": 14,
+      "ts_period": 1786707900,
+      "amount": 7.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": true,
+      "algo_name": "Squeeze Momentum (BB+KC)",
+      "algo_num": 309,
+      "virtual": true,
+      "pm_spent": 7.0,
+      "pm_slug": "sol-updown-15m-1786707900",
+      "token_price": 0.5,
+      "pm_entry_price": 0.5,
+      "pm_size": 14.0,
+      "to_win": 14.0
+    }
+  ],
+  "total_pnl": 172.22
+}
