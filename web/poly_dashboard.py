@@ -17665,4 +17665,10 @@ for _html_name in (
     globals()[_html_name] = _patch_cache_bust(_html)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)
+    # Nginx 127.0.0.1:5050'ye proxy'liyor; dogrudan internete acmak TLS'i baypas eder.
+    app.run(
+        host=os.environ.get("POLY_DASHBOARD_HOST") or "127.0.0.1",
+        port=5050,
+        debug=False,
+        threaded=True,
+    )

@@ -205,7 +205,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 # YOK (disk/crontab): `polyManuel/sol_bot.py`, `temmuzPoly/poly_trader.py`
 
 ## Sürekli Çalışan Servisler
-- `web/poly_dashboard.py` — port **5050**; `systemctl restart poly-dashboard.service` (PID izlemek için: `pgrep -af poly_dashboard.py`)
+- `web/poly_dashboard.py` — port **5050**, **yalnız `127.0.0.1`** (2026-08-14; eskiden `0.0.0.0` idi ve panel `http://IP:5050` ile TLS'siz açılıyordu). Dışarıya nginx `443` üzerinden `bursaapp.com/poly` olarak çıkar; farklı bir arayüze bağlamak gerekirse `POLY_DASHBOARD_HOST`. `systemctl restart poly-dashboard.service` (PID izlemek için: `pgrep -af poly_dashboard.py`)
+- Sunucuda `ufw` **aktif**: yalnız **22/80/443** girişe açık, gerisi `deny`. Yeni bir servisi dışarı açacaksanız kural eklemeniz gerekir (`ufw allow …`).
 
 ### Ayarlar Live anahtarları (`/ayarlar`)
 - 15 satır, `pm_balance_guard._VALID_GROUPS` ile birebir: A1 · A2 · A10 · A6 · A6V2 · A6V3 · A2#16 · A2#02 · A2#03 · A2#04 · A2#05 · A2#06 · A2#07 · A2#08 · A15
