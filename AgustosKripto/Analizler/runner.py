@@ -26,6 +26,7 @@ from virtual_book import (  # noqa: E402
     book_status,
     cached_status,
     close_all_positions,
+    flatten_all_positions,
     fetch_all_klines,
     in_weekend_pause_tr,
     load_state,
@@ -35,6 +36,10 @@ from virtual_book import (  # noqa: E402
     trail_positions,
     write_snapshot,
 )
+from exit_policy import policy_for  # noqa: E402
+
+EXIT_POLICY = policy_for("Analizler")
+
 from signals import (  # noqa: E402
     ANALIZ_META,
     clear_venv_cache,
@@ -154,8 +159,14 @@ def _pick_supertrend(cands: list[dict], max_n: int = 4) -> list[dict]:
     return picked
 
 
+# Hafta sonu duraklaması KALDIRILDI (2026-08-15) — open/close/trail 7/24 koşar.
+# Gerekçe ve ölçüm: `Algoritmalar/runner.py::WEEKEND_PAUSE`.
+# Geri açmak için: WEEKEND_PAUSE = True.
+WEEKEND_PAUSE = False
+
+
 def _skip_weekend(cmd: str) -> dict | None:
-    if not in_weekend_pause_tr():
+    if not WEEKEND_PAUSE or not in_weekend_pause_tr():
         return None
     print(f"[Analizler] hafta sonu — {cmd} skip (Cum 22:00 – Pzt 11:00 İST)")
     return {"ok": True, "skipped": "weekend_pause", "cmd": cmd, "results": []}
@@ -170,9 +181,28 @@ def run_close() -> dict:
     results = []
     for m in ANALIZ_META:
         sp, hp = _paths(m["id"])
-        r = close_all_positions(sp, hp, label=label(m), kl_cache=kl)
+        r = close_all_positions(sp, hp, label=label(m), kl_cache=kl,
+                                policy=EXIT_POLICY)
         results.append({"id": m["id"], "name": m["name"], **r})
     return {"ok": True, "results": results}
+
+
+def run_flatten() -> dict:
+    scan_syms = list(dict.fromkeys(SYMBOLS + ST_SYMBOLS))
+    kl = fetch_all_klines(scan_syms, limit=80)
+    results = []
+    total_closed = 0
+    for m in ANALIZ_META:
+        sp, hp = _paths(m["id"])
+        r = flatten_all_positions(sp, hp, label=label(m), kl_cache=kl)
+        results.append({"id": m["id"], "name": m["name"], **r})
+        total_closed += int(r.get("closed") or 0)
+    try:
+        write_snapshot("analizler", refresh_status_block(with_marks=False))
+    except Exception:
+        pass
+    print(f"[Analizler] flatten → {total_closed} pozisyon kapandı")
+    return {"ok": True, "results": results, "total_closed": total_closed}
 
 
 def run_trail() -> dict:
@@ -190,7 +220,8 @@ def run_trail() -> dict:
     results = []
     for m in ANALIZ_META:
         sp, hp = _paths(m["id"])
-        r = trail_positions(sp, hp, label=label(m), kl_cache=kl)
+        r = trail_positions(sp, hp, label=label(m), kl_cache=kl,
+                            policy=EXIT_POLICY)
         results.append({"id": m["id"], "name": m["name"], **r})
     return {"ok": True, "results": results}
 
@@ -245,6 +276,7 @@ def run_open() -> dict:
             margin_usd=float(cfg["margin_usd"]),
             leverage=int(cfg["leverage"]),
             max_opens=int(cfg["max_opens"]),
+            entry_price_mode="live",
         )
         results.append({"id": m["id"], "name": m["name"], **r})
     clear_venv_cache()
@@ -332,7 +364,7 @@ def run_reset(*, balance: float = DEPOSIT) -> dict:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="AgustosKripto Analizler sanal runner")
-    p.add_argument("cmd", choices=["open", "close", "trail", "status", "reset"])
+    p.add_argument("cmd", choices=["open", "close", "trail", "status", "reset", "flatten"])
     args = p.parse_args()
     if args.cmd == "open":
         r = run_open()
@@ -342,6 +374,8 @@ def main() -> None:
         r = run_trail()
     elif args.cmd == "reset":
         r = run_reset()
+    elif args.cmd == "flatten":
+        r = run_flatten()
     else:
         r = status_block()
     print(json.dumps(r, indent=2, ensure_ascii=False, default=str))

@@ -1,9 +1,36 @@
 {
   "balance": 247.18,
   "deposit": 300.0,
-  "open_positions": [],
+  "open_positions": [
+    {
+      "symbol": "BNBUSDT",
+      "side": "SHORT",
+      "signal": "DOWN",
+      "algo": "A10",
+      "score": 1.0,
+      "interval": "1h",
+      "qty": 0.370401,
+      "leverage": 15,
+      "margin_usd": 15.0,
+      "entry_price": 607.45,
+      "notional": 225.0,
+      "entry_fee": 0.1125,
+      "entry_time_tr": "2026-08-15T01:06:02.196426+03:00",
+      "slot": "2026-08-15 01:00",
+      "virtual": true,
+      "atr": 1.69696358,
+      "atr_usd": 0.628557,
+      "atr_period": 14,
+      "peak_upnl": 0.0,
+      "stop_upnl": null,
+      "stop_level": 0,
+      "lock_armed": false,
+      "lock_history": [],
+      "loss_stop_atr": 6.0
+    }
+  ],
   "total_pnl": -52.7806,
   "total_commission": 44.243364,
-  "updated_at_tr": "2026-08-14T21:02:10.330819+03:00",
-  "last_open_slot": "2026-08-14 20:00"
+  "updated_at_tr": "2026-08-15T01:20:03.614147+03:00",
+  "last_open_slot": "2026-08-15 01:00"
 }

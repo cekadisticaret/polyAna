@@ -50,6 +50,10 @@ import os
 _DIR = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(_DIR, "data")
 TABLE_PATH = os.path.join(DATA, "edge_table.json")
+CONFIG_PATH = os.path.join(DATA, "edge_gate_config.json")
+
+# Kapı açıkken PRO defterleri kenar filtresi olmadan tüm sinyalleri alır.
+# Varsayılan kapalı (ölçüm yoksa işlem açmaz). edge_gate_config.json → {"open": true}
 
 # Gerçekleşen komisyon: $600 notional, Binance USDⓈ-M
 TAKER_ROUND_TRIP = 0.10   # % — taker %0,05 × 2 yön (sistemin varsayımı)
@@ -73,6 +77,20 @@ TIER_SIZE = {"proven": 1.0, "candidate": 0.25, "blocked": 0.0}
 FEE_THRESHOLD_PCT = TAKER_ROUND_TRIP
 
 _CACHE: dict | None = None
+
+
+def gate_open() -> bool:
+    """True = kenar filtresi kapalı, PRO defterleri normal sinyalleri alır."""
+    env = os.environ.get("TEST_EDGE_GATE", "").strip().lower()
+    if env in ("open", "1", "true", "on", "yes"):
+        return True
+    if env in ("closed", "0", "false", "off", "no"):
+        return False
+    try:
+        with open(CONFIG_PATH) as f:
+            return bool(json.load(f).get("open", False))
+    except Exception:
+        return False
 
 
 # ── Tablo üretimi ─────────────────────────────────────────────
@@ -198,6 +216,7 @@ def allowed_pairs(*, tiers: tuple[str, ...] = ("proven", "candidate")) -> list[d
 def summary() -> dict:
     t = load_table()
     return {
+        "open": gate_open(),
         "fee_threshold_pct": t.get("fee_threshold_pct", FEE_THRESHOLD_PCT),
         "counts": t.get("counts") or {},
         "pairs_total": len(t.get("pairs") or {}),

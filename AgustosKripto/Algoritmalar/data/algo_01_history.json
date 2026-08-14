@@ -4128,5 +4128,47 @@
     "win": false,
     "close_reason": "1h_close",
     "book": "A2#01 Liquidity Sweep Proxy"
+  },
+  {
+    "symbol": "SUIUSDT",
+    "side": "LONG",
+    "signal": "UP",
+    "algo": "Liquidity Sweep Proxy",
+    "score": 1,
+    "interval": "1h",
+    "qty": 445.76523,
+    "leverage": 10,
+    "margin_usd": 30.0,
+    "entry_price": 0.673,
+    "notional": 300.0,
+    "entry_fee": 0.15,
+    "entry_time_tr": "2026-08-14T18:05:10.455633+03:00",
+    "slot": "2026-08-14 18:00",
+    "virtual": true,
+    "atr": 0.00350206,
+    "atr_usd": 1.561096,
+    "atr_period": 14,
+    "peak_upnl": 2.9525,
+    "stop_upnl": 1.391404,
+    "stop_level": 1,
+    "lock_armed": true,
+    "lock_history": [
+      {
+        "level": 1,
+        "ts": "2026-08-14T18:36:03.593390+03:00",
+        "stop_upnl": 0.780548,
+        "price": 0.6772
+      }
+    ],
+    "loss_stop_atr": 6.0,
+    "exit_price": 0.6764,
+    "exit_time_tr": "2026-08-15T00:36:03.441035+03:00",
+    "pnl_gross": 1.5156,
+    "exit_fee": 0.150758,
+    "commission": 0.300758,
+    "pnl": 1.2148,
+    "win": true,
+    "close_reason": "atr_stop",
+    "book": "A2#01 Liquidity Sweep Proxy"
   }
 ]

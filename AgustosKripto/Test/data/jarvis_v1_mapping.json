@@ -1,0 +1,312 @@
+{
+  "mapping": {
+    "BTC": "a1_04",
+    "ETH": "a2_07",
+    "SOL": "analiz6_v2",
+    "BNB": "a1_34",
+    "XRP": "b1_mum",
+    "DOGE": "a2_01",
+    "ADA": "a2_09",
+    "AVAX": "b1_mum",
+    "LINK": "a1_08",
+    "DOT": "a1_10",
+    "LTC": "b1_mum",
+    "NEAR": "analiz2",
+    "SUI": "b1_mum",
+    "APT": "a1_31",
+    "ARB": "a1_33",
+    "OP": "b1_mum",
+    "INJ": "a1_36",
+    "TIA": "a2_16",
+    "FIL": "analiz6",
+    "ATOM": "a1_02",
+    "HYPE": "a2_09",
+    "ZEC": "a2_07",
+    "KAITO": "a1_30",
+    "ENA": "a2_12",
+    "WLD": "a1_34",
+    "TAO": "a1_26",
+    "ONDO": "a1_27",
+    "UNI": "a1_03",
+    "AAVE": "a2_01",
+    "XLM": "a2_14"
+  },
+  "mapped": 30,
+  "symbols": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "BNB",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "DOT",
+    "LTC",
+    "NEAR",
+    "SUI",
+    "APT",
+    "ARB",
+    "OP",
+    "INJ",
+    "TIA",
+    "FIL",
+    "ATOM",
+    "HYPE",
+    "ZEC",
+    "KAITO",
+    "ENA",
+    "WLD",
+    "TAO",
+    "ONDO",
+    "UNI",
+    "AAVE",
+    "XLM"
+  ],
+  "labels": {
+    "BTC": "A1#04",
+    "ETH": "A2#07",
+    "SOL": "A6V2",
+    "BNB": "A1#34",
+    "XRP": "B1#03",
+    "DOGE": "A2#01",
+    "ADA": "A2#09",
+    "AVAX": "B1#03",
+    "LINK": "A1#08",
+    "DOT": "A1#10",
+    "LTC": "B1#03",
+    "NEAR": "A2",
+    "SUI": "B1#03",
+    "APT": "A1#31",
+    "ARB": "A1#33",
+    "OP": "B1#03",
+    "INJ": "A1#36",
+    "TIA": "A2#16",
+    "FIL": "A6",
+    "ATOM": "A1#02",
+    "HYPE": "A2#09",
+    "ZEC": "A2#07",
+    "KAITO": "A1#30",
+    "ENA": "A2#12",
+    "WLD": "A1#34",
+    "TAO": "A1#26",
+    "ONDO": "A1#27",
+    "UNI": "A1#03",
+    "AAVE": "A2#01",
+    "XLM": "A2#14"
+  },
+  "coin_stats": {
+    "BTC": {
+      "uid": "a1_04",
+      "pnl": 1.34,
+      "trades": 20,
+      "wr": 45.0,
+      "pinned": false
+    },
+    "ETH": {
+      "uid": "a2_07",
+      "pnl": 12.21,
+      "trades": 18,
+      "wr": 55.6,
+      "pinned": false
+    },
+    "SOL": {
+      "uid": "analiz6_v2",
+      "pnl": 3.86,
+      "trades": 20,
+      "wr": 50.0,
+      "pinned": false
+    },
+    "BNB": {
+      "uid": "a1_34",
+      "pnl": 5.16,
+      "trades": 12,
+      "wr": 41.7,
+      "pinned": false
+    },
+    "XRP": {
+      "uid": "b1_mum",
+      "pnl": 7.84,
+      "trades": 5,
+      "wr": 60.0,
+      "pinned": false
+    },
+    "DOGE": {
+      "uid": "a2_01",
+      "pnl": 2.68,
+      "trades": 9,
+      "wr": 44.4,
+      "pinned": false
+    },
+    "ADA": {
+      "uid": "a2_09",
+      "pnl": 7.45,
+      "trades": 32,
+      "wr": 59.4,
+      "pinned": false
+    },
+    "AVAX": {
+      "uid": "b1_mum",
+      "pnl": 31.47,
+      "trades": 27,
+      "wr": 44.4,
+      "pinned": false
+    },
+    "LINK": {
+      "uid": "a1_08",
+      "pnl": 24.27,
+      "trades": 24,
+      "wr": 62.5,
+      "pinned": false
+    },
+    "DOT": {
+      "uid": "a1_10",
+      "pnl": 21.96,
+      "trades": 25,
+      "wr": 68.0,
+      "pinned": false
+    },
+    "LTC": {
+      "uid": "b1_mum",
+      "pnl": 6.95,
+      "trades": 10,
+      "wr": 40.0,
+      "pinned": false
+    },
+    "NEAR": {
+      "uid": "analiz2",
+      "pnl": 14.29,
+      "trades": 12,
+      "wr": 50.0,
+      "pinned": false
+    },
+    "SUI": {
+      "uid": "b1_mum",
+      "pnl": 1.1,
+      "trades": 15,
+      "wr": 40.0,
+      "pinned": false
+    },
+    "APT": {
+      "uid": "a1_31",
+      "pnl": 34.86,
+      "trades": 26,
+      "wr": 53.8,
+      "pinned": false
+    },
+    "ARB": {
+      "uid": "a1_33",
+      "pnl": 4.51,
+      "trades": 17,
+      "wr": 41.2,
+      "pinned": true
+    },
+    "OP": {
+      "uid": "b1_mum",
+      "pnl": 18.99,
+      "trades": 17,
+      "wr": 47.1,
+      "pinned": true
+    },
+    "INJ": {
+      "uid": "a1_36",
+      "pnl": 29.79,
+      "trades": 21,
+      "wr": 52.4,
+      "pinned": false
+    },
+    "TIA": {
+      "uid": "a2_16",
+      "pnl": 19.53,
+      "trades": 26,
+      "wr": 57.7,
+      "pinned": false
+    },
+    "FIL": {
+      "uid": "analiz6",
+      "pnl": 6.17,
+      "trades": 5,
+      "wr": 20.0,
+      "pinned": false
+    },
+    "ATOM": {
+      "uid": "a1_02",
+      "pnl": 29.12,
+      "trades": 63,
+      "wr": 52.4,
+      "pinned": false
+    },
+    "HYPE": {
+      "uid": "a2_09",
+      "pnl": 2.25,
+      "trades": 8,
+      "wr": 37.5,
+      "pinned": false
+    },
+    "ZEC": {
+      "uid": "a2_07",
+      "pnl": 13.5,
+      "trades": 13,
+      "wr": 38.5,
+      "pinned": false
+    },
+    "KAITO": {
+      "uid": "a1_30",
+      "pnl": 265.81,
+      "trades": 27,
+      "wr": 66.7,
+      "pinned": false
+    },
+    "ENA": {
+      "uid": "a2_12",
+      "pnl": 39.31,
+      "trades": 129,
+      "wr": 52.7,
+      "pinned": false
+    },
+    "WLD": {
+      "uid": "a1_34",
+      "pnl": 74.78,
+      "trades": 13,
+      "wr": 53.8,
+      "pinned": false
+    },
+    "TAO": {
+      "uid": "a1_26",
+      "pnl": 23.73,
+      "trades": 46,
+      "wr": 63.0,
+      "pinned": false
+    },
+    "ONDO": {
+      "uid": "a1_27",
+      "pnl": 39.65,
+      "trades": 63,
+      "wr": 47.6,
+      "pinned": false
+    },
+    "UNI": {
+      "uid": "a1_03",
+      "pnl": 65.22,
+      "trades": 27,
+      "wr": 51.9,
+      "pinned": false
+    },
+    "AAVE": {
+      "uid": "a2_01",
+      "pnl": 29.76,
+      "trades": 20,
+      "wr": 60.0,
+      "pinned": false
+    },
+    "XLM": {
+      "uid": "a2_14",
+      "pnl": 30.43,
+      "trades": 71,
+      "wr": 50.7,
+      "pinned": false
+    }
+  },
+  "leader_rows_n": 63,
+  "updated_at_tr": 

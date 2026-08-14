@@ -197,12 +197,21 @@ def _poly_b1_mum(kl_by_symbol: dict[str, list]) -> dict[str, str]:
     return out
 
 
+# B1#04 ve B1#05 kendi evrenleriyle (BTC/ETH/SOL) sınırlı tutulur: #04'ün küme
+# ağırlıkları ve #05'in coin→motor eşlemesi Poly geçmişinden geliyor ve o geçmiş
+# yalnız bu üç coin için var. 30 coine açmak turu 2 sn'den 34 sn'ye çıkarıyor
+# (ölçüldü) ve tur saatte 6 kez koşuyor — A6V3'teki aynı gerekçe. b1_01/b1_02
+# 30 coinde koşmaya devam ediyor, davranışları bilerek değiştirilmedi.
+_B1_MAJORS_ONLY = {"b1_04", "b1_05"}
+
+
 def _poly_b1(source_key: str, kl_by_symbol: dict[str, list]) -> dict[str, str]:
-    mod = __import__(
-        "b1_02_signal" if source_key == "b1_02" else "b1_01_signal",
-        fromlist=["resolve_live_signal"],
-    )
+    mod = __import__(f"{source_key}_signal", fromlist=["resolve_live_signal"])
     out = {sym: "NEUTRAL" for sym in kl_by_symbol}
+    syms = list(kl_by_symbol)
+    if source_key in _B1_MAJORS_ONLY:
+        supported = set(getattr(mod, "SYMBOLS", ()) or ())
+        syms = [s for s in syms if s in supported]
 
     async def _one(sym: str):
         try:
@@ -213,10 +222,55 @@ def _poly_b1(source_key: str, kl_by_symbol: dict[str, list]) -> dict[str, str]:
             return sym, "NEUTRAL"
 
     async def _all():
-        return await asyncio.gather(*[_one(s) for s in kl_by_symbol])
+        return await asyncio.gather(*[_one(s) for s in syms])
 
     for sym, d in _run_async(_all()):
         out[sym] = d
+    return out
+
+
+def _poly_c101(kl_by_symbol: dict[str, list], *, band: float | None = None) -> dict[str, str]:
+    """C1#01 modelinin yön görüşü — Polymarket kotasyonu olmadan.
+
+    Poly'de C1#01 "piyasa yanlış fiyatlamış mı" diye sorar: model olasılığını
+    bilet fiyatıyla karşılaştırıp aradaki farkı arar. Kripto futures'ta
+    karşılaştırılacak bir bilet yok, o yüzden burada modelin **kendi görüşü**
+    ölçülüyor: P(UP) yazı-turadan (0,50) en az `band` kadar uzaksa o yöne
+    girilir. Eşik uydurma değil, defterlerin kendi sabitleri — C1#01 5 puan,
+    C1#01 V2 3 puan. Kriptoya taşınabilen tek fark bu: V2'nin asıl ayrımı
+    (gerçek ask vs bayat mid) futures'ta karşılıksız, ama "daha düşük çıtayla
+    daha sık işlem" iddiası aynen sınanabilir.
+
+    Bu yüzden ayna "C1#01 kâr eder mi"yi değil, projedeki tek emir-akışı
+    beslemeli modelin (derinlik · funding · OI · CVD) yönü tutturup
+    tutturmadığını sınar.
+
+    `update_baseline=False` şart: derinlik referansı EWMA'sı Poly defterinin
+    dosyasında tutuluyor, ayna onu kirletmemeli.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    import c101_signal as cs  # noqa: E402
+
+    now_tr = datetime.now(timezone(timedelta(hours=3)))
+    supported = set(getattr(cs, "SYMBOLS", ()) or ())
+    if band is None:
+        band = float(getattr(cs, "EDGE_MIN", 0.05))
+    out = {sym: "NEUTRAL" for sym in kl_by_symbol}
+    for sym in kl_by_symbol:
+        if sym not in supported:
+            continue
+        try:
+            model = cs.fair_probability(sym, now_tr, update_baseline=False)
+            if not model:
+                continue
+            p_up = float(model["p_up"])
+            if p_up >= 0.5 + band:
+                out[sym] = "UP"
+            elif p_up <= 0.5 - band:
+                out[sym] = "DOWN"
+        except Exception as e:
+            print(f"[Test C101] {sym}: {e}")
     return out
 
 
@@ -234,12 +288,20 @@ def _poly_islemler(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]:
         return _poly_analiz15(kl_by_symbol)
     if key == "b1_mum":
         return _poly_b1_mum(kl_by_symbol)
-    if key in ("b1_01", "b1_02"):
+    if key in ("b1_01", "b1_02", "b1_04", "b1_05"):
         return _poly_b1(key, kl_by_symbol)
+    if key == "c101":
+        return _poly_c101(kl_by_symbol)
+    if key == "c101_v2":
+        # Eşik V2 trader'ıyla aynı kaynaktan; `poly_trader_c101_v2` **import
+        # edilmez** çünkü o modül `poly_trader_c101`'in globallerini ezer ve
+        # aynı süreçte iki defter birlikte koşamaz.
+        return _poly_c101(kl_by_symbol, band=float(os.environ.get("C101_V2_EDGE_MIN") or 0.03))
     return {sym: "NEUTRAL" for sym in kl_by_symbol}
 
 
-def signal_for_book(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]:
+def _source_signal_for_book(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]:
+    """JARVIS_V1 hariç kaynak defter sinyali."""
     src = book.get("source") or ""
     if src == "islemler_poly":
         return _poly_islemler(book, kl_by_symbol)
@@ -248,6 +310,29 @@ def signal_for_book(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]
     if src == "algo1":
         return _algo_cat.signal_for_book(book, kl_by_symbol)
     return {sym: "NEUTRAL" for sym in kl_by_symbol}
+
+
+def signal_for_book(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]:
+    src = book.get("source") or ""
+    if src == "jarvis_v1":
+        from jarvis_v1 import resolve_signals  # noqa: WPS433
+
+        return resolve_signals(kl_by_symbol, _get_all_books(), _source_signal_for_book)
+    return _source_signal_for_book(book, kl_by_symbol)
+
+
+def _get_all_books() -> list[dict]:
+    import importlib.util as _ilu2
+    import os as _os
+
+    _cat_path = _os.path.join(
+        _os.path.dirname(_os.path.abspath(__file__)), "catalog.py",
+    )
+    _spec2 = _ilu2.spec_from_file_location("kripto_test_catalog_sig", _cat_path)
+    _mod = _ilu2.module_from_spec(_spec2)
+    assert _spec2.loader is not None
+    _spec2.loader.exec_module(_mod)
+    return _mod.ALL_BOOKS
 
 
 def pick_candidates(signals: dict[str, str], *, max_n: int = 6) -> list[dict]:

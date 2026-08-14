@@ -2324,30 +2324,35 @@ def _build_sanal_algo_leader_rows() -> list[dict]:
 
 
 def _leader_board(rows: list[dict], *, sym: str | None = None, limit: int = 8) -> list[dict]:
-    if sym:
-        picked: list[dict] = []
-        for row in rows:
-            st = row.get("sym_stats", {}).get(sym)
-            if not st:
-                continue
-            picked.append({
-                "key": row["key"],
-                "label": row["short"],
-                "wr": st["wr"],
-                "total": st["total"],
-                "pnl": st["pnl"],
-            })
-        picked.sort(key=lambda x: (x["pnl"], x["wr"], x["total"]), reverse=True)
-        return picked[:limit]
-    overall = [{
-        "key": r["key"],
-        "label": r["short"],
-        "wr": r["wr"],
-        "total": r["total"],
-        "pnl": r["pnl"],
-    } for r in rows]
-    overall.sort(key=lambda x: (x["pnl"], x["wr"], x["total"]), reverse=True)
-    return overall[:limit]
+    _test_dir = os.path.join(_DIR_KRIPTO, "Test")
+    if _test_dir not in sys.path:
+        sys.path.insert(0, _test_dir)
+    from leader_mapping import leader_board as _lb  # noqa: WPS433
+
+    return _lb(rows, sym=sym, limit=limit)
+
+
+def _kripto_test_symbol_list() -> list[str]:
+    """Test tarama evreni — USDT suffix'siz."""
+    mod = _load_agustos_runner("Test")
+    return [s.replace("USDT", "") for s in mod.TEST_SYMBOLS]
+
+
+def _kripto_leader_payload(
+    rows: list[dict],
+    *,
+    sym_limit: int = 6,
+    overall_limit: int = 10,
+) -> dict:
+    syms = _kripto_test_symbol_list()
+    return {
+        "min_trades": _ALGO_STATS_MIN_TRADES,
+        "overall": _leader_board(rows, limit=overall_limit),
+        "symbols": syms,
+        "by_symbol": {
+            sym: _leader_board(rows, sym=sym, limit=sym_limit) for sym in syms
+        },
+    }
 
 
 _KRIPTO_TEST_ANALYST_FEED_FILE = os.path.join(_DIR_KRIPTO, "Test", "kripto_analyst_feed.jsonl")
@@ -2392,51 +2397,17 @@ def api_kripto_analyst_feed():
 def _build_kripto_test_leader_rows() -> list[dict]:
     """Kripto Test sanal Binance Futures defterleri — genel + sembol bazlı WR/PnL."""
     mod = _load_agustos_runner("Test")
-    allowed_syms = {s.replace("USDT", "") for s in mod.TEST_SYMBOLS}
-    rows: list[dict] = []
-    for book in mod.ALL_BOOKS:
-        hp = mod._history_path_for_book(book)
-        if not hp:
-            continue
-        try:
-            hist = mod.load_history(hp)
-        except Exception:
-            continue
-        resolved = [t for t in hist if t.get("win") is not None]
-        if len(resolved) < _ALGO_STATS_MIN_TRADES:
-            continue
-        wins = sum(1 for t in resolved if t.get("win"))
-        wr = round(100.0 * wins / len(resolved), 1)
-        pnl = round(sum(float(t.get("pnl") or 0) for t in resolved), 2)
-        sym_map: dict[str, dict] = {}
-        for t in resolved:
-            sym = (t.get("symbol") or "").upper().replace("USDT", "")
-            if sym not in allowed_syms:
-                continue
-            if sym not in sym_map:
-                sym_map[sym] = {"w": 0, "t": 0, "pnl": 0.0}
-            sym_map[sym]["t"] += 1
-            if t.get("win"):
-                sym_map[sym]["w"] += 1
-            sym_map[sym]["pnl"] += float(t.get("pnl") or 0)
-        sym_stats = {
-            sym: {
-                "wr": round(v["w"] / v["t"] * 100, 1),
-                "total": v["t"],
-                "pnl": round(v["pnl"], 2),
-            }
-            for sym, v in sym_map.items()
-            if v["t"] >= _ALGO_STATS_MIN_TRADES
-        }
-        rows.append({
-            "key": book["uid"],
-            "short": book.get("name") or book["uid"],
-            "wr": wr,
-            "total": len(resolved),
-            "pnl": pnl,
-            "sym_stats": sym_stats,
-        })
-    return rows
+    _test_dir = os.path.join(_DIR_KRIPTO, "Test")
+    if _test_dir not in sys.path:
+        sys.path.insert(0, _test_dir)
+    from leader_mapping import build_leader_rows  # noqa: WPS433
+
+    return build_leader_rows(
+        mod.ALL_BOOKS,
+        test_symbols=mod.TEST_SYMBOLS,
+        history_path_for_book=mod._history_path_for_book,
+        load_history=mod.load_history,
+    )
 
 
 @app.route("/poly/api/kripto/analyst/leaders")
@@ -2447,15 +2418,10 @@ def api_kripto_analyst_leaders():
         rows = _build_kripto_test_leader_rows()
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
-    return jsonify({
-        "ok": True,
-        "min_trades": _ALGO_STATS_MIN_TRADES,
-        "overall": _leader_board(rows, limit=10),
-        "btc": _leader_board(rows, sym="BTC", limit=6),
-        "eth": _leader_board(rows, sym="ETH", limit=6),
-        "sol": _leader_board(rows, sym="SOL", limit=6),
-        "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
-    })
+    payload = _kripto_leader_payload(rows)
+    payload["ok"] = True
+    payload["generated_at_tr"] = datetime.now(_TZ_TR).isoformat()
+    return jsonify(payload)
 
 
 @app.route("/poly/api/analyst/leaders")
@@ -15038,39 +15004,11 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
 .sidebar-footer{margin-top:auto;font-size:12px;color:#333;padding:8px 12px;display:flex;align-items:center;gap:6px}
 .live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.main{flex:1;padding:28px;max-width:1240px}
+.main{flex:1;padding:28px;max-width:900px}
 .page-head{margin-bottom:24px}
-.page-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
-@media(max-width:980px){.page-grid{grid-template-columns:1fr}}
 h1{font-size:22px;font-weight:800;margin-bottom:6px}
 .subtitle{font-size:13px;color:#555}
 .feed{display:flex;flex-direction:column;gap:16px}
-.leaders-panel{
-  position:sticky;top:28px;
-  background:linear-gradient(160deg,#101010 0%,#141414 100%);
-  border:1px solid #222;border-radius:16px;padding:16px;
-  box-shadow:0 8px 24px rgba(0,0,0,.22);
-}
-.leaders-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px}
-.leaders-sub{font-size:11px;color:#666;margin-bottom:14px;line-height:1.4}
-.leaders-section{margin-bottom:16px}
-.leaders-section:last-child{margin-bottom:0}
-.leaders-section h3{
-  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
-  color:#86efac;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #222;
-}
-.leader-row{
-  display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;
-  padding:7px 0;border-bottom:1px solid #1a1a1a;
-}
-.leader-row:last-child{border-bottom:none}
-.leader-rank{font-size:11px;font-weight:800;color:#555;text-align:center}
-.leader-name{font-size:12px;font-weight:600;color:#ddd;line-height:1.3}
-.leader-meta{font-size:10px;color:#777;margin-top:2px}
-.leader-pnl{font-size:12px;font-weight:800;text-align:right;white-space:nowrap}
-.leader-pnl.pos{color:#4ade80}
-.leader-pnl.neg{color:#f87171}
-.leader-pnl.zero{color:#888}
 .card{
   background:linear-gradient(145deg,#121212 0%,#161616 100%);
   border:1px solid #222;border-radius:16px;padding:18px 20px;
@@ -15101,7 +15039,9 @@ h1{font-size:22px;font-weight:800;margin-bottom:6px}
   <a class="nav-item" href="/kripto/algoritmalar"><span class="nav-dot"></span>Algoritmalar</a>
   <a class="nav-item" href="/kripto/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="/kripto/test"><span class="nav-dot"></span>Test</a>
+  <a class="nav-item" href="/kripto/jarvis"><span class="nav-dot"></span>JARVIS</a>
   <a class="nav-item active" href="/kripto/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
+  <a class="nav-item" href="/kripto/lider-analiz"><span class="nav-dot"></span>Lider Analizi</a>
   <a class="nav-item" href="/kripto/grafik"><span class="nav-dot"></span>Grafik</a>
   <a class="nav-item" href="/kripto/gecmis"><span class="nav-dot"></span>Geçmiş işlemler</a>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geçiş yap</a>
@@ -15112,50 +15052,11 @@ h1{font-size:22px;font-weight:800;margin-bottom:6px}
     <h1>Yapay Zeka Analiz</h1>
     <div class="subtitle" id="subtitle">Kripto Test AI Analist bildirimleri yükleniyor…</div>
   </div>
-  <div class="page-grid">
-    <div id="feed" class="feed"><div id="loading">Yükleniyor…</div></div>
-    <aside class="leaders-panel">
-      <div class="leaders-title">Lider Analizi</div>
-      <div class="leaders-sub" id="leaders-sub">Kripto Test sanal defterler · min. 5 işlem</div>
-      <div id="leaders-panel"><div class="empty" style="padding:20px 0">Yükleniyor…</div></div>
-    </aside>
-  </div>
+  <div id="feed" class="feed"><div id="loading">Yükleniyor…</div></div>
 </div>
 <script>
 function esc(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function pnlCls(v){ return v>0?'pos':v<0?'neg':'zero'; }
-function pnlStr(v){ return (v>=0?'+':'') + '$' + Math.abs(Number(v)||0).toFixed(0); }
-function renderLeaderRows(items){
-  if(!items || !items.length) return '<div class="empty" style="padding:12px 0">Veri yok</div>';
-  return items.map((r,i) =>
-    '<div class="leader-row">'
-    + '<div class="leader-rank">' + (i+1) + '</div>'
-    + '<div><div class="leader-name">' + esc(r.label) + '</div>'
-    + '<div class="leader-meta">WR ' + esc(r.wr) + '% · ' + esc(r.total) + ' işlem</div></div>'
-    + '<div class="leader-pnl ' + pnlCls(r.pnl) + '">' + pnlStr(r.pnl) + '</div>'
-    + '</div>'
-  ).join('');
-}
-function renderLeaders(data){
-  const el = document.getElementById('leaders-panel');
-  if(!data || data.error){ el.innerHTML = '<div class="empty">Yüklenemedi</div>'; return; }
-  const min = data.min_trades || 5;
-  document.getElementById('leaders-sub').textContent =
-    'Kripto Test sanal defterler · min. ' + min + ' işlem · PnL sıralı';
-  el.innerHTML =
-    '<div class="leaders-section"><h3>Genel</h3>' + renderLeaderRows(data.overall) + '</div>'
-    + '<div class="leaders-section"><h3>BTC</h3>' + renderLeaderRows(data.btc) + '</div>'
-    + '<div class="leaders-section"><h3>ETH</h3>' + renderLeaderRows(data.eth) + '</div>'
-    + '<div class="leaders-section"><h3>SOL</h3>' + renderLeaderRows(data.sol) + '</div>';
-}
-async function loadLeaders(){
-  try{
-    const r = await fetch('/poly/api/kripto/analyst/leaders');
-    if(!r.ok) return;
-    renderLeaders(await r.json());
-  }catch(e){}
 }
 function fmtTs(ts){
   if(!ts) return '';
@@ -15208,9 +15109,7 @@ async function load(){
   }
 }
 load();
-loadLeaders();
 setInterval(load, 60000);
-setInterval(loadLeaders, 120000);
 </script>
 </body>
 </html>
@@ -15223,6 +15122,696 @@ def page_kripto_yapay_zeka_analiz():
     if _auth_required():
         return _login_redirect()
     return KRIPTO_YAPAY_ZEKA_ANALIZ_HTML, 200, _ISLEMLER_NOCACHE
+
+
+KRIPTO_LIDER_ANALIZ_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lider Analizi — Kripto Test</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex}
+.sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:20px;letter-spacing:-0.5px}
+.logo span{color:#c8f135}
+.nav-label{font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:14px;transition:.15s}
+.nav-item:hover{background:#1a1a1a;color:#fff}
+.nav-item.active{background:#1a2e1a;color:#c8f135;font-weight:600}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0}
+.nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:#c8f135}
+.sidebar-footer{margin-top:auto;font-size:12px;color:#333;padding:8px 12px;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{flex:1;padding:28px;max-width:1440px}
+.page-head{margin-bottom:20px}
+h1{font-size:22px;font-weight:800;margin-bottom:6px}
+.subtitle{font-size:13px;color:#555}
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.search{
+  flex:1;min-width:200px;max-width:320px;
+  background:#121212;border:1px solid #2a2a2a;border-radius:10px;
+  padding:10px 14px;font-size:14px;color:#eee;outline:none;
+}
+.search:focus{border-color:#4ade80}
+.search::placeholder{color:#555}
+.coin-count{font-size:12px;color:#666}
+.overall-card{
+  background:linear-gradient(145deg,#121212 0%,#161616 100%);
+  border:1px solid #222;border-radius:16px;padding:18px 20px;margin-bottom:20px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+.section-title{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:#86efac;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #222;
+}
+.coin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.coin-card{
+  background:linear-gradient(160deg,#101010 0%,#141414 100%);
+  border:1px solid #222;border-radius:14px;padding:14px 16px;
+}
+.coin-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.coin-sym{font-size:15px;font-weight:800;color:#fff;letter-spacing:.5px}
+.coin-badge{font-size:10px;color:#666;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:2px 7px}
+.leader-row{
+  display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;
+  padding:6px 0;border-bottom:1px solid #1a1a1a;
+}
+.leader-row:last-child{border-bottom:none}
+.leader-rank{font-size:11px;font-weight:800;color:#555;text-align:center}
+.leader-name{font-size:12px;font-weight:600;color:#ddd;line-height:1.3}
+.leader-meta{font-size:10px;color:#777;margin-top:2px}
+.leader-pnl{font-size:12px;font-weight:800;text-align:right;white-space:nowrap}
+.leader-pnl.pos{color:#4ade80}
+.leader-pnl.neg{color:#f87171}
+.leader-pnl.zero{color:#888}
+.empty{text-align:center;color:#555;padding:24px 12px;font-size:13px}
+#loading{text-align:center;color:#555;padding:60px 20px;font-size:14px}
+@media(max-width:720px){.main{padding:20px 16px}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  __KRIPTO_BRAND__
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/kripto/algoritmalar"><span class="nav-dot"></span>Algoritmalar</a>
+  <a class="nav-item" href="/kripto/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item" href="/kripto/test"><span class="nav-dot"></span>Test</a>
+  <a class="nav-item" href="/kripto/jarvis"><span class="nav-dot"></span>JARVIS</a>
+  <a class="nav-item" href="/kripto/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
+  <a class="nav-item active" href="/kripto/lider-analiz"><span class="nav-dot"></span>Lider Analizi</a>
+  <a class="nav-item" href="/kripto/grafik"><span class="nav-dot"></span>Grafik</a>
+  <a class="nav-item" href="/kripto/gecmis"><span class="nav-dot"></span>Geçmiş işlemler</a>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geçiş yap</a>
+  <div class="sidebar-footer"><span class="live-dot"></span>Canlı</div>
+</div>
+<div class="main">
+  <div class="page-head">
+    <h1>Lider Analizi</h1>
+    <div class="subtitle" id="subtitle">Kripto Test defterleri · 30 coin · PnL sıralı</div>
+  </div>
+  <div class="toolbar">
+    <input class="search" id="search" type="search" placeholder="Coin ara (BTC, ETH…)" autocomplete="off">
+    <span class="coin-count" id="coin-count"></span>
+  </div>
+  <div id="content"><div id="loading">Yükleniyor…</div></div>
+</div>
+<script>
+let leaderData = null;
+
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function pnlCls(v){ return v>0?'pos':v<0?'neg':'zero'; }
+function pnlStr(v){ return (v>=0?'+':'') + '$' + Math.abs(Number(v)||0).toFixed(0); }
+function renderLeaderRows(items){
+  if(!items || !items.length) return '<div class="empty">Bu coin için yeterli veri yok</div>';
+  return items.map((r,i) =>
+    '<div class="leader-row">'
+    + '<div class="leader-rank">' + (i+1) + '</div>'
+    + '<div><div class="leader-name">' + esc(r.label) + '</div>'
+    + '<div class="leader-meta">WR ' + esc(r.wr) + '% · ' + esc(r.total) + ' işlem</div></div>'
+    + '<div class="leader-pnl ' + pnlCls(r.pnl) + '">' + pnlStr(r.pnl) + '</div>'
+    + '</div>'
+  ).join('');
+}
+function renderPage(){
+  const el = document.getElementById('content');
+  if(!leaderData){ el.innerHTML = '<div class="empty">Veri yok</div>'; return; }
+  const q = (document.getElementById('search').value || '').trim().toUpperCase();
+  const syms = (leaderData.symbols || []).filter(s => !q || s.includes(q));
+  const min = leaderData.min_trades || 5;
+  document.getElementById('subtitle').textContent =
+    'Kripto Test sanal defterleri · min. ' + min + ' işlem · PnL sıralı';
+  document.getElementById('coin-count').textContent = syms.length + ' / ' + (leaderData.symbols || []).length + ' coin';
+  let html = '<div class="overall-card"><div class="section-title">Genel · Top ' + (leaderData.overall || []).length + '</div>'
+    + renderLeaderRows(leaderData.overall) + '</div>';
+  if(!syms.length){
+    html += '<div class="empty">Arama sonucu yok</div>';
+  } else {
+    html += '<div class="coin-grid">' + syms.map(sym => {
+      const rows = (leaderData.by_symbol || {})[sym] || [];
+      return '<div class="coin-card">'
+        + '<div class="coin-head"><span class="coin-sym">' + esc(sym) + '</span>'
+        + '<span class="coin-badge">' + rows.length + ' defter</span></div>'
+        + renderLeaderRows(rows)
+        + '</div>';
+    }).join('') + '</div>';
+  }
+  el.innerHTML = html;
+}
+async function loadLeaders(){
+  const el = document.getElementById('content');
+  try{
+    const r = await fetch('/poly/api/kripto/analyst/leaders');
+    if(!r.ok){ el.innerHTML = '<div class="empty">API hatası: ' + r.status + '</div>'; return; }
+    const data = await r.json();
+    if(data.error){ el.innerHTML = '<div class="empty">Oturum hatası</div>'; return; }
+    leaderData = data;
+    renderPage();
+  }catch(e){
+    el.innerHTML = '<div class="empty">Yükleme hatası</div>';
+  }
+}
+document.getElementById('search').addEventListener('input', renderPage);
+loadLeaders();
+setInterval(loadLeaders, 120000);
+</script>
+</body>
+</html>
+"""
+
+
+@app.route("/kripto/lider-analiz")
+@app.route("/kripto/lider-analiz/")
+def page_kripto_lider_analiz():
+    if _auth_required():
+        return _login_redirect()
+    return KRIPTO_LIDER_ANALIZ_HTML, 200, _ISLEMLER_NOCACHE
+
+
+KRIPTO_JARVIS_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JARVIS — Kripto Sistem Zekâsı</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2306b6d4'/><text x='50%25' y='50%25' font-size='18' text-anchor='middle' dominant-baseline='central' fill='%23001018' font-family='Arial' font-weight='bold'>J</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex}
+.sidebar{width:220px;background:#0a0f0a;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:5}
+.logo{font-size:20px;font-weight:800;color:#fff;margin-bottom:20px;letter-spacing:-0.5px}
+.logo span{color:#c8f135}
+.nav-label{font-size:10px;color:#444;text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#888;text-decoration:none;font-size:14px;transition:.15s}
+.nav-item:hover{background:#1a1a1a;color:#fff}
+.nav-item.active{background:#0a1530;color:#00F2FF;font-weight:600}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0}
+.nav-item.active .nav-dot{background:#00F2FF}
+.nav-item:hover .nav-dot{background:#c8f135}
+.sidebar-footer{margin-top:auto;font-size:12px;color:#333;padding:8px 12px;display:flex;align-items:center;gap:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#00F2FF;animation:jpulse 2s infinite}
+@keyframes jpulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── JARVIS · cyan / magenta / gold ── */
+:root{--j-bg:#050A18;--j-cyan:#00F2FF;--j-mag:#B026FF;--j-mag2:#FF00FF;--j-gold:#FFD700;--j-text:#c8e8ff;--j-muted:#6a8fa8}
+.j-main{flex:1;min-width:0;background:var(--j-bg);position:relative;overflow:hidden}
+.j-main:before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(0deg,rgba(0,242,255,.028) 0px,rgba(0,242,255,.028) 1px,transparent 1px,transparent 3px)}
+.j-main:after{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,242,255,.14),transparent 55%),
+              radial-gradient(ellipse 50% 40% at 85% 20%,rgba(176,38,255,.10),transparent 50%)}
+.j-wrap{position:relative;z-index:1;padding:26px 30px 60px;max-width:1500px}
+
+.j-hero{position:relative;text-align:center;padding:14px 0 6px;margin-bottom:18px}
+.j-kicker{font-size:10px;letter-spacing:5px;color:rgba(0,242,255,.55);text-transform:uppercase;margin-bottom:10px}
+.j-title{font-size:clamp(52px,9vw,116px);font-weight:900;letter-spacing:8px;line-height:.95;
+  background:linear-gradient(135deg,var(--j-cyan) 0%,#7ee8ff 35%,var(--j-mag) 70%,var(--j-mag2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 28px rgba(0,242,255,.45))}
+.j-sub{font-size:13px;letter-spacing:4px;color:var(--j-muted);text-transform:uppercase;margin-top:8px}
+.j-sub b{color:var(--j-cyan);font-weight:700;-webkit-text-fill-color:var(--j-cyan)}
+.j-tag{font-size:10px;letter-spacing:3px;color:rgba(176,38,255,.65);text-transform:uppercase;margin-top:14px}
+
+.j-ring{position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:340px;height:340px;opacity:.55;pointer-events:none}
+.j-ring circle{fill:none;stroke:var(--j-cyan)}
+.j-ring .j-ring-m{stroke:var(--j-mag)}
+.j-spin-a{transform-origin:170px 170px;animation:jspin 26s linear infinite}
+.j-spin-b{transform-origin:170px 170px;animation:jspin 17s linear infinite reverse}
+.j-spin-c{transform-origin:170px 170px;animation:jspin 44s linear infinite}
+@keyframes jspin{to{transform:rotate(360deg)}}
+
+.j-status{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.j-chip{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;
+  color:rgba(0,242,255,.85);background:rgba(5,10,24,.82);border:1px solid rgba(0,242,255,.28);border-radius:2px;padding:7px 13px;
+  box-shadow:0 0 12px rgba(0,242,255,.08)}
+.j-chip i{width:6px;height:6px;border-radius:50%;background:var(--j-cyan);animation:jpulse 1.8s infinite;font-style:normal;
+  box-shadow:0 0 8px var(--j-cyan)}
+.j-chip.warn{color:var(--j-gold);border-color:rgba(255,215,0,.35)}
+.j-chip.warn i{background:var(--j-gold);box-shadow:0 0 8px var(--j-gold)}
+
+.j-pagenav{display:flex;gap:12px;justify-content:center;margin:22px 0 28px;flex-wrap:wrap}
+.j-ptab{font-size:10.5px;letter-spacing:2.2px;text-transform:uppercase;padding:11px 24px;cursor:pointer;font-family:inherit;
+  border:1px solid rgba(0,242,255,.22);background:rgba(5,10,24,.75);color:var(--j-muted);
+  clip-path:polygon(0 9px,9px 0,calc(100% - 9px) 0,100% 9px,100% 100%,0 100%);transition:.2s}
+.j-ptab:hover:not(.on){border-color:rgba(176,38,255,.5);color:var(--j-text);box-shadow:0 0 16px rgba(176,38,255,.15)}
+.j-ptab.on{color:var(--j-bg);font-weight:700;border-color:transparent;
+  background:linear-gradient(135deg,var(--j-cyan) 0%,var(--j-mag) 100%);
+  box-shadow:0 0 28px rgba(0,242,255,.35),0 0 40px rgba(176,38,255,.2)}
+
+.j-panel{background:rgba(5,12,28,.82);border:1px solid rgba(0,242,255,.18);border-radius:2px;position:relative;
+  clip-path:polygon(0 10px,10px 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);
+  box-shadow:0 0 20px rgba(0,242,255,.04),inset 0 1px 0 rgba(0,242,255,.06)}
+.j-panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 16px;
+  border-bottom:1px solid rgba(0,242,255,.12);background:linear-gradient(90deg,rgba(0,242,255,.04),rgba(176,38,255,.04))}
+.j-panel-t{font-size:10.5px;letter-spacing:2.6px;text-transform:uppercase;color:var(--j-cyan);font-weight:700}
+.j-panel-m{font-size:10px;color:var(--j-muted);letter-spacing:1px}
+.j-panel-b{padding:16px}
+
+.j-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:1100px){.j-strip{grid-template-columns:repeat(2,1fr)}}
+.j-tile{background:rgba(5,12,28,.82);border:1px solid rgba(0,242,255,.18);padding:15px 17px;
+  clip-path:polygon(0 9px,9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%);
+  box-shadow:0 0 16px rgba(0,242,255,.05)}
+.j-tile-l{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--j-muted);margin-bottom:8px}
+.j-tile-v{font-size:27px;font-weight:800;color:var(--j-text);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.j-tile-v.neg{color:#ff5a8a;text-shadow:0 0 18px rgba(255,90,138,.35)}
+.j-tile-v.pos{color:var(--j-cyan);text-shadow:0 0 18px rgba(0,242,255,.35)}
+.j-tile-v.cy{color:var(--j-gold);text-shadow:0 0 18px rgba(255,215,0,.3)}
+.j-tile-s{font-size:10.5px;color:var(--j-muted);margin-top:6px;line-height:1.5}
+.j-bar{height:3px;background:rgba(0,242,255,.1);margin-top:11px;overflow:hidden}
+.j-bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--j-cyan),var(--j-mag))}
+
+.j-cols{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:1180px){.j-cols{grid-template-columns:1fr}}
+.j-stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+.j-find{display:flex;gap:12px;padding:13px 15px;border-left:2px solid var(--j-cyan);background:rgba(0,242,255,.04);margin-bottom:10px}
+.j-find:last-child{margin-bottom:0}
+.j-find.kritik{border-left-color:#ff5a8a;background:rgba(255,90,138,.08)}
+.j-find.uyari{border-left-color:var(--j-gold);background:rgba(255,215,0,.06)}
+.j-find.iyi{border-left-color:var(--j-cyan);background:rgba(0,242,255,.06)}
+.j-find-i{font-size:9px;letter-spacing:1.4px;text-transform:uppercase;color:var(--j-muted);padding-top:2px;white-space:nowrap;min-width:52px}
+.j-find.kritik .j-find-i{color:#ff8faa}.j-find.uyari .j-find-i{color:var(--j-gold)}.j-find.iyi .j-find-i{color:var(--j-cyan)}
+.j-find-t{font-size:13px;font-weight:700;color:var(--j-text);margin-bottom:4px}
+.j-find-x{font-size:12px;color:var(--j-muted);line-height:1.6}
+
+table.j-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+table.j-tbl th{text-align:right;padding:8px 9px;font-size:9px;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--j-muted);border-bottom:1px solid rgba(0,242,255,.15);font-weight:700;white-space:nowrap}
+table.j-tbl th:first-child,table.j-tbl td:first-child{text-align:left}
+table.j-tbl th:nth-child(2),table.j-tbl td:nth-child(2){text-align:left}
+table.j-tbl td{text-align:right;padding:7px 9px;border-bottom:1px solid rgba(0,242,255,.06);color:rgba(200,232,255,.85);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+table.j-tbl tr:hover td{background:rgba(0,242,255,.04)}
+table.j-tbl tr.j-hi td{background:rgba(255,215,0,.07);border-bottom-color:rgba(255,215,0,.22)}
+table.j-tbl tr.j-hi td:first-child{box-shadow:inset 2px 0 0 var(--j-gold)}
+table.j-tbl tr.j-hi .j-k{color:var(--j-gold)}
+.j-k{color:var(--j-cyan);font-weight:700}
+.j-nm{color:rgba(200,232,255,.7);max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pos{color:var(--j-cyan)}.neg{color:#ff5a8a}.mut{color:var(--j-muted)}
+.j-scroll{max-height:520px;overflow-y:auto}
+.j-scroll::-webkit-scrollbar{width:7px}
+.j-scroll::-webkit-scrollbar-thumb{background:rgba(176,38,255,.35)}
+
+.j-tabs{display:flex;gap:6px}
+.j-tab{font-size:9.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--j-muted);background:transparent;
+  border:1px solid rgba(0,242,255,.18);padding:5px 10px;cursor:pointer;font-family:inherit}
+.j-tab.on{color:var(--j-bg);background:linear-gradient(135deg,var(--j-cyan),var(--j-mag));border-color:transparent;font-weight:700}
+
+.j-rowline{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,242,255,.06);font-size:12px}
+.j-rowline:last-child{border-bottom:none}
+.j-rowline .l{color:rgba(200,232,255,.85);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.j-rowline .n{color:var(--j-muted);font-size:10.5px;font-variant-numeric:tabular-nums}
+.j-rowline .v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.j-verdict{text-align:center;padding:8px 0 4px}
+.j-vring{width:170px;height:170px;margin:0 auto 12px;position:relative}
+.j-vring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.j-vtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.j-vbig{font-size:33px;font-weight:900;line-height:1}
+.j-vlab{font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--j-muted)}
+.j-vnote{font-size:11.5px;color:var(--j-muted);line-height:1.65;padding:0 4px}
+
+.j-spark{display:flex;align-items:flex-end;gap:3px;height:44px;margin-top:10px}
+.j-spark i{flex:1;background:linear-gradient(180deg,var(--j-cyan),var(--j-mag));min-height:2px;display:block;opacity:.7}
+.j-spark i.neg{background:linear-gradient(180deg,#ff5a8a,var(--j-mag2));opacity:.8}
+
+.j-auto{display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--j-muted);line-height:1.6}
+.j-auto b{color:var(--j-cyan);font-weight:700}
+.j-clock{font-size:23px;font-weight:800;color:var(--j-cyan);font-variant-numeric:tabular-nums;letter-spacing:1px;
+  text-shadow:0 0 20px rgba(0,242,255,.4)}
+
+.j-foot{text-align:center;font-size:9.5px;letter-spacing:3.5px;text-transform:uppercase;color:rgba(0,242,255,.35);margin-top:34px}
+.j-load{text-align:center;color:var(--j-muted);padding:70px 20px;font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.j-callout{padding:14px 16px;border:1px solid rgba(176,38,255,.25);background:rgba(176,38,255,.06);margin-bottom:14px;
+  border-left:3px solid var(--j-mag);font-size:12px;color:var(--j-muted);line-height:1.65}
+.j-callout b{color:var(--j-text)}
+.j-callout.danger{border-color:rgba(255,90,138,.35);background:rgba(255,90,138,.08);border-left-color:#ff5a8a}
+.j-callout.warn{border-color:rgba(255,215,0,.3);background:rgba(255,215,0,.06);border-left-color:var(--j-gold)}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  __KRIPTO_BRAND__
+  <div class="nav-label">Ana Menü</div>
+  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/kripto/algoritmalar"><span class="nav-dot"></span>Algoritmalar</a>
+  <a class="nav-item" href="/kripto/analizler"><span class="nav-dot"></span>Analizler</a>
+  <a class="nav-item" href="/kripto/test"><span class="nav-dot"></span>Test</a>
+  <a class="nav-item active" href="/kripto/jarvis"><span class="nav-dot"></span>JARVIS</a>
+  <a class="nav-item" href="/kripto/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
+  <a class="nav-item" href="/kripto/lider-analiz"><span class="nav-dot"></span>Lider Analizi</a>
+  <a class="nav-item" href="/kripto/grafik"><span class="nav-dot"></span>Grafik</a>
+  <a class="nav-item" href="/kripto/gecmis"><span class="nav-dot"></span>Geçmiş işlemler</a>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geçiş yap</a>
+  <div class="sidebar-footer"><span class="live-dot"></span>JARVIS aktif</div>
+</div>
+
+<div class="main j-main">
+ <div class="j-wrap">
+
+  <div class="j-hero">
+    <svg class="j-ring" viewBox="0 0 340 340" aria-hidden="true">
+      <circle class="j-spin-c" cx="170" cy="170" r="162" stroke-opacity=".18" stroke-width="1" stroke-dasharray="2 9"/>
+      <circle class="j-spin-a" cx="170" cy="170" r="139" stroke-opacity=".34" stroke-width="1.4" stroke-dasharray="60 26 14 26"/>
+      <circle class="j-spin-b j-ring-m" cx="170" cy="170" r="116" stroke-opacity=".32" stroke-width="1" stroke-dasharray="4 12"/>
+      <circle cx="170" cy="170" r="95" stroke-opacity=".14" stroke-width="1"/>
+    </svg>
+    <div class="j-kicker">Your world · Your voice · One intelligence</div>
+    <div class="j-title">JARVIS</div>
+    <div class="j-sub">Kripto <b>Sistem Zekâsı</b></div>
+    <div class="j-tag">Ölçer · Anlar · Uyarır</div>
+    <div class="j-status" id="j-status"></div>
+  </div>
+
+  <div class="j-pagenav" id="j-pagenav">
+    <button class="j-ptab on" data-page="test">Kripto Test Analizi</button>
+    <button class="j-ptab" data-page="audit">Kripto Sistem Denetimi</button>
+  </div>
+
+  <div id="j-body"><div class="j-load">Sistem taranıyor…</div></div>
+
+  <div class="j-foot">Ölç · Anla · Karar ver</div>
+ </div>
+</div>
+
+<script>
+const F = (v,d=2)=>(v<0?'−$':'$')+Math.abs(Number(v||0)).toLocaleString('tr-TR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const FS = v=>(Number(v)>=0?'+$':'−$')+Math.abs(Number(v||0)).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const N = v=>Number(v||0).toLocaleString('tr-TR');
+const P = (v,d=1)=>Number(v||0).toLocaleString('tr-TR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const PS = (v,d=2)=>(Number(v)>=0?'+':'−')+P(Math.abs(Number(v||0)),d);
+const cls = v=>Number(v)>0?'pos':Number(v)<0?'neg':'mut';
+const esc = s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CY='#00F2FF', PK='#ff5a8a', GD='#FFD700';
+let DATA=null, AUDIT=null, PAGE='test', TAB='hepsi';
+
+document.getElementById('j-pagenav').addEventListener('click',e=>{
+  const b=e.target.closest('.j-ptab'); if(!b) return;
+  PAGE=b.dataset.page;
+  document.querySelectorAll('.j-ptab').forEach(x=>x.classList.toggle('on',x.dataset.page===PAGE));
+  renderStatus(); renderBody();
+});
+
+function panel(title, meta, inner, bodyStyle){
+  return '<div class="j-panel"><div class="j-panel-h"><div class="j-panel-t">'+title+'</div>'
+    + '<div class="j-panel-m">'+(meta||'')+'</div></div>'
+    + '<div class="j-panel-b"'+(bodyStyle?' style="'+bodyStyle+'"':'')+'>'+inner+'</div></div>';
+}
+
+function renderStatus(){
+  const d=PAGE==='audit'?(AUDIT||{}):(DATA||{});
+  const o=d.ozet||{};
+  const el=document.getElementById('j-status');
+  if(!o.islem && !o.defter){ el.innerHTML=''; return; }
+  const ok=Number(o.brut||0)>0;
+  const defter=PAGE==='audit'?o.defter:(o.aktif_defter||o.defter);
+  el.innerHTML=
+    '<div class="j-chip"><i></i>'+(PAGE==='audit'?'Tam sistem denetimi':'Kripto Test')+'</div>'
+    +'<div class="j-chip"><i></i>'+N(defter)+' defter</div>'
+    +'<div class="j-chip"><i></i>'+N(o.islem)+' işlem</div>'
+    +'<div class="j-chip '+(ok?'':'warn')+'"><i></i>'+(ok?'Brüt pozitif':'Brüt kenar yok')+'</div>'
+    +'<div class="j-chip"><i></i>Son '+esc((d.olusturma||'').slice(11,16))+'</div>';
+}
+
+function renderBody(){ PAGE==='audit'?renderAudit():renderTest(); }
+
+function renderTest(){
+  const d=DATA; if(!d) return;
+  document.getElementById('j-body').innerHTML=
+    tiles(d)+'<div style="margin-bottom:18px">'+findings(d)+'</div>'
+    +'<div class="j-cols"><div class="j-stack">'+dailyChart(d)+'<div id="j-books">'+bookTable(d)+'</div></div>'
+    +'<div class="j-stack">'+verdict(d)+autoPanel(d)+closeReasons(d)+coins(d)+'</div></div>';
+  tickNext();
+}
+
+function tiles(d){
+  const o=d.ozet, m=d.maliyet;
+  const komOran = o.komisyon>0 ? Math.min(100, Math.abs(o.brut)/o.komisyon*100) : 0;
+  return '<div class="j-strip">'
+   + '<div class="j-tile"><div class="j-tile-l">Analiz edilen işlem</div><div class="j-tile-v cy">'+N(o.islem)+'</div>'
+   + '<div class="j-tile-s">'+esc((o.ilk_islem||'').slice(0,10))+' → '+esc((o.son_islem||'').slice(0,10))+'</div></div>'
+   + '<div class="j-tile"><div class="j-tile-l">Brüt sonuç — komisyon öncesi</div><div class="j-tile-v '+cls(o.brut)+'">'+FS(o.brut)+'</div>'
+   + '<div class="j-tile-s">Ham kenar, komisyonun %'+P(komOran,1)+'\\'ini karşılıyor'
+   + '<div class="j-bar"><i style="width:'+komOran.toFixed(1)+'%"></i></div></div></div>'
+   + '<div class="j-tile"><div class="j-tile-l">Ödenen komisyon</div><div class="j-tile-v neg">'+F(o.komisyon)+'</div>'
+   + '<div class="j-tile-s">İşlem başı '+F(m.islem_basi,3)+' · taker %'+P(m.gercek_oran,4)+'</div></div>'
+   + '<div class="j-tile"><div class="j-tile-l">Net sonuç</div><div class="j-tile-v '+cls(o.net)+'">'+FS(o.net)+'</div>'
+   + '<div class="j-tile-s">Sermayenin %'+P(o.kayip_yuzde,1)+'\\'si · '+o.karli_defter+' defter artıda</div></div>'
+   + '</div>';
+}
+
+function findings(d){
+  const map={kritik:'Kritik',uyari:'Uyarı',iyi:'Olumlu',bilgi:'Bilgi'};
+  const rows=(d.bulgular||[]).map(f=>
+    '<div class="j-find '+esc(f.tip)+'"><div class="j-find-i">'+(map[f.tip]||'Bilgi')+'</div>'
+    +'<div><div class="j-find-t">'+esc(f.baslik)+'</div><div class="j-find-x">'+esc(f.metin)+'</div></div></div>').join('');
+  return panel('JARVIS ne gördü', (d.bulgular||[]).length+' bulgu', rows||'<div class="mut">Bulgu yok.</div>');
+}
+
+function dailyChart(d){
+  const g=d.gunluk||[]; if(!g.length) return '';
+  const vals=g.flatMap(x=>[x.brut,x.net]);
+  const mx=Math.max(...vals.map(Math.abs))||1;
+  const W=Math.max(560,g.length*82), H=190, mid=H/2, bw=26;
+  let s='<svg viewBox="0 0 '+W+' '+(H+30)+'" style="width:100%;height:220px">';
+  s+='<line x1="0" y1="'+mid+'" x2="'+W+'" y2="'+mid+'" stroke="rgba(0,242,255,.3)" stroke-width="1"/>';
+  g.forEach((x,i)=>{
+    const cx=(i+0.5)*(W/g.length);
+    [[x.brut,-1,CY],[x.net,1,PK]].forEach(([v,off,col])=>{
+      const h=Math.abs(v)/mx*(mid-16);
+      const y=v>=0?mid-h:mid;
+      s+='<rect x="'+(cx+off*bw-bw/2-1)+'" y="'+y+'" width="'+(bw-3)+'" height="'+Math.max(h,1)+'" fill="'+col+'" opacity=".82"/>';
+    });
+    s+='<text x="'+cx+'" y="'+(H+18)+'" fill="#6a8fa8" font-size="10" text-anchor="middle">'+esc(x.gun)+'</text>';
+  });
+  s+='</svg>';
+  const leg='<div style="display:flex;gap:16px;font-size:10px;color:#6a8fa8;margin-top:6px">'
+    +'<span><i style="display:inline-block;width:9px;height:9px;background:'+CY+';margin-right:5px"></i>Brüt</span>'
+    +'<span><i style="display:inline-block;width:9px;height:9px;background:'+PK+';margin-right:5px"></i>Net</span></div>';
+  return panel('Günlük sonuç', 'günlük toplam P&amp;L (USD)', s+leg);
+}
+
+function bookTable(d){
+  const all=d.defterler||[];
+  const esik=Number(d.maliyet.gercek_oran);
+  let rows=all;
+  if(TAB==='pozitif') rows=all.filter(b=>b.skill!=null&&b.skill>0);
+  if(TAB==='esik') rows=all.filter(b=>b.skill!=null&&b.skill>=esik);
+  if(TAB==='karli') rows=all.filter(b=>b.net>0);
+  const body=rows.map(b=>{
+    const mark = (b.skill!=null&&b.skill>=esik)?'style="color:'+CY+'"':((b.t!=null&&b.t<=-2)?'style="color:'+PK+'"':'');
+    return '<tr><td><span class="j-k" '+mark+'>'+esc(b.key)+'</span></td>'
+     +'<td><div class="j-nm">'+esc(b.ad)+'</div></td>'
+     +'<td>'+N(b.n)+'</td><td>%'+P(b.wr,1)+'</td>'
+     +'<td class="'+(b.skill==null?'mut':cls(b.skill))+'">'+(b.skill==null?'—':PS(b.skill,4))+'</td>'
+     +'<td class="'+(b.t==null?'mut':cls(b.t))+'">'+(b.t==null?'—':PS(b.t,2))+'</td>'
+     +'<td class="'+cls(b.brut)+'">'+FS(b.brut)+'</td>'
+     +'<td class="'+cls(b.net)+'">'+FS(b.net)+'</td></tr>';
+  }).join('');
+  const tabs='<div class="j-tabs">'
+    +[['hepsi','Hepsi'],['pozitif','Pozitif SKILL'],['esik','Maliyeti aşan'],['karli','Net artıda']]
+      .map(([k,l])=>'<button class="j-tab'+(TAB===k?' on':'')+'" onclick="setTab(\\''+k+'\\')">'+l+'</button>').join('')
+    +'</div>';
+  const tbl='<div class="j-scroll"><table class="j-tbl"><thead><tr>'
+    +'<th>Defter</th><th>Algoritma</th><th>İşlem</th><th>WR</th><th>SKILL %</th><th>t</th><th>Brüt</th><th>Net</th>'
+    +'</tr></thead><tbody>'+(body||'<tr><td colspan="8" class="mut">Kayıt yok.</td></tr>')+'</tbody></table></div>';
+  return '<div class="j-panel"><div class="j-panel-h"><div class="j-panel-t">Defter sıralaması · SKILL</div>'
+    + tabs + '</div><div class="j-panel-b">'+tbl+'</div></div>';
+}
+
+function verdict(d){
+  const b=d.beceri, o=d.ozet;
+  const pay=b.olculebilir?100*b.pozitif/b.olculebilir:0;
+  const R=74,C=2*Math.PI*R, off=C*(1-pay/100);
+  const ring='<div class="j-vring"><svg viewBox="0 0 170 170">'
+    +'<circle cx="85" cy="85" r="'+R+'" fill="none" stroke="rgba(0,242,255,.12)" stroke-width="9"/>'
+    +'<circle cx="85" cy="85" r="'+R+'" fill="none" stroke="'+CY+'" stroke-width="9" stroke-linecap="round" '
+    +'stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg>'
+    +'<div class="j-vtxt"><div class="j-vbig" style="color:'+CY+'">%'+P(pay,0)+'</div>'
+    +'<div class="j-vlab">pozitif SKILL</div></div></div>';
+  const note='<div class="j-vnote">'+b.pozitif+' / '+b.olculebilir+' defter pozitif. Ortalama SKILL %'+PS(b.ort_skill,4)+'.</div>';
+  return panel('Beceri var mı', o.aktif_defter+' defter', '<div class="j-verdict">'+ring+note+'</div>');
+}
+
+function closeReasons(d){
+  const rows=(d.kapanis||[]).map(k=>
+    '<div class="j-rowline"><div class="l">'+esc(k.sebep)+'<div class="n">'+N(k.n)+' işlem · WR %'+P(k.wr,1)+'</div></div>'
+    +'<div class="v '+cls(k.net)+'">'+FS(k.net)+'</div></div>').join('');
+  return panel('Çıkış biçimi', 'net P&amp;L', rows);
+}
+
+function coins(d){
+  const rows=(d.coinler||[]).slice(0,10).map(c=>
+    '<div class="j-rowline"><div class="l">'+esc(c.coin)+'<div class="n">'+N(c.n)+' işlem · WR %'+P(c.wr,1)+'</div></div>'
+    +'<div class="v '+cls(c.net)+'">'+FS(c.net)+'</div></div>').join('');
+  return panel('Coin bazında', 'en çok işlem gören 10', rows);
+}
+
+function autoPanel(d){
+  const h=d.tarihce||[];
+  let spark='';
+  if(h.length>1){
+    const mx=Math.max(...h.map(x=>Math.abs(Number(x.net||0))))||1;
+    spark='<div class="j-spark">'+h.map(x=>{
+      const v=Number(x.net||0);
+      return '<i class="'+(v<0?'neg':'')+'" style="height:'+Math.max(2,Math.abs(v)/mx*44).toFixed(0)+'px"></i>';
+    }).join('')+'</div>';
+  }
+  const inner='<div class="j-auto"><div class="j-clock" id="j-next">—:—:—</div>'
+    +'<div style="font-size:10px;color:#6a8fa8;margin-top:6px">sonraki tarama · 00:00</div></div>'
+    +'<div style="font-size:11.5px;color:#6a8fa8;margin-top:12px">Son: <b style="color:'+CY+'">'+esc((d.olusturma||'').replace('T',' ').slice(0,16))+'</b></div>'+spark;
+  return panel('Kendini güncelleme', 'her gece 00:00', inner);
+}
+
+function auditTiles(d){
+  const o=d.ozet;
+  const komOran=o.komisyon>0?Math.min(100,Math.abs(o.brut)/o.komisyon*100):0;
+  return '<div class="j-strip">'
+    +'<div class="j-tile"><div class="j-tile-l">Kapanmış işlem</div><div class="j-tile-v cy">'+N(o.islem)+'</div>'
+    +'<div class="j-tile-s">'+esc((o.ilk||'').slice(0,10))+' → '+esc((o.son||'').slice(0,10))+'</div></div>'
+    +'<div class="j-tile"><div class="j-tile-l">Brüt</div><div class="j-tile-v '+cls(o.brut)+'">'+FS(o.brut)+'</div>'
+    +'<div class="j-tile-s">Kenar %'+P(o.brut_kenar,4)+'<div class="j-bar"><i style="width:'+komOran.toFixed(1)+'%"></i></div></div></div>'
+    +'<div class="j-tile"><div class="j-tile-l">Komisyon</div><div class="j-tile-v neg">'+F(o.komisyon)+'</div>'
+    +'<div class="j-tile-s">Taker %'+P(o.fee_oran,4)+'</div></div>'
+    +'<div class="j-tile"><div class="j-tile-l">Net</div><div class="j-tile-v '+cls(o.net)+'">'+FS(o.net)+'</div>'
+    +'<div class="j-tile-s">Maker tahmini '+FS(o.maker_net)+'</div></div></div>';
+}
+
+function mfeChart(mfe){
+  if(!mfe||!mfe.length) return '';
+  const mx=Math.max(...mfe.map(x=>Math.abs(x.net)))||1;
+  const W=Math.max(520,mfe.length*72), H=180, bw=36;
+  let s='<svg viewBox="0 0 '+W+' '+(H+24)+'" style="width:100%;height:200px">';
+  mfe.forEach((x,i)=>{
+    const cx=(i+0.5)*(W/mfe.length);
+    const h=Math.abs(x.net)/mx*(H-20);
+    const y=x.net>=0?H-h-10:H/2;
+    s+='<rect x="'+(cx-bw/2)+'" y="'+y+'" width="'+(bw-4)+'" height="'+Math.max(h,2)+'" fill="'+(x.net>=0?CY:PK)+'" opacity=".85"/>';
+    s+='<text x="'+cx+'" y="'+(H+14)+'" fill="#6a8fa8" font-size="9" text-anchor="middle">'+esc(x.band)+'</text>';
+  });
+  s+='</svg>';
+  return panel('MFE dağılımı','ATR bandı → net katkı',s);
+}
+
+function auditTbl(headers, rows){
+  const h='<thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead>';
+  const b='<tbody>'+(rows||'<tr><td colspan="'+headers.length+'" class="mut">—</td></tr>')+'</tbody>';
+  return '<div class="j-scroll"><table class="j-tbl">'+h+b+'</table></div>';
+}
+
+function renderAudit(){
+  const d=AUDIT; if(!d) return;
+  const mfeRows=(d.mfe||[]).map(m=>'<tr><td><span class="j-k">'+esc(m.band)+'</span></td><td>'+N(m.n)+'</td><td>%'+P(m.pay,1)+'</td><td class="'+cls(m.ort)+'">'+FS(m.ort)+'</td><td>%'+P(m.wr,1)+'</td><td class="'+cls(m.net)+'">'+FS(m.net)+'</td></tr>').join('');
+  const exitRows=(d.kapanis||[]).map(e=>'<tr><td><span class="j-k">'+esc(e.sebep)+'</span></td><td>'+N(e.n)+'</td><td>%'+P(e.wr,1)+'</td><td class="'+cls(e.net)+'">'+FS(e.net)+'</td><td class="'+cls(e.brut)+'">'+FS(e.brut)+'</td><td>'+F(e.komisyon)+'</td><td class="'+cls(e.skill)+'">'+PS(e.skill,4)+'</td></tr>').join('');
+  const driftRows=(d.drift||[]).map(c=>'<tr><td><span class="j-k">'+esc(c.coin)+'</span></td><td>'+N(c.nL)+'</td><td>'+N(c.nS)+'</td><td class="'+cls(c.skill)+'">'+PS(c.skill,4)+'</td><td>'+PS(c.drift,4)+'</td></tr>').join('');
+  const konsRows=(d.konsensus||[]).map(k=>'<tr><td>'+esc(k.ad)+'</td><td>'+N(k.nL)+'</td><td>'+N(k.nS)+'</td><td class="'+cls(k.skill)+'">'+PS(k.skill,4)+'</td><td>'+PS(k.t,2)+'</td></tr>').join('');
+  const map={kritik:'Kritik',uyari:'Uyarı',iyi:'Olumlu',bilgi:'Bilgi'};
+  const bul=(d.bulgular||[]).map(f=>'<div class="j-find '+esc(f.tip)+'"><div class="j-find-i">'+(map[f.tip]||'Bilgi')+'</div><div><div class="j-find-t">'+esc(f.baslik)+'</div><div class="j-find-x">'+esc(f.metin)+'</div></div></div>').join('');
+  let live='';
+  const ghosts=(d.live&&d.live.hayalet)||[];
+  if(ghosts.length){
+    const gr=ghosts.map(g=>'<tr><td><span class="j-k">'+esc(g.symbol)+'</span></td><td>'+esc(g.side)+'</td><td>'+esc(g.entry)+'</td><td class="neg">açık (hayalet)</td></tr>').join('');
+    live=panel('Live desenkron','state ≠ history',auditTbl(['Sembol','Yön','Giriş','Durum'],gr));
+  }
+  document.getElementById('j-body').innerHTML=
+    auditTiles(d)
+    +'<div class="j-callout danger"><b>Teşhis:</b> Test + Algoritmalar + Analizler — '+N(d.ozet.defter)+' defter, '+N(d.ozet.islem)+' işlem. Zararın kaynağı komisyon.</div>'
+    +regimePanel(d)
+    +'<div style="margin-bottom:18px">'+panel('Sistem bulguları',(d.bulgular||[]).length+'',bul)+'</div>'
+    +'<div class="j-cols"><div class="j-stack">'+mfeChart(d.mfe)
+    +panel('MFE tablosu','',auditTbl(['Band','İşlem','Pay','Ort.','WR','Toplam'],mfeRows))
+    +panel('Çıkış sebebi','',auditTbl(['Sebep','İşlem','WR','Net','Brüt','Kom.','SKILL'],exitRows))
+    +'</div><div class="j-stack">'
+    +panel('Drift — coin','',auditTbl(['Coin','nL','nS','SKILL','DRIFT'],driftRows))
+    +panel('Konsensüs','',auditTbl(['Seviye','nL','nS','SKILL','t'],konsRows))
+    +live+'</div></div>';
+}
+
+function regimePanel(d){
+  const r=d.rejim; if(!r||!r.olcum) return '';
+  const o=r.olcum;
+  const row=(ad,n,net,kom,t,hi)=>'<tr'+(hi?' class="j-hi"':'')+'><td><span class="j-k">'+esc(ad)+'</span></td><td>'+N(n)+'</td><td class="'+cls(net)+'">'+FS(net)+'</td><td>'+F(kom)+'</td><td class="'+cls(t)+'">'+PS(t,2)+'</td></tr>';
+  const tbl=auditTbl(['Rejim','İşlem','Net','Komisyon','t (gün)'],
+      row('eski · 1h/4h zorunlu + 2×ATR',o.eski_islem,o.eski_net,o.eski_kom,o.eski_t)
+     +row('yeni · zaman yok · 24s · 6×ATR',o.yeni_islem,o.yeni_net,o.yeni_kom,o.yeni_t,1));
+  const canli=(r.yeni&&r.yeni.n)
+    ? '<div class="j-callout"><b>Yeni rejimde biriken:</b> '+N(r.yeni.n)+' işlem · net '+FS(r.yeni.net)+' · komisyon '+F(r.yeni.komisyon)+' · SKILL '+PS(r.yeni.skill,4)+'</div>'
+    : '<div class="j-callout">Yeni rejim '+esc((r.gecis_tr||'').slice(0,16).replace('T',' '))+' itibarıyla aktif — ileriye dönük veri birikiyor.</div>';
+  return '<div style="margin-bottom:18px">'
+    +panel('Çıkış rejimi · '+esc(r.aktif||''),'exit_lab ölçümü',
+        '<div class="j-find-x" style="margin-bottom:10px">Aynı girişler gerçek 1m fiyat verisiyle yeniden oynatıldı ('
+        +esc(o.kaynak)+'). Girişler ve algoritmalar sabit; yalnız çıkış kuralı değişti.</div>'
+        +tbl+canli)+'</div>';
+}
+
+function setTab(t){ TAB=t; const el=document.getElementById('j-books'); if(el) el.innerHTML=bookTable(DATA); }
+
+function tickNext(){
+  const el=document.getElementById('j-next'); if(!el) return;
+  const now=new Date();
+  const nx=new Date(now); nx.setHours(24,0,0,0);
+  let s=Math.max(0,Math.floor((nx-now)/1000));
+  el.textContent=String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor(s%3600/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+
+async function load(){
+  try{
+    const r=await fetch('/kripto/api/jarvis',{cache:'no-store'});
+    const d=await r.json();
+    if(!d.ok){ document.getElementById('j-body').innerHTML='<div class="j-load">'+esc(d.error||'Rapor yok')+'</div>'; return; }
+    DATA=d.test||d; AUDIT=d.audit||null;
+    renderStatus(); renderBody();
+  }catch(e){ document.getElementById('j-body').innerHTML='<div class="j-load">Bağlantı hatası</div>'; }
+}
+load();
+setInterval(tickNext,1000);
+setInterval(load,300000);
+
+</script>
+</body>
+</html>
+"""
+
+
+@app.route("/kripto/jarvis")
+def page_kripto_jarvis():
+    if _auth_required():
+        return _login_redirect()
+    return KRIPTO_JARVIS_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/kripto/api/jarvis")
+def api_kripto_jarvis():
+    """JARVIS raporu — gece 00:00 üretilen anlık görüntü + günlük geçmiş."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    try:
+        _jpath = os.path.join(_ROOT, "AgustosKripto", "Test")
+        if _jpath not in sys.path:
+            sys.path.insert(0, _jpath)
+        import jarvis_report as _jr
+        import jarvis_audit as _ja
+
+        test = _jr.load_report()
+        if not test:
+            test = _jr.build_report()
+        test = dict(test)
+        test["tarihce"] = _jr.load_history(60)
+
+        audit = _ja.load_report()
+        if not audit:
+            audit = _ja.build_report()
+
+        return jsonify({"ok": True, "test": test, "audit": audit, **test})
+    except Exception as exc:
+        return jsonify({"ok": False, "error": f"jarvis raporu okunamadı: {exc}"}), 500
 
 
 @app.route("/algoritma-islemler")
@@ -15670,7 +16259,9 @@ body.kf-overview .kf-right-panel{display:block}
     <a class="nav-item" id="nav-kripto-algo" href="/kripto/algoritmalar"><span class="nav-dot"></span>Algoritmalar</a>
     <a class="nav-item" id="nav-kripto-analiz" href="/kripto/analizler"><span class="nav-dot"></span>Analizler</a>
     <a class="nav-item nav-sub" id="nav-kripto-test" href="/kripto/test"><span class="nav-dot"></span>Test</a>
+    <a class="nav-item" href="/kripto/jarvis"><span class="nav-dot"></span>JARVIS</a>
     <a class="nav-item" href="/kripto/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
+    <a class="nav-item" id="nav-kripto-lider" href="/kripto/lider-analiz"><span class="nav-dot"></span>Lider Analizi</a>
     <a class="nav-item" id="nav-kripto-grafik" href="/kripto/grafik"><span class="nav-dot"></span>Grafik</a>
     <a class="nav-item" id="nav-kripto-gecmis" href="/kripto/gecmis"><span class="nav-dot"></span>Geçmiş işlemler</a>
     <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geçiş yap</a>
@@ -15827,7 +16418,7 @@ body.kf-overview .kf-right-panel{display:block}
     <div class="head">
       <div>
         <div class="page-title">Test</div>
-        <div class="page-sub">Poly algoritma-islemler + ALGO1 → sanal Binance · $1000 · $100×6x · max 4 · 1h/4h ATR · scan */10dk (canlı giriş + ters sinyal kapama) · 30 coin · 7/24 (hafta sonu duraklaması yok)</div>
+        <div class="page-sub">Poly algoritma-islemler + ALGO1 + JARVIS_V1 → sanal Binance · $1000 · $100×6x · max 4 (JARVIS_V1: 10) · 70 defter · 1h/4h ATR · scan */10dk · 30 coin · 7/24</div>
       </div>
       <div class="chip" id="test-sum">—</div>
     </div>
@@ -15875,6 +16466,11 @@ body.kf-overview .kf-right-panel{display:block}
   <div class="kf-rp-section">
     <div class="kf-rp-title">En yetenekli algoritmalar (SKILL)</div>
     <div id="kf-rp-algos"><div style="color:#666;font-size:12px">yükleniyor…</div></div>
+  </div>
+  <div class="kf-rp-section">
+    <div class="kf-rp-title">JARVIS_V1 · coin → motor</div>
+    <div class="kf-rp-sub" id="kf-jarvis-sub" style="font-size:10px;color:var(--muted);margin:-4px 0 8px;line-height:1.35">Lider analiz PnL · kaynak TF kopyası · max 10</div>
+    <div id="kf-jarvis-map"><div style="color:#666;font-size:12px">yükleniyor…</div></div>
   </div>
   <div class="kf-rp-section">
     <div class="kf-rp-title">Son Test işlemleri</div>
@@ -16375,6 +16971,37 @@ function renderRpLeadersMini(leaders){
   }).join('');
 }
 
+function renderJarvisMap(rows, meta){
+  const el = document.getElementById('kf-jarvis-map');
+  const sub = document.getElementById('kf-jarvis-sub');
+  if(!el) return;
+  if(!rows || !rows.length){
+    el.innerHTML = '<div style="color:#666;font-size:12px">Eşleme yok (min. 5 işlem)</div>';
+    return;
+  }
+  if(sub && meta){
+    const labels = meta.labels || {};
+  const pinKeys = meta.pinned ? Object.keys(meta.pinned) : [];
+    const pin = pinKeys.length
+      ? ' · pin: ' + pinKeys.map(c => c + '→' + (labels[c] || meta.pinned[c])).join(', ')
+      : '';
+    sub.textContent = (meta.mapped_coins || rows.length) + ' coin · min ' + (meta.min_trades||5) + ' işlem · PnL sıralı' + pin;
+  }
+  el.innerHTML = rows.map(r => {
+    const pnl = r.pnl != null ? Number(r.pnl) : null;
+    const pnlCls = pnl == null ? '' : (pnl >= 0 ? 'pos' : 'neg');
+    const pnlTxt = pnl == null ? '—' : ((pnl>=0?'+':'') + '$' + Math.abs(pnl).toFixed(0));
+    const pin = r.pinned ? ' <span style="font-size:9px;opacity:.65">pin</span>' : '';
+    const wr = r.wr != null ? ('WR '+r.wr+'%') : '';
+    const tr = r.trades != null ? (r.trades + ' işlem') : '';
+    const metaLine = [wr, tr].filter(Boolean).join(' · ');
+    return '<div class="kf-trade-item"><div>'
+      + '<div class="kf-trade-sym">'+r.symbol+' → <span style="color:var(--accent)">'+r.algo+'</span>'+pin+'</div>'
+      + '<div class="kf-trade-meta">'+metaLine+'</div>'
+      + '</div><div class="kf-trade-pnl '+pnlCls+'">'+pnlTxt+'</div></div>';
+  }).join('');
+}
+
 function renderRecentTrades(rows, elId, emptyLbl){
   const el = document.getElementById(elId);
   if(!el) return;
@@ -16430,6 +17057,7 @@ function renderOverview(d){
   renderTopSuccessList(d.top_success);
   renderRpLeadersMini(d.coin_leaders);
   renderWaiting(d);
+  renderJarvisMap(d.jarvis_v1_map, d.jarvis_v1_meta);
   renderRecentTrades(d.recent_test_trades, 'kf-recent-test', 'Henüz Test işlemi yok');
   renderRecentTrades(d.recent_live_trades, 'kf-recent-live', 'Henüz Live işlemi yok');
 }
@@ -16684,13 +17312,14 @@ function renderBooks(elId, sumId, d){
       ? (` · <span style="color:var(--accent)">AKTİF $${m.toFixed(0)}×${lev}x</span>`)
       : (` · $${m.toFixed(0)}×${lev}x · open kapalı`);
     const liveDot = b.real_live ? '<span class="algo-live-dot" title="Canlı — gerçek Binance işlemi de açıyor ($7×20x)"></span>' : '';
+    const gateOpen = !!b.gate_open;
     const gateN = (b.gate_pairs||[]).length;
     const proTag = b.mode === 'pro'
       ? `<span style="margin-left:6px;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:700;`
-        + `background:${gateN?'rgba(200,241,53,.16)':'rgba(255,255,255,.07)'};`
-        + `color:${gateN?'var(--accent)':'var(--muted)'}" `
-        + `title="PRO rejimi — saatlik zorunlu kapanış yok; yalnız ölçülen SKILL komisyonu aşan coin'lerde pozisyon açar">`
-        + `PRO ${gateN?gateN+' coin izinli':'kapı kapalı'}</span>`
+        + `background:${gateOpen||gateN?'rgba(200,241,53,.16)':'rgba(255,255,255,.07)'};`
+        + `color:${gateOpen||gateN?'var(--accent)':'var(--muted)'}" `
+        + `title="PRO rejimi — saatlik zorunlu kapanış yok; ${gateOpen?'kenar filtresi kapalı, tüm sinyaller':'yalnız ölçülen SKILL komisyonu aşan coin\\'ler'}">`
+        + `PRO ${gateOpen?'kapı açık':gateN?gateN+' coin izinli':'kapı kapalı'}</span>`
       : '';
     return `<a class="book-card" href="${href}" style="${active?'border-color:rgba(200,241,53,.35)':''}">
       <div class="bt">${liveDot}${title}${proTag}${active?' · ▶':''}</div>
@@ -16906,13 +17535,26 @@ async function loadBookDetail(){
   }
 }
 async function loadTestBooks(){
+  const el = document.getElementById('test-books');
+  const wl = document.getElementById('test-waiting');
   try{
-    const r = await fetch('/poly/api/kripto/test', {cache:'no-store'});
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 90000);
+    const r = await fetch('/poly/api/kripto/test', {cache:'no-store', signal: ctrl.signal});
+    clearTimeout(t);
     const d = await r.json();
+    if(!r.ok || !d.ok){
+      const msg = (d && d.error) ? d.error : ('HTTP ' + r.status);
+      if(el) el.innerHTML = '<div class="empty">hata: '+msg+'</div>';
+      if(wl) wl.innerHTML = '<div class="empty">hata: '+msg+'</div>';
+      return;
+    }
     renderBooks('test-books','test-sum', d);
     renderTestWaiting(d);
   }catch(e){
-    document.getElementById('test-books').innerHTML = '<div class="empty">hata: '+e+'</div>';
+    const msg = (e && e.name === 'AbortError') ? 'zaman aşımı (90s) — sayfayı yenileyin' : String(e);
+    if(el) el.innerHTML = '<div class="empty">hata: '+msg+'</div>';
+    if(wl) wl.innerHTML = '<div class="empty">hata: '+msg+'</div>';
   }
 }
 function renderTestWaiting(d){
@@ -17152,6 +17794,18 @@ def api_kripto_overview():
             })
     except Exception:
         pass
+    jarvis_map: list[dict] = []
+    jarvis_meta: dict = {}
+    try:
+        _test_dir = os.path.join(_DIR_KRIPTO, "Test")
+        if _test_dir not in sys.path:
+            sys.path.insert(0, _test_dir)
+        from jarvis_v1 import mapping_display_rows, mapping_summary  # noqa: WPS433
+
+        jarvis_map = mapping_display_rows()
+        jarvis_meta = mapping_summary()
+    except Exception as exc:
+        print(f"[kripto overview] jarvis_v1_map: {exc}", flush=True)
     return jsonify({
         "ok": True,
         "coin_leaders": coin_leaders,
@@ -17164,6 +17818,8 @@ def api_kripto_overview():
         "count": snap.get("count"),
         "recent_test_trades": recent_test,
         "recent_live_trades": recent_live,
+        "jarvis_v1_map": jarvis_map,
+        "jarvis_v1_meta": jarvis_meta,
     })
 
 
@@ -17382,14 +18038,17 @@ def _agustos_status_or_snap(rel_dir: str, snap_key: str):
     # Test: 5 dk taze snapshot yeter — yoksa 30 dk bayat bile anında dönsün (70s bekleme yok)
     snap_ttl = 300.0 if snap_key == "test" else None
     snap = read_snapshot(snap_key, max_age=snap_ttl)
-    if snap is not None and expected and _snapshot_book_count(snap) < expected:
+    snap_books = _snapshot_book_count(snap)
+    if snap is not None and expected and snap_books < expected:
         print(
             f"[agustos] {snap_key} snapshot eksik "
-            f"({_snapshot_book_count(snap)}/{expected}) — yeniden oluşturuluyor",
+            f"({snap_books}/{expected}) — bayat döndürülüyor, arka planda yenilenecek",
             flush=True,
         )
-        snap = None
-        _AGUSTOS_RUNNER_CACHE.pop(rel_dir, None)
+        out = dict(snap)
+        out["_stale_snapshot"] = True
+        out["_snapshot_partial"] = True
+        return out
     if snap is not None:
         return snap
     if snap_key == "test":
@@ -17603,9 +18262,10 @@ for _html_name in (
     "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "ALGORITMA_ISLEMLER_HTML", "AYARLAR_HTML",
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
     "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
+    "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML",
 ):
     _html = globals()[_html_name]
-    if _html_name in ("KRIPTO_FUTURE_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML"):
+    if _html_name in ("KRIPTO_FUTURE_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML"):
         # Kripto kendi menüsü — Poly nav / PM Kar enjekte etme
         _html = _html.replace("__KRIPTO_BRAND__", _CEMBOT_KRIPTO_BRAND_HTML)
         _html = _patch_cembot_brand(_html)

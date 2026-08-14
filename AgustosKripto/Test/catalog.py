@@ -47,6 +47,10 @@ _ISLEMLER_POLY: list[tuple[str, str, str]] = [
     ("b1_01",      "B1#01", "B1#01 · en iyi motor"),
     ("b1_02",      "B1#02", "B1#02 · BTC A15 · ETH A6 · SOL A2#01"),
     ("b1_mum",     "B1#03", "B1#03 MUM · Sonnet mum confluence 1h ±15"),
+    ("b1_04",      "B1#04", "B1#04 · edge-ağırlıklı küme konsensüsü · 23 motor"),
+    ("b1_05",      "B1#05", "B1#05 · coin başına en iyi motor · MUM+MELEZ dahil"),
+    ("c101",       "C1#01", "C1#01 · PTB+volatilite olasılık modeli · yön = P(UP) vs %50"),
+    ("c101_v2",    "C1#01V2", "C1#01 V2 · aynı model, gevşek eşik (3 puan vs 5)"),
 ]
 
 _ISLEMLER_A2: list[tuple[str, str, str]] = [
@@ -120,3 +124,16 @@ for _uid in PRO_SOURCE_UIDS:
         "mode": "pro",
         "pro_of": _uid,
     })
+
+# ── JARVIS V1 ────────────────────────────────────────────────
+# Lider Analizi'nden coin→en iyi motor; ARB→A1#33, OP→B1#03 sabit pin.
+ALL_BOOKS.append({
+    "uid": "jarvis_v1",
+    "book_key": "test_jarvis_v1",
+    "name": "JARVIS_V1",
+    "title": "JARVIS V1 · lider analiz motor seçimi · ARB→A1#33 · OP→B1#03 · max 10",
+    "category": "Poly→Kripto JARVIS",
+    "source": "jarvis_v1",
+    "source_key": "jarvis_v1",
+    "max_opens": 10,
+})

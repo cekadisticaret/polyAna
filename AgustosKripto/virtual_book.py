@@ -337,7 +337,10 @@ def fetch_all_klines(
 
 
 # Adaydan pozisyona taşınan ek alanlar — kenar kapısı kademesi ve süre sınırı
-_CAND_CARRY = ("max_hold_h", "edge_tier", "edge_skill_pct", "edge_t", "edge_hours")
+_CAND_CARRY = (
+    "max_hold_h", "edge_tier", "edge_skill_pct", "edge_t", "edge_hours",
+    "jarvis_src", "jarvis_src_name",
+)
 
 
 def _pos_interval(pos: dict) -> str:
@@ -464,16 +467,40 @@ def _settle_close(
     return pnl
 
 
+def _pos_max_hold_h(pos: dict, policy: dict | None) -> float | None:
+    """Pozisyonun süre tavanı — kendi alanı politikayı ezer (PRO/edge_gate)."""
+    own = pos.get("max_hold_h")
+    if own:
+        return float(own)
+    if policy and policy.get("max_hold_h"):
+        return float(policy["max_hold_h"])
+    return None
+
+
+def _apply_policy_to_pos(pos: dict, policy: dict | None) -> dict:
+    """Zarar stopu çarpanını pozisyona işle (atr_profit_lock varsayılanını ezer)."""
+    if not policy or pos.get("loss_stop_atr") is not None:
+        return pos
+    ls = policy.get("loss_stop_atr")
+    if ls is None:
+        return pos
+    out = dict(pos)
+    out["loss_stop_atr"] = float(ls)
+    return out
+
+
 def close_all_positions(
     state_path: str,
     history_path: str,
     *,
     label: str,
     kl_cache: dict[str, list] | None = None,
+    policy: dict | None = None,
 ) -> dict:
     with book_lock(state_path):
         return _close_all_positions_locked(
             state_path, history_path, label=label, kl_cache=kl_cache,
+            policy=policy,
         )
 
 
@@ -483,10 +510,15 @@ def _close_all_positions_locked(
     *,
     label: str,
     kl_cache: dict[str, list] | None = None,
+    policy: dict | None = None,
 ) -> dict:
     """Açık sanal pozisyonları 1h mum kapanışına göre kapat.
 
     ATR runner (kâr + stop_level>=1) saatlik close'ta hold edilir.
+
+    `policy["force_time_close"] is False` ise zorunlu mum kapanışı yapılmaz;
+    bu turda yalnız süre tavanını dolduran pozisyonlar kapatılır. Gerekçe ve
+    ölçüm: `AgustosKripto/exit_policy.py`.
     """
     state = load_state(state_path)
     history = load_history(history_path)
@@ -494,6 +526,7 @@ def _close_all_positions_locked(
     if not opens:
         return {"ok": True, "closed": 0, "held": 0, "pnl": 0.0, "balance": state["balance"]}
 
+    force_time = True if policy is None else bool(policy.get("force_time_close", True))
     cache = kl_cache or {}
     closed = 0
     held = 0
@@ -501,9 +534,12 @@ def _close_all_positions_locked(
     closed_atr_syms: list[str] = []
     remaining = []
     for pos in opens:
+        pos = _apply_policy_to_pos(pos, policy)
         sym = pos.get("symbol") or ""
         iv = _pos_interval(pos)
-        if not _can_settle_interval(iv):
+        limit_h = _pos_max_hold_h(pos, policy)
+        expired = bool(limit_h) and position_age_minutes(pos) >= limit_h * 60.0
+        if not expired and (not force_time or not _can_settle_interval(iv)):
             remaining.append(pos)
             held += 1
             continue
@@ -529,7 +565,7 @@ def _close_all_positions_locked(
         _g, upnl_net, _c = _virtual_upnl_net(pos, exit_px)
         ts_now = now_tr_iso()
         pos2, _ch = update_lock(pos, upnl_net, ts=ts_now, mark=exit_px)
-        if should_skip_hourly_close(pos2, upnl_net):
+        if not expired and should_skip_hourly_close(pos2, upnl_net):
             remaining.append(pos2)
             held += 1
             print(
@@ -539,7 +575,7 @@ def _close_all_positions_locked(
             continue
         tur_pnl += _settle_close(
             state, history, pos2, exit_px=exit_px, label=label,
-            reason=f"{iv}_close",
+            reason="max_hold" if expired else f"{iv}_close",
         )
         closed += 1
         if int(pos2.get("stop_level") or 0) >= 1 and sym:
@@ -560,16 +596,75 @@ def _close_all_positions_locked(
     }
 
 
+def flatten_all_positions(
+    state_path: str,
+    history_path: str,
+    *,
+    label: str,
+    kl_cache: dict[str, list] | None = None,
+    reason: str = "flatten",
+) -> dict:
+    """Tüm açık pozisyonları anlık fiyattan kapat — çıkış rejiminden bağımsız."""
+    with book_lock(state_path):
+        state = load_state(state_path)
+        history = load_history(history_path)
+        opens = list(state.get("open_positions") or [])
+        if not opens:
+            return {"ok": True, "closed": 0, "pnl": 0.0, "balance": state["balance"]}
+
+        cache = kl_cache or {}
+        closed = 0
+        tur_pnl = 0.0
+        for pos in opens:
+            sym = pos.get("symbol") or ""
+            iv = _pos_interval(pos)
+            kl = cache.get(f"{sym}|{iv}")
+            if kl is None:
+                try:
+                    kl = fetch_klines(sym, iv, 3)
+                    cache[f"{sym}|{iv}"] = kl
+                except Exception:
+                    continue
+            if not kl:
+                continue
+            exit_px = float(kl[-1]["c"])
+            if not float(pos.get("atr_usd") or 0) and len(kl) >= 30:
+                pos = init_lock_fields(
+                    pos,
+                    atr=atr_from_klines(kl),
+                    price=float(pos.get("entry_price") or exit_px),
+                )
+            tur_pnl += _settle_close(
+                state, history, pos, exit_px=exit_px, label=label, reason=reason,
+            )
+            closed += 1
+
+        state["open_positions"] = []
+        state["last_open_slot"] = ""
+        save_state(state_path, state)
+        save_history(history_path, history)
+        return {
+            "ok": True,
+            "closed": closed,
+            "pnl": round(tur_pnl, 4),
+            "balance": state["balance"],
+            "total_pnl": state["total_pnl"],
+            "total_commission": state.get("total_commission", 0),
+        }
+
+
 def trail_positions(
     state_path: str,
     history_path: str,
     *,
     label: str,
     kl_cache: dict[str, list] | None = None,
+    policy: dict | None = None,
 ) -> dict:
     with book_lock(state_path):
         return _trail_positions_locked(
             state_path, history_path, label=label, kl_cache=kl_cache,
+            policy=policy,
         )
 
 
@@ -579,8 +674,14 @@ def _trail_positions_locked(
     *,
     label: str,
     kl_cache: dict[str, list] | None = None,
+    policy: dict | None = None,
 ) -> dict:
-    """ATR peak/stop güncelle; stop vurulursa mark ile kapat."""
+    """ATR peak/stop güncelle; stop vurulursa mark ile kapat.
+
+    Süre tavanı burada da kontrol edilir: zorunlu saatlik kapanış kalkınca
+    tavanı yalnız `close` turuna bırakmak pozisyonu bir saate kadar fazladan
+    açık tutardı.
+    """
     state = load_state(state_path)
     history = load_history(history_path)
     opens = list(state.get("open_positions") or [])
@@ -594,6 +695,7 @@ def _trail_positions_locked(
     closed_symbols: list[str] = []
     remaining = []
     for pos in opens:
+        pos = _apply_policy_to_pos(pos, policy)
         sym = pos.get("symbol") or ""
         iv = _pos_interval(pos)
         kl = cache.get(f"{sym}|{iv}")
@@ -626,7 +728,15 @@ def _trail_positions_locked(
                 f"uPnL={upnl_net:+.2f}"
             )
         age_min = position_age_minutes(pos2)
-        if should_loss_stop(pos2, upnl_net) and age_min >= LOSS_STOP_MIN_AGE_MIN:
+        limit_h = _pos_max_hold_h(pos2, policy)
+        if limit_h and age_min >= limit_h * 60.0:
+            tur_pnl += _settle_close(
+                state, history, pos2, exit_px=mark, label=label, reason="max_hold",
+            )
+            closed += 1
+            if sym:
+                closed_symbols.append(sym.upper())
+        elif should_loss_stop(pos2, upnl_net) and age_min >= LOSS_STOP_MIN_AGE_MIN:
             tur_pnl += _settle_close(
                 state, history, pos2, exit_px=mark, label=label, reason="atr_loss",
             )
@@ -1018,10 +1128,17 @@ def book_status(
             "dir_tr": "YÜKSELİR" if side == "LONG" else "DÜŞER",
             **ls,
         })
-    wins = sum(1 for t in history if t.get("win"))
-    n = len(history)
+    reset_at = state.get("balance_reset_at_tr")
+    history_stats = history
+    if reset_at:
+        history_stats = [
+            t for t in history
+            if (t.get("exit_time_tr") or "") >= reset_at
+        ]
+    wins = sum(1 for t in history_stats if t.get("win"))
+    n = len(history_stats)
     hist_commission = round(
-        sum(float(t.get("commission") or 0) for t in history), 6
+        sum(float(t.get("commission") or 0) for t in history_stats), 6
     )
     out = {
         "label": label,
@@ -1044,9 +1161,12 @@ def book_status(
         "max_opens": MAX_OPENS_PER_HOUR,
         "updated_at_tr": state.get("updated_at_tr"),
     }
-    if recent_limit > 0 and history:
+    if recent_limit > 0 and history_stats:
         lim = min(int(recent_limit), n)
         out["recent_history"] = [
-            format_closed_trade(t) for t in reversed(history[-lim:])
+            format_closed_trade(t) for t in reversed(history_stats[-lim:])
         ]
+    if reset_at:
+        out["balance_reset_at_tr"] = reset_at
+        out["history_n_all"] = len(history)
     return out

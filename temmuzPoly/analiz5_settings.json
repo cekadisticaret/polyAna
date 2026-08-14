@@ -53,5 +53,8 @@
   "b1_05_amount_high": 6.0,
   "b1_mum_amount_low": 4.0,
   "b1_mum_amount_mid": 5.0,
-  "b1_mum_amount_high": 6.0
+  "b1_mum_amount_high": 6.0,
+  "sanal_a2_05_v2_amount_low": 12.0,
+  "sanal_a2_05_v2_amount_mid": 16.0,
+  "sanal_a2_05_v2_amount_high": 20.0
 }

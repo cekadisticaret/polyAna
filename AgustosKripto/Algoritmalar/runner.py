@@ -32,6 +32,7 @@ from virtual_book import (  # noqa: E402
     book_status,
     cached_status,
     close_all_positions,
+    flatten_all_positions,
     fetch_all_klines,
     in_weekend_pause_tr,
     load_history,
@@ -43,7 +44,10 @@ from virtual_book import (  # noqa: E402
     write_snapshot,
     now_tr,
 )
+from exit_policy import policy_for  # noqa: E402
 from catalog import ALL_BOOKS, pick_candidates, signal_for_book  # noqa: E402
+
+EXIT_POLICY = policy_for("Algoritmalar")
 from algo_tg_notify import notify_close, notify_open, _format_close_trade, _format_open_pos, _wr  # noqa: E402
 
 DATA = os.path.join(_DIR, "data")
@@ -137,8 +141,20 @@ def book_detail(book_id: str, *, recent_limit: int = 30, with_marks: bool = True
     return st
 
 
+# Hafta sonu duraklaması KALDIRILDI (2026-08-15) — open/close/trail 7/24 koşar.
+# Kripto 7/24 işlem görüyor; duraklama Poly/BIST takviminden miras kalmıştı ve
+# Cuma 22:00'de açık kalan pozisyonları Pazartesi 11:00'e kadar (61 saat) ATR
+# stopu olmadan bırakıyordu. Test grubu (`TEST_WEEKEND_PAUSE = False`) zaten
+# 7/24 çalışıyordu, artık üç grup da aynı.
+# Karar anındaki veri tek hafta sonuna dayanıyordu ve kesin değildi: Test'te
+# hafta sonu girişleri brüt −$662 · SKILL −0,0138 · t=−1,80, hafta içi
+# brüt +$643 · SKILL +0,0014 · t=+0,86. Duraklatmak yerine ölçülebilir veri
+# toplamak tercih edildi. Geri açmak için: WEEKEND_PAUSE = True.
+WEEKEND_PAUSE = False
+
+
 def _skip_weekend(cmd: str) -> dict | None:
-    if not in_weekend_pause_tr():
+    if not WEEKEND_PAUSE or not in_weekend_pause_tr():
         return None
     print(f"[Algoritmalar] hafta sonu — {cmd} skip (Cum 22:00 – Pzt 11:00 İST)")
     return {"ok": True, "skipped": "weekend_pause", "cmd": cmd, "results": []}
@@ -183,7 +199,8 @@ def run_close() -> dict:
     held_total = 0
     for book in ALL_BOOKS:
         sp, hp = _paths(book)
-        r = close_all_positions(sp, hp, label=label(book), kl_cache=kl)
+        r = close_all_positions(sp, hp, label=label(book), kl_cache=kl,
+                                policy=EXIT_POLICY)
         results.append({"id": book["uid"], "name": book["name"], "panel": book["panel"], **r})
         closed_n = int(r.get("closed") or 0)
         if closed_n > 0:
@@ -207,6 +224,23 @@ def run_close() -> dict:
         total_held=held_total,
     )
     return {"ok": True, "results": results}
+
+
+def run_flatten() -> dict:
+    kl = fetch_all_klines(SYMBOLS, limit=5)
+    results = []
+    total_closed = 0
+    for book in ALL_BOOKS:
+        sp, hp = _paths(book)
+        r = flatten_all_positions(sp, hp, label=label(book), kl_cache=kl)
+        results.append({"id": book["uid"], "name": book["name"], "panel": book["panel"], **r})
+        total_closed += int(r.get("closed") or 0)
+    try:
+        write_snapshot("algoritmalar", refresh_status_block(with_marks=False))
+    except Exception:
+        pass
+    print(f"[Algoritmalar] flatten → {total_closed} pozisyon kapandı")
+    return {"ok": True, "results": results, "total_closed": total_closed}
 
 
 def run_open() -> dict:
@@ -244,6 +278,7 @@ def run_open() -> dict:
             margin_usd=float(cfg["margin_usd"]),
             leverage=int(cfg["leverage"]),
             max_opens=max_n,
+            entry_price_mode="live",
         )
         results.append({
             "id": book["uid"],
@@ -299,7 +334,8 @@ def run_trail() -> dict:
     results = []
     for book in ALL_BOOKS:
         sp, hp = _paths(book)
-        r = trail_positions(sp, hp, label=label(book), kl_cache=kl)
+        r = trail_positions(sp, hp, label=label(book), kl_cache=kl,
+                            policy=EXIT_POLICY)
         results.append({"id": book["uid"], "name": book["name"], "panel": book["panel"], **r})
     return {"ok": True, "results": results}
 
@@ -406,7 +442,7 @@ def run_reset(*, balance: float = DEPOSIT) -> dict:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="AgustosKripto Algoritmalar sanal runner")
-    p.add_argument("cmd", choices=["open", "close", "trail", "status", "reset"])
+    p.add_argument("cmd", choices=["open", "close", "trail", "status", "reset", "flatten"])
     args = p.parse_args()
     if args.cmd == "open":
         r = run_open()
@@ -416,6 +452,8 @@ def main() -> None:
         r = run_trail()
     elif args.cmd == "reset":
         r = run_reset()
+    elif args.cmd == "flatten":
+        r = run_flatten()
     else:
         r = status_block()
     print(json.dumps(r, indent=2, ensure_ascii=False, default=str))

@@ -4,7 +4,9 @@
   "open_positions": [],
   "total_pnl": 0.0,
   "total_commission": 0.0,
-  "updated_at_tr": "2026-08-14T21:05:24.505648+03:00",
+  "updated_at_tr": "2026-08-15T01:05:38.841248+03:00",
   "last_open_slot": "",
+  "balance_reset_at_tr": "2026-08-15T00:43:12.448146+03:00",
+  "balance_reset_note": "Kripto Test bakiye reset $1000 — geçmiş korundu",
   "atr_skip_syms": []
 }

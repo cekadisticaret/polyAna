@@ -23,6 +23,7 @@ from virtual_book import (  # noqa: E402
     cached_status,
     close_all_positions,
     close_reversal_positions,
+    flatten_all_positions,
     fetch_all_klines,
     in_weekend_pause_tr,
     load_history,
@@ -36,6 +37,10 @@ from virtual_book import (  # noqa: E402
     write_snapshot,
     now_tr,
 )
+from exit_policy import policy_for  # noqa: E402
+
+EXIT_POLICY = policy_for("Test")
+
 import importlib.util as _ilu
 
 _CAT_PATH = os.path.join(_DIR, "catalog.py")
@@ -65,6 +70,7 @@ signal_for_book = _test_sig.signal_for_book
 _test_gate = _load_test_module("kripto_test_edge_gate", os.path.join(_DIR, "edge_gate.py"))
 edge_decision = _test_gate.decision
 edge_summary = _test_gate.summary
+gate_open = _test_gate.gate_open
 
 _test_eng_spec = _ilu.spec_from_file_location(
     "kripto_test_engine",
@@ -98,6 +104,33 @@ PRO_MIN_HOLD_HOURS = 1.0    # açıldığı saat içinde süre sınırıyla kapa
 
 def is_pro(book: dict) -> bool:
     return (book.get("mode") or "") == "pro"
+
+
+def max_opens_for(book: dict) -> int:
+    if (book.get("uid") or "") == "jarvis_v1":
+        return int(book.get("max_opens") or 10)
+    return MAX_OPEN_POSITIONS
+
+
+def _build_candidates_for_book(
+    book: dict,
+    kl_1h: dict,
+    kl_4h: dict,
+    history: list,
+) -> list[dict]:
+    if (book.get("uid") or "") == "jarvis_v1":
+        from jarvis_v1 import build_jarvis_candidates  # noqa: WPS433
+
+        return build_jarvis_candidates(
+            book, kl_1h, kl_4h, history,
+            symbols=TEST_SYMBOLS,
+            signal_for_book=signal_for_book,
+        )
+    return build_candidates(
+        book, kl_1h, kl_4h, history,
+        symbols=TEST_SYMBOLS,
+        signal_for_book=signal_for_book,
+    )
 
 
 def _paths(book: dict) -> tuple[str, str]:
@@ -168,7 +201,7 @@ def book_detail(book_id: str, *, recent_limit: int = 30, with_marks: bool = True
     st["book_key"] = book["book_key"]
     st["margin_usd"] = MARGIN_USD
     st["leverage"] = LEVERAGE
-    st["max_opens"] = MAX_OPEN_POSITIONS
+    st["max_opens"] = max_opens_for(book)
     st["deposit"] = DEPOSIT
     return st
 
@@ -206,7 +239,11 @@ def _history_path_for_book(book: dict) -> str | None:
 # yok oldu (SKILL ~0). Bu yüzden sıralama artık SKILL + t-istatistiği.
 LEADER_MIN_TRADES = 20
 LEADER_MIN_T = 2.0
-LEADER_MIN_SKILL = 0.04  # maker gidiş-dönüş maliyeti %0.04
+# Eşik %0.04 idi ve yorumu "maker gidiş-dönüş" diyordu — ama bu defterler
+# taker ödüyor. 50.554 gerçek işlemden ölçülen fiili maliyet %0.10
+# (yön başına %0.05). Eski eşik gerçeğin 2,5 katı altındaydı, yani masrafını
+# çıkaramayan (defter, coin) çiftlerini "nitelikli" gösteriyordu.
+LEADER_MIN_SKILL = 0.10
 
 
 def _trade_ret_pct(t: dict) -> float | None:
@@ -333,8 +370,8 @@ def _pair_row(b: dict) -> dict:
 def compute_top_success(*, n: int = 6, min_trades: int | None = None) -> list[dict]:
     """Algo+coin bazında en yüksek SKILL — Kripto overview kutusu.
 
-    Sıralama drift-nötr SKILL üzerinden; nitelikli (n≥20, SKILL≥%0.04,
-    |t|≥2) satırlar en üstte.
+    Sıralama drift-nötr SKILL üzerinden; nitelikli (n≥20, SKILL≥%0.10 =
+    ölçülen taker maliyeti, |t|≥2) satırlar en üstte.
     """
     floor = LEADER_MIN_TRADES if min_trades is None else int(min_trades)
     rows = [
@@ -491,7 +528,8 @@ def run_close() -> dict:
                  if expired else {"ok": True, "closed": 0, "closed_symbols": []})
             results.append({"id": book["uid"], "name": book["name"], "pro": True, **r})
             continue
-        r = close_all_positions(sp, hp, label=label(book), kl_cache=kl)
+        r = close_all_positions(sp, hp, label=label(book), kl_cache=kl,
+                                policy=EXIT_POLICY)
         skip_add = set(r.get("closed_atr_syms") or [])
         if skip_add:
             st = load_state(sp)
@@ -503,14 +541,46 @@ def run_close() -> dict:
     return {"ok": True, "results": results}
 
 
+def run_flatten() -> dict:
+    """Tüm açık pozisyonları anlık fiyattan kapat (çıkış rejiminden bağımsız)."""
+    pos_list: list[dict] = []
+    for book in ALL_BOOKS:
+        sp, _ = _paths(book)
+        pos_list.extend(load_state(sp).get("open_positions") or [])
+    kl = klines_for_positions(pos_list, limit=80) if pos_list else {}
+    results = []
+    total_closed = 0
+    for book in ALL_BOOKS:
+        sp, hp = _paths(book)
+        _ensure_state(sp)
+        r = flatten_all_positions(sp, hp, label=label(book), kl_cache=kl)
+        results.append({"id": book["uid"], "name": book["name"], **r})
+        total_closed += int(r.get("closed") or 0)
+    try:
+        write_snapshot("test", refresh_status_block(with_marks=False))
+    except Exception:
+        pass
+    print(f"[Kripto Test] flatten → {total_closed} pozisyon kapandı")
+    return {"ok": True, "results": results, "total_closed": total_closed}
+
+
 def _apply_edge_gate(book: dict, cands: list[dict]) -> list[dict]:
     """PRO defterinde adayları ölçülen kenara göre süz ve kademe/süre işle.
 
     Kapıdan geçmeyen (defter, coin) hiç açılmaz — kripto kaybının kaynağı
     kenarı olmayan sinyalleri komisyon ödeyerek işlemekti.
+  `gate_open()` açıksa filtre atlanır; PRO çıkış rejimi (saatlik kapanış yok) kalır.
     """
     if not is_pro(book):
         return cands
+    if gate_open():
+        out = []
+        for c in cands:
+            c = dict(c)
+            c["max_hold_h"] = float(c.get("max_hold_h") or PRO_MAX_HOLD_HOURS)
+            c["edge_tier"] = "open"
+            out.append(c)
+        return out
     out = []
     for c in cands:
         d = edge_decision(book["uid"], c["symbol"])
@@ -546,11 +616,7 @@ def run_open() -> dict:
         st["atr_skip_syms"] = []
         save_state(sp, st)
         history = load_history(hp)
-        cands = build_candidates(
-            book, kl_1h, kl_4h, history,
-            symbols=TEST_SYMBOLS,
-            signal_for_book=signal_for_book,
-        )
+        cands = _build_candidates_for_book(book, kl_1h, kl_4h, history)
         for c in cands:
             c["algo"] = book["name"]
         if is_pro(book):
@@ -565,8 +631,9 @@ def run_open() -> dict:
                       **{f"{s}|4h": kl_4h.get(s, []) for s in TEST_SYMBOLS}},
             margin_usd=MARGIN_USD,
             leverage=LEVERAGE,
-            max_opens=MAX_OPEN_POSITIONS,
+            max_opens=max_opens_for(book),
             blocked_syms=blocked,
+            entry_price_mode="live",
         )
         results.append({
             "id": book["uid"],
@@ -577,7 +644,7 @@ def run_open() -> dict:
     gs = edge_summary()
     print(
         f"[Kripto Test] open {len(ALL_BOOKS)} defter · ${MARGIN_USD:.0f}×{LEVERAGE}x "
-        f"· max {MAX_OPEN_POSITIONS} · 1h/4h ATR · "
+        f"· max {MAX_OPEN_POSITIONS} (JARVIS_V1: 10) · 1h/4h ATR · "
         f"kenar kapısı: {gate_blocked} aday reddedildi, "
         f"{len(gs.get('allowed') or [])} çift izinli"
     )
@@ -597,7 +664,8 @@ def run_trail() -> dict:
     results = []
     for book in ALL_BOOKS:
         sp, hp = _paths(book)
-        r = trail_positions(sp, hp, label=label(book), kl_cache=kl)
+        r = trail_positions(sp, hp, label=label(book), kl_cache=kl,
+                            policy=EXIT_POLICY)
         closed_syms = r.get("closed_symbols") or []
         if closed_syms:
             st = load_state(sp)
@@ -653,16 +721,12 @@ def run_scan() -> dict:
 
         st = load_state(sp)  # kapanış sonrası taze durum
         blocked = {str(s).upper() for s in (st.get("atr_skip_syms") or []) if s}
-        slots_left = MAX_OPEN_POSITIONS - len(st.get("open_positions") or [])
+        slots_left = max_opens_for(book) - len(st.get("open_positions") or [])
 
         r_open: dict = {"opened": 0}
         if slots_left > 0:
             history = load_history(hp)
-            cands = build_candidates(
-                book, kl_1h, kl_4h, history,
-                symbols=TEST_SYMBOLS,
-                signal_for_book=signal_for_book,
-            )
+            cands = _build_candidates_for_book(book, kl_1h, kl_4h, history)
             for c in cands:
                 c["algo"] = book["name"]
             if is_pro(book):
@@ -674,7 +738,7 @@ def run_scan() -> dict:
                 kl_cache=kl_cache,
                 margin_usd=MARGIN_USD,
                 leverage=LEVERAGE,
-                max_opens=MAX_OPEN_POSITIONS,
+                max_opens=max_opens_for(book),
                 blocked_syms=blocked,
                 entry_price_mode="live",
                 bypass_slot_gate=True,
@@ -778,16 +842,20 @@ def _build_status(*, with_marks: bool = True) -> dict:
         st["book_key"] = book["book_key"]
         st["margin_usd"] = MARGIN_USD
         st["leverage"] = LEVERAGE
-        st["max_opens"] = MAX_OPEN_POSITIONS
+        st["max_opens"] = max_opens_for(book)
         st["open_active"] = True
         st["deposit"] = DEPOSIT
         if is_pro(book):
             st["mode"] = "pro"
             st["pro_of"] = book.get("pro_of")
-            st["gate_pairs"] = [
-                r for r in (edge_summary().get("allowed") or [])
-                if r.get("uid") == book.get("pro_of")
-            ]
+            st["gate_open"] = gate_open()
+            if gate_open():
+                st["gate_pairs"] = [{"symbol": "all", "tier": "open"}]
+            else:
+                st["gate_pairs"] = [
+                    r for r in (edge_summary().get("allowed") or [])
+                    if r.get("uid") == book.get("pro_of")
+                ]
         books.append(st)
         tot_bal += float(st.get("balance") or 0)
         tot_pnl += float(st.get("total_pnl") or 0)
@@ -831,12 +899,20 @@ def refresh_status_block(*, with_marks: bool = True) -> dict:
     return refresh_status("test", lambda: _build_status(with_marks=with_marks))
 
 
-def run_reset(*, balance: float = DEPOSIT) -> dict:
+def run_reset(*, balance: float = DEPOSIT, close_first: bool = True) -> dict:
+    """Bakiyeyi sıfırla; geçmiş dosyalarına dokunma (analiz için korunur)."""
+    if close_first:
+        run_close()
+    stamp = now_tr()
     results = []
     for book in ALL_BOOKS:
-        sp, hp = _paths(book)
-        st = reset_book(sp, balance=balance, clear_history_path=hp)
+        sp, _hp = _paths(book)
+        st = reset_book(sp, balance=balance)
         st["deposit"] = balance
+        st["balance_reset_at_tr"] = stamp.isoformat()
+        st["balance_reset_note"] = (
+            f"Kripto Test bakiye reset ${balance:.0f} — geçmiş korundu"
+        )
         save_state(sp, st)
         results.append({
             "id": book["uid"],
@@ -848,6 +924,7 @@ def run_reset(*, balance: float = DEPOSIT) -> dict:
         "kind": "test",
         "reset_balance": float(balance),
         "count": len(results),
+        "balance_reset_at_tr": stamp.isoformat(),
         "results": results,
     }
     try:
@@ -860,7 +937,7 @@ def run_reset(*, balance: float = DEPOSIT) -> dict:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="AgustosKripto Test sanal runner")
-    p.add_argument("cmd", choices=["open", "close", "trail", "scan", "status", "reset"])
+    p.add_argument("cmd", choices=["open", "close", "trail", "scan", "status", "reset", "flatten"])
     args = p.parse_args()
     if args.cmd == "open":
         r = run_open()
@@ -872,6 +949,8 @@ def main() -> None:
         r = run_scan()
     elif args.cmd == "reset":
         r = run_reset()
+    elif args.cmd == "flatten":
+        r = run_flatten()
     else:
         r = status_block()
     print(json.dumps(r, indent=2, ensure_ascii=False, default=str))
