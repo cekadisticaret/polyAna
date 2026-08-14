@@ -7,6 +7,6 @@
   "backfill_to": "2026-08-12T15:06:06.005798+03:00",
   "fee_backfill_at": "2026-08-14T14:52:53.263262+03:00",
   "fee_backfill_total": 75.08,
-  "balance_reset_at_tr": "2026-08-14T21:51:02.793385+03:00",
-  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş arşivlendi"
+  "balance_reset_at_tr": "2026-08-14T21:57:21.469208+03:00",
+  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş karar verisi olarak geri yüklendi, skora dahil değil"
 }

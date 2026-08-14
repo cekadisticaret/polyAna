@@ -148,9 +148,11 @@ def main() -> None:
     from pm_balance_guard import clear_algo_islemler_open_after
     clear_algo_islemler_open_after(source="algo_islemler_fresh_start")
 
-    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     if not args.reset_only:
         _run_close_all()
+    # Damga close turundan SONRA alınır: close sırasında kapanan pozisyonların
+    # exit_time'ı damgadan büyük olursa dashboard onları yeni skora sayar.
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
     reset_n, cleared, archived = _reset_balances(now_tr, wipe_history=args.wipe_history)
     nxt = (now_tr.hour + 1) % 24
     arc = f"\n  Arşivlenen işlem: {archived}" if args.wipe_history else ""

@@ -1,37 +1,37 @@
 {
   "ALG1_5m": {
-    "total": 11930,
+    "total": 11933,
     "correct": 5898,
     "by_sym": {
       "BTC": {
-        "total": 4063,
+        "total": 4064,
         "correct": 2026
       },
       "ETH": {
-        "total": 4056,
+        "total": 4057,
         "correct": 1972
       },
       "SOL": {
-        "total": 3811,
+        "total": 3812,
         "correct": 1900
       }
     }
   },
   "ALG2_5m": {
-    "total": 11658,
-    "correct": 5983,
+    "total": 11661,
+    "correct": 5986,
     "by_sym": {
       "BTC": {
-        "total": 3956,
-        "correct": 2053
+        "total": 3957,
+        "correct": 2054
       },
       "ETH": {
-        "total": 3980,
-        "correct": 2053
+        "total": 3981,
+        "correct": 2054
       },
       "SOL": {
-        "total": 3722,
-        "correct": 1877
+        "total": 3723,
+        "correct": 1878
       }
     }
   },
