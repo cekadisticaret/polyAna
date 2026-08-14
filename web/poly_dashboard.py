@@ -3193,25 +3193,12 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
     return row
 
 
-# Listede bakiyesi bu eşiğin altında kalan defter gösterilmez. Detay sayfası
-# (/algoritma-islemler/<defter>) doğrudan URL ile hâlâ açılır.
-_ALGO_ISLEMLER_MIN_BALANCE = 300.0
-
-
 def _build_a2_poly_books() -> dict:
-    """Poly sanal A6 + A2 Top-17 defterleri — bakiyeye göre sıralı, eşik altı gizli."""
+    """Poly sanal A6 + A2 Top-17 defterleri — bakiyeye göre sıralı, tamamı listelenir."""
     books = []
-    hidden = []
     for key in _ALGO_ISLEMLER_KEYS:
         row = _build_single_poly_book(key)
         if not row:
-            continue
-        if float(row.get("balance") or 0) < _ALGO_ISLEMLER_MIN_BALANCE:
-            hidden.append({
-                "id": row.get("id") or key,
-                "label": _OVERVIEW_SHORT_LABELS.get(key, key),
-                "balance": round(float(row.get("balance") or 0), 2),
-            })
             continue
         books.append(row)
     books.sort(key=lambda b: (
@@ -3219,15 +3206,11 @@ def _build_a2_poly_books() -> dict:
         float(b.get("total_pnl") or 0),
         float(b.get("wr") or -1),
     ), reverse=True)
-    hidden.sort(key=lambda b: -b["balance"])
     return {
         "ok": True,
         "panel_filter": "poly_algo",
         "books": books,
         "count": len(books),
-        "min_balance": _ALGO_ISLEMLER_MIN_BALANCE,
-        "hidden_count": len(hidden),
-        "hidden": hidden,
         "total_balance": round(sum(float(b.get("balance") or 0) for b in books), 2),
         "total_pnl": round(sum(float(b.get("total_pnl") or 0) for b in books), 2),
         "total_open": sum(int(b.get("open_count") or 0) for b in books),
@@ -14428,12 +14411,6 @@ body{
 .book-card .br b{font-size:16px}
 .book-card .pos{color:var(--green)}.book-card .neg{color:var(--red)}
 .book-opens{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.45}
-.book-hidden-note{
-  margin-top:14px;padding:10px 14px;border:1px dashed var(--line);border-radius:12px;
-  font-size:11px;color:var(--muted);line-height:1.7;
-}
-.book-hidden-note a{color:var(--muted);text-decoration:none;border-bottom:1px dotted rgba(255,255,255,.25)}
-.book-hidden-note a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 .algo-live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#39ff8e;margin-right:6px;box-shadow:0 0 6px rgba(57,255,142,.85);vertical-align:middle;animation:algoLivePulse 1.6s ease-in-out infinite}
 @keyframes algoLivePulse{0%,100%{opacity:1}50%{opacity:.45}}
 .positions{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
@@ -14702,16 +14679,7 @@ function histRow(t){
     <div class="hist-pnl ${win ? 'win' : 'loss'}">${win ? '✓' : '✗'} ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</div>
   </div>`;
 }
-function hiddenNote(meta){
-  const n = Number(meta && meta.hidden_count || 0);
-  if(!n) return '';
-  const min = Number(meta.min_balance || 300).toFixed(0);
-  const names = (meta.hidden||[]).map(h =>
-    `<a href="/algoritma-islemler/${encodeURIComponent(h.id)}">${h.label}</a> $${Number(h.balance||0).toFixed(0)}`
-  ).join(' · ');
-  return `<div class="book-hidden-note">${n} defter gizli — bakiye $${min} altı${names ? ': ' + names : ''}</div>`;
-}
-function renderBooks(books, meta){
+function renderBooks(books){
   const el = document.getElementById('algo-books');
   const sorted = (books||[]).slice().sort((a,b)=>{
     const ba = Number(a.balance||0), bb = Number(b.balance||0);
@@ -14721,7 +14689,7 @@ function renderBooks(books, meta){
     return Number(b.wr||-1) - Number(a.wr||-1);
   });
   if(!sorted.length){
-    el.innerHTML = '<div class="empty">eşiği geçen defter yok</div>' + hiddenNote(meta);
+    el.innerHTML = '<div class="empty">defter yok</div>';
     return;
   }
   el.innerHTML = '<div class="book-grid">' + sorted.map(b => {
@@ -14744,7 +14712,7 @@ function renderBooks(books, meta){
       <div class="br"><span>Anlık net</span><b class="${upnl>=0?'pos':'neg'}">${upnl>=0?'+':''}${upnl.toFixed(2)}</b></div>
       <div class="book-opens">${b.open_count||0} açık · ${opens}</div>
     </a>`;
-  }).join('') + '</div>' + hiddenNote(meta);
+  }).join('') + '</div>';
 }
 function findBook(books, id){
   const key = String(id||'').toLowerCase();
@@ -14830,9 +14798,8 @@ async function load(){
       'Σ $' + Number(d.total_balance||0).toFixed(0)
       + ' · Net P&L ' + (pnl>=0?'+':'') + Number(pnl).toFixed(1)
       + ' · ' + histSum + ' işlem'
-      + ' · açık ' + (d.total_open||0)
-      + (d.hidden_count ? ' · ' + d.hidden_count + ' gizli' : '');
-    renderBooks(books, d);
+      + ' · açık ' + (d.total_open||0);
+    renderBooks(books);
   } catch(e){
     console.error(e);
     const el = DETAIL_ID ? document.getElementById('detail-positions') : document.getElementById('algo-books');
