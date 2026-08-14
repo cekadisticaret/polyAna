@@ -1,35 +1,9 @@
 {
-  "balance": 248.3,
+  "balance": 247.18,
   "deposit": 300.0,
-  "open_positions": [
-    {
-      "symbol": "AVAXUSDT",
-      "side": "LONG",
-      "signal": "UP",
-      "algo": "A10",
-      "score": 1.0,
-      "interval": "1h",
-      "qty": 35.399622,
-      "leverage": 15,
-      "margin_usd": 15.0,
-      "entry_price": 6.356,
-      "notional": 225.0,
-      "entry_fee": 0.1125,
-      "entry_time_tr": "2026-08-14T15:05:59.007340+03:00",
-      "slot": "2026-08-14 15:00",
-      "virtual": true,
-      "atr": 0.03726516,
-      "atr_usd": 1.319173,
-      "atr_period": 14,
-      "peak_upnl": 0.5888,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
-    }
-  ],
-  "total_pnl": -51.6619,
-  "total_commission": 42.668036,
-  "updated_at_tr": "2026-08-14T16:00:03.386182+03:00",
-  "last_open_slot": "2026-08-14 15:00"
+  "open_positions": [],
+  "total_pnl": -52.7806,
+  "total_commission": 44.243364,
+  "updated_at_tr": "2026-08-14T21:02:10.330819+03:00",
+  "last_open_slot": "2026-08-14 20:00"
 }

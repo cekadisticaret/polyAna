@@ -376,5 +376,41 @@
     "symbol": "40608546482698849605",
     "hata_turu": "order_basarisiz",
     "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5150280'}]"
+  },
+  {
+    "zaman": "2026-08-14T16:06:54.773242+03:00",
+    "symbol": "23920074750762498954",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4249480'}]"
+  },
+  {
+    "zaman": "2026-08-14T16:07:15.444181+03:00",
+    "symbol": "35970698785757367013",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5234040'}]"
+  },
+  {
+    "zaman": "2026-08-14T17:06:51.937737+03:00",
+    "symbol": "21019212179400553500",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4132560'}]"
+  },
+  {
+    "zaman": "2026-08-14T18:06:53.092932+03:00",
+    "symbol": "34104258949801249872",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4524210'}]"
+  },
+  {
+    "zaman": "2026-08-14T21:06:53.033474+03:00",
+    "symbol": "12963639380514962992",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 4205920'}]"
+  },
+  {
+    "zaman": "2026-08-14T21:07:13.543833+03:00",
+    "symbol": "11483276809884552100",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 5408430'}]"
   }
 ]

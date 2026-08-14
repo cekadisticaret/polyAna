@@ -40,7 +40,12 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 _BASELINE_FILE = os.path.join(_DIR, "c101_depth_baseline.json")
 
 # ── Model parametreleri ───────────────────────────────────────
-EDGE_MIN = 0.05          # model ile piyasa arasında en az 5 puan fark
+# Model ile piyasa arasında gereken en az fark. 5 puanken kotasyon Gamma'nın
+# bayat son-işlem fiyatıydı ve kenar şişik ölçülüyordu; gerçek CLOB ask'e
+# geçince (2026-08-14) dağılım çöktü ve 18 değerlendirmede yalnız 1 tanesi
+# eşiği geçti. 3 puan, komisyon (0,50 civarında ~1,75 puan) düşüldükten sonra
+# hâlâ ~2,4 puan pay bırakıyor. Örneklem küçük — veri arttıkça yeniden bak.
+EDGE_MIN = float(os.environ.get("C101_EDGE_MIN") or 0.03)
 PRICE_FLOOR = 0.10       # bu bandın dışında normal dağılım varsayımı kırılır
 PRICE_CEIL = 0.90
 TILT_CAP = 0.05          # yön eğiminin toplam üst sınırı

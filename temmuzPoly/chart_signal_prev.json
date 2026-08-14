@@ -1,22 +1,22 @@
 {
   "predictions": {
     "BTC": {
-      "mc": null,
+      "mc": "UP",
       "yt": "DOWN",
-      "tahmin": "DOWN",
-      "tahmin2": null,
+      "tahmin": null,
+      "tahmin2": "DOWN",
       "parts": {
         "LM": null,
         "ST": null,
-        "ADX": null,
-        "LZ": null,
-        "CVD": null
+        "ADX": "DOWN",
+        "LZ": "UP",
+        "CVD": "DOWN"
       }
     },
     "ETH": {
-      "mc": null,
+      "mc": "UP",
       "yt": "DOWN",
-      "tahmin": "DOWN",
+      "tahmin": null,
       "tahmin2": "DOWN",
       "parts": {
         "LM": "DOWN",
@@ -27,16 +27,16 @@
       }
     },
     "SOL": {
-      "mc": null,
+      "mc": "DOWN",
       "yt": "DOWN",
       "tahmin": "DOWN",
-      "tahmin2": "UP",
+      "tahmin2": "DOWN",
       "parts": {
-        "LM": null,
-        "ST": null,
-        "ADX": null,
-        "LZ": "UP",
-        "CVD": "UP"
+        "LM": "DOWN",
+        "ST": "DOWN",
+        "ADX": "DOWN",
+        "LZ": "DOWN",
+        "CVD": "DOWN"
       }
     }
   }

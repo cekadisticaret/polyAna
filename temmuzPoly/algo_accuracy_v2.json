@@ -1,330 +1,330 @@
 {
   "2": {
     "name": "RSI Diverjansı (14) Katı",
-    "total": 390,
-    "correct": 228,
+    "total": 397,
+    "correct": 229,
     "by_sym": {
       "BTC": {
-        "total": 162,
-        "correct": 92
+        "total": 166,
+        "correct": 93
       },
       "ETH": {
-        "total": 124,
+        "total": 126,
         "correct": 75
       },
       "SOL": {
-        "total": 104,
+        "total": 105,
         "correct": 61
       }
     }
   },
   "3": {
     "name": "Stochastic RSI",
-    "total": 1002,
-    "correct": 495,
+    "total": 1020,
+    "correct": 502,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 163
+        "total": 343,
+        "correct": 165
       },
       "ETH": {
-        "total": 337,
-        "correct": 167
+        "total": 343,
+        "correct": 169
       },
       "SOL": {
-        "total": 328,
-        "correct": 165
+        "total": 334,
+        "correct": 168
       }
     }
   },
   "4": {
     "name": "Schaff Trend Cycle",
-    "total": 1002,
-    "correct": 495,
+    "total": 1020,
+    "correct": 502,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 163
+        "total": 343,
+        "correct": 165
       },
       "ETH": {
-        "total": 337,
-        "correct": 167
+        "total": 343,
+        "correct": 169
       },
       "SOL": {
-        "total": 328,
-        "correct": 165
+        "total": 334,
+        "correct": 168
       }
     }
   },
   "5": {
     "name": "Mean Reversion (Z-Score)",
-    "total": 732,
-    "correct": 395,
+    "total": 746,
+    "correct": 399,
     "by_sym": {
       "BTC": {
-        "total": 258,
-        "correct": 137
+        "total": 262,
+        "correct": 138
       },
       "ETH": {
-        "total": 231,
-        "correct": 128
+        "total": 236,
+        "correct": 130
       },
       "SOL": {
-        "total": 243,
-        "correct": 130
+        "total": 248,
+        "correct": 131
       }
     }
   },
   "6": {
     "name": "Z-Score Mean Reversion",
-    "total": 732,
-    "correct": 395,
+    "total": 746,
+    "correct": 399,
     "by_sym": {
       "BTC": {
-        "total": 258,
-        "correct": 137
+        "total": 262,
+        "correct": 138
       },
       "ETH": {
-        "total": 231,
-        "correct": 128
+        "total": 236,
+        "correct": 130
       },
       "SOL": {
-        "total": 243,
-        "correct": 130
+        "total": 248,
+        "correct": 131
       }
     }
   },
   "7": {
     "name": "Hurst Proxy (trend/MR)",
-    "total": 732,
-    "correct": 395,
+    "total": 746,
+    "correct": 399,
     "by_sym": {
       "BTC": {
-        "total": 258,
-        "correct": 137
+        "total": 262,
+        "correct": 138
       },
       "ETH": {
-        "total": 231,
-        "correct": 128
+        "total": 236,
+        "correct": 130
       },
       "SOL": {
-        "total": 243,
-        "correct": 130
+        "total": 248,
+        "correct": 131
       }
     }
   },
   "8": {
     "name": "Williams %R",
-    "total": 1002,
-    "correct": 508,
+    "total": 1020,
+    "correct": 516,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 169
+        "total": 343,
+        "correct": 172
       },
       "ETH": {
-        "total": 337,
-        "correct": 181
+        "total": 343,
+        "correct": 183
       },
       "SOL": {
-        "total": 328,
-        "correct": 158
+        "total": 334,
+        "correct": 161
       }
     }
   },
   "10": {
     "name": "Fibonacci Retracement",
-    "total": 1002,
-    "correct": 503,
+    "total": 1020,
+    "correct": 508,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 168
+        "total": 343,
+        "correct": 170
       },
       "ETH": {
-        "total": 337,
-        "correct": 175
+        "total": 343,
+        "correct": 177
       },
       "SOL": {
-        "total": 328,
-        "correct": 160
+        "total": 334,
+        "correct": 161
       }
     }
   },
   "11": {
     "name": "Range Trading S/R Bounce",
-    "total": 1002,
-    "correct": 503,
+    "total": 1020,
+    "correct": 508,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 168
+        "total": 343,
+        "correct": 170
       },
       "ETH": {
-        "total": 337,
-        "correct": 175
+        "total": 343,
+        "correct": 177
       },
       "SOL": {
-        "total": 328,
-        "correct": 160
+        "total": 334,
+        "correct": 161
       }
     }
   },
   "12": {
     "name": "Stochastic RSI (14) K/D",
-    "total": 1002,
-    "correct": 515,
+    "total": 1020,
+    "correct": 523,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 177
+        "total": 343,
+        "correct": 180
       },
       "ETH": {
-        "total": 337,
-        "correct": 172
+        "total": 343,
+        "correct": 176
       },
       "SOL": {
-        "total": 328,
-        "correct": 166
+        "total": 334,
+        "correct": 167
       }
     }
   },
   "13": {
     "name": "Bollinger Bands + Squeeze",
-    "total": 1002,
-    "correct": 489,
+    "total": 1020,
+    "correct": 496,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 161
+        "total": 343,
+        "correct": 162
       },
       "ETH": {
-        "total": 337,
-        "correct": 168
+        "total": 343,
+        "correct": 171
       },
       "SOL": {
-        "total": 328,
-        "correct": 160
+        "total": 334,
+        "correct": 163
       }
     }
   },
   "14": {
     "name": "CCI",
-    "total": 1002,
-    "correct": 491,
+    "total": 1020,
+    "correct": 498,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 159
+        "total": 343,
+        "correct": 160
       },
       "ETH": {
-        "total": 337,
-        "correct": 168
+        "total": 343,
+        "correct": 171
       },
       "SOL": {
-        "total": 328,
-        "correct": 164
+        "total": 334,
+        "correct": 167
       }
     }
   },
   "16": {
     "name": "Supertrend",
-    "total": 1002,
-    "correct": 496,
+    "total": 1020,
+    "correct": 509,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 169
+        "total": 343,
+        "correct": 173
       },
       "ETH": {
-        "total": 337,
-        "correct": 168
+        "total": 343,
+        "correct": 172
       },
       "SOL": {
-        "total": 328,
-        "correct": 159
+        "total": 334,
+        "correct": 164
       }
     }
   },
   "17": {
     "name": "SuperTrend v2 (7,2.0)",
-    "total": 1002,
-    "correct": 496,
+    "total": 1020,
+    "correct": 509,
     "by_sym": {
       "BTC": {
-        "total": 337,
-        "correct": 169
+        "total": 343,
+        "correct": 173
       },
       "ETH": {
-        "total": 337,
-        "correct": 168
+        "total": 343,
+        "correct": 172
       },
       "SOL": {
-        "total": 328,
-        "correct": 159
+        "total": 334,
+        "correct": 164
       }
     }
   },
   "9": {
     "name": "Squeeze Momentum (BB+KC)",
-    "total": 695,
-    "correct": 348,
+    "total": 713,
+    "correct": 355,
     "by_sym": {
       "BTC": {
-        "total": 244,
-        "correct": 117
+        "total": 250,
+        "correct": 118
       },
       "ETH": {
-        "total": 209,
-        "correct": 105
+        "total": 215,
+        "correct": 108
       },
       "SOL": {
-        "total": 242,
-        "correct": 126
+        "total": 248,
+        "correct": 129
       }
     }
   },
   "15": {
     "name": "Pairs Trading",
-    "total": 300,
-    "correct": 158,
+    "total": 308,
+    "correct": 162,
     "by_sym": {
       "BTC": {
-        "total": 150,
-        "correct": 77
+        "total": 154,
+        "correct": 78
       },
       "ETH": {
-        "total": 150,
-        "correct": 81
+        "total": 154,
+        "correct": 84
       }
     }
   },
   "_consensus": {
     "name": "Analiz 2 Konsensüs",
-    "total": 960,
-    "correct": 477,
+    "total": 978,
+    "correct": 484,
     "by_sym": {
       "BTC": {
-        "total": 319,
-        "correct": 157
+        "total": 325,
+        "correct": 159
       },
       "ETH": {
-        "total": 324,
-        "correct": 167
+        "total": 330,
+        "correct": 169
       },
       "SOL": {
-        "total": 317,
-        "correct": 153
+        "total": 323,
+        "correct": 156
       }
     }
   },
   "1": {
     "name": "Liquidity Sweep Proxy",
-    "total": 33,
+    "total": 35,
     "correct": 22,
     "by_sym": {
       "BTC": {
-        "total": 13,
+        "total": 15,
         "correct": 7
       },
       "SOL": {
