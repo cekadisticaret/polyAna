@@ -3304,27 +3304,8 @@ def _mirror_token_ok() -> bool:
     return bool(got) and secrets.compare_digest(got, expected)
 
 
-def _mirror_ask(token_id: str | None) -> float | None:
-    """CLOB best_ask — okunamazsa None döner, çağıran mid'e düşer."""
-    if not token_id:
-        return None
-    try:
-        sys.path.insert(0, _DIR_POLY)
-        from pm_trader_helpers import pm_best_ask
-        px = pm_best_ask(token_id)
-        return float(px) if px else None
-    except Exception:
-        return None
-
-
 def _mirror_market(slug: str) -> dict:
-    """slug → CLOB token id'leri + alınabilir fiyat. Aynı slot'ta çok çağrılırsa Gamma'yı yormasın.
-
-    Fiyat, emir defterinin gerçek best_ask'idir. Gamma'nın outcomePrices alanı
-    son işlem fiyatı; saat başında 10+ puan bayat kalabiliyor ve o fiyattan alım
-    yapılamıyor — aynanın tavan/taban kontrolleri bu yüzden yanlış sayıya
-    bakıyordu. Mid bilgisi kaybolmasın diye ayrıca döndürülür.
-    """
+    """slug → CLOB token id'leri + anlık fiyat. Aynı slot'ta çok çağrılırsa Gamma'yı yormasın."""
     now = time.time()
     hit = _MIRROR_MARKET_CACHE.get(slug)
     if hit and now - hit[0] < _MIRROR_MARKET_TTL:
@@ -3339,20 +3320,11 @@ def _mirror_market(slug: str) -> dict:
         tokens = json.loads(raw_tk) if isinstance(raw_tk, str) else (raw_tk or [])
         raw_op = m.get("outcomePrices")
         prices = json.loads(raw_op) if isinstance(raw_op, str) else (raw_op or [])
-        up_token   = tokens[0] if len(tokens) > 1 else None
-        down_token = tokens[1] if len(tokens) > 1 else None
-        up_mid     = float(prices[0]) if len(prices) > 1 else None
-        down_mid   = float(prices[1]) if len(prices) > 1 else None
-        up_ask, down_ask = _mirror_ask(up_token), _mirror_ask(down_token)
         out = {
-            "up_token":   up_token,
-            "down_token": down_token,
-            "up_price":   up_ask if up_ask else up_mid,
-            "down_price": down_ask if down_ask else down_mid,
-            "up_mid":     up_mid,
-            "down_mid":   down_mid,
-            "up_src":     "ask" if up_ask else "mid",
-            "down_src":   "ask" if down_ask else "mid",
+            "up_token":   tokens[0] if len(tokens) > 1 else None,
+            "down_token": tokens[1] if len(tokens) > 1 else None,
+            "up_price":   float(prices[0]) if len(prices) > 1 else None,
+            "down_price": float(prices[1]) if len(prices) > 1 else None,
             "tick_size":  str(m.get("orderPriceMinTickSize", "0.01")),
             "neg_risk":   bool(m.get("negRisk", False)),
             "closed":     bool(m.get("closed", False)),
@@ -3361,111 +3333,6 @@ def _mirror_market(slug: str) -> dict:
         out = {"error": str(e)[:80]}
     _MIRROR_MARKET_CACHE[slug] = (now, out)
     return out
-
-
-_MIRROR_MIN_SHARES = 5.0  # Polymarket alım minimumu — küçük bahisleri yukarı zorlar
-
-
-def _mirror_policy() -> dict:
-    """Kopyalama eşikleri tek yerde. Aynalar bu değerleri sorgulamaz, uygular.
-
-    Fiyat eşiklerinin iki adı var: burada `MIRROR_ENTRY_PRICE_MIN/MAX`, ayna
-    sunucusunun kendi kodunda `MIRROR_MIN/MAX_ENTRY_PRICE`. İkisi de okunur ve
-    hangisinin geçerli olduğu `sources` altında bildirilir — yanlış anahtarı
-    düzenleyip "neden değişmedi" diye aramamak için.
-    """
-    sources: dict[str, str] = {}
-
-    def _f(key: str, default: float, *names: str) -> float:
-        for env_name in names:
-            raw = os.environ.get(env_name)
-            if raw is None or str(raw).strip() == "":
-                continue
-            try:
-                val = float(raw)
-            except (TypeError, ValueError):
-                continue
-            sources[key] = env_name
-            return val
-        sources[key] = "default"
-        return default
-
-    return {
-        "entry_price_min": _f("entry_price_min", 0.40,
-                              "MIRROR_ENTRY_PRICE_MIN", "MIRROR_MIN_ENTRY_PRICE"),
-        "entry_price_max": _f("entry_price_max", 0.75,
-                              "MIRROR_ENTRY_PRICE_MAX", "MIRROR_MAX_ENTRY_PRICE"),
-        "max_age_sec": _f("max_age_sec", 240, "MIRROR_MAX_AGE_SEC"),
-        "max_adverse_drift_pct": _f("max_adverse_drift_pct", 40.0, "MIRROR_MAX_ADVERSE_DRIFT_PCT"),
-        "max_spend_ratio": _f("max_spend_ratio", 1.15, "MIRROR_MAX_SPEND_RATIO"),
-        "min_shares": _MIRROR_MIN_SHARES,
-        "sources": sources,
-    }
-
-
-def _mirror_block(code: str, detail: str) -> dict:
-    return {"copyable": False, "block_reason": code, "block_detail": detail}
-
-
-def _mirror_copy_decision(row: dict, pol: dict) -> dict:
-    """Bu pozisyon şu an kopyalanmalı mı — karar burada verilir.
-
-    Ayna tarafında tekrar akıl yürütülmesin diye engelin kodu ve okunabilir
-    açıklaması birlikte döner. İlk engelde durur; sıralama en ucuzdan en
-    pahalı kontrole doğrudur (fiyat kontrolü Gamma verisi gerektirir).
-    """
-    if not row.get("is_current_slot"):
-        return _mirror_block("stale_slot", "pozisyon aktif slota ait değil")
-    if row.get("stale"):
-        return _mirror_block("stale", "kaynak pozisyonu bayat işaretledi")
-    if row.get("dir") not in ("UP", "DOWN"):
-        return _mirror_block("missing_dir", "yön belirsiz")
-    age = row.get("age_sec")
-    if age is not None and age > pol["max_age_sec"]:
-        return _mirror_block(
-            "too_old",
-            f"sinyal {int(age)} sn eski (limit {int(pol['max_age_sec'])} sn)",
-        )
-    if row.get("pm_closed"):
-        return _mirror_block("market_closed", "Polymarket marketi kapalı")
-    if not row.get("pm_token_id"):
-        return _mirror_block("missing_token", "CLOB token id okunamadı")
-    px = row.get("pm_price_now")
-    if px is None:
-        return _mirror_block("no_price", "anlık PM fiyatı okunamadı")
-    px = float(px)
-    if px > pol["entry_price_max"]:
-        return _mirror_block(
-            "price_above_cap",
-            f"fiyat {px:.2f} > tavan {pol['entry_price_max']:.2f}",
-        )
-    if pol["entry_price_min"] > 0 and px < pol["entry_price_min"]:
-        return _mirror_block(
-            "price_below_floor",
-            f"fiyat {px:.2f} < taban {pol['entry_price_min']:.2f} — "
-            "piyasa kaynağın tahminini yanlışlamış",
-        )
-    drift = row.get("pm_price_drift_pct")
-    cap = pol["max_adverse_drift_pct"]
-    if cap > 0 and drift is not None and float(drift) < -cap:
-        return _mirror_block(
-            "adverse_drift",
-            f"fiyat kaynağın girişine göre %{float(drift):.0f} sapmış (limit -%{cap:.0f})",
-        )
-    return {"copyable": True, "block_reason": None, "block_detail": None}
-
-
-def _mirror_min_stake(px: float | None, pol: dict) -> float | None:
-    """Borsa minimumu bahsi şişirmeden bu pozisyona girilebilecek en küçük tutar.
-
-    5 share zorunlu olduğu için maliyet her zaman 5*fiyat; bunun altındaki bir
-    bahis niyetini aşar. Aynanın kendi kesesine göre karar verebilmesi için
-    tutar değil, tutarın alt sınırı bildirilir.
-    """
-    if not px:
-        return None
-    ratio = pol["max_spend_ratio"] or 1.0
-    return round(pol["min_shares"] * float(px) / ratio, 2)
 
 
 def _mirror_slot_fields(entry_hour: int) -> dict:
@@ -3542,7 +3409,6 @@ def _mirror_rows(key: str, *, with_market: bool, current_only: bool = True) -> l
     allowed = set(_allowed_syms_for(key))
     now = datetime.now(_TZ_TR)
     active_slot = _mirror_active_slot(now)
-    pol = _mirror_policy()
     rows: list[dict] = []
     for p in state.get("open_positions") or []:
         sym_raw = p.get("symbol") or ""
@@ -3573,10 +3439,6 @@ def _mirror_rows(key: str, *, with_market: bool, current_only: bool = True) -> l
         }
         if eh is not None:
             row.update(_mirror_slot_fields(eh))
-        # Defter dosyası bozulsa bile sabit kalan kimlik — ayna mükerrer
-        # kontrolünü buna göre yapar, kendi anahtarını üretmez.
-        if eh is not None and _ed is not None:
-            row["position_id"] = f"{key}:{_ed.isoformat()}:{eh:02d}:{sym_raw}"
         # sinyalin yaşı: bu projede ölçülen en pahalı kalem gecikme kaynaklı kayma
         try:
             t0 = datetime.fromisoformat(str(p.get("entry_time_tr")).replace("Z", "+00:00"))
@@ -3589,10 +3451,6 @@ def _mirror_rows(key: str, *, with_market: bool, current_only: bool = True) -> l
             mk = _mirror_market(row["pm_slug"])
             row["pm_token_id"]  = mk.get("up_token") if up else mk.get("down_token")
             row["pm_price_now"] = mk.get("up_price") if up else mk.get("down_price")
-            # pm_price_now artık gerçek ask; mid'i de veriyoruz ki aynanın
-            # kendi ölçümleri ve geçmiş karşılaştırmaları kopmasın.
-            row["pm_mid_price"] = mk.get("up_mid") if up else mk.get("down_mid")
-            row["pm_quote_src"] = mk.get("up_src") if up else mk.get("down_src")
             row["pm_tick_size"] = mk.get("tick_size")
             row["pm_neg_risk"]  = mk.get("neg_risk")
             row["pm_closed"]    = mk.get("closed")
@@ -3602,15 +3460,6 @@ def _mirror_rows(key: str, *, with_market: bool, current_only: bool = True) -> l
             if ref and cur:
                 # sanal defterin gördüğü fiyata göre şu an ne kadar pahalı
                 row["pm_price_drift_pct"] = round((cur - ref) / ref * 100, 1)
-            # Kopyalama kararı kaynakta verilir; ayna yalnızca uygular.
-            row.update(_mirror_copy_decision(row, pol))
-            row["entry_price_min"] = pol["entry_price_min"]
-            row["entry_price_max"] = pol["entry_price_max"]
-            row["min_stake_usd"] = _mirror_min_stake(row.get("pm_price_now"), pol)
-        else:
-            # Fiyat okunmadan kopyalanabilirliğe karar verilemez. Alanı hiç
-            # yazmamak, aynada "engel yok" diye okunabiliyordu — kapalı başlat.
-            row.update(_mirror_block("no_market_data", "fiyat verisi istenmedi (market=0)"))
         rows.append(row)
     return rows
 
@@ -3683,7 +3532,6 @@ def api_mirror_index():
         "count": len(books),
         "sort": "balance_desc,total_pnl_desc,wr_desc",
         "filter": "all" if include_all else "current_slot",
-        "policy": _mirror_policy(),
         "books": books,
     })
 
@@ -3709,9 +3557,7 @@ def api_mirror_book(book_id: str):
         "server_time_tr": now.isoformat(timespec="seconds"),
         "active_slot": slot,
         "filter": "all" if include_all else "current_slot",
-        "policy": _mirror_policy(),
         "count": len(rows),
-        "copyable_count": sum(1 for r in rows if r.get("copyable")),
         "positions": rows,
     })
 

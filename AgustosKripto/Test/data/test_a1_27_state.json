@@ -1,5 +1,5 @@
 {
-  "balance": 810.55,
+  "balance": 812.87,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -28,31 +28,6 @@
       "lock_history": []
     },
     {
-      "symbol": "OPUSDT",
-      "side": "SHORT",
-      "signal": "DOWN",
-      "algo": "A1#27",
-      "score": 47.02,
-      "interval": "4h",
-      "qty": 7042.253521,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 0.0852,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T15:05:45.306297+03:00",
-      "slot": "2026-08-14 15:00",
-      "virtual": true,
-      "atr": 0.00180084,
-      "atr_usd": 12.681946,
-      "atr_period": 14,
-      "peak_upnl": 2.2183,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
-    },
-    {
       "symbol": "ZECUSDT",
       "side": "LONG",
       "signal": "UP",
@@ -71,7 +46,7 @@
       "atr": 4.07971376,
       "atr_usd": 5.044364,
       "atr_period": 14,
-      "peak_upnl": 0.5864,
+      "peak_upnl": 0.6111,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
@@ -101,11 +76,36 @@
       "stop_level": 0,
       "lock_armed": false,
       "lock_history": []
+    },
+    {
+      "symbol": "OPUSDT",
+      "side": "SHORT",
+      "signal": "DOWN",
+      "algo": "A1#27",
+      "score": 49.65,
+      "interval": "4h",
+      "qty": 7050.52879,
+      "leverage": 6,
+      "margin_usd": 100.0,
+      "entry_price": 0.0851,
+      "notional": 600.0,
+      "entry_fee": 0.3,
+      "entry_time_tr": "2026-08-14T16:00:49.265003+03:00",
+      "slot": "2026-08-14 16:00",
+      "virtual": true,
+      "atr": 0.00183655,
+      "atr_usd": 12.948653,
+      "atr_period": 14,
+      "peak_upnl": 0.0,
+      "stop_upnl": null,
+      "stop_level": 0,
+      "lock_armed": false,
+      "lock_history": []
     }
   ],
-  "total_pnl": -189.4617,
-  "total_commission": 307.038228,
-  "updated_at_tr": "2026-08-14T15:28:05.395316+03:00",
+  "total_pnl": -187.1352,
+  "total_commission": 308.237879,
+  "updated_at_tr": "2026-08-14T16:00:49.265167+03:00",
   "last_open_slot": "2026-08-14 15:00",
   "atr_skip_syms": []
 }

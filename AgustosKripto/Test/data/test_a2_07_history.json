@@ -10035,5 +10035,46 @@
     "win": false,
     "close_reason": "4h_close",
     "book": "A2#07 · A2#07 Hurst Proxy (trend/MR)"
+  },
+  {
+    "symbol": "UNIUSDT",
+    "side": "LONG",
+    "signal": "UP",
+    "algo": "A2#07",
+    "score": 65.13,
+    "interval": "1h",
+    "qty": 187.5,
+    "leverage": 6,
+    "margin_usd": 100.0,
+    "entry_price": 3.2,
+    "notional": 600.0,
+    "entry_fee": 0.3,
+    "entry_time_tr": "2026-08-14T15:05:26.384605+03:00",
+    "slot": "2026-08-14 15:00",
+    "virtual": true,
+    "atr": 0.04918306,
+    "atr_usd": 9.221823,
+    "atr_period": 14,
+    "peak_upnl": 9.3325,
+    "stop_upnl": 4.610912,
+    "stop_level": 1,
+    "lock_armed": true,
+    "lock_history": [
+      {
+        "level": 1,
+        "ts": "2026-08-14T15:06:07.122534+03:00",
+        "stop_upnl": 4.610912,
+        "price": 3.253
+      }
+    ],
+    "exit_price": 3.226,
+    "exit_time_tr": "2026-08-14T15:46:05.139382+03:00",
+    "pnl_gross": 4.875,
+    "exit_fee": 0.302438,
+    "commission": 0.602438,
+    "pnl": 4.2726,
+    "win": true,
+    "close_reason": "atr_stop",
+    "book": "A2#07 · A2#07 Hurst Proxy (trend/MR)"
   }
 ]

@@ -1,5 +1,5 @@
 {
-  "balance": 586.01,
+  "balance": 585.48,
   "deposit": 1000.0,
   "open_positions": [
     {
@@ -53,31 +53,6 @@
       "lock_history": []
     },
     {
-      "symbol": "ETHUSDT",
-      "side": "LONG",
-      "signal": "UP",
-      "algo": "A2#04",
-      "score": 33.26,
-      "interval": "1h",
-      "qty": 0.319603,
-      "leverage": 6,
-      "margin_usd": 100.0,
-      "entry_price": 1877.33,
-      "notional": 600.0,
-      "entry_fee": 0.3,
-      "entry_time_tr": "2026-08-14T15:05:26.343886+03:00",
-      "slot": "2026-08-14 15:00",
-      "virtual": true,
-      "atr": 7.33862752,
-      "atr_usd": 2.345446,
-      "atr_period": 14,
-      "peak_upnl": 0.0,
-      "stop_upnl": null,
-      "stop_level": 0,
-      "lock_armed": false,
-      "lock_history": []
-    },
-    {
       "symbol": "ONDOUSDT",
       "side": "LONG",
       "signal": "UP",
@@ -96,6 +71,31 @@
       "atr": 0.00247736,
       "atr_usd": 4.553965,
       "atr_period": 14,
+      "peak_upnl": 3.0747,
+      "stop_upnl": null,
+      "stop_level": 0,
+      "lock_armed": false,
+      "lock_history": []
+    },
+    {
+      "symbol": "NEARUSDT",
+      "side": "LONG",
+      "signal": "UP",
+      "algo": "A2#04",
+      "score": 33.18,
+      "interval": "1h",
+      "qty": 375.0,
+      "leverage": 6,
+      "margin_usd": 100.0,
+      "entry_price": 1.6,
+      "notional": 600.0,
+      "entry_fee": 0.3,
+      "entry_time_tr": "2026-08-14T15:30:26.822963+03:00",
+      "slot": "2026-08-14 15:00",
+      "virtual": true,
+      "atr": 0.01245449,
+      "atr_usd": 4.670434,
+      "atr_period": 14,
       "peak_upnl": 0.0,
       "stop_upnl": null,
       "stop_level": 0,
@@ -103,9 +103,9 @@
       "lock_history": []
     }
   ],
-  "total_pnl": -413.9263,
-  "total_commission": 378.732712,
-  "updated_at_tr": "2026-08-14T15:28:04.605950+03:00",
+  "total_pnl": -414.456,
+  "total_commission": 379.332747,
+  "updated_at_tr": "2026-08-14T16:00:09.754427+03:00",
   "last_open_slot": "2026-08-14 15:00",
   "atr_skip_syms": []
 }
