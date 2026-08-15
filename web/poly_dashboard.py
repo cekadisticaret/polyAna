@@ -3358,7 +3358,7 @@ def _mirror_policy() -> dict:
                               "MIRROR_ENTRY_PRICE_MIN", "MIRROR_MIN_ENTRY_PRICE"),
         "entry_price_max": _f("entry_price_max", 0.75,
                               "MIRROR_ENTRY_PRICE_MAX", "MIRROR_MAX_ENTRY_PRICE"),
-        "max_age_sec": _f("max_age_sec", 240, "MIRROR_MAX_AGE_SEC"),
+        "max_age_sec": _f("max_age_sec", 1200, "MIRROR_MAX_AGE_SEC"),
         "max_adverse_drift_pct": _f("max_adverse_drift_pct", 40.0, "MIRROR_MAX_ADVERSE_DRIFT_PCT"),
         "max_spend_ratio": _f("max_spend_ratio", 1.15, "MIRROR_MAX_SPEND_RATIO"),
         "min_shares": _MIRROR_MIN_SHARES,
@@ -3444,30 +3444,47 @@ def _mirror_slot_fields(entry_hour: int) -> dict:
 
 
 def _mirror_active_slot(now_tr: datetime | None = None) -> dict:
-    """Şu an mirror'lanabilir slot. :02–:04 arası waiting_open (liste boş)."""
+    """Şu an mirror'lanabilir slot.
+
+    :02–:04 arası pozisyon henüz yoktur ama slot ``active`` kalır — ayna
+    ``waiting_open`` görüp turu atlamasın. Gece yarısı (00:00–00:01) önceki
+    günün 23:05 slotu hâlâ kapanıyor; tarih geri alınır.
+    """
     now_tr = now_tr or datetime.now(_TZ_TR)
     h, m = now_tr.hour, now_tr.minute
     if m >= 5:
         slot_h, slot_date = h, now_tr.date()
-        status = "active"
+        phase = "open"
     elif m < 2:
         if h == 0:
             slot_h = 23
             slot_date = (now_tr - timedelta(days=1)).date()
         else:
             slot_h, slot_date = h - 1, now_tr.date()
-        status = "active"
+        phase = "closing"
     else:
-        slot_h, slot_date = h, now_tr.date()
-        status = "waiting_open"
+        # :02–:04 — gece yarısı 00:xx hâlâ önceki günün 23:05 slotu (00:02'ye kadar)
+        if h == 0:
+            slot_h = 23
+            slot_date = (now_tr - timedelta(days=1)).date()
+        else:
+            slot_h, slot_date = h, now_tr.date()
+        phase = "pre_open"
     out = {
-        "status": status,
+        "status": "active",
+        "slot_phase": phase,
         "slot_date_tr": slot_date.isoformat(),
         **_mirror_slot_fields(slot_h),
     }
-    if status == "waiting_open":
+    if phase == "pre_open":
         out["message"] = (
-            f"{slot_h:02d}:02 close sonrası, {slot_h:02d}:05 open öncesi — henüz yeni slot yok"
+            f"{slot_h:02d}:02 close sonrası, {slot_h:02d}:05 open öncesi — "
+            "pozisyonlar :05 cron sonrası gelir"
+        )
+    elif phase == "closing":
+        out["message"] = (
+            f"{slot_h:02d}:05 slotu kapanıyor ({slot_h:02d}:02 settle) — "
+            "yeni açılış :05"
         )
     return out
 
@@ -3484,13 +3501,34 @@ def _mirror_pos_entry_hour(p: dict) -> tuple[int | None, date | None]:
     return int(eh), et_tr.date()
 
 
+def _mirror_pos_slot_date(p: dict, eh: int | None) -> date | None:
+    """Pozisyonun ait olduğu slot takvim günü (23:05 slotu gece yarısını geçer)."""
+    try:
+        et = datetime.fromisoformat(str(p.get("entry_time_tr")).replace("Z", "+00:00"))
+        if et.tzinfo is None:
+            et = et.replace(tzinfo=_TZ_TR)
+        et_tr = et.astimezone(_TZ_TR)
+    except Exception:
+        return None
+    if eh is None:
+        eh = et_tr.hour
+    slot_day = et_tr.date()
+    # Nadiren entry_hour_tr=23 iken damga 00:0x'e kayarsa önceki güne bağla
+    if int(eh) == 23 and et_tr.hour == 0 and et_tr.minute < 5:
+        slot_day = slot_day - timedelta(days=1)
+    return slot_day
+
+
 def _mirror_pos_matches_slot(p: dict, slot: dict) -> bool:
     if slot.get("status") != "active":
         return False
-    eh, ed = _mirror_pos_entry_hour(p)
-    if eh is None or ed is None:
+    eh, _ed = _mirror_pos_entry_hour(p)
+    if eh is None:
         return False
-    return eh == slot["entry_hour_tr"] and ed.isoformat() == slot["slot_date_tr"]
+    slot_day = _mirror_pos_slot_date(p, eh)
+    if slot_day is None:
+        return False
+    return eh == slot["entry_hour_tr"] and slot_day.isoformat() == slot["slot_date_tr"]
 
 
 def _mirror_rows(key: str, *, with_market: bool, current_only: bool = True) -> list[dict]:

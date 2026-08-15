@@ -13,6 +13,9 @@ from backtest_analiz2 import fetch_klines_history, _neutral_preloaded
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 TOKEN_SIM = 0.50
 
+ApplyPmFn = Callable[[dict, str, str, float, list, dict], bool] | None
+ResolvePnlFn = Callable[[dict, bool], float] | None
+
 SignalFn = Callable[..., dict | None] | Callable[..., Awaitable[dict | None]]
 
 
@@ -76,6 +79,9 @@ async def run_walk_forward(
     end_date: datetime | None = None,
     min_bars: int = 60,
     amount_fn: Callable[[list[Trade], str], float] | None = None,
+    apply_pm_fn: ApplyPmFn = None,
+    resolve_pnl_fn: ResolvePnlFn = None,
+    min_entry_price: float | None = None,
 ) -> dict:
     end = end_date or datetime.now(timezone.utc)
     fetch_start = start_date - timedelta(days=8)
@@ -114,7 +120,7 @@ async def run_walk_forward(
             pred = pos["predicted_dir"]
             actual = "UP" if exit_p >= entry else "DOWN"
             win = pred == actual
-            pnl = resolve_pnl(pos, win)
+            pnl = resolve_pnl_fn(pos, win) if resolve_pnl_fn else resolve_pnl(pos, win)
             balance = round(balance + pnl, 2)
             total_pnl = round(total_pnl + pnl, 2)
 
@@ -152,7 +158,7 @@ async def run_walk_forward(
             if len(kslice) < min_bars:
                 continue
 
-            raw = signal_fn(sym, kslice, open_ms, history, amount_fn)
+            raw = signal_fn(sym, kslice, open_ms, history, amount_fn, bars[i + 1])
             sig = await raw if asyncio.iscoroutine(raw) else raw
             if sig is None:
                 skipped += 1
@@ -174,7 +180,17 @@ async def run_walk_forward(
                 "open_ms": open_ms,
                 "extra": sig.get("extra"),
             }
-            apply_synthetic_pm(pos, amount)
+            next_bar = bars[i + 1]
+            if apply_pm_fn:
+                if not apply_pm_fn(pos, sym, sig["predicted_dir"], amount, kslice, next_bar):
+                    skipped += 1
+                    continue
+                ep = float(pos.get("pm_entry_price") or 0)
+                if min_entry_price is not None and ep < min_entry_price:
+                    skipped += 1
+                    continue
+            else:
+                apply_synthetic_pm(pos, amount)
             open_pos[sym] = pos
 
     pa._slot_utc_ms = None
