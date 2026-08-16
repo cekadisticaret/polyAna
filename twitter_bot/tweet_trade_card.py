@@ -35,6 +35,8 @@ RECENT_SYMBOLS_MAX = 12
 POSTED_KEYS_MAX = 400
 MAX_PER_RUN = 2
 TWEET_GAP_SEC = 4
+# Yalnızca margin üzerinden %kâr bu eşiği aşan işlemler tweetlenir (TWITTER_MIN_PNL_PCT ile override).
+MIN_PNL_PCT = float(os.environ.get("TWITTER_MIN_PNL_PCT", "5"))
 
 
 def _norm_symbol(sym: str) -> str:
@@ -174,6 +176,7 @@ def select_trades(
     candidates = [
         t for t in trades
         if t.get("win")
+        and float(t.get("pnl_pct") or 0) > MIN_PNL_PCT
         and (force or t["_key"] not in posted)
         and _norm_symbol(t.get("symbol") or "") not in excluded
         and (force or _norm_symbol(t.get("symbol") or "") not in blocked_syms)
@@ -256,7 +259,9 @@ def main() -> None:
     trades = _recent_full_trades()
     picks = select_trades(trades, state, force=args.force)
     if not picks:
-        print(f"Son {LOOKBACK_HOURS} saatte uygun yeni kazanan yok, tweet atlanıyor.")
+        print(
+            f"Son {LOOKBACK_HOURS} saatte >{MIN_PNL_PCT:g}% kârlı yeni kazanan yok, tweet atlanıyor."
+        )
         return
 
     os.makedirs(OUT_DIR, exist_ok=True)

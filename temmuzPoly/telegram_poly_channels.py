@@ -62,4 +62,8 @@ def chat_analiz10() -> str:
 
 
 def chat_analist() -> str:
-    return _not_analiz1(_env("TELEGRAM_ANALIST_CHAT_ID") or chat_poly_traders())
+    """Analist kanalı — ANALIZ1 ile aynı ID verilirse LAB'a düş (bilerek boş bırakma)."""
+    cid = _not_analiz1(_env("TELEGRAM_ANALIST_CHAT_ID") or chat_poly_traders())
+    if cid:
+        return cid
+    return _not_analiz1(_env("TELEGRAM_LAB_CHAT_ID"))

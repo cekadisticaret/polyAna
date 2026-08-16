@@ -27,18 +27,17 @@ ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 TG_TOKEN = os.environ.get("TELEGRAM_ANALIST_BOT_TOKEN", "")
 from telegram_poly_channels import chat_analist
 TG_CHAT = chat_analist()  # 1. ANALİZ kanalına düşmez
-CLAUDE_MODEL = "claude-sonnet-5"
+CLAUDE_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
 _TELEGRAM_LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analyst_telegram_log.jsonl")
 _TELEGRAM_LOG_MAX_LINES = 500
 
 
 def required_env_missing() -> list[str]:
+    """Telegram opsiyonel — yoksa yalnız dashboard feed/journal'a yazar."""
     return [
         name for name, val in (
             ("ANALYST_API_TOKEN", ANALYST_TOKEN),
             ("ANTHROPIC_API_KEY", ANTHROPIC_KEY),
-            ("TELEGRAM_ANALIST_BOT_TOKEN", TG_TOKEN),
-            ("TELEGRAM_ANALIST_CHAT_ID", TG_CHAT),
         ) if not val
     ]
 

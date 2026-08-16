@@ -130,11 +130,14 @@ def main() -> int:
     tg_text = f"\U0001f9e0 Poly Algo Analist — {now_str}\n\n{body}"
     if os.environ.get("ANALYST_SKIP_TELEGRAM"):
         ac.log_telegram_text(tg_text)
-    else:
+    elif ac.TG_CHAT and ac.TG_TOKEN:
         try:
             ac.send_telegram(tg_text)
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
             print(f"[analyst] Telegram gönderilemedi: {e}", file=sys.stderr)
+    else:
+        ac.log_telegram_text(tg_text)
+        print("[analyst] Telegram chat yok — yalnız feed/journal.", file=sys.stderr)
 
     tags = [b["key"] for b in books][:10]
     title = f"Poly Algo Analist — {now_str}"
