@@ -479,7 +479,7 @@ def _pos_max_hold_h(pos: dict, policy: dict | None) -> float | None:
 
 def _apply_policy_to_pos(pos: dict, policy: dict | None) -> dict:
     """Zarar stopu çarpanını pozisyona işle (atr_profit_lock varsayılanını ezer)."""
-    if not policy or pos.get("loss_stop_atr") is not None:
+    if not policy:
         return pos
     ls = policy.get("loss_stop_atr")
     if ls is None:

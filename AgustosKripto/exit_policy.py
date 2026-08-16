@@ -15,6 +15,7 @@ işlem başına medyan $0,000 sapmayla yeniden üretiyor):
   eski: 1h/4h zorunlu + 2×ATR stop   46.305 işlem  net −$20.255  kom $19.052
   yeni: zaman kapanışı yok · 24s tavan ·
         6×ATR stop                    9.542 işlem  net  −$1.916  kom  $4.378
+  (2026-08-15 gece canlı ince ayar: ARM 0.5 · zarar stop 3×ATR)
 
 Gün bazlı kümelenmiş t (bağımsız birim gün — 118 defter aynı 30 coinde aynı
 saatte işlem açtığı için işlem düzeyi t sahte hassasiyet üretiyor):
@@ -49,10 +50,10 @@ CONFIG_FILE = os.path.join(_DIR, "exit_policy.json")
 MEASURED = {
     "force_time_close": False,
     "max_hold_h": 24.0,
-    # 2×ATR gürültü seviyesindeydi ve pozisyonları toparlanmadan kesiyordu
-    # (950 işlem, %0 kazanma, −$6.004). 6×ATR ölçümde neredeyse hiç bağlamıyor
-    # ama flaş çöküşe karşı devre kesici olarak duruyor (~%18 teminat).
-    "loss_stop_atr": 6.0,
+    # 2×ATR gürültü seviyesindeydi (950 işlem, %0 kazanma, −$6.004).
+    # 6×ATR canlıda fiilen devreye girmiyordu; 4× hâlâ genişti.
+    # 3× daha sıkı zarar kesici (~%9 teminat @6x).
+    "loss_stop_atr": 3.0,
 }
 
 # Eski davranış — geri alma ve karşılaştırma için.

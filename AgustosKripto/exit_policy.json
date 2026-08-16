@@ -1,7 +1,8 @@
 {
- "enabled": true,
- "switched_at_tr": "2026-08-15T00:17:43+03:00",
- "note": "Olculen cikis rejimi aktif. Geri almak icin enabled=false yaz; kod degisikligi gerekmez. Gerekce ve olcum: AgustosKripto/exit_policy.py",
+  "enabled": true,
+  "switched_at_tr": "2026-08-15T00:17:43+03:00",
+  "tuned_at_tr": "2026-08-15T23:38:00+03:00",
+  "note": "Olculen cikis rejimi aktif. Canli ince ayar: ATR_LOCK_ARM=0.5, loss_stop_atr=3. Geri almak icin enabled=false yaz.",
  "default": {},
  "groups": {}
 }

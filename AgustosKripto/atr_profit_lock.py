@@ -17,7 +17,7 @@ ATR_PERIOD = int(os.environ.get("ATR_LOCK_PERIOD", "14"))
 #   ARM 1.7 → 265 kilit, ARM 1.4 → 564, ARM 1.2 → 811, ARM 1.0 → 1348.
 # MFE 0.5 ATR'yi geçen işlemlerin kazanma oranı %23.5'ten %88.7'ye çıkıyor,
 # yani erken silahlanma doğru taraf.
-ARM_ATR = float(os.environ.get("ATR_LOCK_ARM", "1.0"))
+ARM_ATR = float(os.environ.get("ATR_LOCK_ARM", "0.5"))
 TRAIL_ATR = float(os.environ.get("ATR_LOCK_TRAIL", "1.0"))
 # ARM ile eşit olmamalı: stop = max(peak - TRAIL, LOCK_MIN) olduğu için
 # LOCK_MIN == ARM iken kilit tam zirveye kurulur ve pozisyon silahlandığı anda
@@ -243,6 +243,8 @@ def lock_summary(pos: dict) -> dict[str, Any]:
     return {
         "atr": pos.get("atr"),
         "atr_usd": pos.get("atr_usd"),
+        "arm_atr": float(pos.get("arm_atr") or ARM_ATR),
+        "loss_stop_atr": float(pos.get("loss_stop_atr") or LOSS_STOP_ATR),
         "peak_upnl": pos.get("peak_upnl"),
         "stop_upnl": pos.get("stop_upnl"),
         "stop_level": level,
