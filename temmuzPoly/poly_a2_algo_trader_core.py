@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import os
 import sys
 import urllib.parse
@@ -74,10 +75,49 @@ class A2Config:
     algo_name: str
     state_file: str
     history_file: str
-    # Aşağıdaki ikisinin varsayılanı mevcut 17 A2 defterinin davranışıdır; türev
+    # Aşağıdakilerin varsayılanı mevcut 17 A2 defterinin davranışıdır; türev
     # defterler (ör. A2#05 V2) aynı sinyali farklı kurallarla koşturmak için ezer.
     min_entry_price: float | None = None   # None = fiyat tabanı yok
+    # (alt, üst) — bilet bu yarı açık aralığa düşerse atlanır. Taban tüm ucuz
+    # biletleri keserken bant yalnız ölçülen zarar dilimini keser.
+    exclude_price_band: tuple[float, float] | None = None
+    # (alt, üst) — |z| bu yarı açık aralığın DIŞINDAysa atlanır. Fiyat kuralları
+    # piyasanın görüşünü süzer; bu sinyalin kendi güven derecesini süzer.
+    z_gate: tuple[float, float] | None = None
+    shadow_log: str | None = None          # atlanan slotları da kaydet (jsonl)
     live_mirror: bool = True               # False = gerçek para aynası hiç çağrılmaz
+
+
+Z_PERIOD = 20
+
+
+def entry_zscore(klines: list[dict], period: int = Z_PERIOD) -> float | None:
+    """Giriş anındaki z — `algo_signals.mean_reversion` ile birebir aynı aritmetik.
+
+    Sinyal fonksiyonu z'yi hesaplayıp yalnız işaretini döndürüyor, büyüklüğü
+    atıyor. Burada aynı pencereyi (son 20 kapanış, popülasyon std'si) yeniden
+    kurup büyüklüğü de elde ediyoruz.
+    """
+    closes = [k["close"] for k in klines if k.get("close") is not None]
+    if len(closes) < period:
+        return None
+    win = closes[-period:]
+    mean = sum(win) / period
+    std = math.sqrt(sum((v - mean) ** 2 for v in win) / period)
+    if not std:
+        return None
+    return (win[-1] - mean) / std
+
+
+def _shadow_write(cfg: A2Config, row: dict) -> None:
+    """Alınan ve atlanan slotları birlikte kaydet — kapı eşiği veriden ayarlansın."""
+    if not cfg.shadow_log:
+        return
+    try:
+        with open(cfg.shadow_log, "a") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except Exception as e:
+        print(f"[{cfg.label}] gölge günlüğü yazılamadı: {e}", file=sys.stderr)
 
 
 def _symbol_wr_amount(cfg: A2Config, history: list, symbol: str) -> float:
@@ -344,14 +384,20 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
         if direction not in ("UP", "DOWN"):
             print(f"[{cfg.label} open] {sym} — NEUTRAL, işlem yok")
             continue
+        need_z = cfg.z_gate is not None or bool(cfg.shadow_log)
         try:
-            klines = await _fetch_klines(sym, "1h", 3)
+            klines = await _fetch_klines(sym, "1h", Z_PERIOD + 5 if need_z else 3)
             entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else None
         except Exception:
-            entry_price = None
+            klines, entry_price = [], None
         if entry_price is None:
             continue
-        candidates.append({"sym": sym, "direction": direction, "entry_price": entry_price})
+        candidates.append({
+            "sym": sym,
+            "direction": direction,
+            "entry_price": entry_price,
+            "z": entry_zscore(klines) if need_z else None,
+        })
 
     opened: list[dict] = []
     for c in candidates:
@@ -385,6 +431,42 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
                 print(f"[{cfg.label} open] {sym} — bilet {entry_px} < "
                       f"{cfg.min_entry_price} fiyat tabanı, atlandı")
                 continue
+        if cfg.exclude_price_band is not None:
+            band_lo, band_hi = cfg.exclude_price_band
+            entry_px = pos.get("pm_entry_price")
+            if entry_px is None or band_lo <= float(entry_px) < band_hi:
+                print(f"[{cfg.label} open] {sym} — bilet {entry_px} "
+                      f"[{band_lo}, {band_hi}) yasak bandında, atlandı")
+                continue
+        # z kapısı en sonda: gölge günlüğü yalnız diğer tüm kapıları geçmiş
+        # slotları kaydetsin, yoksa "z olmasa açardık" okuması bozulur.
+        zval = c.get("z")
+        if cfg.z_gate is not None or cfg.shadow_log:
+            z_lo, z_hi = cfg.z_gate or (None, None)
+            in_gate = (
+                zval is not None and z_lo is not None
+                and z_lo <= abs(zval) < z_hi
+            )
+            _shadow_write(cfg, {
+                "ts_tr": now_tr.isoformat(),
+                "hour_tr": hour_tr,
+                "symbol": sym,
+                "direction": direction,
+                "z": round(zval, 4) if zval is not None else None,
+                "pm_price": pos.get("pm_entry_price"),
+                "entry_price": c["entry_price"],
+                "amount": dyn_amount,
+                "taken": bool(in_gate) if cfg.z_gate is not None else True,
+                "actual_dir": None,
+                "win": None,
+            })
+            if cfg.z_gate is not None and not in_gate:
+                zs = f"{zval:.2f}" if zval is not None else "yok"
+                print(f"[{cfg.label} open] {sym} — |z| {zs} "
+                      f"[{z_lo}, {z_hi}) kapısının dışında, atlandı")
+                continue
+        if zval is not None:
+            pos["entry_z"] = round(zval, 4)
         state["open_positions"].append(pos)
         live_tag = ""
         try:

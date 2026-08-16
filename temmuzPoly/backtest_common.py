@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 import poly_predictor_analysis as pa
 from backtest_analiz2 import fetch_klines_history, _neutral_preloaded
+from poly_a2_algo_trader_core import entry_zscore
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 TOKEN_SIM = 0.50
@@ -82,6 +83,8 @@ async def run_walk_forward(
     apply_pm_fn: ApplyPmFn = None,
     resolve_pnl_fn: ResolvePnlFn = None,
     min_entry_price: float | None = None,
+    exclude_price_band: tuple[float, float] | None = None,
+    z_gate: tuple[float, float] | None = None,
 ) -> dict:
     end = end_date or datetime.now(timezone.utc)
     fetch_start = start_date - timedelta(days=8)
@@ -189,8 +192,19 @@ async def run_walk_forward(
                 if min_entry_price is not None and ep < min_entry_price:
                     skipped += 1
                     continue
+                if exclude_price_band is not None:
+                    _lo, _hi = exclude_price_band
+                    if _lo <= ep < _hi:
+                        skipped += 1
+                        continue
             else:
                 apply_synthetic_pm(pos, amount)
+            if z_gate is not None:
+                _z = entry_zscore(kslice)
+                _zlo, _zhi = z_gate
+                if _z is None or not (_zlo <= abs(_z) < _zhi):
+                    skipped += 1
+                    continue
             open_pos[sym] = pos
 
     pa._slot_utc_ms = None

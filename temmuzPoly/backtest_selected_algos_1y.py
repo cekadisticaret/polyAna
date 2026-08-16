@@ -60,7 +60,7 @@ A1_SYMS = ["BTCUSDT", "SOLUSDT"]
 INITIAL_BALANCE = 1000.0
 AMT_LOW, AMT_MID, AMT_HIGH = 24.0, 36.0, 48.0
 C101_V2_EDGE = 0.03
-A2_05_V2_MIN_ENTRY = 0.40
+A2_05_V2_Z_GATE = (1.0, 1.5)
 OUT_FILE = os.path.join(_DIR, "backtest_selected_algos_1y.json")
 CHART_FILE = "/tmp/backtest_selected_algos_1y.png"
 
@@ -526,7 +526,7 @@ async def run_book(book_id: str, label: str, start: datetime, balance: float, ba
         amount_fn=amount_fn if book_id != "c101_v2" else None,
         apply_pm_fn=_apply_pm,
         resolve_pnl_fn=_resolve_pnl,
-        min_entry_price=A2_05_V2_MIN_ENTRY if book_id == "a2_05_v2" else None,
+        z_gate=A2_05_V2_Z_GATE if book_id == "a2_05_v2" else None,
     )
     del r["trade_list"]
     return r

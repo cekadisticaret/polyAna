@@ -297,7 +297,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("b1_05",      "B1#05",                 300,  "Coin başına en iyi motor · MUM+MELEZ dahil"),
     ("c101",       "C1#01 · OPUS-OHLCV",    300,  "PTB+volatilite olasılık · Gamma mid kotasyonu · 5 puan kenar eşiği"),
     ("c101_v2",    "C1#01 V2 · GERÇEK ASK", 300,  "Aynı model, CLOB best_ask kotasyonu · 3 puan kenar eşiği"),
-    ("a2_05_v2",   "A2#05 V2 · FİYAT TABANI", 300, "A2#05 sinyali + 0,40 altı bileti alma kuralı"),
+    ("a2_05_v2",   "A2#05 V2 · Z KAPISI", 300, "A2#05 sinyali + yalnız 1,0 ≤ |z| < 1,5 iken aç"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
@@ -16617,18 +16617,22 @@ function atrLockLine(p, pnlNet){
   const stopLvl = Number(p.stop_level||0);
   const lockEq = p.lock_equity != null ? Number(p.lock_equity) : null;
   const atrUsd = p.atr_usd != null ? Number(p.atr_usd) : null;
-  const lossStop = p.loss_stop_usd != null ? Number(p.loss_stop_usd) : (atrUsd!=null ? -atrUsd : null);
+  const armMult = p.arm_atr != null ? Number(p.arm_atr) : 0.5;
+  const lossMult = p.loss_stop_atr != null ? Number(p.loss_stop_atr) : 3;
+  const lossStop = p.loss_stop_usd != null ? Number(p.loss_stop_usd) : (atrUsd!=null ? -(lossMult * atrUsd) : null);
   const histLine = atrHistoryLine(p.lock_history);
   if(stopLvl >= 1){
-    return `<div class="pos-entry">ATR Stop${stopLvl}${lockEq!=null?' · kilit $'+lockEq.toFixed(2):''}${atrUsd!=null?' · atr$ '+atrUsd.toFixed(2):''} · <b>runner</b></div>${histLine}`;
+    const stopPnl = p.stop_upnl != null ? Number(p.stop_upnl) : null;
+    const stopTxt = stopPnl != null ? ` · stop ${fmtMoney(stopPnl)}` : '';
+    return `<div class="pos-entry">ATR Stop${stopLvl}${lockEq!=null?' · kilit $'+lockEq.toFixed(2):''}${stopTxt}${atrUsd!=null?' · atr$ '+atrUsd.toFixed(2):''} · <b>runner</b></div>${histLine}`;
   }
   if(atrUsd==null) return '';
   const pnl = Number(pnlNet != null ? pnlNet : (p.unrealized_pnl||0));
   if(pnl < 0 && lossStop != null){
-    return `<div class="pos-entry">ATR zarar stop <b>${fmtMoney(lossStop)}</b> · atr$ ${atrUsd.toFixed(2)} · şu an ${fmtMoney(pnl)}</div>`;
+    return `<div class="pos-entry">ATR zarar stop <b>${fmtMoney(lossStop)}</b> (${lossMult}×atr$) · şu an ${fmtMoney(pnl)}</div>`;
   }
-  const armNeed = (1.7 * atrUsd).toFixed(2);
-  return `<div class="pos-entry">Kâr kilidi: +$${armNeed} kâra ulaşınca · atr$ ${atrUsd.toFixed(2)}</div>`;
+  const armNeed = (armMult * atrUsd).toFixed(2);
+  return `<div class="pos-entry">Kâr kilidi: +$${armNeed} kâra ulaşınca (${armMult}×atr$ ${atrUsd.toFixed(2)})</div>`;
 }
 function pickTopTwo(d){
   const waiting = d.waiting || [];
