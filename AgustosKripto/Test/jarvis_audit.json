@@ -1,77 +1,77 @@
 {
- "olusturma": "2026-08-15T00:18:31+03:00",
+ "olusturma": "2026-08-16T00:00:33+03:00",
  "ozet": {
-  "defter": 118,
-  "islem": 50554,
-  "gun": 8.7,
+  "defter": 123,
+  "islem": 52355,
+  "gun": 9.6,
   "ilk": "2026-08-06T08:07:17",
-  "son": "2026-08-15T00:01:03",
-  "wr": 49.1,
-  "brut": -177.73,
-  "net": -21632.68,
-  "komisyon": 21454.96,
-  "hacim": 21459875.0,
+  "son": "2026-08-15T23:30:43",
+  "wr": 49.5,
+  "brut": 451.0,
+  "net": -21906.52,
+  "komisyon": 22357.53,
+  "hacim": 22362125.0,
   "fee_oran": 0.1,
-  "brut_kenar": -0.0008,
-  "islem_basi": -0.428,
-  "maker_net": -8761.68
+  "brut_kenar": 0.002,
+  "islem_basi": -0.418,
+  "maker_net": -8493.85
  },
  "mfe": [
   {
    "band": "0-0.5",
-   "n": 40048,
-   "pay": 79.2,
-   "ort": -1.16,
-   "wr": 23.7,
-   "net": -46566.33
+   "n": 41164,
+   "pay": 78.6,
+   "ort": -1.17,
+   "wr": 23.9,
+   "net": -48149.35
   },
   {
    "band": "0.5-1",
-   "n": 7233,
-   "pay": 14.3,
-   "ort": 1.65,
-   "wr": 89.3,
-   "net": 11964.1
+   "n": 7604,
+   "pay": 14.5,
+   "ort": 1.6,
+   "wr": 88.2,
+   "net": 12148.13
   },
   {
    "band": "1-1.4",
-   "n": 1538,
-   "pay": 3.0,
-   "ort": 2.49,
-   "wr": 97.5,
-   "net": 3831.92
+   "n": 1673,
+   "pay": 3.2,
+   "ort": 2.48,
+   "wr": 97.6,
+   "net": 4156.5
   },
   {
    "band": "1.4-1.7",
-   "n": 491,
+   "n": 534,
    "pay": 1.0,
-   "ort": 3.29,
+   "ort": 3.22,
    "wr": 99.4,
-   "net": 1616.48
+   "net": 1719.75
   },
   {
    "band": "1.7-2.5",
-   "n": 571,
-   "pay": 1.1,
-   "ort": 3.23,
+   "n": 655,
+   "pay": 1.3,
+   "ort": 3.15,
    "wr": 99.8,
-   "net": 1845.21
+   "net": 2065.32
   },
   {
    "band": "2.5-4",
-   "n": 467,
-   "pay": 0.9,
-   "ort": 5.14,
+   "n": 505,
+   "pay": 1.0,
+   "ort": 5.23,
    "wr": 100.0,
-   "net": 2401.39
+   "net": 2641.46
   },
   {
    "band": "4+",
-   "n": 206,
+   "n": 220,
    "pay": 0.4,
-   "ort": 15.9,
-   "wr": 99.0,
-   "net": 3274.55
+   "ort": 15.96,
+   "wr": 99.1,
+   "net": 3511.68
   }
  ],
  "kapanis": [
@@ -97,13 +97,23 @@
   },
   {
    "sebep": "signal_reversal",
-   "n": 3425,
-   "wr": 59.0,
-   "net": -534.44,
-   "brut": 1506.79,
-   "komisyon": 2041.23,
-   "skill": 0.0727,
-   "t": 5.49
+   "n": 4282,
+   "wr": 57.8,
+   "net": -1018.22,
+   "brut": 1537.42,
+   "komisyon": 2555.64,
+   "skill": 0.0594,
+   "t": 5.06
+  },
+  {
+   "sebep": "atr_stop",
+   "n": 2463,
+   "wr": 97.2,
+   "net": 8935.46,
+   "brut": 9849.04,
+   "komisyon": 913.58,
+   "skill": 0.939,
+   "t": 25.59
   },
   {
    "sebep": "hourly",
@@ -116,141 +126,141 @@
    "t": -0.87
   },
   {
-   "sebep": "atr_stop",
-   "n": 2075,
-   "wr": 99.9,
-   "net": 8289.48,
-   "brut": 9053.65,
-   "komisyon": 764.18,
-   "skill": 1.0144,
-   "t": 24.3
+   "sebep": "atr_loss",
+   "n": 958,
+   "wr": 0.0,
+   "net": -6296.78,
+   "brut": -5932.24,
+   "komisyon": 364.54,
+   "skill": -1.4287,
+   "t": -34.56
   },
   {
-   "sebep": "atr_loss",
-   "n": 939,
-   "wr": 0.0,
-   "net": -5976.28,
-   "brut": -5618.85,
-   "komisyon": 357.42,
-   "skill": -1.376,
-   "t": -34.73
+   "sebep": "flatten",
+   "n": 537,
+   "wr": 55.9,
+   "net": -115.55,
+   "brut": 116.1,
+   "komisyon": 231.65,
+   "skill": 0.0341,
+   "t": 3.9
   }
  ],
  "drift": [
   {
    "coin": "KAITOUSDT",
-   "nL": 379,
-   "nS": 470,
-   "skill": 0.1688,
-   "drift": 0.7948,
-   "mL": -0.626,
-   "mS": 0.9636
+   "nL": 401,
+   "nS": 505,
+   "skill": 0.1477,
+   "drift": 0.7718,
+   "mL": -0.6241,
+   "mS": 0.9196
   },
   {
    "coin": "UNIUSDT",
-   "nL": 398,
-   "nS": 446,
-   "skill": 0.0379,
-   "drift": 0.2363,
-   "mL": -0.1985,
-   "mS": 0.2742
+   "nL": 416,
+   "nS": 466,
+   "skill": 0.0346,
+   "drift": 0.2205,
+   "mL": -0.1859,
+   "mS": 0.2551
   },
   {
    "coin": "WLDUSDT",
-   "nL": 291,
-   "nS": 384,
-   "skill": -0.0753,
-   "drift": -0.223,
-   "mL": 0.1478,
-   "mS": -0.2983
-  },
-  {
-   "coin": "TIAUSDT",
-   "nL": 416,
-   "nS": 558,
-   "skill": 0.0132,
-   "drift": 0.1078,
-   "mL": -0.0946,
-   "mS": 0.1211
-  },
-  {
-   "coin": "DOTUSDT",
-   "nL": 425,
-   "nS": 596,
-   "skill": -0.0126,
-   "drift": 0.0998,
-   "mL": -0.1125,
-   "mS": 0.0872
-  },
-  {
-   "coin": "INJUSDT",
-   "nL": 397,
-   "nS": 472,
-   "skill": -0.0291,
-   "drift": 0.0969,
-   "mL": -0.126,
-   "mS": 0.0679
-  },
-  {
-   "coin": "ADAUSDT",
-   "nL": 2142,
-   "nS": 2938,
-   "skill": -0.0158,
-   "drift": 0.0957,
-   "mL": -0.1115,
-   "mS": 0.0798
+   "nL": 311,
+   "nS": 410,
+   "skill": -0.0619,
+   "drift": -0.2182,
+   "mL": 0.1563,
+   "mS": -0.2802
   },
   {
    "coin": "LINKUSDT",
-   "nL": 390,
-   "nS": 411,
-   "skill": -0.0396,
-   "drift": -0.0951,
-   "mL": 0.0555,
-   "mS": -0.1347
+   "nL": 406,
+   "nS": 422,
+   "skill": -0.0131,
+   "drift": -0.155,
+   "mL": 0.1419,
+   "mS": -0.1682
+  },
+  {
+   "coin": "INJUSDT",
+   "nL": 417,
+   "nS": 489,
+   "skill": -0.0299,
+   "drift": 0.1169,
+   "mL": -0.1468,
+   "mS": 0.087
+  },
+  {
+   "coin": "TIAUSDT",
+   "nL": 436,
+   "nS": 582,
+   "skill": 0.0014,
+   "drift": 0.104,
+   "mL": -0.1026,
+   "mS": 0.1054
+  },
+  {
+   "coin": "ADAUSDT",
+   "nL": 2189,
+   "nS": 3025,
+   "skill": -0.0085,
+   "drift": 0.0987,
+   "mL": -0.1071,
+   "mS": 0.0902
+  },
+  {
+   "coin": "ATOMUSDT",
+   "nL": 683,
+   "nS": 667,
+   "skill": -0.0109,
+   "drift": -0.0814,
+   "mL": 0.0705,
+   "mS": -0.0923
   }
  ],
  "konsensus": [
   {
    "ad": "tam uzlaşı ≥95%",
-   "nL": 285,
-   "nS": 286,
-   "skill": -0.1145,
-   "t": -2.82,
-   "mL": -0.1213,
-   "mS": -0.1077
+   "nL": 338,
+   "nS": 293,
+   "skill": -0.0921,
+   "t": -2.29,
+   "mL": -0.0801,
+   "mS": -0.1041
   },
   {
    "ad": "güçlü 80-95%",
-   "nL": 1127,
-   "nS": 1343,
-   "skill": 0.0488,
+   "nL": 1168,
+   "nS": 1396,
+   "skill": 0.0477,
    "t": 1.75,
-   "mL": -0.0682,
-   "mS": 0.1658
+   "mL": -0.0601,
+   "mS": 0.1555
   },
   {
    "ad": "orta 65-80%",
-   "nL": 1790,
-   "nS": 5084,
-   "skill": -0.0477,
-   "t": -1.47,
-   "mL": -0.1232,
-   "mS": 0.0278
+   "nL": 1852,
+   "nS": 5327,
+   "skill": -0.0452,
+   "t": -1.07,
+   "mL": -0.1211,
+   "mS": 0.0308
   },
   {
    "ad": "bölünmüş <65%",
-   "nL": 6401,
-   "nS": 11855,
-   "skill": -0.0031,
-   "t": 1.36,
-   "mL": -0.0332,
-   "mS": 0.027
+   "nL": 6565,
+   "nS": 12052,
+   "skill": -0.0022,
+   "t": 1.41,
+   "mL": -0.0302,
+   "mS": 0.0258
   }
  ],
  "beceri": {
-  "olculebilir": 103,
-  "iki_yon_pozitif": 8
+  "olculebilir": 108,
+  "iki_yon_pozitif": 13
  },
  "live": {
   "hayalet": [],
@@ -262,17 +272,24 @@
   }
  },
  "rejim": {
-  "aktif": "zaman kapanışı yok · 24s tavan · 6×ATR stop",
+  "aktif": "zaman kapanışı yok · 24s tavan · 3×ATR stop",
   "gecis_tr": "2026-08-15T00:17:43+03:00",
   "eski": {
-   "n": 50554,
-   "net": -21632.68,
-   "brut": -177.73,
-   "komisyon": 21454.96,
-   "skill": -0.0043,
-   "t": -0.37
+   "n": 50823,
+   "net": -21581.33,
+   "brut": -43.74,
+   "komisyon": 21537.6,
+   "skill": -0.0036,
+   "t": -0.1
   },
-  "yeni": {},
+  "yeni": {
+   "n": 1532,
+   "net": -325.19,
+   "brut": 494.74,
+   "komisyon": 819.93,
+   "skill": 0.0792,
+   "t": 3.12
+  },
   "olcum": {
    "kaynak": "Test/exit_lab.py · 50.892 işlem · 06–14 Ağu 2026",
    "eski_net": -20255,
@@ -289,12 +306,12 @@
   {
    "tip": "kritik",
    "baslik": "Sistem piyasada değil, komisyonda kaybediyor",
-   "metin": "Brüt sonuç $-177.73 — pratikte sıfır. Komisyon $21,454.96. Kenar maliyetin 121 katı küçük."
+   "metin": "Brüt sonuç $+451.00 — pratikte sıfır. Komisyon $22,357.53. Kenar maliyetin 50 katı küçük."
   },
   {
    "tip": "uyari",
    "baslik": "İşlemlerin %79'i doğru anda ölü",
-   "metin": "40,048 işlem 0,5 ATR bile lehe gitmiyor (toplam $-46,566). Sorun çıkışlarda değil, giriş ayrım gücünde."
+   "metin": "41,164 işlem 0,5 ATR bile lehe gitmiyor (toplam $-48,149). Sorun çıkışlarda değil, giriş ayrım gücünde."
   },
   {
    "tip": "uyari",
@@ -304,7 +321,7 @@
   {
    "tip": "iyi",
    "baslik": "Çıkış rejimi değişti — zararın %90'ı silindi",
-   "metin": "Aynı girişler gerçek 1m veriyle yeniden oynatıldı (Test/exit_lab.py · 50.892 işlem · 06–14 Ağu 2026). Eski rejim (1h/4h zorunlu + 2×ATR stop): 46,305 işlem, net $-20,255, komisyon $19,052. Yeni rejim (zaman kapanışı yok · 24s tavan · 6×ATR stop): 9,542 işlem, net $-1,916, komisyon $4,378. Aktif: zaman kapanışı yok · 24s tavan · 6×ATR stop"
+   "metin": "Aynı girişler gerçek 1m veriyle yeniden oynatıldı (Test/exit_lab.py · 50.892 işlem · 06–14 Ağu 2026). Eski rejim (1h/4h zorunlu + 2×ATR stop): 46,305 işlem, net $-20,255, komisyon $19,052. Yeni rejim (zaman kapanışı yok · 24s tavan · 6×ATR stop): 9,542 işlem, net $-1,916, komisyon $4,378. Aktif: zaman kapanışı yok · 24s tavan · 3×ATR stop"
   },
   {
    "tip": "kritik",
@@ -314,17 +331,17 @@
   {
    "tip": "uyari",
    "baslik": "Çoğunluk oyu ters çalışıyor",
-   "metin": "Tam uzlaşı (≥%95) SKILL %-0.1145 — istatistiksel olarak negatif. Kripto tarafında konsensüs filtresi zarar veriyor olabilir."
+   "metin": "Tam uzlaşı (≥%95) SKILL %-0.0921 — istatistiksel olarak negatif. Kripto tarafında konsensüs filtresi zarar veriyor olabilir."
   },
   {
    "tip": "bilgi",
    "baslik": "Defter bazında beceri testi",
-   "metin": "Her iki yönde de pozitif getiri üreten defter: 8 / 103. Saf şans eseri beklenen ~26."
+   "metin": "Her iki yönde de pozitif getiri üreten defter: 13 / 108. Saf şans eseri beklenen ~27."
   },
   {
    "tip": "iyi",
    "baslik": "Maker geçişi en büyük tek kaldıraç",
-   "metin": "Taker ile net $-21,633; aynı evrende maker ile tahmini $-8,762 (komisyon %0,04 gidiş-dönüş)."
+   "metin": "Taker ile net $-21,907; aynı evrende maker ile tahmini $-8,494 (komisyon %0,04 gidiş-dönüş)."
   }
  ]
 }

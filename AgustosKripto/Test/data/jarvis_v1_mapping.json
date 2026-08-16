@@ -1,30 +1,30 @@
 {
   "mapping": {
-    "BTC": "a1_04",
+    "BTC": "a1_33",
     "ETH": "a2_07",
-    "SOL": "analiz6_v2",
+    "SOL": "b1_05",
     "BNB": "a1_34",
     "XRP": "b1_mum",
     "DOGE": "a2_01",
     "ADA": "a2_09",
     "AVAX": "b1_mum",
     "LINK": "a1_08",
-    "DOT": "a1_10",
+    "DOT": "a2_01",
     "LTC": "b1_mum",
-    "NEAR": "analiz2",
-    "SUI": "b1_mum",
+    "NEAR": "b1_02",
+    "SUI": "a1_38",
     "APT": "a1_31",
     "ARB": "a1_33",
     "OP": "b1_mum",
     "INJ": "a1_36",
-    "TIA": "a2_16",
+    "TIA": "a1_37",
     "FIL": "analiz6",
     "ATOM": "a1_02",
     "HYPE": "a2_09",
     "ZEC": "a2_07",
     "KAITO": "a1_30",
     "ENA": "a2_12",
-    "WLD": "a1_34",
+    "WLD": "a1_06",
     "TAO": "a1_26",
     "ONDO": "a1_27",
     "UNI": "a1_03",
@@ -65,31 +65,31 @@
     "XLM"
   ],
   "labels": {
-    "BTC": "A1#04",
+    "BTC": "A1#33",
     "ETH": "A2#07",
-    "SOL": "A6V2",
+    "SOL": "B1#05",
     "BNB": "A1#34",
     "XRP": "B1#03",
     "DOGE": "A2#01",
     "ADA": "A2#09",
     "AVAX": "B1#03",
     "LINK": "A1#08",
-    "DOT": "A1#10",
+    "DOT": "A2#01",
     "LTC": "B1#03",
-    "NEAR": "A2",
-    "SUI": "B1#03",
+    "NEAR": "B1#02",
+    "SUI": "A1#38",
     "APT": "A1#31",
     "ARB": "A1#33",
     "OP": "B1#03",
     "INJ": "A1#36",
-    "TIA": "A2#16",
+    "TIA": "A1#37",
     "FIL": "A6",
     "ATOM": "A1#02",
     "HYPE": "A2#09",
     "ZEC": "A2#07",
     "KAITO": "A1#30",
     "ENA": "A2#12",
-    "WLD": "A1#34",
+    "WLD": "A1#06",
     "TAO": "A1#26",
     "ONDO": "A1#27",
     "UNI": "A1#03",
@@ -98,24 +98,24 @@
   },
   "coin_stats": {
     "BTC": {
-      "uid": "a1_04",
-      "pnl": 1.34,
-      "trades": 20,
-      "wr": 45.0,
+      "uid": "a1_33",
+      "pnl": -1.15,
+      "trades": 5,
+      "wr": 20.0,
       "pinned": false
     },
     "ETH": {
       "uid": "a2_07",
-      "pnl": 12.21,
-      "trades": 18,
-      "wr": 55.6,
+      "pnl": 14.88,
+      "trades": 20,
+      "wr": 60.0,
       "pinned": false
     },
     "SOL": {
-      "uid": "analiz6_v2",
-      "pnl": 3.86,
-      "trades": 20,
-      "wr": 50.0,
+      "uid": "b1_05",
+      "pnl": 4.8,
+      "trades": 11,
+      "wr": 63.6,
       "pinned": false
     },
     "BNB": {
@@ -127,9 +127,9 @@
     },
     "XRP": {
       "uid": "b1_mum",
-      "pnl": 7.84,
-      "trades": 5,
-      "wr": 60.0,
+      "pnl": 10.43,
+      "trades": 8,
+      "wr": 62.5,
       "pinned": false
     },
     "DOGE": {
@@ -141,30 +141,30 @@
     },
     "ADA": {
       "uid": "a2_09",
-      "pnl": 7.45,
-      "trades": 32,
-      "wr": 59.4,
+      "pnl": 8.15,
+      "trades": 42,
+      "wr": 64.3,
       "pinned": false
     },
     "AVAX": {
       "uid": "b1_mum",
-      "pnl": 31.47,
-      "trades": 27,
-      "wr": 44.4,
+      "pnl": 19.34,
+      "trades": 32,
+      "wr": 40.6,
       "pinned": false
     },
     "LINK": {
       "uid": "a1_08",
-      "pnl": 24.27,
-      "trades": 24,
-      "wr": 62.5,
+      "pnl": 69.96,
+      "trades": 26,
+      "wr": 65.4,
       "pinned": false
     },
     "DOT": {
-      "uid": "a1_10",
-      "pnl": 21.96,
-      "trades": 25,
-      "wr": 68.0,
+      "uid": "a2_01",
+      "pnl": 20.11,
+      "trades": 16,
+      "wr": 37.5,
       "pinned": false
     },
     "LTC": {
@@ -175,52 +175,52 @@
       "pinned": false
     },
     "NEAR": {
-      "uid": "analiz2",
-      "pnl": 14.29,
-      "trades": 12,
-      "wr": 50.0,
+      "uid": "b1_02",
+      "pnl": 21.21,
+      "trades": 51,
+      "wr": 51.0,
       "pinned": false
     },
     "SUI": {
-      "uid": "b1_mum",
-      "pnl": 1.1,
-      "trades": 15,
-      "wr": 40.0,
+      "uid": "a1_38",
+      "pnl": 4.58,
+      "trades": 17,
+      "wr": 64.7,
       "pinned": false
     },
     "APT": {
       "uid": "a1_31",
-      "pnl": 34.86,
-      "trades": 26,
-      "wr": 53.8,
+      "pnl": 35.67,
+      "trades": 28,
+      "wr": 53.6,
       "pinned": false
     },
     "ARB": {
       "uid": "a1_33",
-      "pnl": 4.51,
-      "trades": 17,
-      "wr": 41.2,
+      "pnl": 8.34,
+      "trades": 21,
+      "wr": 42.9,
       "pinned": true
     },
     "OP": {
       "uid": "b1_mum",
-      "pnl": 18.99,
-      "trades": 17,
-      "wr": 47.1,
+      "pnl": 10.7,
+      "trades": 33,
+      "wr": 45.5,
       "pinned": true
     },
     "INJ": {
       "uid": "a1_36",
-      "pnl": 29.79,
-      "trades": 21,
-      "wr": 52.4,
+      "pnl": 41.75,
+      "trades": 23,
+      "wr": 56.5,
       "pinned": false
     },
     "TIA": {
-      "uid": "a2_16",
-      "pnl": 19.53,
-      "trades": 26,
-      "wr": 57.7,
+      "uid": "a1_37",
+      "pnl": 16.44,
+      "trades": 28,
+      "wr": 57.1,
       "pinned": false
     },
     "FIL": {
@@ -232,9 +232,9 @@
     },
     "ATOM": {
       "uid": "a1_02",
-      "pnl": 29.12,
-      "trades": 63,
-      "wr": 52.4,
+      "pnl": 37.45,
+      "trades": 68,
+      "wr": 54.4,
       "pinned": false
     },
     "HYPE": {
@@ -246,51 +246,51 @@
     },
     "ZEC": {
       "uid": "a2_07",
-      "pnl": 13.5,
-      "trades": 13,
-      "wr": 38.5,
+      "pnl": 13.96,
+      "trades": 14,
+      "wr": 42.9,
       "pinned": false
     },
     "KAITO": {
       "uid": "a1_30",
-      "pnl": 265.81,
-      "trades": 27,
-      "wr": 66.7,
+      "pnl": 348.26,
+      "trades": 30,
+      "wr": 70.0,
       "pinned": false
     },
     "ENA": {
       "uid": "a2_12",
-      "pnl": 39.31,
-      "trades": 129,
-      "wr": 52.7,
+      "pnl": 19.03,
+      "trades": 145,
+      "wr": 51.7,
       "pinned": false
     },
     "WLD": {
-      "uid": "a1_34",
-      "pnl": 74.78,
-      "trades": 13,
-      "wr": 53.8,
+      "uid": "a1_06",
+      "pnl": 79.14,
+      "trades": 68,
+      "wr": 75.0,
       "pinned": false
     },
     "TAO": {
       "uid": "a1_26",
-      "pnl": 23.73,
-      "trades": 46,
-      "wr": 63.0,
+      "pnl": 23.68,
+      "trades": 52,
+      "wr": 63.5,
       "pinned": false
     },
     "ONDO": {
       "uid": "a1_27",
-      "pnl": 39.65,
-      "trades": 63,
-      "wr": 47.6,
+      "pnl": 34.46,
+      "trades": 78,
+      "wr": 44.9,
       "pinned": false
     },
     "UNI": {
       "uid": "a1_03",
-      "pnl": 65.22,
-      "trades": 27,
-      "wr": 51.9,
+      "pnl": 55.42,
+      "trades": 28,
+      "wr": 50.0,
       "pinned": false
     },
     "AAVE": {
@@ -302,11 +302,11 @@
     },
     "XLM": {
       "uid": "a2_14",
-      "pnl": 30.43,
-      "trades": 71,
-      "wr": 50.7,
+      "pnl": 40.77,
+      "trades": 77,
+      "wr": 54.5,
       "pinned": false
     }
   },
-  "leader_rows_n": 63,
+  "leader_rows_n": 67,
   "updated_at_tr": 

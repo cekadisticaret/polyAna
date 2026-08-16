@@ -7,23 +7,23 @@
       "tahmin2": "UP",
       "parts": {
         "LM": null,
-        "ST": null,
-        "ADX": "UP",
-        "LZ": "DOWN",
-        "CVD": "UP"
-      }
-    },
-    "ETH": {
-      "mc": "DOWN",
-      "yt": "UP",
-      "tahmin": null,
-      "tahmin2": "UP",
-      "parts": {
-        "LM": "UP",
         "ST": "UP",
         "ADX": "UP",
         "LZ": "UP",
-        "CVD": "UP"
+        "CVD": "DOWN"
+      }
+    },
+    "ETH": {
+      "mc": null,
+      "yt": "DOWN",
+      "tahmin": "DOWN",
+      "tahmin2": "DOWN",
+      "parts": {
+        "LM": null,
+        "ST": null,
+        "ADX": null,
+        "LZ": "DOWN",
+        "CVD": "DOWN"
       }
     },
     "SOL": {
@@ -33,8 +33,8 @@
       "tahmin2": "UP",
       "parts": {
         "LM": "UP",
-        "ST": "UP",
-        "ADX": null,
+        "ST": null,
+        "ADX": "UP",
         "LZ": "DOWN",
         "CVD": "UP"
       }
