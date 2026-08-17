@@ -16,9 +16,13 @@ from zoneinfo import ZoneInfo
 from flask import Flask, jsonify, make_response, render_template_string, request, session, redirect, url_for
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "EylulForex"))
+
+from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _DIR_KRIPTO = os.path.join(os.path.dirname(__file__), "..", "AgustosKripto")
+_DIR_FOREX = os.path.join(os.path.dirname(__file__), "..", "EylulForex")
 _DIR_SONNET = os.path.join(os.path.dirname(__file__), "..", "Sonnet")
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _ENV_FILE = os.path.join(_ROOT, ".env")
@@ -532,6 +536,11 @@ _HEATMAP_ANALYSES = dict(_HARITA_TAB_ANALYSES)
 _HISTORY_SYSTEMS = _build_system_list(_HISTORY_ORDER_GECMIS, include_live=True)
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 _BINANCE  = "https://fapi.binance.com"
+_BINANCE_SPOT = "https://api.binance.com"
+_FAPI_TO_SPOT = {
+    "/fapi/v1/klines": "/api/v3/klines",
+    "/fapi/v1/ticker/price": "/api/v3/ticker/price",
+}
 _PM_GAMMA = "https://gamma-api.polymarket.com"
 
 app = Flask(__name__)
@@ -600,11 +609,22 @@ LOGIN_HTML = """<!DOCTYPE html>
 </html>"""
 
 # ── Yardımcı fonksiyonlar ──────────────────────────────────────
-def _binance(path, params=None):
+def _binance_get(base: str, path: str, params=None):
     qs  = ("?" + "&".join(f"{k}={v}" for k, v in params.items())) if params else ""
-    req = urllib.request.Request(_BINANCE + path + qs, headers={"User-Agent": "Mozilla/5.0"})
+    req = urllib.request.Request(base + path + qs, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=8) as r:
         return json.load(r)
+
+
+def _binance(path, params=None):
+    """Futures önce; 418/403/429 (WAF) olursa spot eşdeğerine düş."""
+    try:
+        return _binance_get(_BINANCE, path, params)
+    except urllib.error.HTTPError as e:
+        spot_path = _FAPI_TO_SPOT.get(path)
+        if e.code in (403, 418, 429) and spot_path:
+            return _binance_get(_BINANCE_SPOT, spot_path, params)
+        raise
 
 def get_price(symbol: str) -> float:
     return float(_binance("/fapi/v1/ticker/price", {"symbol": symbol})["price"])
@@ -809,9 +829,56 @@ _LIVE_OVERVIEW_SYSTEMS = [
 # Anasayfa GERÇEK PM kartı — canlı PM kapalıyken bu sanal defteri gösterir.
 # API anahtarları / Live trader'lar dokunulmaz; tekrar canlıya geçince bu sabiti
 # kaldırıp collect_positions() yoluna dönmek yeterli.
-_PM_HOME_DISPLAY_BOOK = "a2_05"
-_PM_HOME_DISPLAY_LABEL = "A2#05 Mean Rev"
-_PM_HOME_INIT_BAL = 300.0
+_PM_HOME_DISPLAY_DEFAULT = "a2_05"
+_PM_HOME_DISPLAY_FILE = os.path.join(_DIR_POLY, "pm_home_display.json")
+
+
+def _load_pm_home_display() -> dict:
+    try:
+        with open(_PM_HOME_DISPLAY_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_pm_home_display(data: dict) -> dict:
+    tmp = _PM_HOME_DISPLAY_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    os.replace(tmp, _PM_HOME_DISPLAY_FILE)
+    return data
+
+
+def get_pm_home_display_key() -> str:
+    key = str(_load_pm_home_display().get("book_key") or _PM_HOME_DISPLAY_DEFAULT)
+    if key not in _ALGO_ISLEMLER_KEYS:
+        return _PM_HOME_DISPLAY_DEFAULT
+    return key
+
+
+def get_pm_home_display_label(key: str | None = None) -> str:
+    k = key or get_pm_home_display_key()
+    return _ANALYSIS_LABELS.get(k, k)
+
+
+def get_pm_home_display_init_bal(key: str | None = None) -> float:
+    k = key or get_pm_home_display_key()
+    return float(_OVERVIEW_INIT_BAL.get(k, 300) or 300)
+
+
+def set_pm_home_display_book(key: str, *, source: str = "dashboard") -> dict:
+    norm = _normalize_algo_book_id(key)
+    if norm not in _ALGO_ISLEMLER_KEYS:
+        raise ValueError("geçersiz defter")
+    data = {
+        "book_key": norm,
+        "label": get_pm_home_display_label(norm),
+        "updated_at_tr": datetime.now(_TZ_TR).isoformat(),
+        "updated_by": source,
+    }
+    _save_pm_home_display(data)
+    return data
 
 
 def _format_display_pm_trade(t: dict, label: str) -> dict | None:
@@ -861,7 +928,8 @@ def _format_display_pm_open(pos: dict, label: str) -> dict:
 
 def _collect_display_pm_positions() -> list[dict]:
     """Anasayfa pozisyon kartları — seçili sanal defterin açık pozisyonları."""
-    key, label = _PM_HOME_DISPLAY_BOOK, _PM_HOME_DISPLAY_LABEL
+    key = get_pm_home_display_key()
+    label = get_pm_home_display_label(key)
     state = load_state(key)
     out: list[dict] = []
     for pos in state.get("open_positions") or []:
@@ -874,7 +942,8 @@ def _collect_display_pm_positions() -> list[dict]:
 
 def _display_pm_recent_trades(*, limit: int = 20) -> tuple[list[dict], list[dict]]:
     """(bekleyen açık, kapanmış) — anasayfa Son İşlemler paneli."""
-    key, label = _PM_HOME_DISPLAY_BOOK, _PM_HOME_DISPLAY_LABEL
+    key = get_pm_home_display_key()
+    label = get_pm_home_display_label(key)
     state = load_state(key)
     pending = []
     for p in state.get("open_positions") or []:
@@ -893,9 +962,10 @@ def _display_pm_recent_trades(*, limit: int = 20) -> tuple[list[dict], list[dict
 
 def _display_pm_balance() -> tuple[float, float]:
     """(nakit, portföy) — sanal defter bakiyesi + açık pozisyon riski."""
-    key = _PM_HOME_DISPLAY_BOOK
+    key = get_pm_home_display_key()
+    init_bal = get_pm_home_display_init_bal(key)
     state = load_state(key)
-    cash = float(state.get("balance") or _PM_HOME_INIT_BAL)
+    cash = float(state.get("balance") or init_bal)
     open_val = sum(
         float(p.get("pm_spent") or p.get("amount") or 0)
         for p in state.get("open_positions") or []
@@ -953,7 +1023,9 @@ def _live_system_open_stats(key: str) -> tuple[int, int]:
 
 def _real_pm_overview_stats() -> dict:
     """Overview üst kartlar — anasayfada seçili sanal defter (A2#05) gerçek PM gibi."""
-    key, label = _PM_HOME_DISPLAY_BOOK, _PM_HOME_DISPLAY_LABEL
+    key = get_pm_home_display_key()
+    label = get_pm_home_display_label(key)
+    init_bal = get_pm_home_display_init_bal(key)
     hist = _load_trader_history(key)
     graded = [t for t in hist if t.get("win") is not None]
     wins = sum(1 for t in graded if t.get("win"))
@@ -978,7 +1050,7 @@ def _real_pm_overview_stats() -> dict:
 
     return {
         "total_pnl": pnl,
-        "baseline": _PM_HOME_INIT_BAL,
+        "baseline": init_bal,
         "cash": cash,
         "portfolio": portfolio,
         "source": "display_book",
@@ -1687,6 +1759,8 @@ def api_data():
         "pm_hourly": pm_hourly,
         "pm_15m":    pm_15m,
         "updated":   datetime.now(_TZ_TR).strftime("%H:%M:%S"),
+        "display_book": get_pm_home_display_key(),
+        "display_label": get_pm_home_display_label(),
         **get_pm_system_control(),
     })
 
@@ -1706,9 +1780,11 @@ def api_positions_live():
             current_p = None
         entry_p = float(pos.get("entry_price") or 0)
         pred = pos.get("predicted_dir", "")
-        est = _estimate_close_value(pos) if pos.get("pm_token_id") else {
-            "close_val": None, "close_pnl": None, "token_cents": None,
-        }
+        # Sanal defterlerde pm_token_id yok; pm_slug + pm_size ile Gamma/CLOB tahmini yeterli.
+        if float(pos.get("pm_size") or 0) and (pos.get("pm_token_id") or pos.get("pm_slug")):
+            est = _estimate_close_value(pos)
+        else:
+            est = {"close_val": None, "close_pnl": None, "token_cents": None}
         winning = delta = None
         if current_p and entry_p:
             actual = "UP" if current_p >= entry_p else "DOWN"
@@ -3172,10 +3248,15 @@ def _build_a2_poly_books() -> dict:
         float(b.get("total_pnl") or 0),
         float(b.get("wr") or -1),
     ), reverse=True)
+    home_key = get_pm_home_display_key()
+    for b in books:
+        b["is_home_display"] = b.get("id") == home_key
     return {
         "ok": True,
         "panel_filter": "poly_algo",
         "books": books,
+        "home_display_book": home_key,
+        "home_display_label": get_pm_home_display_label(home_key),
         "count": len(books),
         "total_balance": round(sum(float(b.get("balance") or 0) for b in books), 2),
         "total_pnl": round(sum(float(b.get("total_pnl") or 0) for b in books), 2),
@@ -3246,7 +3327,42 @@ def api_a2_algoritma_detail(book_id: str):
         book = _build_single_poly_book(key, include_history=True)
         if not book:
             return jsonify({"ok": False, "error": "not found"}), 404
-        return jsonify({"ok": True, "book": book})
+        home_key = get_pm_home_display_key()
+        book["is_home_display"] = key == home_key
+        return jsonify({
+            "ok": True,
+            "book": book,
+            "home_display_book": home_key,
+            "home_display_label": get_pm_home_display_label(home_key),
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/pm-home-display", methods=["GET", "POST"])
+def api_pm_home_display():
+    """Poly overview'da gösterilecek tek sanal defter — en fazla 1 aktif."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    if request.method == "GET":
+        key = get_pm_home_display_key()
+        cfg = _load_pm_home_display()
+        return jsonify({
+            "ok": True,
+            "book_key": key,
+            "label": get_pm_home_display_label(key),
+            "updated_at_tr": cfg.get("updated_at_tr"),
+            "updated_by": cfg.get("updated_by"),
+        })
+    body = request.get_json(silent=True) or {}
+    raw = body.get("book_key") or body.get("book") or body.get("key")
+    if not raw:
+        return jsonify({"ok": False, "error": "book_key gerekli"}), 400
+    try:
+        data = set_pm_home_display_book(str(raw), source="dashboard")
+        return jsonify({"ok": True, **data})
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -3814,37 +3930,118 @@ def _aggregate_balance_4h(records: list) -> list:
     return [buckets[k] for k in sorted(buckets)]
 
 
-def _balance_history_points(interval: str) -> dict:
-    records = _load_balance_hourly_records()
-    if interval == "4h":
-        records = _aggregate_balance_4h(records)
-    points = []
-    for r in records:
-        dt = _balance_record_dt(r)
-        if not dt:
+def _display_book_balance_history_points(interval: str) -> dict:
+    """Seçili sanal defter (pm_home_display) portföy eğrisi — gerçek PM hourly değil."""
+    key = get_pm_home_display_key()
+    init_bal = get_pm_home_display_init_bal(key)
+    label = get_pm_home_display_label(key)
+    hist = _load_trader_history(key)
+    state = load_state(key)
+    reset_at = state.get("balance_reset_at_tr")
+    hist_stats = hist
+    if reset_at:
+        hist_stats = [
+            t for t in hist
+            if (t.get("exit_time_tr") or "") >= reset_at
+        ]
+
+    events: list[tuple[datetime, float]] = []
+    start_raw = reset_at
+    if not start_raw:
+        times = [t.get("exit_time_tr") or t.get("entry_time_tr") for t in hist_stats]
+        times = [x for x in times if x]
+        if times:
+            start_raw = min(times)
+    if start_raw:
+        try:
+            start_dt = datetime.fromisoformat(str(start_raw))
+            if start_dt.tzinfo is None:
+                start_dt = start_dt.replace(tzinfo=_TZ_TR)
+            events.append((start_dt, float(init_bal)))
+        except Exception:
+            pass
+
+    bal = float(init_bal)
+    closed = sorted(
+        [
+            t for t in hist_stats
+            if t.get("win") is not None and t.get("exit_time_tr")
+        ],
+        key=lambda t: str(t.get("exit_time_tr")),
+    )
+    for t in closed:
+        bal += float(t.get("pnl") or 0)
+        try:
+            dt = datetime.fromisoformat(str(t["exit_time_tr"]))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=_TZ_TR)
+            events.append((dt, round(bal, 2)))
+        except Exception:
             continue
-        port = round(float(r.get("portfolio_usd") or 0), 2)
+
+    _cash, portfolio = _display_pm_balance()
+    now = datetime.now(_TZ_TR)
+    port = round(float(portfolio), 2)
+    if not events:
+        events.append((now, port))
+    elif abs(events[-1][1] - port) > 0.009 or (now - events[-1][0]).total_seconds() > 300:
+        events.append((now, port))
+
+    if not events:
+        return {
+            "interval": interval,
+            "baseline": init_bal,
+            "points": [],
+            "current": port,
+            "delta": None,
+            "display_book": key,
+            "display_label": label,
+            "source": "display_book",
+        }
+
+    step_h = 1 if interval == "1h" else 4
+    t0 = events[0][0].astimezone(_TZ_TR)
+    t1 = now
+    bucket = t0.replace(minute=0, second=0, microsecond=0)
+    if interval == "4h":
+        bucket = bucket.replace(hour=(bucket.hour // 4) * 4)
+
+    points: list[dict] = []
+    ev_i = 0
+    cur_bal = float(init_bal)
+    while bucket <= t1 + timedelta(hours=step_h):
+        while ev_i < len(events) and events[ev_i][0] <= bucket:
+            cur_bal = float(events[ev_i][1])
+            ev_i += 1
         points.append({
-            "time": int(dt.timestamp()),
-            "portfolio": port,
-            "cash": round(float(r.get("cash_usdc") or 0), 2),
-            "positions": round(float(r.get("positions_usd") or 0), 2),
-            "label": dt.strftime("%d.%m %H:%M"),
+            "time": int(bucket.timestamp()),
+            "portfolio": round(cur_bal, 2),
+            "cash": round(_cash, 2),
+            "positions": round(max(0.0, cur_bal - _cash), 2),
+            "label": bucket.strftime("%d.%m %H:%M"),
         })
-    baseline = _pm_profit_baseline()
-    cur = points[-1]["portfolio"] if points else None
+        bucket += timedelta(hours=step_h)
+
+    cur = points[-1]["portfolio"] if points else port
     delta = None
     if len(points) >= 2:
         lookback = 24 if interval == "1h" else 6
         prev = points[max(0, len(points) - lookback - 1)]["portfolio"]
-        delta = round(cur - prev, 2) if cur is not None else None
+        delta = round(cur - prev, 2)
     return {
         "interval": interval,
-        "baseline": baseline,
+        "baseline": init_bal,
         "points": points,
         "current": cur,
         "delta": delta,
+        "display_book": key,
+        "display_label": label,
+        "source": "display_book",
     }
+
+
+def _balance_history_points(interval: str) -> dict:
+    return _display_book_balance_history_points(interval)
 
 
 @app.route("/poly/api/balance-history")
@@ -4106,7 +4303,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260813-a205-home-display"
+_DASH_UI_VER = "20260817-forex-mt"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -4481,6 +4678,16 @@ _CEMBOT_KRIPTO_BRAND_HTML = (
     f'</span></a>'
 )
 
+_CEMBOT_FOREX_BRAND_HTML = (
+    f'<a class="cembot" href="/forex/home" aria-label="Cem Forex">'
+    f'<span class="cembot-mark">{_CEMBOT_MARK_SVG}</span>'
+    f'<span class="cembot-word">'
+    f'<span class="cembot-cem">cem</span>'
+    f'<span class="cembot-bot">FOREX</span>'
+    f'<span class="cembot-clock" data-cembot-clock>—:—:—</span>'
+    f'</span></a>'
+)
+
 _CEMBOT_MOBILE_HTML = (
     f'<a class="cembot cembot-sm" href="/poly" aria-label="CemBOT">'
     f'<span class="cembot-mark">{_CEMBOT_MARK_SVG}</span>'
@@ -4598,6 +4805,9 @@ def _patch_nav_islemler(html: str) -> str:
 _NAV_KRIPTO_SIDEBAR_LINK = (
     '  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto\'ya Geç</a>\n'
 )
+_NAV_FOREX_SIDEBAR_LINK = (
+    '  <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Forex\'e Geç</a>\n'
+)
 
 
 def _patch_nav_kripto_future(html: str) -> str:
@@ -4622,6 +4832,19 @@ def _patch_nav_kripto_future(html: str) -> str:
         if needle in html:
             html = html.replace(needle, needle + _NAV_KRIPTO_SIDEBAR_LINK, 1)
             break
+    return html
+
+
+def _patch_nav_forex(html: str) -> str:
+    """Poly / Kripto sidebar'ına Forex geçişi; Forex sayfasına dokunma."""
+    if 'id="fx-page"' in html or "Forex'e Geç</a>" in html:
+        return html
+    for needle in (
+        '  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto\'ya Geç</a>\n',
+        '  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly\'ye Geçiş yap</a>\n',
+    ):
+        if needle in html:
+            return html.replace(needle, needle + _NAV_FOREX_SIDEBAR_LINK, 1)
     return html
 
 
@@ -9720,10 +9943,16 @@ def api_trade_desk_chart():
         candle_limit = int(candle_limit) if candle_limit not in (None, "") else None
     except (TypeError, ValueError):
         return jsonify({"error": "geçersiz algo parametresi"}), 400
-    return _json_nocache(_trade_desk_chart(
-        sym, tf, algo=algo, ema_fast=ema_fast, ema_slow=ema_slow, gate=gate, price_tf=price_tf,
-        candle_limit=candle_limit,
-    ))
+    try:
+        return _json_nocache(_trade_desk_chart(
+            sym, tf, algo=algo, ema_fast=ema_fast, ema_slow=ema_slow, gate=gate, price_tf=price_tf,
+            candle_limit=candle_limit,
+        ))
+    except Exception as e:
+        return _json_nocache({
+            "symbol": sym, "timeframe": tf, "price_tf": price_tf,
+            "candles": [], "error": "chart_data", "detail": str(e)[:200],
+        })
 
 
 @app.route("/poly/api/trade-desk/estimate", methods=["POST"])
@@ -11410,7 +11639,10 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
     <a class="nav-item" href="/kripto" style="display:inline-flex;margin:0;border:1px solid #2a2a2a;border-radius:12px;padding:12px 16px;color:#c8f135;font-weight:700;text-decoration:none">
       <span class="nav-dot" style="background:#c8f135"></span>Kripto'ya Geç
     </a>
-    <div class="setting-desc" style="margin-top:8px">Binance Futures dashboard — ayrı panel</div>
+    <a class="nav-item" href="/forex/home" style="display:inline-flex;margin:8px 0 0;border:1px solid #2a2a2a;border-radius:12px;padding:12px 16px;color:#d4af37;font-weight:700;text-decoration:none">
+      <span class="nav-dot" style="background:#d4af37"></span>Forex'e Geç
+    </a>
+    <div class="setting-desc" style="margin-top:8px">Kripto = Binance Futures · Forex = ayrı panel</div>
   </div>
 
   <div class="settings-card">
@@ -13100,7 +13332,7 @@ HTML = r"""<!DOCTYPE html>
         </div>
       </div>
       <div class="positions-head">
-        <div class="section-title" style="margin-bottom:0">Açık Pozisyonlar</div>
+        <div class="section-title" style="margin-bottom:0" id="positions-display-title">Açık Pozisyonlar</div>
         <button type="button" class="close-all-btn" id="close-all-btn" onclick="closeAllPositions(this)" disabled>Tümünü Kapat</button>
       </div>
       <div class="positions" id="positions">
@@ -13382,7 +13614,7 @@ async function loadPortfolioChart() {
     const r = await fetch('/poly/api/balance-history?interval=' + portfolioInterval);
     if (!r.ok) return;
     const d = await r.json();
-    const baseline = Number(d.baseline) || 314;
+    const baseline = Number(d.baseline) || 300;
     const pts = (d.points || []).map(p => ({ time: utcToIstPortTime(p.time), value: p.portfolio }));
     if (!pts.length) return;
     const split = _splitPortfolioAtBaseline(pts, baseline);
@@ -13406,9 +13638,11 @@ async function loadPortfolioChart() {
     const dEl = document.getElementById('port-delta-val');
     dEl.textContent = (delta >= 0 ? '+' : '-') + '$' + Math.abs(delta).toFixed(2);
     dEl.className = 'port-delta ' + (delta >= 0 ? 'up' : 'down');
+    const lbl = d.display_label || '';
     const subEl = document.getElementById('port-sub-val');
     if (subEl) subEl.textContent = (portfolioInterval === '1h' ? 'son 24 saat' : 'son 24 saat (4s)')
-      + ' · giriş $' + baseline.toFixed(0);
+      + ' · giriş $' + baseline.toFixed(0)
+      + (lbl ? (' · ' + lbl) : '');
     const upd = document.getElementById('portfolio-updated');
     if (upd) upd.textContent = new Date().toLocaleTimeString('tr-TR');
   } catch(e) { console.error('portfolio', e); }
@@ -13601,6 +13835,11 @@ async function refresh() {
     if (updEl) updEl.textContent = d.updated;
     const updW = document.getElementById('portfolio-updated-wallet');
     if (updW) updW.textContent = d.updated || '—';
+    const posTitle = document.getElementById('positions-display-title');
+    if (posTitle) {
+      posTitle.textContent = 'Açık Pozisyonlar'
+        + (d.display_label ? (' · ' + d.display_label) : '');
+    }
 
     // PM kotasyon — yalnızca açık pozisyonun timeframe/sembolü
     function renderPmQuotes(el, quotes, timeKey) {
@@ -14399,12 +14638,23 @@ body{
 .section{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
 .section-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
 .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.book-card-wrap{display:flex;flex-direction:column;gap:8px}
 .book-card{
   background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
   display:block;color:inherit;text-decoration:none;cursor:pointer;position:relative;
-  transition:border-color .15s, transform .15s, background .15s;
+  transition:border-color .15s, transform .15s, background .15s;flex:1;
 }
 .book-card:hover{border-color:rgba(200,241,53,.4);transform:translateY(-1px);background:rgba(255,255,255,.04)}
+.book-card.book-active{border-color:rgba(0,242,255,.45);box-shadow:0 0 0 1px rgba(0,242,255,.18)}
+.book-activate{
+  display:inline-flex;align-items:center;gap:5px;align-self:flex-start;
+  border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);
+  color:var(--muted);border-radius:999px;padding:5px 11px;
+  font-size:10px;font-weight:800;cursor:pointer;transition:all .15s;
+}
+.book-activate:hover{border-color:rgba(200,241,53,.45);color:var(--accent)}
+.book-activate.on{background:rgba(0,242,255,.12);border-color:rgba(0,242,255,.42);color:#7df9ff}
+.book-activate:disabled{opacity:.55;cursor:wait}
 .book-since{
   position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;color:var(--muted);
   letter-spacing:.02em;white-space:nowrap;
@@ -14683,8 +14933,9 @@ function histRow(t){
     <div class="hist-pnl ${win ? 'win' : 'loss'}">${win ? '✓' : '✗'} ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</div>
   </div>`;
 }
-function renderBooks(books){
+function renderBooks(books, homeKey){
   const el = document.getElementById('algo-books');
+  const activeKey = String(homeKey || '').toLowerCase();
   const sorted = (books||[]).slice().sort((a,b)=>{
     const ba = Number(a.balance||0), bb = Number(b.balance||0);
     if (bb !== ba) return bb - ba;
@@ -14707,7 +14958,11 @@ function renderBooks(books){
     const href = '/algoritma-islemler/' + encodeURIComponent(b.id);
     const since = b.started_at_label || '';
     const sinceTitle = b.started_since_reset ? 'Sıfırlama sonrası dönem' : 'İlk işlem';
-    return `<a class="book-card" href="${href}">
+    const isActive = String(b.id||'').toLowerCase() === activeKey || !!b.is_home_display;
+    const actCls = isActive ? ' on' : '';
+    const actLbl = isActive ? '✓ Poly overview aktif' : 'Poly overview\'da aktif et';
+  return `<div class="book-card-wrap">
+    <a class="book-card${isActive ? ' book-active' : ''}" href="${href}">
       ${since ? `<div class="book-since" title="${sinceTitle}">${since}</div>` : ''}
       <div class="bt">${title}</div>
       <div class="bs">${sub} · ${wr} · ${histN} işlem</div>
@@ -14715,8 +14970,34 @@ function renderBooks(books){
       <div class="br"><span>Net P&L</span><b class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(2)}</b></div>
       <div class="br"><span>Anlık net</span><b class="${upnl>=0?'pos':'neg'}">${upnl>=0?'+':''}${upnl.toFixed(2)}</b></div>
       <div class="book-opens">${b.open_count||0} açık · ${opens}</div>
-    </a>`;
+    </a>
+    <button type="button" class="book-activate${actCls}" ${isActive ? 'disabled' : ''}
+      onclick="setHomeDisplay('${String(b.id).replace(/'/g, '')}', this)"
+      title="Poly /poly overview bu defterden devam eder">${actLbl}</button>
+  </div>`;
   }).join('') + '</div>';
+}
+async function setHomeDisplay(bookId, btn){
+  if(!bookId) return;
+  const prev = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '…'; }
+  try{
+    const r = await fetch('/poly/api/pm-home-display', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({book_key: bookId}),
+    });
+    const d = await r.json();
+    if(!d.ok){
+      alert(d.error || 'aktif edilemedi');
+      if(btn){ btn.disabled = false; btn.textContent = prev; }
+      return;
+    }
+    await load();
+  }catch(e){
+    alert(String(e));
+    if(btn){ btn.disabled = false; btn.textContent = prev; }
+  }
 }
 function findBook(books, id){
   const key = String(id||'').toLowerCase();
@@ -14751,9 +15032,11 @@ function renderDetail(book, skipEdit){
     + ' · WR ' + (book.wr != null ? book.wr + '%' : '—')
     + ' · ' + (book.history_n||0) + ' işlem'
     + ' · Bakiye $' + Number(book.balance||0).toFixed(2)
-    + (book.started_at_label ? ' · başlangıç ' + book.started_at_label : '');
+    + (book.started_at_label ? ' · başlangıç ' + book.started_at_label : '')
+    + (book.is_home_display ? ' · Poly overview aktif' : '');
   sum.textContent = 'Net P&L ' + (pnl>=0?'+':'') + pnl.toFixed(2)
-    + ' · açık ' + (book.open_count||0);
+    + ' · açık ' + (book.open_count||0)
+    + (book.is_home_display ? ' · AKTİF' : '');
   sec.textContent = 'Açık Pozisyonlar · ' + (book.name || book.id);
   const cards = book.cards || [];
   pc.innerHTML = cards.length
@@ -14803,7 +15086,7 @@ async function load(){
       + ' · Net P&L ' + (pnl>=0?'+':'') + Number(pnl).toFixed(1)
       + ' · ' + histSum + ' işlem'
       + ' · açık ' + (d.total_open||0);
-    renderBooks(books);
+    renderBooks(books, d.home_display_book);
   } catch(e){
     console.error(e);
     const el = DETAIL_ID ? document.getElementById('detail-positions') : document.getElementById('algo-books');
@@ -16267,6 +16550,29 @@ body.kf-overview .kf-right-panel{display:block}
 }
 .kf-sym-lime .kf-sym-title{color:var(--accent)}
 .kf-sym-lime .kf-sym-meta{color:var(--muted);opacity:1}
+.kf-kaito-paper{
+  background:linear-gradient(145deg,rgba(0,242,255,.08),rgba(0,242,255,.02));
+  border:1px solid rgba(0,242,255,.28);border-radius:20px;padding:16px 18px;margin-bottom:14px;
+}
+.kf-kaito-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.kf-kaito-title{font-size:14px;font-weight:800;letter-spacing:-.2px}
+.kf-kaito-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+.kf-kaito-badge{
+  font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+  padding:4px 8px;border-radius:999px;background:rgba(0,242,255,.14);color:#7df9ff;border:1px solid rgba(0,242,255,.35);
+  white-space:nowrap;flex-shrink:0;
+}
+.kf-kaito-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.kf-kaito-stat{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 12px}
+.kf-kaito-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.kf-kaito-stat-val{font-size:18px;font-weight:800;margin-top:4px;letter-spacing:-.3px}
+.kf-kaito-open{
+  background:rgba(0,0,0,.22);border:1px solid rgba(0,242,255,.18);border-radius:14px;
+  padding:12px 14px;margin-bottom:10px;font-size:12px;
+}
+.kf-kaito-open b{font-size:13px}
+.kf-kaito-note{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:10px}
+.kf-kaito-trades .kf-trade-item{padding:6px 0}
 .kf-sym-lime .wait-item{background:rgba(0,0,0,.32);border-color:rgba(255,255,255,.08);color:var(--txt)}
 .kf-sym-lime .wait-item:hover{border-color:rgba(57,255,142,.38);background:rgba(57,255,142,.08)}
 .kf-sym-lime .wait-item.top{border-color:rgba(57,255,142,.32);background:rgba(57,255,142,.1)}
@@ -16360,6 +16666,16 @@ body.kf-overview .kf-right-panel{display:block}
             <div class="kf-stat-sub" id="kf-updated">—</div>
           </div>
         </div>
+      </div>
+      <div class="kf-kaito-paper" id="kf-kaito-paper">
+        <div class="kf-kaito-head">
+          <div>
+            <div class="kf-kaito-title">KAITO Kağıt</div>
+            <div class="kf-kaito-sub">cr6 kararları · $7×20x · gerçek emir yok</div>
+          </div>
+          <span class="kf-kaito-badge">Kağıt</span>
+        </div>
+        <div class="empty" style="font-size:12px">yükleniyor…</div>
       </div>
       <div class="section-title">Coin bazlı en yetenekli algoritma</div>
       <div class="kf-leaders-box" id="positions"><div class="empty">yükleniyor…</div></div>
@@ -17065,6 +17381,77 @@ function renderRecentTrades(rows, elId, emptyLbl){
   }).join('');
 }
 
+function renderKaitoPaper(kp){
+  const box = document.getElementById('kf-kaito-paper');
+  if(!box) return;
+  if(!kp || !kp.ok){
+    box.innerHTML = '<div class="kf-kaito-head"><div><div class="kf-kaito-title">KAITO Kağıt</div>'
+      + '<div class="kf-kaito-sub">yüklenemedi</div></div><span class="kf-kaito-badge">Kağıt</span></div>';
+    return;
+  }
+  const bal = Number(kp.balance||0);
+  const pnl = Number(kp.total_pnl||0);
+  const pnlCls = pnl >= 0 ? 'pos' : 'neg';
+  const wr = kp.win_rate != null ? ('WR %' + kp.win_rate) : 'henüz işlem yok';
+  const trades = Number(kp.trade_count||0);
+  let body = '<div class="kf-kaito-stats">'
+    + '<div class="kf-kaito-stat"><div class="kf-kaito-stat-lbl">Bakiye</div><div class="kf-kaito-stat-val">$'
+    + bal.toFixed(2) + '</div></div>'
+    + '<div class="kf-kaito-stat"><div class="kf-kaito-stat-lbl">Net P&L</div><div class="kf-kaito-stat-val '+pnlCls+'">'
+    + (pnl>=0?'+':'') + '$' + Math.abs(pnl).toFixed(2) + '</div></div>'
+    + '<div class="kf-kaito-stat"><div class="kf-kaito-stat-lbl">İşlem</div><div class="kf-kaito-stat-val">'
+    + trades + '</div><div class="kf-kaito-sub" style="margin-top:4px;font-size:10px">'+wr+'</div></div>'
+    + '</div>';
+  const card = kp.card;
+  if(card){
+    const upnl = Number(card.unrealized_pnl||0);
+    const upCls = upnl >= 0 ? 'pos' : 'neg';
+    const lockTxt = card.lock_armed
+      ? ('ATR kilit · seviye ' + (card.stop_level||0) + (card.stop_upnl != null ? (' · stop $' + Number(card.stop_upnl).toFixed(2)) : ''))
+      : 'ATR kilit henüz silahlanmadı';
+    body += '<div class="kf-kaito-open"><b>' + card.side + ' KAITO</b> @ $' + fmtPx(card.entry_price)
+      + ' · şimdi $' + fmtPx(card.current)
+      + '<div class="kf-kaito-sub" style="margin-top:6px">' + (card.agree||0) + ' oy · ' + (card.algo||'—')
+      + ' · <span class="kf-trade-pnl '+upCls+'">' + fmtMoney(upnl) + '</span> açık</div>'
+      + '<div class="kf-kaito-sub" style="margin-top:4px">' + lockTxt + '</div></div>';
+  } else {
+    const sig = kp.current_signal;
+    const sh = kp.last_shadow;
+    if(sig && sig.signal && sig.signal !== 'NEUTRAL'){
+      const vetoed = sh && !sh.opened;
+      const dir = sig.signal === 'UP' ? 'LONG' : 'SHORT';
+      body += '<div class="kf-kaito-note">Şu an sinyal: <b>' + dir + '</b> · ' + (sig.agree||0) + ' oy'
+        + (kp.current_price != null ? (' · $' + fmtPx(kp.current_price)) : '')
+        + (vetoed ? (' · <span style="color:#fbbf24">açılmadı: ' + (sh.reason||'veto') + '</span>') : ' · pozisyon yok')
+        + '</div>';
+    } else if(sh && !sh.opened){
+      body += '<div class="kf-kaito-note">Son tur açılmadı: <b>' + (sh.reason||'—') + '</b>'
+        + (sh.signal ? (' · sinyal ' + sh.signal) : '') + '</div>';
+    } else {
+      body += '<div class="kf-kaito-note">Açık pozisyon yok · cr6 kararları saatlik ölçülüyor</div>';
+    }
+  }
+  const recent = kp.recent_trades || [];
+  if(recent.length){
+    body += '<div class="section-title" style="margin:10px 0 6px;font-size:11px">Son işlemler</div>'
+      + '<div class="kf-kaito-trades">';
+    body += recent.map(t => {
+      const p = Number(t.pnl||0);
+      const cls = p >= 0 ? 'pos' : 'neg';
+      const side = (t.side||'').toUpperCase();
+      const dir = side === 'LONG' ? '↑' : side === 'SHORT' ? '↓' : '';
+      const ts = (t.exit_time_tr||'').slice(11,16) || '—';
+      return '<div class="kf-trade-item"><div><div class="kf-trade-sym">' + dir + ' KAITO</div>'
+        + '<div class="kf-trade-meta">' + ts + (t.close_reason ? (' · ' + t.close_reason) : '') + '</div></div>'
+        + '<div class="kf-trade-pnl ' + cls + '">' + fmtMoney(p) + '</div></div>';
+    }).join('');
+    body += '</div>';
+  }
+  box.innerHTML = '<div class="kf-kaito-head"><div><div class="kf-kaito-title">KAITO Kağıt</div>'
+    + '<div class="kf-kaito-sub">cr6 kararları · $' + (kp.margin_usd||7) + '×' + (kp.leverage||20) + 'x · gerçek emir yok</div></div>'
+    + '<span class="kf-kaito-badge">Kağıt</span></div>' + body;
+}
+
 function renderOverview(d){
   if(!d || !d.ok) return;
   const fmtUsd = (n) => n != null
@@ -17102,6 +17489,7 @@ function renderOverview(d){
   renderJarvisMap(d.jarvis_v1_map, d.jarvis_v1_meta);
   renderRecentTrades(d.recent_test_trades, 'kf-recent-test', 'Henüz Test işlemi yok');
   renderRecentTrades(d.recent_live_trades, 'kf-recent-live', 'Henüz Live işlemi yok');
+  renderKaitoPaper(d.kaito_paper);
 }
 
 async function refreshOverviewFast(force){
@@ -17769,6 +18157,83 @@ def page_kripto_future_legacy():
     return redirect("/kripto", code=301)
 
 
+@app.route("/forex")
+@app.route("/forex/")
+def page_forex_root():
+    """Eski /forex 301 cache'ini aş — tarayıcı bu URL'yi /poly sanıyor."""
+    resp = redirect("/forex/home", code=302)
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
+
+
+@app.route("/forex/home")
+@app.route("/forex/home/")
+def page_forex():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/home")
+    return FOREX_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/grafik")
+@app.route("/forex/grafik/")
+def page_forex_grafik():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/grafik")
+    return FOREX_GRAFIK_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/poly/api/forex/spot")
+def api_forex_spot():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    from forex_data import forex_spot
+    tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
+    return _json_nocache(forex_spot(tf))
+
+
+@app.route("/poly/api/forex/chart")
+def api_forex_chart():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    from forex_data import forex_chart
+    tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
+    try:
+        lim = request.args.get("limit")
+        lim = int(lim) if lim not in (None, "") else None
+    except (TypeError, ValueError):
+        lim = None
+    try:
+        out = forex_chart(tf, limit=lim)
+        return _json_nocache(out)
+    except Exception as e:
+        return _json_nocache({
+            "symbol": "XAUUSD", "timeframe": tf,
+            "candles": [], "error": "chart_data", "detail": str(e)[:200],
+        })
+
+
+@app.route("/poly/api/forex/status")
+def api_forex_status():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    return jsonify({
+        "ok": True,
+        "system": "forex",
+        "label": "Forex",
+        "status": "shell",
+        "balance": 300.0,
+        "open_count": 0,
+        "books": [],
+        "pairs": [
+            {"symbol": "EURUSD", "name": "Euro / Dolar"},
+            {"symbol": "GBPUSD", "name": "Sterlin / Dolar"},
+            {"symbol": "USDJPY", "name": "Dolar / Yen"},
+            {"symbol": "XAUUSD", "name": "Altın / Dolar"},
+        ],
+        "note": "Sayfa açık; işlem motoru henüz bağlanmadı.",
+    })
+
 
 @app.route("/poly/api/crypto-futures/status")
 def api_crypto_futures_status():
@@ -17848,6 +18313,12 @@ def api_kripto_overview():
         jarvis_meta = mapping_summary()
     except Exception as exc:
         print(f"[kripto overview] jarvis_v1_map: {exc}", flush=True)
+    kaito_paper: dict = {"ok": False}
+    try:
+        from kaito_paper import paper_status_block  # noqa: WPS433
+        kaito_paper = paper_status_block(refresh_price=True)
+    except Exception as exc:
+        print(f"[kripto overview] kaito_paper: {exc}", flush=True)
     return jsonify({
         "ok": True,
         "coin_leaders": coin_leaders,
@@ -17862,7 +18333,22 @@ def api_kripto_overview():
         "recent_live_trades": recent_live,
         "jarvis_v1_map": jarvis_map,
         "jarvis_v1_meta": jarvis_meta,
+        "kaito_paper": kaito_paper,
     })
+
+
+@app.route("/poly/api/kripto/kaito-paper")
+def api_kripto_kaito_paper():
+    """KAITO kağıt defteri — cr6 kararları, gerçek emir yok."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    if _DIR_KRIPTO not in sys.path:
+        sys.path.insert(0, _DIR_KRIPTO)
+    try:
+        from kaito_paper import paper_status_block  # noqa: WPS433
+        return jsonify(paper_status_block(refresh_price=True))
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 
 @app.route("/poly/api/crypto-futures/cr6")
@@ -18304,29 +18790,34 @@ for _html_name in (
     "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "ALGORITMA_ISLEMLER_HTML", "AYARLAR_HTML",
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
     "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
-    "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML",
+    "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML", "FOREX_HTML", "FOREX_GRAFIK_HTML",
 ):
     _html = globals()[_html_name]
-    if _html_name in ("KRIPTO_FUTURE_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML"):
+    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML"):
+        _html = _html.replace("__FOREX_BRAND__", _CEMBOT_FOREX_BRAND_HTML)
+        _html = _patch_cembot_brand(_html)
+        _html = _patch_cache_bust(_html)
+    elif _html_name in ("KRIPTO_FUTURE_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML"):
         # Kripto kendi menüsü — Poly nav / PM Kar enjekte etme
         _html = _html.replace("__KRIPTO_BRAND__", _CEMBOT_KRIPTO_BRAND_HTML)
         _html = _patch_cembot_brand(_html)
         _html = _patch_kf_theme(_html)
+        _html = _patch_nav_forex(_html)
         _html = _patch_cache_bust(_html)
     elif _html_name == "YAPAY_ZEKA_ANALIZ_HTML":
         _html = _patch_cembot_brand(_html)
         _html = _patch_kf_theme(_html)
-        _html = _patch_nav_kripto_future(_html)
+        _html = _patch_nav_forex(_patch_nav_kripto_future(_html))
         _html = _patch_nav_algo_islemler(_html)
     elif _html_name == "ALGORITMA_ISLEMLER_HTML":
         # Kendi Poly menüsü + KF görünüm
         _html = _patch_cembot_brand(_html)
         _html = _patch_kf_theme(_html)
-        _html = _patch_nav_kripto_future(_html)
+        _html = _patch_nav_forex(_patch_nav_kripto_future(_html))
     elif _html_name != "LOGIN_HTML":
         _html = _patch_sidebar_profit(_patch_sidebar_cleanup(_html))
         _html = _patch_nav_yapay_zeka_analiz(
-            _patch_nav_algo_islemler(_patch_nav_kripto_future(_patch_nav_islemler(_html)))
+            _patch_nav_algo_islemler(_patch_nav_forex(_patch_nav_kripto_future(_patch_nav_islemler(_html))))
         )
         _html = _patch_cembot_brand(_html)
     else:
