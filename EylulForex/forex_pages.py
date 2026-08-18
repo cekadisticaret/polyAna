@@ -86,7 +86,7 @@ body{
   __FOREX_BRAND__
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item active" href="/forex/home"><span class="nav-dot"></span>Overview</a>
-  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>Grafik 1</a>
+  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
   <a class="nav-item" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
   <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
@@ -354,7 +354,7 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
   __FOREX_BRAND__
   <div class="nav-label">Forex</div>
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
-  <a class="nav-item __FX_NAV_G1__" href="/forex/grafik"><span class="nav-dot"></span>Grafik 1</a>
+  <a class="nav-item __FX_NAV_G1__" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
   <a class="nav-item __FX_NAV_A2__" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
   <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
@@ -720,6 +720,20 @@ function bookTab(t){
   document.querySelectorAll('.book-tab').forEach(x=>x.classList.toggle('on', x.dataset.btab===t));
   renderBook(_book);
 }
+function holdDur(a,z){
+  const parse=s=>{
+    const m=String(s||'').match(/(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+    return m?new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]):null;
+  };
+  const A=parse(a), Z=parse(z);
+  if(!A||!Z) return '';
+  let s=Math.max(0,Math.round((Z-A)/1000));
+  const h=Math.floor(s/3600); s%=3600;
+  const m=Math.floor(s/60); const sec=s%60;
+  if(h) return h+' sa '+m+' dk';
+  if(m) return m+' dk'+(sec?(' '+sec+' sn'):'');
+  return sec+' sn';
+}
 function rejText(r){
   const yon=r.side==='buy'?'AL':'SAT';
   if(r.reason==='bekleme') return yon+' sinyali var — kapanış sonrası bekleme '+r.wait+' sn.';
@@ -782,7 +796,16 @@ function renderBook(b){
     el.innerHTML=html;
   }else{
     const h=b.history||[];
-    el.innerHTML=h.length?h.map(t=>row(t.side,t.volume,t.entry,t.exit,t.close_time||'',t.pnl,false,cost(t))).join(''):'<div class="bk-empty">Kapanmış işlem yok.</div>';
+    el.innerHTML=h.length?h.map(t=>{
+      const sell=t.side==='sell';
+      const dur=holdDur(t.open_time,t.close_time);
+      const extra=[cost(t), dur?('süre '+dur):''].filter(Boolean).join(' · ');
+      return '<div class="bk-row"><div><div class="bk-sym '+(sell?'sell':'buy')+'">XAUUSD, '+(sell?'sell':'buy')+' '+fmt(t.volume)+'</div>'
+        +'<div class="bk-px">'+fmt(t.entry)+(t.exit!=null?' → '+fmt(t.exit):'')+'</div>'
+        +(extra?'<div class="bk-px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
+        +'<div class="bk-right"><div class="bk-pnl '+(t.pnl>=0?'pos':'neg')+'">'+(t.pnl==null?'—':fmt(t.pnl))+'</div>'
+        +(dur?'<div class="bk-ts">'+dur+'</div>':'')+'</div></div>';
+    }).join(''):'<div class="bk-empty">Kapanmış işlem yok.</div>';
   }
 }
 async function loadBook(){
@@ -804,7 +827,7 @@ setInterval(loadBook, 4000);
 def _chart_page(algo: str) -> str:
     g1 = "active" if algo == "g1" else ""
     a2 = "active" if algo == "a2" else ""
-    title = "XAUUSD — Grafik 1" if algo == "g1" else "XAUUSD — Algoritma 2"
+    title = "XAUUSD — CEM01" if algo == "g1" else "XAUUSD — Algoritma 2"
     return (
         FOREX_CHART_TMPL
         .replace("__FX_TITLE__", title)
@@ -879,7 +902,7 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
   __FOREX_BRAND__
   <div class="nav-label">Forex</div>
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
-  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>Grafik 1</a>
+  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
   <a class="nav-item" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
   <a class="nav-item active" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
@@ -902,14 +925,29 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
 <script>
 let _tab='pos', _book=null;
 function fmt(n){ return n==null?'—':Number(n).toFixed(2); }
+function holdDur(a,z){
+  const parse=s=>{
+    const m=String(s||'').match(/(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+    return m?new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]):null;
+  };
+  const A=parse(a), Z=parse(z);
+  if(!A||!Z) return '';
+  let s=Math.max(0,Math.round((Z-A)/1000));
+  const h=Math.floor(s/3600); s%=3600;
+  const m=Math.floor(s/60); const sec=s%60;
+  if(h) return h+' sa '+m+' dk';
+  if(m) return m+' dk'+(sec?(' '+sec+' sn'):'');
+  return sec+' sn';
+}
 function rowClosed(t){
   const sell=t.side==='sell';
+  const dur=holdDur(t.open_time,t.close_time);
   return '<div class="row">'
     +'<div><div class="sym '+(sell?'sell':'buy')+'">XAUUSD, '+(sell?'sell':'buy')+' '+fmt(t.volume)+'</div>'
     +'<div class="px">'+fmt(t.entry)+' → '+fmt(t.exit)+(t.reason?' · '+t.reason:'')+'</div>'
-    +((t.commission||t.swap)?'<div class="px" style="opacity:.65">'+[t.commission?'kom $'+fmt(t.commission):'',t.swap?'swap $'+fmt(t.swap):''].filter(Boolean).join(' · ')+'</div>':'')+'</div>'
-    +'<div class="right"><div class="ts">'+(t.close_time||'')+'</div>'
-    +'<div class="pnl '+(t.pnl>=0?'pos':'neg')+'">'+fmt(t.pnl)+'</div></div></div>';
+    +'<div class="px" style="opacity:.65">'+[t.commission?'kom $'+fmt(t.commission):'',t.swap?'swap $'+fmt(t.swap):'',dur?('süre '+dur):''].filter(Boolean).join(' · ')+'</div></div>'
+    +'<div class="right"><div class="pnl '+(t.pnl>=0?'pos':'neg')+'">'+fmt(t.pnl)+'</div>'
+    +(dur?'<div class="ts">'+dur+'</div>':'')+'</div></div>';
 }
 function rowOpen(p){
   const sell=p.side==='sell';

@@ -16364,6 +16364,11 @@ body{
 }
 .pos-card.dir-up{border-color:rgba(57,255,142,.35);box-shadow:inset 0 0 0 1px rgba(57,255,142,.08)}
 .pos-card.dir-down{border-color:rgba(255,92,122,.35);box-shadow:inset 0 0 0 1px rgba(255,92,122,.08)}
+.pos-card.in-loss{
+  background:linear-gradient(165deg,#3a141c 0%,#1a1216 70%);
+  border-color:rgba(255,70,90,.75);
+  box-shadow:inset 0 0 0 1px rgba(255,70,90,.28);
+}
 .pos-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .pos-name{font-size:20px;font-weight:800}
 .pos-dir{font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px}
@@ -16523,6 +16528,14 @@ body.kf-overview .kf-right-panel{display:block}
   background:linear-gradient(145deg,#6d28d9 0%,#a21caf 48%,#db2777 100%);
   box-shadow:0 16px 36px rgba(109,40,217,.3);
 }
+.kf-ov-wallet.cash.gain{
+  background:linear-gradient(145deg,#065f46 0%,#059669 52%,#34d399 100%);
+  box-shadow:0 16px 36px rgba(5,150,105,.28);
+}
+.kf-ov-wallet.cash.loss{
+  background:linear-gradient(145deg,#7f1d1d 0%,#b91c1c 48%,#e11d48 100%);
+  box-shadow:0 16px 36px rgba(185,28,28,.38);
+}
 .kf-ov-tag{font-size:10px;font-weight:800;letter-spacing:.6px;opacity:.85}
 .kf-ov-lbl{font-size:11px;font-weight:700;opacity:.82;margin-top:12px}
 .kf-ov-bal{font-size:26px;font-weight:800;letter-spacing:-1px;margin-top:4px;line-height:1.1}
@@ -16669,7 +16682,7 @@ body.kf-overview .kf-right-panel{display:block}
           <div class="kf-ov-bal" id="kf-bal">—</div>
           <div class="kf-ov-sub" id="kf-books-sub">A1#39 Live · yükleniyor…</div>
         </div>
-        <div class="kf-ov-wallet cash">
+        <div class="kf-ov-wallet cash" id="kf-pnl-card">
           <div class="kf-ov-tag">NET P&L</div>
           <div class="kf-ov-lbl">A1#39 kapanmış + açık</div>
           <div class="kf-ov-bal" id="kf-pnl">—</div>
@@ -17406,7 +17419,7 @@ function renderA139Opens(lv){
       : 'ATR kilit yok';
     const qtyAttr = (p.qty != null && isFinite(Number(p.qty))) ? String(p.qty) : '';
     const symAttr = String(p.symbol || '').replace(/"/g, '');
-    return '<div class="pos-card '+(up?'dir-up':'dir-down')+'">'
+    return '<div class="pos-card '+(up?'dir-up':'dir-down')+(u<0?' in-loss':'')+'">'
       + '<div class="pos-top"><div class="pos-name">'+name+'</div>'
       + '<div class="pos-dir '+(up?'up':'down')+'">'+(p.side||'—')+'</div></div>'
       + '<div class="pos-price-row"><div class="pos-current">$'+fmtPx(p.current)+'</div>'
@@ -17438,7 +17451,7 @@ function renderA139Closed(lv){
     const pnlCls = pnl >= 0 ? 'pos' : 'neg';
     const name = t.name || (t.symbol||'').replace('USDT','');
     const ts = (t.exit_time_tr||'').slice(0,16).replace('T',' ') || '—';
-    return '<div class="pos-card '+(up?'dir-up':'dir-down')+'">'
+    return '<div class="pos-card '+(up?'dir-up':'dir-down')+(pnl<0?' in-loss':'')+'">'
       + '<div class="pos-top"><div class="pos-name">'+name+'</div>'
       + '<div class="pos-dir '+(up?'up':'down')+'">'+(t.side||'—')+'</div></div>'
       + '<div class="pos-entry">Giriş · $'+fmtPx(t.entry_price)+' → Çıkış · $'+fmtPx(t.exit_price)+'</div>'
@@ -17465,8 +17478,12 @@ function renderOverview(d){
   const pnl = closedPnl + openPnl;
   const pnlEl = document.getElementById('kf-pnl');
   if(pnlEl){
-    pnlEl.textContent = (pnl>=0?'+':'') + '$' + Math.abs(pnl).toFixed(2);
-    pnlEl.style.color = pnl >= 0 ? '#fff' : '#ffe4e6';
+    pnlEl.textContent = (pnl>=0?'+':'-') + '$' + Math.abs(pnl).toFixed(2);
+  }
+  const pnlCard = document.getElementById('kf-pnl-card');
+  if(pnlCard){
+    pnlCard.classList.toggle('loss', pnl < 0);
+    pnlCard.classList.toggle('gain', pnl > 0);
   }
   const booksSub = document.getElementById('kf-books-sub');
   if(booksSub){
