@@ -46,8 +46,11 @@ alwaysApply: true
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py close` | `/tmp/poly_trader_c101_v2.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py open` (**C1#01 V2 · GERÇEK ASK** — aynı model, CLOB ask kotasyonu + 3 puan eşik; sanal **$500**) | `/tmp/poly_trader_c101_v2.log` |
 | `25 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py backfill` | `/tmp/poly_trader_c101_v2_calib.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py close` | `/tmp/poly_trader_a2_05_v2.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py open` (**A2#05 V2 · Z KAPISI** — A2#05 sinyali + yalnız 1,0 ≤ \|z\| < 1,5; sanal, **gerçek para aynası kapalı**) | `/tmp/poly_trader_a2_05_v2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py close` | `/tmp/poly_trader_x101.log` |
+| `3 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py open` (**X1#01 - 13Analiz** — 13 katman + ask kenarı; sanal **$300**; `:02` close / `:03` open; gerçek PM yok) | `/tmp/poly_trader_x101.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py weekly` | `/tmp/poly_trader_x101.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py close` | `/tmp/poly_trader_a2_05_v2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py open` (**A2#05 V2 · Z KAPISI** — A2#05 sinyali + yalnız 1,0 ≤ \|z\| < 1,5; sanal, **gerçek para aynası kapalı**) | `/tmp/poly_trader_a2_05_v2.log` |
 | `25 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py zbackfill` (gölge günlüğü — kapıya takılan slotların sonucunu doldurur) | `/tmp/poly_trader_a2_05_v2_zlog.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py weekly` | `/tmp/poly_trader_a2_05_v2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_mum_live.py close` | `/tmp/poly_trader_b1_mum_live.log` |
@@ -85,10 +88,13 @@ alwaysApply: true
 | `0 * * * *` | `cd /root/aiProject && python3 temmuzPoly/pm_balance_hourly.py` | `/tmp/pm_balance_hourly.log` |
 | `* * * * *` | `temmuzPoly/poly_trader_manual.py close` (manuel PM slot settle) | `/tmp/poly_trader_manual.log` |
 | `4 * * * *` + `sleep 40` | `sleep 40 && cd /root/aiProject && python3 temmuzPoly/algo_signals.py` | `/tmp/algo_signals.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_signals_v2.py` (A2#05 :02 open için erken) | `/tmp/algo_signals_v2.log` |
 | `4 * * * *` + `sleep 40` | `sleep 40 && cd /root/aiProject && python3 temmuzPoly/algo_signals_v2.py` | `/tmp/algo_signals_v2.log` |
 | `*/5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/chart_algo_panel.py update_wr` | `/tmp/chart_algo_panel_wr.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py close 5` (yalnız A2#05) | `/tmp/poly_trader_a2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py open 5` (yalnız A2#05) | `/tmp/poly_trader_a2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py close` | `/tmp/poly_trader_a2.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py open` | `/tmp/poly_trader_a2.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py open` (A2#05 bu saatte açıksa atlanır) | `/tmp/poly_trader_a2.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py weekly` | `/tmp/poly_trader_a2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py close` | `/tmp/poly_trader_a2_02_live.log` |
 | `5 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py open` (sanal A2#02 sync) | `/tmp/poly_trader_a2_02_live.log` |
@@ -98,9 +104,9 @@ alwaysApply: true
 | `5 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_03_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_03_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py close` | `/tmp/poly_trader_a2_04_live.log` |
 | `5 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_04_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_04_live.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py close` | `/tmp/poly_trader_a2_05_live.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py close` | `/tmp/poly_trader_a2_05_live.log` |
 | `12 * * * *` | `temmuzPoly/poly_trader_a2_{02,03,04,05,06,07,08,16}_live.py close` (PM sonuç gecikmesi — settle retry) | `/tmp/poly_trader_a2_*_live.log` |
-| `5 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py open` (sanal A2#05 sync) | `/tmp/poly_trader_a2_05_live.log` |
+| `2 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_live.py open` (sanal A2#05 :02 sonrası) | `/tmp/poly_trader_a2_05_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_06_live.py close` | `/tmp/poly_trader_a2_06_live.log` |
 | `5 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_06_live.py open` (varsayılan kapalı) | `/tmp/poly_trader_a2_06_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_07_live.py close` | `/tmp/poly_trader_a2_07_live.log` |
@@ -115,6 +121,20 @@ alwaysApply: true
 | `20 */3 * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/kripto_test_analyst.py` (Kripto Test AI Analist — Kripto Test sanal defterleri arasında ayrışma bulur, Anthropic API ile yorum üretir, ayrı Telegram kanalına (LAB bot) gönderir, tam metin `AgustosKripto/Test/kripto_analyst_feed.jsonl`'a kaydedilir — `bursaapp.com/kripto/yapay-zeka-analiz`) | `/tmp/kripto_test_analyst.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_algo_daily_report.py` (Poly Algo Analist Günlük Rapor — 00:00 İST; günlük defter özeti + `algo_pattern_stats.py`'de eşik atlayan yeni "watch/confident" kalıplar; `temmuzPoly/analyst_daily_reports.jsonl`) | `/tmp/poly_algo_daily_report.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/jarvis_report.py` (**JARVIS** — 00:00 İST; 69 Kripto Test defterini tarar → `jarvis_report.json` + `jarvis_history.jsonl`; aynı turda 118 defterlik sistem denetimi → `jarvis_audit.json` → `bursaapp.com/kripto/jarvis` iki sekme) | `/tmp/jarvis_report.log` |
+| `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/forex_paper.py` (**Forex sanal** — Grafik 1 + Algoritma 2; XAUUSD $300 · $100×500x; gerçek para yok) | `/tmp/forex_paper.log` |
+
+## Forex sanal defter — giriş/çıkış rejimi (2026-08-17)
+`$100 × 500x` demek altında **1$ hareket = $11.19**; marj $100 = **8.9$**, kasa $300 = **26.8$**. Altın son ölçümde bir saat içinde tek yöne ortalama **12.31$** (p90 23.1$, maks 43$) gidiyor — yani stopsuz *ortalama* bir ters saat kasanın %46'sını yiyor. Eski defterde tek fren M5'in dönmesiydi, likidasyon kontrolü yoktu (`balance` eksiye düşebiliyordu). Beş katman eklendi:
+- **Yapısal plan:** hedef = aynı yöndeki seviye, stop = ters seviyenin `$0.35` öte yanı. İkisi de açılışta kilitlenir.
+- **Giriş kapısı:** `MIN_RR = 1.5` ve stop mesafesi marjın en fazla **%100'ü** (`MAX_RISK_RATIO=1.0` → $100). 35 dk boş kalınca tavan $60→$100 yapıldı. Red sebebi `last_reject`'te (`stop_uzak` / `rr_dusuk` / `seviye_yok` / `bekleme`).
+- **Kâr kilidi:** hangisi önce gelirse — **+$15** başabaş · **+$25** zirve kârın yarısı, veya hedefin %50 / %75'i. +$51 görüp $22'ye bırakmamak için eşik düşürüldü (`LOCK_BE_USD=15` / `LOCK_TRAIL_USD=25`). `peak_usd` her turda yazılır.
+- **Marj TP:** giriş parası (`$100`) üzerinde **%35** kâr (`+$35`) görünce otomatik kapanır (`tp35`). $300 kasada +$51'i hedefe kadar bekletmemek için.
+- **Stop-out:** float zarar marjı (`$100`) yerse zorunlu kapanış — bakiye eksiye düşemez.
+- **Bekleme:** kapanıştan sonra aynı yöne kârlıysa **180 sn**; zararlıysa Grafik 1 **600 sn**, Algoritma 2 **300 sn**.
+- **M5 çıkışı kapanmış mumla:** `rail_signals` artık `closed_direction` de üretiyor (son mum atılarak); oluşan mumun 55 eşiği etrafındaki salınımı pozisyon kapatmıyor.
+- **Grafik TF'i defteri etkilemiyor:** `forex_spot` sinyali hep `BOOK_SIGNAL_TF="1m"`, seviyeleri hep `BOOK_LEVEL_TF="5m"` ile hesaplar (önce 15m idi; 31$ bant ortada hiç açılmıyordu).
+- **Geri alma:** eşikler `forex_book.py` başındaki sabitler (`MIN_RR`, `MAX_RISK_RATIO`, `LOCK_BE_AT`, `LOCK_TRAIL_AT`, `COOLDOWN_*`). Eski davranış için `MIN_RR=0`, `MAX_RISK_RATIO=99`.
+- **MT5 maliyet (2026-08-17):** spread zaten bid/ask dolumda. Üstüne ECN Raw komisyon **$3.50 / 1.00 lot / taraf** (0.10 lot = **$0.35** açılışta bakiyeden, **$0.35** kapanışta) + gecelik swap (**long −$25 / short −$8** per 1.00 lot; 0.10 lot = −$2.50 / −$0.80). Rollover **00:00 İST**, Çarşamba ×3, Cmt/Paz yok. Geçmiş satırında `gross` / `commission` / `swap` / `pnl` (net). Broker spesifikasyonu gelince `COMMISSION_PER_LOT_SIDE` · `SWAP_LONG_PER_LOT` · `SWAP_SHORT_PER_LOT` güncellenir.
 
 ## Pasif / Kaldırılmış
 | Zamanlama | Durum |
@@ -129,7 +149,7 @@ alwaysApply: true
 ## Zamanlama Notları
 - `bist_signal_hunter` seans dışında çıkar (betik içi saat kontrolü).
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
-- Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk).
+- Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk). **A2#05 + A2#05 V2:** close **:01**, open **:02** (sinyal `:01`).
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** varsayılan olarak atlanır (**close** çalışır); **dashboard'dan Aç** yapılan Live analiz hafta sonu dahil işlem açar. A10: aynı pencerede open kapalı; Pzt **11:00**’de devam. **`/algoritma-islemler` (tamamı):** A1/A2/A6/V2/V3/MELEZ/A15/B1#01-05 + A2 Top-17 — hafta sonu da open/close devam (7/24 sanal).
 - **AgustosKripto sanal hafta sonu duraklaması KALDIRILDI (2026-08-15):** Algoritmalar + Analizler artık **7/24** — `open` / `close` / `trail` hafta sonu da koşar (`WEEKEND_PAUSE = False`, her iki `runner.py`'de). Test grubu zaten 7/24 idi; üç grup da aynı hizada.
@@ -226,7 +246,7 @@ alwaysApply: true
 - **Güven vetosu:** `conviction_filter.py` — CR6 açılışında oy birliği (4/4) sinyalleri açılmaz, `conviction_shadow.jsonl`'a yazılır. Ölçülen SKILL −%0,065 · t=−3,89 · 5/5 dilim. `invert_vetoed` varsayılan **false** — ters açmanın %95 aralığı sıfırı kestiği için gerçek parayla denenmiyor.
 - **Funding tarayıcı:** `python3 AgustosKripto/funding_harvest.py [--tg]` — cron yok, elle. Yalnız rapor üretir, **emir açmaz**.
 - **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **11:00** İST (`0 19 * * 5` / `0 8 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
-- Dashboard: `web/poly_dashboard.py` port **5050** (`systemctl restart poly-dashboard.service`). Public: `bursaapp.com/poly` · Kripto Future: `bursaapp.com/kripto` · Forex: `bursaapp.com/forex/grafik` (`EylulForex/` · confluence overlay).
+- Dashboard: `web/poly_dashboard.py` port **5050** (`systemctl restart poly-dashboard.service`). Public: `bursaapp.com/poly` · Kripto Future: `bursaapp.com/kripto` · Forex: `bursaapp.com/forex/grafik` (girişli) · **`/forex/islemler`** sanal defter · paylaşım `bursaapp.com/xau` (girişsiz, aynı XAUUSD ekranı).
 - **Ayarlar Live anahtarları:** `/ayarlar`'da 17 satır, `pm_balance_guard._VALID_GROUPS` ile birebir. **İşlem Miktarları** kartında 15 defterin `$` kademesi var (45 alan = 15×3, `_SETTINGS_LABELS` ile birebir); alan listesi artık JS'te elle tutulmuyor, `input.pm-amt` sınıfından türetiliyor — yeni kademe eklemek için HTML satırı + `_SETTINGS_LABELS` prefix'i + `_read_settings` varsayılanı yeter. (`a2_16` ve `a2_02` Live'ın miktar satırı **yok**, kod varsayılanını kullanırlar.) Yeni Live trader eklenince **üç yer** güncellenmeli: `_VALID_GROUPS` + `_WEEKEND_GROUPS` (guard) ve dashboard'da HTML satırı · `_PM_SYSTEM_ROWS` · `updatePmSystemUI`. POST'ta ayrı grup listesi **tutulmaz** — grup adı gelip tanınmazsa `400` döner, ana şaltere düşmez (2026-08-12: eksik listeden dolayı A6V3 toggle'ı 15 defteri birlikte açıp kapatıyordu).
 - **Kaynak silinme izleme:** `aiproject-file-watch.service` → log `/tmp/aiproject_file_watch.log`; olaylar `ops/incidents/`. Geri yükleme: `ops/CRITICAL_FILE_RESTORE.md` (**09:17 / 09:23 / 13:25 İST**, 2026-08-02). audit: `ausearch -k aiproject_del -ts recent -i`
 - **Dış erişim kapatıldı (2026-08-14 22:12 İST):** Sunucu (`188.166.125.54`) denetlendi, üç açık bulundu ve kapatıldı.
@@ -251,6 +271,7 @@ tail -f /tmp/poly_trader_b1_05_live.log
 tail -f /tmp/poly_trader_b1_mum_live.log
 tail -f /tmp/poly_trader_b1_05.log
 tail -f /tmp/poly_trader_c101.log
+tail -f /tmp/poly_trader_x101.log
 tail -f /tmp/poly_trader_c101_calib.log
 tail -f /tmp/poly_trader_analiz6_v4.log
 tail -f /tmp/poly_trader_a2_02_live.log
@@ -278,4 +299,5 @@ tail -f /tmp/poly_algo_analyst.log
 tail -f /tmp/poly_algo_daily_report.log
 tail -f /tmp/kripto_test_analyst.log
 tail -f /tmp/jarvis_report.log
+tail -f /tmp/forex_paper.log
 ```

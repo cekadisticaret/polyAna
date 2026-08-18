@@ -18,7 +18,7 @@ from flask import Flask, jsonify, make_response, render_template_string, request
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "EylulForex"))
 
-from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML
+from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _DIR_KRIPTO = os.path.join(os.path.dirname(__file__), "..", "AgustosKripto")
@@ -51,6 +51,7 @@ _HEATMAP_SYMS = {
     "b1_05": ["BTC", "ETH", "SOL"],
     "c101": ["BTC", "ETH", "SOL"],
     "c101_v2": ["BTC", "ETH", "SOL"],
+    "x101": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz3":  ["BTC", "SOL", "ETH"],
@@ -88,6 +89,10 @@ _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
 # Eski URL/API anahtarları → güncel defter anahtarı
 _ALGO_BOOK_ALIASES: dict[str, str] = {
     "analiz6_v4": "melez",
+    "13analiz": "x101",
+    "13_analiz": "x101",
+    "x1_01": "x101",
+    "x101_13analiz": "x101",
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Algoritma performansı / harita / analizler — gerçek PM (Live) gösterilmez; sanal karşılığı kullanılır
@@ -128,14 +133,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
+    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
     "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -161,6 +166,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "b1_05":      "B1#05",
     "c101":       "C1#01 · OPUS-OHLCV",
     "c101_v2":    "C1#01 V2 · GERÇEK ASK",
+    "x101":       "X1#01 - 13Analiz",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -184,13 +190,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "analiz1": 300, "analiz2": 300, "analiz6": 300, "analiz6_v2": 300,
     "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300, "b1_mum": 300,
-    "b1_04": 300, "melez": 300, "b1_05": 300, "c101": 300, "c101_v2": 300,
+    "b1_04": 300, "melez": 300, "b1_05": 300, "c101": 300, "c101_v2": 300, "x101": 300,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -243,6 +249,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "b1_05": "B1#05",
     "c101": "C1#01",
     "c101_v2": "C1#01 V2",
+    "x101": "X1#01",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -277,7 +284,7 @@ _OVERVIEW_SHORT_LABELS[_A2_05_V2] = "A2#05 V2"
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
 ] + _A2_KEYS + [_A2_05_V2]
 
 _HEATMAP_ORDER.extend(_A2_KEYS + [_A2_05_V2])
@@ -301,6 +308,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("b1_05",      "B1#05",                 300,  "Coin başına en iyi motor · MUM+MELEZ dahil"),
     ("c101",       "C1#01 · OPUS-OHLCV",    300,  "PTB+volatilite olasılık · Gamma mid kotasyonu · 5 puan kenar eşiği"),
     ("c101_v2",    "C1#01 V2 · GERÇEK ASK", 300,  "Aynı model, CLOB best_ask kotasyonu · 3 puan kenar eşiği"),
+    ("x101",       "X1#01 - 13Analiz",      300,  "13 katman kapısı · C101 model + gerçek ask kenarı · BTC/ETH/SOL"),
     ("a2_05_v2",   "A2#05 V2 · Z KAPISI", 300, "A2#05 sinyali + yalnız 1,0 ≤ |z| < 1,5 iken aç"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
 ]
@@ -3547,31 +3555,43 @@ def _mirror_min_stake(px: float | None, pol: dict) -> float | None:
     return round(pol["min_shares"] * float(px) / ratio, 2)
 
 
-def _mirror_slot_fields(entry_hour: int) -> dict:
-    """İST saatlik slot — :05 open cron, ertesi saat :02 close."""
+# A2#05 ailesi :02 open / sonraki saat :01 close; diğer defterler :05 / :02.
+_MIRROR_EARLY_BOOKS = frozenset({"a2_05", "a2_05_v2", "a2_05_live"})
+
+
+def _mirror_slot_minutes(book: str | None = None) -> tuple[int, int]:
+    """(open_dakika, sonraki_saat_close_dakika)."""
+    if book in _MIRROR_EARLY_BOOKS:
+        return 2, 1
+    return 5, 2
+
+
+def _mirror_slot_fields(entry_hour: int, book: str | None = None) -> dict:
+    """İST saatlik slot — varsayılan :05→:02; A2#05 ailesi :02→:01."""
     nh = (entry_hour + 1) % 24
+    open_m, close_m = _mirror_slot_minutes(book)
     return {
         "entry_hour_tr": entry_hour,
-        "slot_tr": f"{entry_hour:02d}:05-{nh:02d}:02",
-        "slot_open_tr": f"{entry_hour:02d}:05",
-        "slot_close_tr": f"{nh:02d}:02",
+        "slot_tr": f"{entry_hour:02d}:{open_m:02d}-{nh:02d}:{close_m:02d}",
+        "slot_open_tr": f"{entry_hour:02d}:{open_m:02d}",
+        "slot_close_tr": f"{nh:02d}:{close_m:02d}",
         "prediction_tr": f"{entry_hour:02d}:00-{nh:02d}:00",
     }
 
 
-def _mirror_active_slot(now_tr: datetime | None = None) -> dict:
+def _mirror_active_slot(now_tr: datetime | None = None, book: str | None = None) -> dict:
     """Şu an mirror'lanabilir slot.
 
-    :02–:04 arası pozisyon henüz yoktur ama slot ``active`` kalır — ayna
-    ``waiting_open`` görüp turu atlamasın. Gece yarısı (00:00–00:01) önceki
-    günün 23:05 slotu hâlâ kapanıyor; tarih geri alınır.
+    Varsayılan: :02–:04 pre_open, :05+ open, :00–:01 closing.
+    A2#05 ailesi: :01 pre_open, :02+ open, :00 closing.
     """
     now_tr = now_tr or datetime.now(_TZ_TR)
     h, m = now_tr.hour, now_tr.minute
-    if m >= 5:
+    open_m, close_m = _mirror_slot_minutes(book)
+    if m >= open_m:
         slot_h, slot_date = h, now_tr.date()
         phase = "open"
-    elif m < 2:
+    elif m < close_m:
         if h == 0:
             slot_h = 23
             slot_date = (now_tr - timedelta(days=1)).date()
@@ -3579,8 +3599,11 @@ def _mirror_active_slot(now_tr: datetime | None = None) -> dict:
             slot_h, slot_date = h - 1, now_tr.date()
         phase = "closing"
     else:
-        # :02–:04 — gece yarısı 00:xx hâlâ önceki günün 23:05 slotu (00:02'ye kadar)
-        if h == 0:
+        # Varsayılan :02–:04 — 00:xx hâlâ dünün 23:05 slotu (00:02 settle).
+        # A2#05 :01 sonrası 00:01 = bu saatin pre_open'ı.
+        if book in _MIRROR_EARLY_BOOKS:
+            slot_h, slot_date = h, now_tr.date()
+        elif h == 0:
             slot_h = 23
             slot_date = (now_tr - timedelta(days=1)).date()
         else:
@@ -3590,17 +3613,17 @@ def _mirror_active_slot(now_tr: datetime | None = None) -> dict:
         "status": "active",
         "slot_phase": phase,
         "slot_date_tr": slot_date.isoformat(),
-        **_mirror_slot_fields(slot_h),
+        **_mirror_slot_fields(slot_h, book),
     }
     if phase == "pre_open":
         out["message"] = (
-            f"{slot_h:02d}:02 close sonrası, {slot_h:02d}:05 open öncesi — "
-            "pozisyonlar :05 cron sonrası gelir"
+            f"{slot_h:02d}:{close_m:02d} close sonrası, {slot_h:02d}:{open_m:02d} open öncesi — "
+            f"pozisyonlar :{open_m:02d} cron sonrası gelir"
         )
     elif phase == "closing":
         out["message"] = (
-            f"{slot_h:02d}:05 slotu kapanıyor ({slot_h:02d}:02 settle) — "
-            "yeni açılış :05"
+            f"{slot_h:02d}:{open_m:02d} slotu kapanıyor ({(slot_h + 1) % 24:02d}:{close_m:02d} settle) — "
+            f"yeni açılış :{open_m:02d}"
         )
     return out
 
@@ -3630,7 +3653,7 @@ def _mirror_pos_slot_date(p: dict, eh: int | None) -> date | None:
         eh = et_tr.hour
     slot_day = et_tr.date()
     # Nadiren entry_hour_tr=23 iken damga 00:0x'e kayarsa önceki güne bağla
-    if int(eh) == 23 and et_tr.hour == 0 and et_tr.minute < 5:
+    if int(eh) == 23 and et_tr.hour == 0 and et_tr.minute < 5:  # erken defter :02 giriş; 00:0x kayması aynı
         slot_day = slot_day - timedelta(days=1)
     return slot_day
 
@@ -3658,7 +3681,7 @@ def _mirror_rows(key: str, *, with_market: bool, current_only: bool = True) -> l
         return []
     allowed = set(_allowed_syms_for(key))
     now = datetime.now(_TZ_TR)
-    active_slot = _mirror_active_slot(now)
+    active_slot = _mirror_active_slot(now, key)
     pol = _mirror_policy()
     rows: list[dict] = []
     for p in state.get("open_positions") or []:
@@ -3689,7 +3712,7 @@ def _mirror_rows(key: str, *, with_market: bool, current_only: bool = True) -> l
             "stale": not in_active,
         }
         if eh is not None:
-            row.update(_mirror_slot_fields(eh))
+            row.update(_mirror_slot_fields(eh, key))
         # Defter dosyası bozulsa bile sabit kalan kimlik — ayna mükerrer
         # kontrolünü buna göre yapar, kendi anahtarını üretmez.
         if eh is not None and _ed is not None:
@@ -3797,6 +3820,7 @@ def api_mirror_index():
         "ok": True,
         "server_time_tr": now.isoformat(timespec="seconds"),
         "active_slot": slot,
+        "active_slot_a2_05": _mirror_active_slot(now, "a2_05"),
         "count": len(books),
         "sort": "balance_desc,total_pnl_desc,wr_desc",
         "filter": "all" if include_all else "current_slot",
@@ -3818,7 +3842,7 @@ def api_mirror_book(book_id: str):
     include_all = (request.args.get("all") or "").lower() in ("1", "true", "yes")
     rows = _mirror_rows(key, with_market=with_market, current_only=not include_all)
     now = datetime.now(_TZ_TR)
-    slot = _mirror_active_slot(now)
+    slot = _mirror_active_slot(now, key)
     info = _mirror_book_row(key, open_count=len(rows))
     return jsonify({
         "ok": True,
@@ -18183,19 +18207,46 @@ def page_forex_grafik():
     return FOREX_GRAFIK_HTML, 200, _ISLEMLER_NOCACHE
 
 
-@app.route("/poly/api/forex/spot")
-def api_forex_spot():
+@app.route("/forex/algo2")
+@app.route("/forex/algo2/")
+def page_forex_algo2():
     if _auth_required():
-        return jsonify({"error": "unauthorized"}), 401
+        return redirect("/poly/login?next=/forex/algo2")
+    return FOREX_ALGO2_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/islemler")
+@app.route("/forex/islemler/")
+def page_forex_islemler():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/islemler")
+    return FOREX_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/xau")
+@app.route("/xau/")
+@app.route("/forex/izle")
+@app.route("/forex/izle/")
+def page_forex_public():
+    """Girişsiz paylaşım — aynı XAUUSD grafik, sol menü kapalı."""
+    html = FOREX_GRAFIK_HTML.replace('id="fx-page"', 'id="fx-page" class="fx-public"', 1)
+    return html, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/poly/api/forex/spot")
+@app.route("/xau/api/spot")
+@app.route("/forex/api/spot")
+def api_forex_spot():
     from forex_data import forex_spot
     tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
-    return _json_nocache(forex_spot(tf))
+    algo = str(request.args.get("algo") or "g1")
+    return _json_nocache(forex_spot(tf, algo=algo))
 
 
 @app.route("/poly/api/forex/chart")
+@app.route("/xau/api/chart")
+@app.route("/forex/api/chart")
 def api_forex_chart():
-    if _auth_required():
-        return jsonify({"error": "unauthorized"}), 401
     from forex_data import forex_chart
     tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
     try:
@@ -18204,7 +18255,9 @@ def api_forex_chart():
     except (TypeError, ValueError):
         lim = None
     try:
-        out = forex_chart(tf, limit=lim)
+        plain = str(request.args.get("plain") or "") in ("1", "true", "yes")
+        algo = str(request.args.get("algo") or "g1")
+        out = forex_chart(tf, limit=lim, plain=plain, algo=algo)
         return _json_nocache(out)
     except Exception as e:
         return _json_nocache({
@@ -18217,22 +18270,37 @@ def api_forex_chart():
 def api_forex_status():
     if _auth_required():
         return jsonify({"error": "unauthorized"}), 401
+    from forex_book import snapshot
+    from forex_data import forex_quote
+    q = forex_quote()
+    book = snapshot(q.get("bid"), q.get("ask"))
     return jsonify({
         "ok": True,
         "system": "forex",
         "label": "Forex",
-        "status": "shell",
-        "balance": 300.0,
-        "open_count": 0,
-        "books": [],
+        "status": "paper",
+        "balance": book.get("equity", book.get("balance")),
+        "open_count": book.get("open_count") or 0,
+        "books": [book],
         "pairs": [
             {"symbol": "EURUSD", "name": "Euro / Dolar"},
             {"symbol": "GBPUSD", "name": "Sterlin / Dolar"},
             {"symbol": "USDJPY", "name": "Dolar / Yen"},
             {"symbol": "XAUUSD", "name": "Altın / Dolar"},
         ],
-        "note": "Sayfa açık; işlem motoru henüz bağlanmadı.",
+        "note": "Sanal $300 · $100×500x · AL/SAT sinyal",
     })
+
+
+@app.route("/poly/api/forex/book")
+def api_forex_book():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    from forex_book import snapshot
+    from forex_data import forex_quote
+    q = forex_quote()
+    algo = str(request.args.get("algo") or "g1")
+    return _json_nocache(snapshot(q.get("bid"), q.get("ask"), book=algo))
 
 
 @app.route("/poly/api/crypto-futures/status")
@@ -18791,9 +18859,10 @@ for _html_name in (
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
     "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
     "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML", "FOREX_HTML", "FOREX_GRAFIK_HTML",
+    "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML",
 ):
     _html = globals()[_html_name]
-    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML"):
+    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML"):
         _html = _html.replace("__FOREX_BRAND__", _CEMBOT_FOREX_BRAND_HTML)
         _html = _patch_cembot_brand(_html)
         _html = _patch_cache_bust(_html)

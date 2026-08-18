@@ -30,6 +30,16 @@ _BAR_SEC = {
 _cache: dict[tuple, tuple[float, list]] = {}
 _CACHE_TTL = 6.0
 _quote_cache: tuple[float, dict] | None = None
+_rail_cache: tuple[float, dict] | None = None
+# Defter grafiğin zaman diliminden bağımsız — hangi TF açıksa açık olsun,
+# AL/SAT kararı ve Destek/Direnç hep aynı kaynaktan gelir.
+BOOK_SIGNAL_TF = "1m"
+BOOK_LEVEL_TF = "5m"
+_tick_cache: tuple[float, dict] | None = None
+_RAIL_TTL = 4.0
+_TICK_TTL = 2.0
+_STALE_SEC = 25  # Yahoo GC=F COMEX molasında (00:00–01:00 İST) donar
+_basis: float | None = None  # GC - PAXG, son taze Yahoo anında
 
 
 def _get_json(url: str) -> dict | list:
@@ -103,6 +113,48 @@ def _resample_4h(rows: list[dict]) -> list[dict]:
     return [buckets[k] for k in sorted(buckets)]
 
 
+def _paxg_price() -> float | None:
+    try:
+        data = _get_json(f"{_BINANCE_SPOT}/api/v3/ticker/price?symbol={_PAXG}")
+        return float(data["price"])
+    except Exception:
+        return None
+
+
+def _shift(c: dict, basis: float) -> dict:
+    return {
+        "time": c["time"],
+        "open": c["open"] + basis,
+        "high": c["high"] + basis,
+        "low": c["low"] + basis,
+        "close": c["close"] + basis,
+        "volume": c["volume"],
+    }
+
+
+def _fill_stale(rows: list[dict], tf: str) -> tuple[list[dict], str]:
+    """Yahoo son mumu bayatsa PAXG hareketini GC seviyesine kaydırıp ekle."""
+    global _basis
+    if not rows:
+        return rows, "yahoo_gc"
+    now = int(time.time())
+    last_t = int(rows[-1]["time"])
+    if now - last_t < _STALE_SEC:
+        return rows, "yahoo_gc"
+    try:
+        paxg = _paxg_klines(tf, 80)
+    except Exception:
+        return rows, "yahoo_stale"
+    if not paxg:
+        return rows, "yahoo_stale"
+    anchor = next((p for p in reversed(paxg) if p["time"] <= last_t), paxg[0])
+    _basis = float(rows[-1]["close"]) - float(anchor["close"])
+    extra = [_shift(p, _basis) for p in paxg if p["time"] > last_t]
+    if not extra:
+        return rows, "yahoo_stale"
+    return rows + extra, "yahoo+paxg"
+
+
 def get_xau_klines(tf: str = "1m", limit: int = 200) -> tuple[list[dict], str]:
     if tf not in _YF:
         tf = "1m"
@@ -119,8 +171,10 @@ def get_xau_klines(tf: str = "1m", limit: int = 200) -> tuple[list[dict], str]:
             rows = _resample_4h(rows)
         rows = rows[-n:]
         if rows:
+            rows, src = _fill_stale(rows, tf)
+            rows = rows[-n:]
             _cache[key] = (now, rows)
-            return rows, "yahoo_gc"
+            return rows, src
     except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, json.JSONDecodeError):
         pass
     rows = _paxg_klines(tf, n)
@@ -141,11 +195,13 @@ def _paxg_spread() -> float | None:
 
 def forex_quote() -> dict:
     """Bid / ask / mid + günlük H/L."""
-    global _quote_cache
+    global _quote_cache, _basis
     now = time.time()
     if _quote_cache and now - _quote_cache[0] < 2.0:
         return dict(_quote_cache[1])
     mid = day_hi = day_lo = None
+    src = "yahoo"
+    yahoo_ts = 0
     try:
         rows, meta = _yahoo_raw("1m", "1d")
         px = meta.get("regularMarketPrice")
@@ -154,14 +210,30 @@ def forex_quote() -> dict:
         day_lo = meta.get("regularMarketDayLow")
         if mid is None and rows:
             mid = rows[-1]["close"]
+        yahoo_ts = int(meta.get("regularMarketTime") or (rows[-1]["time"] if rows else 0) or 0)
     except Exception:
         pass
+    paxg = _paxg_price()
+    age = (now - yahoo_ts) if yahoo_ts else 9999
+    if mid is not None and paxg and age < _STALE_SEC:
+        _basis = mid - paxg
+    elif paxg is not None and age >= _STALE_SEC:
+        # COMEX mola: Yahoo donar. Farkı donduğu andaki PAXG mumundan al,
+        # şu anki PAXG'den değil — yoksa mid = stale Yahoo'da kalır.
+        if _basis is None and mid is not None and yahoo_ts:
+            try:
+                pk = _paxg_klines("1m", 80)
+                anchor = next((p for p in reversed(pk) if p["time"] <= yahoo_ts), None)
+                if anchor:
+                    _basis = mid - float(anchor["close"])
+            except Exception:
+                _basis = None
+        if _basis is not None:
+            mid = paxg + _basis
+            src = "paxg_basis"
     if mid is None:
-        try:
-            data = _get_json(f"{_BINANCE_SPOT}/api/v3/ticker/price?symbol={_PAXG}")
-            mid = float(data["price"])
-        except Exception:
-            mid = None
+        mid = paxg
+        src = "paxg"
     raw = _paxg_spread()
     spr = float(raw) if raw and raw >= 0.20 else _DEFAULT_SPREAD
     spr = max(0.20, min(2.0, spr))
@@ -182,8 +254,53 @@ def forex_quote() -> dict:
         "day_high": round(float(day_hi), dec) if day_hi is not None else None,
         "day_low": round(float(day_lo), dec) if day_lo is not None else None,
         "live_price": mid,
+        "src": src,
+        "stale_sec": int(age) if yahoo_ts else None,
     }
     _quote_cache = (now, out)
+    return dict(out)
+
+
+def paxg_tick_score(window_sec: int = 90, limit: int = 500) -> dict:
+    """PAXGUSDT aggTrade dengesizliği — taker alış vs satış, -100..100."""
+    global _tick_cache
+    now = time.time()
+    if _tick_cache and now - _tick_cache[0] < _TICK_TTL:
+        return dict(_tick_cache[1])
+    start = int((now - window_sec) * 1000)
+    try:
+        data = _get_json(
+            f"{_BINANCE_SPOT}/api/v3/aggTrades?symbol={_PAXG}"
+            f"&startTime={start}&limit={limit}"
+        )
+        if not isinstance(data, list):
+            data = []
+    except Exception:
+        data = []
+    buy = sell = 0.0
+    for t in data:
+        try:
+            q = float(t.get("q") or 0)
+        except (TypeError, ValueError):
+            continue
+        if t.get("m"):
+            sell += q
+        else:
+            buy += q
+    tot = buy + sell
+    n = len(data)
+    imb = ((buy - sell) / tot * 100.0) if tot > 0 else 0.0
+    if n < 8:
+        imb *= n / 8.0
+    imb = max(-100.0, min(100.0, imb))
+    out = {
+        "score": round(imb, 1),
+        "buy": round(buy, 4),
+        "sell": round(sell, 4),
+        "n": n,
+        "window_sec": window_sec,
+    }
+    _tick_cache = (now, out)
     return dict(out)
 
 
@@ -193,17 +310,107 @@ def bar_remaining(tf: str) -> int:
     return sec - (now % sec)
 
 
-def forex_spot(timeframe: str = "1m") -> dict:
-    """Eski imza — kotasyon + mum kalan süre."""
+def forex_rail() -> dict:
+    """M5/M15 şerit sinyali — 4 sn önbellek."""
+    global _rail_cache
+    now = time.time()
+    if _rail_cache and now - _rail_cache[0] < _RAIL_TTL:
+        return dict(_rail_cache[1])
+    from forex_signal import rail_signals
+    data = rail_signals()
+    _rail_cache = (now, data)
+    return dict(data)
+
+
+def forex_spot(timeframe: str = "1m", algo: str = "g1") -> dict:
+    """Kotasyon + mum kalan süre + canlı sinyal (tick, 2 sn)."""
     tf = timeframe if timeframe in _YF else "1m"
+    if algo == "a2":
+        return _forex_spot_a2(tf)
     q = forex_quote()
     q["timeframe"] = tf
     q["bar_sec"] = _BAR_SEC[tf]
     q["bar_left"] = bar_remaining(tf)
+    try:
+        q["rail"] = forex_rail()
+    except Exception:
+        q["rail"] = {}
+    try:
+        q["tick"] = paxg_tick_score()
+    except Exception:
+        q["tick"] = {"score": 0.0, "n": 0}
+    q["signal_tf"] = BOOK_SIGNAL_TF
+    q["level_tf"] = BOOK_LEVEL_TF
+    try:
+        from forex_signal import live_signal
+        q["signal"] = live_signal(BOOK_SIGNAL_TF)
+    except Exception as e:
+        q["signal"] = {
+            "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
+            "error": str(e)[:160],
+        }
+    try:
+        from forex_signal import sr_levels
+        rows, _ = get_xau_klines(BOOK_LEVEL_TF, 120)
+        levels = sr_levels(rows)
+    except Exception:
+        levels = {}
+    q["book_levels"] = {
+        "support": (levels or {}).get("nearest_support"),
+        "resistance": (levels or {}).get("nearest_resistance"),
+        "tf": BOOK_LEVEL_TF,
+    }
+    try:
+        from forex_book import apply_signal
+        q["book"] = apply_signal(
+            q.get("signal"), q.get("bid"), q.get("ask"),
+            rail=q.get("rail"), levels=levels,
+        )
+    except Exception as e:
+        q["book"] = {"ok": False, "error": str(e)[:160]}
     return q
 
 
-def forex_chart(timeframe: str = "1m", price_tf: str | None = None, limit: int | None = None) -> dict:
+def _forex_spot_a2(tf: str) -> dict:
+    """Algoritma 2 — 13 katmanlı motor, ayrı defter. Grafik 1 sinyali yok."""
+    q = forex_quote()
+    q["timeframe"] = tf
+    q["bar_sec"] = _BAR_SEC[tf]
+    q["bar_left"] = bar_remaining(tf)
+    q["algo"] = "a2"
+    q["tick"] = {"score": 0.0, "n": 0}
+    q["signal_tf"] = BOOK_SIGNAL_TF
+    q["level_tf"] = BOOK_LEVEL_TF
+    try:
+        from algo2_engine import live_decision
+        dec = live_decision(persist=True)
+    except Exception as e:
+        dec = {
+            "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
+            "allow_entry": False, "engine": "algo2", "error": str(e)[:160],
+            "rail": {}, "levels": {},
+        }
+    q["signal"] = dec
+    q["rail"] = dec.get("rail") or {}
+    levels = dec.get("levels") or {}
+    q["book_levels"] = {
+        "support": levels.get("nearest_support"),
+        "resistance": levels.get("nearest_resistance"),
+        "tf": BOOK_LEVEL_TF,
+    }
+    book_sig = dec if dec.get("allow_entry") else {**dec, "direction": "NEUTRAL"}
+    try:
+        from forex_book import apply_signal
+        q["book"] = apply_signal(
+            book_sig, q.get("bid"), q.get("ask"),
+            rail=q.get("rail"), levels=levels, book="a2",
+        )
+    except Exception as e:
+        q["book"] = {"ok": False, "error": str(e)[:160]}
+    return q
+
+
+def forex_chart(timeframe: str = "1m", price_tf: str | None = None, limit: int | None = None, plain: bool = False, algo: str = "g1") -> dict:
     tf = (price_tf or timeframe or "1m").lower()
     if tf not in _YF:
         tf = "1m"
@@ -236,6 +443,45 @@ def forex_chart(timeframe: str = "1m", price_tf: str | None = None, limit: int |
         "bar_left": bar_remaining(tf),
         **{k: q[k] for k in ("mid", "bid", "ask", "spread", "day_high", "day_low", "live_price")},
     }
+    if plain:
+        out["tick"] = {"score": 0.0, "n": 0}
+        out["signal"] = {
+            "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
+            "engine": "plain",
+        }
+        out["signal_markers"] = []
+        out["rail"] = {}
+        out["levels"] = {}
+        out["algo"] = algo
+        return out
+    if algo == "a2":
+        out["tick"] = {"score": 0.0, "n": 0}
+        out["algo"] = "a2"
+        try:
+            from algo2_engine import overlay_markers
+            sig, marks = overlay_markers(tf, candles)
+            out["signal"] = sig
+            out["signal_markers"] = marks
+            out["rail"] = sig.get("rail") or {}
+            out["levels"] = sig.get("levels") or {}
+        except Exception as e:
+            out["signal"] = {
+                "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
+                "engine": "algo2", "error": str(e)[:160],
+            }
+            out["signal_markers"] = []
+            out["rail"] = {}
+            out["levels"] = {}
+        try:
+            from forex_book import snapshot
+            out["book"] = snapshot(out.get("bid"), out.get("ask"), book="a2")
+        except Exception:
+            out["book"] = None
+        return out
+    try:
+        out["tick"] = paxg_tick_score()
+    except Exception:
+        out["tick"] = {"score": 0.0, "n": 0}
     try:
         from forex_signal import overlay_signals
         sig, marks = overlay_signals(tf, candles)
@@ -247,4 +493,13 @@ def forex_chart(timeframe: str = "1m", price_tf: str | None = None, limit: int |
             "error": str(e)[:160],
         }
         out["signal_markers"] = []
+    try:
+        out["rail"] = forex_rail()
+    except Exception:
+        out["rail"] = {}
+    try:
+        from forex_signal import sr_levels
+        out["levels"] = sr_levels(candles)
+    except Exception as e:
+        out["levels"] = {"ok": False, "error": str(e)[:160]}
     return out

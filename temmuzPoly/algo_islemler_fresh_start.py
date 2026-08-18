@@ -4,6 +4,7 @@
 Kullanım:
   python3 algo_islemler_fresh_start.py           # close + reset $300
   python3 algo_islemler_fresh_start.py --reset-only   # sadece bakiye (close atla)
+  python3 algo_islemler_fresh_start.py --reset-only --keep-open  # bakiye $300, açık pozisyonlar kalır
 
 Not: open çalıştırmaz — :05 / :06 cron kendi açar.
 """
@@ -29,7 +30,7 @@ ALGO_ISLEMLER_KEYS = [
     "analiz1", "analiz2",
     "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15",
     "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
-    "c101", "c101_v2",
+    "c101", "c101_v2", "x101",
 ] + [f"a2_{i:02d}" for i in range(1, 18)] + ["a2_05_v2"]
 
 # Dosya adı defter anahtarından farklı olanlar
@@ -39,7 +40,7 @@ _STATE_FILE_KEY = {"melez": "analiz6_v4"}
 _STANDALONE_CLOSE = [
     "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15",
     "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
-    "melez", "c101", "c101_v2", "a2_05_v2",
+    "melez", "c101", "c101_v2", "x101", "a2_05_v2",
 ]
 
 # Betik adı defter anahtarından farklı olanlar
@@ -91,9 +92,12 @@ def _archive_history(key: str, stamp: str) -> int:
     return n
 
 
-def _reset_balances(now_tr: datetime, wipe_history: bool = False) -> tuple[int, int, int]:
+def _reset_balances(
+    now_tr: datetime, *, wipe_history: bool = False, keep_open: bool = False,
+) -> tuple[int, int, int, int]:
     reset_n = 0
     cleared_open = 0
+    kept_open = 0
     archived = 0
     stamp = now_tr.strftime("%Y%m%d_%H%M")
     for key in ALGO_ISLEMLER_KEYS:
@@ -109,27 +113,38 @@ def _reset_balances(now_tr: datetime, wipe_history: bool = False) -> tuple[int, 
             continue
         if wipe_history:
             archived += _archive_history(key, stamp)
-        cleared_open += len(state.get("open_positions") or [])
+        open_n = len(state.get("open_positions") or [])
+        if keep_open:
+            kept_open += open_n
+        else:
+            cleared_open += open_n
+            state["open_positions"] = []
         state["balance"] = _BALANCE
-        state["open_positions"] = []
         state["total_pnl"] = 0.0
         state["balance_reset_at_tr"] = now_tr.isoformat()
-        state["balance_reset_note"] = (
-            f"algoritma-islemler toplu reset ${_BALANCE:.0f} — "
-            + ("geçmiş arşivlendi" if wipe_history else "geçmiş korundu")
-        )
+        note_parts = [f"algoritma-islemler toplu reset ${_BALANCE:.0f}"]
+        if keep_open and open_n:
+            note_parts.append(f"açık {open_n} poz korundu")
+        if wipe_history:
+            note_parts.append("geçmiş arşivlendi")
+        else:
+            note_parts.append("geçmiş korundu")
+        state["balance_reset_note"] = " — ".join(note_parts)
         state.pop("defer_cleared_at_tr", None)
         state.pop("defer_note", None)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2, ensure_ascii=False)
         reset_n += 1
-        print(f"  reset {key} → ${_BALANCE:.0f}")
-    return reset_n, cleared_open, archived
+        extra = f"  ({open_n} açık)" if keep_open and open_n else ""
+        print(f"  reset {key} → ${_BALANCE:.0f}{extra}")
+    return reset_n, cleared_open, archived, kept_open
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Algoritma-islemler fresh start ($300)")
     parser.add_argument("--reset-only", action="store_true", help="close atla, sadece bakiye sıfırla")
+    parser.add_argument("--keep-open", action="store_true",
+                        help="açık pozisyonları state'te bırak (--reset-only ile)")
     parser.add_argument("--wipe-history", action="store_true",
                         help="geçmişi _archive_<tarih>/ klasörüne taşıyıp defteri boşalt")
     parser.add_argument("--check", action="store_true",
@@ -145,6 +160,9 @@ def main() -> None:
             print(f"  EKSİK {k} → {os.path.basename(_state_path(k))}")
         return
 
+    if args.keep_open and not args.reset_only:
+        parser.error("--keep-open yalnızca --reset-only ile kullanılabilir (close açık pozisyonları kapatır)")
+
     from pm_balance_guard import clear_algo_islemler_open_after
     clear_algo_islemler_open_after(source="algo_islemler_fresh_start")
 
@@ -153,11 +171,18 @@ def main() -> None:
     # Damga close turundan SONRA alınır: close sırasında kapanan pozisyonların
     # exit_time'ı damgadan büyük olursa dashboard onları yeni skora sayar.
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    reset_n, cleared, archived = _reset_balances(now_tr, wipe_history=args.wipe_history)
+    reset_n, cleared, archived, kept = _reset_balances(
+        now_tr, wipe_history=args.wipe_history, keep_open=args.keep_open,
+    )
     nxt = (now_tr.hour + 1) % 24
     arc = f"\n  Arşivlenen işlem: {archived}" if args.wipe_history else ""
+    open_line = (
+        f"  Korunan açık pozisyon: {kept}"
+        if args.keep_open
+        else f"  Kalan açık temizlendi: {cleared}"
+    )
     print(
-        f"\n✓ {reset_n} defter → ${_BALANCE:.0f}  |  kalan açık temizlendi: {cleared}{arc}\n"
+        f"\n✓ {reset_n} defter → ${_BALANCE:.0f}  |{open_line}{arc}\n"
         f"  Sonraki otomatik open: ~{nxt:02d}:05–:06 İST (cron)\n"
         f"  Manuel open çalıştırılmadı."
     )

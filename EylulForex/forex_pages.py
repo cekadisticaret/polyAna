@@ -86,7 +86,9 @@ body{
   __FOREX_BRAND__
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item active" href="/forex/home"><span class="nav-dot"></span>Overview</a>
-  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>Grafik</a>
+  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>Grafik 1</a>
+  <a class="nav-item" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
+  <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geç</a>
   <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto'ya Geç</a>
@@ -96,13 +98,13 @@ body{
   <div class="head">
     <div>
       <div class="page-title">Forex <span class="badge">yeni</span></div>
-      <div class="page-sub">Poly ve Kripto’dan ayrı sistem · sanal defterler henüz bağlanmadı</div>
+      <div class="page-sub">Sanal XAUUSD · $300 kasa · $100×500x · AL/SAT sinyal</div>
     </div>
   </div>
   <div class="hero">
     <div class="glass">
       <h2>Sayfa açık</h2>
-      <p>Bu ekran Poly (`/poly`) ve Kripto (`/kripto`) gibi üçüncü sistem. İşlem motoru, cron ve defterler bir sonraki adımda eklenecek — şimdilik kabuk ve menü geçişi hazır.</p>
+      <p>XAUUSD sanal defter: kasa $300, her işlem $100 × 500x. Grafikte AL yeşil → al, SAT kırmızı → sat. Liste <a href="/forex/islemler" style="color:var(--gold)">İşlemler</a>’de.</p>
       <div class="sys">
         <a href="/poly">← Poly</a>
         <a href="/kripto">← Kripto</a>
@@ -153,12 +155,15 @@ loadStatus();
 </html>
 """
 
-FOREX_GRAFIK_HTML = r"""<!DOCTYPE html>
+FOREX_CHART_TMPL = r"""<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>XAUUSD — Forex</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#071018">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>__FX_TITLE__</title>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d1b2a'/><text x='50%25' y='54%25' font-size='16' text-anchor='middle' dominant-baseline='central' fill='%23d4af37' font-family='Arial' font-weight='bold'>F</text></svg>">
 <style>
@@ -186,9 +191,15 @@ body{display:flex;color:var(--txt);font-family:Inter,system-ui,sans-serif;backgr
 .meta{margin-left:auto;display:flex;gap:14px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .meta b{color:var(--txt);font-weight:700}
 .exec{display:grid;grid-template-columns:1fr 88px 1fr;gap:0;background:#0d47a1}
-.ex-btn{border:none;color:#fff;padding:10px 14px;cursor:pointer;text-align:left;font:inherit}
+.ex-btn{border:none;color:#fff;padding:10px 14px;cursor:pointer;text-align:left;font:inherit;transition:background .25s}
 .ex-btn.sell{background:#1565c0;text-align:left}
 .ex-btn.buy{background:#0d47a1;text-align:right}
+.ex-btn.sell.hot{background:#e53935 !important}
+.ex-btn.buy.hot{background:#2e7d32 !important}
+.exec.sig-up{background:#1b5e20}
+.exec.sig-down{background:#8e1b1b}
+.exec.sig-up .lot{background:#14532d}
+.exec.sig-down .lot{background:#7f1d1d}
 .ex-btn:active{filter:brightness(1.08)}
 .ex-k{font-size:10px;font-weight:800;letter-spacing:.08em;opacity:.85}
 .ex-p{font-size:20px;font-weight:800;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
@@ -197,7 +208,63 @@ body{display:flex;color:var(--txt);font-family:Inter,system-ui,sans-serif;backgr
 .lot-lbl{font-size:9px;opacity:.7;font-weight:700}
 .lot-step{display:flex;gap:8px}
 .lot-step button{width:22px;height:18px;border:none;border-radius:4px;background:rgba(255,255,255,.15);color:#fff;cursor:pointer;font-weight:800}
-.chart-wrap{flex:1;min-height:0;position:relative;background:#fff}
+.chart-row{flex:1;min-height:0;display:flex}
+.rail{width:96px;flex-shrink:0;background:#070e14;display:flex;flex-direction:column;border-right:1px solid var(--line)}
+.rail-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 8px;border-bottom:1px solid var(--line);position:relative;overflow:hidden;transition:background .35s}
+.rail-card:last-child{border-bottom:none}
+.rail-card::before{content:'';position:absolute;inset:auto 18% 10px 18%;height:2px;border-radius:2px;background:rgba(255,255,255,.06)}
+.rail-tf{font-size:10px;font-weight:800;letter-spacing:.14em;color:#6d7b86}
+.rail-gauge{position:relative;width:58px;height:58px}
+.rail-gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+.rg-bg{fill:none;stroke:#182430;stroke-width:3.2}
+.rg-fg{fill:none;stroke:#546e7a;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:0 100;transition:stroke-dasharray .55s ease,stroke .35s}
+.rail-score{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:#cfd8dc}
+.rail-dir{font-size:11px;font-weight:800;text-align:center;line-height:1.15;color:#8a96a0;letter-spacing:.02em}
+.rail-bars{display:flex;gap:4px;height:18px;align-items:flex-end}
+.rail-bars i{width:7px;border-radius:2px 2px 0 0;background:#2a3a46;height:20%;transition:height .4s,background .35s}
+.rail-cd{font-size:10px;font-weight:800;color:#5d6d78;font-variant-numeric:tabular-nums}
+.rail-card.lean-up{background:linear-gradient(180deg,rgba(38,166,154,.10),transparent 70%)}
+.rail-card.lean-up .rg-fg{stroke:#26a69a}
+.rail-card.lean-up .rail-score,.rail-card.lean-up .rail-dir{color:#7ee8dc}
+.rail-card.lean-up .rail-bars i{background:#1a5c55}
+.rail-card.lean-down{background:linear-gradient(180deg,rgba(239,83,80,.10),transparent 70%)}
+.rail-card.lean-down .rg-fg{stroke:#ef5350}
+.rail-card.lean-down .rail-score,.rail-card.lean-down .rail-dir{color:#ff8a80}
+.rail-card.lean-down .rail-bars i{background:#6b2a2a}
+.rail-card.up{background:linear-gradient(180deg,rgba(38,166,154,.28),rgba(38,166,154,.04));animation:railPulseUp 1.6s ease-in-out infinite}
+.rail-card.up .rg-fg{stroke:#26a69a}
+.rail-card.up .rail-score,.rail-card.up .rail-dir{color:#26a69a}
+.rail-card.down{background:linear-gradient(180deg,rgba(239,83,80,.28),rgba(239,83,80,.04));animation:railPulseDown 1.6s ease-in-out infinite}
+.rail-card.down .rg-fg{stroke:#ef5350}
+.rail-card.down .rail-score,.rail-card.down .rail-dir{color:#ef5350}
+.rail-card.hot .rail-gauge{filter:drop-shadow(0 0 8px currentColor)}
+@keyframes railPulseUp{0%,100%{box-shadow:inset 0 0 0 0 rgba(38,166,154,0)}50%{box-shadow:inset 0 0 22px 0 rgba(38,166,154,.22)}}
+@keyframes railPulseDown{0%,100%{box-shadow:inset 0 0 0 0 rgba(239,83,80,0)}50%{box-shadow:inset 0 0 22px 0 rgba(239,83,80,.22)}}
+.book-pane{
+  width:300px;flex-shrink:0;background:#0b1116;border-left:1px solid var(--line);
+  display:flex;flex-direction:column;min-height:0;
+}
+.book-head{padding:12px 14px 8px;border-bottom:1px solid var(--line)}
+.book-head b{display:block;font-size:13px;font-weight:800}
+.book-head small{color:var(--muted);font-size:10px}
+.book-tabs{display:flex;gap:14px;padding:0 14px;border-bottom:1px solid var(--line)}
+.book-tab{background:none;border:none;color:#6d7b86;font:inherit;font-size:10px;font-weight:800;letter-spacing:.04em;padding:8px 0;cursor:pointer}
+.book-tab.on{color:#4ea3ff;border-bottom:2px solid #4ea3ff}
+.book-list{flex:1;overflow:auto}
+.bk-row{display:flex;justify-content:space-between;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.bk-sym{font-size:12px;font-weight:700}
+.bk-sym.buy{color:#3d8bfd}
+.bk-sym.sell{color:#ef5350}
+.bk-px{font-size:11px;color:#8a96a0;margin-top:3px;font-variant-numeric:tabular-nums}
+.bk-right{text-align:right}
+.bk-ts{font-size:10px;color:#6d7b86;font-variant-numeric:tabular-nums}
+.bk-pnl{font-size:16px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
+.bk-pnl.pos{color:#c8f135}
+.bk-pnl.neg{color:#ef5350}
+.bk-empty{padding:18px 14px;color:#6d7b86;font-size:12px}
+.book-eq{padding:10px 14px;border-top:1px solid var(--line);font-size:16px;font-weight:800;text-align:center}
+.book-eq span{display:block;font-size:10px;color:var(--muted);font-weight:600}
+.chart-wrap{flex:1;min-width:0;min-height:0;position:relative;background:#fff}
 #fx-chart{width:100%;height:100%}
 .hud{position:absolute;top:10px;left:12px;z-index:4;font-size:12px;font-weight:700;color:#37474f;pointer-events:none}
 .hud span{color:#90a4ae;font-weight:600}
@@ -209,14 +276,76 @@ body{display:flex;color:var(--txt);font-family:Inter,system-ui,sans-serif;backgr
 .sig.down .sig-dir{color:#ef5350}
 .sig-meta{font-size:10px;color:#78909c;margin-top:3px;font-weight:600}
 .sig-ly{font-size:10px;color:#90a4ae;margin-top:2px;font-variant-numeric:tabular-nums}
+.ck-row{display:flex;justify-content:space-between;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);font-size:11px}
+.ck-row b{font-size:10px;font-weight:800;letter-spacing:.02em}
+.ck-row .ck-sc{font-variant-numeric:tabular-nums;font-weight:800}
+.ck-row.ok .ck-sc{color:#c8f135}
+.ck-row.bad .ck-sc{color:#ef5350}
+.ck-why{font-size:10px;color:#6d7b86;margin-top:3px;line-height:1.35}
+.ck-head{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:800}
+.ck-head small{display:block;font-size:10px;color:#6d7b86;font-weight:600;margin-top:3px}
 .cd{position:absolute;right:72px;bottom:28px;z-index:4;background:#263238;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;font-variant-numeric:tabular-nums}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1b2832;border:1px solid var(--gold);color:var(--gold);padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;display:none;z-index:20}
+body.fx-public .sidebar{display:none}
+body.fx-public .desk{width:100%}
+body.fx-public .book-pane{display:none}
+button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 @media(max-width:800px){
-  body{flex-direction:column;overflow:auto}
-  .sidebar{width:100%;height:auto;flex-direction:row;flex-wrap:wrap;padding:8px}
-  .desk{height:auto;min-height:80vh}
-  .chart-wrap{min-height:62vh}
-  .ex-p{font-size:16px}
+  html,body{height:100%;height:100dvh;overflow:hidden}
+  body{
+    flex-direction:column;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  body:not(.fx-public) .sidebar{
+    display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;
+    width:100%;height:auto;padding:6px 8px;gap:4px;overflow-x:auto;
+    -webkit-overflow-scrolling:touch;border-right:none;border-bottom:1px solid var(--line);
+  }
+  body:not(.fx-public) .nav-label,
+  body:not(.fx-public) .sidebar-footer{display:none}
+  body:not(.fx-public) .nav-item{white-space:nowrap;padding:8px 10px;font-size:12px}
+  .desk{height:100%;min-height:0}
+  .topbar{display:none}
+  .exec{
+    order:3;grid-template-columns:1fr 72px 1fr;flex-shrink:0;
+    padding-bottom:env(safe-area-inset-bottom,0);
+  }
+  .ex-btn{padding:10px 10px;min-height:56px}
+  .ex-p{font-size:17px}
+  .lot input{width:46px;font-size:16px}
+  .lot-step button{width:28px;height:24px}
+  .chart-row{order:2;flex-direction:column;flex:1;min-height:0}
+  .rail{
+    width:100%;flex-direction:row;height:auto;flex-shrink:0;
+    border-right:none;border-bottom:1px solid var(--line);
+  }
+  .rail-card{
+    flex:1;flex-direction:row;flex-wrap:nowrap;justify-content:center;
+    align-items:center;gap:6px 8px;padding:7px 8px;
+    border-bottom:none;border-right:1px solid var(--line);
+  }
+  .rail-card:last-child{border-right:none}
+  .rail-card::before{display:none}
+  .rail-tf{letter-spacing:.08em}
+  .rail-gauge{width:40px;height:40px;flex-shrink:0}
+  .rail-score{font-size:13px}
+  .rail-dir{font-size:10px;min-width:0;text-align:left}
+  .rail-bars{display:none}
+  .rail-cd{font-size:9px;margin-left:auto}
+  .book-pane{display:none}
+  .chart-wrap{flex:1;min-height:0}
+  .hud{top:8px;left:8px;font-size:11px;max-width:46%}
+  .sig{top:8px;right:8px;min-width:0;padding:6px 8px}
+  .sig-dir{font-size:12px}
+  .sig-ly{display:none}
+  .cd{right:10px;bottom:10px}
+  .toast{bottom:76px;left:12px;right:12px;transform:none;text-align:center}
+}
+@media(max-width:420px){
+  .meta #m-hl{display:none}
+  .ex-p{font-size:15px}
+  .rail-dir{max-width:72px}
 }
 </style>
 </head>
@@ -225,7 +354,9 @@ body{display:flex;color:var(--txt);font-family:Inter,system-ui,sans-serif;backgr
   __FOREX_BRAND__
   <div class="nav-label">Forex</div>
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
-  <a class="nav-item active" href="/forex/grafik"><span class="nav-dot"></span>Grafik</a>
+  <a class="nav-item __FX_NAV_G1__" href="/forex/grafik"><span class="nav-dot"></span>Grafik 1</a>
+  <a class="nav-item __FX_NAV_A2__" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
+  <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
   <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
@@ -259,24 +390,65 @@ body{display:flex;color:var(--txt);font-family:Inter,system-ui,sans-serif;backgr
       <div class="ex-p" id="p-ask">—</div>
     </button>
   </div>
-  <div class="chart-wrap">
-    <div class="hud" id="hud">XAUUSD, M1</div>
-    <div class="sig" id="sig">
-      <div class="sig-dir" id="sig-dir">NÖTR</div>
-      <div class="sig-meta" id="sig-meta">confluence bekleniyor</div>
-      <div class="sig-ly" id="sig-ly"></div>
+  <div class="chart-row">
+    <div class="rail" id="rail">
+      <div class="rail-card" id="rail-5m">
+        <div class="rail-tf">M5</div>
+        <div class="rail-gauge">
+          <svg viewBox="0 0 36 36" aria-hidden="true">
+            <circle class="rg-bg" cx="18" cy="18" r="15" pathLength="100"/>
+            <circle class="rg-fg" id="rail-5m-ring" cx="18" cy="18" r="15" pathLength="100"/>
+          </svg>
+          <div class="rail-score" id="rail-5m-score">—</div>
+        </div>
+        <div class="rail-dir" id="rail-5m-dir">DENGELİ</div>
+        <div class="rail-bars" id="rail-5m-bars"><i></i><i></i><i></i></div>
+        <div class="rail-cd" id="rail-5m-cd">—</div>
+      </div>
+      <div class="rail-card" id="rail-15m">
+        <div class="rail-tf">M15</div>
+        <div class="rail-gauge">
+          <svg viewBox="0 0 36 36" aria-hidden="true">
+            <circle class="rg-bg" cx="18" cy="18" r="15" pathLength="100"/>
+            <circle class="rg-fg" id="rail-15m-ring" cx="18" cy="18" r="15" pathLength="100"/>
+          </svg>
+          <div class="rail-score" id="rail-15m-score">—</div>
+        </div>
+        <div class="rail-dir" id="rail-15m-dir">DENGELİ</div>
+        <div class="rail-bars" id="rail-15m-bars"><i></i><i></i><i></i></div>
+        <div class="rail-cd" id="rail-15m-cd">—</div>
+      </div>
     </div>
-    <div class="cd" id="cd">—</div>
-    <div id="fx-chart"></div>
+    <div class="chart-wrap">
+      <div class="hud" id="hud">XAUUSD, M1</div>
+      <div class="sig" id="sig">
+        <div class="sig-dir" id="sig-dir">NÖTR</div>
+        <div class="sig-meta" id="sig-meta">confluence bekleniyor</div>
+        <div class="sig-ly" id="sig-ly"></div>
+      </div>
+      <div class="cd" id="cd">—</div>
+      <div id="fx-chart"></div>
+    </div>
+    <aside class="book-pane" id="book-pane">
+      <div class="book-head"><b>İşlemler</b><small>XAUUSD · $100 × 500x</small></div>
+      <div class="book-tabs">
+        <button type="button" class="book-tab on" data-btab="pos" onclick="bookTab('pos')">POZİSYONLAR</button>
+        <button type="button" class="book-tab" data-btab="hist" onclick="bookTab('hist')">İŞLEMLER</button>
+      </div>
+      <div class="book-list" id="book-list"></div>
+      <div class="book-eq"><span>bakiye</span><b id="book-eq">$300.00</b></div>
+    </aside>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
+const FX_ALGO='__FX_ALGO__';
 const TFS = [
   ['1m','M1'],['5m','M5'],['15m','M15'],['30m','M30'],['1h','H1'],['4h','H4'],['1d','D1']
 ];
 let _tf = '1m', _chart=null, _series=null, _bidLine=null, _askLine=null;
-let _last=[], _req=0, _barLeft=60, _barSec=60;
+let _srLines=[], _last=[], _req=0, _barLeft=60, _barSec=60;
+const _railLeft={};
 const TZ='Europe/Istanbul';
 
 function utcToIst(sec){
@@ -292,7 +464,10 @@ function toast(msg){
 function paper(side){
   const lot=document.getElementById('lot').value;
   const px=side==='buy'?document.getElementById('p-ask').textContent:document.getElementById('p-bid').textContent;
-  toast('Sanal '+ (side==='buy'?'AL':'SAT') +' '+lot+' lot @ '+px+' — motor henüz yok');
+  const msg=FX_ALGO==='a2'
+    ? 'Sanal '+ (side==='buy'?'AL':'SAT') +' '+lot+' lot @ '+px+' — A2 kontrol listesi açarsa cron işler'
+    : 'Sanal '+ (side==='buy'?'AL':'SAT') +' '+lot+' lot @ '+px+' — motor henüz yok';
+  toast(msg);
 }
 function nudgeLot(d){
   const el=document.getElementById('lot');
@@ -306,12 +481,20 @@ function buildTfs(){
   box.querySelectorAll('.tf').forEach(b=>b.onclick=()=>{_tf=b.dataset.tf; buildTfs(); loadChart();});
 }
 function fmt(n,dec){ return n==null?'—':Number(n).toFixed(dec!=null?dec:2); }
+function fmtCd(sec){
+  const n=Math.max(0,sec|0);
+  return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+}
 function tick(){
   document.getElementById('m-clk').textContent=new Date().toLocaleTimeString('tr-TR',{hour12:false,timeZone:TZ});
   if(_barLeft>0) _barLeft--;
-  const m=String(Math.floor(_barLeft/60)).padStart(2,'0');
-  const s=String(_barLeft%60).padStart(2,'0');
-  document.getElementById('cd').textContent=m+':'+s;
+  document.getElementById('cd').textContent=fmtCd(_barLeft);
+  ['5m','15m'].forEach(tf=>{
+    if(_railLeft[tf]==null) return;
+    if(_railLeft[tf]>0) _railLeft[tf]--;
+    const el=document.getElementById(tf==='5m'?'rail-5m-cd':'rail-15m-cd');
+    if(el) el.textContent=fmtCd(_railLeft[tf]);
+  });
 }
 function applyQuote(q){
   const dec=q.dec!=null?q.dec:2;
@@ -333,6 +516,9 @@ function applyQuote(q){
     c.close=Number(q.mid.toFixed(dec)); c.high=Math.max(c.high,c.close); c.low=Math.min(c.low,c.close);
     _last[_last.length-1]=c; if(_series) _series.update(c);
   }
+  if(q.rail) applyRail(q.rail);
+  if(q.signal) applySignal(q, true);
+  if(q.book) renderBook(q.book);
 }
 function ensure(){
   if(_chart) return true;
@@ -350,12 +536,20 @@ function ensure(){
     upColor:'#26a69a', downColor:'#ef5350', borderUpColor:'#26a69a',
     borderDownColor:'#ef5350', wickUpColor:'#26a69a', wickDownColor:'#ef5350',
   });
-  window.addEventListener('resize',()=>{ if(_chart) _chart.applyOptions({width:el.clientWidth,height:el.clientHeight||480}); });
+  const sizeChart=()=>{
+    if(!_chart) return;
+    const w=el.clientWidth, h=el.clientHeight;
+    if(w>0 && h>0) _chart.applyOptions({width:w,height:h});
+  };
+  window.addEventListener('resize',sizeChart);
+  if(window.visualViewport) window.visualViewport.addEventListener('resize',sizeChart);
+  if(window.ResizeObserver) new ResizeObserver(sizeChart).observe(el);
+  requestAnimationFrame(sizeChart);
   return true;
 }
 async function refreshQuote(){
   try{
-    const r=await fetch('/poly/api/forex/spot?timeframe='+_tf,{cache:'no-store'});
+    const r=await fetch('/poly/api/forex/spot?timeframe='+_tf+'&algo='+FX_ALGO,{cache:'no-store'});
     applyQuote(await r.json());
   }catch(e){}
 }
@@ -365,7 +559,7 @@ async function loadChart(){
   const lab=(TFS.find(x=>x[0]===_tf)||[_tf,_tf])[1];
   document.getElementById('hud').innerHTML='XAUUSD, '+lab+' <span>Gold vs US Dollar</span>';
   try{
-    const r=await fetch('/poly/api/forex/chart?timeframe='+_tf+'&limit=240&_='+Date.now(),{cache:'no-store'});
+    const r=await fetch('/poly/api/forex/chart?timeframe='+_tf+'&limit=240&algo='+FX_ALGO+'&_='+Date.now(),{cache:'no-store'});
     const d=await r.json();
     if(id!==_req) return;
     applyQuote(d);
@@ -373,25 +567,58 @@ async function loadChart(){
     _last=candles.slice();
     _series.setData(candles);
     applySignal(d);
+    applyRail(d.rail||{});
+    applyLevels(d.levels||{});
     _chart.timeScale().fitContent();
   }catch(e){ console.error(e); }
 }
-function applySignal(d){
+function paintExec(dir){
+  dir=String(dir||'').toUpperCase();
+  const sell=document.querySelector('.ex-btn.sell');
+  const buy=document.querySelector('.ex-btn.buy');
+  const bar=document.querySelector('.exec');
+  if(!sell||!buy||!bar) return;
+  sell.classList.toggle('hot', dir==='DOWN');
+  buy.classList.toggle('hot', dir==='UP');
+  bar.classList.toggle('sig-up', dir==='UP');
+  bar.classList.toggle('sig-down', dir==='DOWN');
+  sell.style.background=dir==='DOWN'?'#e53935':'';
+  buy.style.background=dir==='UP'?'#2e7d32':'';
+}
+function applySignal(d, quoteOnly){
   const s=d.signal||{};
   const dir=s.direction||'NEUTRAL';
+  paintExec(dir);
   const el=document.getElementById('sig');
   el.className='sig'+(dir==='UP'?' up':dir==='DOWN'?' down':'');
   const lab=dir==='UP'?'YÜKSELİŞ':dir==='DOWN'?'DÜŞÜŞ':'NÖTR';
   document.getElementById('sig-dir').textContent=lab;
   const conf=s.confidence!=null?Number(s.confidence).toFixed(0):'—';
-  const st=s.is_stable?'kararlı':'bekliyor';
-  document.getElementById('sig-meta').textContent='güven '+conf+' · '+st;
+  let st=s.is_stable?'kararlı':'bekliyor';
+  if(s.tick_lead) st='tick';
+  if(s.price_lead) st='fiyat';
+  if(s.rail_confirm) st='M5/M15';
+  if(s.veto) st=s.veto==='rail'?'ray veto':'ray ayrıştı';
+  if(s.engine==='algo2_pending') st='algoritma bekleniyor';
+  if(s.engine==='algo2'){
+    st=s.allow_entry?'aç':'bekliyor';
+    if(s.regime) st+=' · '+s.regime;
+  }
+  document.getElementById('sig-meta').textContent=
+    (s.engine==='algo2' && s.score!=null)
+      ? ('skor '+Number(s.score).toFixed(0)+' · '+st)
+      : ('güven '+conf+' · '+st);
   const L=s.layers||{};
   document.getElementById('sig-ly').textContent=
-    'T '+(L.trend!=null?Number(L.trend).toFixed(0):'—')
-    +'  M '+(L.momentum!=null?Number(L.momentum).toFixed(0):'—')
-    +'  P '+(L.pattern!=null?Number(L.pattern).toFixed(0):'—');
-  if(!_series) return;
+    s.engine==='algo2'
+      ? ((s.verdict||'').slice(0,72) || ('T '+(L.trend!=null?Number(L.trend).toFixed(0):'—')+'  K '+(L.momentum!=null?Number(L.momentum).toFixed(0):'—')+'  P '+(L.pattern!=null?Number(L.pattern).toFixed(0):'—')))
+      : ('T '+(L.trend!=null?Number(L.trend).toFixed(0):'—')
+        +'  K '+(L.momentum!=null?Number(L.momentum).toFixed(0):'—')
+        +'  P '+(L.pattern!=null?Number(L.pattern).toFixed(0):'—')
+        +(L.tick!=null?'  Δ '+Number(L.tick).toFixed(0):''));
+  _sig=s;
+  if(FX_ALGO==='a2' && _btab==='karar') renderBook(_book);
+  if(quoteOnly||!_series) return;
   const marks=(d.signal_markers||[]).map(m=>({
     time:utcToIst(m.time),
     position:m.direction==='UP'?'belowBar':'aboveBar',
@@ -401,12 +628,331 @@ function applySignal(d){
   }));
   _series.setMarkers(marks);
 }
+function clearSr(){
+  if(!_series) return;
+  _srLines.forEach(l=>{ try{ _series.removePriceLine(l); }catch(e){} });
+  _srLines=[];
+}
+function applyLevels(lv){
+  clearSr();
+  if(!_series || !lv || lv.ok===false) return;
+  const near=(a,b)=>a!=null && b!=null && Math.abs(Number(a)-Number(b))<1e-6;
+  const add=(price,color,title,axis,width,style)=>{
+    if(price==null) return;
+    _srLines.push(_series.createPriceLine({
+      price:Number(price), color:color, lineWidth:width||1,
+      lineStyle:style!=null?style:LightweightCharts.LineStyle.Dotted,
+      axisLabelVisible:axis!==false, title:title,
+    }));
+  };
+  if(lv.nearest_resistance)
+    add(lv.nearest_resistance.price,'rgba(248,113,113,0.95)','Direnç',true,2,LightweightCharts.LineStyle.Solid);
+  if(lv.nearest_support)
+    add(lv.nearest_support.price,'rgba(74,222,128,0.95)','Destek',true,2,LightweightCharts.LineStyle.Solid);
+  (lv.resistance||[]).slice(0,3).forEach((x,i)=>{
+    if(near(x.price, lv.nearest_resistance && lv.nearest_resistance.price)) return;
+    add(x.price,'rgba(248,113,113,0.28)','D'+(i+1),false);
+  });
+  (lv.support||[]).slice(0,3).forEach((x,i)=>{
+    if(near(x.price, lv.nearest_support && lv.nearest_support.price)) return;
+    add(x.price,'rgba(74,222,128,0.28)','S'+(i+1),false);
+  });
+  const hud=document.getElementById('hud');
+  if(hud && (lv.nearest_support || lv.nearest_resistance)){
+    const bits=[];
+    if(lv.nearest_support) bits.push('S '+Number(lv.nearest_support.price).toFixed(2));
+    if(lv.nearest_resistance) bits.push('D '+Number(lv.nearest_resistance.price).toFixed(2));
+    const base=hud.innerHTML.split(' · S ')[0].split(' · D ')[0];
+    hud.innerHTML=base+' <span>· '+bits.join(' · ')+'</span>';
+  }
+}
+function applyRail(rail){
+  [['5m','rail-5m'],['15m','rail-15m']].forEach(([tf,id])=>{
+    const s=rail[tf]||{};
+    const dir=s.direction||'NEUTRAL';
+    const lean=s.lean||(s.raw_score>4?'UP':s.raw_score<-4?'DOWN':'FLAT');
+    const fill=Math.max(0,Math.min(100,Number(s.fill!=null?s.fill:(s.confidence||0)/55*100)));
+    const card=document.getElementById(id);
+    let cls='rail-card';
+    if(dir==='UP') cls+=' up';
+    else if(dir==='DOWN') cls+=' down';
+    else if(lean==='UP') cls+=' lean-up';
+    else if(lean==='DOWN') cls+=' lean-down';
+    if(fill>=70) cls+=' hot';
+    card.className=cls;
+    const ring=document.getElementById(id+'-ring');
+    if(ring) ring.style.strokeDasharray=fill.toFixed(1)+' '+(100-fill).toFixed(1);
+    document.getElementById(id+'-score').textContent=s.confidence!=null?Number(s.confidence).toFixed(0):'—';
+    let lab='DENGELİ';
+    if(dir==='UP') lab=s.is_stable?'ARTACAK':'↑ YAKIN';
+    else if(dir==='DOWN') lab=s.is_stable?'DÜŞECEK':'↓ YAKIN';
+    else if(lean==='UP') lab=fill>=45?'↑ YAKIN':'↑ EĞİLİM';
+    else if(lean==='DOWN') lab=fill>=45?'↓ YAKIN':'↓ EĞİLİM';
+    document.getElementById(id+'-dir').textContent=lab;
+    const L=s.layers||{};
+    const bars=document.getElementById(id+'-bars');
+    if(bars){
+      const vals=[L.trend,L.momentum,L.pattern].map(v=>{
+        const n=Math.abs(Number(v)||0);
+        return Math.max(18,Math.min(100,n));
+      });
+      bars.querySelectorAll('i').forEach((el,i)=>{
+        el.style.height=vals[i]+'%';
+        const raw=[L.trend,L.momentum,L.pattern][i]||0;
+        el.style.background=raw>4?'#26a69a':raw<-4?'#ef5350':'#2a3a46';
+      });
+    }
+    if(s.bar_left!=null) _railLeft[tf]=s.bar_left;
+    const cd=document.getElementById(id+'-cd');
+    if(cd && _railLeft[tf]!=null) cd.textContent=fmtCd(_railLeft[tf]);
+  });
+}
 const q=new URLSearchParams(location.search);
 if(TFS.some(x=>x[0]===q.get('tf'))) _tf=q.get('tf');
 buildTfs(); tick(); setInterval(tick,1000);
-loadChart(); refreshQuote();
+let _book=null, _btab='pos', _sig=null;
+if(FX_ALGO==='a2'){
+  const tabs=document.querySelector('.book-tabs');
+  if(tabs) tabs.insertAdjacentHTML('beforeend','<button type="button" class="book-tab" data-btab="karar" onclick="bookTab(\'karar\')">KARAR</button>');
+}
+function bookTab(t){
+  _btab=t;
+  document.querySelectorAll('.book-tab').forEach(x=>x.classList.toggle('on', x.dataset.btab===t));
+  renderBook(_book);
+}
+function rejText(r){
+  const yon=r.side==='buy'?'AL':'SAT';
+  if(r.reason==='bekleme') return yon+' sinyali var — kapanış sonrası bekleme '+r.wait+' sn.';
+  if(r.reason==='stop_uzak') return yon+' sinyali var — stop çok uzak (risk $'+fmt(r.risk_usd)+'), açılmadı.';
+  if(r.reason==='rr_dusuk') return yon+' sinyali var — ödül/risk '+fmt(r.rr)+' (en az 1.5), açılmadı.';
+  if(r.reason==='seviye_yok') return yon+' sinyali var — fiyat destek/direnç arasında değil, açılmadı.';
+  return '';
+}
+function renderBook(b){
+  _book=b||_book;
+  const pane=document.getElementById('book-pane');
+  if(!pane || !b) return;
+  const eq=document.getElementById('book-eq');
+  if(eq) eq.textContent='$'+fmt(b.equity!=null?b.equity:b.balance);
+  const el=document.getElementById('book-list');
+  if(!el) return;
+  const row=(side,vol,a,z,ts,pnl,open,extra)=>{
+    const sell=side==='sell';
+    return '<div class="bk-row"><div><div class="bk-sym '+(sell?'sell':'buy')+'">XAUUSD, '+(sell?'sell':'buy')+' '+fmt(vol)+'</div>'
+      +'<div class="bk-px">'+fmt(a)+(z!=null?' → '+fmt(z):'')+'</div>'
+      +(extra?'<div class="bk-px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
+      +'<div class="bk-right"><div class="bk-ts">'+ts+(open?' · açık':'')+'</div>'
+      +'<div class="bk-pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl==null?'—':fmt(pnl))+'</div></div></div>';
+  };
+  const plan=p=>{
+    const bits=[];
+    if(p.stop!=null) bits.push((p.lock_stage?'kilit ':'SL ')+fmt(p.stop));
+    if(p.target!=null) bits.push('TP '+fmt(p.target));
+    if(p.progress!=null) bits.push('%'+fmt(p.progress));
+    if(p.commission) bits.push('kom $'+fmt(p.commission));
+    if(p.swap) bits.push('swap $'+fmt(p.swap));
+    return bits.join(' · ');
+  };
+  const cost=t=>{
+    const bits=[];
+    if(t.commission) bits.push('kom $'+fmt(t.commission));
+    if(t.swap) bits.push('swap $'+fmt(t.swap));
+    return bits.join(' · ');
+  };
+  if(_btab==='karar'){
+    const s=_sig||{};
+    const rows=s.checklist||[];
+    let html='<div class="ck-head">skor '+(s.score!=null?Number(s.score).toFixed(0):'—')
+      +(s.allow_entry?' · AÇ':' · BEKLE')
+      +'<small>'+(s.verdict||'kontrol listesi bekleniyor')+'</small></div>';
+    html+=rows.map(it=>{
+      const ok=it.ok?'ok':'bad';
+      return '<div class="ck-row '+ok+'"><div><b>'+it.id+'. '+it.name+'</b>'
+        +'<div class="ck-why">'+(it.reason||'')+(it.vote&&it.vote!=='NEUTRAL'?' · '+it.vote:'')+'</div></div>'
+        +'<div class="ck-sc">'+(it.score!=null?Number(it.score).toFixed(0):'—')+'</div></div>';
+    }).join('');
+    el.innerHTML=html||'<div class="bk-empty">Karar henüz yok.</div>';
+    return;
+  }
+  if(_btab==='pos'){
+    const ps=b.positions||(b.position?[b.position]:[]);
+    let html=ps.length?ps.map(p=>row(p.side,p.volume,p.entry,p.mark,p.open_time||'',p.float_net!=null?p.float_net:p.float_pnl,true,plan(p))).join(''):'<div class="bk-empty">Açık pozisyon yok.</div>';
+    const rj=b.last_reject;
+    if(rj) html+='<div class="bk-empty" style="text-align:left">'+rejText(rj)+'</div>';
+    el.innerHTML=html;
+  }else{
+    const h=b.history||[];
+    el.innerHTML=h.length?h.map(t=>row(t.side,t.volume,t.entry,t.exit,t.close_time||'',t.pnl,false,cost(t))).join(''):'<div class="bk-empty">Kapanmış işlem yok.</div>';
+  }
+}
+async function loadBook(){
+  try{
+    const r=await fetch('/poly/api/forex/book?algo='+FX_ALGO,{cache:'no-store'});
+    if(r.ok) renderBook(await r.json());
+  }catch(e){}
+}
+loadChart(); refreshQuote(); loadBook();
 setInterval(loadChart, 15000);
 setInterval(refreshQuote, 2000);
+setInterval(loadBook, 4000);
+</script>
+</body>
+</html>
+"""
+
+
+def _chart_page(algo: str) -> str:
+    g1 = "active" if algo == "g1" else ""
+    a2 = "active" if algo == "a2" else ""
+    title = "XAUUSD — Grafik 1" if algo == "g1" else "XAUUSD — Algoritma 2"
+    return (
+        FOREX_CHART_TMPL
+        .replace("__FX_TITLE__", title)
+        .replace("__FX_NAV_G1__", g1)
+        .replace("__FX_NAV_A2__", a2)
+        .replace("__FX_ALGO__", algo)
+    )
+
+
+FOREX_GRAFIK_HTML = _chart_page("g1")
+FOREX_ALGO2_HTML = _chart_page("a2")
+
+FOREX_ISLEMLER_HTML = r"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>İşlemler — Forex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d1b2a'/><text x='50%25' y='54%25' font-size='16' text-anchor='middle' dominant-baseline='central' fill='%23d4af37' font-family='Arial' font-weight='bold'>F</text></svg>">
+<style>
+:root{
+  --bg:#0b0e12; --card:#12171d; --line:#1e262e;
+  --txt:#e8eef4; --muted:#7d8b96; --gold:#d4af37;
+  --buy:#3d8bfd; --sell:#ef5350; --up:#c8f135;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui,sans-serif;background:var(--bg)}
+.sidebar{
+  width:220px;background:#0e1318;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;
+  border-right:1px solid var(--line);
+}
+.nav-label{font-size:10px;color:#556;text-transform:uppercase;letter-spacing:1px;margin:16px 0 6px 12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:#888;text-decoration:none;font-size:13px;font-weight:600}
+.nav-item.active{background:rgba(212,175,55,.12);color:var(--gold)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.sidebar-footer{margin-top:auto;font-size:11px;color:#556;padding:12px}
+.desk{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh}
+.head{padding:16px 18px 8px}
+.head h1{font-size:22px;font-weight:800}
+.head small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.tabs{display:flex;gap:18px;padding:0 18px;border-bottom:1px solid var(--line)}
+.tab{background:none;border:none;color:var(--muted);font:inherit;font-size:12px;font-weight:800;letter-spacing:.04em;padding:10px 0;cursor:pointer}
+.tab.on{color:#4ea3ff;border-bottom:2px solid #4ea3ff}
+.list{flex:1;overflow:auto}
+.row{display:flex;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.sym{font-size:14px;font-weight:700}
+.sym.buy{color:var(--buy)}
+.sym.sell{color:var(--sell)}
+.px{font-size:12px;color:#9aa8b3;margin-top:4px;font-variant-numeric:tabular-nums}
+.right{text-align:right}
+.ts{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pnl{font-size:18px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.pnl.pos{color:var(--up)}
+.pnl.neg{color:var(--sell)}
+.empty{padding:28px 18px;color:var(--muted);font-size:13px}
+.eq{
+  margin:12px 16px 16px;padding:10px 16px;border-radius:999px;background:#1a2330;
+  display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:18px;
+}
+.eq span{font-size:12px;color:var(--muted);font-weight:600}
+@media(max-width:800px){
+  body{flex-direction:column}
+  .sidebar{width:100%;height:auto;flex-direction:row;flex-wrap:wrap;padding:10px}
+  .nav-label,.sidebar-footer{display:none}
+}
+</style>
+</head>
+<body id="fx-page">
+<div class="sidebar">
+  __FOREX_BRAND__
+  <div class="nav-label">Forex</div>
+  <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>Grafik 1</a>
+  <a class="nav-item" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
+  <a class="nav-item active" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <div class="nav-label">Sistemler</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
+  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
+  <div class="sidebar-footer">XAUUSD · $100×500x</div>
+</div>
+<div class="desk">
+  <div class="head">
+    <h1>Geçmiş</h1>
+    <small>XAUUSD · sanal $100 × 500x</small>
+  </div>
+  <div class="tabs">
+    <button type="button" class="tab on" data-tab="pos" onclick="showTab('pos')">POZİSYONLAR</button>
+    <button type="button" class="tab" data-tab="hist" onclick="showTab('hist')">İŞLEMLER</button>
+  </div>
+  <div class="list" id="list"></div>
+  <div class="eq"><span>bakiye</span> <b id="eq">$300.00</b></div>
+</div>
+<script>
+let _tab='pos', _book=null;
+function fmt(n){ return n==null?'—':Number(n).toFixed(2); }
+function rowClosed(t){
+  const sell=t.side==='sell';
+  return '<div class="row">'
+    +'<div><div class="sym '+(sell?'sell':'buy')+'">XAUUSD, '+(sell?'sell':'buy')+' '+fmt(t.volume)+'</div>'
+    +'<div class="px">'+fmt(t.entry)+' → '+fmt(t.exit)+(t.reason?' · '+t.reason:'')+'</div>'
+    +((t.commission||t.swap)?'<div class="px" style="opacity:.65">'+[t.commission?'kom $'+fmt(t.commission):'',t.swap?'swap $'+fmt(t.swap):''].filter(Boolean).join(' · ')+'</div>':'')+'</div>'
+    +'<div class="right"><div class="ts">'+(t.close_time||'')+'</div>'
+    +'<div class="pnl '+(t.pnl>=0?'pos':'neg')+'">'+fmt(t.pnl)+'</div></div></div>';
+}
+function rowOpen(p){
+  const sell=p.side==='sell';
+  const pnl=p.float_pnl;
+  return '<div class="row">'
+    +'<div><div class="sym '+(sell?'sell':'buy')+'">XAUUSD, '+(sell?'sell':'buy')+' '+fmt(p.volume)+'</div>'
+    +'<div class="px">'+fmt(p.entry)+(p.mark!=null?' → '+fmt(p.mark):'')+'</div>'
+    +'<div class="px" style="opacity:.65">'+[p.stop!=null?(p.lock_stage?'kilit ':'SL ')+fmt(p.stop):'',p.target!=null?'TP '+fmt(p.target):'',p.progress!=null?'%'+fmt(p.progress):'',p.commission?'kom $'+fmt(p.commission):'',p.swap?'swap $'+fmt(p.swap):''].filter(Boolean).join(' · ')+'</div></div>'
+    +'<div class="right"><div class="ts">'+(p.open_time||'')+' · açık</div>'
+    +'<div class="pnl '+((p.float_net!=null?p.float_net:pnl)>=0?'pos':'neg')+'">'+fmt(p.float_net!=null?p.float_net:pnl)+'</div></div></div>';
+}
+function render(){
+  const el=document.getElementById('list');
+  const b=_book||{};
+  document.getElementById('eq').textContent='$'+fmt(b.equity!=null?b.equity:b.balance);
+  if(_tab==='pos'){
+    const ps=b.positions||(b.position?[b.position]:[]);
+    let html=ps.length?ps.map(rowOpen).join(''):'<div class="empty">Açık pozisyon yok.</div>';
+    const r=b.last_reject;
+    if(r){
+      const yon=r.side==='buy'?'AL':'SAT';
+      const msg={bekleme:'kapanış sonrası bekleme '+r.wait+' sn',stop_uzak:'stop çok uzak (risk $'+fmt(r.risk_usd)+')',rr_dusuk:'ödül/risk '+fmt(r.rr)+' (en az 1.5)',seviye_yok:'fiyat destek/direnç arasında değil'}[r.reason];
+      if(msg) html+='<div class="empty" style="text-align:left">'+yon+' sinyali var — '+msg+', açılmadı.</div>';
+    }
+    el.innerHTML=html;
+  }else{
+    const h=b.history||[];
+    el.innerHTML=h.length?h.map(rowClosed).join(''):'<div class="empty">Kapanmış işlem yok. Grafikte AL/SAT yanınca burada birikir.</div>';
+  }
+}
+function showTab(t){
+  _tab=t;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.tab===t));
+  render();
+}
+async function load(){
+  try{
+    const r=await fetch('/poly/api/forex/book',{cache:'no-store'});
+    if(r.ok) _book=await r.json();
+  }catch(e){}
+  render();
+}
+load(); setInterval(load, 4000);
 </script>
 </body>
 </html>
