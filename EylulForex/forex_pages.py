@@ -34,6 +34,7 @@ body{
 .nav-item.active{background:rgba(212,175,55,.12);color:var(--gold)}
 .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5}
 .nav-item.active .nav-dot{opacity:1;background:var(--gold)}
+.nav-item.nav-sub{margin-left:14px;padding-left:14px;font-size:12px}
 .sidebar-footer{margin-top:auto;font-size:11px;color:#555;padding:12px;display:flex;align-items:center;gap:6px}
 .sidebar-footer .dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
 .main{flex:1;padding:28px 28px 40px;min-width:0}
@@ -87,6 +88,7 @@ body{
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item active" href="/forex/home"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item nav-sub" href="/forex/cembybit"><span class="nav-dot"></span>CEMBYBIT</a>
   <a class="nav-item" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
   <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
@@ -179,6 +181,7 @@ body{display:flex;color:var(--txt);font-family:Inter,system-ui,sans-serif;backgr
 .nav-label{font-size:10px;color:#556;text-transform:uppercase;letter-spacing:1px;margin:14px 0 4px 10px}
 .nav-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;color:#8a96a0;text-decoration:none;font-size:13px;font-weight:600}
 .nav-item.active{background:rgba(212,175,55,.12);color:var(--gold)}
+.nav-item.nav-sub{margin-left:12px;padding-left:16px;font-size:12px}
 .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .sidebar-footer{margin-top:auto;font-size:11px;color:#556;padding:10px}
 .desk{flex:1;min-width:0;display:flex;flex-direction:column;height:100%}
@@ -355,6 +358,7 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
   <div class="nav-label">Forex</div>
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item __FX_NAV_G1__" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item nav-sub __FX_NAV_BYBIT__" href="/forex/cembybit"><span class="nav-dot"></span>CEMBYBIT</a>
   <a class="nav-item __FX_NAV_A2__" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
   <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
@@ -826,18 +830,26 @@ setInterval(loadBook, 4000);
 
 def _chart_page(algo: str) -> str:
     g1 = "active" if algo == "g1" else ""
+    bybit = "active" if algo == "bybit" else ""
     a2 = "active" if algo == "a2" else ""
-    title = "XAUUSD — CEM01" if algo == "g1" else "XAUUSD — Algoritma 2"
+    if algo == "bybit":
+        title = "XAUUSD — CEMBYBIT"
+    elif algo == "a2":
+        title = "XAUUSD — Algoritma 2"
+    else:
+        title = "XAUUSD — CEM01"
     return (
         FOREX_CHART_TMPL
         .replace("__FX_TITLE__", title)
         .replace("__FX_NAV_G1__", g1)
+        .replace("__FX_NAV_BYBIT__", bybit)
         .replace("__FX_NAV_A2__", a2)
         .replace("__FX_ALGO__", algo)
     )
 
 
 FOREX_GRAFIK_HTML = _chart_page("g1")
+FOREX_CEMBYBIT_HTML = _chart_page("bybit")
 FOREX_ALGO2_HTML = _chart_page("a2")
 
 FOREX_ISLEMLER_HTML = r"""<!DOCTYPE html>
@@ -864,6 +876,7 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
 .nav-label{font-size:10px;color:#556;text-transform:uppercase;letter-spacing:1px;margin:16px 0 6px 12px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:#888;text-decoration:none;font-size:13px;font-weight:600}
 .nav-item.active{background:rgba(212,175,55,.12);color:var(--gold)}
+.nav-item.nav-sub{margin-left:14px;padding-left:14px;font-size:12px}
 .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .sidebar-footer{margin-top:auto;font-size:11px;color:#556;padding:12px}
 .desk{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh}
@@ -903,6 +916,7 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
   <div class="nav-label">Forex</div>
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item nav-sub" href="/forex/cembybit"><span class="nav-dot"></span>CEMBYBIT</a>
   <a class="nav-item" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
   <a class="nav-item active" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>

@@ -26,6 +26,12 @@ def _files(book: str = "g1") -> tuple[Path, Path, Path]:
             _DIR / "forex_a2_history.json",
             _DIR / "forex_a2.lock",
         )
+    if book == "bybit":
+        return (
+            _DIR / "forex_cembybit_state.json",
+            _DIR / "forex_cembybit_history.json",
+            _DIR / "forex_cembybit.lock",
+        )
     return _STATE, _HIST, _LOCK
 _TZ = ZoneInfo("Europe/Istanbul")
 

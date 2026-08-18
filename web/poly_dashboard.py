@@ -18,7 +18,7 @@ from flask import Flask, jsonify, make_response, render_template_string, request
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "EylulForex"))
 
-from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML
+from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_CEMBYBIT_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _DIR_KRIPTO = os.path.join(os.path.dirname(__file__), "..", "AgustosKripto")
@@ -16369,6 +16369,11 @@ body{
   border-color:rgba(255,70,90,.75);
   box-shadow:inset 0 0 0 1px rgba(255,70,90,.28);
 }
+.pos-card.in-gain{
+  background:linear-gradient(165deg,#0f2a1c 0%,#121816 70%);
+  border-color:rgba(57,255,142,.75);
+  box-shadow:inset 0 0 0 1px rgba(57,255,142,.28);
+}
 .pos-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .pos-name{font-size:20px;font-weight:800}
 .pos-dir{font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px}
@@ -17419,7 +17424,7 @@ function renderA139Opens(lv){
       : 'ATR kilit yok';
     const qtyAttr = (p.qty != null && isFinite(Number(p.qty))) ? String(p.qty) : '';
     const symAttr = String(p.symbol || '').replace(/"/g, '');
-    return '<div class="pos-card '+(up?'dir-up':'dir-down')+(u<0?' in-loss':'')+'">'
+    return '<div class="pos-card '+(up?'dir-up':'dir-down')+(u<0?' in-loss':(u>0?' in-gain':''))+'">'
       + '<div class="pos-top"><div class="pos-name">'+name+'</div>'
       + '<div class="pos-dir '+(up?'up':'down')+'">'+(p.side||'—')+'</div></div>'
       + '<div class="pos-price-row"><div class="pos-current">$'+fmtPx(p.current)+'</div>'
@@ -17451,7 +17456,7 @@ function renderA139Closed(lv){
     const pnlCls = pnl >= 0 ? 'pos' : 'neg';
     const name = t.name || (t.symbol||'').replace('USDT','');
     const ts = (t.exit_time_tr||'').slice(0,16).replace('T',' ') || '—';
-    return '<div class="pos-card '+(up?'dir-up':'dir-down')+(pnl<0?' in-loss':'')+'">'
+    return '<div class="pos-card '+(up?'dir-up':'dir-down')+(pnl<0?' in-loss':(pnl>0?' in-gain':''))+'">'
       + '<div class="pos-top"><div class="pos-name">'+name+'</div>'
       + '<div class="pos-dir '+(up?'up':'down')+'">'+(t.side||'—')+'</div></div>'
       + '<div class="pos-entry">Giriş · $'+fmtPx(t.entry_price)+' → Çıkış · $'+fmtPx(t.exit_price)+'</div>'
@@ -18191,6 +18196,14 @@ def page_forex_grafik():
     if _auth_required():
         return redirect("/poly/login?next=/forex/grafik")
     return FOREX_GRAFIK_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/cembybit")
+@app.route("/forex/cembybit/")
+def page_forex_cembybit():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/cembybit")
+    return FOREX_CEMBYBIT_HTML, 200, _ISLEMLER_NOCACHE
 
 
 @app.route("/forex/algo2")
@@ -18996,11 +19009,11 @@ for _html_name in (
     "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "ALGORITMA_ISLEMLER_HTML", "AYARLAR_HTML",
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
     "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
-    "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML", "FOREX_HTML", "FOREX_GRAFIK_HTML",
+    "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML",     "FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML",
     "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML",
 ):
     _html = globals()[_html_name]
-    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML"):
+    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML", "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML"):
         _html = _html.replace("__FOREX_BRAND__", _CEMBOT_FOREX_BRAND_HTML)
         _html = _patch_cembot_brand(_html)
         _html = _patch_cache_bust(_html)

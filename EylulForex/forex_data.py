@@ -327,6 +327,7 @@ def forex_spot(timeframe: str = "1m", algo: str = "g1") -> dict:
     tf = timeframe if timeframe in _YF else "1m"
     if algo == "a2":
         return _forex_spot_a2(tf)
+    book_key = "bybit" if algo == "bybit" else "g1"
     q = forex_quote()
     q["timeframe"] = tf
     q["bar_sec"] = _BAR_SEC[tf]
@@ -361,11 +362,16 @@ def forex_spot(timeframe: str = "1m", algo: str = "g1") -> dict:
         "tf": BOOK_LEVEL_TF,
     }
     try:
-        from forex_book import apply_signal
-        q["book"] = apply_signal(
-            q.get("signal"), q.get("bid"), q.get("ask"),
-            rail=q.get("rail"), levels=levels,
-        )
+        from forex_book import apply_signal, snapshot
+        if book_key == "bybit":
+            # Ayrı defter; Bybit bağlanana kadar sinyal yazılmaz — CEM01 dosyalarına dokunulmaz.
+            q["book"] = snapshot(q.get("bid"), q.get("ask"), book=book_key)
+        else:
+            q["book"] = apply_signal(
+                q.get("signal"), q.get("bid"), q.get("ask"),
+                rail=q.get("rail"), levels=levels,
+                book=book_key,
+            )
     except Exception as e:
         q["book"] = {"ok": False, "error": str(e)[:160]}
     return q
