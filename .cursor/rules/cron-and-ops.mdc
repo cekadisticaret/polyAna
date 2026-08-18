@@ -69,6 +69,10 @@ alwaysApply: true
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py close` | `/tmp/crypto_futures_cr6.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py open` (Algoritmalar Live — Hurst+A1#11+Z-Score MR+MR gerçek Binance $7×20x) | `/tmp/crypto_futures_cr6.log` |
 | `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_cr6.py trail` | `/tmp/crypto_futures_cr6_trail.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_a139.py close` | `/tmp/crypto_futures_a139.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_a139.py open` (**A1#39 Live** gerçek Binance $20×7x · max 4 · Test H1 Kombinasyon) | `/tmp/crypto_futures_a139.log` |
+| `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_a139.py trail` | `/tmp/crypto_futures_a139_trail.log` |
+| `*/10 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_a139.py scan` | `/tmp/crypto_futures_a139_scan.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/kaito_paper.py close` | `/tmp/kaito_paper.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/kaito_paper.py open` (**KAITO kağıt defteri** — cr6 kararları, **gerçek para yok**) | `/tmp/kaito_paper.log` |
 | `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/kaito_paper.py trail` | `/tmp/kaito_paper_trail.log` |
@@ -239,6 +243,7 @@ alwaysApply: true
 - **Sahipsiz defter temizliği:** `python3 AgustosKripto/orphan_scan.py [--archive]` — kataloğdan kaldırılmış ama dosyası kalan defterleri bulur. Bunlar hiçbir `close`/`trail` turunda görülmez, açık pozisyonları sonsuza kadar açık kalır ve muhasebeye girmez. 2026-08-15'te `Analizler/a4` bulundu (6 pozisyon **55 saattir** açık, 353 kapanmış işlem, bakiye $106,06/$300) → `_archive_orphan_20260815/`'e taşındı. Yeni defter silerken bu betiği çalıştır.
 - **Kripto denetim:** `python3 AgustosKripto/skill_audit.py --all` — cron yok, elle. Gerçek para kararı öncesi çalıştır; tek doğru ölçüt SKILL + t, WR değil.
 - **Binance Live DURDURULDU (2026-08-11):** `crypto_futures_live_control.json` → `live_paused: true`. Sebep: denetim brüt kenarın sıfır olduğunu gösterdi (net −$10.027'nin tamamı komisyon). Hayalet pozisyon tıkanıklığı 08-08'den beri kazara koruma sağlıyordu; tıkanıklık açıldığı için açılış elle durduruldu. **Yeniden açmadan önce** `skill_audit.py --all` çalıştır ve eşiği geçen defter sayısını kontrol et. `close`/`trail` çalışmaya devam ediyor.
+- **A1#39 Live (2026-08-18):** CR6 evreni kapalı kaldı. Ayrı defter `crypto_futures_a139.py` Test `/kripto/test/a1_39` (H1 Kombinasyon) motorunu gerçek Binance'te koşturur: $20×7x, max 4, 30 coin, BTC/ETH/BNB dahil, Test çıkış rejimi (24s · 3×ATR · ATR kilit). Kontrol `crypto_futures_a139_control.json`. `/kripto` üst çubuğu + bakiye/işlem kartı bu defteri gösterir. Manuel `open` yok — cron :05 / */10 scan.
 - **KAITO kağıt defteri (yeni, 2026-08-16; `kaito_paper.py`):** "Binance canlıda sadece KAITO açalım" fikrini **kasa riske girmeden** ölçer. cr6 ile birebir: 4 defterin oyu (`algo_05`/`algo_06`/`algo_07`/`algo1_11`), `_combine_votes`, `conviction_filter` vetosu (4/4 birlik açılmaz), $7×20x, ATR kâr kilidi + `exit_policy` (24s tavan · 3×ATR), gerçek taker komisyonu. Farkı: tek pozisyon ve emir defteri yok (giriş mum kapanışından) → sonuç **iyimser taraflı** okunmalı. `stats` ile oku; gölge günlüğü `kaito_paper_shadow.jsonl` açılmayan turların sebebini de yazar.
  - **Neden kağıt:** Kripto Test'in +$1.272'lik KAITO rakamı kenar değil. Gün kümelenmiş **t=+0,76** (9 gün, sıfırdan ayırt edilemez) · 13.08 tek günü +$1.348 yani toplamın tamamından fazla, 12.08 −$646 · en iyi 5 işlem kârın %63'ü, en iyi 20 işlem %152 (gerisi eksi) · LONG −$1.897 (WR %34,2) vs SHORT +$3.169 (WR %60,7). Sebep basit: KAITO aynı pencerede **0,91 → 0,35 (−%61,3)**, neredeyse her gün eksi; defterler çoğunlukla short kaldığı için kazandılar. Bu yön, beceri değil.
  - **Ayrıca strateji uyuşmuyor:** o rakam Kripto Test defterlerinden ($100×6x, 69 Poly aynası); canlı cr6 4 algo çoğunluk oyu ve $7×20x. Test sonucu cr6'nın KAITO'da ne yapacağını söylemiyor — bu defter tam olarak o boşluğu ölçüyor.
@@ -283,6 +288,9 @@ tail -f /tmp/poly_trader_a2_06_live.log
 tail -f /tmp/poly_trader_a2_07_live.log
 tail -f /tmp/crypto_futures_cr6.log
 tail -f /tmp/crypto_futures_cr6_trail.log
+tail -f /tmp/crypto_futures_a139.log
+tail -f /tmp/crypto_futures_a139_trail.log
+tail -f /tmp/crypto_futures_a139_scan.log
 tail -f /tmp/agustos_algoritmalar.log
 tail -f /tmp/agustos_algoritmalar_trail.log
 tail -f /tmp/agustos_analizler.log

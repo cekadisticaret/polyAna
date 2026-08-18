@@ -271,11 +271,15 @@ def open_market(
     margin_type: str | None = None,
     reduce_only: bool = False,
     skip_max_positions: bool = False,
+    allow_excluded: bool = False,
+    skip_allowlist: bool = False,
 ) -> dict:
     """MARKET ile LONG (BUY) veya SHORT (SELL) aç.
 
     margin_usd: teminat (USDT). Pozisyon notional ≈ margin_usd * leverage.
     skip_max_positions: CR6 gibi kendi kotasını yöneten stratejiler için.
+    allow_excluded: BTC/ETH/BNB Live yasağını bu emir için kaldır (A1#39).
+    skip_allowlist: config.symbols dışındaki Test evreni sembollerine izin ver.
     """
     cfg = load_config()
     symbol = symbol.upper()
@@ -289,10 +293,10 @@ def open_market(
     else:
         raise ValueError("side LONG/SHORT olmalı")
 
-    if symbol not in [s.upper() for s in cfg.get("symbols") or []]:
+    if not skip_allowlist and symbol not in [s.upper() for s in cfg.get("symbols") or []]:
         raise ValueError(f"{symbol} allowlist dışı — crypto_futures_config.json")
 
-    if not reduce_only and is_live_open_excluded(symbol):
+    if not reduce_only and not allow_excluded and is_live_open_excluded(symbol):
         raise ValueError(f"{symbol} Binance Live açılış dışı (BTC/ETH/BNB kapalı)")
 
     lev = int(leverage or cfg.get("default_leverage") or 5)
@@ -445,6 +449,8 @@ def open_maker(
     wait_sec: float | None = None,
     poll_sec: float = 3.0,
     skip_max_positions: bool = False,
+    allow_excluded: bool = False,
+    skip_allowlist: bool = False,
 ) -> dict:
     """Post-only LIMIT ile pozisyon aç — maker komisyonu (%0.02 vs %0.05).
 
@@ -466,9 +472,9 @@ def open_maker(
     else:
         raise ValueError("side LONG/SHORT olmalı")
 
-    if symbol not in [s.upper() for s in cfg.get("symbols") or []]:
+    if not skip_allowlist and symbol not in [s.upper() for s in cfg.get("symbols") or []]:
         raise ValueError(f"{symbol} allowlist dışı — crypto_futures_config.json")
-    if is_live_open_excluded(symbol):
+    if not allow_excluded and is_live_open_excluded(symbol):
         raise ValueError(f"{symbol} Binance Live açılış dışı (BTC/ETH/BNB kapalı)")
 
     lev = int(leverage or cfg.get("default_leverage") or 5)

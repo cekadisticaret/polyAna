@@ -31,7 +31,19 @@
     "TIAUSDT",
     "ARBUSDT",
     "OPUSDT",
-    "1000PEPEUSDT"
+    "1000PEPEUSDT",
+    "FILUSDT",
+    "ATOMUSDT",
+    "HYPEUSDT",
+    "ZECUSDT",
+    "KAITOUSDT",
+    "ENAUSDT",
+    "WLDUSDT",
+    "TAOUSDT",
+    "ONDOUSDT",
+    "UNIUSDT",
+    "AAVEUSDT",
+    "XLMUSDT"
   ],
-  "notes": "A1#21 Fear & Greed Live: $10×15x top-6 majors önce. Taker %0.04 net PnL. Canlı: CRYPTO_FUTURES_CR6_ENABLED"
+  "notes": "A1#39 Live Test evreni (30 coin) + eski CR6 listesi. CR6 hâlâ paused; A139 allow_excluded ile BTC/ETH/BNB açabilir."
 }

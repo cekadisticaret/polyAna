@@ -16415,16 +16415,12 @@ body{
 .chart-coin .cs{font-size:11px;font-weight:700;color:#aaa}
 .chart-main{min-width:0}
 .live-bar{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-  padding:12px 14px;margin-bottom:14px;border-radius:18px;
-  background:rgba(57,255,142,.08);border:1px solid rgba(57,255,142,.28);
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  padding:8px 0;margin-bottom:10px;border:none;background:transparent;
 }
 .live-bar.paused{
-  background:rgba(255,92,122,.1);border-color:rgba(255,92,122,.35);
+  background:transparent;border:none;
 }
-.live-bar-txt{min-width:0;flex:1 1 140px}
-.live-bar-txt b{display:block;font-size:14px;font-weight:800}
-.live-bar-txt span{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
 .live-bar-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .topn-box{
   display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:14px;
@@ -16574,6 +16570,13 @@ body.kf-overview .kf-right-panel{display:block}
 }
 .kf-sym-lime .kf-sym-title{color:var(--accent)}
 .kf-sym-lime .kf-sym-meta{color:var(--muted);opacity:1}
+.kf-a139-live{
+  background:linear-gradient(145deg,rgba(57,255,142,.10),rgba(200,241,53,.04));
+  border:1px solid rgba(57,255,142,.32);border-radius:20px;padding:16px 18px;margin-bottom:14px;
+}
+.kf-a139-live .kf-kaito-badge{
+  background:rgba(57,255,142,.16);color:#39ff8e;border:1px solid rgba(57,255,142,.4);
+}
 .kf-kaito-paper{
   background:linear-gradient(145deg,rgba(0,242,255,.08),rgba(0,242,255,.02));
   border:1px solid rgba(0,242,255,.28);border-radius:20px;padding:16px 18px;margin-bottom:14px;
@@ -16639,10 +16642,6 @@ body.kf-overview .kf-right-panel{display:block}
 <div class="main" id="kf-main">
   <div id="view-dash">
   <div class="live-bar" id="live-bar">
-    <div class="live-bar-txt">
-      <b id="live-bar-title">Binance Live</b>
-      <span id="live-bar-sub">Algoritmalar Live · sanal Test etkilenmez</span>
-    </div>
     <div class="live-bar-actions">
       <div class="topn-box" title="Saatlik max açık pozisyon">
         <label for="topn-input">Max</label>
@@ -16656,7 +16655,7 @@ body.kf-overview .kf-right-panel{display:block}
   <div class="head">
     <div>
       <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">…</span></div>
-      <div class="page-sub" id="page-sub">Kripto Test · 30 coin · $100×6x · coin bazlı en başarılı algoritma</div>
+      <div class="page-sub" id="page-sub">A1#39 Live · $20×7x · max 4 · 30 coin</div>
     </div>
     <button type="button" class="wbtn" title="Yenile" onclick="refreshOverviewFast(true)" style="width:40px;height:40px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);cursor:pointer;font-size:18px">↻</button>
   </div>
@@ -16665,42 +16664,22 @@ body.kf-overview .kf-right-panel{display:block}
     <div class="kf-overview-left">
       <div class="kf-stats-row kf-top-stats">
         <div class="kf-ov-wallet">
-          <div class="kf-ov-tag">TEST BAKİYE</div>
-          <div class="kf-ov-lbl">Toplam sanal bakiye</div>
+          <div class="kf-ov-tag">BINANCE BAKİYE</div>
+          <div class="kf-ov-lbl">USDT cüzdan</div>
           <div class="kf-ov-bal" id="kf-bal">—</div>
-          <div class="kf-ov-sub" id="kf-books-sub">59 defter · yükleniyor…</div>
+          <div class="kf-ov-sub" id="kf-books-sub">A1#39 Live · yükleniyor…</div>
         </div>
         <div class="kf-ov-wallet cash">
           <div class="kf-ov-tag">NET P&L</div>
-          <div class="kf-ov-lbl">Kapanmış işlemler</div>
+          <div class="kf-ov-lbl">A1#39 kapanmış + açık</div>
           <div class="kf-ov-bal" id="kf-pnl">—</div>
           <div class="kf-ov-sub" id="kf-open-sub">açık pozisyon —</div>
         </div>
       </div>
-      <div class="kf-stat-card">
-        <div class="kf-stat-grid">
-          <div>
-            <div class="kf-stat-label">Tarama evreni</div>
-            <div class="kf-stat-val" id="kf-symbols">30</div>
-            <div class="kf-stat-sub">Binance Futures · scan */10dk</div>
-          </div>
-          <div>
-            <div class="kf-stat-label">Açık pozisyon</div>
-            <div class="kf-stat-val" id="kf-open">—</div>
-            <div class="kf-stat-sub" id="kf-updated">—</div>
-          </div>
-        </div>
-      </div>
-      <div class="kf-kaito-paper" id="kf-kaito-paper">
-        <div class="kf-kaito-head">
-          <div>
-            <div class="kf-kaito-title">KAITO Kağıt</div>
-            <div class="kf-kaito-sub">cr6 kararları · $7×20x · gerçek emir yok</div>
-          </div>
-          <span class="kf-kaito-badge">Kağıt</span>
-        </div>
-        <div class="empty" style="font-size:12px">yükleniyor…</div>
-      </div>
+      <div class="section-title">Açık işlemler · A1#39 Live</div>
+      <div class="positions" id="kf-live-opens" style="margin-bottom:18px"><div class="empty">yükleniyor…</div></div>
+      <div class="section-title">Kapanmış işlemler · A1#39 Live</div>
+      <div class="positions" id="kf-live-closed" style="margin-bottom:18px"><div class="empty">yükleniyor…</div></div>
       <div class="section-title">Coin bazlı en yetenekli algoritma</div>
       <div class="kf-leaders-box" id="positions"><div class="empty">yükleniyor…</div></div>
       <div class="section-title" style="margin-top:18px">En yüksek SKILL · algo + coin</div>
@@ -16749,7 +16728,7 @@ body.kf-overview .kf-right-panel{display:block}
     <div class="head">
       <div>
         <div class="page-title">Geçmiş işlemler</div>
-        <div class="page-sub">Algoritmalar Live kapanmış pozisyonlar</div>
+        <div class="page-sub">A1#39 Live kapanmış pozisyonlar</div>
       </div>
     </div>
     <div class="panel">
@@ -17405,100 +17384,101 @@ function renderRecentTrades(rows, elId, emptyLbl){
   }).join('');
 }
 
-function renderKaitoPaper(kp){
-  const box = document.getElementById('kf-kaito-paper');
+function renderA139Opens(lv){
+  const box = document.getElementById('kf-live-opens');
   if(!box) return;
-  if(!kp || !kp.ok){
-    box.innerHTML = '<div class="kf-kaito-head"><div><div class="kf-kaito-title">KAITO Kağıt</div>'
-      + '<div class="kf-kaito-sub">yüklenemedi</div></div><span class="kf-kaito-badge">Kağıt</span></div>';
+  if(!lv || !lv.ok){
+    box.innerHTML = '<div class="empty">'+(lv && lv.error ? lv.error : 'canlı pozisyon yüklenemedi')+'</div>';
     return;
   }
-  const bal = Number(kp.balance||0);
-  const pnl = Number(kp.total_pnl||0);
-  const pnlCls = pnl >= 0 ? 'pos' : 'neg';
-  const wr = kp.win_rate != null ? ('WR %' + kp.win_rate) : 'henüz işlem yok';
-  const trades = Number(kp.trade_count||0);
-  let body = '<div class="kf-kaito-stats">'
-    + '<div class="kf-kaito-stat"><div class="kf-kaito-stat-lbl">Bakiye</div><div class="kf-kaito-stat-val">$'
-    + bal.toFixed(2) + '</div></div>'
-    + '<div class="kf-kaito-stat"><div class="kf-kaito-stat-lbl">Net P&L</div><div class="kf-kaito-stat-val '+pnlCls+'">'
-    + (pnl>=0?'+':'') + '$' + Math.abs(pnl).toFixed(2) + '</div></div>'
-    + '<div class="kf-kaito-stat"><div class="kf-kaito-stat-lbl">İşlem</div><div class="kf-kaito-stat-val">'
-    + trades + '</div><div class="kf-kaito-sub" style="margin-top:4px;font-size:10px">'+wr+'</div></div>'
-    + '</div>';
-  const card = kp.card;
-  if(card){
-    const upnl = Number(card.unrealized_pnl||0);
-    const upCls = upnl >= 0 ? 'pos' : 'neg';
-    const lockTxt = card.lock_armed
-      ? ('ATR kilit · seviye ' + (card.stop_level||0) + (card.stop_upnl != null ? (' · stop $' + Number(card.stop_upnl).toFixed(2)) : ''))
-      : 'ATR kilit henüz silahlanmadı';
-    body += '<div class="kf-kaito-open"><b>' + card.side + ' KAITO</b> @ $' + fmtPx(card.entry_price)
-      + ' · şimdi $' + fmtPx(card.current)
-      + '<div class="kf-kaito-sub" style="margin-top:6px">' + (card.agree||0) + ' oy · ' + (card.algo||'—')
-      + ' · <span class="kf-trade-pnl '+upCls+'">' + fmtMoney(upnl) + '</span> açık</div>'
-      + '<div class="kf-kaito-sub" style="margin-top:4px">' + lockTxt + '</div></div>';
-  } else {
-    const sig = kp.current_signal;
-    const sh = kp.last_shadow;
-    if(sig && sig.signal && sig.signal !== 'NEUTRAL'){
-      const vetoed = sh && !sh.opened;
-      const dir = sig.signal === 'UP' ? 'LONG' : 'SHORT';
-      body += '<div class="kf-kaito-note">Şu an sinyal: <b>' + dir + '</b> · ' + (sig.agree||0) + ' oy'
-        + (kp.current_price != null ? (' · $' + fmtPx(kp.current_price)) : '')
-        + (vetoed ? (' · <span style="color:#fbbf24">açılmadı: ' + (sh.reason||'veto') + '</span>') : ' · pozisyon yok')
-        + '</div>';
-    } else if(sh && !sh.opened){
-      body += '<div class="kf-kaito-note">Son tur açılmadı: <b>' + (sh.reason||'—') + '</b>'
-        + (sh.signal ? (' · sinyal ' + sh.signal) : '') + '</div>';
-    } else {
-      body += '<div class="kf-kaito-note">Açık pozisyon yok · cr6 kararları saatlik ölçülüyor</div>';
-    }
+  const cards = lv.cards || [];
+  if(!cards.length){
+    box.innerHTML = '<div class="empty">Açık işlem yok · cron :05 / */10 tarama bekleniyor</div>';
+    return;
   }
-  const recent = kp.recent_trades || [];
-  if(recent.length){
-    body += '<div class="section-title" style="margin:10px 0 6px;font-size:11px">Son işlemler</div>'
-      + '<div class="kf-kaito-trades">';
-    body += recent.map(t => {
-      const p = Number(t.pnl||0);
-      const cls = p >= 0 ? 'pos' : 'neg';
-      const side = (t.side||'').toUpperCase();
-      const dir = side === 'LONG' ? '↑' : side === 'SHORT' ? '↓' : '';
-      const ts = (t.exit_time_tr||'').slice(11,16) || '—';
-      return '<div class="kf-trade-item"><div><div class="kf-trade-sym">' + dir + ' KAITO</div>'
-        + '<div class="kf-trade-meta">' + ts + (t.close_reason ? (' · ' + t.close_reason) : '') + '</div></div>'
-        + '<div class="kf-trade-pnl ' + cls + '">' + fmtMoney(p) + '</div></div>';
-    }).join('');
-    body += '</div>';
+  box.innerHTML = cards.map(p => {
+    const up = (p.side||'') === 'LONG';
+    const u = Number(p.unrealized_pnl||0);
+    const pnlCls = u >= 0 ? 'pos' : 'neg';
+    const name = p.name || (p.symbol||'').replace('USDT','');
+    const lock = p.lock_armed
+      ? ('ATR kilit · stop $' + Number(p.stop_upnl||0).toFixed(2))
+      : 'ATR kilit yok';
+    const qtyAttr = (p.qty != null && isFinite(Number(p.qty))) ? String(p.qty) : '';
+    const symAttr = String(p.symbol || '').replace(/"/g, '');
+    return '<div class="pos-card '+(up?'dir-up':'dir-down')+'">'
+      + '<div class="pos-top"><div class="pos-name">'+name+'</div>'
+      + '<div class="pos-dir '+(up?'up':'down')+'">'+(p.side||'—')+'</div></div>'
+      + '<div class="pos-price-row"><div class="pos-current">$'+fmtPx(p.current)+'</div>'
+      + '<div class="pos-pct '+pnlCls+'">'+fmtMoney(u)+'</div></div>'
+      + '<div class="pos-entry">Giriş · $'+fmtPx(p.entry_price)+' · '+(p.interval||'1h')+' · $'
+      + Number(p.margin_usd||20).toFixed(0)+'×'+(p.leverage||7)+'x</div>'
+      + '<div class="pos-slot">'+lock+'</div>'
+      + '<div class="close-btn-wrap"><button type="button" class="close-btn" data-sym="'+symAttr+'" data-qty="'+qtyAttr+'" onclick="closeA139Pos(this)">Pozisyonu Kapat</button></div>'
+      + '</div>';
+  }).join('');
+}
+function closeA139Pos(btn){
+  const sym = btn.getAttribute('data-sym') || '';
+  const q = btn.getAttribute('data-qty');
+  closeCr6(sym, q ? Number(q) : null, btn);
+}
+
+function renderA139Closed(lv){
+  const box = document.getElementById('kf-live-closed');
+  if(!box) return;
+  const rows = (lv && lv.recent_trades) || [];
+  if(!rows.length){
+    box.innerHTML = '<div class="empty">Henüz kapanmış işlem yok</div>';
+    return;
   }
-  box.innerHTML = '<div class="kf-kaito-head"><div><div class="kf-kaito-title">KAITO Kağıt</div>'
-    + '<div class="kf-kaito-sub">cr6 kararları · $' + (kp.margin_usd||7) + '×' + (kp.leverage||20) + 'x · gerçek emir yok</div></div>'
-    + '<span class="kf-kaito-badge">Kağıt</span></div>' + body;
+  box.innerHTML = rows.map(t => {
+    const up = (t.side||'') === 'LONG';
+    const pnl = Number(t.pnl||0);
+    const pnlCls = pnl >= 0 ? 'pos' : 'neg';
+    const name = t.name || (t.symbol||'').replace('USDT','');
+    const ts = (t.exit_time_tr||'').slice(0,16).replace('T',' ') || '—';
+    return '<div class="pos-card '+(up?'dir-up':'dir-down')+'">'
+      + '<div class="pos-top"><div class="pos-name">'+name+'</div>'
+      + '<div class="pos-dir '+(up?'up':'down')+'">'+(t.side||'—')+'</div></div>'
+      + '<div class="pos-entry">Giriş · $'+fmtPx(t.entry_price)+' → Çıkış · $'+fmtPx(t.exit_price)+'</div>'
+      + '<div class="pos-slot">'+ts+(t.close_reason ? (' · '+t.close_reason) : '')+'</div>'
+      + '<div class="pos-close-row"><span class="close-lbl">Net</span>'
+      + '<span class="live-close-pnl '+pnlCls+'">'+fmtMoney(pnl)+'</span>'
+      + '<span class="tag">$' + Number(t.margin_usd||20).toFixed(0)+'×'+(t.leverage||7)+'x</span>'
+      + '<span class="tag">'+(t.interval||'1h')+'</span></div>'
+      + '</div>';
+  }).join('');
 }
 
 function renderOverview(d){
   if(!d || !d.ok) return;
-  const fmtUsd = (n) => n != null
-    ? '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})
+  const lv = d.a139_live || {};
+  const usdt = lv.usdt || {};
+  const fmtUsd = (n, digits) => n != null && Number.isFinite(Number(n))
+    ? '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:digits,maximumFractionDigits:digits})
     : '—';
   const balEl = document.getElementById('kf-bal');
-  if(balEl) balEl.textContent = fmtUsd(d.total_balance);
-  const pnl = Number(d.total_pnl||0);
+  if(balEl) balEl.textContent = fmtUsd(usdt.balance, 2);
+  const closedPnl = Number(lv.total_pnl||0);
+  const openPnl = (lv.cards||[]).reduce((s,c)=>s+Number(c.unrealized_pnl||0),0);
+  const pnl = closedPnl + openPnl;
   const pnlEl = document.getElementById('kf-pnl');
   if(pnlEl){
     pnlEl.textContent = (pnl>=0?'+':'') + '$' + Math.abs(pnl).toFixed(2);
     pnlEl.style.color = pnl >= 0 ? '#fff' : '#ffe4e6';
   }
   const booksSub = document.getElementById('kf-books-sub');
-  if(booksSub) booksSub.textContent = (d.count||'—') + ' defter · Kripto Test sanal';
+  if(booksSub){
+    const avail = usdt.available != null ? ('kullanılabilir $' + Number(usdt.available).toFixed(2)) : 'A1#39 Live $20×7x';
+    booksSub.textContent = avail;
+  }
+  const openN = lv.open_count != null ? lv.open_count : 0;
   const openSub = document.getElementById('kf-open-sub');
-  if(openSub) openSub.textContent = (d.total_open||0) + ' açık pozisyon';
-  const symEl = document.getElementById('kf-symbols');
-  if(symEl) symEl.textContent = String(d.symbols_n || 30);
-  const openEl = document.getElementById('kf-open');
-  if(openEl) openEl.textContent = String(d.total_open != null ? d.total_open : '—');
-  const updEl = document.getElementById('kf-updated');
-  if(updEl) updEl.textContent = new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}) + ' güncellendi';
+  if(openSub){
+    const closedTxt = (closedPnl>=0?'+':'') + '$' + Math.abs(closedPnl).toFixed(2) + ' kapanmış';
+    openSub.textContent = openN + ' açık · ' + closedTxt;
+  }
   const waitN = document.getElementById('kf-wait-n');
   if(waitN) waitN.textContent = String(d.symbols_n || 30);
   const waitHint = document.getElementById('kf-wait-hint');
@@ -17513,7 +17493,8 @@ function renderOverview(d){
   renderJarvisMap(d.jarvis_v1_map, d.jarvis_v1_meta);
   renderRecentTrades(d.recent_test_trades, 'kf-recent-test', 'Henüz Test işlemi yok');
   renderRecentTrades(d.recent_live_trades, 'kf-recent-live', 'Henüz Live işlemi yok');
-  renderKaitoPaper(d.kaito_paper);
+  renderA139Opens(d.a139_live);
+  renderA139Closed(d.a139_live);
 }
 
 async function refreshOverviewFast(force){
@@ -17541,7 +17522,7 @@ async function refreshOverviewFast(force){
 
 async function refreshLiveBar(){
   try{
-    const r = await fetch('/poly/api/crypto-futures/live-control', {cache:'no-store'});
+    const r = await fetch('/poly/api/crypto-futures/a139-control', {cache:'no-store'});
     const d = await r.json();
     if(d.ok) renderLiveBar(d);
   }catch(e){}
@@ -17551,21 +17532,12 @@ function renderCards(d){ renderOverview(d); }
 function renderLiveBar(d){
   const bar = document.getElementById('live-bar');
   const btn = document.getElementById('live-toggle-btn');
-  const title = document.getElementById('live-bar-title');
-  const sub = document.getElementById('live-bar-sub');
   const topIn = document.getElementById('topn-input');
-  const pageSub = document.getElementById('page-sub');
   if(!bar || !btn) return;
   const dashPaused = !!d.live_paused;
   const envOn = d.env_enabled !== false;
   const topN = Math.max(1, Math.min(10, Number(d.top_n != null ? d.top_n : 4) || 4));
   bar.classList.toggle('paused', dashPaused || !envOn);
-  if(title) title.textContent = dashPaused ? 'Binance Live KAPALI' : 'Binance Live AÇIK';
-  if(sub){
-    if(!envOn) sub.textContent = 'Env kapalı (CRYPTO_FUTURES_CR6_ENABLED)';
-    else if(dashPaused) sub.textContent = 'Yeni açılış yok · açıklar :02/ATR/hard SL ile kapanır · max ' + topN;
-    else sub.textContent = 'Algoritmalar Live aktif · max ' + topN + ' poz · sanal etkilenmez';
-  }
   if(topIn && document.activeElement !== topIn){
     topIn.min = d.top_n_min != null ? d.top_n_min : 1;
     topIn.max = d.top_n_max != null ? d.top_n_max : 10;
@@ -17598,17 +17570,14 @@ async function saveTopN(){
   v = Math.max(1, Math.min(10, v));
   el.value = String(v);
   try{
-    const r = await fetch('/poly/api/crypto-futures/live-control', {
+    const r = await fetch('/poly/api/crypto-futures/a139-control', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({top_n: v}),
     });
     const d = await r.json();
     if(!d.ok){ alert(d.error || 'max poz kaydedilemedi'); return; }
     if(d.top_n != null) el.value = String(d.top_n);
-    const sub = document.getElementById('live-bar-sub');
-    if(sub && sub.textContent){
-      refreshLiveBar();
-    }
+    refreshLiveBar();
   }catch(e){ alert(String(e)); }
 }
 async function toggleBinanceLive(){
@@ -17616,12 +17585,12 @@ async function toggleBinanceLive(){
   const bar = document.getElementById('live-bar');
   const pausing = !(bar && bar.classList.contains('paused'));
   const msg = pausing
-    ? 'Binance Live kapatılsın mı? Yeni açılış durur; mevcut pozisyonlar :02 / ATR / hard SL ile kapanmaya devam eder. Sanal Algoritma/Analiz etkilenmez.'
-    : 'Binance Live açılsın mı? Algoritmalar Live (Hurst+A1#11+Z-Score MR+MR) emirleri tekrar çalışır.';
+    ? 'A1#39 Live kapatılsın mı? Yeni açılış durur; açık pozisyonlar ATR / 24s tavan ile kapanmaya devam eder. Test sanal defteri etkilenmez. CR6 kapalı kalır.'
+    : "A1#39 Live açılsın mı? Test a1_39 motoru gerçek Binance'te $20×7x, en fazla 4 işlem açar.";
   if(!confirm(msg)) return;
   if(btn){ btn.disabled = true; btn.textContent = '…'; }
   try{
-    const r = await fetch('/poly/api/crypto-futures/live-control', {
+    const r = await fetch('/poly/api/crypto-futures/a139-control', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({toggle: true}),
     });
@@ -17638,10 +17607,10 @@ async function refresh(){
   await refreshLiveBar();
 }
 async function closeCr6(symbol, qty, btn){
-  if(!confirm(symbol + ' Algoritmalar Live pozisyonunu kapat?')) return;
+  if(!confirm(symbol + ' A1#39 Live pozisyonunu kapat?')) return;
   btn.classList.add('loading'); btn.textContent = 'Kapatılıyor…';
   try{
-    const body = {symbol, strategy:'Supertrend'};
+    const body = {symbol, strategy:'A139'};
     if(qty != null) body.qty = qty;
     const r = await fetch('/poly/api/crypto-futures/close', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -17660,7 +17629,7 @@ async function loadHistory(){
   const el = document.getElementById('hist-list');
   if(!el) return;
   try{
-    const r = await fetch('/poly/api/crypto-futures/history', {cache:'no-store'});
+    const r = await fetch('/poly/api/crypto-futures/a139-history', {cache:'no-store'});
     const d = await r.json();
     const rows = (d && d.trades) || [];
     if(!rows.length){
@@ -18355,20 +18324,27 @@ def api_kripto_overview():
     waiting = snap.get("waiting") or []
     recent_test = mod.compute_recent_test_trades(limit=12)
     recent_live: list[dict] = []
+    a139_live: dict = {"ok": False}
     try:
-        from crypto_futures_cr6 import load_history as _cr6_hist  # noqa: WPS433
-        for t in list(reversed(_cr6_hist() or []))[:8]:
-            sym = (t.get("symbol") or "").upper()
-            recent_live.append({
-                "symbol": sym,
-                "name": sym.replace("USDT", "") if sym.endswith("USDT") else sym,
-                "side": t.get("side"),
-                "algo": t.get("algo") or t.get("strategy") or "Live",
-                "pnl": round(float(t.get("pnl") or 0), 4),
-                "exit_time_tr": t.get("exit_time_tr") or "",
-            })
-    except Exception:
-        pass
+        from crypto_futures_a139 import status_block as _a139_status  # noqa: WPS433
+        a139_live = _a139_status(refresh_price=True)
+        recent_live = list(a139_live.get("recent_trades") or [])
+    except Exception as exc:
+        print(f"[kripto overview] a139_live: {exc}", flush=True)
+        try:
+            from crypto_futures_cr6 import load_history as _cr6_hist  # noqa: WPS433
+            for t in list(reversed(_cr6_hist() or []))[:8]:
+                sym = (t.get("symbol") or "").upper()
+                recent_live.append({
+                    "symbol": sym,
+                    "name": sym.replace("USDT", "") if sym.endswith("USDT") else sym,
+                    "side": t.get("side"),
+                    "algo": t.get("algo") or t.get("strategy") or "Live",
+                    "pnl": round(float(t.get("pnl") or 0), 4),
+                    "exit_time_tr": t.get("exit_time_tr") or "",
+                })
+        except Exception:
+            pass
     jarvis_map: list[dict] = []
     jarvis_meta: dict = {}
     try:
@@ -18381,12 +18357,6 @@ def api_kripto_overview():
         jarvis_meta = mapping_summary()
     except Exception as exc:
         print(f"[kripto overview] jarvis_v1_map: {exc}", flush=True)
-    kaito_paper: dict = {"ok": False}
-    try:
-        from kaito_paper import paper_status_block  # noqa: WPS433
-        kaito_paper = paper_status_block(refresh_price=True)
-    except Exception as exc:
-        print(f"[kripto overview] kaito_paper: {exc}", flush=True)
     return jsonify({
         "ok": True,
         "coin_leaders": coin_leaders,
@@ -18401,7 +18371,7 @@ def api_kripto_overview():
         "recent_live_trades": recent_live,
         "jarvis_v1_map": jarvis_map,
         "jarvis_v1_meta": jarvis_meta,
-        "kaito_paper": kaito_paper,
+        "a139_live": a139_live,
     })
 
 
@@ -18490,6 +18460,123 @@ def api_crypto_futures_live_control():
             "top_n": get_top_n(),
             "top_n_min": TOP_N_MIN,
             "top_n_max": TOP_N_MAX,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/crypto-futures/a139")
+def api_crypto_futures_a139():
+    """A1#39 Live açık pozisyonlar + Binance bakiye."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_KRIPTO)
+    try:
+        from crypto_futures_a139 import status_block
+        return jsonify(status_block(refresh_price=True))
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/crypto-futures/a139-control", methods=["GET", "POST"])
+def api_crypto_futures_a139_control():
+    """A1#39 Live aç/kapa — CR6 ve sanal Test etkilenmez."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_KRIPTO)
+    try:
+        from crypto_futures_a139 import (
+            get_live_control,
+            set_live_paused,
+            set_top_n,
+            toggle_live_paused,
+            _opens_allowed,
+            _env_enabled,
+            is_live_paused,
+            get_top_n,
+            TOP_N_MIN,
+            TOP_N_MAX,
+        )
+        if request.method == "GET":
+            ctrl = get_live_control()
+            return jsonify({
+                "ok": True,
+                **ctrl,
+                "enabled": _opens_allowed(),
+                "env_enabled": _env_enabled(),
+                "top_n_min": TOP_N_MIN,
+                "top_n_max": TOP_N_MAX,
+            })
+        body = request.get_json(force=True) if request.is_json else {}
+        ctrl = None
+        if body.get("toggle"):
+            ctrl = toggle_live_paused(source="dashboard")
+        if "paused" in body or "live_paused" in body:
+            paused = body.get("paused", body.get("live_paused"))
+            ctrl = set_live_paused(bool(paused), source="dashboard")
+        if "top_n" in body:
+            ctrl = set_top_n(body.get("top_n"), source="dashboard")
+        if ctrl is None:
+            return jsonify({"ok": False, "error": "toggle, paused veya top_n gerekli"}), 400
+        return jsonify({
+            "ok": True,
+            **ctrl,
+            "enabled": _opens_allowed(),
+            "env_enabled": _env_enabled(),
+            "live_paused": is_live_paused(),
+            "top_n": get_top_n(),
+            "top_n_min": TOP_N_MIN,
+            "top_n_max": TOP_N_MAX,
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/poly/api/crypto-futures/a139-history")
+def api_crypto_futures_a139_history():
+    """A1#39 Live kapanmış işlem geçmişi."""
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    sys.path.insert(0, _DIR_KRIPTO)
+    try:
+        from crypto_futures_a139 import load_history
+        hist = list(reversed(load_history() or []))
+        trades = []
+        for t in hist[:100]:
+            sym = (t.get("symbol") or "").upper()
+            trades.append({
+                "symbol": sym,
+                "name": sym.replace("USDT", "") if sym.endswith("USDT") else sym,
+                "side": t.get("side"),
+                "algo": t.get("algo") or "A1#39",
+                "leverage": t.get("leverage"),
+                "margin_usd": t.get("margin_usd"),
+                "entry_price": t.get("entry_price"),
+                "exit_price": t.get("exit_price"),
+                "entry_time_tr": t.get("entry_time_tr"),
+                "exit_time_tr": t.get("exit_time_tr"),
+                "pnl_gross": t.get("pnl_gross"),
+                "commission": t.get("commission"),
+                "entry_fee": t.get("entry_fee"),
+                "exit_fee": t.get("exit_fee"),
+                "pnl": t.get("pnl"),
+                "close_reason": t.get("close_reason"),
+            })
+        net_sum = round(sum(float(x.get("pnl") or 0) for x in trades), 4)
+        fee_sum = round(sum(float(x.get("commission") or 0) for x in trades), 4)
+        gross_sum = round(sum(
+            float(x.get("pnl_gross") if x.get("pnl_gross") is not None else (x.get("pnl") or 0))
+            for x in trades
+        ), 4)
+        return jsonify({
+            "ok": True,
+            "trades": trades,
+            "summary": {
+                "n": len(trades),
+                "pnl_gross": gross_sum,
+                "commission": fee_sum,
+                "pnl_net": net_sum,
+            },
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -18808,6 +18895,40 @@ def api_crypto_futures_close():
             qty = float(qty)
         strategy = (body.get("strategy") or "").upper()
         r = close_market(symbol, qty=qty)
+        if strategy in ("A139", "A1#39", "A139_LIVE") or body.get("a139"):
+            try:
+                from crypto_futures_a139 import (
+                    load_state as _a139_st,
+                    save_state as _a139_sv,
+                    load_history as _a139_h,
+                    save_history as _a139_hv,
+                )
+                from datetime import datetime
+                from zoneinfo import ZoneInfo
+                st = _a139_st()
+                opens = st.get("open_positions") or []
+                closed_pos = next((p for p in opens if p.get("symbol") == symbol), None)
+                st["open_positions"] = [p for p in opens if p.get("symbol") != symbol]
+                if closed_pos:
+                    pnl = float(r.get("pnl") or r.get("pnl_est") or 0)
+                    fee = float(r.get("commission") or 0)
+                    st["total_pnl"] = round(float(st.get("total_pnl") or 0) + pnl, 4)
+                    st["total_commission"] = round(float(st.get("total_commission") or 0) + fee, 6)
+                _a139_sv(st)
+                if closed_pos:
+                    hist = _a139_h()
+                    hist.append({
+                        **closed_pos,
+                        "exit_price": r.get("mark_price"),
+                        "exit_time_tr": r.get("exit_time_tr") or datetime.now(ZoneInfo("Europe/Istanbul")).isoformat(),
+                        "pnl": r.get("pnl") if r.get("pnl") is not None else r.get("pnl_est"),
+                        "commission": r.get("commission"),
+                        "close_reason": "manual",
+                        "manual_close": True,
+                    })
+                    _a139_hv(hist)
+            except Exception as ce:
+                r["a139_state_warn"] = str(ce)
         # Algoritmalar Live (eski CR6 state) düş
         if strategy in ("CR6", "Supertrend", "ST", "st") or body.get("cr6"):
             try:
