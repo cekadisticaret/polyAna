@@ -121,11 +121,18 @@ alwaysApply: true
 | `0 21 * * *` | `temmuzPoly/weekly_slot_heatmap_all.py send` (00:00 İST — A15 TG) | `/tmp/weekly_slot_heatmap_all.log` |
 | `15 * * * *` | `temmuzPoly/slot_data_archive.py` (saatlik slot arşivi) | `/tmp/slot_data_archive.log` |
 | `20 * * * *` | `cd /root/aiProject && python3 twitter_bot/tweet_trade_card.py` (@tradecomio saatlik en başarılı işlem — giriş/kapanış/kâr görsel; yeni yoksa atlar) | `/tmp/twitter_trade_card.log` |
+| `*/30 * * * *` | `cd /root/aiProject && python3 twitter_bot/tweet_forex_wins.py` (@tradecomio CEM01 kazananları + WR, 30 dk; birden fazlaysa aynı görsel) | `/tmp/twitter_forex_wins.log` |
 | `0 */3 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_algo_analyst.py` (Poly Algo Analist — A1/A6 ailesi/A2#01-17/A10/A15/B1#01-02 karşılaştırmalı yorum, Anthropic API ile üretilip Telegram'a gönderilir, özet `temmuzPoly/analyst_journal.jsonl`'a kaydedilir) | `/tmp/poly_algo_analyst.log` |
 | `20 */3 * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/kripto_test_analyst.py` (Kripto Test AI Analist — Kripto Test sanal defterleri arasında ayrışma bulur, Anthropic API ile yorum üretir, ayrı Telegram kanalına (LAB bot) gönderir, tam metin `AgustosKripto/Test/kripto_analyst_feed.jsonl`'a kaydedilir — `bursaapp.com/kripto/yapay-zeka-analiz`) | `/tmp/kripto_test_analyst.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_algo_daily_report.py` (Poly Algo Analist Günlük Rapor — 00:00 İST; günlük defter özeti + `algo_pattern_stats.py`'de eşik atlayan yeni "watch/confident" kalıplar; `temmuzPoly/analyst_daily_reports.jsonl`) | `/tmp/poly_algo_daily_report.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/jarvis_report.py` (**JARVIS** — 00:00 İST; 69 Kripto Test defterini tarar → `jarvis_report.json` + `jarvis_history.jsonl`; aynı turda 118 defterlik sistem denetimi → `jarvis_audit.json` → `bursaapp.com/kripto/jarvis` iki sekme) | `/tmp/jarvis_report.log` |
-| `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/forex_paper.py` (**Forex sanal** — Grafik 1 + Algoritma 2; XAUUSD $300 · $100×500x; gerçek para yok) | `/tmp/forex_paper.log` |
+| `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/forex_paper.py` (**Forex** — CEM01 + A2 sanal; **EXNESS** `/forex/cembybit` sanal `$100×500x` kom $0.35 — canlı emir kapalı) | `/tmp/forex_paper.log` |
+| `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/cem02_paper.py` (**CAPITAL** — Capital.com demo oturum; emir yok) | `/tmp/cem02_paper.log` |
+| `*/1 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 EylulForex/gpsusdt_paper.py` (**GPSUSDT** — CEM01 yapısı, ayrı defter; canlı emir yok) | `/tmp/gpsusdt_paper.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py close` | `/tmp/fx_algo_runner.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py open` (**Forex Algoritma işlemler** — Poly listesinin XAUUSD sanal kopyası · $1000 · $200×100x · kom $0.35; CEM01/Poly dokunulmaz; manuel open yok) | `/tmp/fx_algo_runner.log` |
+| `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py trail` (CEM01 gibi dakikalık mark/stop) | `/tmp/fx_algo_runner.log` |
+| `*/10 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py scan` | `/tmp/fx_algo_runner.log` |
 
 ## Forex sanal defter — giriş/çıkış rejimi (2026-08-17)
 `$100 × 500x` demek altında **1$ hareket = $11.19**; marj $100 = **8.9$**, kasa $300 = **26.8$**. Altın son ölçümde bir saat içinde tek yöne ortalama **12.31$** (p90 23.1$, maks 43$) gidiyor — yani stopsuz *ortalama* bir ters saat kasanın %46'sını yiyor. Eski defterde tek fren M5'in dönmesiydi, likidasyon kontrolü yoktu (`balance` eksiye düşebiliyordu). Beş katman eklendi:
@@ -243,7 +250,7 @@ alwaysApply: true
 - **Sahipsiz defter temizliği:** `python3 AgustosKripto/orphan_scan.py [--archive]` — kataloğdan kaldırılmış ama dosyası kalan defterleri bulur. Bunlar hiçbir `close`/`trail` turunda görülmez, açık pozisyonları sonsuza kadar açık kalır ve muhasebeye girmez. 2026-08-15'te `Analizler/a4` bulundu (6 pozisyon **55 saattir** açık, 353 kapanmış işlem, bakiye $106,06/$300) → `_archive_orphan_20260815/`'e taşındı. Yeni defter silerken bu betiği çalıştır.
 - **Kripto denetim:** `python3 AgustosKripto/skill_audit.py --all` — cron yok, elle. Gerçek para kararı öncesi çalıştır; tek doğru ölçüt SKILL + t, WR değil.
 - **Binance Live DURDURULDU (2026-08-11):** `crypto_futures_live_control.json` → `live_paused: true`. Sebep: denetim brüt kenarın sıfır olduğunu gösterdi (net −$10.027'nin tamamı komisyon). Hayalet pozisyon tıkanıklığı 08-08'den beri kazara koruma sağlıyordu; tıkanıklık açıldığı için açılış elle durduruldu. **Yeniden açmadan önce** `skill_audit.py --all` çalıştır ve eşiği geçen defter sayısını kontrol et. `close`/`trail` çalışmaya devam ediyor.
-- **A1#39 Live (2026-08-18):** CR6 evreni kapalı kaldı. Ayrı defter `crypto_futures_a139.py` Test `/kripto/test/a1_39` (H1 Kombinasyon) motorunu gerçek Binance'te koşturur: $20×7x, max 4, 30 coin, BTC/ETH/BNB dahil, Test çıkış rejimi (24s · 3×ATR · ATR kilit). Kontrol `crypto_futures_a139_control.json`. `/kripto` üst çubuğu + bakiye/işlem kartı bu defteri gösterir. Manuel `open` yok — cron :05 / */10 scan.
+- **A1#39 Live (2026-08-18):** CR6 evreni kapalı kaldı. Ayrı defter `crypto_futures_a139.py` Test `/kripto/test/a1_39` (H1 Kombinasyon) motorunu gerçek Binance'te koşturur: $20×7x, max 4, 30 coin, BTC/ETH/BNB dahil, Test çıkış rejimi (24s · 3×ATR · ATR kilit). Kontrol `crypto_futures_a139_control.json`. `/kripto` üst çubuğu + bakiye/işlem kartı bu defteri gösterir. Manuel `open` yok — cron :05 / */10 scan. **DURDURULDU (2026-08-19):** `live_paused: true` — yeni açık yok; `close`/`trail` çalışır.
 - **KAITO kağıt defteri (yeni, 2026-08-16; `kaito_paper.py`):** "Binance canlıda sadece KAITO açalım" fikrini **kasa riske girmeden** ölçer. cr6 ile birebir: 4 defterin oyu (`algo_05`/`algo_06`/`algo_07`/`algo1_11`), `_combine_votes`, `conviction_filter` vetosu (4/4 birlik açılmaz), $7×20x, ATR kâr kilidi + `exit_policy` (24s tavan · 3×ATR), gerçek taker komisyonu. Farkı: tek pozisyon ve emir defteri yok (giriş mum kapanışından) → sonuç **iyimser taraflı** okunmalı. `stats` ile oku; gölge günlüğü `kaito_paper_shadow.jsonl` açılmayan turların sebebini de yazar.
  - **Neden kağıt:** Kripto Test'in +$1.272'lik KAITO rakamı kenar değil. Gün kümelenmiş **t=+0,76** (9 gün, sıfırdan ayırt edilemez) · 13.08 tek günü +$1.348 yani toplamın tamamından fazla, 12.08 −$646 · en iyi 5 işlem kârın %63'ü, en iyi 20 işlem %152 (gerisi eksi) · LONG −$1.897 (WR %34,2) vs SHORT +$3.169 (WR %60,7). Sebep basit: KAITO aynı pencerede **0,91 → 0,35 (−%61,3)**, neredeyse her gün eksi; defterler çoğunlukla short kaldığı için kazandılar. Bu yön, beceri değil.
  - **Ayrıca strateji uyuşmuyor:** o rakam Kripto Test defterlerinden ($100×6x, 69 Poly aynası); canlı cr6 4 algo çoğunluk oyu ve $7×20x. Test sonucu cr6'nın KAITO'da ne yapacağını söylemiyor — bu defter tam olarak o boşluğu ölçüyor.
@@ -303,9 +310,13 @@ tail -f /tmp/poly_analiz8_jesse.log
 tail -f /tmp/weekly_slot_heatmap_all.log
 tail -f /tmp/slot_data_archive.log
 tail -f /tmp/twitter_trade_card.log
+tail -f /tmp/twitter_forex_wins.log
 tail -f /tmp/poly_algo_analyst.log
 tail -f /tmp/poly_algo_daily_report.log
 tail -f /tmp/kripto_test_analyst.log
 tail -f /tmp/jarvis_report.log
 tail -f /tmp/forex_paper.log
+tail -f /tmp/cem02_paper.log
+tail -f /tmp/gpsusdt_paper.log
+tail -f /tmp/fx_algo_runner.log
 ```

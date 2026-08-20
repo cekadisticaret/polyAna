@@ -1,4 +1,4 @@
-"""XAUUSD — Yahoo GC=F mum + bid/ask kotasyonu (forex terminal)."""
+"""CEM02 veri — CEM01 kopyası. forex_data import etmez."""
 from __future__ import annotations
 
 import json
@@ -164,6 +164,15 @@ def get_xau_klines(tf: str = "1m", limit: int = 200) -> tuple[list[dict], str]:
     hit = _cache.get(key)
     if hit and now - hit[0] < _CACHE_TTL:
         return hit[1], "cache"
+    try:
+        from capital_api import configured, prices as capital_prices
+        if configured():
+            rows = capital_prices(tf, n)
+            if rows:
+                _cache[key] = (now, rows)
+                return rows, "capital"
+    except Exception:
+        pass
     iv, rg, default_n = _YF[tf]
     try:
         rows, _meta = _yahoo_raw(iv, rg)
@@ -194,11 +203,20 @@ def _paxg_spread() -> float | None:
 
 
 def forex_quote() -> dict:
-    """Bid / ask / mid + günlük H/L."""
+    """Bid / ask / mid + günlük H/L. Capital demo varsa oradan."""
     global _quote_cache, _basis
     now = time.time()
     if _quote_cache and now - _quote_cache[0] < 2.0:
         return dict(_quote_cache[1])
+    try:
+        from capital_api import configured, quote as capital_quote
+        if configured():
+            q = capital_quote()
+            if q.get("bid") is not None or q.get("mid") is not None:
+                _quote_cache = (now, q)
+                return dict(q)
+    except Exception:
+        pass
     mid = day_hi = day_lo = None
     src = "yahoo"
     yahoo_ts = 0
@@ -316,7 +334,7 @@ def forex_rail() -> dict:
     now = time.time()
     if _rail_cache and now - _rail_cache[0] < _RAIL_TTL:
         return dict(_rail_cache[1])
-    from forex_signal import rail_signals
+    from cem02_signal import rail_signals
     data = rail_signals()
     _rail_cache = (now, data)
     return dict(data)
@@ -325,20 +343,6 @@ def forex_rail() -> dict:
 def forex_spot(timeframe: str = "1m", algo: str = "g1") -> dict:
     """Kotasyon + mum kalan süre + canlı sinyal (tick, 2 sn)."""
     tf = timeframe if timeframe in _YF else "1m"
-    if algo == "a2":
-        return _forex_spot_a2(tf)
-    if algo == "bybit":
-        try:
-            return _forex_spot_bybit(tf)
-        except Exception as e:
-            return {
-                "symbol": "XAUUSD", "name": "Exness",
-                "algo": "bybit", "src": "bybit", "ok": False,
-                "error": str(e)[:200],
-                "bid": None, "ask": None, "mid": None,
-                "signal": {"direction": "NEUTRAL", "engine": "bybit"},
-                "book": {"ok": False, "error": str(e)[:160]},
-            }
     q = forex_quote()
     q["timeframe"] = tf
     q["bar_sec"] = _BAR_SEC[tf]
@@ -354,7 +358,7 @@ def forex_spot(timeframe: str = "1m", algo: str = "g1") -> dict:
     q["signal_tf"] = BOOK_SIGNAL_TF
     q["level_tf"] = BOOK_LEVEL_TF
     try:
-        from forex_signal import live_signal
+        from cem02_signal import live_signal
         q["signal"] = live_signal(BOOK_SIGNAL_TF)
     except Exception as e:
         q["signal"] = {
@@ -362,7 +366,7 @@ def forex_spot(timeframe: str = "1m", algo: str = "g1") -> dict:
             "error": str(e)[:160],
         }
     try:
-        from forex_signal import sr_levels
+        from cem02_signal import sr_levels
         rows, _ = get_xau_klines(BOOK_LEVEL_TF, 120)
         levels = sr_levels(rows)
     except Exception:
@@ -373,195 +377,15 @@ def forex_spot(timeframe: str = "1m", algo: str = "g1") -> dict:
         "tf": BOOK_LEVEL_TF,
     }
     try:
-        from forex_book import apply_signal
-        q["book"] = apply_signal(
-            q.get("signal"), q.get("bid"), q.get("ask"),
-            rail=q.get("rail"), levels=levels,
-        )
-    except Exception as e:
-        q["book"] = {"ok": False, "error": str(e)[:160]}
-    return q
-
-
-def _bybit_quote() -> dict:
-    from bybit_xau import ticker
-    t = ticker()
-    bid, ask = t["bid"], t["ask"]
-    mid = t["last"]
-    spr = max(0.0, ask - bid)
-    dec = 2
-    return {
-        "symbol": "XAUUSD",
-        "name": "Exness",
-        "dec": dec,
-        "mid": round(mid, dec),
-        "bid": round(bid, dec),
-        "ask": round(ask, dec),
-        "spread": round(spr, 2),
-        "day_high": round(t["day_high"], dec) if t.get("day_high") is not None else None,
-        "day_low": round(t["day_low"], dec) if t.get("day_low") is not None else None,
-        "live_price": round(mid, dec),
-        "src": "bybit",
-        "stale_sec": 0,
-        "algo": "bybit",
-    }
-
-
-def _bybit_rows(tf: str, n: int) -> list[dict]:
-    from bybit_xau import klines
-    return klines(tf, n)
-
-
-def _forex_spot_bybit(tf: str) -> dict:
-    """EXNESS defteri — kotasyon şimdilik Bybit altın (Exness API yok). Yahoo/CEM01 yok."""
-    from bybit_xau import klines
-    q = _bybit_quote()
-    q["timeframe"] = tf
-    q["bar_sec"] = _BAR_SEC[tf]
-    q["bar_left"] = bar_remaining(tf)
-    q["tick"] = {"score": 0.0, "n": 0}
-    q["signal_tf"] = BOOK_SIGNAL_TF
-    q["level_tf"] = BOOK_LEVEL_TF
-    try:
-        from forex_signal import rail_signals
-        q["rail"] = rail_signals(klines_fn=_bybit_rows)
-    except Exception:
-        q["rail"] = {}
-    try:
-        from forex_signal import live_signal
-        q["signal"] = live_signal(
-            BOOK_SIGNAL_TF,
-            candles=klines(BOOK_SIGNAL_TF, 120),
-            klines_fn=_bybit_rows,
-            use_tick=False,
-        )
-    except Exception as e:
-        q["signal"] = {
-            "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
-            "engine": "kalman_vwap", "error": str(e)[:160],
-        }
-    try:
-        from forex_signal import sr_levels
-        levels = sr_levels(klines(BOOK_LEVEL_TF, 120))
-    except Exception:
-        levels = {}
-    q["book_levels"] = {
-        "support": (levels or {}).get("nearest_support"),
-        "resistance": (levels or {}).get("nearest_resistance"),
-        "tf": BOOK_LEVEL_TF,
-    }
-    try:
-        from forex_book import apply_signal
-        q["book"] = apply_signal(
-            q.get("signal"), q.get("bid"), q.get("ask"),
-            rail=q.get("rail"), levels=levels, book="bybit",
-        )
-    except Exception as e:
-        q["book"] = {"ok": False, "error": str(e)[:160]}
-    try:
-        from bybit_trade import live_status
-        q["live"] = live_status()
-    except Exception:
-        q["live"] = {"ok": False, "enabled": False}
-    return q
-
-
-def _forex_chart_bybit(tf: str, n: int) -> dict:
-    from bybit_xau import klines
-    rows = klines(tf, n)
-    q = _bybit_quote()
-    dec = 2
-    candles = [
-        {
-            "time": c["time"],
-            "open": round(c["open"], dec),
-            "high": round(c["high"], dec),
-            "low": round(c["low"], dec),
-            "close": round(c["close"], dec),
-            "volume": round(c["volume"], 2),
-        }
-        for c in rows
-    ]
-    out = {
-        "symbol": "XAUUSD",
-        "name": "Exness",
-        "timeframe": tf,
-        "price_tf": tf,
-        "dec": dec,
-        "candles": candles,
-        "source": "bybit",
-        "bar_sec": _BAR_SEC[tf],
-        "bar_left": bar_remaining(tf),
-        "algo": "bybit",
-        "tick": {"score": 0.0, "n": 0},
-        **{k: q[k] for k in ("mid", "bid", "ask", "spread", "day_high", "day_low", "live_price")},
-    }
-    try:
-        from forex_signal import overlay_signals
-        sig, marks = overlay_signals(tf, candles, klines_fn=_bybit_rows, use_tick=False)
-        out["signal"] = sig
-        out["signal_markers"] = marks
-        out["rail"] = sig.get("rail") or {}
-    except Exception as e:
-        out["signal"] = {
-            "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
-            "engine": "kalman_vwap", "error": str(e)[:160],
-        }
-        out["signal_markers"] = []
-        out["rail"] = {}
-    if not out.get("rail"):
-        try:
-            from forex_signal import rail_signals
-            out["rail"] = rail_signals(klines_fn=_bybit_rows)
-        except Exception:
-            out["rail"] = {}
-    try:
-        from forex_signal import sr_levels
-        out["levels"] = sr_levels(candles)
-    except Exception as e:
-        out["levels"] = {"ok": False, "error": str(e)[:160]}
-    try:
-        from forex_book import snapshot
-        out["book"] = snapshot(out.get("bid"), out.get("ask"), book="bybit")
-    except Exception:
-        out["book"] = None
-    return out
-
-
-def _forex_spot_a2(tf: str) -> dict:
-    """Algoritma 2 — 13 katmanlı motor, ayrı defter. Grafik 1 sinyali yok."""
-    q = forex_quote()
-    q["timeframe"] = tf
-    q["bar_sec"] = _BAR_SEC[tf]
-    q["bar_left"] = bar_remaining(tf)
-    q["algo"] = "a2"
-    q["tick"] = {"score": 0.0, "n": 0}
-    q["signal_tf"] = BOOK_SIGNAL_TF
-    q["level_tf"] = BOOK_LEVEL_TF
-    try:
-        from algo2_engine import live_decision
-        dec = live_decision(persist=True)
-    except Exception as e:
-        dec = {
-            "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
-            "allow_entry": False, "engine": "algo2", "error": str(e)[:160],
-            "rail": {}, "levels": {},
-        }
-    q["signal"] = dec
-    q["rail"] = dec.get("rail") or {}
-    levels = dec.get("levels") or {}
-    q["book_levels"] = {
-        "support": levels.get("nearest_support"),
-        "resistance": levels.get("nearest_resistance"),
-        "tf": BOOK_LEVEL_TF,
-    }
-    book_sig = dec if dec.get("allow_entry") else {**dec, "direction": "NEUTRAL"}
-    try:
-        from forex_book import apply_signal
-        q["book"] = apply_signal(
-            book_sig, q.get("bid"), q.get("ask"),
-            rail=q.get("rail"), levels=levels, book="a2",
-        )
+        from capital_api import configured, snapshot_book
+        if configured():
+            q["book"] = snapshot_book()
+        else:
+            from cem02_book import apply_signal
+            q["book"] = apply_signal(
+                q.get("signal"), q.get("bid"), q.get("ask"),
+                rail=q.get("rail"), levels=levels,
+            )
     except Exception as e:
         q["book"] = {"ok": False, "error": str(e)[:160]}
     return q
@@ -574,16 +398,6 @@ def forex_chart(timeframe: str = "1m", price_tf: str | None = None, limit: int |
     n = _YF[tf][2]
     if limit is not None:
         n = max(20, min(500, int(limit)))
-    if algo == "bybit":
-        try:
-            return _forex_chart_bybit(tf, n)
-        except Exception as e:
-            return {
-                "symbol": "XAUUSD", "name": "Exness",
-                "timeframe": tf, "price_tf": tf, "dec": 2,
-                "candles": [], "source": "bybit", "error": str(e)[:200],
-                "algo": "bybit",
-            }
     rows, src = get_xau_klines(tf, n)
     q = forex_quote()
     dec = 2
@@ -621,36 +435,12 @@ def forex_chart(timeframe: str = "1m", price_tf: str | None = None, limit: int |
         out["levels"] = {}
         out["algo"] = algo
         return out
-    if algo == "a2":
-        out["tick"] = {"score": 0.0, "n": 0}
-        out["algo"] = "a2"
-        try:
-            from algo2_engine import overlay_markers
-            sig, marks = overlay_markers(tf, candles)
-            out["signal"] = sig
-            out["signal_markers"] = marks
-            out["rail"] = sig.get("rail") or {}
-            out["levels"] = sig.get("levels") or {}
-        except Exception as e:
-            out["signal"] = {
-                "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
-                "engine": "algo2", "error": str(e)[:160],
-            }
-            out["signal_markers"] = []
-            out["rail"] = {}
-            out["levels"] = {}
-        try:
-            from forex_book import snapshot
-            out["book"] = snapshot(out.get("bid"), out.get("ask"), book="a2")
-        except Exception:
-            out["book"] = None
-        return out
     try:
         out["tick"] = paxg_tick_score()
     except Exception:
         out["tick"] = {"score": 0.0, "n": 0}
     try:
-        from forex_signal import overlay_signals
+        from cem02_signal import overlay_signals
         sig, marks = overlay_signals(tf, candles)
         out["signal"] = sig
         out["signal_markers"] = marks
@@ -665,7 +455,7 @@ def forex_chart(timeframe: str = "1m", price_tf: str | None = None, limit: int |
     except Exception:
         out["rail"] = {}
     try:
-        from forex_signal import sr_levels
+        from cem02_signal import sr_levels
         out["levels"] = sr_levels(candles)
     except Exception as e:
         out["levels"] = {"ok": False, "error": str(e)[:160]}

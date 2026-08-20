@@ -253,3 +253,123 @@ def render_coin_leaders(rows: list[dict], *, avg_wr: float, coin_count: int, ts_
 
     img.save(out_path, "PNG")
     return out_path
+
+
+# Forex CEM01 — altın tema (grafik sayfasıyla aynı palet)
+C_FX_BG_A = (11, 14, 18)
+C_FX_BG_B = (18, 23, 29)
+C_FX_GOLD = (57, 255, 142)
+C_FX_GREEN = (57, 255, 142)
+C_FX_RED = (239, 83, 80)
+C_FX_TXT = (232, 238, 244)
+C_FX_MUTED = (125, 139, 150)
+C_FX_CARD = (22, 29, 36)
+
+
+def render_forex_wins(
+    trades: list[dict],
+    *,
+    wr: float,
+    wins: int,
+    trades_n: int,
+    ts_label: str,
+    out_path: str,
+    window_label: str = "last 30m",
+) -> str:
+    """Bir veya birden fazla CEM01 kazananı + (WR>%55 ise) defter WR, tek PNG."""
+    show_wr = wr > 55
+    n = max(1, len(trades))
+    row_h = 118 if n <= 4 else 100
+    h = (430 if show_wr else 250) + n * row_h + 90
+    h = min(max(h, 640 if show_wr else 560), 1600)
+    img = _vertical_gradient(W, h, C_FX_BG_A, C_FX_BG_B)
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    draw.rectangle([(0, 0), (W, 10)], fill=C_FX_GOLD)
+
+    f_kicker = _font("DejaVuSans-Bold.ttf", 26)
+    f_title = _font("DejaVuSans-Bold.ttf", 52)
+    f_wr = _font("DejaVuSans-Bold.ttf", 110)
+    f_sub = _font("DejaVuSans.ttf", 26)
+    f_sec = _font("DejaVuSans-Bold.ttf", 22)
+    f_side = _font("DejaVuSans-Bold.ttf", 26)
+    f_px = _font("DejaVuSans-Bold.ttf", 32)
+    f_pnl = _font("DejaVuSans-Bold.ttf", 36)
+    f_meta = _font("DejaVuSans.ttf", 22)
+    f_footer = _font("DejaVuSans-Bold.ttf", 26)
+
+    y = 48
+    draw.text((PAD_X, y), "XAUUSD  ·  FOREX", font=f_kicker, fill=C_FX_GOLD)
+    y += 44
+    if show_wr:
+        draw.text((PAD_X, y), "WIN RATE", font=f_title, fill=C_FX_TXT)
+        y += 68
+        draw.text((PAD_X, y), f"{wr:.1f}%", font=f_wr, fill=C_FX_GOLD)
+        y += 124
+        draw.text(
+            (PAD_X, y),
+            f"{wins}/{trades_n} trades  ·  $100 X 100X  ·  {window_label}",
+            font=f_sub,
+            fill=C_FX_MUTED,
+        )
+        y += 56
+    else:
+        draw.text((PAD_X, y), "TRADE RESULT", font=f_title, fill=C_FX_TXT)
+        y += 68
+        draw.text((PAD_X, y), f"$100 X 100X  ·  {window_label}", font=f_sub, fill=C_FX_MUTED)
+        y += 48
+    draw.line([(PAD_X, y), (W - PAD_X, y)], fill=(57, 255, 142, 70), width=2)
+    y += 22
+    sec = f"{n} WINNER{'S' if n != 1 else ''}"
+    draw.text((PAD_X, y), sec, font=f_sec, fill=C_FX_GOLD)
+    y += 40
+
+    for t in trades:
+        side = str(t.get("side") or "").lower()
+        sell = side in ("sell", "short")
+        side_txt = "SHORT" if sell else "LONG"
+        side_col = C_FX_RED if sell else C_FX_GREEN
+        entry = float(t.get("entry") or t.get("entry_price") or 0)
+        exit_px = float(t.get("exit") or t.get("exit_price") or 0)
+        pnl = float(t.get("pnl") or 0)
+        margin = float(t.get("margin") or t.get("margin_usd") or 100) or 100
+        pct = 100.0 * pnl / margin
+        clock = str(t.get("close_clock") or "")
+        reason = str(t.get("reason") or "").upper()
+
+        top = y
+        _rounded_rect(
+            draw,
+            (PAD_X, top, W - PAD_X, top + row_h - 14),
+            18,
+            fill=(*C_FX_CARD, 240),
+            outline=(57, 255, 142, 45),
+            width=1,
+        )
+        badge_w = 118
+        _rounded_rect(
+            draw,
+            (PAD_X + 18, top + 18, PAD_X + 18 + badge_w, top + 56),
+            12,
+            fill=(side_col[0], side_col[1], side_col[2], 36),
+            outline=(side_col[0], side_col[1], side_col[2], 140),
+            width=2,
+        )
+        draw.text((PAD_X + 32, top + 24), side_txt, font=f_side, fill=side_col)
+        px_txt = f"{entry:,.2f}  →  {exit_px:,.2f}"
+        draw.text((PAD_X + 18 + badge_w + 20, top + 22), px_txt, font=f_px, fill=C_FX_TXT)
+        pnl_txt = f"+${pnl:,.2f}"
+        pb = draw.textbbox((0, 0), pnl_txt, font=f_pnl)
+        draw.text((W - PAD_X - 28 - (pb[2] - pb[0]), top + 18), pnl_txt, font=f_pnl, fill=C_FX_GREEN)
+        meta = f"{clock}  ·  {pct:+.1f}% margin" + (f"  ·  {reason}" if reason else "")
+        draw.text((PAD_X + 22, top + row_h - 52), meta, font=f_meta, fill=C_FX_MUTED)
+        y += row_h
+
+    footer_y = h - 70
+    draw.line([(PAD_X, footer_y - 22), (W - PAD_X, footer_y - 22)], fill=(255, 255, 255, 22), width=2)
+    draw.text((PAD_X, footer_y), f"@{_twitter_handle()}", font=f_footer, fill=C_FX_GOLD)
+    bbox = draw.textbbox((0, 0), ts_label, font=f_meta)
+    draw.text((W - PAD_X - (bbox[2] - bbox[0]), footer_y + 2), ts_label, font=f_meta, fill=C_FX_MUTED)
+
+    img.save(out_path, "PNG")
+    return out_path

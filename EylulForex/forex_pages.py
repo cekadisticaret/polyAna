@@ -87,9 +87,10 @@ body{
   __FOREX_BRAND__
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item active" href="/forex/home"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
-  <a class="nav-item nav-sub" href="/forex/cembybit"><span class="nav-dot"></span>CEMBYBIT</a>
-  <a class="nav-item" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
+  <a class="nav-item" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
   <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geç</a>
@@ -253,6 +254,12 @@ body{display:flex;color:var(--txt);font-family:Inter,system-ui,sans-serif;backgr
 .book-tabs{display:flex;gap:14px;padding:0 14px;border-bottom:1px solid var(--line)}
 .book-tab{background:none;border:none;color:#6d7b86;font:inherit;font-size:10px;font-weight:800;letter-spacing:.04em;padding:8px 0;cursor:pointer}
 .book-tab.on{color:#4ea3ff;border-bottom:2px solid #4ea3ff}
+body.fx-g1 .book-tabs,body.fx-bybit .book-tabs,body.fx-gps .book-tabs{display:none}
+.bk-box{margin:10px 10px 6px;border:1px solid #24303a;border-radius:10px;background:#111920}
+.bk-box-h{padding:8px 12px 0;font-size:10px;font-weight:800;letter-spacing:.06em;color:#8a96a0}
+.bk-box .bk-row{border-bottom:none;padding:8px 12px 10px}
+.bk-box .bk-empty{padding:10px 12px 12px}
+.bk-sec{padding:10px 14px 4px;font-size:10px;font-weight:800;letter-spacing:.06em;color:#6d7b86}
 .book-list{flex:1;overflow:auto}
 .bk-row{display:flex;justify-content:space-between;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
 .bk-sym{font-size:12px;font-weight:700}
@@ -266,7 +273,10 @@ body{display:flex;color:var(--txt);font-family:Inter,system-ui,sans-serif;backgr
 .bk-pnl.neg{color:#ef5350}
 .bk-empty{padding:18px 14px;color:#6d7b86;font-size:12px}
 .book-eq{padding:10px 14px;border-top:1px solid var(--line);font-size:16px;font-weight:800;text-align:center}
-.book-eq span{display:block;font-size:10px;color:var(--muted);font-weight:600}
+.book-eq > span{display:block;font-size:10px;color:var(--muted);font-weight:600}
+.book-eq-row{display:flex;align-items:baseline;justify-content:center;gap:8px}
+.book-eq b{font-weight:800;font-variant-numeric:tabular-nums}
+.book-eq em{display:none}
 .chart-wrap{flex:1;min-width:0;min-height:0;position:relative;background:#fff}
 #fx-chart{width:100%;height:100%}
 .hud{position:absolute;top:10px;left:12px;z-index:4;font-size:12px;font-weight:700;color:#37474f;pointer-events:none}
@@ -310,6 +320,7 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
   body:not(.fx-public) .nav-item{white-space:nowrap;padding:8px 10px;font-size:12px}
   .desk{height:100%;min-height:0}
   .topbar{display:none}
+  body.fx-gps .exec{display:none}
   .exec{
     order:3;grid-template-columns:1fr 72px 1fr;flex-shrink:0;
     padding-bottom:env(safe-area-inset-bottom,0);
@@ -337,6 +348,10 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
   .rail-bars{display:none}
   .rail-cd{font-size:9px;margin-left:auto}
   .book-pane{display:none}
+  body.fx-gps .book-pane{
+    display:flex;width:100%;max-height:46vh;border-left:none;
+    border-top:1px solid var(--line);order:4;
+  }
   .chart-wrap{flex:1;min-height:0}
   .hud{top:8px;left:8px;font-size:11px;max-width:46%}
   .sig{top:8px;right:8px;min-width:0;padding:6px 8px}
@@ -352,23 +367,24 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
 }
 </style>
 </head>
-<body id="fx-page">
+<body id="fx-page" class="__FX_BODY_CLASS__">
 <div class="sidebar">
   __FOREX_BRAND__
   <div class="nav-label">Forex</div>
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item __FX_NAV_G1__" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
-  <a class="nav-item nav-sub __FX_NAV_BYBIT__" href="/forex/cembybit"><span class="nav-dot"></span>CEMBYBIT</a>
-  <a class="nav-item __FX_NAV_A2__" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
-  <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item __FX_NAV_C2__" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item __FX_NAV_GPS__" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
+  <a class="nav-item" href="__FX_ISLEMLER_HREF__"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
   <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
-  <div class="sidebar-footer">XAUUSD · sanal</div>
+  <div class="sidebar-footer">__FX_FOOTER__</div>
 </div>
 <div class="desk">
   <div class="topbar">
-    <div class="sym">XAUUSD<small>Altın / Dolar</small></div>
+    <div class="sym">__FX_PAIR__<small>__FX_PAIR_SUB__</small></div>
     <div class="tfs" id="tfs"></div>
     <div class="meta">
       <div>Spread <b id="m-spr">—</b></div>
@@ -434,19 +450,20 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
       <div id="fx-chart"></div>
     </div>
     <aside class="book-pane" id="book-pane">
-      <div class="book-head"><b>İşlemler</b><small>XAUUSD · $100 × 500x</small></div>
+      <div class="book-head"><b>İşlemler</b><small>__FX_BOOK_SUB__</small></div>
       <div class="book-tabs">
         <button type="button" class="book-tab on" data-btab="pos" onclick="bookTab('pos')">POZİSYONLAR</button>
         <button type="button" class="book-tab" data-btab="hist" onclick="bookTab('hist')">İŞLEMLER</button>
       </div>
       <div class="book-list" id="book-list"></div>
-      <div class="book-eq"><span>bakiye</span><b id="book-eq">$300.00</b></div>
+      <div class="book-eq"><span>bakiye</span><div class="book-eq-row"><b id="book-eq">$300.00</b><em id="book-n">0 işlem</em></div></div>
     </aside>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
 const FX_ALGO='__FX_ALGO__';
+const FX_PAIR='__FX_PAIR__';
 const TFS = [
   ['1m','M1'],['5m','M5'],['15m','M15'],['30m','M30'],['1h','H1'],['4h','H4'],['1d','D1']
 ];
@@ -470,6 +487,8 @@ function paper(side){
   const px=side==='buy'?document.getElementById('p-ask').textContent:document.getElementById('p-bid').textContent;
   const msg=FX_ALGO==='a2'
     ? 'Sanal '+ (side==='buy'?'AL':'SAT') +' '+lot+' lot @ '+px+' — A2 kontrol listesi açarsa cron işler'
+    : FX_ALGO==='gps'
+    ? 'Binance MARKET '+ (side==='buy'?'BUY':'SELL') +' GPSUSDT @ '+px+' — sinyal gelince cron açar (paper)'
     : 'Sanal '+ (side==='buy'?'AL':'SAT') +' '+lot+' lot @ '+px+' — motor henüz yok';
   toast(msg);
 }
@@ -485,6 +504,8 @@ function buildTfs(){
   box.querySelectorAll('.tf').forEach(b=>b.onclick=()=>{_tf=b.dataset.tf; buildTfs(); loadChart();});
 }
 function fmt(n,dec){ return n==null?'—':Number(n).toFixed(dec!=null?dec:2); }
+function pxFmt(n){ return n==null?'—':Number(n).toFixed(FX_ALGO==='gps'?5:2); }
+function money(n){ return n==null?'—':Number(n).toFixed(2); }
 function fmtCd(sec){
   const n=Math.max(0,sec|0);
   return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
@@ -523,16 +544,20 @@ function applyQuote(q){
   if(q.rail) applyRail(q.rail);
   if(q.signal) applySignal(q, true);
   if(q.book) renderBook(q.book);
+  if(FX_ALGO==='bybit'){
+    const f=document.querySelector('.sidebar-footer');
+    if(f) f.textContent='XAUUSD · Exness · canlı kapalı';
+  }
 }
 function ensure(){
   if(_chart) return true;
   const el=document.getElementById('fx-chart');
   if(!el||!window.LightweightCharts) return false;
   _chart=LightweightCharts.createChart(el,{
-    layout:{background:{type:'solid',color:'#ffffff'},textColor:'#546e7a'},
-    grid:{vertLines:{color:'#eceff1'},horzLines:{color:'#eceff1'}},
-    rightPriceScale:{borderColor:'#cfd8dc'},
-    timeScale:{borderColor:'#cfd8dc',timeVisible:true,secondsVisible:false},
+    layout:{background:{type:'solid',color:'#0b141c'},textColor:'#7d8b96'},
+    grid:{vertLines:{color:'#1c2a36'},horzLines:{color:'#1c2a36'}},
+    rightPriceScale:{borderColor:'#1c2a36'},
+    timeScale:{borderColor:'#1c2a36',timeVisible:true,secondsVisible:false},
     crosshair:{mode:LightweightCharts.CrosshairMode.Normal},
     width:el.clientWidth, height:el.clientHeight||480,
   });
@@ -561,7 +586,11 @@ async function loadChart(){
   const id=++_req;
   if(!ensure()) return;
   const lab=(TFS.find(x=>x[0]===_tf)||[_tf,_tf])[1];
-  document.getElementById('hud').innerHTML='XAUUSD, '+lab+' <span>Gold vs US Dollar</span>';
+  document.getElementById('hud').innerHTML=(FX_ALGO==='bybit'
+    ? 'XAUUSD, '+lab+' <span>Exness Raw</span>'
+    : FX_ALGO==='gps'
+    ? FX_PAIR+', '+lab+' <span>GPS / USDT</span>'
+    : 'XAUUSD, '+lab+' <span>Gold vs US Dollar</span>');
   try{
     const r=await fetch('/poly/api/forex/chart?timeframe='+_tf+'&limit=240&algo='+FX_ALGO+'&_='+Date.now(),{cache:'no-store'});
     const d=await r.json();
@@ -724,6 +753,10 @@ function bookTab(t){
   document.querySelectorAll('.book-tab').forEach(x=>x.classList.toggle('on', x.dataset.btab===t));
   renderBook(_book);
 }
+function clockAt(s){
+  const m=String(s||'').match(/(\d{2}):(\d{2})/);
+  return m?m[1]+':'+m[2]:'';
+}
 function holdDur(a,z){
   const parse=s=>{
     const m=String(s||'').match(/(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
@@ -751,32 +784,92 @@ function renderBook(b){
   const pane=document.getElementById('book-pane');
   if(!pane || !b) return;
   const eq=document.getElementById('book-eq');
-  if(eq) eq.textContent='$'+fmt(b.equity!=null?b.equity:b.balance);
+  if(eq){
+    const px=b.equity!=null?b.equity:b.balance;
+    const base=b.init_balance!=null?b.init_balance:300;
+    const broke=(b.book==='bybit') && (b.halted || px<10);
+    eq.textContent=broke?'para bitti':('$'+fmt(px));
+    eq.classList.toggle('up', !broke && px>base);
+    eq.classList.toggle('dn', broke || px<base);
+  }
+  const nEl=document.getElementById('book-n');
+  if(nEl){
+    const n=b.trade_count!=null?b.trade_count:((b.history||[]).length+(b.open_count||0));
+    nEl.textContent=n+' işlem';
+  }
+  const sub=pane.querySelector('.book-head small');
+  if(sub && b.book==='bybit' && b.costs){
+    sub.textContent='XAUUSD · $100 × '+b.leverage+'x · Exness Raw kom $'+fmt(b.costs.commission_open)+' + $'+fmt(b.costs.commission_close);
+  }
+  if(sub && (b.book==='gps' || FX_ALGO==='gps') && b.costs){
+    const av=b.available!=null?(' · serbest $'+fmt(b.available)): '';
+    sub.textContent='Isolated $100×'+(b.leverage||20)+'x · kasa $'+fmt(b.init_balance||500)+av+' · taker %0.05 ($'+fmt(b.costs.commission_open)+' aç / $'+fmt(b.costs.commission_close)+' kapa)';
+  }
   const el=document.getElementById('book-list');
   if(!el) return;
   const row=(side,vol,a,z,ts,pnl,open,extra)=>{
     const sell=side==='sell';
-    return '<div class="bk-row"><div><div class="bk-sym '+(sell?'sell':'buy')+'">XAUUSD, '+(sell?'sell':'buy')+' '+fmt(vol)+'</div>'
-      +'<div class="bk-px">'+fmt(a)+(z!=null?' → '+fmt(z):'')+'</div>'
+    const volTxt=FX_ALGO==='gps'?Math.round(Number(vol)).toLocaleString('tr-TR'):fmt(vol);
+    const px=FX_ALGO==='gps'?pxFmt:fmt;
+    return '<div class="bk-row"><div><div class="bk-sym '+(sell?'sell':'buy')+'">'+FX_PAIR+', '+(sell?'sell':'buy')+' '+volTxt+'</div>'
+      +'<div class="bk-px">'+px(a)+(z!=null?' → '+px(z):'')+'</div>'
       +(extra?'<div class="bk-px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
       +'<div class="bk-right"><div class="bk-ts">'+ts+(open?' · açık':'')+'</div>'
-      +'<div class="bk-pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl==null?'—':fmt(pnl))+'</div></div></div>';
+      +'<div class="bk-pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl==null?'—':(FX_ALGO==='gps'?money(pnl):fmt(pnl)))+'</div></div></div>';
   };
   const plan=p=>{
     const bits=[];
-    if(p.stop!=null) bits.push((p.lock_stage?'kilit ':'SL ')+fmt(p.stop));
-    if(p.target!=null) bits.push('TP '+fmt(p.target));
+    const px=FX_ALGO==='gps'?pxFmt:fmt;
+    if(p.stop!=null) bits.push((p.lock_stage?'kilit ':'SL ')+px(p.stop));
+    if(p.target!=null) bits.push('TP '+px(p.target));
+    if(FX_ALGO==='gps'){
+      if(p.liq_price) bits.push('liq '+px(p.liq_price));
+      if(p.roe!=null) bits.push('ROE '+money(p.roe)+'%');
+      if(p.commission_open!=null) bits.push('kom $'+money(p.commission_open));
+      return bits.join(' · ');
+    }
     if(p.progress!=null) bits.push('%'+fmt(p.progress));
-    if(p.commission) bits.push('kom $'+fmt(p.commission));
+    if(p.commission_open!=null) bits.push('kom aç $'+fmt(p.commission_open));
+    else if(p.commission) bits.push('kom $'+fmt(p.commission));
     if(p.swap) bits.push('swap $'+fmt(p.swap));
     return bits.join(' · ');
   };
   const cost=t=>{
     const bits=[];
-    if(t.commission) bits.push('kom $'+fmt(t.commission));
+    if(t.commission_open!=null || t.commission_close!=null)
+      bits.push('kom aç $'+fmt(t.commission_open)+' + kapa $'+fmt(t.commission_close));
+    else if(t.commission) bits.push('kom $'+fmt(t.commission));
     if(t.swap) bits.push('swap $'+fmt(t.swap));
     return bits.join(' · ');
   };
+  const posBlock=()=>{
+    const ps=b.positions||(b.position?[b.position]:[]);
+    let inner=ps.length?ps.map(p=>row(p.side,p.volume,p.entry,p.mark,clockAt(p.open_time)||p.open_time||'',p.float_net!=null?p.float_net:p.float_pnl,true,plan(p))).join(''):'<div class="bk-empty">Açık pozisyon yok.</div>';
+    const rj=b.last_reject;
+    if(rj) inner+='<div class="bk-empty" style="text-align:left">'+rejText(rj)+'</div>';
+    return inner;
+  };
+  const histBlock=()=>{
+    const h=b.history||[];
+    return h.length?h.map(t=>{
+      const sell=t.side==='sell';
+      const dur=holdDur(t.open_time,t.close_time);
+      const hh=clockAt(t.open_time);
+      const extra=[hh?('aç '+hh):'', cost(t), dur?('süre '+dur):''].filter(Boolean).join(' · ');
+      const volTxt=FX_ALGO==='gps'?Math.round(Number(t.volume)).toLocaleString('tr-TR'):fmt(t.volume);
+      const px=FX_ALGO==='gps'?pxFmt:fmt;
+      return '<div class="bk-row"><div><div class="bk-sym '+(sell?'sell':'buy')+'">'+FX_PAIR+', '+(sell?'sell':'buy')+' '+volTxt+'</div>'
+        +'<div class="bk-px">'+px(t.entry)+(t.exit!=null?' → '+px(t.exit):'')+'</div>'
+        +(extra?'<div class="bk-px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
+        +'<div class="bk-right"><div class="bk-pnl '+(t.pnl>=0?'pos':'neg')+'">'+(t.pnl==null?'—':(FX_ALGO==='gps'?money(t.pnl):fmt(t.pnl)))+'</div>'
+        +(hh?'<div class="bk-ts">'+hh+'</div>':(dur?'<div class="bk-ts">'+dur+'</div>':''))+'</div></div>';
+    }).join(''):'<div class="bk-empty">Kapanmış işlem yok.</div>';
+  };
+  if(FX_ALGO!=='a2'){
+    el.innerHTML='<div class="bk-box"><div class="bk-box-h">POZİSYONLAR</div>'+posBlock()+'</div>'
+      +'<div class="bk-sec">İŞLEMLER</div>'+histBlock();
+    return;
+  }
   if(_btab==='karar'){
     const s=_sig||{};
     const rows=s.checklist||[];
@@ -793,23 +886,9 @@ function renderBook(b){
     return;
   }
   if(_btab==='pos'){
-    const ps=b.positions||(b.position?[b.position]:[]);
-    let html=ps.length?ps.map(p=>row(p.side,p.volume,p.entry,p.mark,p.open_time||'',p.float_net!=null?p.float_net:p.float_pnl,true,plan(p))).join(''):'<div class="bk-empty">Açık pozisyon yok.</div>';
-    const rj=b.last_reject;
-    if(rj) html+='<div class="bk-empty" style="text-align:left">'+rejText(rj)+'</div>';
-    el.innerHTML=html;
+    el.innerHTML=posBlock();
   }else{
-    const h=b.history||[];
-    el.innerHTML=h.length?h.map(t=>{
-      const sell=t.side==='sell';
-      const dur=holdDur(t.open_time,t.close_time);
-      const extra=[cost(t), dur?('süre '+dur):''].filter(Boolean).join(' · ');
-      return '<div class="bk-row"><div><div class="bk-sym '+(sell?'sell':'buy')+'">XAUUSD, '+(sell?'sell':'buy')+' '+fmt(t.volume)+'</div>'
-        +'<div class="bk-px">'+fmt(t.entry)+(t.exit!=null?' → '+fmt(t.exit):'')+'</div>'
-        +(extra?'<div class="bk-px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
-        +'<div class="bk-right"><div class="bk-pnl '+(t.pnl>=0?'pos':'neg')+'">'+(t.pnl==null?'—':fmt(t.pnl))+'</div>'
-        +(dur?'<div class="bk-ts">'+dur+'</div>':'')+'</div></div>';
-    }).join(''):'<div class="bk-empty">Kapanmış işlem yok.</div>';
+    el.innerHTML=histBlock();
   }
 }
 async function loadBook(){
@@ -831,26 +910,65 @@ setInterval(loadBook, 4000);
 def _chart_page(algo: str) -> str:
     g1 = "active" if algo == "g1" else ""
     bybit = "active" if algo == "bybit" else ""
+    gps = "active" if algo == "gps" else ""
     a2 = "active" if algo == "a2" else ""
     if algo == "bybit":
-        title = "XAUUSD — CEMBYBIT"
+        title = "XAUUSD — EXNESS"
+        pair, sub, book, foot = "XAUUSD", "Exness Raw", "XAUUSD · $100 × 500x · kom $0.35", "XAUUSD · Exness"
+        body = "fx-bybit"
+    elif algo == "gps":
+        title = "GPSUSDT — Binance"
+        pair, sub, book, foot = "GPSUSDT", "Binance Isolated · sanal $500", "GPSUSDT · Isolated $100 × 20x · taker %0.05", "GPSUSDT · Binance $500"
+        body = "fx-gps"
     elif algo == "a2":
         title = "XAUUSD — Algoritma 2"
+        pair, sub, book, foot = "XAUUSD", "Altın / Dolar", "XAUUSD · $100 × 500x", "XAUUSD · sanal"
+        body = "fx-a2"
     else:
         title = "XAUUSD — CEM01"
+        pair, sub, book, foot = "XAUUSD", "Altın / Dolar", "XAUUSD · $100 × 500x", "XAUUSD · sanal"
+        body = "fx-g1"
     return (
         FOREX_CHART_TMPL
         .replace("__FX_TITLE__", title)
         .replace("__FX_NAV_G1__", g1)
+        .replace("__FX_NAV_C2__", "")
         .replace("__FX_NAV_BYBIT__", bybit)
+        .replace("__FX_NAV_GPS__", gps)
         .replace("__FX_NAV_A2__", a2)
         .replace("__FX_ALGO__", algo)
+        .replace("__FX_PAIR__", pair)
+        .replace("__FX_PAIR_SUB__", sub)
+        .replace("__FX_BOOK_SUB__", book)
+        .replace("__FX_FOOTER__", foot)
+        .replace("__FX_BODY_CLASS__", body)
+        .replace("__FX_ISLEMLER_HREF__", "/forex/gpsusdt/islemler" if algo == "gps" else "/forex/islemler")
     )
 
 
 FOREX_GRAFIK_HTML = _chart_page("g1")
 FOREX_CEMBYBIT_HTML = _chart_page("bybit")
 FOREX_ALGO2_HTML = _chart_page("a2")
+FOREX_GPSUSDT_HTML = _chart_page("gps")
+FOREX_CEM02_HTML = (
+    FOREX_CHART_TMPL
+    .replace("__FX_TITLE__", "XAUUSD — CEM01")
+    .replace("__FX_NAV_G1__", "")
+    .replace("__FX_NAV_C2__", "active")
+    .replace("__FX_NAV_BYBIT__", "")
+    .replace("__FX_NAV_GPS__", "")
+    .replace("__FX_NAV_A2__", "")
+    .replace("__FX_ALGO__", "g1")
+    .replace("__FX_PAIR__", "XAUUSD")
+    .replace("__FX_PAIR_SUB__", "Altın / Dolar")
+    .replace("__FX_BOOK_SUB__", "XAUUSD · Capital")
+    .replace("__FX_FOOTER__", "XAUUSD · Capital")
+    .replace("__FX_BODY_CLASS__", "fx-g1")
+    .replace("__FX_ISLEMLER_HREF__", "/forex/cem02/islemler")
+    .replace("/poly/api/forex/spot", "/poly/api/forex/cem02/spot")
+    .replace("/poly/api/forex/chart", "/poly/api/forex/cem02/chart")
+    .replace("/poly/api/forex/book", "/poly/api/forex/cem02/book")
+)
 
 FOREX_ISLEMLER_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
@@ -915,9 +1033,10 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
   __FOREX_BRAND__
   <div class="nav-label">Forex</div>
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
-  <a class="nav-item nav-sub" href="/forex/cembybit"><span class="nav-dot"></span>CEMBYBIT</a>
-  <a class="nav-item" href="/forex/algo2"><span class="nav-dot"></span>Algoritma 2</a>
+  <a class="nav-item" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
   <a class="nav-item active" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
@@ -939,6 +1058,10 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
 <script>
 let _tab='pos', _book=null;
 function fmt(n){ return n==null?'—':Number(n).toFixed(2); }
+function clockAt(s){
+  const m=String(s||'').match(/(\d{2}):(\d{2})/);
+  return m?m[1]+':'+m[2]:'';
+}
 function holdDur(a,z){
   const parse=s=>{
     const m=String(s||'').match(/(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
@@ -956,12 +1079,13 @@ function holdDur(a,z){
 function rowClosed(t){
   const sell=t.side==='sell';
   const dur=holdDur(t.open_time,t.close_time);
+  const hh=clockAt(t.open_time);
   return '<div class="row">'
     +'<div><div class="sym '+(sell?'sell':'buy')+'">XAUUSD, '+(sell?'sell':'buy')+' '+fmt(t.volume)+'</div>'
     +'<div class="px">'+fmt(t.entry)+' → '+fmt(t.exit)+(t.reason?' · '+t.reason:'')+'</div>'
-    +'<div class="px" style="opacity:.65">'+[t.commission?'kom $'+fmt(t.commission):'',t.swap?'swap $'+fmt(t.swap):'',dur?('süre '+dur):''].filter(Boolean).join(' · ')+'</div></div>'
+    +'<div class="px" style="opacity:.65">'+[hh?('aç '+hh):'',t.commission?'kom $'+fmt(t.commission):'',t.swap?'swap $'+fmt(t.swap):'',dur?('süre '+dur):''].filter(Boolean).join(' · ')+'</div></div>'
     +'<div class="right"><div class="pnl '+(t.pnl>=0?'pos':'neg')+'">'+fmt(t.pnl)+'</div>'
-    +(dur?'<div class="ts">'+dur+'</div>':'')+'</div></div>';
+    +(hh?'<div class="ts">'+hh+'</div>':(dur?'<div class="ts">'+dur+'</div>':''))+'</div></div>';
 }
 function rowOpen(p){
   const sell=p.side==='sell';
@@ -1009,3 +1133,384 @@ load(); setInterval(load, 4000);
 </body>
 </html>
 """
+
+FOREX_CEM02_ISLEMLER_HTML = (
+    FOREX_ISLEMLER_HTML
+    .replace('href="/forex/islemler"', 'href="/forex/cem02/islemler"')
+    .replace("/poly/api/forex/book", "/poly/api/forex/cem02/book")
+)
+
+FOREX_GPS_ISLEMLER_HTML = r"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>İşlemler — GPSUSDT</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e12; --card:#12171d; --line:#1e262e;
+  --txt:#e8eef4; --muted:#7d8b96; --gold:#d4af37;
+  --buy:#3d8bfd; --sell:#ef5350; --up:#c8f135;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui,sans-serif;background:var(--bg)}
+.sidebar{
+  width:220px;background:#0e1318;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;
+  border-right:1px solid var(--line);
+}
+.nav-label{font-size:10px;color:#556;text-transform:uppercase;letter-spacing:1px;margin:16px 0 6px 12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:#888;text-decoration:none;font-size:13px;font-weight:600}
+.nav-item.active{background:rgba(212,175,55,.12);color:var(--gold)}
+.nav-item.nav-sub{margin-left:14px;padding-left:14px;font-size:12px}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.sidebar-footer{margin-top:auto;font-size:11px;color:#556;padding:12px}
+.desk{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh}
+.head{padding:16px 18px 8px}
+.head h1{font-size:22px;font-weight:800}
+.head small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.box{margin:10px 16px 8px;border:1px solid #24303a;border-radius:10px;background:#111920}
+.box-h{padding:10px 14px 0;font-size:10px;font-weight:800;letter-spacing:.06em;color:#8a96a0}
+.sec{padding:10px 18px 4px;font-size:10px;font-weight:800;letter-spacing:.06em;color:#6d7b86}
+.list{flex:1;overflow:auto}
+.row{display:flex;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.box .row{border-bottom:none;padding:10px 14px 12px}
+.sym{font-size:14px;font-weight:700}
+.sym.buy{color:var(--buy)}
+.sym.sell{color:var(--sell)}
+.px{font-size:12px;color:#9aa8b3;margin-top:4px;font-variant-numeric:tabular-nums}
+.right{text-align:right}
+.ts{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pnl{font-size:18px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.pnl.pos{color:var(--up)}
+.pnl.neg{color:var(--sell)}
+.empty{padding:20px 18px;color:var(--muted);font-size:13px}
+.eq{
+  margin:12px 16px 16px;padding:10px 16px;border-radius:999px;background:#1a2330;
+  display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:18px;
+}
+.eq span{font-size:12px;color:var(--muted);font-weight:600}
+.foot{padding:0 18px 16px;font-size:11px;color:var(--muted);text-align:center}
+@media(max-width:800px){
+  body{flex-direction:column}
+  .sidebar{width:100%;height:auto;flex-direction:row;flex-wrap:wrap;padding:10px}
+  .nav-label,.sidebar-footer{display:none}
+}
+</style>
+</head>
+<body id="fx-page">
+<div class="sidebar">
+  __FOREX_BRAND__
+  <div class="nav-label">Forex</div>
+  <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
+  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
+  <a class="nav-item active" href="/forex/gpsusdt/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <div class="nav-label">Sistemler</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
+  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
+  <div class="sidebar-footer">GPSUSDT · Binance $500</div>
+</div>
+<div class="desk">
+  <div class="head">
+    <h1>İşlemler</h1>
+    <small>GPSUSDT · Isolated $100 × 20x · kasa $500</small>
+  </div>
+  <div class="box">
+    <div class="box-h">POZİSYONLAR</div>
+    <div id="pos"></div>
+  </div>
+  <div class="sec">İŞLEMLER</div>
+  <div class="list" id="hist"></div>
+  <div class="eq"><span>bakiye</span> <b id="eq">$500.00</b></div>
+  <div class="foot">Binance USDT-M sanal · taker %0.05 · borsaya emir gitmez</div>
+</div>
+<script>
+function money(n){ return n==null?'—':Number(n).toFixed(2); }
+function px(n){ return n==null?'—':Number(n).toFixed(5); }
+function qty(n){ return n==null?'—':Math.round(Number(n)).toLocaleString('tr-TR'); }
+function clockAt(s){
+  const m=String(s||'').match(/(\d{2}):(\d{2})/);
+  return m?m[1]+':'+m[2]:'';
+}
+function holdDur(a,z){
+  const parse=s=>{
+    const m=String(s||'').match(/(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+    return m?new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]):null;
+  };
+  const A=parse(a), Z=parse(z);
+  if(!A||!Z) return '';
+  let s=Math.max(0,Math.round((Z-A)/1000));
+  const h=Math.floor(s/3600); s%=3600;
+  const m=Math.floor(s/60); const sec=s%60;
+  if(h) return h+' sa '+m+' dk';
+  if(m) return m+' dk';
+  return sec+' sn';
+}
+function rowOpen(p){
+  const sell=p.side==='sell';
+  const pnl=p.float_net!=null?p.float_net:p.float_pnl;
+  const extra=[
+    p.stop!=null?(p.lock_stage?'kilit ':'SL ')+px(p.stop):'',
+    p.target!=null?'TP '+px(p.target):'',
+    p.commission_open!=null?'kom aç $'+money(p.commission_open):'',
+  ].filter(Boolean).join(' · ');
+  return '<div class="row"><div><div class="sym '+(sell?'sell':'buy')+'">GPSUSDT, '+(sell?'sell':'buy')+' '+qty(p.qty||p.volume)+'</div>'
+    +'<div class="px">'+px(p.entry)+(p.mark!=null?' → '+px(p.mark):'')+'</div>'
+    +(extra?'<div class="px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
+    +'<div class="right"><div class="ts">'+clockAt(p.open_time)+' · açık</div>'
+    +'<div class="pnl '+(pnl>=0?'pos':'neg')+'">'+money(pnl)+'</div></div></div>';
+}
+function rowClosed(t){
+  const sell=t.side==='sell';
+  const dur=holdDur(t.open_time,t.close_time);
+  const hh=clockAt(t.open_time);
+  const extra=[hh?('aç '+hh):'','kom aç $'+money(t.commission_open)+' + kapa $'+money(t.commission_close),dur?('süre '+dur):''].filter(Boolean).join(' · ');
+  return '<div class="row"><div><div class="sym '+(sell?'sell':'buy')+'">GPSUSDT, '+(sell?'sell':'buy')+' '+qty(t.volume)+'</div>'
+    +'<div class="px">'+px(t.entry)+' → '+px(t.exit)+'</div>'
+    +(extra?'<div class="px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
+    +'<div class="right"><div class="pnl '+(t.pnl>=0?'pos':'neg')+'">'+money(t.pnl)+'</div>'
+    +(hh?'<div class="ts">'+clockAt(t.close_time||t.open_time)+'</div>':'')+'</div></div>';
+}
+function render(b){
+  document.getElementById('eq').textContent='$'+money(b.equity!=null?b.equity:b.balance);
+  const ps=b.positions||(b.position?[b.position]:[]);
+  let posHtml=ps.length?ps.map(rowOpen).join(''):'<div class="empty">Açık pozisyon yok.</div>';
+  const r=b.last_reject;
+  if(r){
+    const yon=r.side==='buy'?'AL':'SAT';
+    const msg={bekleme:'kapanış sonrası bekleme',stop_uzak:'stop çok uzak',rr_dusuk:'ödül/risk düşük',seviye_yok:'plan yok'}[r.reason]||r.reason||'';
+    if(msg) posHtml+='<div class="empty" style="text-align:left">'+yon+' sinyali var — '+msg+', açılmadı.</div>';
+  }
+  document.getElementById('pos').innerHTML=posHtml;
+  const h=b.history||[];
+  document.getElementById('hist').innerHTML=h.length?h.map(rowClosed).join(''):'<div class="empty">Kapanmış işlem yok.</div>';
+}
+async function load(){
+  try{
+    const r=await fetch('/poly/api/forex/book?algo=gps',{cache:'no-store'});
+    if(r.ok) render(await r.json());
+  }catch(e){}
+}
+load(); setInterval(load, 4000);
+</script>
+</body>
+</html>
+"""
+
+FOREX_FX_ALGOS_HTML = r"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Algoritma işlemler — Forex XAUUSD</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e12; --card:#12171d; --card2:#161d24; --line:#1e262e;
+  --txt:#e8eef4; --muted:#7d8b96; --gold:#d4af37;
+  --green:#39FF8E; --red:#ef5350;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui,sans-serif;background:var(--bg)}
+.sidebar{
+  width:220px;background:#0e1318;padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;
+  border-right:1px solid var(--line);
+}
+.nav-label{font-size:10px;color:#556;text-transform:uppercase;letter-spacing:1px;margin:16px 0 6px 12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:#888;text-decoration:none;font-size:13px;font-weight:600}
+.nav-item.active{background:rgba(212,175,55,.12);color:var(--gold)}
+.nav-item.nav-sub{margin-left:14px;padding-left:14px;font-size:12px}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.sidebar-footer{margin-top:auto;font-size:11px;color:#556;padding:12px}
+.main{flex:1;min-width:0;padding:22px 24px 40px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+.page-title{font-size:22px;font-weight:800}
+.page-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.chip{background:#1a2330;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:700;white-space:nowrap}
+.section-title{font-size:11px;font-weight:800;letter-spacing:.06em;color:#8a96a0;margin-bottom:10px;text-transform:uppercase}
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.book-card{
+  display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:14px 16px;text-decoration:none;color:inherit;
+}
+.book-card:hover{border-color:rgba(212,175,55,.35)}
+.bt{font-size:14px;font-weight:800}
+.bs{font-size:11px;color:var(--muted);margin-top:3px}
+.br{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;font-weight:700}
+.br b{font-size:16px}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.book-opens{font-size:11px;color:var(--muted);margin-top:8px}
+.empty{color:#556;font-size:13px;padding:16px 0}
+.detail-back{display:inline-block;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--gold);text-decoration:none}
+.positions{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.pos-card{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.pos-top{display:flex;justify-content:space-between;align-items:center}
+.pos-name{font-size:16px;font-weight:800}
+.pos-dir{font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px}
+.pos-dir.up{background:rgba(200,241,53,.12);color:var(--green)}
+.pos-dir.down{background:rgba(239,83,80,.12);color:var(--red)}
+.pos-current{font-size:22px;font-weight:800;margin:8px 0 2px}
+.pos-entry{font-size:11px;color:var(--muted);margin-top:4px}
+.hist-row{
+  display:grid;grid-template-columns:72px 56px 1fr auto;gap:10px;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--line);font-size:12px;
+}
+.hist-time{color:var(--muted);font-weight:600}
+.hist-dir{font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;text-align:center}
+.hist-dir.up{background:rgba(200,241,53,.12);color:var(--green)}
+.hist-dir.down{background:rgba(239,83,80,.12);color:var(--red)}
+.hist-meta{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-pnl{font-weight:800;text-align:right}
+@media(max-width:800px){
+  body{flex-direction:column}
+  .sidebar{width:100%;height:auto;flex-direction:row;flex-wrap:wrap;padding:10px}
+  .nav-label,.sidebar-footer{display:none}
+  .main{padding:16px}
+}
+</style>
+</head>
+<body id="fx-page">
+<div class="sidebar">
+  __FOREX_BRAND__
+  <div class="nav-label">Forex</div>
+  <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item active" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
+  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
+  <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <div class="nav-label">Sistemler</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
+  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
+  <div class="sidebar-footer">XAUUSD · $1000 sanal</div>
+</div>
+<div class="main">
+  <div id="view-list">
+    <div class="head">
+      <div>
+        <div class="page-title">Algoritma işlemler</div>
+        <div class="page-sub">XAUUSD sanal $1000 · $200 × 100x · kom $0.35 · 24s / 3×ATR · Poly listesinin altın kopyası</div>
+      </div>
+      <div class="chip" id="sum-chip">—</div>
+    </div>
+    <div class="section-title">algoritma durumu · en iyi → en kötü</div>
+    <div id="algo-books"><div class="empty">yükleniyor…</div></div>
+  </div>
+  <div id="view-detail" style="display:none">
+    <div class="head">
+      <div>
+        <a class="detail-back" href="/forex/algoritma-islemler">← Algoritmalar</a>
+        <div class="page-title" id="detail-title">—</div>
+        <div class="page-sub" id="detail-sub">XAUUSD · $1000</div>
+      </div>
+      <div class="chip" id="detail-sum">—</div>
+    </div>
+    <div class="section-title">Açık pozisyonlar</div>
+    <div class="positions" id="detail-positions"><div class="empty">yükleniyor…</div></div>
+    <div class="section-title" style="margin-top:22px">Geçmiş işlemler</div>
+    <div id="detail-history"><div class="empty">yükleniyor…</div></div>
+  </div>
+</div>
+<script>
+const PATH = location.pathname.replace(/\/+$/,'');
+const m = PATH.match(/\/forex\/algoritma-islemler\/([a-zA-Z0-9_]+)$/);
+const DETAIL_ID = m ? m[1] : null;
+function money(n){ return n==null?'—':Number(n).toFixed(2); }
+function px(n){ return n==null?'—':Number(n).toFixed(2); }
+function clock(s){
+  const x=String(s||'');
+  const mm=x.match(/T(\d{2}:\d{2})/)||x.match(/(\d{2}:\d{2})/);
+  return mm?mm[1]:'';
+}
+function renderList(d){
+  const mk=d.mark!=null?('XAU $'+money(d.mark)+' · '):'';
+  const u=Number(d.total_unrealized||0);
+  document.getElementById('sum-chip').textContent =
+    mk+'Σ $'+money(d.total_balance)+' · Anlık '+(u>=0?'+':'')+money(u)
+    +' · Net '+(Number(d.total_pnl||0)>=0?'+':'')+money(d.total_pnl)
+    +' · açık '+(d.total_open||0);
+  const books=(d.books||[]).slice().sort((a,b)=>
+    Number(b.balance||0)-Number(a.balance||0)
+    || Number(b.total_pnl||0)-Number(a.total_pnl||0)
+    || Number(b.wr||0)-Number(a.wr||0)
+  );
+  const el=document.getElementById('algo-books');
+  if(!books.length){ el.innerHTML='<div class="empty">defter yok</div>'; return; }
+  el.innerHTML='<div class="book-grid">'+books.map(b=>{
+    const pnl=Number(b.total_pnl||0);
+    const upnl=Number(b.unrealized_pnl||0);
+    const wr=b.wr!=null?('WR '+b.wr+'%'):'WR —';
+    const href='/forex/algoritma-islemler/'+encodeURIComponent(b.id);
+    const opens=(b.cards||[]).map(c=> (c.side==='LONG'?'AL':'SAT')).join(' · ')||'açık yok';
+    return '<a class="book-card" href="'+href+'"><div class="bt">'+(b.name||b.id)+'</div>'
+      +'<div class="bs">'+(b.title||'')+' · '+wr+' · '+(b.history_n||0)+' işlem</div>'
+      +'<div class="br"><span>Bakiye</span><b>$'+money(b.balance)+'</b></div>'
+      +'<div class="br"><span>Net P&amp;L</span><b class="'+(pnl>=0?'pos':'neg')+'">'+(pnl>=0?'+':'')+money(pnl)+'</b></div>'
+      +'<div class="br"><span>Anlık</span><b class="'+(upnl>=0?'pos':'neg')+'">'+(upnl>=0?'+':'')+money(upnl)+'</b></div>'
+      +'<div class="book-opens">'+(b.open_count||0)+' açık · '+opens
+      +(b.cards&&b.cards[0]&&b.cards[0].mark!=null?(' · mark $'+money(b.cards[0].mark)):'')+'</div></a>';
+  }).join('')+'</div>';
+}
+function renderDetail(b){
+  document.getElementById('detail-title').textContent=b.name||b.id;
+  document.getElementById('detail-sub').textContent=(b.title||'')+' · XAUUSD · $1000';
+  const pnl=Number(b.total_pnl||0);
+  document.getElementById('detail-sum').textContent=
+    '$'+money(b.balance)+' · '+(pnl>=0?'+':'')+money(pnl)+' · WR '+(b.wr!=null?b.wr+'%':'—');
+  const ps=b.positions||[];
+  const pel=document.getElementById('detail-positions');
+  pel.innerHTML=ps.length?ps.map(p=>{
+    const sell=p.side==='SHORT'||p.side==='sell';
+    const fn=p.float_net;
+    return '<div class="pos-card"><div class="pos-top"><div class="pos-name">XAUUSD</div>'
+      +'<div class="pos-dir '+(sell?'down':'up')+'">'+(sell?'SAT':'AL')+'</div></div>'
+      +'<div class="pos-current '+(fn>=0?'pos':'neg')+'">'+money(fn)+'</div>'
+      +'<div class="pos-entry">'+px(p.entry_price)+(p.mark!=null?' → '+px(p.mark):'')+' · '+clock(p.entry_time_tr)+'</div></div>';
+  }).join(''):'<div class="empty">Açık pozisyon yok.</div>';
+  const h=b.history||[];
+  const hel=document.getElementById('detail-history');
+  hel.innerHTML=h.length?h.map(t=>{
+    const sell=t.side==='SHORT'||t.side==='sell';
+    const tp=Number(t.pnl||0);
+    return '<div class="hist-row"><div class="hist-time">'+clock(t.exit_time_tr||t.entry_time_tr)+'</div>'
+      +'<div class="hist-dir '+(sell?'down':'up')+'">'+(sell?'SAT':'AL')+'</div>'
+      +'<div class="hist-meta">'+px(t.entry_price)+' → '+px(t.exit_price)
+      +' · kom $'+money(t.commission)+(t.close_reason?' · '+t.close_reason:'')+'</div>'
+      +'<div class="hist-pnl '+(tp>=0?'pos':'neg')+'">'+(tp>=0?'+':'')+money(tp)+'</div></div>';
+  }).join(''):'<div class="empty">Kapanmış işlem yok. Cron :05 / */10 ilk turları bekler.</div>';
+}
+async function loadFxAlgos(){
+  try{
+    if(DETAIL_ID){
+      document.getElementById('view-list').style.display='none';
+      document.getElementById('view-detail').style.display='block';
+      const r=await fetch('/poly/api/forex/algo-books/'+encodeURIComponent(DETAIL_ID),{cache:'no-store'});
+      const d=await r.json();
+      if(!d||!d.ok){
+        document.getElementById('detail-positions').innerHTML='<div class="empty">hata: '+(d&&d.error?d.error:'yüklenemedi')+'</div>';
+        return;
+      }
+      renderDetail(d.book||d);
+      return;
+    }
+    const r=await fetch('/poly/api/forex/algo-books',{cache:'no-store'});
+    const d=await r.json();
+    if(!d||!d.ok){
+      document.getElementById('algo-books').innerHTML='<div class="empty">hata: '+(d&&d.error?d.error:'yüklenemedi')+'</div>';
+      return;
+    }
+    renderList(d);
+  }catch(e){
+    const el=DETAIL_ID?document.getElementById('detail-positions'):document.getElementById('algo-books');
+    if(el) el.innerHTML='<div class="empty">yükleme hatası</div>';
+  }
+}
+loadFxAlgos(); setInterval(loadFxAlgos, 2000);
+</script>
+</body>
+</html>
+"""
+

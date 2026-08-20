@@ -1,62 +1,61 @@
-"""XAUUSD sanal defter — $300 kasa, $100 × 500x, yapısal giriş/çıkış.
+"""GPSUSDT sanal — Binance USDT-M Isolated MARKET gibi (gerçek emir yok).
 
-Giriş yalnız Destek/Direnç yapısına yakınken açılır: hedef aynı yöndeki
-seviye, stop ters seviyenin öte yanı. Ödül/risk oranı tutmuyorsa ya da stop
-marjın kaldıramayacağı kadar uzaksa işlem hiç açılmaz.
+Kasa $500, Isolated $100 × 20x.
+Dolum: fapi emir defteri VWAP (alış ask merdiveni / satış bid merdiveni).
+Komisyon: hesabın gerçek taker oranı (yoksa VIP0 %0.05) × her tarafın notional'ı.
+Funding: Binance fundingRate geçmişi, açık pozisyona işlenir.
+forex_book.py (CEM01) dokunulmaz.
 """
 from __future__ import annotations
 
 import fcntl
 import json
+import math
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 _DIR = Path(__file__).resolve().parent / "data"
-_STATE = _DIR / "forex_paper_state.json"
-_HIST = _DIR / "forex_paper_history.json"
-_LOCK = _DIR / "forex_paper.lock"
+_STATE = _DIR / "forex_gpsusdt_state.json"
+_HIST = _DIR / "forex_gpsusdt_history.json"
+_LOCK = _DIR / "forex_gpsusdt.lock"
+_PX = 6  # GPSUSDT tick — altın 2 hane değil
 
 
-def _files(book: str = "g1") -> tuple[Path, Path, Path]:
-    if book == "a2":
-        return (
-            _DIR / "forex_a2_state.json",
-            _DIR / "forex_a2_history.json",
-            _DIR / "forex_a2.lock",
-        )
-    if book == "bybit":
-        return (
-            _DIR / "forex_cembybit_state.json",
-            _DIR / "forex_cembybit_history.json",
-            _DIR / "forex_cembybit.lock",
-        )
+def _files(book: str = "gps") -> tuple[Path, Path, Path]:
     return _STATE, _HIST, _LOCK
 _TZ = ZoneInfo("Europe/Istanbul")
 
-INIT_BAL = 300.0
+INIT_BAL = 500.0
 MARGIN = 100.0
-LEVERAGE = 500
-BYBIT_LEVERAGE = 500  # /forex/cembybit artık Exness Raw — CEM01 ile aynı 500x
-BYBIT_HALT_USD = 10.0  # equity bunun altına inerse işlem durur
-SYMBOL = "XAUUSD"
+LEVERAGE = 20          # Binance USDT-M
+SYMBOL = "GPSUSDT"
 VOLUME = 0.10
 HIST_MAX = 400
-MAX_OPEN = 2       # bir AL + bir SAT aynı anda olabilir
+MAX_OPEN = 1           # tek pozisyon — forex gibi anında tersine dönmez
+TAKER_FEE = 0.0005     # Binance taker — notional × 0.05%
+QTY_STEP = 1.0
+MMR = 0.010            # isolated bakım marjı (~%1)
+MARGIN_TYPE = "ISOLATED"
 
-_LEVEL_PAD = 0.35   # hedefe varmadan kapat (seviyeden dönme riski alma)
-_STOP_PAD = 0.35    # stop, ters seviyenin öte yanına
-MAX_RISK_RATIO = 1.00   # stop mesafesi marjın en fazla %100'ü ($100)
-STOPOUT_RATIO = 1.00    # float zarar marjı yerse zorunlu kapanış
-MIN_RR = 1.5            # ödül/risk bunun altındaysa açma
+# CEM01'de $0.35 pad ≈ 3300$'lık altında %0.0106 — hedef vuruşu için küçük pay
+_PAD_FRAC = 0.35 / 3300.0
+_LEVEL_PAD = 0.35
+_STOP_PAD = 0.35
+MAX_RISK_RATIO = 1.00
+STOPOUT_RATIO = 1.00
+MIN_RR = 1.5
+STOP_ATR = 2.0
+STOP_PCT_CAP = 0.05
+STOP_PCT_FLOOR = 0.008
 LOCK_BE_AT = 0.50       # hedefin yarısı görülünce stop başabaşa
 LOCK_TRAIL_AT = 0.75    # hedefin 3/4'ünde kârın yarısı kilit
 LOCK_BE_USD = 15.0      # +$15 olunca stop başabaşa
 LOCK_TRAIL_USD = 25.0   # +$25 olunca zirve kârın yarısı kilit — +$51'in $22'ye inmesi bir daha olmasın
 TP_MARGIN_PCT = 0.35    # giriş marjının %35'i kârda otomatik kapat ($100 → +$35)
-COOLDOWN_WIN = 180      # kârlı kapanış sonrası aynı yöne bekleme (sn)
-COOLDOWN_LOSS = 600     # Grafik 1 — zararlı kapanış sonrası bekleme (sn)
+COOLDOWN_WIN = 900      # kârlı kapanış sonrası 15 dk
+COOLDOWN_LOSS = 1800    # zararlı kapanış sonrası 30 dk
 COOLDOWN_LOSS_A2 = 300  # Algoritma 2 — zarar sonrası 5 dk
 
 # MT5 ECN Raw (IC / Pepperstone tipi). Broker spesifikasyonu gelince burayı değiştir.
@@ -66,6 +65,79 @@ COMMISSION_PER_LOT_SIDE = 3.50
 SWAP_LONG_PER_LOT = -25.00
 SWAP_SHORT_PER_LOT = -8.00
 SWAP_TRIPLE_WEEKDAY = 2  # 0=Pzt … 2=Çar
+
+
+def _r(px) -> float:
+    try:
+        from gpsusdt_binance import round_px
+        return round_px(float(px))
+    except Exception:
+        return round(float(px), _PX)
+
+
+def _pad(entry: float) -> float:
+    return max(_r(float(entry) * _PAD_FRAC), 10 ** (-_PX))
+
+
+def _liq_price(side: str, entry: float, lev: float = LEVERAGE) -> float:
+    """Isolated tasfiye — Binance sade formül (MMR dahil)."""
+    entry = float(entry)
+    imr = 1.0 / float(lev)
+    if side == "buy":
+        return _r(entry * (1.0 - imr + MMR))
+    return _r(entry * (1.0 + imr - MMR))
+
+
+def _binance_qty(entry: float) -> float:
+    try:
+        from gpsusdt_binance import size_from_margin
+        return float(size_from_margin(MARGIN, LEVERAGE, entry))
+    except Exception:
+        if entry <= 0:
+            return 0.0
+        raw = MARGIN * LEVERAGE / float(entry)
+        step = QTY_STEP
+        qty = math.floor(raw / step) * step
+        return round(qty, 3)
+
+
+def _atr5() -> float:
+    try:
+        from gpsusdt_data import gps_klines
+        rows = gps_klines("5m", 20)
+    except Exception:
+        return 0.0
+    if len(rows) < 8:
+        return 0.0
+    n = min(14, len(rows) - 1)
+    s = 0.0
+    for i in range(-n, 0):
+        s += float(rows[i]["high"]) - float(rows[i]["low"])
+    return s / n
+
+
+def _binance_plan(side: str, entry: float, atr: float | None = None) -> dict:
+    """Binance market — ATR/% stop, RR 1.5 hedef. Altın S/R yok."""
+    entry = float(entry)
+    atr = float(atr or 0)
+    stop_dist = atr * STOP_ATR if atr > 0 else entry * 0.02
+    stop_dist = min(max(stop_dist, entry * STOP_PCT_FLOOR), entry * STOP_PCT_CAP)
+    target_dist = stop_dist * MIN_RR
+    if side == "buy":
+        stop, target, kind = entry - stop_dist, entry + target_dist, "ATR"
+    else:
+        stop, target, kind = entry + stop_dist, entry - target_dist, "ATR"
+    risk = _usd(entry, stop_dist)
+    reward = _usd(entry, target_dist)
+    return {
+        "target": _r(target),
+        "target_kind": kind,
+        "stop": _r(stop),
+        "risk_usd": round(risk, 2),
+        "reward_usd": round(reward, 2),
+        "rr": round(reward / risk, 2) if risk else 0,
+        "fill": "binance_usdm",
+    }
 
 
 def _now_iso() -> str:
@@ -95,7 +167,7 @@ def _atomic_write(path: Path, data) -> None:
     tmp.replace(path)
 
 
-def _load_state(book: str = "g1") -> dict:
+def _load_state(book: str = "gps") -> dict:
     state, _, _ = _files(book)
     if not state.exists():
         return _empty_state()
@@ -124,7 +196,7 @@ def _plist(st: dict) -> list:
     return rows
 
 
-def _load_hist(book: str = "g1") -> list:
+def _load_hist(book: str = "gps") -> list:
     _, hist, _ = _files(book)
     if not hist.exists():
         return []
@@ -135,7 +207,7 @@ def _load_hist(book: str = "g1") -> list:
         return []
 
 
-def _lev(book: str = "g1", pos: dict | None = None) -> float:
+def _lev(book: str = "gps", pos: dict | None = None) -> float:
     if pos is not None:
         try:
             lv = float(pos.get("leverage") or 0)
@@ -143,16 +215,44 @@ def _lev(book: str = "g1", pos: dict | None = None) -> float:
                 return lv
         except (TypeError, ValueError):
             pass
-    return float(BYBIT_LEVERAGE if book == "bybit" else LEVERAGE)
+    return float(LEVERAGE)
 
 
-def _usd(entry: float, dist: float, book: str = "g1", pos: dict | None = None) -> float:
-    """Fiyat mesafesini $ karşılığına çevirir."""
+def _qty(pos: dict | None) -> float:
+    if not pos:
+        return 0.0
+    try:
+        return float(pos.get("qty") or pos.get("volume") or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _taker() -> float:
+    try:
+        from gpsusdt_binance import taker_rate
+        return float(taker_rate())
+    except Exception:
+        return float(TAKER_FEE)
+
+
+def _fee(qty: float, price: float, rate: float | None = None) -> float:
+    r = _taker() if rate is None else float(rate)
+    return round(abs(float(qty) * float(price)) * r, 6)
+
+
+def _usd(entry: float, dist: float, book: str = "gps", pos: dict | None = None) -> float:
+    """Fiyat mesafesini $ karşılığına çevirir — Binance: qty × dist."""
+    q = _qty(pos)
+    if q > 0:
+        return abs(q * float(dist))
     return dist / float(entry) * MARGIN * _lev(book, pos)
 
 
-def _pnl(side: str, entry: float, exit_px: float, book: str = "g1", pos: dict | None = None) -> float:
+def _pnl(side: str, entry: float, exit_px: float, book: str = "gps", pos: dict | None = None) -> float:
+    q = _qty(pos)
     sign = 1.0 if side == "buy" else -1.0
+    if q > 0:
+        return sign * q * (float(exit_px) - float(entry))
     return sign * _usd(entry, exit_px - entry, book=book, pos=pos)
 
 
@@ -164,9 +264,26 @@ def _open_px(side: str, bid: float, ask: float) -> float:
     return ask if side == "buy" else bid
 
 
-def _commission_side(book: str = "g1") -> float:
-    """Exness Raw / MT5 ECN: $3.50 / 1.00 lot / taraf → 0.10 lot = $0.35."""
-    return round(COMMISSION_PER_LOT_SIDE * VOLUME, 2)
+def _notional(pos: dict | None = None) -> float:
+    if pos and pos.get("notional"):
+        return float(pos["notional"])
+    return MARGIN * LEVERAGE
+
+
+def _commission_side(book: str = "gps", pos: dict | None = None, *, exit_px: float | None = None) -> float:
+    """Taker — kapanışta çıkış notional, açıkken kayıtlı açılış ücreti."""
+    if exit_px is not None and pos is not None:
+        return _fee(_qty(pos), exit_px, pos.get("taker_rate"))
+    if pos and pos.get("commission_open") is not None:
+        try:
+            return round(float(pos["commission_open"]), 6)
+        except (TypeError, ValueError):
+            pass
+    q = _qty(pos)
+    px = float(pos.get("entry") or 0) if pos else 0
+    if q > 0 and px > 0:
+        return _fee(q, px)
+    return round(_notional(pos) * _taker(), 6)
 
 
 def _equity_now(st: dict, bid: float | None, ask: float | None) -> float:
@@ -196,11 +313,12 @@ def _float_pnl(pos: dict, bid: float | None, ask: float | None) -> float | None:
 
 
 def _net_float(pos: dict, bid: float | None, ask: float | None) -> float | None:
-    """Kapanış komisyonu düşülmüş yüzer net (açılış komisyonu ve swap bakiyede)."""
+    """Kapanış komisyonu düşülmüş yüzer net (açılış komisyonu ve funding bakiyede)."""
     fp = _float_pnl(pos, bid, ask)
     if fp is None:
         return None
-    return round(fp - _commission_side(str(pos.get("book") or "g1")), 2)
+    exit_px = _exit_px(pos["side"], bid, ask)
+    return round(fp - _commission_side("gps", pos, exit_px=exit_px), 6)
 
 
 # ---------------------------------------------------------------- seviye planı
@@ -215,31 +333,32 @@ def _level_price(lv) -> float | None:
         return None
 
 
-def _plan(side: str, entry: float, levels: dict | None, book: str = "g1") -> dict | None:
+def _plan(side: str, entry: float, levels: dict | None, book: str = "gps") -> dict | None:
     """Hedef = aynı yöndeki seviye, stop = ters seviyenin öte yanı."""
     sup = _level_price((levels or {}).get("nearest_support"))
     res = _level_price((levels or {}).get("nearest_resistance"))
     if sup is None or res is None:
         return None
     entry = float(entry)
+    pad = _pad(entry)
     if side == "buy":
         if res <= entry or sup >= entry:
             return None
-        target, stop = res, round(sup - _STOP_PAD, 2)
-        reward = _usd(entry, (res - _LEVEL_PAD) - entry, book=book)
+        target, stop = res, _r(sup - pad)
+        reward = _usd(entry, (res - pad) - entry, book=book)
         risk = _usd(entry, entry - stop, book=book)
         kind = "Direnç"
     else:
         if sup >= entry or res <= entry:
             return None
-        target, stop = sup, round(res + _STOP_PAD, 2)
-        reward = _usd(entry, entry - (sup + _LEVEL_PAD), book=book)
+        target, stop = sup, _r(res + pad)
+        reward = _usd(entry, entry - (sup + pad), book=book)
         risk = _usd(entry, stop - entry, book=book)
         kind = "Destek"
     if risk <= 0 or reward <= 0:
         return None
     return {
-        "target": round(target, 2),
+        "target": _r(target),
         "target_kind": kind,
         "stop": stop,
         "risk_usd": round(risk, 2),
@@ -321,7 +440,7 @@ def _update_lock(pos: dict, mark: float) -> None:
         return
     lock = entry + keep_px if pos["side"] == "buy" else entry - keep_px
     stop = float(pos["stop"])
-    pos["stop"] = round(max(stop, lock) if pos["side"] == "buy" else min(stop, lock), 2)
+    pos["stop"] = _r(max(stop, lock) if pos["side"] == "buy" else min(stop, lock))
     pos["lock_stage"] = max(int(pos.get("lock_stage") or 0), stage)
 
 
@@ -330,9 +449,10 @@ def _hit_target(pos: dict, mark: float) -> bool:
     if tgt is None:
         return False
     tgt = float(tgt)
+    pad = _pad(float(pos["entry"]))
     if pos["side"] == "sell":
-        return mark <= tgt + _LEVEL_PAD and mark < float(pos["entry"])
-    return mark >= tgt - _LEVEL_PAD and mark > float(pos["entry"])
+        return mark <= tgt + pad and mark < float(pos["entry"])
+    return mark >= tgt - pad and mark > float(pos["entry"])
 
 
 def _hit_stop(pos: dict, mark: float) -> bool:
@@ -354,60 +474,81 @@ def _m5_against(pos: dict, rail: dict | None) -> bool:
     return False
 
 
-def _accrue_swap(st: dict, pos: dict, book: str = "g1") -> bool:
-    """00:00 İST rollover. Çarşamba ×3; Cmt/Paz atlanır. Exness CFD de swap alır."""
-    now = datetime.now(_TZ)
-    last = pos.get("swap_date")
-    if last:
-        try:
-            last_d = datetime.strptime(str(last)[:10], "%Y-%m-%d").date()
-        except ValueError:
-            last_d = now.date()
-    else:
-        try:
-            last_d = datetime.strptime(pos["open_time"], "%Y.%m.%d %H:%M:%S").date()
-        except (KeyError, ValueError, TypeError):
-            last_d = now.date()
-    charged = False
-    d = last_d + timedelta(days=1)
-    while d <= now.date():
-        pos["swap_date"] = d.isoformat()
-        if d.weekday() < 5:
-            nights = 3 if d.weekday() == SWAP_TRIPLE_WEEKDAY else 1
-            amt = round(_swap_rate(pos["side"]) * VOLUME * nights, 2)
-            pos["swap"] = round(float(pos.get("swap") or 0) + amt, 2)
-            st["balance"] = round(float(st["balance"]) + amt, 2)
-            st["total_pnl"] = round(float(st["total_pnl"]) + amt, 2)
-            charged = True
-        d += timedelta(days=1)
-    return charged
+def _accrue_swap(st: dict, pos: dict, book: str = "gps") -> bool:
+    """Binance funding — açık pozisyona geçmiş settlement'ları işle."""
+    try:
+        from gpsusdt_binance import funding_events
+        events = funding_events(12)
+    except Exception:
+        return False
+    opened = pos.get("open_ms")
+    try:
+        opened = int(opened or 0)
+    except (TypeError, ValueError):
+        opened = 0
+    if opened <= 0:
+        # iso → ms kabaca
+        opened = int(time.time() * 1000) - 60_000
+    paid_until = int(pos.get("funded_until") or 0)
+    q = _qty(pos)
+    if q <= 0:
+        return False
+    signed = q if pos.get("side") == "buy" else -q
+    dirty = False
+    now_ms = int(time.time() * 1000)
+    for ev in events:
+        ts = int(ev.get("time") or 0)
+        if ts <= opened or ts <= paid_until or ts > now_ms:
+            continue
+        mark = float(ev.get("mark") or 0) or float(pos.get("entry") or 0)
+        rate = float(ev.get("rate") or 0)
+        pay = round(signed * mark * rate, 6)  # + = bakiyeden çıkar (long, pozitif funding)
+        st["balance"] = round(float(st["balance"]) - pay, 6)
+        st["total_pnl"] = round(float(st["total_pnl"]) - pay, 6)
+        pos["swap"] = round(float(pos.get("swap") or 0) - pay, 6)
+        pos["funded_until"] = ts
+        pos["funding_last"] = {"time": ts, "rate": rate, "pay": pay}
+        dirty = True
+    return dirty
 
 
-def _loss_cooldown(book: str = "g1") -> float:
-    return COOLDOWN_LOSS_A2 if book == "a2" else COOLDOWN_LOSS
+def _loss_cooldown(book: str = "gps") -> float:
+    return COOLDOWN_LOSS
 
 
-def _close_one(st: dict, hist: list, pos: dict, bid: float, ask: float, reason: str, book: str = "g1") -> dict | None:
+def _close_fill_px(pos: dict, bid: float, ask: float) -> float:
+    """Reduce-only MARKET — long kapanışı bid merdiveni, short ask merdiveni."""
+    try:
+        from gpsusdt_binance import market_fill
+        close_side = "sell" if pos.get("side") == "buy" else "buy"
+        fill = market_fill(close_side, _qty(pos))
+        if fill.get("ok") and fill.get("price"):
+            return float(fill["price"])
+    except Exception:
+        pass
+    return _exit_px(pos["side"], bid, ask)
+
+
+def _close_one(st: dict, hist: list, pos: dict, bid: float, ask: float, reason: str, book: str = "gps") -> dict | None:
     rows = _plist(st)
     if not any(p.get("id") == pos.get("id") for p in rows):
         return None
-    exit_px = _exit_px(pos["side"], bid, ask)
-    gross = round(_pnl(pos["side"], pos["entry"], exit_px, book=book, pos=pos), 2)
-    comm_close = _commission_side(book)
-    comm_open = round(float(pos.get("commission") or 0), 2)
-    commission = round(comm_open + comm_close, 2)
-    swap = round(float(pos.get("swap") or 0), 2)
-    net = round(gross - commission + swap, 2)
-    # açılış komisyonu ve swap bakiyede; kapanışta yalnız fiyat + kapanış komisyonu
-    st["balance"] = round(float(st["balance"]) + gross - comm_close, 2)
-    st["total_pnl"] = round(float(st["total_pnl"]) + gross - comm_close, 2)
+    exit_px = _close_fill_px(pos, bid, ask)
+    gross = round(_pnl(pos["side"], pos["entry"], exit_px, book=book, pos=pos), 6)
+    comm_close = _commission_side(book, pos, exit_px=exit_px)
+    comm_open = round(float(pos.get("commission_open") or pos.get("commission") or 0), 6)
+    commission = round(comm_open + comm_close, 6)
+    swap = round(float(pos.get("swap") or 0), 6)
+    net = round(gross - commission + swap, 6)
+    st["balance"] = round(float(st["balance"]) + gross - comm_close, 6)
+    st["total_pnl"] = round(float(st["total_pnl"]) + gross - comm_close, 6)
     hist.append({
         "id": pos["id"],
         "symbol": SYMBOL,
         "side": pos["side"],
         "volume": pos.get("volume") or VOLUME,
         "entry": pos["entry"],
-        "exit": round(exit_px, 2),
+        "exit": _r(exit_px),
         "open_time": pos["open_time"],
         "close_time": _now_iso(),
         "gross": gross,
@@ -423,6 +564,10 @@ def _close_one(st: dict, hist: list, pos: dict, bid: float, ask: float, reason: 
         "rr": pos.get("rr"),
         "margin": MARGIN,
         "leverage": pos.get("leverage") or _lev(book),
+        "qty": _qty(pos),
+        "fill_src": "binance_usdm_vwap",
+        "venue": "binance_usdm",
+        "taker_rate": pos.get("taker_rate") or _taker(),
     })
     del hist[:-HIST_MAX]
     st["positions"] = [p for p in rows if p.get("id") != pos.get("id")]
@@ -432,8 +577,8 @@ def _close_one(st: dict, hist: list, pos: dict, bid: float, ask: float, reason: 
     return hist[-1]
 
 
-def _protect(st: dict, hist: list, bid: float, ask: float, rail=None, levels=None, book: str = "g1") -> bool:
-    """Sıra: zorunlu kapanış → stop → hedef → M5 tersi."""
+def _protect(st: dict, hist: list, bid: float, ask: float, rail=None, levels=None, book: str = "gps", mark: float | None = None) -> bool:
+    """Tetik: mark (Binance isolated). Dolum: MARKET VWAP."""
     closed = False
     stopout = -MARGIN * STOPOUT_RATIO
     for pos in list(_plist(st)):
@@ -441,18 +586,19 @@ def _protect(st: dict, hist: list, bid: float, ask: float, rail=None, levels=Non
             plan = _plan(pos["side"], float(pos["entry"]), levels, book=book)
             if plan:
                 _apply_plan(pos, plan)
-        mark = _exit_px(pos["side"], bid, ask)
-        _update_lock(pos, mark)
+        trig = float(mark) if mark else _exit_px(pos["side"], bid, ask)
+        _update_lock(pos, trig)
         if _net_float(pos, bid, ask) is not None and _net_float(pos, bid, ask) <= stopout:
             reason = "stopout"
-        elif _hit_stop(pos, mark):
+        elif pos.get("liq_price") is not None and (
+            (pos["side"] == "buy" and trig <= float(pos["liq_price"]))
+            or (pos["side"] == "sell" and trig >= float(pos["liq_price"]))
+        ):
+            reason = "liq"
+        elif _hit_stop(pos, trig):
             reason = "lock" if int(pos.get("lock_stage") or 0) else "stop"
-        elif _float_pnl(pos, bid, ask) is not None and _float_pnl(pos, bid, ask) >= MARGIN * TP_MARGIN_PCT:
-            reason = "tp35"
-        elif _hit_target(pos, mark):
-            reason = "sr"
-        elif _m5_against(pos, rail):
-            reason = "m5"
+        elif _hit_target(pos, trig):
+            reason = "tp"
         else:
             continue
         _close_one(st, hist, pos, bid, ask, reason, book=book)
@@ -471,38 +617,71 @@ def _cooling(st: dict, side: str) -> float:
     return max(0.0, left)
 
 
-def _open(st: dict, side: str, bid: float, ask: float, signal: str, plan: dict, book: str = "g1") -> dict | None:
+def _open(st: dict, side: str, bid: float, ask: float, signal: str, plan: dict, book: str = "gps") -> dict | None:
     rows = _plist(st)
-    if book == "bybit" and st.get("halted"):
-        return None
     if _has_side(st, side) or len(rows) >= MAX_OPEN:
         return None
     if float(st["balance"]) - MARGIN * len(rows) < MARGIN:
         return None
+    hint = _open_px(side, bid, ask)
+    qty = _binance_qty(hint)
+    if qty <= 0:
+        st["last_reject"] = {"side": side, "reason": "qty_min", "at": _now_iso()}
+        return None
+    try:
+        from gpsusdt_binance import market_fill
+        fill = market_fill(side, qty)
+    except Exception as e:
+        st["last_reject"] = {"side": side, "reason": "fill_err", "detail": str(e)[:80], "at": _now_iso()}
+        return None
+    if not fill.get("ok"):
+        st["last_reject"] = {"side": side, "reason": fill.get("error") or "fill_fail", "at": _now_iso()}
+        return None
+    entry = float(fill["price"])
+    qty = float(fill["qty"])
+    notional = float(fill["notional"])
+    rate = _taker()
+    fee = _fee(qty, entry, rate)
     st["seq"] = int(st.get("seq") or 0) + 1
-    entry = round(_open_px(side, bid, ask), 2)
     pos = {
-        "id": f"fx-{st['seq']}-{int(time.time())}",
+        "id": f"gps-{st['seq']}-{int(time.time())}",
         "book": book,
         "symbol": SYMBOL,
         "side": side,
-        "volume": VOLUME,
+        "volume": qty,
+        "qty": qty,
         "entry": entry,
         "open_time": _now_iso(),
+        "open_ms": int(time.time() * 1000),
         "signal": signal,
         "margin": MARGIN,
-        "leverage": _lev(book),
-        "commission": _commission_side(book),
-        "commission_open": _commission_side(book),
-        "commission_close": _commission_side(book),
+        "leverage": LEVERAGE,
+        "notional": notional,
+        "commission": fee,
+        "commission_open": fee,
+        "taker_rate": rate,
         "swap": 0.0,
-        "swap_date": None,
-        "fill_src": "exness" if book == "bybit" else "paper",
+        "funded_until": 0,
+        "fill_src": "binance_usdm_vwap",
+        "venue": "binance_usdm",
+        "margin_type": MARGIN_TYPE,
+        "order_type": "MARKET",
+        "order_status": "FILLED",
+        "reduce_only": False,
+        "fill_levels": fill.get("levels"),
+        "liq_price": _liq_price(side, entry),
+        "order_id": f"BN-PAPER-{st['seq']}-{int(time.time())}",
     }
     _apply_plan(pos, plan)
-    comm = pos["commission"]
-    st["balance"] = round(float(st["balance"]) - comm, 2)
-    st["total_pnl"] = round(float(st["total_pnl"]) - comm, 2)
+    print(
+        f"[GPSUSDT] BINANCE {MARGIN_TYPE} MARKET {side.upper()} qty={qty} VWAP@{entry} "
+        f"margin=${MARGIN:.0f} lev={LEVERAGE}x notional=${notional:.2f} "
+        f"taker ${fee:.4f} ({rate*100:.4f}%) levels={fill.get('levels')} "
+        f"liq={pos['liq_price']} (paper FILLED — fapi emir yok)",
+        flush=True,
+    )
+    st["balance"] = round(float(st["balance"]) - fee, 6)
+    st["total_pnl"] = round(float(st["total_pnl"]) - fee, 6)
     rows.append(pos)
     st["positions"] = rows
     st["position"] = rows[0]
@@ -515,19 +694,20 @@ def apply_signal(
     ask: float | None,
     rail: dict | None = None,
     levels: dict | None = None,
-    book: str = "g1",
+    book: str = "gps",
 ) -> dict:
-    """UP → AL, DOWN → SAT. Short açıkken long da açılır (en fazla 1+1)."""
+    """UP → AL, DOWN → SAT. Tek Isolated pozisyon."""
     direction = str((signal or {}).get("direction") or "NEUTRAL").upper()
-    if book == "bybit":
-        try:
-            from bybit_xau import ticker
-            t = ticker(force=True)
-            bid, ask = float(t["bid"]), float(t["ask"])
-        except Exception:
-            pass
+    book = "gps"
     if bid is None or ask is None or bid <= 0 or ask <= 0:
         return snapshot(bid, ask, book=book)
+
+    _mark = None
+    try:
+        from gpsusdt_binance import premium
+        _mark = float(premium().get("mark") or 0) or None
+    except Exception:
+        _mark = None
 
     state_p, hist_p, lock_p = _files(book)
     _DIR.mkdir(parents=True, exist_ok=True)
@@ -540,28 +720,16 @@ def apply_signal(
         for pos in _plist(st):
             if _accrue_swap(st, pos, book=book):
                 dirty = True
-        if _protect(st, hist, bid, ask, rail=rail, levels=levels, book=book):
+        if _protect(st, hist, bid, ask, rail=rail, levels=levels, book=book, mark=_mark):
             dirty = True
-
-        if book == "bybit":
-            eq_now = _equity_now(st, bid, ask)
-            if st.get("halted") or eq_now < BYBIT_HALT_USD:
-                if not st.get("halted"):
-                    for pos in list(_plist(st)):
-                        _close_one(st, hist, pos, bid, ask, "para_bitti", book=book)
-                    st["halted"] = True
-                    st["halt_reason"] = "para_bitti"
-                    st["halt_at"] = _now_iso()
-                    dirty = True
-                want = None
 
         if direction != (st.get("last_dir") or "NEUTRAL"):
             st["last_dir"] = direction
             dirty = True
 
-        if want and not _has_side(st, want):
+        if want and not _plist(st) and bool((signal or {}).get("is_stable")):
             wait = _cooling(st, want)
-            plan = None if wait else _plan(want, _open_px(want, bid, ask), levels, book=book)
+            plan = None if wait else _binance_plan(want, _open_px(want, bid, ask), _atr5())
             why = "bekleme" if wait else _plan_reject(plan)
             if why:
                 prev = st.get("last_reject") or {}
@@ -587,7 +755,7 @@ def apply_signal(
     return snapshot(bid, ask, book=book)
 
 
-def snapshot(bid: float | None = None, ask: float | None = None, book: str = "g1") -> dict:
+def snapshot(bid: float | None = None, ask: float | None = None, book: str = "gps") -> dict:
     st = _load_state(book)
     hist = _load_hist(book)
     rows = []
@@ -603,8 +771,13 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "g1
         item["swap"] = round(float(pos.get("swap") or 0), 2)
         if bid is not None and ask is not None:
             mark = _exit_px(pos["side"], bid, ask)
-            item["mark"] = round(mark, 2)
+            item["mark"] = _r(mark)
             item["progress"] = round(min(1.0, _progress(pos, mark)) * 100, 1)
+            mg = float(pos.get("margin") or MARGIN)
+            item["roe"] = round((fpnl or 0) / mg * 100.0, 2) if mg else None
+            item["liq_price"] = pos.get("liq_price") or _liq_price(pos["side"], pos["entry"], _lev(pos=pos))
+            item["margin_type"] = pos.get("margin_type") or MARGIN_TYPE
+            item["order_status"] = pos.get("order_status") or "FILLED"
         rows.append(item)
         if fpnl is not None:
             float_sum += fpnl
@@ -612,11 +785,16 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "g1
             net_sum += net
     return {
         "ok": True,
-        "book": book,
+        "book": "gps",
         "symbol": SYMBOL,
+        "dec": _PX,
         "balance": round(float(st["balance"]), 2),
+        "wallet": round(float(st["balance"]), 2),
+        "used_margin": round(MARGIN * len(rows), 2),
+        "available": round(float(st["balance"]) - MARGIN * len(rows), 2),
         "equity": round(float(st["balance"]) + net_sum, 2) if rows else round(float(st["balance"]), 2),
         "init_balance": INIT_BAL,
+        "margin_type": MARGIN_TYPE,
         "total_pnl": round(float(st["total_pnl"]), 2),
         "float_pnl": round(float_sum, 2) if rows else None,
         "open_count": len(rows),
@@ -634,21 +812,24 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "g1
             "commission_side": _commission_side(book),
             "commission_open": _commission_side(book),
             "commission_close": _commission_side(book),
-            "commission_rt": round(_commission_side(book) * 2, 2),
-            "swap_long": round(SWAP_LONG_PER_LOT * VOLUME, 2),
-            "swap_short": round(SWAP_SHORT_PER_LOT * VOLUME, 2),
-            "volume": VOLUME,
-            "notional": MARGIN * _lev(book),
-            "fee_model": "exness_raw" if book == "bybit" else "mt5",
+            "commission_rt": round(_commission_side(book) * 2, 4),
+            "taker": TAKER_FEE,
+            "volume": (rows[0].get("qty") if rows else None) or _binance_qty(bid or 0.01),
+            "notional": MARGIN * LEVERAGE,
+            "fee_model": "binance_taker",
+            "taker_pct": TAKER_FEE * 100.0,
+            "note": "Binance USDT-M Isolated MARKET — VWAP dolum, taker her tarafta, funding işlenir; emir gitmez",
+            "venue": "binance_usdm",
+            "dec": _PX,
         },
+        "venue": "binance_usdm",
         "ts": datetime.now(timezone.utc).isoformat(),
     }
 
 
-def reset_book(book: str) -> dict:
-    """Yalnız verilen defteri $300'e çeker. CEM01 (g1) için çağırma."""
-    if book not in ("bybit", "a2"):
-        raise ValueError("reset_book: g1 yasak")
+def reset_book(book: str = "gps") -> dict:
+    """GPSUSDT defterini $500'e çeker. CEM01'e dokunmaz."""
+    book = "gps"
     state_p, hist_p, lock_p = _files(book)
     _DIR.mkdir(parents=True, exist_ok=True)
     with open(lock_p, "a+", encoding="utf-8") as lk:

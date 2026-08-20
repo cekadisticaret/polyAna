@@ -28,6 +28,15 @@ def run() -> dict:
         f"allow={s2.get('allow_entry')} bal={b2.get('balance')} "
         f"open={b2.get('open_count')}"
     )
+    bb = forex_spot("1m", algo="bybit")
+    b3 = bb.get("book") or snapshot(bb.get("bid"), bb.get("ask"), book="bybit")
+    s3 = bb.get("signal") or {}
+    print(
+        f"bybit dir={s3.get('direction')} bal={b3.get('balance')} "
+        f"open={b3.get('open_count')} src={bb.get('src')} "
+        f"pos={[p.get('side') for p in (b3.get('positions') or [])]}"
+    )
+    print("exness live=paused")
     return book
 
 

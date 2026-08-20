@@ -1,0 +1,8 @@
+{
+  "live_paused": true,
+  "symbol": "XAUUSD",
+  "leverage": 500,
+  "margin_usdt": 100,
+  "max_qty": 0.1,
+  "note": "Sayfa Exness Raw sanal. Canlı emir kapalı — EXNESS_API_KEY gelene kadar."
+}

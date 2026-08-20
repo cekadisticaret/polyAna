@@ -1,4 +1,6 @@
 .env
+EylulForex/mt5-demo/.env
+EylulForex/mt5-demo/config/
 crypto-news-monitor/node_modules/
 crypto-news-monitor/data/
 twitter_bot/data/

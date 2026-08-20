@@ -20,14 +20,31 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/chart_algo_panel.py` | Grafik ALG1/ALG2 — 5m/15m konsensüs + slot WR takibi (`update_wr` cron */5). |
 | `Sonnet/candle_pattern_engine1.py` | Mum pattern + S/D + confluence + `generate_report()` (grafik raporu) |
 | `Sonnet/candle_pattern_engine.py` | v1 motor (yedek; grafik engine1 kullanır) |
-| `web/poly_dashboard.py` | Poly dashboard **5050** — `/poly/grafik` mum analizi; `/algoritma-islemler` A1/A2/A6/V2/V3/A15/B1×3 + A2 Top-17 (7/24 sanal), **33 defterin tamamı listelenir** (X1#01 - 13Analiz dahil) (bakiye filtresi 2026-08-14'te kaldırıldı — sıfırlama sonrası hepsi $300'dan başladığı için zarardaki her defter gizleniyordu); `/poly/yapay-zeka-analiz` Poly Algo Analist bildirim akışı + Lider Analizi; `/kripto/yapay-zeka-analiz` Kripto Test AI Analist bildirim akışı; **`/kripto/lider-analiz`** Kripto Test 30 coin lider tablosu (genel + coin bazlı PnL/WR); **`/kripto/jarvis`** JARVIS denetim ekranı (cyan/magenta/gold HUD, iki sekme: Kripto Test Analizi + Kripto Sistem Denetimi; veri `/kripto/api/jarvis` → `jarvis_report.json` + `jarvis_audit.json`, gece 00:00 tazelenir, CSS sınıfları `j-` önekli); `/kripto` coin liderleri **SKILL + t** ile sıralanır (WR değil); **`/forex`** üçüncü sistem kabuğu — Grafik 1 Kalman + Algoritma 2 (13 katman, sanal) |
+| `web/poly_dashboard.py` | Poly dashboard **5050** — `/poly/grafik` mum analizi; `/algoritma-islemler` A1/A2/A6/V2/V3/A15/B1×3 + A2 Top-17 (7/24 sanal), **33 defterin tamamı listelenir** (X1#01 - 13Analiz dahil) (bakiye filtresi 2026-08-14'te kaldırıldı — sıfırlama sonrası hepsi $300'dan başladığı için zarardaki her defter gizleniyordu); `/poly/yapay-zeka-analiz` Poly Algo Analist bildirim akışı + Lider Analizi; `/kripto/yapay-zeka-analiz` Kripto Test AI Analist bildirim akışı; **`/kripto/lider-analiz`** Kripto Test 30 coin lider tablosu (genel + coin bazlı PnL/WR); **`/kripto/jarvis`** JARVIS denetim ekranı (cyan/magenta/gold HUD, iki sekme: Kripto Test Analizi + Kripto Sistem Denetimi; veri `/kripto/api/jarvis` → `jarvis_report.json` + `jarvis_audit.json`, gece 00:00 tazelenir, CSS sınıfları `j-` önekli); `/kripto` coin liderleri **SKILL + t** ile sıralanır (WR değil); **`/forex`** üçüncü sistem kabuğu — Grafik 1 Kalman + Algoritma 2 (13 katman, sanal) + **`/forex/algoritma-islemler`** (Poly listesinin XAUUSD $1000 kopyası) |
 | `EylulForex/` | Forex sistemi — Poly/Kripto gibi ayrı klasör; `bursaapp.com/forex` |
-| `EylulForex/forex_pages.py` | Forex overview + **CEM01** (`/forex/grafik`) + **CEMBYBIT** (`/forex/cembybit`, CEM01 kopyası, ayrı defter) + **Algoritma 2** (`/forex/algo2`) + `/forex/islemler` · `/xau` = CEM01 |
-| `EylulForex/forex_book.py` | XAUUSD sanal — $300 · $100×500x · 1 AL + 1 SAT; `book=g1\|a2\|bybit`; CEMBYBIT ayrı dosya (`forex_cembybit_*`); Bybit henüz bağlanmadı; zarar bekleme G1 10 dk / A2 **5 dk**; giriş R:R≥1.5 · risk≤$100 · 5m S/R; çıkış: %35 marj TP · stop · kâr kilidi · S/R · kapanmış M5 · stop-out |
-| `EylulForex/forex_paper.py` | Cron: Grafik 1 + Algoritma 2 sinyallerini kendi defterlerine işler (`*/1`) |
+| `EylulForex/forex_pages.py` | Forex overview + **Algoritma işlemler** + **CEM01** (`/forex/grafik`) + **CAPITAL** (`/forex/cem02`) + **GPSUSDT** + `/forex/islemler` · `/xau` = CEM01; EXNESS ve Algoritma 2 menüde yok |
+| `EylulForex/fx_algo_catalog.py` | Forex Algoritma işlemler kataloğu — Poly `_ALGO_ISLEMLER_KEYS` + **D101–D106**; $1000 / $200×100x / kom $0.35 |
+| `EylulForex/fx_algo_signals.py` | XAU mumunda aynı indikatör; Poly import (yazma yok); D101–D106 `fx_algo_d`; c101_v2 trader yok |
+| `EylulForex/fx_algo_d.py` | D101 trend · D102 mean-rev · D103 vol kırılım · D104 akış vekili · D105 Kalman+Hurst · D106 confluence |
+| `EylulForex/fx_algo_book.py` | XAUUSD sanal defter `data/fx_algo_*` — $1000 · max 1 · Test çıkış (24s · 3×ATR) |
+| `EylulForex/fx_algo_runner.py` | Cron :02 close · :05 open · */2 trail · */10 scan; manuel open yok |
+| `EylulForex/capital_api.py` | Capital.com Open API — oturum/hesap/GOLD fiyat/pozisyon; emir yok; `.env` `CAPITAL_*` |
+| `EylulForex/cem02_book.py` | CEM02 sanal XAUUSD — CEM01 kopyası, bağımsız `data/cem02_*`; `forex_book` import yok |
+| `EylulForex/cem02_data.py` | CEM02 kotasyon/mum — CEM01 kopyası; `forex_data` import yok |
+| `EylulForex/cem02_signal.py` | CEM02 Kalman+VWAP — CEM01 kopyası; `forex_signal` import yok |
+| `EylulForex/cem02_paper.py` | Cron `* * * * *`: Capital demo oturum ping; anahtar yoksa eski sanal defter |
+| `EylulForex/gpsusdt_data.py` | GPSUSDT Binance **USDT-M** mum/kotasyon (fapi, spot yedek) — CEM01'e dokunmaz |
+| `EylulForex/gpsusdt_binance.py` | GPSUSDT fapi: filtre, defter VWAP, taker, funding — emir yok |
+| `EylulForex/gpsusdt_book.py` | GPSUSDT sanal Isolated $100×20x — Binance MARKET VWAP + gerçek taker + funding; borsaya emir gitmez |
+| `EylulForex/gpsusdt_signal.py` | GPSUSDT Kalman+VWAP + S/R — `forex_signal.py` kopyası değil, aynı motor ayrı veri |
+| `EylulForex/gpsusdt_paper.py` | Cron `* * * * *` (+10s): GPSUSDT sanal; `forex_paper.py` değişmedi |
+| `EylulForex/forex_book.py` | XAUUSD sanal — $300 · $100×500x · 1 AL + 1 SAT; `book=g1\|a2\|bybit`; EXNESS sayfası Exness Raw kom $0.35/taraf |
+| `EylulForex/forex_paper.py` | Cron `* * * * *`: CEM01 + A2 + **EXNESS** sanal (canlı emir kapalı) |
 | `EylulForex/algo2_engine.py` | **Algoritma 2** — 13 katman (sinyal/rejim/MTF/S-R/süpürme/filtre/risk/pozisyon/performans/simülasyon/paper/panel/karar); Grafik 1'e dokunmaz |
 | `EylulForex/algo2_backtest.py` | A2 kapı simülasyonu (5m, emir yok) → `data/algo2_backtest.json` |
-| `EylulForex/forex_data.py` | XAUUSD mum + bid/ask — Yahoo `GC=F`; COMEX molasında (bayat >25s) PAXG hareketi GC bazına kaydırılır; defter sinyali **1m**, S/R **5m** |
+| `EylulForex/forex_data.py` | CEM01: Yahoo `GC=F` (+ bayatta PAXG); EXNESS sayfası: geçici Bybit altın ticker (Exness API bekleniyor); defter sinyali **1m**, S/R **5m** |
+| `EylulForex/bybit_xau.py` | Geçici altın fiyat — `XAUUSDT` ticker/kline; EXNESS defteri bunu kullanır; CEM01'e dokunmaz |
+| `EylulForex/bybit_trade.py` | Eski Bybit canlı yol — **devre dışı**; EXNESS canlı için Exness API anahtarı gerekir |
 | `EylulForex/confluence_signal_engine.py` | Sinyal motoru: H1 trend + **Kalman+VWAP** (MACD yok) + pattern + opsiyonel PAXG tick |
 | `EylulForex/forex_signal.py` | Overlay: tick + M5/M15 veto; ray kendi Kalman+VWAP'ı (tick yok) |
 | `temmuzPoly/repair_a2_sanal_settlement.py` | A2 sanal geçmişi PM slot open/close ile yeniden hesaplar (Binance 1h). |
@@ -64,9 +81,9 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `AgustosKripto/binance_futures_client.py` | Binance USD-M REST — emir, bakiye, commissionRate, userTrades, `book_ticker`, `query_order`, `premium_index`, `funding_info` |
 | `AgustosKripto/crypto_futures_trader.py` | Futures open/close + `dust` süpürme (|notional|≤$2); brüt/komisyon/net; `open_maker` (post-only GTX limit, tick yuvarlama, dolmazsa iptal) |
 | `AgustosKripto/crypto_futures_cr6.py` | **Algoritmalar Live** (gerçek Binance) — Hurst+A1#11 MR+Z-Score MR+Mean Reversion çoğunluk oyu; top-N; $7×20x; **yeni open BTC/ETH/BNB yok**; ATR/hard SL; `fcntl` state kilidi + atomik yazım, `order_id` idempotency (hayalet pozisyon temizliği), `MAX_HOLD_HOURS` · **şu an paused** |
-| `AgustosKripto/crypto_futures_a139.py` | **A1#39 Live** (gerçek Binance) — Test `a1_39` (H1 Kombinasyon) ile aynı sinyal/TF/çıkış; $20×7x; max 4; 30 coin; BTC/ETH/BNB açık; cron :02/:05/*/2/*/10 |
+| `AgustosKripto/crypto_futures_a139.py` | **A1#39 Live** (gerçek Binance) — Test `a1_39` (H1 Kombinasyon) ile aynı sinyal/TF/çıkış; $20×7x; max 4; 30 coin; `/kripto` kartları yerel defterden (Binance 418/yasak ekranı boşaltmaz); USDT son okunan cache |
 | `AgustosKripto/crypto_futures_live_control.json` | CR6 Binance Live — `live_paused` (yeni açılış) + `top_n`; **paused kalır**, A1#39 ayrı kontrol |
-| `AgustosKripto/crypto_futures_a139_control.json` | A1#39 Live — `live_paused` + `top_n` (1–4); `/kripto` üst çubuğu bunu çevirir |
+| `AgustosKripto/crypto_futures_a139_control.json` | A1#39 Live — `live_paused` + `top_n` (1–4); `/kripto` üst çubuğu bunu çevirir; **19.08 durduruldu** |
 | `temmuzPoly/pm_home_display.json` | Poly `/poly` overview'da gösterilecek tek sanal defter (`book_key`; varsayılan `a2_05`) — `/algoritma-islemler` kartından "Poly overview'da aktif et" |
 | `AgustosKripto/kaito_paper.py` | **KAITO kağıt defteri** — cr6 kararları, gerçek emir yok; `/kripto` overview'dan kaldırıldı (cron hâlâ ölçer) |
 | `AgustosKripto/cr6_tg_card.py` | Algoritmalar Live TG sarı kart (ALGO2 stili) — açılış/kapanış/ATR photo |
@@ -75,7 +92,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/pm_profit_baseline.json` | PM Kar başlangıç bakiyesi (varsayılan $314); Toplam Kar = nakit − baseline. |
 | `temmuzPoly/` | Poly trader'lar, algo motorları, backtest; dashboard port **5050**. |
 | `crypto-news-monitor/` | Kripto haber/tweet tarayıcı — RSS + opsiyonel Twitter, Claude skor, Telegram alarm (30 dk cron) |
-| `twitter_bot/` | @tradecomio otomatik tweet — `tweet_trade_card.py` (saatlik cron: son 3 saatte **>%5** margin kârlı en iyi Test işlemi → kart; altı atlanır) |
+| `twitter_bot/` | @tradecomio otomatik tweet — `tweet_trade_card.py` (saatlik kripto kart) + `tweet_forex_wins.py` (30 dk: CEM01 kazananları + WR, birden fazlaysa aynı görsel) |
 | `freqtrade/` | [freqtrade/freqtrade](https://github.com/freqtrade/freqtrade) — kurulu venv; dry-run config; **3. Analiz Freqtrade** saatlik sanal PM (BTC+SOL+ETH) |
 | `freqtrade/poly_analiz3_freqtrade.py` | 3. Analiz Freqtrade — SampleStrategy TA + saatlik sanal Polymarket $300 |
 | `freqtrade/analiz3_signal.py` | Freqtrade TA → PM UP/DOWN sinyal motoru |
@@ -200,6 +217,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `AgustosKripto/Algoritmalar/runner.py close/open/trail/reset` — sanal $300; tüm 51 defter open $30×10x; close/open TG → **10. ANALİZ kanalı** (🔶 SANAL); Cum 22:00–Pzt 11:00 İST skip
 - `AgustosKripto/Analizler/runner.py close/open/trail` — A1–A10 + A6(Supertrend $10×15x max4) + ATR trail
 - `AgustosKripto/Test/runner.py close/open/trail/scan` — Poly sinyal kaynaklı sanal defterler; `$100×6x`; `scan` 10 dk'da bir erken sinyal yakalar (`:05` beklemeden). **PRO defterleri** (`pro_a2_05` · `pro_analiz6_v3` · `pro_b1_mum` · `pro_melez`) `close`'ta saatlik settle edilmez; yalnız süre sınırı (`max_hold_h`, kapının verdiği ufuk / tavan 48s), ters sinyal (`scan`) ve ATR stopu (`trail`) kapatır; açılış `edge_gate`'ten geçmek zorunda
+- `EylulForex/fx_algo_runner.py close/open/trail/scan` — Forex Algoritma işlemler; Poly listesinin **XAUUSD** sanal kopyası ($1000 · $200×100x · kom $0.35); cron :02 close · :05 open · **dakikalık trail** · */10 scan; anlık PnL bid/ask (CEM01 gibi); CEM01/Poly dosyalarına dokunmaz; manuel open yok
+- `EylulForex/cem02_paper.py` — dakikalık CEM02 sanal (`/forex/cem02`); CEM01 kopyası, `forex_*` import yok; `/tmp/cem02_paper.log`
 - **Poly→Kripto uyumsuzluğu (ölçüldü, 2026-08-12):** Aynı sinyal Poly'de kâr, kriptoda zarar. Sebep komisyon oranı değil **başabaş eşiği**: Poly'de başabaş = piyasa fiyatı ≈ %49,8 (binary 1:1 ödeme), kriptoda = komisyon + ödeme şekli ⇒ A2#05 %61,7 · A6V3 %70,4 · B1#03 %44,6. Yani kriptoda kâr için ~12 puan daha isabet gerekiyor. 1Y ölçüm (181 bin sinyal, 7 ufuk, drift-nötr SKILL) 4 defterin hiçbirinde komisyonu aşan kenar bulamadı — tek yakın aday A6V3 majör 48s (+%0,109 · t=+2,65) ve o da 840 testlik çoklu-test düzeltmesini geçmiyor. Çözüm bu yüzden "daha iyi ayar" değil **kanıt şartı** (`edge_gate`): kenar yoksa pozisyon açılmaz
 - **Çıkış rejimi ölçümü (1Y, `backtest_pro4.py`):** saatlik zorunlu kapanış A2#05'e 34.692 işlem yükledi (−$26.552); aynı sinyal sinyal-dönene-kadar tutulunca 5.841 işlem (−$11.811) → komisyonun **%83'ü** kalkıyor. Kayıp küçülüyor ama kenar olmadığı için kâra dönmüyor; bu yüzden PRO rejimi kapı ile birlikte çalışır
 - **Çıkış rejimi TÜM sanal defterlerde değişti (2026-08-15):** … yeni rejim **zaman kapanışı yok · 24s tavan · 3×ATR stop** (canlı ince ayar: önce 6×→4×→3×). **ATR kâr kilidi ARM 0.5** (önce 1.0→0.7→0.5).
@@ -220,6 +239,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `AgustosKripto/Test/minute_data.py fetch` — elle; 30 coin × 90g 1m OHLC (`data/minute_cache/`, ~28 MB)
 - `AgustosKripto/Test/maker_sim.py` — elle; 88g üst %10 (3180 sinyal): taker net/sinyal **−%0,095**; maker fill **ters seçilim** (dolanlar kötü, kaçanlar brüt +%0,13…+%0,76); limit emir kurtarmıyor
 - `twitter_bot/tweet_trade_card.py` — `20 * * * *` saatlik: son 3 saatteki en yüksek %kârlı Test işlemi → giriş/kapanış/kâr görsel kart → @tradecomio tweet; yeni kazanan yoksa atlar (`/tmp/twitter_trade_card.log`)
+- `twitter_bot/tweet_forex_wins.py` — `*/30 * * * *`: CEM01 (`/forex/grafik`) son 30 dk kazananları + defter WR, birden fazlaysa aynı görsel (`/tmp/twitter_forex_wins.log`)
 - `temmuzPoly/poly_trader_analiz15.py close/open` — **15. Analiz** BTC→A6 · ETH→A8 · SOL→A2 sanal ($300); Cum 22:00–Pzt 11:00 open kapalı
 - `temmuzPoly/poly_trader_analiz6.py weekly` — Cumartesi 21:00 haftalık 6 ısı haritası
 - `temmuzPoly/poly_trader_analiz15.py weekly` — Cumartesi 21:00 haftalık 15 ısı haritası

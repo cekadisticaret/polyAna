@@ -1,4 +1,4 @@
-"""XAUUSD mumlarını confluence_signal_engine ile skorlar — grafik overlay."""
+"""CEM02 sinyal — CEM01 kopyası. forex_signal import etmez."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -8,7 +8,7 @@ import pandas as pd
 from confluence_signal_engine import EngineConfig, ShadowLogger, SignalEngine, SignalResult
 
 _DIR = Path(__file__).resolve().parent
-_SHADOW = str(_DIR / "shadow_signals.jsonl")
+_SHADOW = str(_DIR / "cem02_shadow_signals.jsonl")
 
 # Grafik TF → trend filtresi (üst dilim)
 _HTF = {
@@ -125,7 +125,7 @@ def _apply_rail_veto(sig: dict, rail: dict | None) -> dict:
 
 def _tick_payload() -> dict:
     try:
-        from forex_data import paxg_tick_score
+        from cem02_data import paxg_tick_score
         return paxg_tick_score()
     except Exception:
         return {"score": 0.0, "n": 0}
@@ -180,7 +180,7 @@ def _apply_price_lead(sig: dict, impulse: float) -> dict:
 
 def _rail_now() -> dict:
     try:
-        from forex_data import forex_rail
+        from cem02_data import forex_rail
         return forex_rail()
     except Exception:
         return {}
@@ -189,7 +189,7 @@ def _rail_now() -> dict:
 def _fetch_rows(tf: str, n: int, klines_fn=None) -> list[dict]:
     if klines_fn is not None:
         return list(klines_fn(tf, n) or [])
-    from forex_data import get_xau_klines
+    from cem02_data import get_xau_klines
     rows, _ = get_xau_klines(tf, n)
     return rows
 
@@ -368,7 +368,7 @@ def sr_levels(candles: list[dict]) -> dict:
 
 def rail_signals(klines_fn=None) -> dict:
     """Grafik sol şeridi — M5 ve M15 yönü (artacak / düşecek)."""
-    from forex_data import bar_remaining
+    from cem02_data import bar_remaining
 
     out: dict[str, dict] = {}
     for tf, lab in (("5m", "M5"), ("15m", "M15")):

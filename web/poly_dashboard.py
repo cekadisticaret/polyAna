@@ -18,7 +18,7 @@ from flask import Flask, jsonify, make_response, render_template_string, request
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "EylulForex"))
 
-from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_CEMBYBIT_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML
+from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_CEMBYBIT_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML, FOREX_GPSUSDT_HTML, FOREX_GPS_ISLEMLER_HTML, FOREX_FX_ALGOS_HTML, FOREX_CEM02_HTML, FOREX_CEM02_ISLEMLER_HTML
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _DIR_KRIPTO = os.path.join(os.path.dirname(__file__), "..", "AgustosKripto")
@@ -16358,6 +16358,22 @@ body{
 .section.wait-rail{position:sticky;top:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column}
 .section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;flex-shrink:0}
 .positions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.kf-closed-list{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.kf-closed-band{
+  display:flex;align-items:center;gap:10px;flex-wrap:nowrap;
+  padding:8px 12px;border-radius:10px;background:var(--card2);
+  border:1px solid var(--line);min-width:0;
+}
+.kf-closed-band.dir-up{border-color:rgba(57,255,142,.28)}
+.kf-closed-band.dir-down{border-color:rgba(255,92,122,.28)}
+.kf-closed-band.in-gain{background:linear-gradient(90deg,#0f2a1c 0%,var(--card2) 55%)}
+.kf-closed-band.in-loss{background:linear-gradient(90deg,#3a141c 0%,var(--card2) 55%)}
+.kf-closed-band .pos-name{font-size:14px;font-weight:800;min-width:52px}
+.kf-closed-band .pos-dir{font-size:10px;padding:3px 8px;flex-shrink:0}
+.kf-closed-mid{flex:1;min-width:0;font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kf-closed-pnl{font-size:13px;font-weight:800;flex-shrink:0}
+.kf-closed-pnl.pos{color:var(--green)}.kf-closed-pnl.neg{color:var(--red)}
+.kf-closed-band .tag{margin-left:0}
 .pos-card{
   background:var(--card2);border-radius:20px;padding:18px;border:1px solid var(--line);
   animation:fadeUp .35s ease both;
@@ -16486,6 +16502,7 @@ body{
   .panel{grid-template-columns:1fr}
   .section.wait-rail{position:static;max-height:none}
   .positions{grid-template-columns:1fr}
+  .kf-closed-band{flex-wrap:wrap;gap:6px 10px}
 }
 .kf-mobile-top{display:contents}
 .kf-nav-toggle{display:none}
@@ -16697,7 +16714,7 @@ body.kf-overview .kf-right-panel{display:block}
       <div class="section-title">Açık işlemler · A1#39 Live</div>
       <div class="positions" id="kf-live-opens" style="margin-bottom:18px"><div class="empty">yükleniyor…</div></div>
       <div class="section-title">Kapanmış işlemler · A1#39 Live</div>
-      <div class="positions" id="kf-live-closed" style="margin-bottom:18px"><div class="empty">yükleniyor…</div></div>
+      <div class="kf-closed-list" id="kf-live-closed"><div class="empty">yükleniyor…</div></div>
       <div class="section-title">Coin bazlı en yetenekli algoritma</div>
       <div class="kf-leaders-box" id="positions"><div class="empty">yükleniyor…</div></div>
       <div class="section-title" style="margin-top:18px">En yüksek SKILL · algo + coin</div>
@@ -16940,6 +16957,10 @@ function fmtPx(n){
 function fmtMoney(n){
   if(n==null||isNaN(n)) return '—';
   return (n>=0?'+':'') + '$' + Number(n).toFixed(2);
+}
+function fmtTrWhen(s){
+  const m=String(s||'').match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+  return m ? (m[3]+'.'+m[2]+' '+m[4]+':'+m[5]) : '';
 }
 function atrHistoryLine(hist){
   if(!hist || !hist.length) return '';
@@ -17424,12 +17445,13 @@ function renderA139Opens(lv){
       : 'ATR kilit yok';
     const qtyAttr = (p.qty != null && isFinite(Number(p.qty))) ? String(p.qty) : '';
     const symAttr = String(p.symbol || '').replace(/"/g, '');
+    const opened = fmtTrWhen(p.entry_time_tr);
     return '<div class="pos-card '+(up?'dir-up':'dir-down')+(u<0?' in-loss':(u>0?' in-gain':''))+'">'
       + '<div class="pos-top"><div class="pos-name">'+name+'</div>'
       + '<div class="pos-dir '+(up?'up':'down')+'">'+(p.side||'—')+'</div></div>'
       + '<div class="pos-price-row"><div class="pos-current">$'+fmtPx(p.current)+'</div>'
       + '<div class="pos-pct '+pnlCls+'">'+fmtMoney(u)+'</div></div>'
-      + '<div class="pos-entry">Giriş · $'+fmtPx(p.entry_price)+' · '+(p.interval||'1h')+' · $'
+      + '<div class="pos-entry">Giriş'+(opened?(' · '+opened):'')+' · $'+fmtPx(p.entry_price)+' · '+(p.interval||'1h')+' · $'
       + Number(p.margin_usd||20).toFixed(0)+'×'+(p.leverage||7)+'x</div>'
       + '<div class="pos-slot">'+lock+'</div>'
       + '<div class="close-btn-wrap"><button type="button" class="close-btn" data-sym="'+symAttr+'" data-qty="'+qtyAttr+'" onclick="closeA139Pos(this)">Pozisyonu Kapat</button></div>'
@@ -17455,16 +17477,16 @@ function renderA139Closed(lv){
     const pnl = Number(t.pnl||0);
     const pnlCls = pnl >= 0 ? 'pos' : 'neg';
     const name = t.name || (t.symbol||'').replace('USDT','');
-    const ts = (t.exit_time_tr||'').slice(0,16).replace('T',' ') || '—';
-    return '<div class="pos-card '+(up?'dir-up':'dir-down')+(pnl<0?' in-loss':(pnl>0?' in-gain':''))+'">'
-      + '<div class="pos-top"><div class="pos-name">'+name+'</div>'
-      + '<div class="pos-dir '+(up?'up':'down')+'">'+(t.side||'—')+'</div></div>'
-      + '<div class="pos-entry">Giriş · $'+fmtPx(t.entry_price)+' → Çıkış · $'+fmtPx(t.exit_price)+'</div>'
-      + '<div class="pos-slot">'+ts+(t.close_reason ? (' · '+t.close_reason) : '')+'</div>'
-      + '<div class="pos-close-row"><span class="close-lbl">Net</span>'
-      + '<span class="live-close-pnl '+pnlCls+'">'+fmtMoney(pnl)+'</span>'
+    const opened = fmtTrWhen(t.entry_time_tr);
+    const closed = fmtTrWhen(t.exit_time_tr) || '—';
+    const mid = [opened?('Giriş '+opened):'', '$'+fmtPx(t.entry_price)+' → $'+fmtPx(t.exit_price), closed+(t.close_reason?(' · '+t.close_reason):'')].filter(Boolean).join(' · ');
+    return '<div class="kf-closed-band '+(up?'dir-up':'dir-down')+(pnl<0?' in-loss':(pnl>0?' in-gain':''))+'">'
+      + '<div class="pos-name">'+name+'</div>'
+      + '<div class="pos-dir '+(up?'up':'down')+'">'+(t.side||'—')+'</div>'
+      + '<div class="kf-closed-mid">'+mid+'</div>'
+      + '<span class="kf-closed-pnl '+pnlCls+'">'+fmtMoney(pnl)+'</span>'
       + '<span class="tag">$' + Number(t.margin_usd||20).toFixed(0)+'×'+(t.leverage||7)+'x</span>'
-      + '<span class="tag">'+(t.interval||'1h')+'</span></div>'
+      + '<span class="tag">'+(t.interval||'1h')+'</span>'
       + '</div>';
   }).join('');
 }
@@ -17493,7 +17515,9 @@ function renderOverview(d){
   const booksSub = document.getElementById('kf-books-sub');
   if(booksSub){
     const avail = usdt.available != null ? ('kullanılabilir $' + Number(usdt.available).toFixed(2)) : 'A1#39 Live $20×7x';
-    booksSub.textContent = avail;
+    booksSub.textContent = usdt.cached
+      ? (avail + ' · son okunan')
+      : (lv.error ? (avail + ' · Binance geçici kapalı') : avail);
   }
   const openN = lv.open_count != null ? lv.open_count : 0;
   const openSub = document.getElementById('kf-open-sub');
@@ -18200,6 +18224,8 @@ def page_forex_grafik():
 
 @app.route("/forex/cembybit")
 @app.route("/forex/cembybit/")
+@app.route("/forex/exness")
+@app.route("/forex/exness/")
 def page_forex_cembybit():
     if _auth_required():
         return redirect("/poly/login?next=/forex/cembybit")
@@ -18214,12 +18240,56 @@ def page_forex_algo2():
     return FOREX_ALGO2_HTML, 200, _ISLEMLER_NOCACHE
 
 
+@app.route("/forex/cem02")
+@app.route("/forex/cem02/")
+def page_forex_cem02():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/cem02")
+    return FOREX_CEM02_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/cem02/islemler")
+@app.route("/forex/cem02/islemler/")
+def page_forex_cem02_islemler():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/cem02/islemler")
+    return FOREX_CEM02_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/gpsusdt")
+@app.route("/forex/gpsusdt/")
+def page_forex_gpsusdt():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/gpsusdt")
+    return FOREX_GPSUSDT_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/gpsusdt/islemler")
+@app.route("/forex/gpsusdt/islemler/")
+def page_forex_gpsusdt_islemler():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/gpsusdt/islemler")
+    return FOREX_GPS_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
+
+
 @app.route("/forex/islemler")
 @app.route("/forex/islemler/")
 def page_forex_islemler():
     if _auth_required():
         return redirect("/poly/login?next=/forex/islemler")
     return FOREX_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/algoritma-islemler")
+@app.route("/forex/algoritma-islemler/")
+@app.route("/forex/algoritma-islemler/<uid>")
+def page_forex_fx_algos(uid=None):
+    if _auth_required():
+        nxt = "/forex/algoritma-islemler"
+        if uid:
+            nxt += "/" + uid
+        return redirect("/poly/login?next=" + nxt)
+    return FOREX_FX_ALGOS_HTML, 200, _ISLEMLER_NOCACHE
 
 
 @app.route("/xau")
@@ -18236,9 +18306,12 @@ def page_forex_public():
 @app.route("/xau/api/spot")
 @app.route("/forex/api/spot")
 def api_forex_spot():
-    from forex_data import forex_spot
     tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
     algo = str(request.args.get("algo") or "g1")
+    if algo == "gps":
+        from gpsusdt_data import gps_spot
+        return _json_nocache(gps_spot(tf))
+    from forex_data import forex_spot
     return _json_nocache(forex_spot(tf, algo=algo))
 
 
@@ -18256,7 +18329,12 @@ def api_forex_chart():
     try:
         plain = str(request.args.get("plain") or "") in ("1", "true", "yes")
         algo = str(request.args.get("algo") or "g1")
-        out = forex_chart(tf, limit=lim, plain=plain, algo=algo)
+        if algo == "gps":
+            from gpsusdt_data import gps_chart
+            out = gps_chart(tf, lim or 240)
+        else:
+            from forex_data import forex_chart
+            out = forex_chart(tf, limit=lim, plain=plain, algo=algo)
         return _json_nocache(out)
     except Exception as e:
         return _json_nocache({
@@ -18291,15 +18369,120 @@ def api_forex_status():
     })
 
 
+@app.route("/poly/api/forex/gpsusdt")
+def api_forex_gpsusdt():
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    from gpsusdt_data import gps_chart
+    tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
+    try:
+        lim = request.args.get("limit")
+        lim = int(lim) if lim not in (None, "") else 240
+    except (TypeError, ValueError):
+        lim = 240
+    return _json_nocache(gps_chart(tf, lim))
+
+
+@app.route("/poly/api/forex/cem02/spot")
+def api_forex_cem02_spot():
+    tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
+    from cem02_data import forex_spot as cem02_spot
+    return _json_nocache(cem02_spot(tf))
+
+
+@app.route("/poly/api/forex/cem02/chart")
+def api_forex_cem02_chart():
+    tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
+    try:
+        lim = request.args.get("limit")
+        lim = int(lim) if lim not in (None, "") else None
+    except (TypeError, ValueError):
+        lim = None
+    try:
+        plain = str(request.args.get("plain") or "") in ("1", "true", "yes")
+        from cem02_data import forex_chart as cem02_chart
+        return _json_nocache(cem02_chart(tf, limit=lim, plain=plain))
+    except Exception as e:
+        return _json_nocache({
+            "symbol": "XAUUSD", "timeframe": tf,
+            "candles": [], "error": "chart_data", "detail": str(e)[:200],
+        })
+
+
+@app.route("/poly/api/forex/cem02/book")
+def api_forex_cem02_book():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        from capital_api import configured, snapshot_book
+        if configured():
+            return _json_nocache(snapshot_book())
+    except Exception as e:
+        return _json_nocache({"ok": False, "error": str(e)[:200]})
+    from cem02_book import snapshot as cem02_snapshot
+    from cem02_data import forex_quote as cem02_quote
+    q = cem02_quote()
+    return _json_nocache(cem02_snapshot(q.get("bid"), q.get("ask")))
+
+
+@app.route("/poly/api/forex/cem02/capital")
+def api_forex_cem02_capital():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    from capital_api import status
+    return _json_nocache(status())
+
+
 @app.route("/poly/api/forex/book")
 def api_forex_book():
     if _auth_required():
         return jsonify({"error": "unauthorized"}), 401
+    algo = str(request.args.get("algo") or "g1")
+    if algo == "gps":
+        from gpsusdt_book import snapshot as gps_snapshot
+        from gpsusdt_data import gps_quote
+        q = gps_quote()
+        return _json_nocache(gps_snapshot(q.get("bid"), q.get("ask")))
     from forex_book import snapshot
     from forex_data import forex_quote
     q = forex_quote()
-    algo = str(request.args.get("algo") or "g1")
     return _json_nocache(snapshot(q.get("bid"), q.get("ask"), book=algo))
+
+
+@app.route("/poly/api/forex/algo-books")
+def api_forex_algo_books():
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    from forex_data import forex_quote
+    from fx_algo_book import snapshot_all
+    q = forex_quote()
+    def _f(v):
+        try:
+            return float(v) if v not in (None, "") else None
+        except (TypeError, ValueError):
+            return None
+    mark = _f(q.get("mid") or q.get("bid") or q.get("ask"))
+    return _json_nocache(snapshot_all(mark, bid=_f(q.get("bid")), ask=_f(q.get("ask"))))
+
+
+@app.route("/poly/api/forex/algo-books/<uid>")
+def api_forex_algo_book(uid):
+    if _auth_required():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    from fx_algo_book import snapshot
+    from fx_algo_catalog import get_book
+    book = get_book(uid)
+    if not book:
+        return _json_nocache({"ok": False, "error": "unknown_book"}, 404)
+    from forex_data import forex_quote
+    q = forex_quote()
+    def _f(v):
+        try:
+            return float(v) if v not in (None, "") else None
+        except (TypeError, ValueError):
+            return None
+    mark = _f(q.get("mid") or q.get("bid") or q.get("ask"))
+    return _json_nocache(snapshot(book["uid"], mark, bid=_f(q.get("bid")), ask=_f(q.get("ask"))))
 
 
 @app.route("/poly/api/crypto-futures/status")
@@ -18357,7 +18540,7 @@ def api_kripto_overview():
     a139_live: dict = {"ok": False}
     try:
         from crypto_futures_a139 import status_block as _a139_status  # noqa: WPS433
-        a139_live = _a139_status(refresh_price=True)
+        a139_live = _a139_status(refresh_price=False)
         recent_live = list(a139_live.get("recent_trades") or [])
     except Exception as exc:
         print(f"[kripto overview] a139_live: {exc}", flush=True)
@@ -18503,7 +18686,7 @@ def api_crypto_futures_a139():
     sys.path.insert(0, _DIR_KRIPTO)
     try:
         from crypto_futures_a139 import status_block
-        return jsonify(status_block(refresh_price=True))
+        return jsonify(status_block(refresh_price=False))
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -19010,10 +19193,11 @@ for _html_name in (
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
     "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
     "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML",     "FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML",
-    "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML",
+    "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML", "FOREX_GPSUSDT_HTML", "FOREX_GPS_ISLEMLER_HTML",
+    "FOREX_FX_ALGOS_HTML", "FOREX_CEM02_HTML", "FOREX_CEM02_ISLEMLER_HTML",
 ):
     _html = globals()[_html_name]
-    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML", "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML"):
+    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML", "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML", "FOREX_GPSUSDT_HTML", "FOREX_GPS_ISLEMLER_HTML", "FOREX_FX_ALGOS_HTML", "FOREX_CEM02_HTML", "FOREX_CEM02_ISLEMLER_HTML"):
         _html = _html.replace("__FOREX_BRAND__", _CEMBOT_FOREX_BRAND_HTML)
         _html = _patch_cembot_brand(_html)
         _html = _patch_cache_bust(_html)
