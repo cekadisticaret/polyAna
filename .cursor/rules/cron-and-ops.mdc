@@ -123,12 +123,20 @@ alwaysApply: true
 | `20 * * * *` | `cd /root/aiProject && python3 twitter_bot/tweet_trade_card.py` (@tradecomio saatlik en başarılı işlem — giriş/kapanış/kâr görsel; yeni yoksa atlar) | `/tmp/twitter_trade_card.log` |
 | `*/30 * * * *` | `cd /root/aiProject && python3 twitter_bot/tweet_forex_wins.py` (@tradecomio CEM01 kazananları + WR, 30 dk; birden fazlaysa aynı görsel) | `/tmp/twitter_forex_wins.log` |
 | `0 */3 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_algo_analyst.py` (Poly Algo Analist — A1/A6 ailesi/A2#01-17/A10/A15/B1#01-02 karşılaştırmalı yorum, Anthropic API ile üretilip Telegram'a gönderilir, özet `temmuzPoly/analyst_journal.jsonl`'a kaydedilir) | `/tmp/poly_algo_analyst.log` |
+| `10 */3 * * *` | `cd /root/aiProject && python3 EylulForex/forex_analyst.py` (**Forex CEM01 Analist** — `/forex/grafik` sanal XAUUSD; Claude yorum, feed `/forex/yapay-zeka-analiz`; emir yok) | `/tmp/forex_analyst.log` |
 | `20 */3 * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/kripto_test_analyst.py` (Kripto Test AI Analist — Kripto Test sanal defterleri arasında ayrışma bulur, Anthropic API ile yorum üretir, ayrı Telegram kanalına (LAB bot) gönderir, tam metin `AgustosKripto/Test/kripto_analyst_feed.jsonl`'a kaydedilir — `bursaapp.com/kripto/yapay-zeka-analiz`) | `/tmp/kripto_test_analyst.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_algo_daily_report.py` (Poly Algo Analist Günlük Rapor — 00:00 İST; günlük defter özeti + `algo_pattern_stats.py`'de eşik atlayan yeni "watch/confident" kalıplar; `temmuzPoly/analyst_daily_reports.jsonl`) | `/tmp/poly_algo_daily_report.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/jarvis_report.py` (**JARVIS** — 00:00 İST; 69 Kripto Test defterini tarar → `jarvis_report.json` + `jarvis_history.jsonl`; aynı turda 118 defterlik sistem denetimi → `jarvis_audit.json` → `bursaapp.com/kripto/jarvis` iki sekme) | `/tmp/jarvis_report.log` |
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/forex_paper.py` (**Forex** — CEM01 + A2 sanal; **EXNESS** `/forex/cembybit` sanal `$100×500x` kom $0.35 — canlı emir kapalı) | `/tmp/forex_paper.log` |
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/cem02_paper.py` (**CAPITAL** — Capital.com demo oturum; emir yok) | `/tmp/cem02_paper.log` |
-| `*/1 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 EylulForex/gpsusdt_paper.py` (**GPSUSDT** — CEM01 yapısı, ayrı defter; canlı emir yok) | `/tmp/gpsusdt_paper.log` |
+| `*/1 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 EylulForex/oapi_paper.py` (**OPEN API** — cTrader oturum ping; emir yok) | `/tmp/oapi_paper.log` |
+| `*/1 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 EylulForex/gpsusdt_paper.py` (**GPSUSDT** — Kalman+VWAP aynı; Binance Isolated **CANLI $50×15x**; `gpsusdt_live_control.json`) | `/tmp/gpsusdt_paper.log` |
+| `*/1 * * * *` + `sleep 15` | `sleep 15 && cd /root/aiProject && python3 EylulForex/gps2_paper.py` (**GPSUSDT_2** — aynı motor, **sanal $160 · Isolated $50×15x**; emir yok) | `/tmp/gps2_paper.log` |
+| `*/1 * * * *` + `sleep 25` | `sleep 25 && cd /root/aiProject && python3 EylulForex/b103_paper.py` (**B1#03** — CEM01 masası kopyası · B1#03 MUM 1h · sanal $300 · $100×500x) | `/tmp/b103_paper.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py close` | `/tmp/bin_b103_paper.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py open` (**BIN_B1#03** — b1_mum 1:1; Binance XAUUSDT Isolated **CANLI $30×15x**; GPSUSDT ayrı; `bin_b103_live_control.json`) | `/tmp/bin_b103_paper.log` |
+| `*/1 * * * *` + `sleep 35` | `sleep 35 && cd /root/aiProject && python3 EylulForex/bin_b103_paper.py trail` | `/tmp/bin_b103_paper.log` |
+| `*/10 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py scan` | `/tmp/bin_b103_paper.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py close` | `/tmp/fx_algo_runner.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py open` (**Forex Algoritma işlemler** — Poly listesinin XAUUSD sanal kopyası · $1000 · $200×100x · kom $0.35; CEM01/Poly dokunulmaz; manuel open yok) | `/tmp/fx_algo_runner.log` |
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py trail` (CEM01 gibi dakikalık mark/stop) | `/tmp/fx_algo_runner.log` |
@@ -258,7 +266,7 @@ alwaysApply: true
 - **Güven vetosu:** `conviction_filter.py` — CR6 açılışında oy birliği (4/4) sinyalleri açılmaz, `conviction_shadow.jsonl`'a yazılır. Ölçülen SKILL −%0,065 · t=−3,89 · 5/5 dilim. `invert_vetoed` varsayılan **false** — ters açmanın %95 aralığı sıfırı kestiği için gerçek parayla denenmiyor.
 - **Funding tarayıcı:** `python3 AgustosKripto/funding_harvest.py [--tg]` — cron yok, elle. Yalnız rapor üretir, **emir açmaz**.
 - **Hafta sonu PM dashboard:** `pm_weekend_sync.py` — Cum **22:00** / Pzt **11:00** İST (`0 19 * * 5` / `0 8 * * 1` UTC); A1 Live + A2 Live anahtarları senkron.
-- Dashboard: `web/poly_dashboard.py` port **5050** (`systemctl restart poly-dashboard.service`). Public: `bursaapp.com/poly` · Kripto Future: `bursaapp.com/kripto` · Forex: `bursaapp.com/forex/grafik` (girişli) · **`/forex/islemler`** sanal defter · paylaşım `bursaapp.com/xau` (girişsiz, aynı XAUUSD ekranı).
+- **Poly Live kilit (`user_live_hold`, 2026-08-20):** kullanıcı söyleyene kadar gerçek PM `open` yok. Dashboard Aç tuşu + Pazartesi `pm_weekend_sync` bu kilidi aşamaz. Sanal defterler çalışır. Kaldırmak: `set_user_live_hold(False)`.
 - **Ayarlar Live anahtarları:** `/ayarlar`'da 17 satır, `pm_balance_guard._VALID_GROUPS` ile birebir. **İşlem Miktarları** kartında 15 defterin `$` kademesi var (45 alan = 15×3, `_SETTINGS_LABELS` ile birebir); alan listesi artık JS'te elle tutulmuyor, `input.pm-amt` sınıfından türetiliyor — yeni kademe eklemek için HTML satırı + `_SETTINGS_LABELS` prefix'i + `_read_settings` varsayılanı yeter. (`a2_16` ve `a2_02` Live'ın miktar satırı **yok**, kod varsayılanını kullanırlar.) Yeni Live trader eklenince **üç yer** güncellenmeli: `_VALID_GROUPS` + `_WEEKEND_GROUPS` (guard) ve dashboard'da HTML satırı · `_PM_SYSTEM_ROWS` · `updatePmSystemUI`. POST'ta ayrı grup listesi **tutulmaz** — grup adı gelip tanınmazsa `400` döner, ana şaltere düşmez (2026-08-12: eksik listeden dolayı A6V3 toggle'ı 15 defteri birlikte açıp kapatıyordu).
 - **Kaynak silinme izleme:** `aiproject-file-watch.service` → log `/tmp/aiproject_file_watch.log`; olaylar `ops/incidents/`. Geri yükleme: `ops/CRITICAL_FILE_RESTORE.md` (**09:17 / 09:23 / 13:25 İST**, 2026-08-02). audit: `ausearch -k aiproject_del -ts recent -i`
 - **Dış erişim kapatıldı (2026-08-14 22:12 İST):** Sunucu (`188.166.125.54`) denetlendi, üç açık bulundu ve kapatıldı.
@@ -312,11 +320,16 @@ tail -f /tmp/slot_data_archive.log
 tail -f /tmp/twitter_trade_card.log
 tail -f /tmp/twitter_forex_wins.log
 tail -f /tmp/poly_algo_analyst.log
+tail -f /tmp/forex_analyst.log
 tail -f /tmp/poly_algo_daily_report.log
 tail -f /tmp/kripto_test_analyst.log
 tail -f /tmp/jarvis_report.log
 tail -f /tmp/forex_paper.log
 tail -f /tmp/cem02_paper.log
+tail -f /tmp/oapi_paper.log
 tail -f /tmp/gpsusdt_paper.log
+tail -f /tmp/gps2_paper.log
+tail -f /tmp/b103_paper.log
+tail -f /tmp/bin_b103_paper.log
 tail -f /tmp/fx_algo_runner.log
 ```

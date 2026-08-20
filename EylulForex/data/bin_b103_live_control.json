@@ -1,0 +1,10 @@
+{
+  "live_paused": false,
+  "margin_usd": 30,
+  "leverage": 15,
+  "margin_type": "ISOLATED",
+  "updated_at_tr": "2026-08-21T02:50:00+03:00",
+  "updated_by": "user:/forex/algoritma-islemler/b1_mum canlı Binance",
+  "reason": "BIN_B1#03 XAUUSDT Isolated MARKET $30×15x — GPSUSDT ayrı",
+  "wallet_at_live": 151.9982
+}

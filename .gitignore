@@ -1,6 +1,10 @@
 .env
 EylulForex/mt5-demo/.env
 EylulForex/mt5-demo/config/
+EylulForex/data/ctrader_token.json
+EylulForex/data/ctrader_symbol.json
+EylulForex/data/capital_session.json
+EylulForex/data/forex_analyst_feed.jsonl
 crypto-news-monitor/node_modules/
 crypto-news-monitor/data/
 twitter_bot/data/

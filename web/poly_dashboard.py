@@ -18,7 +18,7 @@ from flask import Flask, jsonify, make_response, render_template_string, request
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "EylulForex"))
 
-from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_CEMBYBIT_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML, FOREX_GPSUSDT_HTML, FOREX_GPS_ISLEMLER_HTML, FOREX_FX_ALGOS_HTML, FOREX_CEM02_HTML, FOREX_CEM02_ISLEMLER_HTML
+from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_CEMBYBIT_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML, FOREX_GPSUSDT_HTML, FOREX_GPS_ISLEMLER_HTML, FOREX_GPS2_HTML, FOREX_GPS2_ISLEMLER_HTML, FOREX_BINB103_HTML, FOREX_BINB103_ISLEMLER_HTML, FOREX_B103_HTML, FOREX_B103_ISLEMLER_HTML, FOREX_FX_ALGOS_HTML, FOREX_CEM02_HTML, FOREX_CEM02_ISLEMLER_HTML, FOREX_OAPI_HTML, FOREX_OAPI_ISLEMLER_HTML, FOREX_YZA_HTML
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _DIR_KRIPTO = os.path.join(os.path.dirname(__file__), "..", "AgustosKripto")
@@ -2469,6 +2469,45 @@ def api_kripto_analyst_feed():
     except ValueError:
         limit = 50
     entries = _read_kripto_test_analyst_feed()
+    entries = entries[-limit:][::-1]
+    return jsonify({
+        "ok": True,
+        "count": len(entries),
+        "entries": entries,
+        "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
+    })
+
+
+_FOREX_ANALYST_FEED_FILE = os.path.join(_DIR_FOREX, "data", "forex_analyst_feed.jsonl")
+
+
+def _read_forex_analyst_feed() -> list[dict]:
+    entries: list[dict] = []
+    if os.path.exists(_FOREX_ANALYST_FEED_FILE):
+        try:
+            with open(_FOREX_ANALYST_FEED_FILE, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entries.append(json.loads(line))
+                    except Exception:
+                        continue
+        except Exception:
+            entries = []
+    return entries
+
+
+@app.route("/poly/api/forex/analyst/feed")
+def api_forex_analyst_feed():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        limit = min(max(int(request.args.get("limit", 50)), 1), 200)
+    except ValueError:
+        limit = 50
+    entries = _read_forex_analyst_feed()
     entries = entries[-limit:][::-1]
     return jsonify({
         "ok": True,
@@ -18214,12 +18253,36 @@ def page_forex():
     return FOREX_HTML, 200, _ISLEMLER_NOCACHE
 
 
+@app.route("/forex/yapay-zeka-analiz")
+@app.route("/forex/yapay-zeka-analiz/")
+def page_forex_yapay_zeka_analiz():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/yapay-zeka-analiz")
+    return FOREX_YZA_HTML, 200, _ISLEMLER_NOCACHE
+
+
 @app.route("/forex/grafik")
 @app.route("/forex/grafik/")
 def page_forex_grafik():
     if _auth_required():
         return redirect("/poly/login?next=/forex/grafik")
     return FOREX_GRAFIK_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/b103")
+@app.route("/forex/b103/")
+def page_forex_b103():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/b103")
+    return FOREX_B103_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/b103/islemler")
+@app.route("/forex/b103/islemler/")
+def page_forex_b103_islemler():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/b103/islemler")
+    return FOREX_B103_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
 
 
 @app.route("/forex/cembybit")
@@ -18256,6 +18319,47 @@ def page_forex_cem02_islemler():
     return FOREX_CEM02_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
 
 
+@app.route("/forex/openapi")
+@app.route("/forex/openapi/")
+def page_forex_openapi():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/openapi")
+    return FOREX_OAPI_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/openapi/islemler")
+@app.route("/forex/openapi/islemler/")
+def page_forex_openapi_islemler():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/openapi/islemler")
+    return FOREX_OAPI_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/openapi/connect")
+def page_forex_openapi_connect():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/openapi/connect")
+    from ctrader_api import app_configured, oauth_url
+    if not app_configured():
+        return redirect("/forex/openapi")
+    return redirect(oauth_url())
+
+
+@app.route("/forex/openapi/oauth")
+def page_forex_openapi_oauth():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/openapi")
+    code = str(request.args.get("code") or "").strip()
+    if not code:
+        return redirect("/forex/openapi")
+    try:
+        from ctrader_api import exchange_code
+        exchange_code(code)
+    except Exception:
+        return redirect("/forex/openapi")
+    return redirect("/forex/openapi")
+
+
 @app.route("/forex/gpsusdt")
 @app.route("/forex/gpsusdt/")
 def page_forex_gpsusdt():
@@ -18270,6 +18374,38 @@ def page_forex_gpsusdt_islemler():
     if _auth_required():
         return redirect("/poly/login?next=/forex/gpsusdt/islemler")
     return FOREX_GPS_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/gpsusdt2")
+@app.route("/forex/gpsusdt2/")
+def page_forex_gpsusdt2():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/gpsusdt2")
+    return FOREX_GPS2_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/gpsusdt2/islemler")
+@app.route("/forex/gpsusdt2/islemler/")
+def page_forex_gpsusdt2_islemler():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/gpsusdt2/islemler")
+    return FOREX_GPS2_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/bin-b103")
+@app.route("/forex/bin-b103/")
+def page_forex_bin_b103():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/bin-b103")
+    return FOREX_BINB103_HTML, 200, _ISLEMLER_NOCACHE
+
+
+@app.route("/forex/bin-b103/islemler")
+@app.route("/forex/bin-b103/islemler/")
+def page_forex_bin_b103_islemler():
+    if _auth_required():
+        return redirect("/poly/login?next=/forex/bin-b103/islemler")
+    return FOREX_BINB103_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
 
 
 @app.route("/forex/islemler")
@@ -18311,6 +18447,15 @@ def api_forex_spot():
     if algo == "gps":
         from gpsusdt_data import gps_spot
         return _json_nocache(gps_spot(tf))
+    if algo == "gps2":
+        from gps2_data import gps_spot as gps2_spot
+        return _json_nocache(gps2_spot(tf))
+    if algo == "b103":
+        from b103_data import forex_spot as b103_spot
+        return _json_nocache(b103_spot(tf))
+    if algo == "binb103":
+        from bin_b103_data import live_spot as bin_b103_spot
+        return _json_nocache(bin_b103_spot(tf))
     from forex_data import forex_spot
     return _json_nocache(forex_spot(tf, algo=algo))
 
@@ -18332,6 +18477,15 @@ def api_forex_chart():
         if algo == "gps":
             from gpsusdt_data import gps_chart
             out = gps_chart(tf, lim or 240)
+        elif algo == "gps2":
+            from gps2_data import gps_chart as gps2_chart
+            out = gps2_chart(tf, lim or 240)
+        elif algo == "b103":
+            from b103_data import forex_chart as b103_chart
+            out = b103_chart(tf, lim or 240)
+        elif algo == "binb103":
+            from bin_b103_data import live_chart as bin_b103_chart
+            out = bin_b103_chart(tf, lim or 240)
         else:
             from forex_data import forex_chart
             out = forex_chart(tf, limit=lim, plain=plain, algo=algo)
@@ -18433,6 +18587,56 @@ def api_forex_cem02_capital():
     return _json_nocache(status())
 
 
+@app.route("/poly/api/forex/openapi/spot")
+def api_forex_openapi_spot():
+    tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
+    from oapi_data import forex_spot as oapi_spot
+    return _json_nocache(oapi_spot(tf))
+
+
+@app.route("/poly/api/forex/openapi/chart")
+def api_forex_openapi_chart():
+    tf = str(request.args.get("timeframe") or request.args.get("tf") or "1m")
+    try:
+        lim = request.args.get("limit")
+        lim = int(lim) if lim not in (None, "") else None
+    except (TypeError, ValueError):
+        lim = None
+    try:
+        plain = str(request.args.get("plain") or "") in ("1", "true", "yes")
+        from oapi_data import forex_chart as oapi_chart
+        return _json_nocache(oapi_chart(tf, limit=lim, plain=plain))
+    except Exception as e:
+        return _json_nocache({
+            "symbol": "XAUUSD", "timeframe": tf,
+            "candles": [], "error": "chart_data", "detail": str(e)[:200],
+        })
+
+
+@app.route("/poly/api/forex/openapi/book")
+def api_forex_openapi_book():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    try:
+        from ctrader_api import configured, snapshot_book
+        if configured():
+            return _json_nocache(snapshot_book())
+    except Exception as e:
+        return _json_nocache({"ok": False, "error": str(e)[:200]})
+    from oapi_book import snapshot as oapi_snapshot
+    from oapi_data import forex_quote as oapi_quote
+    q = oapi_quote()
+    return _json_nocache(oapi_snapshot(q.get("bid"), q.get("ask")))
+
+
+@app.route("/poly/api/forex/openapi/status")
+def api_forex_openapi_status():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    from ctrader_api import status
+    return _json_nocache(status())
+
+
 @app.route("/poly/api/forex/book")
 def api_forex_book():
     if _auth_required():
@@ -18443,6 +18647,21 @@ def api_forex_book():
         from gpsusdt_data import gps_quote
         q = gps_quote()
         return _json_nocache(gps_snapshot(q.get("bid"), q.get("ask")))
+    if algo == "gps2":
+        from gps2_book import snapshot as gps2_snapshot
+        from gps2_data import gps_quote as gps2_quote
+        q = gps2_quote()
+        return _json_nocache(gps2_snapshot(q.get("bid"), q.get("ask")))
+    if algo == "b103":
+        from b103_book import snapshot as b103_snapshot
+        from forex_data import forex_quote
+        q = forex_quote()
+        return _json_nocache(b103_snapshot(q.get("bid"), q.get("ask")))
+    if algo == "binb103":
+        from bin_b103_book import snapshot as bin_b103_snapshot
+        from bin_b103_data import live_quote as bin_b103_quote
+        q = bin_b103_quote()
+        return _json_nocache(bin_b103_snapshot(q.get("bid"), q.get("ask")))
     from forex_book import snapshot
     from forex_data import forex_quote
     q = forex_quote()
@@ -19194,10 +19413,14 @@ for _html_name in (
     "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
     "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML",     "FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML",
     "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML", "FOREX_GPSUSDT_HTML", "FOREX_GPS_ISLEMLER_HTML",
+    "FOREX_GPS2_HTML", "FOREX_GPS2_ISLEMLER_HTML",
+    "FOREX_BINB103_HTML", "FOREX_BINB103_ISLEMLER_HTML",
+    "FOREX_B103_HTML", "FOREX_B103_ISLEMLER_HTML",
     "FOREX_FX_ALGOS_HTML", "FOREX_CEM02_HTML", "FOREX_CEM02_ISLEMLER_HTML",
+    "FOREX_OAPI_HTML", "FOREX_OAPI_ISLEMLER_HTML", "FOREX_YZA_HTML",
 ):
     _html = globals()[_html_name]
-    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML", "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML", "FOREX_GPSUSDT_HTML", "FOREX_GPS_ISLEMLER_HTML", "FOREX_FX_ALGOS_HTML", "FOREX_CEM02_HTML", "FOREX_CEM02_ISLEMLER_HTML"):
+    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML", "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML", "FOREX_GPSUSDT_HTML", "FOREX_GPS_ISLEMLER_HTML", "FOREX_GPS2_HTML", "FOREX_GPS2_ISLEMLER_HTML", "FOREX_BINB103_HTML", "FOREX_BINB103_ISLEMLER_HTML", "FOREX_B103_HTML", "FOREX_B103_ISLEMLER_HTML", "FOREX_FX_ALGOS_HTML", "FOREX_CEM02_HTML", "FOREX_CEM02_ISLEMLER_HTML", "FOREX_OAPI_HTML", "FOREX_OAPI_ISLEMLER_HTML", "FOREX_YZA_HTML"):
         _html = _html.replace("__FOREX_BRAND__", _CEMBOT_FOREX_BRAND_HTML)
         _html = _patch_cembot_brand(_html)
         _html = _patch_cache_bust(_html)

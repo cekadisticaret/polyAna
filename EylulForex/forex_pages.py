@@ -89,9 +89,14 @@ body{
   <a class="nav-item active" href="/forex/home"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item nav-sub" href="/forex/b103"><span class="nav-dot"></span>B1#03</a>
   <a class="nav-item" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item" href="/forex/openapi"><span class="nav-dot"></span>OPEN API</a>
   <a class="nav-item" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
+  <a class="nav-item" href="/forex/gpsusdt2"><span class="nav-dot"></span>GPSUSDT_2</a>
+  <a class="nav-item" href="/forex/bin-b103"><span class="nav-dot"></span>BIN_B1#03</a>
   <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item" href="/forex/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly'ye Geç</a>
   <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto'ya Geç</a>
@@ -254,7 +259,7 @@ body{display:flex;color:var(--txt);font-family:Inter,system-ui,sans-serif;backgr
 .book-tabs{display:flex;gap:14px;padding:0 14px;border-bottom:1px solid var(--line)}
 .book-tab{background:none;border:none;color:#6d7b86;font:inherit;font-size:10px;font-weight:800;letter-spacing:.04em;padding:8px 0;cursor:pointer}
 .book-tab.on{color:#4ea3ff;border-bottom:2px solid #4ea3ff}
-body.fx-g1 .book-tabs,body.fx-bybit .book-tabs,body.fx-gps .book-tabs{display:none}
+body.fx-g1 .book-tabs,body.fx-bybit .book-tabs,body.fx-gps .book-tabs,body.fx-gps2 .book-tabs,body.fx-binb103 .book-tabs{display:none}
 .bk-box{margin:10px 10px 6px;border:1px solid #24303a;border-radius:10px;background:#111920}
 .bk-box-h{padding:8px 12px 0;font-size:10px;font-weight:800;letter-spacing:.06em;color:#8a96a0}
 .bk-box .bk-row{border-bottom:none;padding:8px 12px 10px}
@@ -277,6 +282,36 @@ body.fx-g1 .book-tabs,body.fx-bybit .book-tabs,body.fx-gps .book-tabs{display:no
 .book-eq-row{display:flex;align-items:baseline;justify-content:center;gap:8px}
 .book-eq b{font-weight:800;font-variant-numeric:tabular-nums}
 .book-eq em{display:none}
+.book-eq-meta{margin-top:6px;font-size:10px;font-weight:600;color:#6d7b86;line-height:1.45;text-align:center}
+body.fx-gps .book-eq-meta,body.fx-gps2 .book-eq-meta,body.fx-binb103 .book-eq-meta{text-align:left;font-size:11px}
+body.fx-gps .book-eq,body.fx-gps2 .book-eq,body.fx-binb103 .book-eq{font-size:28px;padding:14px 16px;text-align:left}
+body.fx-gps .book-eq > span,body.fx-gps2 .book-eq > span,body.fx-binb103 .book-eq > span{font-size:11px;letter-spacing:.04em}
+body.fx-gps .book-eq-row,body.fx-gps2 .book-eq-row,body.fx-binb103 .book-eq-row{justify-content:space-between;align-items:baseline}
+body.fx-gps .book-eq em,body.fx-gps2 .book-eq em,body.fx-binb103 .book-eq em{
+  display:inline;font-style:normal;font-size:13px;font-weight:700;
+  color:#8a96a0;white-space:nowrap;
+}
+body.fx-gps .bk-sym,body.fx-gps2 .bk-sym,body.fx-binb103 .bk-sym{font-size:13px}
+body.fx-gps .bk-px,body.fx-gps2 .bk-px,body.fx-binb103 .bk-px{font-size:12px}
+body.fx-gps .bk-pnl,body.fx-gps2 .bk-pnl,body.fx-binb103 .bk-pnl{font-size:18px}
+body.fx-gps .bk-box.win,body.fx-gps2 .bk-box.win,body.fx-binb103 .bk-box.win{
+  border-color:rgba(200,241,53,.45);
+  background:linear-gradient(180deg,rgba(200,241,53,.16),rgba(17,25,32,.9));
+  box-shadow:inset 4px 0 0 #c8f135;
+}
+body.fx-gps .bk-box.lose,body.fx-gps2 .bk-box.lose,body.fx-binb103 .bk-box.lose{
+  border-color:rgba(239,83,80,.4);
+  background:linear-gradient(180deg,rgba(239,83,80,.14),rgba(17,25,32,.9));
+  box-shadow:inset 4px 0 0 #ef5350;
+}
+body.fx-gps .bk-row.win,body.fx-gps2 .bk-row.win,body.fx-binb103 .bk-row.win{
+  background:linear-gradient(90deg,rgba(200,241,53,.14),transparent 70%);
+  box-shadow:inset 4px 0 0 #c8f135;
+}
+body.fx-gps .bk-row.lose,body.fx-gps2 .bk-row.lose,body.fx-binb103 .bk-row.lose{
+  background:linear-gradient(90deg,rgba(239,83,80,.12),transparent 70%);
+  box-shadow:inset 4px 0 0 #ef5350;
+}
 .chart-wrap{flex:1;min-width:0;min-height:0;position:relative;background:#fff}
 #fx-chart{width:100%;height:100%}
 .hud{position:absolute;top:10px;left:12px;z-index:4;font-size:12px;font-weight:700;color:#37474f;pointer-events:none}
@@ -320,7 +355,7 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
   body:not(.fx-public) .nav-item{white-space:nowrap;padding:8px 10px;font-size:12px}
   .desk{height:100%;min-height:0}
   .topbar{display:none}
-  body.fx-gps .exec{display:none}
+  body.fx-gps .exec,body.fx-gps2 .exec,body.fx-binb103 .exec{display:none}
   .exec{
     order:3;grid-template-columns:1fr 72px 1fr;flex-shrink:0;
     padding-bottom:env(safe-area-inset-bottom,0);
@@ -348,7 +383,7 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
   .rail-bars{display:none}
   .rail-cd{font-size:9px;margin-left:auto}
   .book-pane{display:none}
-  body.fx-gps .book-pane{
+  body.fx-gps .book-pane,body.fx-gps2 .book-pane,body.fx-binb103 .book-pane{
     display:flex;width:100%;max-height:46vh;border-left:none;
     border-top:1px solid var(--line);order:4;
   }
@@ -374,9 +409,14 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item __FX_NAV_G1__" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item nav-sub __FX_NAV_B103__" href="/forex/b103"><span class="nav-dot"></span>B1#03</a>
   <a class="nav-item __FX_NAV_C2__" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item __FX_NAV_OAPI__" href="/forex/openapi"><span class="nav-dot"></span>OPEN API</a>
   <a class="nav-item __FX_NAV_GPS__" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
+  <a class="nav-item __FX_NAV_GPS2__" href="/forex/gpsusdt2"><span class="nav-dot"></span>GPSUSDT_2</a>
+  <a class="nav-item __FX_NAV_BINB103__" href="/forex/bin-b103"><span class="nav-dot"></span>BIN_B1#03</a>
   <a class="nav-item" href="__FX_ISLEMLER_HREF__"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item __FX_NAV_YZA__" href="/forex/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
   <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
@@ -456,13 +496,14 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
         <button type="button" class="book-tab" data-btab="hist" onclick="bookTab('hist')">İŞLEMLER</button>
       </div>
       <div class="book-list" id="book-list"></div>
-      <div class="book-eq"><span>bakiye</span><div class="book-eq-row"><b id="book-eq">$300.00</b><em id="book-n">0 işlem</em></div></div>
+      <div class="book-eq"><span>bakiye</span><div class="book-eq-row"><b id="book-eq">$300.00</b><em id="book-n">0 işlem</em></div><div class="book-eq-meta" id="book-eq-meta"></div></div>
     </aside>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
 const FX_ALGO='__FX_ALGO__';
+const FX_GPS = (FX_ALGO==='gps'||FX_ALGO==='gps2');
 const FX_PAIR='__FX_PAIR__';
 const TFS = [
   ['1m','M1'],['5m','M5'],['15m','M15'],['30m','M30'],['1h','H1'],['4h','H4'],['1d','D1']
@@ -488,7 +529,13 @@ function paper(side){
   const msg=FX_ALGO==='a2'
     ? 'Sanal '+ (side==='buy'?'AL':'SAT') +' '+lot+' lot @ '+px+' — A2 kontrol listesi açarsa cron işler'
     : FX_ALGO==='gps'
-    ? 'Binance MARKET '+ (side==='buy'?'BUY':'SELL') +' GPSUSDT @ '+px+' — sinyal gelince cron açar (paper)'
+    ? 'Binance MARKET '+ (side==='buy'?'BUY':'SELL') +' GPSUSDT @ '+px+' — sinyal gelince cron canlı açar ($50×15x)'
+    : FX_ALGO==='gps2'
+    ? 'Sanal Isolated MARKET '+ (side==='buy'?'BUY':'SELL') +' GPSUSDT @ '+px+' — cron $50×15x · kasa $160'
+    : FX_ALGO==='b103'
+    ? 'Sanal '+ (side==='buy'?'AL':'SAT') +' '+lot+' lot @ '+px+' — B1#03 MUM 1h · cron $100×500x'
+    : FX_ALGO==='binb103'
+    ? 'Binance MARKET '+ (side==='buy'?'BUY':'SELL') +' XAUUSDT @ '+px+' — b1_mum :05/:10 cron $30×15x'
     : 'Sanal '+ (side==='buy'?'AL':'SAT') +' '+lot+' lot @ '+px+' — motor henüz yok';
   toast(msg);
 }
@@ -504,7 +551,37 @@ function buildTfs(){
   box.querySelectorAll('.tf').forEach(b=>b.onclick=()=>{_tf=b.dataset.tf; buildTfs(); loadChart();});
 }
 function fmt(n,dec){ return n==null?'—':Number(n).toFixed(dec!=null?dec:2); }
-function pxFmt(n){ return n==null?'—':Number(n).toFixed(FX_ALGO==='gps'?5:2); }
+function parseStart(s){
+  if(s==null||s==='') return null;
+  if(typeof s==='number'){
+    const ms=s>1e12?s:s*1000;
+    const d=new Date(ms);
+    return isNaN(d)?null:d;
+  }
+  const m=String(s).match(/(\d{4})[.\-\/](\d{2})[.\-\/](\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if(m) return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0));
+  const d=new Date(s);
+  return isNaN(d)?null:d;
+}
+function fmtStart(s){
+  const d=parseStart(s);
+  if(!d) return '';
+  const p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'.'+p(d.getMonth()+1)+'.'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function ageActive(s){
+  const d=parseStart(s);
+  if(!d) return '';
+  let sec=Math.max(0,Math.round((Date.now()-d.getTime())/1000));
+  const day=Math.floor(sec/86400); sec%=86400;
+  const h=Math.floor(sec/3600); sec%=3600;
+  const m=Math.floor(sec/60);
+  if(day) return day+' g '+h+' sa';
+  if(h) return h+' sa '+(m?m+' dk':'');
+  if(m) return m+' dk';
+  return 'az önce';
+}
+function pxFmt(n){ return n==null?'—':Number(n).toFixed(FX_GPS?5:2); }
 function money(n){ return n==null?'—':Number(n).toFixed(2); }
 function fmtCd(sec){
   const n=Math.max(0,sec|0);
@@ -589,7 +666,13 @@ async function loadChart(){
   document.getElementById('hud').innerHTML=(FX_ALGO==='bybit'
     ? 'XAUUSD, '+lab+' <span>Exness Raw</span>'
     : FX_ALGO==='gps'
-    ? FX_PAIR+', '+lab+' <span>GPS / USDT</span>'
+    ? FX_PAIR+', '+lab+' <span>GPS / USDT · CANLI $50×15x</span>'
+    : FX_ALGO==='gps2'
+    ? FX_PAIR+', '+lab+' <span>GPS / USDT · sanal $50×15x · $160</span>'
+    : FX_ALGO==='b103'
+    ? FX_PAIR+', '+lab+' <span>B1#03 MUM · 1h confluence</span>'
+    : FX_ALGO==='binb103'
+    ? FX_PAIR+', '+lab+' <span>BIN_B1#03 · Isolated CANLI $30×15x</span>'
     : 'XAUUSD, '+lab+' <span>Gold vs US Dollar</span>');
   try{
     const r=await fetch('/poly/api/forex/chart?timeframe='+_tf+'&limit=240&algo='+FX_ALGO+'&_='+Date.now(),{cache:'no-store'});
@@ -777,6 +860,14 @@ function rejText(r){
   if(r.reason==='stop_uzak') return yon+' sinyali var — stop çok uzak (risk $'+fmt(r.risk_usd)+'), açılmadı.';
   if(r.reason==='rr_dusuk') return yon+' sinyali var — ödül/risk '+fmt(r.rr)+' (en az 1.5), açılmadı.';
   if(r.reason==='seviye_yok') return yon+' sinyali var — fiyat destek/direnç arasında değil, açılmadı.';
+  if(r.reason==='live_paused') return yon+' sinyali var — canlı duraklatıldı, açılmadı.';
+  if(r.reason==='keys_missing') return yon+' sinyali var — Binance anahtarı yok, açılmadı.';
+  if(r.reason==='margin_short') return yon+' sinyali var — USDT yetersiz, açılmadı.';
+  if(r.reason==='binance_already_open') return yon+' sinyali var — borsada açık GPSUSDT var, açılmadı.';
+  if(r.reason==='live_close_fail') return 'Canlı kapanış reddedildi'+(r.detail?(' — '+r.detail):'')+'.';
+  if(r.reason==='qty_min') return yon+' sinyali var — lot çok küçük, açılmadı.';
+  if(r.reason==='bn_status_unknown') return yon+' sinyali var — borsa durumu okunamadı, açılmadı.';
+  if(r.reason) return yon+' sinyali var — '+(r.reason)+(r.detail?(' · '+r.detail):'')+', açılmadı.';
   return '';
 }
 function renderBook(b){
@@ -795,37 +886,69 @@ function renderBook(b){
   const nEl=document.getElementById('book-n');
   if(nEl){
     const n=b.trade_count!=null?b.trade_count:((b.history||[]).length+(b.open_count||0));
-    nEl.textContent=n+' işlem';
+    nEl.textContent=(FX_GPS?'toplam ':'')+n+' işlem';
+  }
+  const metaEl=document.getElementById('book-eq-meta');
+  if(metaEl){
+    const init=b.init_balance;
+    let start=b.started_at;
+    const pos=b.positions||(b.position?[b.position]:[]);
+    for(const p of pos){
+      if(p.open_time && (!start || String(p.open_time)<String(start))) start=p.open_time;
+    }
+    if(!start && (b.history||[]).length){
+      const h=b.history;
+      start=h[h.length-1].open_time||h[h.length-1].close_time;
+    }
+    const when=fmtStart(start);
+    const age=ageActive(start);
+    const bits=[];
+    if(init!=null) bits.push('başlangıç $'+fmt(init));
+    if(when) bits.push(when+(age?' · '+age+' aktif':''));
+    else if(age) bits.push(age+' aktif');
+    metaEl.textContent=bits.join(' · ');
   }
   const sub=pane.querySelector('.book-head small');
   if(sub && b.book==='bybit' && b.costs){
     sub.textContent='XAUUSD · $100 × '+b.leverage+'x · Exness Raw kom $'+fmt(b.costs.commission_open)+' + $'+fmt(b.costs.commission_close);
   }
-  if(sub && (b.book==='gps' || FX_ALGO==='gps') && b.costs){
+  if(sub && (b.book==='gps' || b.book==='gps2' || FX_GPS) && b.costs){
+    const live=b.live||{};
+    const on=FX_ALGO==='gps' && live.enabled && !live.paused;
     const av=b.available!=null?(' · serbest $'+fmt(b.available)): '';
-    sub.textContent='Isolated $100×'+(b.leverage||20)+'x · kasa $'+fmt(b.init_balance||500)+av+' · taker %0.05 ($'+fmt(b.costs.commission_open)+' aç / $'+fmt(b.costs.commission_close)+' kapa)';
+    const tag=FX_ALGO==='gps2'?'sanal Isolated $':(on?'CANLI Isolated $':'Isolated $');
+    sub.textContent=tag+(b.margin||50)+'×'+(b.leverage||15)+'x · bakiye $'+fmt(b.equity!=null?b.equity:b.balance)+av+' · taker %0.05';
+    const titleSmall=document.querySelector('.topbar .sym small');
+    if(titleSmall) titleSmall.textContent=FX_ALGO==='gps2'
+      ? 'Binance Isolated · sanal $'+(b.margin||50)+' × '+(b.leverage||15)+'x · kasa $160'
+      : (on
+      ? 'Binance Isolated · CANLI $'+(b.margin||50)+' × '+(b.leverage||15)+'x'
+      : (live.paused?'Binance Isolated · duraklatıldı':'Binance Isolated · $'+(b.margin||50)+' × '+(b.leverage||15)+'x'));
   }
   const el=document.getElementById('book-list');
   if(!el) return;
   const row=(side,vol,a,z,ts,pnl,open,extra)=>{
     const sell=side==='sell';
-    const volTxt=FX_ALGO==='gps'?Math.round(Number(vol)).toLocaleString('tr-TR'):fmt(vol);
-    const px=FX_ALGO==='gps'?pxFmt:fmt;
-    return '<div class="bk-row"><div><div class="bk-sym '+(sell?'sell':'buy')+'">'+FX_PAIR+', '+(sell?'sell':'buy')+' '+volTxt+'</div>'
+    const volTxt=FX_GPS?Math.round(Number(vol)).toLocaleString('tr-TR'):fmt(vol);
+    const px=FX_GPS?pxFmt:fmt;
+    const band=FX_GPS&&pnl!=null?(pnl>=0?' win':' lose'):'';
+    return '<div class="bk-row'+band+'"><div><div class="bk-sym '+(sell?'sell':'buy')+'">'+FX_PAIR+', '+(sell?'sell':'buy')+' '+volTxt+'</div>'
       +'<div class="bk-px">'+px(a)+(z!=null?' → '+px(z):'')+'</div>'
       +(extra?'<div class="bk-px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
       +'<div class="bk-right"><div class="bk-ts">'+ts+(open?' · açık':'')+'</div>'
-      +'<div class="bk-pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl==null?'—':(FX_ALGO==='gps'?money(pnl):fmt(pnl)))+'</div></div></div>';
+      +'<div class="bk-pnl '+(pnl>=0?'pos':'neg')+'">'+(pnl==null?'—':(FX_GPS?money(pnl):fmt(pnl)))+'</div></div></div>';
   };
   const plan=p=>{
     const bits=[];
-    const px=FX_ALGO==='gps'?pxFmt:fmt;
+    const px=FX_GPS?pxFmt:fmt;
     if(p.stop!=null) bits.push((p.lock_stage?'kilit ':'SL ')+px(p.stop));
     if(p.target!=null) bits.push('TP '+px(p.target));
-    if(FX_ALGO==='gps'){
+    if(FX_GPS){
       if(p.liq_price) bits.push('liq '+px(p.liq_price));
       if(p.roe!=null) bits.push('ROE '+money(p.roe)+'%');
       if(p.commission_open!=null) bits.push('kom $'+money(p.commission_open));
+      if(p.order_id && FX_ALGO==='gps') bits.push('#'+p.order_id);
+      if(FX_ALGO==='gps' && (p.live || p.fill_src==='binance_usdm_live')) bits.push('canlı');
       return bits.join(' · ');
     }
     if(p.progress!=null) bits.push('%'+fmt(p.progress));
@@ -849,6 +972,15 @@ function renderBook(b){
     if(rj) inner+='<div class="bk-empty" style="text-align:left">'+rejText(rj)+'</div>';
     return inner;
   };
+  const posBoxClass=()=>{
+    if(!FX_GPS) return 'bk-box';
+    const ps=b.positions||(b.position?[b.position]:[]);
+    if(!ps.length) return 'bk-box';
+    const p=ps[0];
+    const pnl=p.float_net!=null?p.float_net:p.float_pnl;
+    if(pnl==null) return 'bk-box';
+    return 'bk-box '+(pnl>=0?'win':'lose');
+  };
   const histBlock=()=>{
     const h=b.history||[];
     return h.length?h.map(t=>{
@@ -856,17 +988,17 @@ function renderBook(b){
       const dur=holdDur(t.open_time,t.close_time);
       const hh=clockAt(t.open_time);
       const extra=[hh?('aç '+hh):'', cost(t), dur?('süre '+dur):''].filter(Boolean).join(' · ');
-      const volTxt=FX_ALGO==='gps'?Math.round(Number(t.volume)).toLocaleString('tr-TR'):fmt(t.volume);
-      const px=FX_ALGO==='gps'?pxFmt:fmt;
+      const volTxt=FX_GPS?Math.round(Number(t.volume)).toLocaleString('tr-TR'):fmt(t.volume);
+      const px=FX_GPS?pxFmt:fmt;
       return '<div class="bk-row"><div><div class="bk-sym '+(sell?'sell':'buy')+'">'+FX_PAIR+', '+(sell?'sell':'buy')+' '+volTxt+'</div>'
         +'<div class="bk-px">'+px(t.entry)+(t.exit!=null?' → '+px(t.exit):'')+'</div>'
         +(extra?'<div class="bk-px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
-        +'<div class="bk-right"><div class="bk-pnl '+(t.pnl>=0?'pos':'neg')+'">'+(t.pnl==null?'—':(FX_ALGO==='gps'?money(t.pnl):fmt(t.pnl)))+'</div>'
+        +'<div class="bk-right"><div class="bk-pnl '+(t.pnl>=0?'pos':'neg')+'">'+(t.pnl==null?'—':(FX_GPS?money(t.pnl):fmt(t.pnl)))+'</div>'
         +(hh?'<div class="bk-ts">'+hh+'</div>':(dur?'<div class="bk-ts">'+dur+'</div>':''))+'</div></div>';
     }).join(''):'<div class="bk-empty">Kapanmış işlem yok.</div>';
   };
   if(FX_ALGO!=='a2'){
-    el.innerHTML='<div class="bk-box"><div class="bk-box-h">POZİSYONLAR</div>'+posBlock()+'</div>'
+    el.innerHTML='<div class="'+posBoxClass()+'"><div class="bk-box-h">POZİSYONLAR</div>'+posBlock()+'</div>'
       +'<div class="bk-sec">İŞLEMLER</div>'+histBlock();
     return;
   }
@@ -911,6 +1043,9 @@ def _chart_page(algo: str) -> str:
     g1 = "active" if algo == "g1" else ""
     bybit = "active" if algo == "bybit" else ""
     gps = "active" if algo == "gps" else ""
+    gps2 = "active" if algo == "gps2" else ""
+    binb103 = "active" if algo == "binb103" else ""
+    b103 = "active" if algo == "b103" else ""
     a2 = "active" if algo == "a2" else ""
     if algo == "bybit":
         title = "XAUUSD — EXNESS"
@@ -918,8 +1053,20 @@ def _chart_page(algo: str) -> str:
         body = "fx-bybit"
     elif algo == "gps":
         title = "GPSUSDT — Binance"
-        pair, sub, book, foot = "GPSUSDT", "Binance Isolated · sanal $500", "GPSUSDT · Isolated $100 × 20x · taker %0.05", "GPSUSDT · Binance $500"
+        pair, sub, book, foot = "GPSUSDT", "Binance Isolated · CANLI $50 × 15x", "GPSUSDT · CANLI Isolated $50 × 15x · taker %0.05", "GPSUSDT · Binance canlı"
         body = "fx-gps"
+    elif algo == "gps2":
+        title = "GPSUSDT_2 — sanal"
+        pair, sub, book, foot = "GPSUSDT", "Binance Isolated · sanal $50 × 15x · kasa $160", "GPSUSDT_2 · sanal Isolated $50 × 15x · kasa $160", "GPSUSDT_2 · sanal $160"
+        body = "fx-gps2"
+    elif algo == "binb103":
+        title = "XAUUSDT — BIN_B1#03"
+        pair, sub, book, foot = "XAUUSDT", "BIN_B1#03 MUM · Isolated CANLI $30 × 15x", "XAUUSDT · CANLI Isolated $30 × 15x · b1_mum 24s/3×ATR", "BIN_B1#03 · Binance canlı"
+        body = "fx-binb103"
+    elif algo == "b103":
+        title = "XAUUSD — B1#03"
+        pair, sub, book, foot = "XAUUSD", "B1#03 MUM · 1h confluence", "XAUUSD · $100 × 500x · B1#03 MUM", "XAUUSD · B1#03 sanal"
+        body = "fx-g1"
     elif algo == "a2":
         title = "XAUUSD — Algoritma 2"
         pair, sub, book, foot = "XAUUSD", "Altın / Dolar", "XAUUSD · $100 × 500x", "XAUUSD · sanal"
@@ -928,13 +1075,28 @@ def _chart_page(algo: str) -> str:
         title = "XAUUSD — CEM01"
         pair, sub, book, foot = "XAUUSD", "Altın / Dolar", "XAUUSD · $100 × 500x", "XAUUSD · sanal"
         body = "fx-g1"
+    if algo == "gps":
+        islemler = "/forex/gpsusdt/islemler"
+    elif algo == "gps2":
+        islemler = "/forex/gpsusdt2/islemler"
+    elif algo == "b103":
+        islemler = "/forex/b103/islemler"
+    elif algo == "binb103":
+        islemler = "/forex/bin-b103/islemler"
+    else:
+        islemler = "/forex/islemler"
     return (
         FOREX_CHART_TMPL
         .replace("__FX_TITLE__", title)
         .replace("__FX_NAV_G1__", g1)
         .replace("__FX_NAV_C2__", "")
+        .replace("__FX_NAV_OAPI__", "")
+        .replace("__FX_NAV_YZA__", "")
         .replace("__FX_NAV_BYBIT__", bybit)
         .replace("__FX_NAV_GPS__", gps)
+        .replace("__FX_NAV_GPS2__", gps2)
+        .replace("__FX_NAV_BINB103__", binb103)
+        .replace("__FX_NAV_B103__", b103)
         .replace("__FX_NAV_A2__", a2)
         .replace("__FX_ALGO__", algo)
         .replace("__FX_PAIR__", pair)
@@ -942,7 +1104,7 @@ def _chart_page(algo: str) -> str:
         .replace("__FX_BOOK_SUB__", book)
         .replace("__FX_FOOTER__", foot)
         .replace("__FX_BODY_CLASS__", body)
-        .replace("__FX_ISLEMLER_HREF__", "/forex/gpsusdt/islemler" if algo == "gps" else "/forex/islemler")
+        .replace("__FX_ISLEMLER_HREF__", islemler)
     )
 
 
@@ -950,18 +1112,26 @@ FOREX_GRAFIK_HTML = _chart_page("g1")
 FOREX_CEMBYBIT_HTML = _chart_page("bybit")
 FOREX_ALGO2_HTML = _chart_page("a2")
 FOREX_GPSUSDT_HTML = _chart_page("gps")
+FOREX_GPS2_HTML = _chart_page("gps2")
+FOREX_BINB103_HTML = _chart_page("binb103")
+FOREX_B103_HTML = _chart_page("b103")
 FOREX_CEM02_HTML = (
     FOREX_CHART_TMPL
     .replace("__FX_TITLE__", "XAUUSD — CEM01")
     .replace("__FX_NAV_G1__", "")
     .replace("__FX_NAV_C2__", "active")
+    .replace("__FX_NAV_OAPI__", "")
+    .replace("__FX_NAV_YZA__", "")
     .replace("__FX_NAV_BYBIT__", "")
-    .replace("__FX_NAV_GPS__", "")
-    .replace("__FX_NAV_A2__", "")
-    .replace("__FX_ALGO__", "g1")
-    .replace("__FX_PAIR__", "XAUUSD")
-    .replace("__FX_PAIR_SUB__", "Altın / Dolar")
-    .replace("__FX_BOOK_SUB__", "XAUUSD · Capital")
+        .replace("__FX_NAV_GPS__", "")
+        .replace("__FX_NAV_GPS2__", "")
+        .replace("__FX_NAV_BINB103__", "")
+        .replace("__FX_NAV_B103__", "")
+        .replace("__FX_NAV_A2__", "")
+        .replace("__FX_ALGO__", "g1")
+        .replace("__FX_PAIR__", "XAUUSD")
+        .replace("__FX_PAIR_SUB__", "Altın / Dolar")
+        .replace("__FX_BOOK_SUB__", "XAUUSD · Capital")
     .replace("__FX_FOOTER__", "XAUUSD · Capital")
     .replace("__FX_BODY_CLASS__", "fx-g1")
     .replace("__FX_ISLEMLER_HREF__", "/forex/cem02/islemler")
@@ -969,6 +1139,47 @@ FOREX_CEM02_HTML = (
     .replace("/poly/api/forex/chart", "/poly/api/forex/cem02/chart")
     .replace("/poly/api/forex/book", "/poly/api/forex/cem02/book")
 )
+
+FOREX_OAPI_HTML = (
+    FOREX_CHART_TMPL
+    .replace("__FX_TITLE__", "XAUUSD — OPEN API")
+    .replace("__FX_NAV_G1__", "")
+    .replace("__FX_NAV_C2__", "")
+    .replace("__FX_NAV_OAPI__", "active")
+    .replace("__FX_NAV_YZA__", "")
+    .replace("__FX_NAV_BYBIT__", "")
+        .replace("__FX_NAV_GPS__", "")
+        .replace("__FX_NAV_GPS2__", "")
+        .replace("__FX_NAV_BINB103__", "")
+        .replace("__FX_NAV_B103__", "")
+        .replace("__FX_NAV_A2__", "")
+        .replace("__FX_ALGO__", "g1")
+        .replace("__FX_PAIR__", "XAUUSD")
+        .replace("__FX_PAIR_SUB__", "cTrader Open API")
+    .replace("__FX_BOOK_SUB__", "XAUUSD · cTrader")
+    .replace("__FX_FOOTER__", "XAUUSD · cTrader Open API")
+    .replace("__FX_BODY_CLASS__", "fx-g1")
+    .replace("__FX_ISLEMLER_HREF__", "/forex/openapi/islemler")
+    .replace("/poly/api/forex/spot", "/poly/api/forex/openapi/spot")
+    .replace("/poly/api/forex/chart", "/poly/api/forex/openapi/chart")
+    .replace("/poly/api/forex/book", "/poly/api/forex/openapi/book")
+) + r"""
+<script>
+(async function(){
+  try{
+    const r=await fetch('/poly/api/forex/openapi/status',{cache:'no-store'});
+    const d=await r.json();
+    if(d && d.ok) return;
+    const a=document.createElement('a');
+    a.href = d && d.oauth_ready ? '/forex/openapi/connect' : 'https://openapi.ctrader.com/apps';
+    a.target = d && d.oauth_ready ? '_self' : '_blank';
+    a.textContent = d && d.oauth_ready ? 'cTrader bağla' : 'cTrader uygulama aç';
+    a.style.cssText='position:fixed;z-index:40;top:12px;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:999px;background:#d4af37;color:#111;font:700 12px Sora,system-ui;text-decoration:none';
+    document.body.appendChild(a);
+  }catch(e){}
+})();
+</script>
+"""
 
 FOREX_ISLEMLER_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
@@ -1035,9 +1246,14 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item nav-sub" href="/forex/b103"><span class="nav-dot"></span>B1#03</a>
   <a class="nav-item" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item" href="/forex/openapi"><span class="nav-dot"></span>OPEN API</a>
   <a class="nav-item" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
+  <a class="nav-item" href="/forex/gpsusdt2"><span class="nav-dot"></span>GPSUSDT_2</a>
+  <a class="nav-item" href="/forex/bin-b103"><span class="nav-dot"></span>BIN_B1#03</a>
   <a class="nav-item active" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item" href="/forex/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
   <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
@@ -1140,6 +1356,22 @@ FOREX_CEM02_ISLEMLER_HTML = (
     .replace("/poly/api/forex/book", "/poly/api/forex/cem02/book")
 )
 
+FOREX_OAPI_ISLEMLER_HTML = (
+    FOREX_ISLEMLER_HTML
+    .replace('href="/forex/islemler"', 'href="/forex/openapi/islemler"')
+    .replace("/poly/api/forex/book", "/poly/api/forex/openapi/book")
+)
+
+FOREX_B103_ISLEMLER_HTML = (
+    FOREX_ISLEMLER_HTML
+    .replace("<title>İşlemler — Forex</title>", "<title>İşlemler — B1#03</title>")
+    .replace('href="/forex/islemler"', 'href="/forex/b103/islemler"')
+    .replace('nav-item nav-sub" href="/forex/b103"', 'nav-item nav-sub active" href="/forex/b103"')
+    .replace("/poly/api/forex/book", "/poly/api/forex/book?algo=b103")
+    .replace("XAUUSD · $100×500x", "XAUUSD · B1#03 MUM · $100×500x")
+    .replace("XAUUSD · sanal $100 × 500x", "XAUUSD · B1#03 MUM · sanal $100 × 500x")
+)
+
 FOREX_GPS_ISLEMLER_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -1170,6 +1402,10 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
 .head h1{font-size:22px;font-weight:800}
 .head small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
 .box{margin:10px 16px 8px;border:1px solid #24303a;border-radius:10px;background:#111920}
+.box.win{border-color:rgba(200,241,53,.45);background:linear-gradient(180deg,rgba(200,241,53,.16),#111920);box-shadow:inset 4px 0 0 #c8f135}
+.box.lose{border-color:rgba(239,83,80,.4);background:linear-gradient(180deg,rgba(239,83,80,.14),#111920);box-shadow:inset 4px 0 0 #ef5350}
+.row.win{box-shadow:inset 4px 0 0 #c8f135;background:linear-gradient(90deg,rgba(200,241,53,.12),transparent 60%)}
+.row.lose{box-shadow:inset 4px 0 0 #ef5350;background:linear-gradient(90deg,rgba(239,83,80,.1),transparent 60%)}
 .box-h{padding:10px 14px 0;font-size:10px;font-weight:800;letter-spacing:.06em;color:#8a96a0}
 .sec{padding:10px 18px 4px;font-size:10px;font-weight:800;letter-spacing:.06em;color:#6d7b86}
 .list{flex:1;overflow:auto}
@@ -1186,10 +1422,11 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
 .pnl.neg{color:var(--sell)}
 .empty{padding:20px 18px;color:var(--muted);font-size:13px}
 .eq{
-  margin:12px 16px 16px;padding:10px 16px;border-radius:999px;background:#1a2330;
-  display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:18px;
+  margin:12px 16px 16px;padding:12px 18px;border-radius:999px;background:#1a2330;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:800;font-size:26px;
 }
-.eq span{font-size:12px;color:var(--muted);font-weight:600}
+.eq span{font-size:13px;color:var(--muted);font-weight:600}
+.eq em{font-style:normal;font-size:14px;font-weight:700;color:#8a96a0;white-space:nowrap}
 .foot{padding:0 18px 16px;font-size:11px;color:var(--muted);text-align:center}
 @media(max-width:800px){
   body{flex-direction:column}
@@ -1205,18 +1442,23 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item nav-sub" href="/forex/b103"><span class="nav-dot"></span>B1#03</a>
   <a class="nav-item" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item" href="/forex/openapi"><span class="nav-dot"></span>OPEN API</a>
   <a class="nav-item" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
+  <a class="nav-item" href="/forex/gpsusdt2"><span class="nav-dot"></span>GPSUSDT_2</a>
+  <a class="nav-item" href="/forex/bin-b103"><span class="nav-dot"></span>BIN_B1#03</a>
   <a class="nav-item active" href="/forex/gpsusdt/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item" href="/forex/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
   <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
-  <div class="sidebar-footer">GPSUSDT · Binance $500</div>
+  <div class="sidebar-footer">GPSUSDT · Binance canlı</div>
 </div>
 <div class="desk">
   <div class="head">
     <h1>İşlemler</h1>
-    <small>GPSUSDT · Isolated $100 × 20x · kasa $500</small>
+    <small id="gps-sub">GPSUSDT · CANLI Isolated $50 × 15x · kasa $500</small>
   </div>
   <div class="box">
     <div class="box-h">POZİSYONLAR</div>
@@ -1224,8 +1466,8 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
   </div>
   <div class="sec">İŞLEMLER</div>
   <div class="list" id="hist"></div>
-  <div class="eq"><span>bakiye</span> <b id="eq">$500.00</b></div>
-  <div class="foot">Binance USDT-M sanal · taker %0.05 · borsaya emir gitmez</div>
+  <div class="eq"><span>bakiye</span> <b id="eq">$500.00</b> <em id="eq-n">toplam 0 işlem</em></div>
+  <div class="foot" id="gps-foot">Binance USDT-M Isolated · CANLI $50 × 15x · taker %0.05</div>
 </div>
 <script>
 function money(n){ return n==null?'—':Number(n).toFixed(2); }
@@ -1257,7 +1499,7 @@ function rowOpen(p){
     p.target!=null?'TP '+px(p.target):'',
     p.commission_open!=null?'kom aç $'+money(p.commission_open):'',
   ].filter(Boolean).join(' · ');
-  return '<div class="row"><div><div class="sym '+(sell?'sell':'buy')+'">GPSUSDT, '+(sell?'sell':'buy')+' '+qty(p.qty||p.volume)+'</div>'
+  return '<div class="row'+(pnl==null?'':(pnl>=0?' win':' lose'))+'"><div><div class="sym '+(sell?'sell':'buy')+'">GPSUSDT, '+(sell?'sell':'buy')+' '+qty(p.qty||p.volume)+'</div>'
     +'<div class="px">'+px(p.entry)+(p.mark!=null?' → '+px(p.mark):'')+'</div>'
     +(extra?'<div class="px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
     +'<div class="right"><div class="ts">'+clockAt(p.open_time)+' · açık</div>'
@@ -1275,16 +1517,39 @@ function rowClosed(t){
     +(hh?'<div class="ts">'+clockAt(t.close_time||t.open_time)+'</div>':'')+'</div></div>';
 }
 function render(b){
+  const live=b.live||{};
+  const on=live.enabled && !live.paused;
+  const sub=document.getElementById('gps-sub');
+  if(sub) sub.textContent=on
+    ? 'GPSUSDT · CANLI Isolated $'+(b.margin||50)+' × '+(b.leverage||15)+'x'
+    : 'GPSUSDT · Isolated $'+(b.margin||50)+' × '+(b.leverage||15)+'x'+(live.paused?' · duraklatıldı':'');
+  const foot=document.getElementById('gps-foot');
+  if(foot) foot.textContent=on
+    ? 'Binance USDT-M Isolated · CANLI $'+(b.margin||50)+' × '+(b.leverage||15)+'x · taker %0.05'+(live.usdt_available!=null?(' · borsa $'+money(live.usdt_available)):'')
+    : 'Binance USDT-M Isolated · $'+(b.margin||50)+' × '+(b.leverage||15)+'x';
   document.getElementById('eq').textContent='$'+money(b.equity!=null?b.equity:b.balance);
+  const nEl=document.getElementById('eq-n');
+  if(nEl){
+    const n=b.trade_count!=null?b.trade_count:((b.history||[]).length+(b.open_count||0));
+    nEl.textContent='toplam '+n+' işlem';
+  }
   const ps=b.positions||(b.position?[b.position]:[]);
   let posHtml=ps.length?ps.map(rowOpen).join(''):'<div class="empty">Açık pozisyon yok.</div>';
   const r=b.last_reject;
   if(r){
     const yon=r.side==='buy'?'AL':'SAT';
-    const msg={bekleme:'kapanış sonrası bekleme',stop_uzak:'stop çok uzak',rr_dusuk:'ödül/risk düşük',seviye_yok:'plan yok'}[r.reason]||r.reason||'';
+    const msg={bekleme:'kapanış sonrası bekleme',stop_uzak:'stop çok uzak',rr_dusuk:'ödül/risk düşük',seviye_yok:'plan yok',live_paused:'canlı duraklatıldı',keys_missing:'Binance anahtarı yok',margin_short:'USDT yetersiz',binance_already_open:'borsada açık GPSUSDT var',live_close_fail:'canlı kapanış reddedildi',bn_status_unknown:'borsa durumu okunamadı'}[r.reason]||r.reason||'';
     if(msg) posHtml+='<div class="empty" style="text-align:left">'+yon+' sinyali var — '+msg+', açılmadı.</div>';
   }
   document.getElementById('pos').innerHTML=posHtml;
+  const box=document.querySelector('.box');
+  if(box){
+    box.classList.remove('win','lose');
+    if(ps.length){
+      const pnl=ps[0].float_net!=null?ps[0].float_net:ps[0].float_pnl;
+      if(pnl!=null) box.classList.add(pnl>=0?'win':'lose');
+    }
+  }
   const h=b.history||[];
   document.getElementById('hist').innerHTML=h.length?h.map(rowClosed).join(''):'<div class="empty">Kapanmış işlem yok.</div>';
 }
@@ -1299,6 +1564,64 @@ load(); setInterval(load, 4000);
 </body>
 </html>
 """
+
+FOREX_GPS2_ISLEMLER_HTML = FOREX_GPS_ISLEMLER_HTML.replace(
+    'href="/forex/gpsusdt/islemler"',
+    'href="/forex/gpsusdt2/islemler"',
+).replace(
+    "GPSUSDT · Binance canlı",
+    "GPSUSDT_2 · sanal $160",
+).replace(
+    'GPSUSDT · CANLI Isolated $50 × 15x · kasa $500',
+    'GPSUSDT_2 · sanal Isolated $50 × 15x · kasa $160',
+).replace(
+    "$500.00",
+    "$160.00",
+).replace(
+    "Binance USDT-M Isolated · CANLI $50 × 15x · taker %0.05",
+    "Binance USDT-M Isolated · sanal $50 × 15x · kasa $160 · emir yok",
+).replace(
+    "/poly/api/forex/book?algo=gps",
+    "/poly/api/forex/book?algo=gps2",
+).replace(
+    "<title>İşlemler — GPSUSDT</title>",
+    "<title>İşlemler — GPSUSDT_2</title>",
+).replace(
+    "    ? 'GPSUSDT · CANLI Isolated $'+(b.margin||50)+' × '+(b.leverage||15)+'x'\n    : 'GPSUSDT · Isolated $'+(b.margin||50)+' × '+(b.leverage||15)+'x'+(live.paused?' · duraklatıldı':'');",
+    "    ? 'GPSUSDT_2 · sanal Isolated $'+(b.margin||50)+' × '+(b.leverage||15)+'x · kasa $160'\n    : 'GPSUSDT_2 · sanal Isolated $'+(b.margin||50)+' × '+(b.leverage||15)+'x · kasa $160';",
+).replace(
+    "    ? 'Binance USDT-M Isolated · CANLI $'+(b.margin||50)+' × '+(b.leverage||15)+'x · taker %0.05'+(live.usdt_available!=null?(' · borsa $'+money(live.usdt_available)):'')\n    : 'Binance USDT-M Isolated · $'+(b.margin||50)+' × '+(b.leverage||15)+'x';",
+    "    ? 'Binance USDT-M Isolated · sanal $'+(b.margin||50)+' × '+(b.leverage||15)+'x · kasa $160 · emir yok'\n    : 'Binance USDT-M Isolated · sanal $'+(b.margin||50)+' × '+(b.leverage||15)+'x · kasa $160 · emir yok';",
+)
+
+FOREX_BINB103_ISLEMLER_HTML = FOREX_GPS_ISLEMLER_HTML.replace(
+    '  <a class="nav-item active" href="/forex/gpsusdt/islemler"><span class="nav-dot"></span>İşlemler</a>',
+    '  <a class="nav-item active" href="/forex/bin-b103/islemler"><span class="nav-dot"></span>İşlemler</a>',
+).replace(
+    "GPSUSDT · Binance canlı",
+    "BIN_B1#03 · Binance canlı",
+).replace(
+    "GPSUSDT · CANLI Isolated $50 × 15x · kasa $500",
+    "XAUUSDT · CANLI Isolated $30 × 15x · b1_mum",
+).replace(
+    "Binance USDT-M Isolated · CANLI $50 × 15x · taker %0.05",
+    "XAUUSDT Isolated · CANLI $30 × 15x · b1_mum 24s/3×ATR",
+).replace(
+    "/poly/api/forex/book?algo=gps",
+    "/poly/api/forex/book?algo=binb103",
+).replace(
+    "<title>İşlemler — GPSUSDT</title>",
+    "<title>İşlemler — BIN_B1#03</title>",
+).replace(
+    "GPSUSDT, ",
+    "XAUUSDT, ",
+).replace(
+    "    ? 'GPSUSDT · CANLI Isolated $'+(b.margin||50)+' × '+(b.leverage||15)+'x'\n    : 'GPSUSDT · Isolated $'+(b.margin||50)+' × '+(b.leverage||15)+'x'+(live.paused?' · duraklatıldı':'');",
+    "    ? 'BIN_B1#03 · CANLI Isolated $'+(b.margin||30)+' × '+(b.leverage||15)+'x'\n    : 'BIN_B1#03 · Isolated $'+(b.margin||30)+' × '+(b.leverage||15)+'x'+(live.paused?' · duraklatıldı':'');",
+).replace(
+    "    ? 'Binance USDT-M Isolated · CANLI $'+(b.margin||50)+' × '+(b.leverage||15)+'x · taker %0.05'+(live.usdt_available!=null?(' · borsa $'+money(live.usdt_available)):'')\n    : 'Binance USDT-M Isolated · $'+(b.margin||50)+' × '+(b.leverage||15)+'x';",
+    "    ? 'XAUUSDT Isolated · CANLI $'+(b.margin||30)+' × '+(b.leverage||15)+'x · b1_mum'+(live.usdt_available!=null?(' · borsa $'+money(live.usdt_available)):'')\n    : 'XAUUSDT Isolated · $'+(b.margin||30)+' × '+(b.leverage||15)+'x';",
+)
 
 FOREX_FX_ALGOS_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
@@ -1379,9 +1702,14 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
   <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item active" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
   <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item nav-sub" href="/forex/b103"><span class="nav-dot"></span>B1#03</a>
   <a class="nav-item" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item" href="/forex/openapi"><span class="nav-dot"></span>OPEN API</a>
   <a class="nav-item" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
+  <a class="nav-item" href="/forex/gpsusdt2"><span class="nav-dot"></span>GPSUSDT_2</a>
+  <a class="nav-item" href="/forex/bin-b103"><span class="nav-dot"></span>BIN_B1#03</a>
   <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item" href="/forex/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <div class="nav-label">Sistemler</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
   <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
@@ -1509,6 +1837,134 @@ async function loadFxAlgos(){
   }
 }
 loadFxAlgos(); setInterval(loadFxAlgos, 2000);
+</script>
+</body>
+</html>
+"""
+
+
+FOREX_YZA_HTML = r"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yapay Zeka Analiz — Forex CEM01</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d1b2a'/><text x='50%25' y='54%25' font-size='16' text-anchor='middle' dominant-baseline='central' fill='%23d4af37' font-family='Arial' font-weight='bold'>F</text></svg>">
+<style>
+:root{
+  --bg:#05080d; --card:#101820; --line:rgba(212,175,55,.14);
+  --txt:#f3efe4; --muted:#8b8678; --gold:#d4af37;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui,sans-serif;background:var(--bg)}
+.sidebar{
+  width:220px;background:rgba(8,12,18,.94);padding:24px 16px;display:flex;flex-direction:column;gap:4px;
+  flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);
+}
+.nav-label{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:1px;margin:16px 0 6px 12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:#888;text-decoration:none;font-size:13px;font-weight:600}
+.nav-item:hover{background:rgba(255,255,255,.04);color:#ccc}
+.nav-item.active{background:rgba(212,175,55,.12);color:var(--gold)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5}
+.nav-item.active .nav-dot{opacity:1;background:var(--gold)}
+.sidebar-footer{margin-top:auto;font-size:11px;color:#555;padding:12px}
+.main{flex:1;padding:28px;max-width:920px}
+h1{font-size:22px;font-weight:800;margin-bottom:6px}
+.subtitle{font-size:13px;color:var(--muted);margin-bottom:22px}
+.feed{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.card-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:700}
+.card-meta{font-size:12px;color:var(--muted);white-space:nowrap}
+.badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:3px 8px;border-radius:999px;margin-bottom:10px;background:rgba(212,175,55,.12);color:var(--gold)}
+.card-body{font-size:14px;line-height:1.65;color:#ccc;white-space:pre-wrap}
+.card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag{font-size:10px;color:#888;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:2px 7px}
+.empty{text-align:center;color:#555;padding:40px 20px;font-size:14px}
+@media(max-width:800px){
+  body{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:relative}
+  .nav-label,.sidebar-footer{display:none}
+}
+</style>
+</head>
+<body id="fx-page">
+<div class="sidebar">
+  __FOREX_BRAND__
+  <div class="nav-label">Forex</div>
+  <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Overview</a>
+  <a class="nav-item" href="/forex/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
+  <a class="nav-item" href="/forex/grafik"><span class="nav-dot"></span>CEM01</a>
+  <a class="nav-item nav-sub" href="/forex/b103"><span class="nav-dot"></span>B1#03</a>
+  <a class="nav-item" href="/forex/cem02"><span class="nav-dot"></span>CAPITAL</a>
+  <a class="nav-item" href="/forex/openapi"><span class="nav-dot"></span>OPEN API</a>
+  <a class="nav-item" href="/forex/gpsusdt"><span class="nav-dot"></span>GPSUSDT</a>
+  <a class="nav-item" href="/forex/gpsusdt2"><span class="nav-dot"></span>GPSUSDT_2</a>
+  <a class="nav-item" href="/forex/bin-b103"><span class="nav-dot"></span>BIN_B1#03</a>
+  <a class="nav-item" href="/forex/islemler"><span class="nav-dot"></span>İşlemler</a>
+  <a class="nav-item active" href="/forex/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
+  <div class="nav-label">Sistemler</div>
+  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly</a>
+  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto</a>
+  <div class="sidebar-footer">XAUUSD · CEM01 analist</div>
+</div>
+<div class="main">
+  <h1>Yapay Zeka Analiz</h1>
+  <div class="subtitle" id="subtitle">CEM01 grafik yorumları yükleniyor…</div>
+  <div id="feed" class="feed"><div class="empty">Yükleniyor…</div></div>
+</div>
+<script>
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtTs(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  if(Number.isNaN(d.getTime())) return ts;
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mi = String(d.getMinutes()).padStart(2,'0');
+  return dd + '.' + mm + ' ' + hh + ':' + mi;
+}
+function renderCard(e){
+  const tags = Array.isArray(e.tags) ? e.tags : [];
+  const tagHtml = tags.length
+    ? '<div class="card-tags">' + tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>'
+    : '';
+  return '<article class="card">'
+    + '<span class="badge">3 Saatlik</span>'
+    + '<div class="card-head">'
+    + '<div class="card-title">📈 ' + esc(e.title || 'Forex CEM01 Analist') + '</div>'
+    + '<div class="card-meta">' + esc(fmtTs(e.ts)) + '</div>'
+    + '</div>'
+    + '<div class="card-body">' + esc(e.body || '') + '</div>'
+    + tagHtml
+    + '</article>';
+}
+async function load(){
+  const feed = document.getElementById('feed');
+  try{
+    const r = await fetch('/poly/api/forex/analyst/feed?limit=100');
+    if(!r.ok){ feed.innerHTML = '<div class="empty">API hatası: ' + r.status + '</div>'; return; }
+    const data = await r.json();
+    if(data.error){ feed.innerHTML = '<div class="empty">Oturum hatası</div>'; return; }
+    const entries = data.entries || [];
+    document.getElementById('subtitle').textContent =
+      entries.length + ' bildirim · CEM01 /forex/grafik · 3 saatte bir';
+    if(!entries.length){
+      feed.innerHTML = '<div class="empty">Henüz bildirim yok. İlk analiz 3 saatte bir gelir.</div>';
+      return;
+    }
+    feed.innerHTML = entries.map(renderCard).join('');
+  }catch(e){
+    feed.innerHTML = '<div class="empty">Yükleme hatası</div>';
+  }
+}
+load();
+setInterval(load, 60000);
 </script>
 </body>
 </html>
