@@ -88,11 +88,11 @@ body[data-world] .main-right{
   top:52px;
 }
 @media(max-width:800px){
-  .dash-worldbar{left:0;height:48px}
-  body[data-world] .sidebar{margin-top:48px}
+  .dash-worldbar{display:none}
+  body[data-world] .sidebar{margin-top:0}
   body[data-world] .main,body[data-world] #kf-main{margin-top:0}
   body[data-world] .desk{padding-top:0}
-  body[data-world] .chart-full{margin-top:48px;height:auto;max-height:none}
+  body[data-world] .chart-full{margin-top:0;height:auto;max-height:none}
 }
 """
     )

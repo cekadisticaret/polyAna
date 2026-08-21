@@ -706,6 +706,17 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
             float_sum += item["float_net"] or 0
         rows.append(item)
     live = _live_snap()
+    if live.get("enabled") and live.get("usdt_wallet") is None:
+        try:
+            from binance_um_wallet import fetch as _um
+            acc = _um()
+            if acc:
+                live["usdt_wallet"] = acc.get("wallet")
+                live["usdt_available"] = acc.get("available")
+                live["usdt_equity"] = acc.get("equity")
+                live["usdt_unrealized"] = acc.get("unrealized")
+        except Exception:
+            pass
     try:
         from bin_b103_signal import engine_info
         eng = engine_info()
@@ -771,5 +782,10 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
         from desk_meta import attach
         attach(out, "binb103", hist=hist, positions=rows, state_path=_STATE, init=out.get("init_balance"))
     except Exception:
+        pass
+    out["init_balance"] = 261.0
+    try:
+        out["total_pnl"] = round(float(out.get("equity") or out.get("balance") or 0) - 261.0, 2)
+    except (TypeError, ValueError):
         pass
     return out

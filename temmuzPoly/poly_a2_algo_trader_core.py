@@ -144,6 +144,8 @@ def _build_configs() -> list[A2Config]:
                 algo_name=name,
                 state_file=os.path.join(_DIR, f"poly_trader_{key}_state.json"),
                 history_file=os.path.join(_DIR, f"poly_trader_{key}_history.json"),
+                # Ucuz bilet (0,40 altı) A2#05'te ölçülen zararın tamamıydı.
+                min_entry_price=0.40 if num == 5 else None,
             )
         )
     return out
@@ -285,7 +287,12 @@ async def run_close(cfg: A2Config, *, notify: bool = True) -> str | None:
     toplam_pnl = 0.0
     failed: list[dict] = []
 
+    cur_hour = now_tr.hour
     for pos in list(state["open_positions"]):
+        # Bu saatte yeni açılanı kapatma — A2#05 :02 open ile :02 toplu close çakışmasın.
+        if pos.get("entry_hour_tr") == cur_hour:
+            failed.append(pos)
+            continue
         candle = pm_sanal_slot_candle(pos["symbol"], pos["entry_time_tr"])
         if not candle:
             failed.append(pos)
@@ -338,6 +345,9 @@ async def run_close(cfg: A2Config, *, notify: bool = True) -> str | None:
     _save_history(cfg, history)
 
     if not lines:
+        leftover = [p for p in failed if p.get("entry_hour_tr") != cur_hour]
+        if leftover:
+            print(f"[{cfg.label} close] {saat} — mum alınamadı, {len(leftover)} açık kaldı")
         return None
 
     total_pnl = state.get("total_pnl", 0.0)
@@ -399,8 +409,16 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
             "z": entry_zscore(klines) if need_z else None,
         })
 
+    already = {
+        p.get("symbol")
+        for p in state["open_positions"]
+        if p.get("entry_hour_tr") == hour_tr
+    }
     opened: list[dict] = []
     for c in candidates:
+        if c["sym"] in already:
+            print(f"[{cfg.label} open] {c['sym']} — bu saatte zaten açık, atlandı")
+            continue
         sym = c["sym"]
         direction = c["direction"]
         dyn_amount, hot_boost, cold_cut = _resolve_trade_amount(cfg, history, sym, hour_tr)

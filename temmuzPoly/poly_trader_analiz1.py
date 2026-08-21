@@ -1,8 +1,8 @@
 """
 Poly Sanal Trader
 Modlar:
-  close   → saat başında  (0 * * * *): önceki saatin sonuçlarını kapatır, bildirir
-  open    → 5 geçe        (5 * * * *): yeni tahmin, işlem açar
+  close   → :01  (1 * * * *): önceki saatin sonuçlarını kapatır, bildirir
+  open    → :02  (2 * * * *): yeni tahmin, işlem açar
   preview → 45 geçe      (45 * * * *): bir sonraki saatin geçmiş başarı oranlarını bildirir
   weekly  → Cumartesi 21:00: haftalık ısı haritası görseli üretir, Telegram'a gönderir
   daily   → Her gün 00:00 İST: önceki günün kapanan işlemleri Telegram'a gönderir
@@ -255,7 +255,7 @@ async def run_close() -> None:
     print(f"[1. ANALİZ close] {saat} İST — {len(lines)} pozisyon kapatıldı")
 
 
-# ── OPEN: 5 geçe — yeni tahmin + pozisyon aç ─────────────────
+# ── OPEN: :02 — yeni tahmin + pozisyon aç ─────────────────
 async def run_open() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)

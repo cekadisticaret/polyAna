@@ -238,23 +238,9 @@ def live_position(c: BinanceFuturesClient | None = None) -> dict | None:
 
 
 def usdt_account(c: BinanceFuturesClient | None = None) -> dict | None:
-    """Tüm USDT-M cüzdan — GPS Isolated da buradan düşer."""
-    try:
-        c = c or _client()
-        if not c.configured():
-            return None
-        acc = c.account() or {}
-        wallet = float(acc.get("totalWalletBalance") or 0)
-        avail = float(acc.get("availableBalance") or 0)
-        upnl = float(acc.get("totalUnrealizedProfit") or 0)
-        return {
-            "wallet": round(wallet, 4),
-            "available": round(avail, 4),
-            "unrealized": round(upnl, 4),
-            "equity": round(wallet + upnl, 4),
-        }
-    except Exception:
-        return None
+    """Tüm USDT-M cüzdan — GPS / BIN aynı kaynak (`binance_um_wallet`)."""
+    from binance_um_wallet import fetch
+    return fetch()
 
 
 def usdt_available(c: BinanceFuturesClient | None = None) -> float | None:

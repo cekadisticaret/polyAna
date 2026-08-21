@@ -55,6 +55,7 @@ _HEATMAP_SYMS = {
     "c101": ["BTC", "ETH", "SOL"],
     "c101_v2": ["BTC", "ETH", "SOL"],
     "x101": ["BTC", "ETH", "SOL"],
+    "e01": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz5":  ["BTC", "SOL"],
@@ -86,6 +87,9 @@ _ALGO_BOOK_ALIASES: dict[str, str] = {
     "13_analiz": "x101",
     "x1_01": "x101",
     "x101_13analiz": "x101",
+    "e_01": "e01",
+    "e1": "e01",
+    "e1_01": "e01",
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Algoritma performansı / harita / analizler — gerçek PM (Live) gösterilmez; sanal karşılığı kullanılır
@@ -126,14 +130,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "e01",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "e01",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
+    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "e01",
     "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -160,6 +164,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "c101":       "C1#01 · OPUS-OHLCV",
     "c101_v2":    "C1#01 V2 · GERÇEK ASK",
     "x101":       "X1#01 - 13Analiz",
+    "e01":        "E01 · A1+C101+V2 oy",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -183,13 +188,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "e01",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "analiz1": 300, "analiz2": 300, "analiz6": 300, "analiz6_v2": 300,
     "analiz6_v3": 300, "analiz10": 300, "analiz15": 300, "b1_01": 300, "b1_02": 300, "b1_mum": 300,
-    "b1_04": 300, "melez": 300, "b1_05": 300, "c101": 300, "c101_v2": 300, "x101": 300,
+    "b1_04": 300, "melez": 300, "b1_05": 300, "c101": 300, "c101_v2": 300, "x101": 300, "e01": 300,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -243,6 +248,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "c101": "C1#01",
     "c101_v2": "C1#01 V2",
     "x101": "X1#01",
+    "e01": "E01",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -277,7 +283,7 @@ _OVERVIEW_SHORT_LABELS[_A2_05_V2] = "A2#05 V2"
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "e01",
 ] + _A2_KEYS + [_A2_05_V2]
 
 _HEATMAP_ORDER.extend(_A2_KEYS + [_A2_05_V2])
@@ -302,6 +308,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("c101",       "C1#01 · OPUS-OHLCV",    300,  "PTB+volatilite olasılık · Gamma mid kotasyonu · 5 puan kenar eşiği"),
     ("c101_v2",    "C1#01 V2 · GERÇEK ASK", 300,  "Aynı model, CLOB best_ask kotasyonu · 3 puan kenar eşiği"),
     ("x101",       "X1#01 - 13Analiz",      300,  "13 katman kapısı · C101 model + gerçek ask kenarı · BTC/ETH/SOL"),
+    ("e01",        "E01 · A1+C101+V2 oy",   300,  "A1 + C1#01 + A2#05 V2 oy · çatışmada yok · 1/2/3 oy = $8/$12/$24"),
     ("a2_05_v2",   "A2#05 V2 · Z KAPISI", 300, "A2#05 sinyali + yalnız 1,0 ≤ |z| < 1,5 iken aç"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
 ]
@@ -18685,6 +18692,101 @@ def api_forex_gpsusdt_token():
         return _json_nocache({"ok": False, "error": str(e)[:200]}, 500)
 
 
+def _bin_b103_api_token_ok() -> bool:
+    """BIN_XAUUSDT işlemler API — oturum yok, yalnız token. Tanımsızsa GPS token kabul."""
+    expected = (
+        (os.environ.get("BIN_B103_API_TOKEN") or "").strip()
+        or (os.environ.get("GPSUSDT_API_TOKEN") or "").strip()
+    )
+    if not expected:
+        return False
+    got = (
+        request.headers.get("X-Bin-B103-Token")
+        or request.headers.get("X-Gpsusdt-Token")
+        or request.headers.get("X-Api-Token")
+        or request.args.get("token")
+        or ""
+    ).strip()
+    return bool(got) and secrets.compare_digest(got, expected)
+
+
+def _bin_b103_api_payload() -> dict:
+    """`/forex/bin-b103/islemler` ile aynı defter — salt okunur, emir yok."""
+    from bin_b103_book import snapshot as bin_snapshot
+    from bin_b103_data import live_quote as bin_quote
+    q = bin_quote()
+    book = bin_snapshot(q.get("bid"), q.get("ask"))
+    try:
+        lim = int(request.args.get("limit") or 50)
+    except (TypeError, ValueError):
+        lim = 50
+    lim = max(1, min(lim, 200))
+    hist = list(book.get("history") or [])[:lim]
+    live = book.get("live") or {}
+    eng = book.get("engine") or {}
+    return {
+        "ok": True,
+        "book": "binb103",
+        "page": "/forex/bin-b103/islemler",
+        "symbol": book.get("symbol") or "XAUUSDT",
+        "title": book.get("title") or "BIN_XAUUSDT",
+        "venue": "binance_usdm",
+        "engine": eng,
+        "margin": book.get("margin"),
+        "leverage": book.get("leverage"),
+        "margin_type": book.get("margin_type"),
+        "equity": book.get("equity"),
+        "balance": book.get("balance"),
+        "wallet": book.get("wallet"),
+        "available": book.get("available"),
+        "used_margin": book.get("used_margin"),
+        "init_balance": book.get("init_balance"),
+        "total_pnl": book.get("total_pnl"),
+        "float_pnl": book.get("float_pnl"),
+        "started_at": book.get("started_at"),
+        "trade_count": book.get("trade_count"),
+        "open_count": book.get("open_count"),
+        "last_dir": book.get("last_dir"),
+        "last_reject": book.get("last_reject"),
+        "night_quiet": book.get("night_quiet"),
+        "night_window": book.get("night_window"),
+        "live": {
+            "enabled": live.get("enabled"),
+            "paused": live.get("paused"),
+            "paper": live.get("paper"),
+            "configured": live.get("configured"),
+            "symbol": live.get("symbol") or "XAUUSDT",
+            "position": live.get("position"),
+            "usdt_wallet": live.get("usdt_wallet"),
+            "usdt_available": live.get("usdt_available"),
+            "usdt_equity": live.get("usdt_equity"),
+            "usdt_unrealized": live.get("usdt_unrealized"),
+        },
+        "positions": book.get("positions") or [],
+        "position": book.get("position"),
+        "history": hist,
+        "history_n": len(book.get("history") or []),
+        "costs": book.get("costs"),
+        "bid": q.get("bid"),
+        "ask": q.get("ask"),
+        "mid": q.get("mid"),
+        "ts": book.get("ts"),
+    }
+
+
+@app.route("/forex/api/bin-b103")
+@app.route("/forex/api/bin-b103/")
+@app.route("/forex/api/bin-b103/islemler")
+@app.route("/poly/api/forex/bin-b103")
+def api_forex_bin_b103_token():
+    if not _bin_b103_api_token_ok():
+        return _json_nocache({"ok": False, "error": "unauthorized"}, 401)
+    try:
+        return _json_nocache(_bin_b103_api_payload())
+    except Exception as e:
+        return _json_nocache({"ok": False, "error": str(e)[:200]}, 500)
+
+
 @app.route("/poly/api/forex/bin-b103/live", methods=["GET", "POST"])
 def api_forex_bin_b103_live():
     """BIN_B1#03 Binance aç/kapa — oturum şart. Open çağırmaz."""
@@ -18757,7 +18859,10 @@ def api_forex_book():
     if algo == "binb103":
         from bin_b103_book import snapshot as bin_b103_snapshot
         from bin_b103_data import live_quote as bin_b103_quote
-        q = bin_b103_quote()
+        try:
+            q = bin_b103_quote()
+        except Exception:
+            q = {}
         return _json_nocache(bin_b103_snapshot(q.get("bid"), q.get("ask")))
     from forex_book import snapshot
     from forex_data import forex_quote

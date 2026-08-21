@@ -942,7 +942,8 @@ function renderBook(b){
     const live=b.live||{};
     const night=b.night_quiet?(' · gece '+(b.night_window||'22:00–08:00')+' açık yok'):'';
     const paper=live.paper || live.paused;
-    sub.textContent=(paper?'sanal Isolated $':'CANLI Isolated $')+(b.margin||50)+'×'+(b.leverage||50)+'x · kasa $'+(b.init_balance||180)+' · A2#09 24s/3×ATR'+night;
+    const av=b.available!=null?(' · serbest $'+fmt(b.available)):'';
+    sub.textContent=(paper?'sanal Isolated $':'CANLI Isolated $')+(b.margin||50)+'×'+(b.leverage||50)+'x · bakiye $'+fmt(b.equity!=null?b.equity:b.balance)+av+' · A2#09 24s/3×ATR'+night;
     const titleSmall=document.querySelector('.topbar .sym small');
     if(titleSmall) titleSmall.textContent=b.night_quiet
       ? 'BIN_XAUUSDT · gece penceresi '+(b.night_window||'22:00–08:00')
@@ -1228,7 +1229,21 @@ FOREX_OAPI_HTML = (
     const r=await fetch('/poly/api/forex/openapi/status',{cache:'no-store'});
     const d=await r.json();
     const a=document.createElement('a');
-    a.style.cssText='position:fixed;z-index:40;top:12px;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:999px;font:700 12px Sora,system-ui;text-decoration:none';
+    a.style.cssText='position:fixed;z-index:60;top:64px;left:50%;transform:translateX(-50%);padding:10px 18px;border-radius:999px;font:700 13px Sora,system-ui;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.35)';
+    if(d && d.ok && d.can_trade){
+      a.textContent='cTrader bağlı · DEMO işlem';
+      a.style.background='#1b5e20'; a.style.color='#c8f7c5';
+      a.href='/forex/openapi/islemler';
+      document.body.appendChild(a);
+      return;
+    }
+    if(d && d.ok && d.need_trade_grant){
+      a.href='/forex/openapi/connect';
+      a.textContent='cTrader bağla · DEMO işlem izni';
+      a.style.background='#d4af37'; a.style.color='#111';
+      document.body.appendChild(a);
+      return;
+    }
     if(d && d.ok){
       a.textContent=d.demo?'cTrader bağlı · DEMO':'cTrader bağlı · CANLI';
       a.style.background='#1b5e20'; a.style.color='#c8f7c5';
@@ -1237,12 +1252,13 @@ FOREX_OAPI_HTML = (
       return;
     }
     if(flag==='err'){
-      a.textContent='Bağlantı alınamadı — redirect URI ve Allow access';
+      a.textContent='Bağlantı alınamadı — cTrader Allow access tekrar dene';
       a.style.background='#5c1a1a'; a.style.color='#ffc9c9';
+      a.href='/forex/openapi/connect';
     }else{
       a.href = d && d.oauth_ready ? '/forex/openapi/connect' : 'https://openapi.ctrader.com/apps';
       a.target = d && d.oauth_ready ? '_self' : '_blank';
-      a.textContent = d && d.oauth_ready ? 'cTrader bağla' : 'cTrader uygulama aç';
+      a.textContent = d && d.oauth_ready ? 'cTrader bağla · DEMO' : 'cTrader uygulama aç';
       a.style.background='#d4af37'; a.style.color='#111';
     }
     document.body.appendChild(a);

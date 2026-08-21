@@ -1,0 +1,38 @@
+{
+  "cem02": {
+    "started_at": "2026.08.20 21:05:04",
+    "init_balance": 0.0
+  },
+  "g1": {
+    "started_at": "2026.08.17 22:05:54",
+    "init_balance": 300.0
+  },
+  "a2": {
+    "started_at": "2026.08.18 01:46:44",
+    "init_balance": 300.0
+  },
+  "bybit": {
+    "started_at": "2026.08.19 00:50:14",
+    "init_balance": 300.0
+  },
+  "gps2": {
+    "started_at": "2026.08.20 20:37:21",
+    "init_balance": 160.0
+  },
+  "gps": {
+    "started_at": "2026.08.20 16:44:17",
+    "init_balance": 261.0
+  },
+  "oapi": {
+    "started_at": "2026.08.20 10:32:24",
+    "init_balance": 300.0
+  },
+  "b103": {
+    "started_at": "2026.08.20 21:01:30",
+    "init_balance": 300.0
+  },
+  "binb103": {
+    "started_at": "2026.08.21 04:30:15",
+    "init_balance": 261.0
+  }
+}

@@ -12,9 +12,11 @@ alwaysApply: true
 | `31 14 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
 | `59 23 * * *` | `cd /root/aiProject && python3 BistAnaliz/backup.py` | `/tmp/backup.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
-| `2 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,5,6,10,15}.py close` | `/tmp/poly_trader_analiz*.log` |
+| `1 * * * *` | `temmuzPoly/poly_trader_analiz1.py close` | `/tmp/poly_trader_analiz1.log` |
+| `2 * * * *` | `temmuzPoly/poly_trader_analiz1.py open` (**A1** sanal — diğer analizlerden ayrı, :02) | `/tmp/poly_trader_analiz1.log` |
+| `2 * * * *` | `temmuzPoly/poly_trader_analiz{2,5,6,10,15}.py close` | `/tmp/poly_trader_analiz*.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py close` (A2 canlı PM SOL $6–8) | `/tmp/poly_trader_analiz2_live.log` |
-| `5 * * * *` | `temmuzPoly/poly_trader_analiz{1,2,5,6,10,15}.py open` | `/tmp/poly_trader_analiz*.log` |
+| `5 * * * *` | `temmuzPoly/poly_trader_analiz{2,5,6,10,15}.py open` | `/tmp/poly_trader_analiz*.log` |
 | `5 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py open` (`PM_ANALIZ2_REAL_ENABLED`) | `/tmp/poly_trader_analiz2_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz10_live.py close` | `/tmp/poly_trader_analiz10_live.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz10_live.py open` (`PM_ANALIZ10_REAL_ENABLED`) | `/tmp/poly_trader_analiz10_live.log` |
@@ -40,15 +42,18 @@ alwaysApply: true
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05_live.py close` | `/tmp/poly_trader_b1_05_live.log` |
 | `6 * * * *` + `sleep 30` | `sleep 30 && cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05_live.py open` (**B1#05 Live** gerçek PM $4–6 · **:06:30**, sanal :06 sonrası sync · ayarlardan aç/kapa, **varsayılan kapalı**) | `/tmp/poly_trader_b1_05_live.log` |
 | `12 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05_live.py close` (settle retry) | `/tmp/poly_trader_b1_05_live.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101.py close` | `/tmp/poly_trader_c101.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101.py open` (**C1#01 · OPUS-OHLCV** — PTB+volatilite olasılık modeli, çeyrek Kelly; sanal **$500**) | `/tmp/poly_trader_c101.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101.py close` | `/tmp/poly_trader_c101.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101.py open` (**C1#01 · OPUS-OHLCV** — PTB+volatilite olasılık modeli, çeyrek Kelly; sanal **$500**) | `/tmp/poly_trader_c101.log` |
 | `25 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101.py backfill` (açılmayan slotların sonucunu kalibrasyon günlüğüne işler) | `/tmp/poly_trader_c101_calib.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py close` | `/tmp/poly_trader_c101_v2.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py close` | `/tmp/poly_trader_c101_v2.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py open` (**C1#01 V2 · GERÇEK ASK** — aynı model, CLOB ask kotasyonu + 3 puan eşik; sanal **$500**) | `/tmp/poly_trader_c101_v2.log` |
 | `25 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py backfill` | `/tmp/poly_trader_c101_v2_calib.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py close` | `/tmp/poly_trader_x101.log` |
 | `3 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py open` (**X1#01 - 13Analiz** — 13 katman + ask kenarı; sanal **$300**; `:02` close / `:03` open; gerçek PM yok) | `/tmp/poly_trader_x101.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py weekly` | `/tmp/poly_trader_x101.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_e01.py close` | `/tmp/poly_trader_e01.log` |
+| `3 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_e01.py open` (**E01** — A1 + C1#01 + A2#05 V2 oy; çatışmada yok; 1/2/3 oy = $8/$12/$24; sanal **$300**; `:01` close / `:03` open; gerçek PM yok) | `/tmp/poly_trader_e01.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_e01.py weekly` | `/tmp/poly_trader_e01.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py close` | `/tmp/poly_trader_a2_05_v2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py open` (**A2#05 V2 · Z KAPISI** — A2#05 sinyali + yalnız 1,0 ≤ \|z\| < 1,5; sanal, **gerçek para aynası kapalı**) | `/tmp/poly_trader_a2_05_v2.log` |
 | `25 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py zbackfill` (gölge günlüğü — kapıya takılan slotların sonucunu doldurur) | `/tmp/poly_trader_a2_05_v2_zlog.log` |
@@ -129,7 +134,7 @@ alwaysApply: true
 | `0 21 * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/jarvis_report.py` (**JARVIS** — 00:00 İST; 69 Kripto Test defterini tarar → `jarvis_report.json` + `jarvis_history.jsonl`; aynı turda 118 defterlik sistem denetimi → `jarvis_audit.json` → `bursaapp.com/kripto/jarvis` iki sekme) | `/tmp/jarvis_report.log` |
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/forex_paper.py` (**Forex** — CEM01 + A2 sanal; **EXNESS** `/forex/cembybit` sanal `$100×500x` kom $0.35 — canlı emir kapalı) | `/tmp/forex_paper.log` |
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/cem02_paper.py` (**CAPITAL** — Capital.com demo oturum; emir yok) | `/tmp/cem02_paper.log` |
-| `*/1 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 EylulForex/oapi_paper.py` (**OPEN API** — cTrader oturum ping; emir yok) | `/tmp/oapi_paper.log` |
+| `*/1 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 EylulForex/oapi_paper.py` (**OPEN API** — cTrader DEMO emir, Kalman+VWAP; trading OAuth; canlı hesaba emir yok) | `/tmp/oapi_paper.log` |
 | `*/1 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 EylulForex/gpsusdt_paper.py` (**GPSUSDT** — Kalman+VWAP aynı; Binance Isolated **CANLI $50×15x**; **22:00–08:00 İST yeni açık yok**; `gpsusdt_live_control.json`) | `/tmp/gpsusdt_paper.log` |
 | `*/1 * * * *` + `sleep 15` | `sleep 15 && cd /root/aiProject && python3 EylulForex/gps2_paper.py` (**GPSUSDT_2** — aynı motor, **sanal $160 · Isolated $50×15x**; emir yok) | `/tmp/gps2_paper.log` |
 | `*/1 * * * *` + `sleep 25` | `sleep 25 && cd /root/aiProject && python3 EylulForex/b103_paper.py` (**B1#03** — CEM01 masası kopyası · B1#03 MUM 1h · sanal $300 · $100×500x) | `/tmp/b103_paper.log` |
@@ -169,7 +174,7 @@ alwaysApply: true
 ## Zamanlama Notları
 - `bist_signal_hunter` seans dışında çıkar (betik içi saat kontrolü).
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
-- Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk). **A2#05 + A2#05 V2:** close **:01**, open **:02** (sinyal `:01`).
+- Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk). **A1 + C1#01 + A2#05 V2:** close **:01**, open **:02**. **A2#05** (ana defter) close **:01**, open **:02** (sinyal `:01`).
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** varsayılan olarak atlanır (**close** çalışır); **dashboard'dan Aç** yapılan Live analiz hafta sonu dahil işlem açar. A10: aynı pencerede open kapalı; Pzt **11:00**’de devam. **`/algoritma-islemler` (tamamı):** A1/A2/A6/V2/V3/MELEZ/A15/B1#01-05 + A2 Top-17 — hafta sonu da open/close devam (7/24 sanal).
 - **AgustosKripto sanal hafta sonu duraklaması KALDIRILDI (2026-08-15):** Algoritmalar + Analizler artık **7/24** — `open` / `close` / `trail` hafta sonu da koşar (`WEEKEND_PAUSE = False`, her iki `runner.py`'de). Test grubu zaten 7/24 idi; üç grup da aynı hizada.
@@ -293,6 +298,7 @@ tail -f /tmp/poly_trader_b1_mum_live.log
 tail -f /tmp/poly_trader_b1_05.log
 tail -f /tmp/poly_trader_c101.log
 tail -f /tmp/poly_trader_x101.log
+tail -f /tmp/poly_trader_e01.log
 tail -f /tmp/poly_trader_c101_calib.log
 tail -f /tmp/poly_trader_analiz6_v4.log
 tail -f /tmp/poly_trader_a2_02_live.log

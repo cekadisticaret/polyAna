@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import sys
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -42,12 +43,24 @@ _CONTROL = _DIR / "data" / "bin_b103_live_control.json"
 
 
 def _get(path: str, params: str = "") -> dict | list:
+    _root = str(_ROOT)
+    if _root not in sys.path:
+        sys.path.insert(0, _root)
+    from binance_fapi_guard import ban_msg, fapi_blocked, note_418
+    if fapi_blocked():
+        raise RuntimeError(ban_msg())
     url = f"{_FAPI}{path}"
     if params:
         url += "?" + params
     req = urllib.request.Request(url, headers=_UA)
-    with urllib.request.urlopen(req, timeout=12) as r:
-        return json.loads(r.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=12) as r:
+            return json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode(errors="replace")
+        if e.code == 418:
+            note_418(body)
+        raise
 
 
 def exchange_filters() -> dict:
@@ -282,23 +295,9 @@ def live_position(c: BinanceFuturesClient | None = None) -> dict | None:
 
 
 def usdt_account(c: BinanceFuturesClient | None = None) -> dict | None:
-    """Tüm USDT-M cüzdan — GPSUSDT Isolated ayrı sembol."""
-    try:
-        c = c or _client()
-        if not c.configured():
-            return None
-        acc = c.account() or {}
-        wallet = float(acc.get("totalWalletBalance") or 0)
-        avail = float(acc.get("availableBalance") or 0)
-        upnl = float(acc.get("totalUnrealizedProfit") or 0)
-        return {
-            "wallet": round(wallet, 4),
-            "available": round(avail, 4),
-            "unrealized": round(upnl, 4),
-            "equity": round(wallet + upnl, 4),
-        }
-    except Exception:
-        return None
+    """Tüm USDT-M cüzdan — GPS / BIN aynı kaynak (`binance_um_wallet`)."""
+    from binance_um_wallet import fetch
+    return fetch()
 
 
 def usdt_available(c: BinanceFuturesClient | None = None) -> float | None:

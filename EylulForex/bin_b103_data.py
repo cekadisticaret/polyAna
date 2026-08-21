@@ -33,14 +33,27 @@ def bar_remaining(tf: str) -> int:
     return max(0, sec - (now % sec))
 
 
+def _fapi_ok() -> bool:
+    try:
+        import sys
+        from pathlib import Path
+        root = str(Path(__file__).resolve().parents[1])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import fapi_blocked
+        return not fapi_blocked()
+    except Exception:
+        return True
+
+
 def _klines_raw(tf: str, limit: int) -> tuple[list[dict], str]:
     iv = tf if tf in _BAR_SEC else "1m"
     lim = max(20, min(int(limit or 240), 500))
     last_err = "yok"
-    for src, url in (
-        ("fapi", f"{_FAPI}/fapi/v1/klines?symbol={SYMBOL}&interval={iv}&limit={lim}"),
-        ("spot", f"{_SPOT}/api/v3/klines?symbol={SYMBOL}&interval={iv}&limit={lim}"),
-    ):
+    sources = []
+    if _fapi_ok():
+        sources.append(("fapi", f"{_FAPI}/fapi/v1/klines?symbol={SYMBOL}&interval={iv}&limit={lim}"))
+    for src, url in sources:
         try:
             rows = _get_json(url)
             if not isinstance(rows, list) or not rows:
@@ -58,7 +71,14 @@ def _klines_raw(tf: str, limit: int) -> tuple[list[dict], str]:
             return out, src
         except Exception as e:
             last_err = str(e)[:160]
-    raise RuntimeError(last_err)
+    try:
+        from forex_data import get_xau_klines
+        rows, src = get_xau_klines(iv, lim)
+        if rows:
+            return list(rows), src or "xau"
+    except Exception as e:
+        last_err = str(e)[:160]
+    return [], last_err
 
 
 def xau_klines(tf: str, n: int = 120) -> list[dict]:
@@ -67,7 +87,8 @@ def xau_klines(tf: str, n: int = 120) -> list[dict]:
     hit = _cache.get(key)
     if hit and now - hit[0] < _TTL:
         return list(hit[1])
-    rows, _ = _klines_raw(tf, n)
+    rows, _src = _klines_raw(tf, n)
+    rows = rows or []
     _cache[key] = (now, rows)
     return list(rows)
 
@@ -80,18 +101,33 @@ def signal_klines(tf: str, n: int = 180) -> list[dict]:
 
 
 def _ticker() -> tuple[dict, str]:
-    last_err = "yok"
-    for src, url in (
-        ("fapi", f"{_FAPI}/fapi/v1/ticker/bookTicker?symbol={SYMBOL}"),
-        ("spot", f"{_SPOT}/api/v3/ticker/bookTicker?symbol={SYMBOL}"),
-    ):
+    sources = []
+    if _fapi_ok():
+        sources.append(("fapi", f"{_FAPI}/fapi/v1/ticker/bookTicker?symbol={SYMBOL}"))
+    for src, url in sources:
         try:
             d = _get_json(url)
             if isinstance(d, dict) and (d.get("bidPrice") or d.get("askPrice")):
                 return d, src
-        except Exception as e:
-            last_err = str(e)[:160]
-    raise RuntimeError(last_err)
+        except Exception:
+            pass
+    try:
+        from forex_data import forex_quote
+        q = forex_quote()
+        bid, ask = q.get("bid"), q.get("ask")
+        if bid or ask:
+            return {"bidPrice": bid, "askPrice": ask}, "xau"
+    except Exception:
+        pass
+    try:
+        rows = signal_klines("1m", 4)
+        if rows:
+            px = float(rows[-1].get("close") or 0)
+            if px:
+                return {"bidPrice": px, "askPrice": px}, "xau_last"
+    except Exception:
+        pass
+    return {"bidPrice": None, "askPrice": None}, "none"
 
 
 def live_quote() -> dict:

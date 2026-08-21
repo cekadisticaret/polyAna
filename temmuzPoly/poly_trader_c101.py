@@ -15,7 +15,7 @@ da kaydedilir, çünkü "0.70 dedim, gerçekte %70 mi çıktı" sorusu ancak öy
 yanıtlanır.
 
 Modlar: close / open / preview / stats / calib / compare
-Cron: :02 close · :05 open
+Cron: :01 close · :02 open
 """
 from __future__ import annotations
 
@@ -400,7 +400,10 @@ def run_close() -> None:
     save_history(history)
 
     if not lines:
-        print(f"[{LABEL} close] {saat} — kapatılan pozisyon yok")
+        if failed:
+            print(f"[{LABEL} close] {saat} — mum alınamadı, {len(failed)} açık kaldı")
+        else:
+            print(f"[{LABEL} close] {saat} — kapatılan pozisyon yok")
         return
 
     total = state.get("total_pnl", 0.0)

@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import sys
 import time
 import urllib.request
 
@@ -44,10 +45,21 @@ def _get(path: str, params: dict, *, cache_ttl: int = 0) -> list | dict | None:
         except Exception:
             pass
     try:
+        _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import fapi_blocked, note_418
+        if fapi_blocked():
+            return None
+    except Exception:
+        note_418 = None  # type: ignore
+    try:
         req = urllib.request.Request(url, headers={"User-Agent": "c101/1.0"})
         with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
             data = json.load(r)
     except Exception as e:
+        if "418" in str(e) and note_418:
+            note_418(str(e))
         print(f"[C101 data] {path} hata: {e}")
         return None
     if cache_ttl > 0:

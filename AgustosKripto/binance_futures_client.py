@@ -76,6 +76,7 @@ class BinanceFuturesClient:
         params: dict | None = None,
         *,
         signed: bool = False,
+        ignore_ban: bool = False,
     ) -> Any:
         params = dict(params or {})
         headers = {"User-Agent": "aiProject-futures/1.0", "Accept": "application/json"}
@@ -93,6 +94,21 @@ class BinanceFuturesClient:
             query = urllib.parse.urlencode(params, doseq=True) if params else ""
 
         url = f"{self.base}{path}"
+        if "fapi.binance.com" in str(self.base):
+            try:
+                import sys
+                _root = os.path.dirname(_DIR)
+                if _root not in sys.path:
+                    sys.path.insert(0, _root)
+                from binance_fapi_guard import ban_msg, fapi_blocked, note_418
+                if fapi_blocked() and not ignore_ban:
+                    raise BinanceFuturesError(ban_msg(), status=418)
+            except BinanceFuturesError:
+                raise
+            except Exception:
+                note_418 = None  # type: ignore
+        else:
+            note_418 = None  # type: ignore
         if query and method.upper() == "GET":
             url = f"{url}?{query}"
             data = None
@@ -113,12 +129,15 @@ class BinanceFuturesClient:
                 parsed = json.loads(body)
             except Exception:
                 parsed = body
+            if e.code == 418 and note_418:
+                note_418(str(parsed))
             raise BinanceFuturesError(
                 f"HTTP {e.code}: {parsed}", status=e.code, body=parsed
             ) from e
 
-    def get(self, path: str, params: dict | None = None, *, signed: bool = False) -> Any:
-        return self._request("GET", path, params, signed=signed)
+    def get(self, path: str, params: dict | None = None, *, signed: bool = False,
+            ignore_ban: bool = False) -> Any:
+        return self._request("GET", path, params, signed=signed, ignore_ban=ignore_ban)
 
     def post(self, path: str, params: dict | None = None, *, signed: bool = False) -> Any:
         return self._request("POST", path, params, signed=signed)
@@ -189,8 +208,8 @@ class BinanceFuturesClient:
     def balance(self) -> list:
         return self.get("/fapi/v2/balance", signed=True)
 
-    def account(self) -> dict:
-        return self.get("/fapi/v2/account", signed=True)
+    def account(self, *, ignore_ban: bool = False) -> dict:
+        return self.get("/fapi/v2/account", signed=True, ignore_ban=ignore_ban)
 
     def position_risk(self, symbol: str | None = None) -> list:
         params = {"symbol": symbol.upper()} if symbol else None

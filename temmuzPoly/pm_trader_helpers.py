@@ -135,7 +135,7 @@ def _is_algo_islemler_label(label: str) -> bool:
     u = label.strip().upper()
     if u == "A2" or u.startswith("A2#"):
         return True
-    for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#", "C1#", "X1#"):
+    for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#", "C1#", "X1#", "E01"):
         if label.startswith(prefix):
             return True
     return False
@@ -1108,26 +1108,36 @@ def sanal_pnl(pos: dict, win: bool) -> float:
 
 
 def pm_sanal_slot_candle(symbol: str, entry_time_tr: str) -> tuple[float, float] | None:
-    """PM slot saatinin Binance 1h open/close (İST entry_time_tr)."""
+    """PM slot saatinin Binance 1h open/close (İST entry_time_tr).
+
+    Önce futures (`fapi`); 418/ban olursa spot data API, sonra `api.binance.com`.
+    """
     try:
         et = datetime.fromisoformat(entry_time_tr.replace("Z", "+00:00")).astimezone(_TZ_TR)
     except Exception:
         return None
     slot = et.replace(minute=0, second=0, microsecond=0)
     ms = int(slot.timestamp() * 1000)
-    url = (
-        "https://fapi.binance.com/fapi/v1/klines?"
-        f"symbol={symbol}&interval=1h&startTime={ms}&limit=1"
+    urls = (
+        f"https://fapi.binance.com/fapi/v1/klines?symbol={symbol}&interval=1h&startTime={ms}&limit=1",
+        f"https://data-api.binance.vision/api/v3/klines?symbol={symbol}&interval=1h&startTime={ms}&limit=1",
+        f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1h&startTime={ms}&limit=1",
     )
-    try:
-        with urllib.request.urlopen(url, timeout=15) as r:
-            data = json.loads(r.read())
-    except Exception:
-        return None
-    if not data:
-        return None
-    k = data[0]
-    return float(k[1]), float(k[4])
+    last_err = None
+    for url in urls:
+        try:
+            with urllib.request.urlopen(url, timeout=15) as r:
+                data = json.loads(r.read())
+        except Exception as e:
+            last_err = e
+            continue
+        if not data:
+            continue
+        k = data[0]
+        return float(k[1]), float(k[4])
+    if last_err is not None:
+        print(f"[pm_sanal_slot_candle] {symbol} {slot:%H:%M} mum yok: {last_err}")
+    return None
 
 
 def pm_sanal_settle_trade(pos: dict, hour_open: float, hour_close: float) -> dict:
