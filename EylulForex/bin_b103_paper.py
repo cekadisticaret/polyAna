@@ -1,4 +1,4 @@
-"""BIN_B1#03 cron — algoritma-islemler/a2_09 ritmi, Isolated $50×50x sanal $180.
+"""BIN_XAUUSDT cron — seçilen algoritma-islemler motoru, Isolated $50×50x sanal $180.
 
   python3 EylulForex/bin_b103_paper.py close|open|trail|scan|status
 

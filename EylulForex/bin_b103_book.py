@@ -625,6 +625,47 @@ def switch_live(want_live: bool) -> dict:
     }
 
 
+@_locked
+def switch_engine(uid: str) -> dict:
+    """Algoritma işlemler → BIN motoru. Open yok; açık satır varsa kapatır."""
+    from bin_b103_binance import close_live, live_position_state, paper_mode
+    from bin_b103_data import live_quote
+    from bin_b103_signal import current_uid, set_engine_uid
+
+    info = set_engine_uid(uid)
+    if not info.get("ok"):
+        return info
+    closed = 0
+    bn_closed = False
+    if info.get("changed"):
+        q = live_quote()
+        bid = float(q.get("bid") or 0)
+        ask = float(q.get("ask") or 0)
+        st = _load_state()
+        hist = _load_hist()
+        if not paper_mode():
+            state, _ = live_position_state()
+            if state == "open" and (bid or ask):
+                fill = close_live(fallback_px=ask or bid)
+                bn_closed = bool(fill.get("ok"))
+        for pos in list(_plist(st)):
+            px = _exit_px(pos.get("side") or "buy", bid, ask) if bid and ask else float(pos.get("entry") or 0)
+            fee = abs(px * _qty(pos)) * float(pos.get("taker_rate") or _taker())
+            _close_record(st, hist, pos, px or float(pos.get("entry") or 0), "switch_engine", fee_close=fee)
+            closed += 1
+        st["positions"] = []
+        st["position"] = None
+        _atomic(_STATE, st)
+        _atomic(_HIST, hist)
+    info.update({
+        "closed": closed,
+        "bn_closed": bn_closed,
+        "engine": current_uid(),
+        "opened": False,
+    })
+    return info
+
+
 def _live_snap() -> dict:
     out = {
         "enabled": False,
@@ -665,6 +706,11 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
             float_sum += item["float_net"] or 0
         rows.append(item)
     live = _live_snap()
+    try:
+        from bin_b103_signal import engine_info
+        eng = engine_info()
+    except Exception:
+        eng = {"uid": "a2_09", "name": "A2#09", "title": "A2#09 Squeeze Momentum"}
     bal = float(st.get("balance") or 0)
     init = float(st.get("init_balance") or 0)
     out = {
@@ -672,7 +718,8 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
         "book": "binb103",
         "id": "binb103",
         "name": "BIN_XAUUSDT",
-        "title": "BIN_XAUUSDT · Isolated $50×50x · sanal $180",
+        "title": "BIN_XAUUSDT · Isolated $50×50x · " + str(eng.get("name") or "A2#09"),
+        "engine": eng,
         "symbol": SYMBOL,
         "dec": _PX,
         "balance": round(bal, 2),
@@ -701,7 +748,7 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
         "venue": "binance_usdm",
         "costs": {
             "fee_model": "binance_taker",
-            "note": "BIN_B1#03 XAUUSDT Isolated sanal $50×50x · kasa $180 — A2#09 24s/3×ATR",
+            "note": "BIN_XAUUSDT Isolated $50×50x · " + str(eng.get("name") or "A2#09") + " · 24s/3×ATR",
             "venue": "binance_usdm",
             "dec": _PX,
         },

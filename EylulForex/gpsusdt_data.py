@@ -135,13 +135,27 @@ def bar_remaining(tf: str) -> int:
     return sec - (now % sec)
 
 
+def _spot_book() -> dict:
+    d = _get_json(f"{_SPOT}/api/v3/ticker/bookTicker?symbol={SYMBOL}")
+    bid = float(d.get("bidPrice") or 0)
+    ask = float(d.get("askPrice") or 0)
+    last = float(d.get("lastPrice") or 0)
+    if not last:
+        try:
+            p = _get_json(f"{_SPOT}/api/v3/ticker/price?symbol={SYMBOL}")
+            last = float(p.get("price") or 0)
+        except Exception:
+            last = (bid + ask) / 2 if bid and ask else (bid or ask)
+    return {"bid": bid, "ask": ask, "last": last}
+
+
 def gps_quote() -> dict:
     tick, src = _ticker()
     bid = float(tick.get("bidPrice") or 0)
     ask = float(tick.get("askPrice") or 0)
     mid = (bid + ask) / 2 if bid and ask else (bid or ask)
     dec = _dec(mid or 1)
-    mark = funding = None
+    mark = funding = last = None
     try:
         from gpsusdt_binance import premium
         p = premium()
@@ -149,6 +163,17 @@ def gps_quote() -> dict:
         funding = p.get("last_funding_rate")
     except Exception:
         pass
+    try:
+        px = _get_json(f"{_FAPI}/fapi/v1/ticker/price?symbol={SYMBOL}")
+        last = float(px.get("price") or 0) or None
+    except Exception:
+        last = mark or mid
+    spot = {}
+    try:
+        spot = _spot_book()
+    except Exception:
+        spot = {}
+    live = last or mark or mid
     return {
         "symbol": SYMBOL,
         "name": "GPS / USDT",
@@ -158,11 +183,16 @@ def gps_quote() -> dict:
         "bid": round(bid, dec) if bid else None,
         "ask": round(ask, dec) if ask else None,
         "mark": round(mark, dec) if mark else None,
+        "last": round(last, dec) if last else None,
         "funding_rate": funding,
         "spread": round(ask - bid, dec) if bid and ask else None,
-        "live_price": round(mid, dec) if mid else None,
+        "live_price": round(live, dec) if live else None,
         "src": src,
         "venue": "binance_usdm",
+        "market": "usdm_perp",
+        "spot_bid": round(spot["bid"], dec) if spot.get("bid") else None,
+        "spot_ask": round(spot["ask"], dec) if spot.get("ask") else None,
+        "spot_last": round(spot["last"], dec) if spot.get("last") else None,
         "stale_sec": 0,
     }
 

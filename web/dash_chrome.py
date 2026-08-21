@@ -79,6 +79,9 @@ body[data-world] .main,body[data-world] .desk,body[data-world] #kf-main{
 body[data-world] .main{margin-top:52px}
 body[data-world] .desk{padding-top:52px}
 body[data-world] #kf-main{margin-top:52px}
+body[data-world] .chart-full{
+  margin-top:52px;height:calc(100vh - 52px);max-height:calc(100vh - 52px);
+}
 body[data-world] .right-panel,
 body[data-world] .kf-right-panel,
 body[data-world] .main-right{
@@ -89,6 +92,7 @@ body[data-world] .main-right{
   body[data-world] .sidebar{margin-top:48px}
   body[data-world] .main,body[data-world] #kf-main{margin-top:0}
   body[data-world] .desk{padding-top:0}
+  body[data-world] .chart-full{margin-top:48px;height:auto;max-height:none}
 }
 """
     )

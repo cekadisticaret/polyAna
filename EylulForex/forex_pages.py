@@ -419,10 +419,11 @@ button,a,.tf,.ex-btn{touch-action:manipulation;-webkit-tap-highlight-color:trans
 </div>
 <div class="desk">
   <div class="topbar">
-    <div class="sym">__FX_PAIR__<small>__FX_PAIR_SUB__</small></div>
+    <div class="sym">__FX_PAIR__<small id="fx-engine-sub">__FX_PAIR_SUB__</small></div>
     <div class="tfs" id="tfs"></div>
     <div class="meta">
       <div>Spread <b id="m-spr">—</b></div>
+      <div>Son <b id="m-last">—</b></div>
       <div>Gün <b id="m-hl">—</b></div>
       <div id="m-clk">—</div>
     </div>
@@ -598,7 +599,16 @@ function applyQuote(q){
   const dec=q.dec!=null?q.dec:2;
   document.getElementById('p-bid').textContent=fmt(q.bid,dec);
   document.getElementById('p-ask').textContent=fmt(q.ask,dec);
-  document.getElementById('m-spr').textContent=q.spread!=null?q.spread.toFixed(2):'—';
+  const sdec=(FX_GPS||FX_ALGO==='binb103')?Math.max(5,dec):2;
+  document.getElementById('m-spr').textContent=q.spread!=null?Number(q.spread).toFixed(sdec):'—';
+  const lastEl=document.getElementById('m-last');
+  if(lastEl){
+    const last=q.last!=null?q.last:(q.mark!=null?q.mark:q.mid);
+    lastEl.textContent=last!=null?fmt(last,dec):'—';
+    if(FX_GPS && q.spot_last!=null && last!=null && Math.abs(q.spot_last-last)>0){
+      lastEl.textContent=fmt(last,dec)+'  spot '+fmt(q.spot_last,dec);
+    }
+  }
   if(q.day_low!=null && q.day_high!=null)
     document.getElementById('m-hl').textContent=fmt(q.day_low,dec)+' / '+fmt(q.day_high,dec);
   if(q.bar_left!=null){ _barLeft=q.bar_left; _barSec=q.bar_sec||_barSec; }
@@ -609,9 +619,10 @@ function applyQuote(q){
     if(q.bid!=null) _bidLine=_series.createPriceLine({price:q.bid,color:'#26a69a',lineWidth:1,lineStyle:LightweightCharts.LineStyle.Solid,axisLabelVisible:true,title:'Bid'});
     if(q.ask!=null) _askLine=_series.createPriceLine({price:q.ask,color:'#ef5350',lineWidth:1,lineStyle:LightweightCharts.LineStyle.Solid,axisLabelVisible:true,title:'Ask'});
   }
-  if(q.mid!=null && _last.length){
+  const livePx=q.last!=null?q.last:(q.mark!=null?q.mark:q.mid);
+  if(livePx!=null && _last.length){
     const c=Object.assign({},_last[_last.length-1]);
-    c.close=Number(q.mid.toFixed(dec)); c.high=Math.max(c.high,c.close); c.low=Math.min(c.low,c.close);
+    c.close=Number(livePx.toFixed(dec)); c.high=Math.max(c.high,c.close); c.low=Math.min(c.low,c.close);
     _last[_last.length-1]=c; if(_series) _series.update(c);
   }
   if(q.rail) applyRail(q.rail);
@@ -662,7 +673,7 @@ async function loadChart(){
   document.getElementById('hud').innerHTML=(FX_ALGO==='bybit'
     ? 'XAUUSD, '+lab+' <span>Exness Raw</span>'
     : FX_ALGO==='gps'
-    ? FX_PAIR+', '+lab+' <span>GPS / USDT · CANLI $50×15x</span>'
+    ? FX_PAIR+', '+lab+' <span>Binance USDT-M · Isolated $50×15x</span>'
     : FX_ALGO==='gps2'
     ? FX_PAIR+', '+lab+' <span>GPS / USDT · sanal $50×15x · $160</span>'
     : FX_ALGO==='b103'
@@ -1045,6 +1056,11 @@ function paintLiveBtn(b){
   btn.hidden=false;
   btn.className='live-sw '+(on?'on':'off');
   btn.textContent=on?'CANLI · kapat':'CANLI\'ya AL';
+  const sub=document.getElementById('fx-engine-sub');
+  const en=b&&b.engine;
+  if(sub && en && en.name){
+    sub.textContent='BIN_XAUUSDT · '+en.name+' · Isolated $50 × 50x';
+  }
 }
 async function toggleBinLive(){
   const btn=document.getElementById('bin-live-btn');
@@ -1736,11 +1752,22 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
 .section-title{font-size:11px;font-weight:800;letter-spacing:.06em;color:#8a96a0;margin-bottom:10px;text-transform:uppercase}
 .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .book-card{
-  display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  position:relative;display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;
   padding:14px 16px;text-decoration:none;color:inherit;
 }
 .book-card:hover{border-color:rgba(212,175,55,.35)}
-.bt{font-size:14px;font-weight:800}
+.book-card.on{border-color:rgba(212,175,55,.7);box-shadow:0 0 0 1px rgba(212,175,55,.25)}
+.book-card .book-body{display:block;text-decoration:none;color:inherit}
+.act-btn{
+  position:absolute;top:10px;right:10px;z-index:2;
+  border:1px solid rgba(212,175,55,.35);background:#1a2330;color:var(--gold);
+  font:700 10px/1 Sora,system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;
+  padding:6px 9px;border-radius:999px;cursor:pointer;
+}
+.act-btn:hover{background:rgba(212,175,55,.16)}
+.act-btn.on{background:var(--gold);color:#111;border-color:var(--gold)}
+.act-btn:disabled{opacity:.55;cursor:wait}
+.bt{font-size:14px;font-weight:800;padding-right:78px}
 .bs{font-size:11px;color:var(--muted);margin-top:3px}
 .br{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;font-weight:700}
 .br b{font-size:16px}
@@ -1795,7 +1822,7 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
     <div class="head">
       <div>
         <div class="page-title">Algoritma işlemler</div>
-        <div class="page-sub">XAUUSD sanal $1000 · $200 × 100x · kom $0.35 · 24s / 3×ATR · Poly listesinin altın kopyası</div>
+        <div class="page-sub">XAUUSD sanal $1000 · $200 × 100x · Aktif et → BIN_XAUUSDT · cron kendi saatinde açar</div>
       </div>
       <div class="chip" id="sum-chip">—</div>
     </div>
@@ -1809,7 +1836,10 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
         <div class="page-title" id="detail-title">—</div>
         <div class="page-sub" id="detail-sub">XAUUSD · $1000</div>
       </div>
-      <div class="chip" id="detail-sum">—</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button type="button" class="act-btn" id="detail-act" style="position:static">Aktif et</button>
+        <div class="chip" id="detail-sum">—</div>
+      </div>
     </div>
     <div class="section-title">Açık pozisyonlar</div>
     <div class="positions" id="detail-positions"><div class="empty">yükleniyor…</div></div>
@@ -1828,13 +1858,16 @@ function clock(s){
   const mm=x.match(/T(\d{2}:\d{2})/)||x.match(/(\d{2}:\d{2})/);
   return mm?mm[1]:'';
 }
+let BIN_UID = '';
 function renderList(d){
+  BIN_UID = (d.bin_engine && d.bin_engine.uid) || BIN_UID || '';
   const mk=d.mark!=null?('XAU $'+money(d.mark)+' · '):'';
   const u=Number(d.total_unrealized||0);
+  const en=d.bin_engine&&d.bin_engine.name?(' · BIN '+d.bin_engine.name):'';
   document.getElementById('sum-chip').textContent =
     mk+'Σ $'+money(d.total_balance)+' · Anlık '+(u>=0?'+':'')+money(u)
     +' · Net '+(Number(d.total_pnl||0)>=0?'+':'')+money(d.total_pnl)
-    +' · açık '+(d.total_open||0);
+    +' · açık '+(d.total_open||0)+en;
   const books=(d.books||[]).slice().sort((a,b)=>
     Number(b.balance||0)-Number(a.balance||0)
     || Number(b.total_pnl||0)-Number(a.total_pnl||0)
@@ -1848,18 +1881,31 @@ function renderList(d){
     const wr=b.wr!=null?('WR '+b.wr+'%'):'WR —';
     const href='/forex/algoritma-islemler/'+encodeURIComponent(b.id);
     const opens=(b.cards||[]).map(c=> (c.side==='LONG'?'AL':'SAT')).join(' · ')||'açık yok';
-    return '<a class="book-card" href="'+href+'"><div class="bt">'+(b.name||b.id)+'</div>'
+    const on=BIN_UID && BIN_UID===b.id;
+    return '<div class="book-card'+(on?' on':'')+'">'
+      +'<button type="button" class="act-btn'+(on?' on':'')+'" data-uid="'+b.id+'">'+(on?'BIN aktif':'Aktif et')+'</button>'
+      +'<a class="book-body" href="'+href+'"><div class="bt">'+(b.name||b.id)+'</div>'
       +'<div class="bs">'+(b.title||'')+' · '+wr+' · '+(b.history_n||0)+' işlem</div>'
       +'<div class="br"><span>Bakiye</span><b>$'+money(b.balance)+'</b></div>'
       +'<div class="br"><span>Net P&amp;L</span><b class="'+(pnl>=0?'pos':'neg')+'">'+(pnl>=0?'+':'')+money(pnl)+'</b></div>'
       +'<div class="br"><span>Anlık</span><b class="'+(upnl>=0?'pos':'neg')+'">'+(upnl>=0?'+':'')+money(upnl)+'</b></div>'
       +'<div class="book-opens">'+(b.open_count||0)+' açık · '+opens
-      +(b.cards&&b.cards[0]&&b.cards[0].mark!=null?(' · mark $'+money(b.cards[0].mark)):'')+'</div></a>';
+      +(b.cards&&b.cards[0]&&b.cards[0].mark!=null?(' · mark $'+money(b.cards[0].mark)):'')+'</div></a></div>';
   }).join('')+'</div>';
+  el.querySelectorAll('.act-btn').forEach(btn=>{
+    btn.addEventListener('click', ev=>{ ev.preventDefault(); ev.stopPropagation(); activateBin(btn.getAttribute('data-uid'), btn); });
+  });
 }
 function renderDetail(b){
   document.getElementById('detail-title').textContent=b.name||b.id;
-  document.getElementById('detail-sub').textContent=(b.title||'')+' · XAUUSD · $1000';
+  const on=BIN_UID && BIN_UID===b.id;
+  document.getElementById('detail-sub').textContent=(b.title||'')+' · XAUUSD · $1000'+(on?' · BIN aktif':'');
+  const dab=document.getElementById('detail-act');
+  if(dab){
+    dab.className='act-btn'+(on?' on':'');
+    dab.textContent=on?'BIN aktif':'Aktif et';
+    dab.onclick=()=>activateBin(b.id, dab);
+  }
   const pnl=Number(b.total_pnl||0);
   document.getElementById('detail-sum').textContent=
     '$'+money(b.balance)+' · '+(pnl>=0?'+':'')+money(pnl)+' · WR '+(b.wr!=null?b.wr+'%':'—');
@@ -1885,8 +1931,25 @@ function renderDetail(b){
       +'<div class="hist-pnl '+(tp>=0?'pos':'neg')+'">'+(tp>=0?'+':'')+money(tp)+'</div></div>';
   }).join(''):'<div class="empty">Kapanmış işlem yok. Cron :05 / */10 ilk turları bekler.</div>';
 }
+async function activateBin(uid, btn){
+  if(!uid) return;
+  if(btn) btn.disabled=true;
+  try{
+    const r=await fetch('/poly/api/forex/bin-b103/engine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:uid})});
+    const d=await r.json();
+    if(!r.ok||!d.ok){ alert(d.error||'aktif edilemedi'); return; }
+    BIN_UID=d.uid||uid;
+    await loadFxAlgos();
+  }catch(e){ alert('aktif et hata'); }
+  finally{ if(btn) btn.disabled=false; }
+}
 async function loadFxAlgos(){
   try{
+    try{
+      const er=await fetch('/poly/api/forex/bin-b103/engine',{cache:'no-store'});
+      const ei=await er.json();
+      if(ei&&ei.ok&&ei.uid) BIN_UID=ei.uid;
+    }catch(e){}
     if(DETAIL_ID){
       document.getElementById('view-list').style.display='none';
       document.getElementById('view-detail').style.display='block';

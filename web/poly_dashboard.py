@@ -18716,6 +18716,24 @@ def api_forex_bin_b103_live():
     return _json_nocache(out)
 
 
+@app.route("/poly/api/forex/bin-b103/engine", methods=["GET", "POST"])
+def api_forex_bin_b103_engine():
+    """Algoritma işlemler → BIN_XAUUSDT motoru. Open çağırmaz."""
+    if _auth_required():
+        return _json_nocache({"ok": False, "error": "unauthorized"}, 401)
+    from bin_b103_signal import engine_info
+    if request.method == "GET":
+        info = engine_info()
+        info["ok"] = True
+        return _json_nocache(info)
+    body = request.get_json(silent=True) or {}
+    uid = str(body.get("uid") or body.get("engine") or "").strip().lower()
+    if not uid:
+        return _json_nocache({"ok": False, "error": "uid gerekli"}, 400)
+    from bin_b103_book import switch_engine
+    return _json_nocache(switch_engine(uid))
+
+
 @app.route("/poly/api/forex/book")
 def api_forex_book():
     if _auth_required():
@@ -18760,7 +18778,13 @@ def api_forex_algo_books():
         except (TypeError, ValueError):
             return None
     mark = _f(q.get("mid") or q.get("bid") or q.get("ask"))
-    return _json_nocache(snapshot_all(mark, bid=_f(q.get("bid")), ask=_f(q.get("ask"))))
+    out = snapshot_all(mark, bid=_f(q.get("bid")), ask=_f(q.get("ask")))
+    try:
+        from bin_b103_signal import engine_info
+        out["bin_engine"] = engine_info()
+    except Exception:
+        out["bin_engine"] = None
+    return _json_nocache(out)
 
 
 @app.route("/poly/api/forex/algo-books/<uid>")

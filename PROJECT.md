@@ -58,11 +58,11 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `EylulForex/b103_paper.py` | Cron `* * * * *` (+25s): B1#03 sanal open/trail |
 | `EylulForex/bin_b103_data.py` | BIN_B1#03 XAUUSDT mum/kotasyon — GPSUSDT ayrı |
 | `EylulForex/bin_b103_binance.py` | BIN_B1#03 fapi Isolated MARKET XAUUSDT — GPSUSDT/CR6'ya yazmaz |
-| `EylulForex/bin_b103_book.py` | BIN_B1#03 sanal $180 · $50×50x — A2#09 24s/3×ATR/reverse; Binance emir kapalı |
-| `EylulForex/bin_b103_signal.py` | BIN_B1#03 — `fx_algo_signals._a2(9)` Squeeze Momentum + 1h/4h; eski motor değişmez |
+| `EylulForex/bin_b103_book.py` | BIN_XAUUSDT sanal $180 · $50×50x — seçilen motor 24s/3×ATR/reverse |
+| `EylulForex/bin_b103_signal.py` | BIN_XAUUSDT — `/forex/algoritma-islemler` Aktif et ile seçilen `fx_algo` motoru (varsayılan A2#09) |
 | `EylulForex/bin_b103_paper.py` | Cron :02 close · :05 open · */1 trail · */10 scan; 22:00–08:00 İST yeni açık yok |
 | `EylulForex/night_window.py` | Canlı GPSUSDT + BIN_B1#03 gece penceresi 22:00–08:00 İST — yalnız yeni açık yok; trail/ATR çalışır |
-| `EylulForex/data/bin_b103_live_control.json` | BIN_B1#03 — sayfa butonu CANLI/sanal; `paper`+`live_paused` |
+| `EylulForex/data/bin_b103_live_control.json` | BIN_XAUUSDT — CANLI/sanal + `engine_uid` (Aktif et) |
 | `EylulForex/desk_meta.py` | Forex masa sağ alt — başlangıç bakiyesi + ilk çalışma anı (işlem mantığı yok) |
 | `EylulForex/forex_book.py` | XAUUSD sanal — $300 · $100×500x · 1 AL + 1 SAT; `book=g1\|a2\|bybit`; EXNESS sayfası Exness Raw kom $0.35/taraf |
 | `EylulForex/forex_paper.py` | Cron `* * * * *`: CEM01 + A2 + **EXNESS** sanal (canlı emir kapalı) |
@@ -243,7 +243,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `EylulForex/gpsusdt_paper.py` — dakikalık GPSUSDT; Kalman+VWAP aynı; Binance Isolated **CANLI $50×15x**; **22:00–08:00 İST yeni açık yok** (trail/ATR durmaz); `data/gpsusdt_live_control.json`; `/tmp/gpsusdt_paper.log`
 - `EylulForex/gps2_paper.py` — dakikalık GPSUSDT_2; aynı Kalman+VWAP; **sanal $160 · Isolated $50×15x**; emir yok; `/tmp/gps2_paper.log`
 - `EylulForex/b103_paper.py` — dakikalık B1#03; CEM01 masa kopyası; sinyal `b1_mum_signal` 1h; sanal $300 · $100×500x; `/tmp/b103_paper.log`
-- `EylulForex/bin_b103_paper.py` — **BIN_B1#03** `/forex/bin-b103` butonu **CANLI'ya AL / kapat**; sanal $180 veya Isolated **$50×50x** Binance; A2#09; **22:00–08:00 İST yeni açık yok**; cron :02 close · :05 open · trail · */10 scan; `/tmp/bin_b103_paper.log`
+- `EylulForex/bin_b103_paper.py` — **BIN_XAUUSDT** `/forex/bin-b103`; motor `/forex/algoritma-islemler` **Aktif et** (varsayılan A2#09); **CANLI'ya AL**; Isolated **$50×50x**; **22:00–08:00 İST yeni açık yok**; cron :02/:05; `/tmp/bin_b103_paper.log`
 - **Poly→Kripto uyumsuzluğu (ölçüldü, 2026-08-12):** Aynı sinyal Poly'de kâr, kriptoda zarar. Sebep komisyon oranı değil **başabaş eşiği**: Poly'de başabaş = piyasa fiyatı ≈ %49,8 (binary 1:1 ödeme), kriptoda = komisyon + ödeme şekli ⇒ A2#05 %61,7 · A6V3 %70,4 · B1#03 %44,6. Yani kriptoda kâr için ~12 puan daha isabet gerekiyor. 1Y ölçüm (181 bin sinyal, 7 ufuk, drift-nötr SKILL) 4 defterin hiçbirinde komisyonu aşan kenar bulamadı — tek yakın aday A6V3 majör 48s (+%0,109 · t=+2,65) ve o da 840 testlik çoklu-test düzeltmesini geçmiyor. Çözüm bu yüzden "daha iyi ayar" değil **kanıt şartı** (`edge_gate`): kenar yoksa pozisyon açılmaz
 - **Çıkış rejimi ölçümü (1Y, `backtest_pro4.py`):** saatlik zorunlu kapanış A2#05'e 34.692 işlem yükledi (−$26.552); aynı sinyal sinyal-dönene-kadar tutulunca 5.841 işlem (−$11.811) → komisyonun **%83'ü** kalkıyor. Kayıp küçülüyor ama kenar olmadığı için kâra dönmüyor; bu yüzden PRO rejimi kapı ile birlikte çalışır
 - **Çıkış rejimi TÜM sanal defterlerde değişti (2026-08-15):** … yeni rejim **zaman kapanışı yok · 24s tavan · 3×ATR stop** (canlı ince ayar: önce 6×→4×→3×). **ATR kâr kilidi ARM 0.5** (önce 1.0→0.7→0.5).
