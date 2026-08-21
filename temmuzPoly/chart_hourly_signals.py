@@ -1,4 +1,4 @@
-"""Grafik overlay — 1. Analiz (A1) + 3. Freqtrade (A3) + 8. Jesse (A8) saatlik UP/DOWN okları."""
+"""Grafik overlay — 1. Analiz (A1) saatlik UP/DOWN okları."""
 from __future__ import annotations
 
 import json
@@ -12,7 +12,6 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
 
 import poly_predictor_analysis as ppa  # noqa: E402
-from a3a8_signal_mode import a3_direction as _a3_direction, a8_direction as _jesse_direction, signal_mode_status  # noqa: E402
 
 
 def _fetch_1h_klines(symbol: str, limit: int = 72) -> list[dict]:
@@ -74,7 +73,7 @@ def compute_hourly_chart_signals(
     *,
     lookback_bars: int = 24,
 ) -> dict[str, Any]:
-    """Saatlik A1 + A3 + A8 sinyalleri — grafik marker listesi."""
+    """Saatlik A1 sinyalleri — grafik marker listesi."""
     try:
         klines = _fetch_1h_klines(symbol, limit=max(72, lookback_bars + 40))
     except Exception as e:
@@ -100,26 +99,12 @@ def compute_hourly_chart_signals(
         if a1:
             signals.append({"time": ts, "dir": a1, "tag": "A1"})
 
-        a3 = _a3_direction(slice_k)
-        if a3:
-            signals.append({"time": ts, "dir": a3, "tag": "A3"})
-
-        a8 = _jesse_direction(slice_k)
-        if a8:
-            signals.append({"time": ts, "dir": a8, "tag": "A8"})
-
     current: dict[str, Any] = {}
     last_slice = closed
     if last_slice:
         last_ms = last_slice[-1]["open_time"]
         a1_now = _a1_direction(last_slice, last_ms)
-        a3_now = _a3_direction(last_slice)
-        a8_now = _jesse_direction(last_slice)
         if a1_now:
             current["a1"] = {"dir": a1_now, "label": f"A1 {'↑' if a1_now == 'UP' else '↓'}"}
-        if a3_now:
-            current["a3"] = {"dir": a3_now, "label": f"A3 {'↑' if a3_now == 'UP' else '↓'}"}
-        if a8_now:
-            current["a8"] = {"dir": a8_now, "label": f"A8 {'↑' if a8_now == 'UP' else '↓'}"}
 
-    return {"ok": True, "signals": signals, "current": current, **signal_mode_status()}
+    return {"ok": True, "signals": signals, "current": current}

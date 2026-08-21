@@ -1,7 +1,6 @@
-"""BIN_B1#03 — Binance XAUUSDT mum/kotasyon. GPSUSDT / CEM01 dokunulmaz.
+"""GPSUSDT_2 — Binance USDT-M mum + kotasyon. Spot yedek.
 
-Sinyal mumu `forex_data.get_xau_klines` (algoritma-islemler/a2_09 ile aynı).
-Grafik ve dolum kotasyonu XAUUSDT fapi.
+gpsusdt_data.py (canlı) dokunulmaz.
 """
 from __future__ import annotations
 
@@ -12,13 +11,17 @@ import urllib.request
 _UA = {"User-Agent": "Mozilla/5.0"}
 _SPOT = "https://api.binance.com"
 _FAPI = "https://fapi.binance.com"
-SYMBOL = "XAUUSDT"
+SYMBOL = "GPSUSDT"
+BOOK_SIGNAL_TF = "1m"
+BOOK_LEVEL_TF = "5m"
 _BAR_SEC = {
     "1m": 60, "5m": 300, "15m": 900, "30m": 1800,
     "1h": 3600, "4h": 14400, "1d": 86400,
 }
 _cache: dict[tuple, tuple[float, object]] = {}
 _TTL = 8.0
+_TICK_TTL = 2.0
+_tick_cache: tuple[float, dict] | None = None
 
 
 def _get_json(url: str):
@@ -27,10 +30,12 @@ def _get_json(url: str):
         return json.load(r)
 
 
-def bar_remaining(tf: str) -> int:
-    sec = _BAR_SEC.get(tf, 60)
-    now = int(time.time())
-    return max(0, sec - (now % sec))
+def _dec(px: float) -> int:
+    if px >= 1:
+        return 4
+    if px >= 0.1:
+        return 5
+    return 6
 
 
 def _klines_raw(tf: str, limit: int) -> tuple[list[dict], str]:
@@ -61,7 +66,7 @@ def _klines_raw(tf: str, limit: int) -> tuple[list[dict], str]:
     raise RuntimeError(last_err)
 
 
-def xau_klines(tf: str, n: int = 120) -> list[dict]:
+def gps_klines(tf: str, n: int = 120) -> list[dict]:
     key = ("kl", tf, int(n))
     now = time.time()
     hit = _cache.get(key)
@@ -70,13 +75,6 @@ def xau_klines(tf: str, n: int = 120) -> list[dict]:
     rows, _ = _klines_raw(tf, n)
     _cache[key] = (now, rows)
     return list(rows)
-
-
-def signal_klines(tf: str, n: int = 180) -> list[dict]:
-    """Algoritma-islemler/a2_09 ile aynı XAU beslemesi."""
-    from forex_data import get_xau_klines
-    rows, _src = get_xau_klines(tf, n)
-    return rows or []
 
 
 def _ticker() -> tuple[dict, str]:
@@ -94,29 +92,71 @@ def _ticker() -> tuple[dict, str]:
     raise RuntimeError(last_err)
 
 
-def live_quote() -> dict:
-    d, src = _ticker()
-    bid = float(d.get("bidPrice") or 0)
-    ask = float(d.get("askPrice") or 0)
-    mid = (bid + ask) / 2.0 if bid and ask else (bid or ask)
-    dec = 2
-    mark = None
-    funding = None
+def gps_tick_score(window_sec: int = 90, limit: int = 500) -> dict:
+    """Binance aggTrade dengesizliği — CEM01 PAXG tick'in GPS karşılığı."""
+    global _tick_cache
+    now = time.time()
+    if _tick_cache and now - _tick_cache[0] < _TICK_TTL:
+        return dict(_tick_cache[1])
+    start = int((now - window_sec) * 1000)
+    data = []
     try:
-        from bin_b103_binance import premium
-        pr = premium()
-        mark = pr.get("mark")
-        funding = pr.get("last_funding_rate")
+        data = _get_json(
+            f"{_FAPI}/fapi/v1/aggTrades?symbol={SYMBOL}&startTime={start}&limit={limit}"
+        )
+        if not isinstance(data, list):
+            data = []
+    except Exception:
+        try:
+            data = _get_json(
+                f"{_SPOT}/api/v3/aggTrades?symbol={SYMBOL}&startTime={start}&limit={limit}"
+            )
+            if not isinstance(data, list):
+                data = []
+        except Exception:
+            data = []
+    buy = sell = 0.0
+    for t in data:
+        qty = float(t.get("q") or 0)
+        if t.get("m"):
+            sell += qty
+        else:
+            buy += qty
+    tot = buy + sell
+    score = 0.0 if tot <= 0 else (buy - sell) / tot * 100.0
+    out = {"score": round(score, 2), "n": len(data), "buy": buy, "sell": sell}
+    _tick_cache = (now, out)
+    return dict(out)
+
+
+def bar_remaining(tf: str) -> int:
+    sec = _BAR_SEC.get(tf, 60)
+    now = int(time.time())
+    return sec - (now % sec)
+
+
+def gps_quote() -> dict:
+    tick, src = _ticker()
+    bid = float(tick.get("bidPrice") or 0)
+    ask = float(tick.get("askPrice") or 0)
+    mid = (bid + ask) / 2 if bid and ask else (bid or ask)
+    dec = _dec(mid or 1)
+    mark = funding = None
+    try:
+        from gps2_binance import premium
+        p = premium()
+        mark = p.get("mark")
+        funding = p.get("last_funding_rate")
     except Exception:
         pass
     return {
-        "ok": True,
         "symbol": SYMBOL,
-        "name": "XAU / USDT",
+        "name": "GPS / USDT",
+        "algo": "gps2",
+        "dec": dec,
+        "mid": round(mid, dec) if mid else None,
         "bid": round(bid, dec) if bid else None,
         "ask": round(ask, dec) if ask else None,
-        "mid": round(mid, dec) if mid else None,
-        "dec": dec,
         "mark": round(mark, dec) if mark else None,
         "funding_rate": funding,
         "spread": round(ask - bid, dec) if bid and ask else None,
@@ -127,50 +167,64 @@ def live_quote() -> dict:
     }
 
 
-def live_signal_now() -> dict:
-    kl1 = signal_klines("1h", 180)
-    kl4 = signal_klines("4h", 120)
-    from bin_b103_signal import resolve
-    return resolve(kl1, kl4)
-
-
-def live_spot(timeframe: str = "1m") -> dict:
+def gps_spot(timeframe: str = "1m") -> dict:
     tf = timeframe if timeframe in _BAR_SEC else "1m"
-    q = live_quote()
+    q = gps_quote()
     q["timeframe"] = tf
     q["bar_sec"] = _BAR_SEC[tf]
     q["bar_left"] = bar_remaining(tf)
-    q["signal_tf"] = "1h"
-    q["level_tf"] = "1h"
+    q["signal_tf"] = BOOK_SIGNAL_TF
+    q["level_tf"] = BOOK_LEVEL_TF
     try:
-        q["signal"] = live_signal_now()
+        q["tick"] = gps_tick_score()
+    except Exception:
+        q["tick"] = {"score": 0.0, "n": 0}
+    try:
+        from gps2_signal import live_signal, rail_signals, sr_levels
+        q["rail"] = rail_signals(klines_fn=gps_klines)
+        q["signal"] = live_signal(
+            BOOK_SIGNAL_TF,
+            candles=gps_klines(BOOK_SIGNAL_TF, 120),
+            klines_fn=gps_klines,
+            tick=q.get("tick"),
+        )
+        levels = sr_levels(gps_klines(BOOK_LEVEL_TF, 120))
     except Exception as e:
+        q["rail"] = {}
         q["signal"] = {
             "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
-            "engine": "a2_09", "error": str(e)[:160],
+            "engine": "kalman_vwap", "error": str(e)[:160],
         }
-    q["rail"] = {}
+        levels = {}
+    q["book_levels"] = {
+        "support": (levels or {}).get("nearest_support"),
+        "resistance": (levels or {}).get("nearest_resistance"),
+        "tf": BOOK_LEVEL_TF,
+    }
     try:
-        from bin_b103_book import snapshot
-        q["book"] = snapshot(q.get("bid"), q.get("ask"))
+        from gps2_book import apply_signal
+        q["book"] = apply_signal(
+            q.get("signal"), q.get("bid"), q.get("ask"),
+            rail=q.get("rail"), levels=levels,
+        )
     except Exception as e:
         q["book"] = {"ok": False, "error": str(e)[:160]}
     return q
 
 
-def live_chart(timeframe: str = "1m", limit: int = 240) -> dict:
+def gps_chart(timeframe: str = "1m", limit: int = 240) -> dict:
     tf = timeframe if timeframe in _BAR_SEC else "1m"
     n = max(20, min(int(limit or 240), 500))
     try:
-        rows = xau_klines(tf, n)
-        q = live_quote()
+        rows = gps_klines(tf, n)
+        q = gps_quote()
     except Exception as e:
         return {
-            "ok": False, "symbol": SYMBOL, "name": "XAU / USDT",
-            "timeframe": tf, "algo": "binb103", "error": str(e)[:200],
+            "ok": False, "symbol": SYMBOL, "name": "GPS / USDT",
+            "timeframe": tf, "algo": "gps2", "error": str(e)[:200],
             "candles": [], "bid": None, "ask": None, "mid": None,
         }
-    dec = 2
+    dec = int(q.get("dec") or 6)
     candles = [
         {
             "time": c["time"],
@@ -188,7 +242,7 @@ def live_chart(timeframe: str = "1m", limit: int = 240) -> dict:
     out = {
         "ok": True,
         "symbol": SYMBOL,
-        "name": "XAU / USDT",
+        "name": "GPS / USDT",
         "timeframe": tf,
         "price_tf": tf,
         "dec": dec,
@@ -196,23 +250,32 @@ def live_chart(timeframe: str = "1m", limit: int = 240) -> dict:
         "source": q.get("src") or "binance",
         "bar_sec": _BAR_SEC[tf],
         "bar_left": bar_remaining(tf),
-        "algo": "binb103",
+        "algo": "gps2",
         "day_high": round(hi, dec) if hi else None,
         "day_low": round(lo, dec) if lo else None,
         **{k: q[k] for k in ("mid", "bid", "ask", "spread", "live_price")},
     }
     try:
-        out["signal"] = live_signal_now()
+        out["tick"] = gps_tick_score()
+    except Exception:
+        out["tick"] = {"score": 0.0, "n": 0}
+    try:
+        from gps2_signal import overlay_signals, rail_signals, sr_levels
+        sig, marks = overlay_signals(tf, candles, klines_fn=gps_klines, tick=out.get("tick"))
+        out["signal"] = sig
+        out["signal_markers"] = marks
+        out["rail"] = sig.get("rail") or rail_signals(klines_fn=gps_klines)
+        out["levels"] = sr_levels(candles)
     except Exception as e:
         out["signal"] = {
             "direction": "NEUTRAL", "confidence": 0.0, "is_stable": False,
-            "engine": "a2_09", "error": str(e)[:160],
+            "engine": "kalman_vwap", "error": str(e)[:160],
         }
-    out["signal_markers"] = []
-    out["rail"] = {}
-    out["levels"] = {}
+        out["signal_markers"] = []
+        out["rail"] = {}
+        out["levels"] = {"ok": False, "error": str(e)[:160]}
     try:
-        from bin_b103_book import snapshot
+        from gps2_book import snapshot
         out["book"] = snapshot(out.get("bid"), out.get("ask"))
     except Exception:
         out["book"] = None

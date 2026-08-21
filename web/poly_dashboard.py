@@ -15,8 +15,11 @@ from zoneinfo import ZoneInfo
 
 from flask import Flask, jsonify, make_response, render_template_string, request, session, redirect, url_for
 
+sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "EylulForex"))
+
+from dash_chrome import patch_dash_chrome, world_for_html  # noqa: E402
 
 from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_CEMBYBIT_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML, FOREX_GPSUSDT_HTML, FOREX_GPS_ISLEMLER_HTML, FOREX_GPS2_HTML, FOREX_GPS2_ISLEMLER_HTML, FOREX_BINB103_HTML, FOREX_BINB103_ISLEMLER_HTML, FOREX_B103_HTML, FOREX_B103_ISLEMLER_HTML, FOREX_FX_ALGOS_HTML, FOREX_CEM02_HTML, FOREX_CEM02_ISLEMLER_HTML, FOREX_OAPI_HTML, FOREX_OAPI_ISLEMLER_HTML, FOREX_YZA_HTML
 
@@ -54,9 +57,7 @@ _HEATMAP_SYMS = {
     "x101": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
-    "analiz3":  ["BTC", "SOL", "ETH"],
     "analiz5":  ["BTC", "SOL"],
-    "analiz8":  ["BTC", "SOL", "ETH"],
     "analiz10": ["BTC", "SOL"],
     "a2_16_live": ["BTC", "ETH", "SOL"],
     "a2_02_live": ["BTC", "ETH", "SOL"],
@@ -73,14 +74,6 @@ _HEATMAP_SYMS = {
 _HEATMAP_MERGE: dict[str, list[str]] = {}
 # poly_trader_* dışındaki analiz dosyaları (history, state) — mutlak yol
 _CUSTOM_TRADER_FILES: dict[str, tuple[str, str]] = {
-    "analiz3": (
-        os.path.join(_ROOT, "freqtrade/user_data/analiz3_freqtrade_history.json"),
-        os.path.join(_ROOT, "freqtrade/user_data/analiz3_freqtrade_state.json"),
-    ),
-    "analiz8": (
-        os.path.join(_ROOT, "jesse/storage/analiz8_jesse_history.json"),
-        os.path.join(_ROOT, "jesse/storage/analiz8_jesse_state.json"),
-    ),
     "melez": (
         os.path.join(_DIR_POLY, "poly_trader_analiz6_v4_history.json"),
         os.path.join(_DIR_POLY, "poly_trader_analiz6_v4_state.json"),
@@ -4865,49 +4858,15 @@ def _patch_nav_islemler(html: str) -> str:
     return html
 
 
-_NAV_KRIPTO_SIDEBAR_LINK = (
-    '  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto\'ya Geç</a>\n'
-)
-_NAV_FOREX_SIDEBAR_LINK = (
-    '  <a class="nav-item" href="/forex/home"><span class="nav-dot"></span>Forex\'e Geç</a>\n'
-)
-
-
 def _patch_nav_kripto_future(html: str) -> str:
-    """Sidebar: Ayarlar altında Kripto'ya Geç; eski üst menü /kripto linkini kaldır."""
-    import re
+    """Eski /kripto-future adreslerini /kripto yap. Dünya geçişi üst barda."""
     html = html.replace('href="/poly/kripto-future"', 'href="/kripto"')
     html = html.replace('href="/kripto-future"', 'href="/kripto"')
-    if (
-        "Ayarlar</a>\n  <a class=\"nav-item\" href=\"/kripto\">"
-        "<span class=\"nav-dot\"></span>Kripto'ya Geç</a>"
-    ) in html:
-        return html
-    html = re.sub(
-        r'\n  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto\'ya Geç</a>\n',
-        '\n',
-        html,
-    )
-    for needle in (
-        '  <a class="nav-item active" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>\n',
-        '  <a class="nav-item" href="/ayarlar"><span class="nav-dot"></span>Ayarlar</a>\n',
-    ):
-        if needle in html:
-            html = html.replace(needle, needle + _NAV_KRIPTO_SIDEBAR_LINK, 1)
-            break
     return html
 
 
 def _patch_nav_forex(html: str) -> str:
-    """Poly / Kripto sidebar'ına Forex geçişi; Forex sayfasına dokunma."""
-    if 'id="fx-page"' in html or "Forex'e Geç</a>" in html:
-        return html
-    for needle in (
-        '  <a class="nav-item" href="/kripto"><span class="nav-dot"></span>Kripto\'ya Geç</a>\n',
-        '  <a class="nav-item" href="/poly"><span class="nav-dot"></span>Poly\'ye Geçiş yap</a>\n',
-    ):
-        if needle in html:
-            return html.replace(needle, needle + _NAV_FOREX_SIDEBAR_LINK, 1)
+    """Forex geçişi üst barda — sidebar'a link ekleme."""
     return html
 
 
@@ -18347,17 +18306,19 @@ def page_forex_openapi_connect():
 
 @app.route("/forex/openapi/oauth")
 def page_forex_openapi_oauth():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/openapi")
+    """cTrader redirect — code 60 sn; giriş bekletmeden token al."""
     code = str(request.args.get("code") or "").strip()
     if not code:
+        if _auth_required():
+            return redirect("/poly/login?next=/forex/openapi")
         return redirect("/forex/openapi")
     try:
         from ctrader_api import exchange_code
         exchange_code(code)
-    except Exception:
-        return redirect("/forex/openapi")
-    return redirect("/forex/openapi")
+    except Exception as e:
+        print(f"[oapi oauth] {type(e).__name__}: {e}", flush=True)
+        return redirect("/forex/openapi?oapi=err")
+    return redirect("/forex/openapi?oapi=ok")
 
 
 @app.route("/forex/gpsusdt")
@@ -18635,6 +18596,124 @@ def api_forex_openapi_status():
         return jsonify({"error": "unauthorized"}), 401
     from ctrader_api import status
     return _json_nocache(status())
+
+
+def _gpsusdt_api_token_ok() -> bool:
+    """GPSUSDT işlemler API — oturum yok, yalnız token. Tanımsızsa uç kapalı."""
+    expected = (os.environ.get("GPSUSDT_API_TOKEN") or "").strip()
+    if not expected:
+        return False
+    got = (
+        request.headers.get("X-Gpsusdt-Token")
+        or request.headers.get("X-Api-Token")
+        or request.args.get("token")
+        or ""
+    ).strip()
+    return bool(got) and secrets.compare_digest(got, expected)
+
+
+def _gpsusdt_api_payload() -> dict:
+    """`/forex/gpsusdt/islemler` ile aynı defter — salt okunur, emir yok."""
+    from gpsusdt_book import snapshot as gps_snapshot
+    from gpsusdt_data import gps_quote
+    q = gps_quote()
+    book = gps_snapshot(q.get("bid"), q.get("ask"))
+    try:
+        lim = int(request.args.get("limit") or 50)
+    except (TypeError, ValueError):
+        lim = 50
+    lim = max(1, min(lim, 200))
+    hist = list(book.get("history") or [])[:lim]
+    live = book.get("live") or {}
+    return {
+        "ok": True,
+        "book": "gps",
+        "page": "/forex/gpsusdt/islemler",
+        "symbol": book.get("symbol") or "GPSUSDT",
+        "title": "GPSUSDT · CANLI Isolated",
+        "venue": "binance_usdm",
+        "margin": book.get("margin"),
+        "leverage": book.get("leverage"),
+        "margin_type": book.get("margin_type"),
+        "equity": book.get("equity"),
+        "balance": book.get("balance"),
+        "wallet": book.get("wallet"),
+        "available": book.get("available"),
+        "used_margin": book.get("used_margin"),
+        "init_balance": book.get("init_balance"),
+        "total_pnl": book.get("total_pnl"),
+        "float_pnl": book.get("float_pnl"),
+        "started_at": book.get("started_at"),
+        "trade_count": book.get("trade_count"),
+        "open_count": book.get("open_count"),
+        "last_dir": book.get("last_dir"),
+        "last_reject": book.get("last_reject"),
+        "night_quiet": book.get("night_quiet"),
+        "night_window": book.get("night_window"),
+        "live": {
+            "enabled": live.get("enabled"),
+            "paused": live.get("paused"),
+            "configured": live.get("configured"),
+            "symbol": live.get("symbol") or "GPSUSDT",
+            "position": live.get("position"),
+            "usdt_wallet": live.get("usdt_wallet"),
+            "usdt_available": live.get("usdt_available"),
+            "usdt_equity": live.get("usdt_equity"),
+            "usdt_unrealized": live.get("usdt_unrealized"),
+        },
+        "positions": book.get("positions") or [],
+        "history": hist,
+        "history_n": len(book.get("history") or []),
+        "costs": book.get("costs"),
+        "bid": q.get("bid"),
+        "ask": q.get("ask"),
+        "mid": q.get("mid"),
+        "ts": book.get("ts"),
+    }
+
+
+@app.route("/forex/api/gpsusdt")
+@app.route("/forex/api/gpsusdt/")
+@app.route("/forex/api/gpsusdt/islemler")
+@app.route("/poly/api/forex/gpsusdt")
+def api_forex_gpsusdt_token():
+    if not _gpsusdt_api_token_ok():
+        return _json_nocache({"ok": False, "error": "unauthorized"}, 401)
+    try:
+        return _json_nocache(_gpsusdt_api_payload())
+    except Exception as e:
+        return _json_nocache({"ok": False, "error": str(e)[:200]}, 500)
+
+
+@app.route("/poly/api/forex/bin-b103/live", methods=["GET", "POST"])
+def api_forex_bin_b103_live():
+    """BIN_B1#03 Binance aç/kapa — oturum şart. Open çağırmaz."""
+    if _auth_required():
+        return _json_nocache({"ok": False, "error": "unauthorized"}, 401)
+    from bin_b103_binance import load_control, paper_mode, live_paused
+    if request.method == "GET":
+        c = load_control()
+        paper = paper_mode()
+        return _json_nocache({
+            "ok": True,
+            "live": (not paper) and (not live_paused()),
+            "paper": paper,
+            "paused": live_paused(),
+            "control": c,
+        })
+    body = request.get_json(silent=True) or {}
+    from bin_b103_binance import paper_mode as _pm
+    from bin_b103_book import switch_live
+    if body.get("toggle"):
+        want = _pm()
+    elif "live" in body:
+        want = bool(body.get("live"))
+    elif "paused" in body or "live_paused" in body:
+        want = not bool(body.get("paused", body.get("live_paused")))
+    else:
+        return _json_nocache({"ok": False, "error": "toggle veya live gerekli"}, 400)
+    out = switch_live(want)
+    return _json_nocache(out)
 
 
 @app.route("/poly/api/forex/book")
@@ -19449,6 +19528,8 @@ for _html_name in (
         _html = _patch_cembot_brand(_html)
     else:
         _html = _patch_cembot_brand(_html)
+    if _html_name != "LOGIN_HTML":
+        _html = patch_dash_chrome(_html, world_for_html(_html_name))
     globals()[_html_name] = _patch_cache_bust(_html)
 
 if __name__ == "__main__":

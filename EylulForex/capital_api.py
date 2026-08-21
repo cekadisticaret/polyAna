@@ -383,7 +383,7 @@ def snapshot_book() -> dict:
             "close_time": t.get("date") or t.get("dateUtc"),
             "src": "capital",
         })
-    return {
+    out = {
         "ok": True,
         "book": "capital",
         "symbol": "XAUUSD",
@@ -409,6 +409,12 @@ def snapshot_book() -> dict:
         "src": "capital_demo" if _demo() else "capital_live",
         "ts": datetime.now(timezone.utc).isoformat(),
     }
+    try:
+        from desk_meta import attach
+        attach(out, "cem02", hist=hist, init=out.get("init_balance") or out.get("balance"))
+    except Exception:
+        pass
+    return out
 
 
 def status() -> dict:

@@ -1,7 +1,6 @@
-"""GPSUSDT cron — CEM01 ile aynı ritim, ayrı defter.
+"""B1#03 cron — CEM01 ritim, B1#03 MUM sinyal, ayrı defter.
 
-Sinyal gelince Isolated MARKET $50×15x canlı Binance emri.
-CEM01 (forex_paper.py) çalışmaya devam eder; bu betik ona dokunmaz.
+forex_paper.py / CEM01 çalışmaya devam eder; bu betik ona dokunmaz.
 """
 from __future__ import annotations
 
@@ -11,21 +10,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from gpsusdt_book import snapshot
-from gpsusdt_data import gps_spot
+from b103_book import snapshot
+from b103_data import forex_spot
 
 
 def run() -> dict:
-    q = gps_spot("1m")
+    q = forex_spot("1m")
     book = q.get("book") or snapshot(q.get("bid"), q.get("ask"))
     sig = q.get("signal") or {}
-    pos = (book.get("positions") or [])
-    live = book.get("live") or {}
     print(
-        f"gps binance live={live.get('enabled')} dir={sig.get('direction')} "
+        f"b103 dir={sig.get('direction')} score={sig.get('score')} "
         f"bal={book.get('balance')} eq={book.get('equity')} "
         f"open={book.get('open_count')} "
-        f"pos={[(p.get('side'), p.get('qty')) for p in pos]}"
+        f"pos={[p.get('side') for p in (book.get('positions') or [])]}"
     )
     return book
 

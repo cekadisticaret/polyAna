@@ -1,4 +1,4 @@
-"""CEM02 sanal defter — CEM01 kopyası, bağımsız dosyalar. forex_book import etmez.
+"""OPEN API sanal defter — CAPITAL kopyası, bağımsız dosyalar. cem02/forex_book import etmez.
 
 Giriş yalnız Destek/Direnç yapısına yakınken açılır: hedef aynı yöndeki
 seviye, stop ters seviyenin öte yanı. Ödül/risk oranı tutmuyorsa ya da stop
@@ -14,12 +14,12 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 _DIR = Path(__file__).resolve().parent / "data"
-_STATE = _DIR / "cem02_state.json"
-_HIST = _DIR / "cem02_history.json"
-_LOCK = _DIR / "cem02.lock"
+_STATE = _DIR / "oapi_state.json"
+_HIST = _DIR / "oapi_history.json"
+_LOCK = _DIR / "oapi.lock"
 
 
-def _files(book: str = "c2") -> tuple[Path, Path, Path]:
+def _files(book: str = "oapi") -> tuple[Path, Path, Path]:
     return _STATE, _HIST, _LOCK
 _TZ = ZoneInfo("Europe/Istanbul")
 
@@ -633,7 +633,7 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "c2
     }
     try:
         from desk_meta import attach
-        attach(out, "cem02", hist=hist, state_path=_files(book)[0], init=out.get("init_balance"))
+        attach(out, "oapi", hist=hist, state_path=_files(book)[0], init=out.get("init_balance"))
     except Exception:
         pass
     return out

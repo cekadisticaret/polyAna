@@ -130,11 +130,11 @@ alwaysApply: true
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/forex_paper.py` (**Forex** — CEM01 + A2 sanal; **EXNESS** `/forex/cembybit` sanal `$100×500x` kom $0.35 — canlı emir kapalı) | `/tmp/forex_paper.log` |
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/cem02_paper.py` (**CAPITAL** — Capital.com demo oturum; emir yok) | `/tmp/cem02_paper.log` |
 | `*/1 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 EylulForex/oapi_paper.py` (**OPEN API** — cTrader oturum ping; emir yok) | `/tmp/oapi_paper.log` |
-| `*/1 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 EylulForex/gpsusdt_paper.py` (**GPSUSDT** — Kalman+VWAP aynı; Binance Isolated **CANLI $50×15x**; `gpsusdt_live_control.json`) | `/tmp/gpsusdt_paper.log` |
+| `*/1 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 EylulForex/gpsusdt_paper.py` (**GPSUSDT** — Kalman+VWAP aynı; Binance Isolated **CANLI $50×15x**; **22:00–08:00 İST yeni açık yok**; `gpsusdt_live_control.json`) | `/tmp/gpsusdt_paper.log` |
 | `*/1 * * * *` + `sleep 15` | `sleep 15 && cd /root/aiProject && python3 EylulForex/gps2_paper.py` (**GPSUSDT_2** — aynı motor, **sanal $160 · Isolated $50×15x**; emir yok) | `/tmp/gps2_paper.log` |
 | `*/1 * * * *` + `sleep 25` | `sleep 25 && cd /root/aiProject && python3 EylulForex/b103_paper.py` (**B1#03** — CEM01 masası kopyası · B1#03 MUM 1h · sanal $300 · $100×500x) | `/tmp/b103_paper.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py close` | `/tmp/bin_b103_paper.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py open` (**BIN_B1#03** — b1_mum 1:1; Binance XAUUSDT Isolated **CANLI $30×15x**; GPSUSDT ayrı; `bin_b103_live_control.json`) | `/tmp/bin_b103_paper.log` |
+| `5 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py open` (**BIN_B1#03** — A2#09; Isolated **$50×50x**; sayfa **CANLI'ya AL** (`paper`/`live_paused`); sanal $180 veya Binance; **22:00–08:00 İST yeni açık yok**; GPSUSDT ayrı) | `/tmp/bin_b103_paper.log` |
 | `*/1 * * * *` + `sleep 35` | `sleep 35 && cd /root/aiProject && python3 EylulForex/bin_b103_paper.py trail` | `/tmp/bin_b103_paper.log` |
 | `*/10 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py scan` | `/tmp/bin_b103_paper.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py close` | `/tmp/fx_algo_runner.log` |
@@ -164,6 +164,7 @@ alwaysApply: true
 | `poly_trader_analiz3.py`, `poly_trader_karisim1.py`, `run_alfa.sh`, `poly_trader_alfa.py`, `alfa_signal.py`, `poly_trader_analiz7.py`, `poly_trader_analiz9.py`, `poly_trader_analiz13.py`, `poly_trader_analiz21.py`, `poly_trader_analiz23.py`, `poly_trader_analiz31.py`, `poly_trader_analiz32.py`, `poly_trader_5m_btc_107.py`, `btc_analiz_hourly.py`, `poly_trader_5m_btc_105.py`, `jesse/poly_analiz8_live.py`, `jesse/run_analiz8_live.sh`, `poly_trader_5m_sol_109.py`, `poly_trader_5m_sol_112.py`, `poly_trader_5m_sol_113.py`, `poly_trader_5m_sol_114.py`, `poly_trader_cem_analiz.py`, `poly_trader_5m_sol_210.py`, `pm_partial_takeprofit.py`, `freqtrade/run_analiz3.sh`, `jesse/run_analiz8.sh`, `poly_trader_5m_sol_110.py`, `poly_trader_15m_a2.py`, `poly_trader_15m_309_live.py` | **KALDIRILDI** |
 | `poly_15m_a2_algo_trader_core.py`, `poly_trader_5m_real_stats.py`, `analiz32_15m_signal_snapshot.py` + tüm `15m_309` / `15m_316` / `15m_317` / `5m_sol_110` / `15m_309_live` state+history dosyaları | **SİLİNDİ (2026-08-14)** — 15M/5M defterleri sistemden tamamen kaldırıldı; cron satırları (`*/15` open, Pazar weekly, saatlik real_stats) düşürüldü, dashboard kayıtları (`_HEATMAP_SYMS`, `_LIVE_PM_ANALYSES`, `_PM_SYSTEM_ROWS`, `_PM_POSITION_SOURCES`, `_15M_PM_ANALYSES`) ve harita "110 güvenilir slotlar" paneli temizlendi. `pm_orphan_sync._guess_trader` 15m slug'ları artık `None` döndürür (sahipsiz bırakır). `poly_trader_5m_common.py` **kaldı** — Trade Desk 5m/15m kotasyonu onu kullanıyor |
 | `polyManuel/sol_bot.py`, `poly_trader.py` | **YOK** — disk/crontab’ta yok |
+| `freqtrade/` · `jesse/` (A3 Freqtrade + A8 Jesse) | **SİLİNDİ (2026-08-21)** — klasörler, venv, Poly sanal defterler ve Analizler `a3`/`a8` kitapları kaldırıldı. A15’in ETH→A8 EMA kuralı (`a3a8_signal_mode.a8_direction`) duruyor — jesse import etmez. |
 
 ## Zamanlama Notları
 - `bist_signal_hunter` seans dışında çıkar (betik içi saat kontrolü).
@@ -313,8 +314,6 @@ tail -f /tmp/agustos_analizler_trail.log
 tail -f /tmp/aiproject_file_watch.log
 tail -f /tmp/backup.log
 tail -f /tmp/crypto_news_monitor.log
-tail -f /tmp/poly_analiz3_freqtrade.log
-tail -f /tmp/poly_analiz8_jesse.log
 tail -f /tmp/weekly_slot_heatmap_all.log
 tail -f /tmp/slot_data_archive.log
 tail -f /tmp/twitter_trade_card.log

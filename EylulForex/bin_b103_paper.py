@@ -1,4 +1,4 @@
-"""BIN_B1#03 cron — algoritma-islemler/b1_mum ritmi, Binance Isolated $30×15x.
+"""BIN_B1#03 cron — algoritma-islemler/a2_09 ritmi, Isolated $50×50x sanal $180.
 
   python3 EylulForex/bin_b103_paper.py close|open|trail|scan|status
 
@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bin_b103_book import close_expired, close_if_reverse, open_position, snapshot, trail
 from bin_b103_data import live_quote, signal_klines
 from bin_b103_signal import resolve, side_of
+from night_window import is_quiet as _night_quiet, label as _night_label
 
 
 def _quote() -> dict:
@@ -48,6 +49,9 @@ def run_trail() -> dict:
 
 
 def run_open() -> dict:
+    if _night_quiet("binb103"):
+        print(f"[bin_b103 open] gece penceresi {_night_label()} — skip")
+        return {"ok": True, "opened": 0, "skip": "gece_penceresi"}
     bid, ask = _ba()
     kl1 = signal_klines("1h", 180)
     kl4 = signal_klines("4h", 120)
@@ -78,9 +82,12 @@ def run_scan() -> dict:
     if side:
         r = close_if_reverse(side, bid, ask, kl1)
         closed = int(r.get("closed") or 0)
-        kl = kl1 if sig.get("tf") == "1h" else kl4
-        pos = open_position(side, bid, ask, signal=sig["direction"], tf=sig["tf"], kl=kl)
-        opened = 1 if pos else 0
+        if _night_quiet("binb103"):
+            print(f"[bin_b103 scan] gece penceresi {_night_label()} — open skip")
+        else:
+            kl = kl1 if sig.get("tf") == "1h" else kl4
+            pos = open_position(side, bid, ask, signal=sig["direction"], tf=sig["tf"], kl=kl)
+            opened = 1 if pos else 0
     trail(bid, ask, kl1)
     print(f"[bin_b103 scan] reverse={closed} open={opened} dir={sig.get('direction')}")
     return {"ok": True, "closed": closed, "opened": opened, "signal": sig}

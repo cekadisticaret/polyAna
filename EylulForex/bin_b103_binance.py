@@ -1,6 +1,6 @@
 """BIN_B1#03 — Binance USDT-M XAUUSDT Isolated MARKET.
 
-Sinyal `bin_b103_signal.py` (b1_mum). GPSUSDT / CR6 / A139'a girmez.
+Sinyal `bin_b103_signal.py` (A2#09 Squeeze Momentum). GPSUSDT / CR6 / A139'a girmez.
 """
 from __future__ import annotations
 
@@ -8,7 +8,11 @@ import json
 import sys
 import time
 import urllib.request
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
+
+_TZ = ZoneInfo("Europe/Istanbul")
 
 _DIR = Path(__file__).resolve().parent
 _ROOT = _DIR.parent
@@ -193,6 +197,47 @@ def live_paused() -> bool:
     return bool(load_control().get("live_paused", True))
 
 
+def paper_mode() -> bool:
+    """Canlı emir kapalı — sanal defter devam eder."""
+    c = load_control()
+    if c.get("paper") is False:
+        return False
+    return bool(c.get("paper") or c.get("live_paused", True))
+
+
+def paper_balance() -> float:
+    try:
+        return float(load_control().get("paper_balance") or 180)
+    except (TypeError, ValueError):
+        return 180.0
+
+
+def save_control(data: dict) -> dict:
+    global _status_cache
+    _CONTROL.parent.mkdir(parents=True, exist_ok=True)
+    tmp = _CONTROL.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(_CONTROL)
+    _status_cache = None
+    return data
+
+
+def set_live_mode(live: bool, *, source: str = "dashboard") -> dict:
+    """True = Binance emir açık. False = sanal $180, emir yok. Open çağırmaz."""
+    c = load_control()
+    c["live_paused"] = not bool(live)
+    c["paper"] = not bool(live)
+    c["paper_balance"] = float(c.get("paper_balance") or 180)
+    c["updated_at_tr"] = datetime.now(_TZ).isoformat(timespec="seconds")
+    c["updated_by"] = source
+    c["reason"] = (
+        "BIN_B1#03 XAUUSDT Isolated CANLI $50×50x — A2#09"
+        if live
+        else "BIN_B1#03 XAUUSDT Isolated sanal $50×50x · kasa $180 — A2#09 · emir yok"
+    )
+    return save_control(c)
+
+
 def configured() -> bool:
     try:
         return BinanceFuturesClient().configured()
@@ -269,10 +314,12 @@ def live_status(*, force: bool = False) -> dict:
     if not force and _status_cache and now - _status_cache[0] < _STATUS_TTL:
         return dict(_status_cache[1])
     paused = live_paused()
+    paper = paper_mode()
     cfg = configured()
     out = {
-        "enabled": bool(cfg and not paused),
+        "enabled": bool(cfg and not paused and not paper),
         "paused": paused,
+        "paper": paper,
         "configured": cfg,
         "venue": "binance_usdm",
         "symbol": SYMBOL,
@@ -285,6 +332,10 @@ def live_status(*, force: bool = False) -> dict:
         "wallet_at_live": None,
         "testnet": False,
     }
+    if paper:
+        out["error"] = None
+        _status_cache = (now, out)
+        return dict(out)
     ctrl = load_control()
     if cfg:
         try:
@@ -321,13 +372,50 @@ def live_status(*, force: bool = False) -> dict:
     return dict(out)
 
 
+def _err_body(e: BinanceFuturesError) -> dict:
+    body = e.body if isinstance(e.body, dict) else {}
+    return body if isinstance(body, dict) else {}
+
+
+def is_tradfi_unsigned(err) -> bool:
+    if isinstance(err, BinanceFuturesError):
+        body = _err_body(err)
+        if int(body.get("code") or 0) == -4411:
+            return True
+        err = str(err)
+    s = str(err or "")
+    return "-4411" in s or "TradFi-Perps" in s or "TradFi" in s
+
+
+def sign_tradfi_perps() -> dict:
+    """XAUUSDT TradFi-Perps sözleşmesi — emir atmaz, bir kez imza.
+
+    POST /fapi/v1/stock/contract  (Binance USD-M TradFi-Perps)
+    """
+    c = _client()
+    if not c.configured():
+        return {"ok": False, "error": "keys_missing"}
+    try:
+        resp = c.post("/fapi/v1/stock/contract", signed=True)
+        print(f"[BIN_B1#03] TradFi-Perps imza: {resp}", flush=True)
+        return {"ok": True, "resp": resp}
+    except BinanceFuturesError as e:
+        body = _err_body(e)
+        msg = str(body.get("msg") or e)[:160]
+        if "already" in msg.lower() or body.get("code") in (-2010,):
+            return {"ok": True, "resp": {"skipped": True, "msg": msg}}
+        return {"ok": False, "error": str(e)[:160], "code": body.get("code")}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:160]}
+
+
 def prepare_live(c: BinanceFuturesClient, leverage: int) -> dict:
     plan = {"leverage": int(leverage), "margin_type": "ISOLATED"}
     plan["leverage_resp"] = c.set_leverage(SYMBOL, int(leverage))
     try:
         plan["margin_resp"] = c.set_margin_type(SYMBOL, "ISOLATED")
     except BinanceFuturesError as e:
-        body = e.body if isinstance(e.body, dict) else {}
+        body = _err_body(e)
         if body.get("code") in (-4046, 4046) or "No need to change" in str(e):
             plan["margin_resp"] = {"skipped": True}
         else:
@@ -413,7 +501,19 @@ def place_market(
                 req["positionSide"] = "LONG" if side_u == "SELL" else "SHORT"
             else:
                 req["positionSide"] = "LONG" if side_u == "BUY" else "SHORT"
-        order = c.new_order(**req)
+        try:
+            order = c.new_order(**req)
+        except BinanceFuturesError as e:
+            if reduce_only or not is_tradfi_unsigned(e):
+                raise
+            signed = sign_tradfi_perps()
+            if not signed.get("ok"):
+                return {
+                    "ok": False,
+                    "error": "tradfi_unsigned",
+                    "detail": str(signed.get("error") or e)[:120],
+                }
+            order = c.new_order(**req)
         avg, exe, order = _fill_from_order(c, order, fallback_px, qty)
         if exe <= 0:
             return {"ok": False, "error": "fill_empty", "order_id": order.get("orderId")}
@@ -444,6 +544,8 @@ def place_market(
             "reduce_only": reduce_only,
         }
     except BinanceFuturesError as e:
+        if is_tradfi_unsigned(e):
+            return {"ok": False, "error": "tradfi_unsigned", "detail": str(e)[:120]}
         return {"ok": False, "error": str(e)[:120]}
     except Exception as e:
         return {"ok": False, "error": str(e)[:120]}

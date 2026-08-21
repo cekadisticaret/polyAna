@@ -1,4 +1,4 @@
-"""BIN_B1#03 defter — b1_mum çıkışı (24s · 3×ATR · reverse) + XAUUSDT Isolated $30×15x.
+"""BIN_B1#03 defter — A2#09 çıkışı (24s · 3×ATR · reverse) + XAUUSDT Isolated $50×50x sanal $180.
 
 GPSUSDT / fx_algo_* / CEM01 dosyalarına yazmaz. Emir yalnız `bin_b103_binance`.
 """
@@ -29,6 +29,7 @@ from atr_profit_lock import (  # noqa: E402
     update_lock,
 )
 from exit_policy import policy_for  # noqa: E402
+from night_window import is_quiet as _night_quiet, label as _night_label  # noqa: E402
 
 DATA = _DIR / "data"
 _STATE = DATA / "forex_bin_b103_state.json"
@@ -36,11 +37,12 @@ _HIST = DATA / "forex_bin_b103_history.json"
 _LOCK = DATA / "forex_bin_b103.lock"
 _TZ = ZoneInfo("Europe/Istanbul")
 
-MARGIN = 30.0
-LEVERAGE = 15
+MARGIN = 50.0
+LEVERAGE = 50
 SYMBOL = "XAUUSDT"
 MAX_OPEN = 1
 MARGIN_TYPE = "ISOLATED"
+PAPER_BAL = 180.0
 HIST_MAX = 400
 REVERSE_MIN_AGE_MIN = 15.0
 POLICY = policy_for("Test")
@@ -59,10 +61,27 @@ def _r(px) -> float:
         return round(float(px), _PX)
 
 
+def _paper() -> bool:
+    try:
+        from bin_b103_binance import paper_mode
+        return bool(paper_mode())
+    except Exception:
+        return False
+
+
+def _paper_bal() -> float:
+    try:
+        from bin_b103_binance import paper_balance
+        return float(paper_balance())
+    except Exception:
+        return PAPER_BAL
+
+
 def _empty() -> dict:
+    init = _paper_bal() if _paper() else 0.0
     return {
-        "balance": 0.0,
-        "init_balance": 0.0,
+        "balance": init,
+        "init_balance": init,
         "total_pnl": 0.0,
         "last_dir": "NEUTRAL",
         "position": None,
@@ -116,6 +135,8 @@ def _load_hist() -> list:
 
 
 def _taker() -> float:
+    if _paper():
+        return 0.0004
     try:
         from bin_b103_binance import taker_rate
         return float(taker_rate())
@@ -245,6 +266,12 @@ def _close_live(fallback_px: float) -> dict:
 
 def _flatten_one(st: dict, hist: list, pos: dict, bid: float, ask: float, reason: str) -> bool:
     hint = _exit_px(pos.get("side") or "buy", bid, ask)
+    if _paper() or not pos.get("live"):
+        fee = abs(hint * _qty(pos)) * float(pos.get("taker_rate") or _taker())
+        _close_record(st, hist, pos, hint, reason, fee_close=fee)
+        st["positions"] = []
+        st["position"] = None
+        return True
     fill = _close_live(hint)
     if not fill.get("ok"):
         st["last_reject"] = {
@@ -270,6 +297,8 @@ def _bn_side(row: dict) -> str | None:
 
 
 def _reconcile(st: dict, hist: list, bid: float, ask: float) -> bool:
+    if _paper():
+        return False
     from bin_b103_binance import live_position_state
     state, row = live_position_state()
     rows = _plist(st)
@@ -339,48 +368,77 @@ def _open(st: dict, side: str, bid: float, ask: float, signal: str, tf: str, kl:
     rows = _plist(st)
     if rows or len(rows) >= MAX_OPEN:
         return None
+    if _night_quiet("binb103"):
+        st["last_reject"] = {
+            "side": side, "reason": "gece_penceresi",
+            "detail": _night_label(), "at": _now_iso(),
+        }
+        return None
     hint = _open_px(side, bid, ask)
     qty = _qty_for(hint)
     if qty <= 0:
         st["last_reject"] = {"side": side, "reason": "qty_min", "at": _now_iso()}
         return None
-    from bin_b103_binance import (
-        configured,
-        live_enabled,
-        live_paused,
-        live_position_state,
-        place_market,
-        usdt_available,
-    )
-    if not configured():
-        st["last_reject"] = {"side": side, "reason": "keys_missing", "at": _now_iso()}
-        return None
-    if live_paused() or not live_enabled():
-        st["last_reject"] = {"side": side, "reason": "live_paused", "at": _now_iso()}
-        return None
-    bn_state, _ = live_position_state()
-    if bn_state == "open":
-        st["last_reject"] = {"side": side, "reason": "binance_already_open", "at": _now_iso()}
-        return None
-    if bn_state == "unknown":
-        st["last_reject"] = {"side": side, "reason": "bn_status_unknown", "at": _now_iso()}
-        return None
-    avail = usdt_available()
-    if avail is not None and avail < MARGIN:
-        st["last_reject"] = {
-            "side": side, "reason": "margin_short",
-            "detail": f"usdt={avail}", "at": _now_iso(),
-        }
-        return None
-    fill = place_market(side, qty, reduce_only=False, leverage=LEVERAGE, fallback_px=hint)
-    if not fill.get("ok"):
-        st["last_reject"] = {"side": side, "reason": fill.get("error") or "live_open_fail", "at": _now_iso()}
-        return None
-    entry = float(fill["price"])
-    qty = float(fill["qty"])
-    notional = float(fill["notional"])
-    rate = _taker()
-    fee = float(fill.get("fee") if fill.get("fee") is not None else abs(notional) * rate)
+    paper = _paper()
+    fill = None
+    if paper:
+        avail = float(st.get("balance") or 0)
+        if avail < MARGIN:
+            st["last_reject"] = {
+                "side": side, "reason": "margin_short",
+                "detail": f"paper={avail}", "at": _now_iso(),
+            }
+            return None
+        entry = hint
+        notional = round(qty * entry, 8)
+        rate = _taker()
+        fee = abs(notional) * rate
+    else:
+        from bin_b103_binance import (
+            configured,
+            live_enabled,
+            live_paused,
+            live_position_state,
+            place_market,
+            usdt_available,
+        )
+        if not configured():
+            st["last_reject"] = {"side": side, "reason": "keys_missing", "at": _now_iso()}
+            return None
+        if live_paused() or not live_enabled():
+            st["last_reject"] = {"side": side, "reason": "live_paused", "at": _now_iso()}
+            return None
+        bn_state, _ = live_position_state()
+        if bn_state == "open":
+            st["last_reject"] = {"side": side, "reason": "binance_already_open", "at": _now_iso()}
+            return None
+        if bn_state == "unknown":
+            st["last_reject"] = {"side": side, "reason": "bn_status_unknown", "at": _now_iso()}
+            return None
+        avail = usdt_available()
+        if avail is not None and avail < MARGIN:
+            st["last_reject"] = {
+                "side": side, "reason": "margin_short",
+                "detail": f"usdt={avail}", "at": _now_iso(),
+            }
+            return None
+        fill = place_market(side, qty, reduce_only=False, leverage=LEVERAGE, fallback_px=hint)
+        if not fill.get("ok"):
+            err = str(fill.get("error") or "live_open_fail")
+            if err == "tradfi_unsigned" or "-4411" in err or "TradFi" in err:
+                err = "tradfi_unsigned"
+            st["last_reject"] = {
+                "side": side,
+                "reason": err,
+                "detail": str(fill.get("detail") or "")[:80] or None,
+                "at": _now_iso(),
+            }
+            return None
+        entry = float(fill["price"])
+        qty = float(fill["qty"])
+        notional = float(fill["notional"])
+        rate = _taker()
+        fee = float(fill.get("fee") if fill.get("fee") is not None else abs(notional) * rate)
     st["seq"] = int(st.get("seq") or 0) + 1
     pos = {
         "id": f"binb103-{st['seq']}-{int(time.time())}",
@@ -401,19 +459,20 @@ def _open(st: dict, side: str, bid: float, ask: float, signal: str, tf: str, kl:
         "commission": fee,
         "commission_open": fee,
         "taker_rate": rate,
-        "fill_src": "binance_usdm_live",
-        "venue": "binance_usdm",
+        "fill_src": "paper" if paper else "binance_usdm_live",
+        "venue": "paper" if paper else "binance_usdm",
         "margin_type": MARGIN_TYPE,
         "order_type": "MARKET",
-        "order_status": fill.get("status") or "FILLED",
-        "order_id": fill.get("order_id"),
-        "live": True,
+        "order_status": (fill or {}).get("status") or "FILLED",
+        "order_id": None if paper else (fill or {}).get("order_id"),
+        "live": not paper,
         "max_hold_h": float(POLICY.get("max_hold_h") or 24.0),
         "loss_stop_atr": float(POLICY.get("loss_stop_atr") or 3.0),
     }
     pos = init_lock_fields(pos, atr=atr_from_klines(kl), price=entry)
+    tag = "PAPER" if paper else f"LIVE {MARGIN_TYPE}"
     print(
-        f"[BIN_B1#03] LIVE {MARGIN_TYPE} MARKET {side.upper()} qty={qty} @{entry} "
+        f"[BIN_B1#03] {tag} MARKET {side.upper()} qty={qty} @{entry} "
         f"margin=${MARGIN:.0f} lev={LEVERAGE}x notional=${notional:.2f} "
         f"taker ${fee:.4f} orderId={pos['order_id']}",
         flush=True,
@@ -520,10 +579,57 @@ def trail(bid: float, ask: float, kl: list) -> dict:
     return {"ok": True, "closed": closed, "updated": updated, "held": len(remaining)}
 
 
+@_locked
+def switch_live(want_live: bool) -> dict:
+    """Buton: canlı aç/kapa. Yeni open yok — yalnız kontrol + açık defter satırını kapatır."""
+    from bin_b103_binance import close_live, live_position_state, set_live_mode
+    from bin_b103_data import live_quote
+    q = live_quote()
+    bid = float(q.get("bid") or 0)
+    ask = float(q.get("ask") or 0)
+    st = _load_state()
+    hist = _load_hist()
+    closed = 0
+    bn_closed = False
+    if want_live:
+        for pos in list(_plist(st)):
+            px = _exit_px(pos.get("side") or "buy", bid, ask) if bid and ask else float(pos.get("entry") or 0)
+            fee = abs(px * _qty(pos)) * float(pos.get("taker_rate") or _taker())
+            _close_record(st, hist, pos, px or float(pos.get("entry") or 0), "switch_live", fee_close=fee)
+            closed += 1
+        st["positions"] = []
+        st["position"] = None
+        ctrl = set_live_mode(True, source="dashboard:CANLI")
+    else:
+        state, _ = live_position_state()
+        if state == "open" and (bid or ask):
+            fill = close_live(fallback_px=ask or bid)
+            bn_closed = bool(fill.get("ok"))
+        for pos in list(_plist(st)):
+            px = _exit_px(pos.get("side") or "buy", bid, ask) if bid and ask else float(pos.get("entry") or 0)
+            fee = abs(px * _qty(pos)) * float(pos.get("taker_rate") or _taker())
+            _close_record(st, hist, pos, px or float(pos.get("entry") or 0), "switch_paper", fee_close=fee)
+            closed += 1
+        st["positions"] = []
+        st["position"] = None
+        ctrl = set_live_mode(False, source="dashboard:sanal")
+    _atomic(_STATE, st)
+    _atomic(_HIST, hist)
+    return {
+        "ok": True,
+        "live": bool(want_live),
+        "paper": not bool(want_live),
+        "closed": closed,
+        "bn_closed": bn_closed,
+        "control": ctrl,
+    }
+
+
 def _live_snap() -> dict:
     out = {
         "enabled": False,
         "paused": True,
+        "paper": True,
         "configured": False,
         "venue": "binance_usdm",
         "margin": MARGIN,
@@ -565,8 +671,8 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
         "ok": True,
         "book": "binb103",
         "id": "binb103",
-        "name": "BIN_B1#03",
-        "title": "BIN_B1#03 · XAUUSDT Isolated $30×15x",
+        "name": "BIN_XAUUSDT",
+        "title": "BIN_XAUUSDT · Isolated $50×50x · sanal $180",
         "symbol": SYMBOL,
         "dec": _PX,
         "balance": round(bal, 2),
@@ -589,11 +695,13 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
         "leverage": LEVERAGE,
         "last_dir": st.get("last_dir"),
         "last_reject": st.get("last_reject"),
+        "night_quiet": _night_quiet("binb103"),
+        "night_window": _night_label(),
         "live": live,
         "venue": "binance_usdm",
         "costs": {
             "fee_model": "binance_taker",
-            "note": "BIN_B1#03 XAUUSDT Isolated MARKET $30×15x — b1_mum 24s/3×ATR",
+            "note": "BIN_B1#03 XAUUSDT Isolated sanal $50×50x · kasa $180 — A2#09 24s/3×ATR",
             "venue": "binance_usdm",
             "dec": _PX,
         },

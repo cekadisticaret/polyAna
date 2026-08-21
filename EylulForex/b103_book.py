@@ -1,8 +1,6 @@
-"""CEM02 sanal defter — CEM01 kopyası, bağımsız dosyalar. forex_book import etmez.
+"""B1#03 sanal defter — CEM01 kopyası ($300 · $100×500x).
 
-Giriş yalnız Destek/Direnç yapısına yakınken açılır: hedef aynı yöndeki
-seviye, stop ters seviyenin öte yanı. Ödül/risk oranı tutmuyorsa ya da stop
-marjın kaldıramayacağı kadar uzaksa işlem hiç açılmaz.
+forex_book.py / CEM01 dokunulmaz. Sinyal b1_mum (B1#03 MUM).
 """
 from __future__ import annotations
 
@@ -14,12 +12,12 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 _DIR = Path(__file__).resolve().parent / "data"
-_STATE = _DIR / "cem02_state.json"
-_HIST = _DIR / "cem02_history.json"
-_LOCK = _DIR / "cem02.lock"
+_STATE = _DIR / "forex_b103_state.json"
+_HIST = _DIR / "forex_b103_history.json"
+_LOCK = _DIR / "forex_b103.lock"
 
 
-def _files(book: str = "c2") -> tuple[Path, Path, Path]:
+def _files(book: str = "b103") -> tuple[Path, Path, Path]:
     return _STATE, _HIST, _LOCK
 _TZ = ZoneInfo("Europe/Istanbul")
 
@@ -83,7 +81,7 @@ def _atomic_write(path: Path, data) -> None:
     tmp.replace(path)
 
 
-def _load_state(book: str = "c2") -> dict:
+def _load_state(book: str = "b103") -> dict:
     state, _, _ = _files(book)
     if not state.exists():
         return _empty_state()
@@ -112,7 +110,7 @@ def _plist(st: dict) -> list:
     return rows
 
 
-def _load_hist(book: str = "c2") -> list:
+def _load_hist(book: str = "b103") -> list:
     _, hist, _ = _files(book)
     if not hist.exists():
         return []
@@ -123,7 +121,7 @@ def _load_hist(book: str = "c2") -> list:
         return []
 
 
-def _lev(book: str = "c2", pos: dict | None = None) -> float:
+def _lev(book: str = "b103", pos: dict | None = None) -> float:
     if pos is not None:
         try:
             lv = float(pos.get("leverage") or 0)
@@ -134,12 +132,12 @@ def _lev(book: str = "c2", pos: dict | None = None) -> float:
     return float(BYBIT_LEVERAGE if book == "bybit" else LEVERAGE)
 
 
-def _usd(entry: float, dist: float, book: str = "c2", pos: dict | None = None) -> float:
+def _usd(entry: float, dist: float, book: str = "b103", pos: dict | None = None) -> float:
     """Fiyat mesafesini $ karşılığına çevirir."""
     return dist / float(entry) * MARGIN * _lev(book, pos)
 
 
-def _pnl(side: str, entry: float, exit_px: float, book: str = "c2", pos: dict | None = None) -> float:
+def _pnl(side: str, entry: float, exit_px: float, book: str = "b103", pos: dict | None = None) -> float:
     sign = 1.0 if side == "buy" else -1.0
     return sign * _usd(entry, exit_px - entry, book=book, pos=pos)
 
@@ -152,7 +150,7 @@ def _open_px(side: str, bid: float, ask: float) -> float:
     return ask if side == "buy" else bid
 
 
-def _commission_side(book: str = "c2") -> float:
+def _commission_side(book: str = "b103") -> float:
     """Exness Raw / MT5 ECN: $3.50 / 1.00 lot / taraf → 0.10 lot = $0.35."""
     return round(COMMISSION_PER_LOT_SIDE * VOLUME, 2)
 
@@ -203,7 +201,7 @@ def _level_price(lv) -> float | None:
         return None
 
 
-def _plan(side: str, entry: float, levels: dict | None, book: str = "c2") -> dict | None:
+def _plan(side: str, entry: float, levels: dict | None, book: str = "b103") -> dict | None:
     """Hedef = aynı yöndeki seviye, stop = ters seviyenin öte yanı."""
     sup = _level_price((levels or {}).get("nearest_support"))
     res = _level_price((levels or {}).get("nearest_resistance"))
@@ -342,7 +340,7 @@ def _m5_against(pos: dict, rail: dict | None) -> bool:
     return False
 
 
-def _accrue_swap(st: dict, pos: dict, book: str = "c2") -> bool:
+def _accrue_swap(st: dict, pos: dict, book: str = "b103") -> bool:
     """00:00 İST rollover. Çarşamba ×3; Cmt/Paz atlanır. Exness CFD de swap alır."""
     now = datetime.now(_TZ)
     last = pos.get("swap_date")
@@ -371,11 +369,11 @@ def _accrue_swap(st: dict, pos: dict, book: str = "c2") -> bool:
     return charged
 
 
-def _loss_cooldown(book: str = "c2") -> float:
+def _loss_cooldown(book: str = "b103") -> float:
     return COOLDOWN_LOSS_A2 if book == "a2" else COOLDOWN_LOSS
 
 
-def _close_one(st: dict, hist: list, pos: dict, bid: float, ask: float, reason: str, book: str = "c2") -> dict | None:
+def _close_one(st: dict, hist: list, pos: dict, bid: float, ask: float, reason: str, book: str = "b103") -> dict | None:
     rows = _plist(st)
     if not any(p.get("id") == pos.get("id") for p in rows):
         return None
@@ -420,7 +418,7 @@ def _close_one(st: dict, hist: list, pos: dict, bid: float, ask: float, reason: 
     return hist[-1]
 
 
-def _protect(st: dict, hist: list, bid: float, ask: float, rail=None, levels=None, book: str = "c2") -> bool:
+def _protect(st: dict, hist: list, bid: float, ask: float, rail=None, levels=None, book: str = "b103") -> bool:
     """Sıra: zorunlu kapanış → stop → hedef → M5 tersi."""
     closed = False
     stopout = -MARGIN * STOPOUT_RATIO
@@ -459,7 +457,7 @@ def _cooling(st: dict, side: str) -> float:
     return max(0.0, left)
 
 
-def _open(st: dict, side: str, bid: float, ask: float, signal: str, plan: dict, book: str = "c2") -> dict | None:
+def _open(st: dict, side: str, bid: float, ask: float, signal: str, plan: dict, book: str = "b103") -> dict | None:
     rows = _plist(st)
     if book == "bybit" and st.get("halted"):
         return None
@@ -470,7 +468,7 @@ def _open(st: dict, side: str, bid: float, ask: float, signal: str, plan: dict, 
     st["seq"] = int(st.get("seq") or 0) + 1
     entry = round(_open_px(side, bid, ask), 2)
     pos = {
-        "id": f"fx-{st['seq']}-{int(time.time())}",
+        "id": f"b103-{st['seq']}-{int(time.time())}",
         "book": book,
         "symbol": SYMBOL,
         "side": side,
@@ -503,11 +501,12 @@ def apply_signal(
     ask: float | None,
     rail: dict | None = None,
     levels: dict | None = None,
-    book: str = "c2",
+    book: str = "b103",
 ) -> dict:
     """UP → AL, DOWN → SAT. Short açıkken long da açılır (en fazla 1+1)."""
     direction = str((signal or {}).get("direction") or "NEUTRAL").upper()
-    if book == "bybit":
+    book = "b103"
+    if False and book == "bybit":
         try:
             from bybit_xau import ticker
             t = ticker(force=True)
@@ -575,7 +574,7 @@ def apply_signal(
     return snapshot(bid, ask, book=book)
 
 
-def snapshot(bid: float | None = None, ask: float | None = None, book: str = "c2") -> dict:
+def snapshot(bid: float | None = None, ask: float | None = None, book: str = "b103") -> dict:
     st = _load_state(book)
     hist = _load_hist(book)
     rows = []
@@ -633,7 +632,7 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "c2
     }
     try:
         from desk_meta import attach
-        attach(out, "cem02", hist=hist, state_path=_files(book)[0], init=out.get("init_balance"))
+        attach(out, "b103", hist=hist, state_path=_files(book)[0], init=out.get("init_balance"))
     except Exception:
         pass
     return out

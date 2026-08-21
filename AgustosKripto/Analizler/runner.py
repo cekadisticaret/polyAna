@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analizler — A1/A2/A3/A8/A4/A10/A6 sanal futures saatlik open/close.
+"""Analizler — A1/A2/A10/A6 sanal futures saatlik open/close.
 
   python3 AgustosKripto/Analizler/runner.py close
   python3 AgustosKripto/Analizler/runner.py open
@@ -42,8 +42,6 @@ EXIT_POLICY = policy_for("Analizler")
 
 from signals import (  # noqa: E402
     ANALIZ_META,
-    clear_venv_cache,
-    prefetch_a3_a8,
     resolve,
     supertrend_scored,
 )
@@ -232,9 +230,6 @@ def run_open() -> dict:
         return skipped
     scan_syms = list(dict.fromkeys(SYMBOLS + ST_SYMBOLS))
     kl = fetch_all_klines(scan_syms, limit=80)
-    # A3/A8 sistem python'da talib/jesse yok — freqtrade/jesse .venv üzerinden
-    clear_venv_cache()
-    prefetch_a3_a8(SYMBOLS)
     results = []
     for m in ANALIZ_META:
         sp, hp = _paths(m["id"])
@@ -279,7 +274,6 @@ def run_open() -> dict:
             entry_price_mode="live",
         )
         results.append({"id": m["id"], "name": m["name"], **r})
-    clear_venv_cache()
     return {"ok": True, "results": results}
 
 

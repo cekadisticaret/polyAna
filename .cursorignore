@@ -1,7 +1,5 @@
 # Heavy / generated — keep remote extension host light
 backups/
-jesse/
-freqtrade/
 **/node_modules/
 **/.venv/
 **/__pycache__/

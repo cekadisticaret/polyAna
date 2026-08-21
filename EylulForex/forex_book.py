@@ -610,7 +610,7 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "g1
             float_sum += fpnl
         if net is not None:
             net_sum += net
-    return {
+    out = {
         "ok": True,
         "book": book,
         "symbol": SYMBOL,
@@ -643,6 +643,12 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "g1
         },
         "ts": datetime.now(timezone.utc).isoformat(),
     }
+    try:
+        from desk_meta import attach
+        attach(out, book, hist=hist, state_path=_files(book)[0], init=out.get("init_balance"))
+    except Exception:
+        pass
+    return out
 
 
 def reset_book(book: str) -> dict:
