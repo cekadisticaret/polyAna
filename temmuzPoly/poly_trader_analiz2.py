@@ -8,7 +8,7 @@ Modlar:
   stats   → manuel: detaylı başarı raporu
 
 Algoritma: poly_predictor_analysis.py
-Sanal bütçe: $300, işlem $12/$16/$20 (sembol WR — 1. Analiz mantığı).
+Sanal bütçe: $1000, işlem $24/$36/$48 (sembol WR — 1. Analiz mantığı).
 Hacim filtresi yok. ALLOW_FALLBACK=False → sadece predict(); True ise ABD kapalıyken yedek RSI/MACD/EMA.
 Gece modu kapalı. Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open/preview atlanır; close açık pozisyon varsa çalışır).
 """
@@ -26,7 +26,7 @@ from dataclasses import dataclass
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines, _rsi, _macd, _ema
 from pm_trader_helpers import (
-    apply_pm_quote, sanal_pnl, symbol_wr_amount, pm_hourly_profit_entry_ok,
+    apply_pm_quote, sanal_pnl, symbol_wr_amount_for_book, pm_hourly_profit_entry_ok,
     pm_sanal_settle_trade, pm_sanal_slot_candle,
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT,
     SANAL_TRADE_AMOUNT_HIGH, SANAL_TRADE_AMOUNT_LOW,
@@ -48,6 +48,7 @@ HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz2_history.json")
 WEEKLY_IMG    = "/tmp/poly_analiz2_weekly_heatmap.png"
 
 INITIAL_BALANCE    = SANAL_INITIAL_BALANCE
+BOOK_KEY           = "analiz2"
 TRADE_AMOUNT       = SANAL_TRADE_AMOUNT
 TRADE_AMOUNT_HIGH  = SANAL_TRADE_AMOUNT_HIGH
 TRADE_AMOUNT_LOW   = SANAL_TRADE_AMOUNT_LOW
@@ -373,7 +374,7 @@ async def run_open() -> None:
             continue
 
         name = sym.replace("USDT", "")
-        base_amount = symbol_wr_amount(history, sym)
+        base_amount = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
         _sk, dyn_amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
             history, hour_tr, base_amount
         )

@@ -45,7 +45,7 @@ base.CALIB_FILE = os.path.join(_DIR, "c101_v2_calibration.jsonl")
 base.LABEL = "C1#01 V2"
 base.BOOK_KEY = "c101_v2"
 base.ALGO_NAME = "OPUS-OHLCV V2 · gerçek ask'e karşı adil fiyat"
-base.INITIAL_BALANCE = 300.0
+base.INITIAL_BALANCE = 1000.0
 
 
 def pm_prices(symbol: str, now_utc: datetime) -> dict | None:

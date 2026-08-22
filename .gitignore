@@ -2,6 +2,8 @@
 EylulForex/mt5-demo/.env
 EylulForex/mt5-demo/config/
 EylulForex/data/ctrader_token.json
+EylulForex/data/oapi_live_state.json
+EylulForex/data/oapi_live.lock
 EylulForex/data/ctrader_symbol.json
 EylulForex/data/capital_session.json
 EylulForex/data/forex_analyst_feed.jsonl

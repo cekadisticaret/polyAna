@@ -75,11 +75,21 @@ def _get(path: str, params: dict, *, cache_ttl: int = 0) -> list | dict | None:
 # ── 1. OHLCV + taker akışı ────────────────────────────────────
 def klines(symbol: str, interval: str = "1h", limit: int = 120) -> list[dict]:
     """Ham kline → dict. takerBuyBase alanı CVD vekili için tutulur."""
-    raw = _get(
-        "/fapi/v1/klines",
-        {"symbol": symbol.upper(), "interval": interval, "limit": int(limit)},
-        cache_ttl=45,
-    )
+    raw = None
+    try:
+        _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import public_klines
+        raw = public_klines(symbol, interval, int(limit))
+    except Exception:
+        raw = None
+    if not isinstance(raw, list):
+        raw = _get(
+            "/fapi/v1/klines",
+            {"symbol": symbol.upper(), "interval": interval, "limit": int(limit)},
+            cache_ttl=45,
+        )
     if not isinstance(raw, list):
         return []
     out = []

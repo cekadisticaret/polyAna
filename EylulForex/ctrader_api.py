@@ -3,14 +3,15 @@
 Docs: https://help.ctrader.com/open-api/
 Apps: https://openapi.ctrader.com/apps
 
-OAuth REST + JSON WebSocket. Emir yok (yalnız hesap/fiyat/pozisyon).
+OAuth REST + JSON WebSocket. Emir yalnız DEMO + `CTRADER_SCOPE=trading`.
+Canlı (`CTRADER_DEMO=false`) hesaba emir gitmez.
 
 Env:
   CTRADER_CLIENT_ID
   CTRADER_CLIENT_SECRET
   CTRADER_REDIRECT_URI   (uygulamada kayıtlı olmalı)
-  CTRADER_SCOPE=accounts (görüntü; trading = emir hakkı, kullanmıyoruz)
-  CTRADER_DEMO=true      (false = live.ctraderapi.com)
+  CTRADER_SCOPE=trading  (emir; accounts = yalnız görüntü)
+  CTRADER_DEMO=true      (false = live.ctraderapi.com — emir yine kapalı)
   CTRADER_ACCOUNT_ID     (boşsa token'daki ilk hesap)
 """
 from __future__ import annotations
@@ -24,6 +25,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 _DIR = Path(__file__).resolve().parent
@@ -57,6 +59,13 @@ PT_ACCOUNTS_REQ = 2149
 PT_ACCOUNTS_RES = 2150
 PT_DEAL_LIST_REQ = 2133
 PT_DEAL_LIST_RES = 2134
+PT_NEW_ORDER_REQ = 2106
+PT_AMEND_SLTP_REQ = 2110
+PT_CLOSE_POS_REQ = 2111
+PT_EXECUTION_EVENT = 2126
+PT_ORDER_ERROR_EVENT = 2132
+PT_UNREAL_PNL_REQ = 2187
+PT_UNREAL_PNL_RES = 2188
 PT_HEARTBEAT = 51
 
 _PERIOD = {
@@ -105,6 +114,21 @@ def app_configured() -> bool:
 
 def configured() -> bool:
     return app_configured() and bool((load_token().get("accessToken") or "").strip())
+
+
+def granted_scope() -> str:
+    return str((load_token().get("granted_scope") or "")).strip().lower()
+
+
+def orders_allowed() -> bool:
+    """DEMO + trading OAuth. Canlı hesaba emir yok."""
+    if not _demo():
+        return False
+    if not configured():
+        return False
+    if scope() != "trading":
+        return False
+    return granted_scope() == "trading"
 
 
 def ws_url() -> str:
@@ -158,7 +182,12 @@ def _token_http(params: dict) -> dict:
         raise RuntimeError(f"ctrader token: {body.get('errorCode')} {body.get('description')}")
     if not body.get("accessToken"):
         raise RuntimeError("ctrader token: accessToken yok")
+    prev = load_token()
     body["saved_at"] = time.time()
+    if (params.get("grant_type") or "") == "authorization_code":
+        body["granted_scope"] = scope()
+    else:
+        body["granted_scope"] = prev.get("granted_scope") or body.get("granted_scope")
     save_token(body)
     return body
 
@@ -346,9 +375,76 @@ def _pick_gold(symbols: list) -> dict | None:
     return ranked[0][1] if ranked else None
 
 
+def _sym_pack(acc_id: int, hit: dict) -> dict:
+    return {
+        "accountId": acc_id,
+        "symbolId": int(hit.get("symbolId")),
+        "symbolName": hit.get("symbolName") or "XAUUSD",
+        "digits": int(hit.get("digits") or 2),
+        "lotSize": int(hit.get("lotSize") or 0),
+        "minVolume": int(hit.get("minVolume") or 0),
+        "stepVolume": int(hit.get("stepVolume") or 0),
+        "maxVolume": int(hit.get("maxVolume") or 0),
+    }
+
+
+def _lots_to_vol(lots: float, sym: dict) -> int:
+    lot = int(sym.get("lotSize") or 10_000)
+    step = int(sym.get("stepVolume") or 100)
+    mn = int(sym.get("minVolume") or step or 100)
+    raw = int(round(float(lots) * lot))
+    if step > 0:
+        raw = (raw // step) * step
+    return max(mn, raw)
+
+
+def _rel_price(delta: float) -> int:
+    return max(1, int(round(abs(float(delta)) * 100_000)))
+
+
+def _ts_tr(ms) -> str | None:
+    if ms is None or ms == "":
+        return None
+    try:
+        t = float(ms)
+    except (TypeError, ValueError):
+        return None
+    if t > 10_000_000_000:
+        t /= 1000.0
+    try:
+        return datetime.fromtimestamp(t, ZoneInfo("Europe/Istanbul")).strftime("%Y.%m.%d %H:%M:%S")
+    except (OSError, OverflowError, ValueError):
+        return None
+
+
+def _pos_mark_pnl(side: str, entry, mark, volume_raw, lots, lot_size) -> float | None:
+    if entry is None or mark is None:
+        return None
+    try:
+        entry_f, mark_f = float(entry), float(mark)
+    except (TypeError, ValueError):
+        return None
+    units = None
+    try:
+        if volume_raw is not None:
+            units = float(volume_raw) / 100.0
+        elif lots is not None and lot_size:
+            units = float(lots) * (float(lot_size) / 100.0)
+    except (TypeError, ValueError):
+        units = None
+    if not units:
+        return None
+    sign = 1.0 if side == "buy" else -1.0
+    return round(sign * (mark_f - entry_f) * units, 2)
+
+
 async def _ensure_symbol(ws: _Ws, acc_id: int) -> dict:
     cached = _load_sym()
-    if cached.get("symbolId") and cached.get("accountId") == acc_id:
+    if (
+        cached.get("symbolId")
+        and cached.get("accountId") == acc_id
+        and int(cached.get("lotSize") or 0) > 0
+    ):
         return cached
     await ws.send(PT_SYMBOLS_REQ, {
         "ctidTraderAccountId": acc_id,
@@ -359,12 +455,7 @@ async def _ensure_symbol(ws: _Ws, acc_id: int) -> dict:
     hit = _pick_gold(rows)
     if not hit:
         raise RuntimeError("ctrader XAUUSD/GOLD sembolü yok")
-    out = {
-        "accountId": acc_id,
-        "symbolId": int(hit.get("symbolId")),
-        "symbolName": hit.get("symbolName") or "XAUUSD",
-        "digits": int(hit.get("digits") or 2),
-    }
+    out = _sym_pack(acc_id, hit)
     _save_sym(out)
     return out
 
@@ -403,6 +494,9 @@ def quote() -> dict:
             "bid": bid,
             "ask": ask,
             "mid": mid,
+            "live_price": mid,
+            "day_high": None,
+            "day_low": None,
             "spread": (ask - bid) if bid is not None and ask is not None else None,
             "src": "ctrader_demo" if _demo() else "ctrader_live",
             "market_status": "TRADEABLE",
@@ -476,18 +570,20 @@ def snapshot_book() -> dict:
             side = "buy" if side_raw in ("1", "BUY") else "sell"
             md = row.get("moneyDigits") or digits
             vol = td.get("volume")
+            lot = int((_load_sym() or {}).get("lotSize") or 10_000)
             try:
-                lots = float(vol) / 100.0 if vol is not None else None
+                lots = float(vol) / lot if vol is not None and lot else None
             except (TypeError, ValueError):
                 lots = None
             pos_out.append({
                 "id": row.get("positionId"),
                 "symbol": "XAUUSD",
                 "side": side,
+                "volume_raw": vol,
                 "volume": lots if lots is not None else vol,
                 "entry": _f(row.get("price")),
                 "mark": None,
-                "open_time": td.get("openTimestamp") or row.get("utcLastUpdateTimestamp"),
+                "open_time": _ts_tr(td.get("openTimestamp") or row.get("utcLastUpdateTimestamp")),
                 "float_pnl": None,
                 "float_net": None,
                 "stop": _f(row.get("stopLoss")),
@@ -495,7 +591,70 @@ def snapshot_book() -> dict:
                 "leverage": None,
                 "src": "ctrader",
                 "swap": _money(row.get("swap"), md),
+                "commission": _money(row.get("commission"), md),
             })
+        bid = ask = None
+        if pos_out:
+            try:
+                sym = await _ensure_symbol(ws, acc_id)
+                await ws.send(PT_SUB_SPOTS_REQ, {
+                    "ctidTraderAccountId": acc_id,
+                    "symbolId": [sym["symbolId"]],
+                })
+                await ws.wait({PT_SUB_SPOTS_RES, PT_SPOT_EVENT})
+                deadline = time.time() + 6
+                while time.time() < deadline:
+                    msg = await ws.recv(timeout=max(0.4, deadline - time.time()))
+                    if int(msg.get("payloadType") or 0) == PT_SPOT_EVENT:
+                        spot = msg.get("payload") or {}
+                        bid = _px(spot.get("bid"))
+                        ask = _px(spot.get("ask"))
+                        break
+            except Exception:
+                bid = ask = None
+            u_map: dict = {}
+            try:
+                await ws.send(PT_UNREAL_PNL_REQ, {"ctidTraderAccountId": acc_id})
+                ures = await ws.wait({PT_UNREAL_PNL_RES}, timeout=10)
+                up = ures.get("payload") or {}
+                ud = up.get("moneyDigits") or digits
+                for row in up.get("positionUnrealizedPnL") or []:
+                    pid = row.get("positionId")
+                    u_map[pid] = {
+                        "gross": _money(row.get("grossUnrealizedPnL"), ud),
+                        "net": _money(row.get("netUnrealizedPnL"), ud),
+                    }
+            except Exception:
+                u_map = {}
+            lot = int((_load_sym() or {}).get("lotSize") or 10_000)
+            float_sum = 0.0
+            net_sum = 0.0
+            have_float = False
+            for p in pos_out:
+                mark = bid if p["side"] == "sell" else ask
+                if mark is None:
+                    mark = bid if bid is not None else ask
+                p["mark"] = mark
+                u = u_map.get(p.get("id")) or {}
+                fp = u.get("gross")
+                fn = u.get("net")
+                if fp is None:
+                    fp = _pos_mark_pnl(
+                        p["side"], p.get("entry"), mark,
+                        p.get("volume_raw"), p.get("volume"), lot,
+                    )
+                if fn is None:
+                    fn = fp
+                p["float_pnl"] = fp
+                p["float_net"] = fn
+                if fp is not None:
+                    float_sum += fp
+                    have_float = True
+                if fn is not None:
+                    net_sum += fn
+        else:
+            float_sum = net_sum = 0.0
+            have_float = False
         hist = []
         try:
             now_ms = int(time.time() * 1000)
@@ -510,29 +669,39 @@ def snapshot_book() -> dict:
                 td = d.get("tradeData") or {}
                 side_raw = str(td.get("tradeSide") or "").upper()
                 md = d.get("moneyDigits") or digits
+                cpd = d.get("closePositionDetail") if isinstance(d.get("closePositionDetail"), dict) else None
+                if not cpd:
+                    continue
+                lot = int((_load_sym() or {}).get("lotSize") or 10_000)
+                raw_vol = td.get("volume")
+                try:
+                    lots = float(raw_vol) / lot if raw_vol is not None and lot else None
+                except (TypeError, ValueError):
+                    lots = None
                 hist.append({
                     "side": "buy" if side_raw in ("1", "BUY") else "sell",
-                    "volume": td.get("volume"),
-                    "entry": _f(d.get("executionPrice") or d.get("closePrice")),
+                    "volume": lots if lots is not None else raw_vol,
+                    "entry": _f(cpd.get("entryPrice") or d.get("executionPrice") or d.get("closePrice")),
                     "exit": _f(d.get("executionPrice")),
-                    "pnl": _money(d.get("closePositionDetail", {}).get("grossProfit") if isinstance(d.get("closePositionDetail"), dict) else d.get("pnl"), md),
+                    "pnl": _money(cpd.get("grossProfit") if cpd.get("grossProfit") is not None else cpd.get("pnl") or d.get("pnl"), md),
                     "reason": str(d.get("dealStatus") or ""),
-                    "open_time": td.get("openTimestamp"),
-                    "close_time": d.get("executionTimestamp"),
+                    "open_time": _ts_tr(td.get("openTimestamp")),
+                    "close_time": _ts_tr(d.get("executionTimestamp")),
                     "src": "ctrader",
                 })
         except Exception:
             hist = []
+        equity = round(balance + (net_sum if have_float else 0.0), 2)
         out = {
             "ok": True,
             "book": "openapi",
             "symbol": "XAUUSD",
             "balance": balance,
-            "equity": balance,
+            "equity": equity,
             "available": None,
             "init_balance": None,
             "total_pnl": None,
-            "float_pnl": None,
+            "float_pnl": round(float_sum, 2) if have_float else None,
             "open_count": len(pos_out),
             "trade_count": len(hist) + len(pos_out),
             "position": pos_out[0] if pos_out else None,
@@ -550,11 +719,6 @@ def snapshot_book() -> dict:
             "src": "ctrader_demo" if _demo() else "ctrader_live",
             "ts": datetime.now(timezone.utc).isoformat(),
         }
-        try:
-            from desk_meta import attach
-            attach(out, "oapi", hist=hist, init=out.get("init_balance") or out.get("balance"))
-        except Exception:
-            pass
         return out
 
     return _run(_do)
@@ -578,6 +742,8 @@ def status() -> dict:
             "configured": False,
             "oauth_ready": True,
             "demo": _demo(),
+            "can_trade": False,
+            "need_trade_grant": True,
             "error": "token_missing",
             "oauth_url": oauth_url(),
             "connect": "/forex/openapi/connect",
@@ -592,6 +758,8 @@ def status() -> dict:
             "configured": True,
             "oauth_ready": True,
             "demo": _demo(),
+            "can_trade": orders_allowed(),
+            "need_trade_grant": _demo() and granted_scope() != "trading",
             "account": book.get("live"),
             "balance": book.get("balance"),
             "equity": book.get("equity"),
@@ -607,10 +775,131 @@ def status() -> dict:
             "configured": True,
             "oauth_ready": True,
             "demo": _demo(),
+            "can_trade": orders_allowed(),
+            "need_trade_grant": _demo() and granted_scope() != "trading",
             "error": str(e)[:240],
             "oauth_url": oauth_url(),
             "connect": "/forex/openapi/connect",
         }
+
+
+def _exec_payload(msg: dict) -> dict:
+    pt = int(msg.get("payloadType") or 0)
+    p = msg.get("payload") or {}
+    if pt == PT_ORDER_ERROR_EVENT or p.get("errorCode"):
+        raise RuntimeError(f"ctrader order {p.get('errorCode') or p.get('description') or p}")
+    pos = p.get("position") or {}
+    deal = p.get("deal") or {}
+    order = p.get("order") or {}
+    return {
+        "ok": True,
+        "position_id": pos.get("positionId") or p.get("positionId") or deal.get("positionId"),
+        "order_id": order.get("orderId") or deal.get("orderId"),
+        "price": deal.get("executionPrice") or pos.get("price"),
+        "volume_raw": (pos.get("tradeData") or {}).get("volume") or deal.get("filledVolume"),
+        "exec": str(p.get("executionType") or ""),
+        "src": "ctrader_demo" if _demo() else "ctrader_live",
+    }
+
+
+def place_market(
+    side: str,
+    lots: float = 0.10,
+    stop: float | None = None,
+    target: float | None = None,
+    comment: str = "bursaapp oapi",
+) -> dict:
+    if not orders_allowed():
+        raise RuntimeError("ctrader demo emir kapalı — trading izni veya DEMO şart")
+    side_u = "BUY" if str(side).lower() in ("buy", "up", "long") else "SELL"
+
+    async def _do(ws, acc_id, _token):
+        if not _demo():
+            raise RuntimeError("ctrader canlı emir kapalı")
+        sym = await _ensure_symbol(ws, acc_id)
+        vol = _lots_to_vol(lots, sym)
+        payload = {
+            "ctidTraderAccountId": acc_id,
+            "symbolId": sym["symbolId"],
+            "orderType": "MARKET",
+            "tradeSide": side_u,
+            "volume": vol,
+            "comment": (comment or "bursaapp oapi")[:512],
+            "label": "oapi",
+        }
+        if stop is not None and target is not None:
+            await ws.send(PT_SUB_SPOTS_REQ, {
+                "ctidTraderAccountId": acc_id,
+                "symbolId": [sym["symbolId"]],
+            })
+            await ws.wait({PT_SUB_SPOTS_RES, PT_SPOT_EVENT})
+            spot = None
+            deadline = time.time() + 6
+            while time.time() < deadline:
+                msg = await ws.recv(timeout=max(0.4, deadline - time.time()))
+                if int(msg.get("payloadType") or 0) == PT_SPOT_EVENT:
+                    spot = msg.get("payload") or {}
+                    break
+            bid = _px((spot or {}).get("bid"))
+            ask = _px((spot or {}).get("ask"))
+            entry = ask if side_u == "BUY" else bid
+            if entry:
+                sl, tp = float(stop), float(target)
+                if side_u == "BUY":
+                    payload["relativeStopLoss"] = _rel_price(entry - sl)
+                    payload["relativeTakeProfit"] = _rel_price(tp - entry)
+                else:
+                    payload["relativeStopLoss"] = _rel_price(sl - entry)
+                    payload["relativeTakeProfit"] = _rel_price(entry - tp)
+        await ws.send(PT_NEW_ORDER_REQ, payload)
+        ev = await ws.wait({PT_EXECUTION_EVENT, PT_ORDER_ERROR_EVENT}, timeout=20)
+        return _exec_payload(ev)
+
+    return _run(_do)
+
+
+def close_position(position_id, volume_raw: int | None = None, lots: float | None = None) -> dict:
+    if not orders_allowed():
+        raise RuntimeError("ctrader demo emir kapalı — trading izni veya DEMO şart")
+
+    async def _do(ws, acc_id, _token):
+        if not _demo():
+            raise RuntimeError("ctrader canlı emir kapalı")
+        vol = int(volume_raw or 0)
+        if vol <= 0:
+            sym = await _ensure_symbol(ws, acc_id)
+            vol = _lots_to_vol(float(lots or 0.10), sym)
+        await ws.send(PT_CLOSE_POS_REQ, {
+            "ctidTraderAccountId": acc_id,
+            "positionId": int(position_id),
+            "volume": vol,
+        })
+        ev = await ws.wait({PT_EXECUTION_EVENT, PT_ORDER_ERROR_EVENT}, timeout=20)
+        return _exec_payload(ev)
+
+    return _run(_do)
+
+
+def amend_sltp(position_id, stop: float | None = None, target: float | None = None) -> dict:
+    if not orders_allowed():
+        raise RuntimeError("ctrader demo emir kapalı — trading izni veya DEMO şart")
+
+    async def _do(ws, acc_id, _token):
+        if not _demo():
+            raise RuntimeError("ctrader canlı emir kapalı")
+        payload = {
+            "ctidTraderAccountId": acc_id,
+            "positionId": int(position_id),
+        }
+        if stop is not None:
+            payload["stopLoss"] = float(stop)
+        if target is not None:
+            payload["takeProfit"] = float(target)
+        await ws.send(PT_AMEND_SLTP_REQ, payload)
+        ev = await ws.wait({PT_EXECUTION_EVENT, PT_ORDER_ERROR_EVENT}, timeout=20)
+        return _exec_payload(ev)
+
+    return _run(_do)
 
 
 def ping() -> dict:

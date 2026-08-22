@@ -51,8 +51,28 @@ def _klines_raw(tf: str, limit: int) -> tuple[list[dict], str]:
     lim = max(20, min(int(limit or 240), 500))
     last_err = "yok"
     sources = []
-    if _fapi_ok():
-        sources.append(("fapi", f"{_FAPI}/fapi/v1/klines?symbol={SYMBOL}&interval={iv}&limit={lim}"))
+    try:
+        import sys
+        from pathlib import Path
+        root = str(Path(__file__).resolve().parents[1])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import public_klines
+        raw = public_klines(SYMBOL, iv, lim)
+        if isinstance(raw, list) and raw:
+            out = []
+            for r in raw:
+                out.append({
+                    "time": int(r[0]) // 1000,
+                    "open": float(r[1]),
+                    "high": float(r[2]),
+                    "low": float(r[3]),
+                    "close": float(r[4]),
+                    "volume": float(r[5] or 0),
+                })
+            return out, "public"
+    except Exception as e:
+        last_err = str(e)[:160]
     for src, url in sources:
         try:
             rows = _get_json(url)
@@ -102,8 +122,23 @@ def signal_klines(tf: str, n: int = 180) -> list[dict]:
 
 def _ticker() -> tuple[dict, str]:
     sources = []
-    if _fapi_ok():
-        sources.append(("fapi", f"{_FAPI}/fapi/v1/ticker/bookTicker?symbol={SYMBOL}"))
+    try:
+        import sys
+        from pathlib import Path
+        root = str(Path(__file__).resolve().parents[1])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import get_book
+        hit = get_book(SYMBOL)
+        if hit and (hit.get("bid") or hit.get("ask")):
+            return {
+                "bidPrice": hit.get("bid"),
+                "askPrice": hit.get("ask"),
+                "bidQty": hit.get("bid_qty"),
+                "askQty": hit.get("ask_qty"),
+            }, "ws"
+    except Exception:
+        pass
     for src, url in sources:
         try:
             d = _get_json(url)

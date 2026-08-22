@@ -10,7 +10,7 @@ B1#01 iskeletini yeniden kullanır — poly_trader_b1_01.py DOKUNULMAZ.
 Ayrı state/history. Sanal defter; gerçek para emri yok.
 
 Modlar: close / open / preview / weekly / stats
-Cron: :02 close · :06 open (a2 sinyalleri :05'te ~10 sn'de üretiliyor)
+Cron: :01 close · :02:30 open (kaynak defterler :02'de açtıktan sonra)
 """
 import asyncio
 import os

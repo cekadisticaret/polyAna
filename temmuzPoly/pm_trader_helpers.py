@@ -135,7 +135,7 @@ def _is_algo_islemler_label(label: str) -> bool:
     u = label.strip().upper()
     if u == "A2" or u.startswith("A2#"):
         return True
-    for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#", "C1#", "X1#", "E01"):
+    for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#", "C1#", "X1#", "E01", "COMBO"):
         if label.startswith(prefix):
             return True
     return False
@@ -222,22 +222,22 @@ def skip_if_weekend_pause(
 
 
 # Sanal trader giriş tutarları (1. Analiz mantığı — A1 Live hariç ortak)
-SANAL_INITIAL_BALANCE = 300.0
-SANAL_TRADE_AMOUNT = 16.0       # sembol WR veri yok veya tam %50
-SANAL_TRADE_AMOUNT_HIGH = 20.0  # sembol genel WR > %50
-SANAL_TRADE_AMOUNT_LOW = 12.0   # sembol genel WR < %50
+SANAL_INITIAL_BALANCE = 1000.0
+SANAL_TRADE_AMOUNT = 16.0       # eski sabit (A10 dual vb. — WR kademesi değil)
+SANAL_TRADE_AMOUNT_HIGH = 20.0
+SANAL_TRADE_AMOUNT_LOW = 12.0
+
+# Algoritma-işlemler sanal — sembol WR kademesi (soğuk saat −%30 ayrıca)
+COMBO_FAMILY_KEYS = frozenset({"analiz1", "c101", "a2_05_v2", "combo"})
+COMBO_FAMILY_INIT = 1000.0
+COMBO_FAMILY_WR = (24.0, 36.0, 48.0)
+SANAL_WR_DEFAULT = COMBO_FAMILY_WR
 
 
 def symbol_wr_amount(history: list, symbol: str) -> float:
-    """Sembol bazlı geçmiş WR'ye göre işlem tutarı ($12 / $16 / $20)."""
-    return wr_tier_amount(
-        history, symbol,
-        SANAL_TRADE_AMOUNT_LOW, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
-    )
-
-
-_SANAL_A2_WR_DEFAULT = (8.0, 12.0, 16.0)
-_SANAL_A6_WR_DEFAULT = (12.0, 16.0, 20.0)
+    """Sembol WR → $24 / $36 / $48 (veri yok → orta)."""
+    low, mid, high = SANAL_WR_DEFAULT
+    return wr_tier_amount(history, symbol, low, mid, high)
 
 
 def wr_tier_amount(
@@ -257,9 +257,7 @@ def wr_tier_amount(
 
 
 def sanal_wr_amount_defaults(book_key: str) -> tuple[float, float, float]:
-    if book_key.startswith("a2_"):
-        return _SANAL_A2_WR_DEFAULT
-    return _SANAL_A6_WR_DEFAULT
+    return SANAL_WR_DEFAULT
 
 
 def load_sanal_wr_amounts(book_key: str) -> tuple[float, float, float]:

@@ -10,6 +10,7 @@ import sys
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 _POLY = os.path.join(_ROOT, "temmuzPoly")
 _ALGO_DIR = os.path.join(_ROOT, "AgustosKripto", "Algoritmalar")
+_ANALIZ_DIR = os.path.join(_ROOT, "AgustosKripto", "Analizler")
 for p in (_POLY, _ALGO_DIR):
     if p not in sys.path:
         sys.path.insert(0, p)
@@ -24,8 +25,19 @@ _algo_cat = importlib.util.module_from_spec(_spec)
 assert _spec.loader is not None
 _spec.loader.exec_module(_algo_cat)
 
+_an_spec = importlib.util.spec_from_file_location(
+    "agustos_analiz_signals",
+    os.path.join(_ANALIZ_DIR, "signals.py"),
+)
+_an_sig = importlib.util.module_from_spec(_an_spec)
+assert _an_spec.loader is not None
+_an_spec.loader.exec_module(_an_sig)
+
 from backtest_common import to_algo21_klines  # noqa: E402
 from backtest_analiz2 import _neutral_preloaded  # noqa: E402
+
+_ST_EXCLUDE = frozenset({"BTCUSDT", "ETHUSDT"})
+_ST_SLOW = frozenset({"SOLUSDT"})
 
 
 def _bars_ohlc(kl: list) -> list:
@@ -181,11 +193,16 @@ def _poly_analiz15(kl_by_symbol: dict[str, list]) -> dict[str, str]:
     return out
 
 
+_B1_MUM_SKIP = frozenset({"KAITOUSDT"})
+
+
 def _poly_b1_mum(kl_by_symbol: dict[str, list]) -> dict[str, str]:
     from b1_mum_signal import resolve_direction  # noqa: E402
 
     out = {sym: "NEUTRAL" for sym in kl_by_symbol}
     for sym, kl in kl_by_symbol.items():
+        if (sym or "").upper() in _B1_MUM_SKIP:
+            continue
         if len(kl) < 30:
             continue
         try:
@@ -300,6 +317,57 @@ def _poly_islemler(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]:
     return {sym: "NEUTRAL" for sym in kl_by_symbol}
 
 
+def _analiz_a10(kl_by_symbol: dict[str, list]) -> dict[str, str]:
+    out = {}
+    for sym, kl in kl_by_symbol.items():
+        try:
+            d = _an_sig.signal_a10(sym, kl)
+            out[sym] = d if d in ("UP", "DOWN") else "NEUTRAL"
+        except Exception as e:
+            print(f"[Test A10] {sym}: {e}")
+            out[sym] = "NEUTRAL"
+    return out
+
+
+def _analiz_st(kl_by_symbol: dict[str, list]) -> dict[str, str]:
+    out = {}
+    for sym, kl in kl_by_symbol.items():
+        try:
+            d, _sc = _an_sig.supertrend_scored(kl)
+            out[sym] = d if d in ("UP", "DOWN") else "NEUTRAL"
+        except Exception as e:
+            print(f"[Test A6 ST] {sym}: {e}")
+            out[sym] = "NEUTRAL"
+    return out
+
+
+def build_supertrend_candidates(kl_1h: dict[str, list], *, max_n: int = 4) -> list[dict]:
+    """Analizler A6 Supertrend — BTC/ETH yok, skor sırası, SOL en son, max 4."""
+    rows: list[dict] = []
+    for sym, kl in kl_1h.items():
+        if sym in _ST_EXCLUDE:
+            continue
+        try:
+            d, sc = _an_sig.supertrend_scored(kl)
+        except Exception:
+            continue
+        if d not in ("UP", "DOWN"):
+            continue
+        rows.append({
+            "symbol": sym,
+            "side": "LONG" if d == "UP" else "SHORT",
+            "signal": d,
+            "score": float(sc),
+            "interval": "1h",
+            "slow": sym in _ST_SLOW,
+        })
+    fast = [c for c in rows if not c.get("slow")]
+    slow = [c for c in rows if c.get("slow")]
+    fast.sort(key=lambda x: (-float(x["score"]), x["symbol"]))
+    slow.sort(key=lambda x: (-float(x["score"]), x["symbol"]))
+    return (fast + slow)[:max_n]
+
+
 def _source_signal_for_book(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]:
     """JARVIS_V1 hariç kaynak defter sinyali."""
     src = book.get("source") or ""
@@ -309,6 +377,12 @@ def _source_signal_for_book(book: dict, kl_by_symbol: dict[str, list]) -> dict[s
         return _algo_cat.signal_for_book(book, kl_by_symbol)
     if src == "algo1":
         return _algo_cat.signal_for_book(book, kl_by_symbol)
+    if src == "analizler":
+        key = book.get("source_key") or ""
+        if key == "a10":
+            return _analiz_a10(kl_by_symbol)
+        if key == "a6":
+            return _analiz_st(kl_by_symbol)
     return {sym: "NEUTRAL" for sym in kl_by_symbol}
 
 
@@ -318,6 +392,10 @@ def signal_for_book(book: dict, kl_by_symbol: dict[str, list]) -> dict[str, str]
         from jarvis_v1 import resolve_signals  # noqa: WPS433
 
         return resolve_signals(kl_by_symbol, _get_all_books(), _source_signal_for_book)
+    if src == "cebu":
+        from cebu import resolve_signals as _cebu_resolve  # noqa: WPS433
+
+        return _cebu_resolve(kl_by_symbol, _get_all_books(), _source_signal_for_book)
     return _source_signal_for_book(book, kl_by_symbol)
 
 

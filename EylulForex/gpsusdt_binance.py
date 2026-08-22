@@ -14,6 +14,8 @@ from pathlib import Path
 _DIR = Path(__file__).resolve().parent
 _ROOT = _DIR.parent
 _KRIPTO = str(_ROOT / "AgustosKripto")
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 if _KRIPTO not in sys.path:
     sys.path.insert(0, _KRIPTO)
 
@@ -39,6 +41,14 @@ _CONTROL = _DIR / "data" / "gpsusdt_live_control.json"
 
 
 def _get(path: str, params: str = "") -> dict | list:
+    try:
+        from binance_fapi_guard import ban_msg, fapi_blocked
+        if fapi_blocked():
+            raise RuntimeError(ban_msg())
+    except RuntimeError:
+        raise
+    except Exception:
+        pass
     url = f"{_FAPI}{path}"
     if params:
         url += "?" + params
@@ -69,6 +79,18 @@ def taker_rate() -> float:
 
 
 def book_ticker() -> dict:
+    try:
+        from binance_fapi_guard import get_book
+        hit = get_book(SYMBOL)
+        if hit and (hit.get("bid") or hit.get("ask")):
+            return {
+                "bid": float(hit.get("bid") or 0),
+                "ask": float(hit.get("ask") or 0),
+                "bid_qty": float(hit.get("bid_qty") or 0),
+                "ask_qty": float(hit.get("ask_qty") or 0),
+            }
+    except Exception:
+        pass
     d = _get("/fapi/v1/ticker/bookTicker", f"symbol={SYMBOL}")
     return {
         "bid": float(d.get("bidPrice") or 0),
@@ -79,6 +101,13 @@ def book_ticker() -> dict:
 
 
 def premium() -> dict:
+    try:
+        from binance_fapi_guard import ws_premium
+        hit = ws_premium(SYMBOL)
+        if hit:
+            return hit
+    except Exception:
+        pass
     d = _get("/fapi/v1/premiumIndex", f"symbol={SYMBOL}")
     return {
         "mark": float(d.get("markPrice") or 0),
@@ -220,13 +249,30 @@ def _hedge(c: BinanceFuturesClient) -> bool:
 def live_position_state(c: BinanceFuturesClient | None = None) -> tuple[str, dict | None]:
     """('open', row) | ('flat', None) | ('unknown', None)."""
     try:
+        from binance_fapi_guard import fapi_blocked, position_state, write_position
+        hit = position_state(SYMBOL)
+        if hit:
+            return hit
+        if fapi_blocked():
+            return "unknown", None
         c = c or _client()
         if not c.configured():
             return "unknown", None
         for r in c.position_risk(SYMBOL) or []:
             amt = float(r.get("positionAmt") or 0)
+            write_position(
+                SYMBOL,
+                amt=amt,
+                entry=float(r.get("entryPrice") or 0),
+                mark=float(r.get("markPrice") or 0),
+                upnl=float(r.get("unRealizedProfit") or 0),
+                leverage=float(r.get("leverage") or 0),
+                margin_type=str(r.get("marginType") or ""),
+                src="rest",
+            )
             if abs(amt) > 0:
                 return "open", r
+        write_position(SYMBOL, amt=0.0, src="rest")
         return "flat", None
     except Exception:
         return "unknown", None
@@ -369,7 +415,7 @@ def place_market(
     qty: float,
     *,
     reduce_only: bool = False,
-    leverage: int = 15,
+    leverage: int = 10,
     fallback_px: float = 0.0,
 ) -> dict:
     """GPSUSDT Isolated MARKET — CR6 state'e yazmaz."""
@@ -415,6 +461,18 @@ def place_market(
             f"orderId={order.get('orderId')} reduceOnly={reduce_only} fee=${fee:.4f}",
             flush=True,
         )
+        try:
+            from binance_fapi_guard import write_position
+            if not reduce_only:
+                write_position(
+                    SYMBOL,
+                    amt=exe if side_u == "BUY" else -exe,
+                    entry=avg,
+                    mark=avg,
+                    src="fill",
+                )
+        except Exception:
+            pass
         return {
             "ok": True,
             "side": "buy" if side_u == "BUY" else "sell",

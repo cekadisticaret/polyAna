@@ -2,7 +2,7 @@
 """A2#05 Mean Reversion LIVE — gerçek Polymarket $4–5–6.
 
 Sanal A2#05 ayrı devam eder. Env: PM_A2_05_LIVE_ENABLED=true
-Cron: close :02 · open :05+10sn (sanal :05:00 sonrası)
+Cron: close :01 · open :02:10 (sanal :02 sonrası)
 Dashboard: a2_05_live aç/kapa (varsayılan kapalı)
 """
 from __future__ import annotations
@@ -16,6 +16,7 @@ SPEC = A2LiveSpec(
     amount_system="a2_05",
     env_flag="PM_A2_05_LIVE_ENABLED",
     default_amount=5.0,
+    min_entry_price=0.40,
 )
 
 if __name__ == "__main__":

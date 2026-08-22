@@ -89,6 +89,7 @@ _TZ_TR = ZoneInfo("Europe/Istanbul")
 STATE_FILE = os.path.join(_DIR, "crypto_futures_a139_state.json")
 HISTORY_FILE = os.path.join(_DIR, "crypto_futures_a139_history.json")
 CONTROL_FILE = os.path.join(_DIR, "crypto_futures_a139_control.json")
+USDT_CACHE_FILE = os.path.join(_DIR, "crypto_futures_a139_usdt.json")
 TEST_HISTORY = os.path.join(_TEST, "data", "test_a1_39_history.json")
 LABEL = "A1#39 Live"
 ALGO_NAME = "A1#39 H1 Profesyonel Kombinasyon"
@@ -223,6 +224,45 @@ def state_lock(wait_sec: float | None = None):
         fh.close()
 
 
+def _load_usdt_cache() -> dict | None:
+    if not os.path.exists(USDT_CACHE_FILE):
+        return None
+    try:
+        with open(USDT_CACHE_FILE) as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return None
+        bal = data.get("balance")
+        if bal is None:
+            return None
+        return {
+            "asset": data.get("asset") or "USDT",
+            "balance": float(bal),
+            "available": float(data["available"]) if data.get("available") is not None else None,
+            "cross_wallet": float(data["cross_wallet"]) if data.get("cross_wallet") is not None else None,
+            "cached": True,
+            "cached_at_tr": data.get("cached_at_tr") or "",
+        }
+    except Exception:
+        return None
+
+
+def _save_usdt_cache(usdt: dict) -> None:
+    if not usdt or usdt.get("balance") is None:
+        return
+    try:
+        with open(USDT_CACHE_FILE, "w") as f:
+            json.dump({
+                "asset": usdt.get("asset") or "USDT",
+                "balance": float(usdt["balance"]),
+                "available": usdt.get("available"),
+                "cross_wallet": usdt.get("cross_wallet"),
+                "cached_at_tr": now_tr_iso(),
+            }, f)
+    except Exception:
+        pass
+
+
 def load_state() -> dict:
     if os.path.exists(STATE_FILE):
         try:
@@ -300,6 +340,93 @@ def _drop_closed_ghosts(opens: list, history: list | None = None) -> tuple[list,
         oid = p.get("order_id")
         (ghosts if oid and str(oid) in done else keep).append(p)
     return keep, ghosts
+
+
+def _close_local_only(pos: dict, *, reason: str) -> dict:
+    """Binance zaten düz — yeni emir yok, yalnız defter satırı."""
+    entry = float(pos.get("entry_price") or 0)
+    qty = float(pos.get("qty") or 0)
+    side = pos.get("side") or "LONG"
+    sym = pos.get("symbol") or ""
+    try:
+        px = float(_client().mark_price(sym))
+    except Exception:
+        px = entry
+    if px <= 0:
+        px = entry
+    if side == "LONG":
+        pnl_gross = (px - entry) * qty
+    else:
+        pnl_gross = (entry - px) * qty
+    pnl_gross = round(pnl_gross, 4)
+    rate = get_taker_rate(None, sym or "BTCUSDT", cfg=load_config())
+    entry_notional = float(pos.get("notional") or (entry * qty))
+    exit_notional = px * qty
+    entry_fee = float(pos.get("entry_fee") or 0)
+    if entry_fee <= 0:
+        entry_fee = estimate_fee(entry_notional, rate)
+    exit_fee = estimate_fee(exit_notional, rate)
+    commission = round(entry_fee + exit_fee, 6)
+    pnl = net_pnl(pnl_gross, commission)
+    return {
+        **pos,
+        "exit_price": round(px, 8),
+        "exit_time_tr": now_tr_iso(),
+        "pnl_gross": pnl_gross,
+        "commission": commission,
+        "entry_fee": round(entry_fee, 6),
+        "exit_fee": round(exit_fee, 6),
+        "pnl": round(pnl, 4),
+        "close_reason": reason,
+        "close_order_id": None,
+        "dry_run": False,
+    }
+
+
+def _reconcile_binance(state: dict, history: list) -> list:
+    """Binance'te olmayan yerel açıkları kapat. Emir göndermez."""
+    opens = list(state.get("open_positions") or [])
+    if not opens:
+        return []
+    try:
+        live = {(p.get("symbol") or "").upper() for p in get_positions()}
+    except Exception as e:
+        print(f"[{LABEL}] reconcile: {e}")
+        return []
+    closed = []
+    kept = []
+    for pos in opens:
+        sym = (pos.get("symbol") or "").upper()
+        if sym in live:
+            kept.append(pos)
+            continue
+        rec = _close_local_only(pos, reason="binance_sync")
+        _record_close(state, history, rec)
+        closed.append(rec)
+        print(f"[{LABEL}] SYNC {sym} Binance'te yok — defterden düşüldü pnl={rec.get('pnl')}")
+    if closed:
+        state["open_positions"] = kept
+    return closed
+
+
+def run_sync() -> dict:
+    try:
+        with state_lock():
+            state = load_state()
+            history = load_history()
+            closed = _reconcile_binance(state, history)
+            if closed:
+                save_state(state)
+                save_history(history)
+            return {
+                "ok": True,
+                "closed": len(closed),
+                "symbols": [c.get("symbol") for c in closed],
+                "held": len(state.get("open_positions") or []),
+            }
+    except StateLockBusy as e:
+        print(f"[{LABEL}] sync atlandı — {e}")
+        return {"ok": False, "skipped": "locked", "closed": 0}
 
 
 def _apply_policy(pos: dict) -> dict:
@@ -588,13 +715,17 @@ def run_close() -> dict:
 def _run_close_locked() -> dict:
     state = load_state()
     history = load_history()
+    synced = _reconcile_binance(state, history)
+    if synced:
+        save_state(state)
+        save_history(history)
     opens, ghosts = _drop_closed_ghosts(list(state.get("open_positions") or []), history)
     if ghosts:
         state["open_positions"] = opens
         save_state(state)
     if not opens:
         print(f"[{LABEL}] close: açık yok")
-        return {"ok": True, "closed": 0, "held": 0}
+        return {"ok": True, "closed": len(synced), "held": 0, "synced": len(synced)}
 
     closed = []
     remaining = []
@@ -635,12 +766,16 @@ def run_trail() -> dict:
 def _run_trail_locked() -> dict:
     state = load_state()
     history = load_history()
+    synced = _reconcile_binance(state, history)
+    if synced:
+        save_state(state)
+        save_history(history)
     opens, ghosts = _drop_closed_ghosts(list(state.get("open_positions") or []), history)
     if ghosts:
         state["open_positions"] = opens
         save_state(state)
     if not opens:
-        return {"ok": True, "closed": 0, "updated": 0}
+        return {"ok": True, "closed": len(synced), "updated": 0, "synced": len(synced)}
 
     closed = []
     remaining = []
@@ -764,16 +899,18 @@ def _run_scan_locked() -> dict:
     return {"ok": True, "closed": len(closed), "opened": opened}
 
 
-def _enrich(pos: dict, chain: dict | None, *, fee_rate: float) -> dict:
+def _enrich(pos: dict, chain: dict | None, *, fee_rate: float, refresh_price: bool = True) -> dict:
     entry = float(pos.get("entry_price") or 0)
     qty = float(pos.get("qty") or 0)
     side = pos.get("side") or "LONG"
     mark = float((chain or {}).get("mark_price") or 0)
-    if mark <= 0:
+    if mark <= 0 and refresh_price:
         try:
             mark = _client().mark_price(pos["symbol"])
         except Exception:
-            mark = entry
+            mark = 0
+    if mark <= 0:
+        mark = entry
     _g, upnl_net, _px = _live_upnl_net(pos, mark)
     pos_locked, _ = update_lock(dict(pos), upnl_net)
     ls = lock_summary(pos_locked)
@@ -798,31 +935,36 @@ def status_block(*, refresh_price: bool = True) -> dict:
     ctrl = get_live_control()
     usdt = None
     chain_map = {}
+    live_err = None
+    c = None
+    if refresh_price:
+        try:
+            c = _client(cfg)
+            if c.configured():
+                usdt = usdt_balance(c)
+                for p in get_positions(c):
+                    chain_map[p["symbol"]] = p
+                _save_usdt_cache(usdt)
+        except Exception as e:
+            live_err = str(e)
+            c = None
+    if usdt is None:
+        usdt = _load_usdt_cache()
     try:
-        c = _client(cfg)
-        if c.configured() and refresh_price:
-            usdt = usdt_balance(c)
-            for p in get_positions(c):
-                chain_map[p["symbol"]] = p
-    except Exception as e:
-        return {
-            "ok": True,
-            "label": LABEL,
-            "algo": ALGO_NAME,
-            "live_paused": bool(ctrl.get("live_paused")),
-            "env_enabled": _env_enabled(),
-            "enabled": _opens_allowed(),
-            "dry_run": dry,
-            "error": str(e),
-            "open_positions": opens,
-            "cards": [],
-            "usdt": None,
-        }
-    try:
-        fee_rate = get_taker_rate(c if c.configured() else None, "BTCUSDT", cfg=cfg)
+        fee_rate = get_taker_rate(
+            c if (refresh_price and c and c.configured()) else None,
+            "BTCUSDT",
+            cfg=cfg,
+        )
     except Exception:
         fee_rate = float(cfg.get("taker_fee_rate") or 0.0005)
-    cards = [_enrich(p, chain_map.get(p.get("symbol")), fee_rate=fee_rate) for p in opens]
+    cards = [
+        _enrich(
+            p, chain_map.get(p.get("symbol")),
+            fee_rate=fee_rate, refresh_price=refresh_price and not live_err,
+        )
+        for p in opens
+    ]
     wins = sum(1 for t in history if float(t.get("pnl") or 0) > 0)
     n = len(history)
     recent = []
@@ -858,6 +1000,7 @@ def status_block(*, refresh_price: bool = True) -> dict:
         "env_enabled": _env_enabled(),
         "enabled": _opens_allowed(),
         "dry_run": dry,
+        "error": live_err,
         "usdt": usdt,
         "open_count": len(cards),
         "cards": cards,
@@ -874,7 +1017,7 @@ def status_block(*, refresh_price: bool = True) -> dict:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="A1#39 Live Binance Futures")
-    p.add_argument("cmd", choices=["open", "close", "trail", "scan", "status"])
+    p.add_argument("cmd", choices=["open", "close", "trail", "scan", "status", "sync"])
     args = p.parse_args()
     if args.cmd == "open":
         r = run_open()
@@ -884,6 +1027,8 @@ def main() -> None:
         r = run_trail()
     elif args.cmd == "scan":
         r = run_scan()
+    elif args.cmd == "sync":
+        r = run_sync()
     else:
         r = status_block()
     print(json.dumps(r, indent=2, ensure_ascii=False, default=str))

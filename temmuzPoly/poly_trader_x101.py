@@ -1,6 +1,6 @@
 """X1#01 - 13Analiz — sanal Poly saatlik defter.
 
-BTC/ETH/SOL. Gerçek PM emri yok. Cron: :02 close · :03 open.
+BTC/ETH/SOL. Gerçek PM emri yok. Cron: :01 close · :02 open.
 Başlangıç $300. Kapı: x101_signal (13 katman, ask kenarı).
 """
 from __future__ import annotations
@@ -32,7 +32,9 @@ from pm_trader_helpers import (  # noqa: E402
     pm_find_market,
     pm_sanal_settle_trade,
     pm_sanal_slot_candle,
+    resolve_slot_trade_amount,
     skip_if_weekend_pause,
+    symbol_wr_amount_for_book,
 )
 from telegram_poly_channels import chat_analiz4  # noqa: E402
 from x101_signal import SYMBOLS, decide  # noqa: E402
@@ -46,7 +48,7 @@ HISTORY_FILE = os.path.join(_DIR, "poly_trader_x101_history.json")
 LABEL = "X1#01 - 13Analiz"
 BOOK_KEY = "x101"
 ALGO_NAME = "X1#01 - 13Analiz"
-INITIAL_BALANCE = 300.0
+INITIAL_BALANCE = 1000.0
 
 
 def load_state() -> dict:
@@ -149,7 +151,8 @@ def run_open() -> None:
         if not dec.get("allow"):
             skipped.append((sym, dec.get("verdict") or "kapı kapalı"))
             continue
-        stake = float(dec.get("stake") or 0)
+        base = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
+        stake, _hot, _cold = resolve_slot_trade_amount(base, now_tr.hour, history)
         if stake <= 0 or stake > balance:
             skipped.append((sym, "bakiye/kademe"))
             continue

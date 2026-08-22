@@ -25,10 +25,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from poly_predictor_analysis import predict, _fetch_klines
 from pm_trader_helpers import (
     apply_pm_quote, resolve_slot_trade_amount, slot_amount_log, sanal_pnl,
-    trades_for_exit_day, format_daily_history_tg, symbol_wr_amount,
+    trades_for_exit_day, format_daily_history_tg,
     pm_sanal_settle_trade, pm_sanal_slot_candle,
-    SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
-    SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause, resolve_open_slot_gates, pm_hourly_profit_entry_ok,
+    skip_if_weekend_pause, resolve_open_slot_gates, pm_hourly_profit_entry_ok,
+    symbol_wr_amount_for_book, COMBO_FAMILY_INIT,
     pm_tg_stake,
 )
 from telegram_poly_channels import chat_analiz1
@@ -43,10 +43,11 @@ STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz1_state.json")
 HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz1_history.json")
 WEEKLY_IMG    = "/tmp/poly_weekly_heatmap.png"
 
-INITIAL_BALANCE    = SANAL_INITIAL_BALANCE
-TRADE_AMOUNT       = SANAL_TRADE_AMOUNT
-TRADE_AMOUNT_HIGH  = SANAL_TRADE_AMOUNT_HIGH
-TRADE_AMOUNT_LOW   = SANAL_TRADE_AMOUNT_LOW
+INITIAL_BALANCE    = COMBO_FAMILY_INIT
+TRADE_AMOUNT       = 36.0
+TRADE_AMOUNT_HIGH  = 48.0
+TRADE_AMOUNT_LOW   = 24.0
+BOOK_KEY           = "analiz1"
 SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # XRP/DOGE/BNB pasif
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
@@ -54,7 +55,7 @@ _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cum
 
 def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float, bool, bool]:
     """WR tutarı → etkili saat +%40 / zayıf saat -%30."""
-    base = symbol_wr_amount(history, sym)
+    base = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
     return resolve_slot_trade_amount(base, hour_tr, history)
 
 
@@ -290,7 +291,7 @@ async def run_open() -> None:
         sym         = c["sym"]
         pred_obj    = c["pred_obj"]
         ind_ema_raw = pred_obj.trend.upper()
-        base_amt = symbol_wr_amount(history, sym)
+        base_amt = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
         _sk, dyn_amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
             history, hour_tr, base_amt
         )

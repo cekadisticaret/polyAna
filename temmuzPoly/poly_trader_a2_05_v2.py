@@ -51,7 +51,7 @@ Güvenlik: `live_mirror=False`. `algo_num=5` sinyali okumak için gerekli ama
 o numara gerçek para aynasına (`poly_trader_a2_05_live`) bağlı; bu defter
 onu **hiçbir koşulda** tetiklemez.
 
-Cron: :02 close · :05 open · :25 zbackfill · Cmt 21:00 weekly
+Cron: :01 close · :02 open · :25 zbackfill · Cmt 21:00 weekly
 """
 from __future__ import annotations
 
@@ -78,8 +78,10 @@ CONFIG = A2Config(
     state_file=os.path.join(_DIR, f"poly_trader_{BOOK_KEY}_state.json"),
     history_file=os.path.join(_DIR, f"poly_trader_{BOOK_KEY}_history.json"),
     z_gate=(Z_LO, Z_HI),
+    min_entry_price=0.40,
     shadow_log=ZLOG,
     live_mirror=False,
+    init_balance=1000.0,
 )
 
 if __name__ == "__main__":

@@ -9,7 +9,9 @@ import contextlib
 import fcntl
 import json
 import os
+import sys
 import time
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -269,21 +271,24 @@ def save_history(path: str, history: list) -> None:
     save_json(path, history)
 
 
-def fetch_klines(symbol: str, interval: str = "1h", limit: int = 80, *, use_cache: bool = True) -> list[dict]:
-    ck = f"{symbol}|{interval}|{limit}"
-    if use_cache:
-        hit = _KLINE_CACHE.get(ck)
-        if hit and (time.time() - hit[0]) < _KLINE_TTL_SEC:
-            return hit[1]
-    url = (
-        f"https://fapi.binance.com/fapi/v1/klines?"
-        f"symbol={symbol}&interval={interval}&limit={limit}"
-    )
-    req = urllib.request.Request(url, headers={"User-Agent": "AgustosKripto/1.0"})
-    with urllib.request.urlopen(req, timeout=12) as resp:
-        raw = json.load(resp)
+_KLINE_URLS = (
+    "https://fapi.binance.com/fapi/v1/klines",
+    "https://data-api.binance.vision/api/v3/klines",
+    "https://api.binance.com/api/v3/klines",
+)
+
+
+def _fapi_guard():
+    try:
+        from binance_fapi_guard import fapi_blocked, note_418  # noqa: WPS433
+        return fapi_blocked, note_418
+    except Exception:
+        return (lambda: False), (lambda *a, **k: None)
+
+
+def _parse_klines(raw) -> list[dict]:
     out = []
-    for k in raw:
+    for k in raw or []:
         out.append({
             "t": int(k[0]) // 1000,
             "o": float(k[1]),
@@ -297,9 +302,54 @@ def fetch_klines(symbol: str, interval: str = "1h", limit: int = 80, *, use_cach
             "close": float(k[4]),
             "volume": float(k[5]),
         })
-    if use_cache:
-        _KLINE_CACHE[ck] = (time.time(), out)
     return out
+
+
+def fetch_klines(symbol: str, interval: str = "1h", limit: int = 80, *, use_cache: bool = True) -> list[dict]:
+    """USDT-M kline; fapi 418/ban olunca spot public kline (kart/mark için)."""
+    ck = f"{symbol}|{interval}|{limit}"
+    if use_cache:
+        hit = _KLINE_CACHE.get(ck)
+        if hit and (time.time() - hit[0]) < _KLINE_TTL_SEC:
+            return hit[1]
+    try:
+        _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import public_klines  # noqa: WPS433
+        raw = public_klines(symbol, interval, limit)
+        out = _parse_klines(raw)
+        if out:
+            if use_cache:
+                _KLINE_CACHE[ck] = (time.time(), out)
+            return out
+    except Exception:
+        pass
+    fapi_blocked, note_418 = _fapi_guard()
+    blocked = bool(fapi_blocked())
+    last_err: Exception | None = None
+    for base in _KLINE_URLS:
+        if blocked and "fapi.binance.com" in base:
+            continue
+        url = f"{base}?symbol={symbol}&interval={interval}&limit={limit}"
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "AgustosKripto/1.0"})
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                raw = json.load(resp)
+            out = _parse_klines(raw)
+            if out:
+                if use_cache:
+                    _KLINE_CACHE[ck] = (time.time(), out)
+                return out
+        except Exception as e:
+            last_err = e
+            if isinstance(e, urllib.error.HTTPError) and e.code == 418:
+                note_418(str(e) or "418")
+                blocked = True
+            continue
+    if last_err:
+        raise last_err
+    return []
 
 
 def fetch_all_klines(
@@ -615,6 +665,7 @@ def flatten_all_positions(
         cache = kl_cache or {}
         closed = 0
         tur_pnl = 0.0
+        remaining = []
         for pos in opens:
             sym = pos.get("symbol") or ""
             iv = _pos_interval(pos)
@@ -624,8 +675,10 @@ def flatten_all_positions(
                     kl = fetch_klines(sym, iv, 3)
                     cache[f"{sym}|{iv}"] = kl
                 except Exception:
+                    remaining.append(pos)
                     continue
             if not kl:
+                remaining.append(pos)
                 continue
             exit_px = float(kl[-1]["c"])
             if not float(pos.get("atr_usd") or 0) and len(kl) >= 30:
@@ -639,8 +692,9 @@ def flatten_all_positions(
             )
             closed += 1
 
-        state["open_positions"] = []
-        state["last_open_slot"] = ""
+        state["open_positions"] = remaining
+        if not remaining:
+            state["last_open_slot"] = ""
         save_state(state_path, state)
         save_history(history_path, history)
         return {
@@ -1088,16 +1142,27 @@ def book_status(
         side = pos.get("side") or "LONG"
         mark = entry
         if live_marks:
-            iv = _pos_interval(pos)
-            kl = cache.get(f"{sym}|{iv}")
-            if kl is None and sym:
-                try:
-                    kl = fetch_klines(sym, iv, 2)
-                    cache[f"{sym}|{iv}"] = kl
-                except Exception:
-                    kl = []
-            if kl:
-                mark = float(kl[-1]["c"])
+            try:
+                _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                if _root not in sys.path:
+                    sys.path.insert(0, _root)
+                from binance_fapi_guard import get_mark  # noqa: WPS433
+                mx = get_mark(sym) if sym else None
+            except Exception:
+                mx = None
+            if mx:
+                mark = mx
+            else:
+                iv = _pos_interval(pos)
+                kl = cache.get(f"{sym}|{iv}") or cache.get(sym)
+                if kl is None and sym:
+                    try:
+                        kl = fetch_klines(sym, iv, 2)
+                        cache[f"{sym}|{iv}"] = kl
+                    except Exception:
+                        kl = []
+                if kl:
+                    mark = float(kl[-1]["c"])
         gross = futures_pnl(side, entry, mark, qty)
         entry_notional = float(pos.get("notional") or (entry * qty))
         exit_notional = mark * qty

@@ -44,6 +44,7 @@ from c101_signal import SYMBOLS, evaluate, fair_probability, stake_for  # noqa: 
 from pm_trader_helpers import (  # noqa: E402
     pm_find_market, pm_sanal_settle_trade, pm_sanal_slot_candle,
     pm_taker_fee, skip_if_weekend_pause,
+    symbol_wr_amount_for_book, COMBO_FAMILY_INIT,
 )
 from telegram_poly_channels import chat_analiz4  # noqa: E402
 
@@ -57,8 +58,7 @@ CALIB_FILE = os.path.join(_DIR, "c101_calibration.jsonl")
 LABEL = "C1#01"
 BOOK_KEY = "c101"
 ALGO_NAME = "OPUS-OHLCV · PTB + volatilite adil fiyat"
-# Tüm algoritma-islemler defterleriyle aynı çizgi (14.08.2026 toplu sıfırlama)
-INITIAL_BALANCE = 300.0
+INITIAL_BALANCE = COMBO_FAMILY_INIT
 COMPARE_KEY = "a2_05"
 
 
@@ -229,7 +229,10 @@ def run_open() -> None:
             skipped.append((sym, ev["skip_reason"], ev))
             continue
 
-        stake = stake_for(balance, ev["kelly_used"])
+        if BOOK_KEY == "c101":
+            stake = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
+        else:
+            stake = stake_for(balance, ev["kelly_used"])
         if stake > balance:
             calib["traded"] = False
             calib["skip_reason"] = "bakiye yetersiz"
@@ -266,6 +269,7 @@ def run_open() -> None:
             "c101_pm_price": price,
             "c101_edge": ev["edge"],
             "c101_kelly": ev["kelly_used"],
+            "c101_stake_mode": "wr_24_36_48",
             "c101_sigma_eff": model["sigma_eff"],
             "c101_z": model["z"],
             "c101_spot": model["spot"],
@@ -308,7 +312,7 @@ def run_open() -> None:
     msg = (
         f"{sep}\n"
         f"🧪 <b>{LABEL} · OPUS-OHLCV</b>  {now_tr:%d.%m.%Y} {now_tr.hour:02d}:00→{next_h}\n"
-        f"<i>yön tahmini değil, yanlış fiyatlama avı · çeyrek Kelly</i>\n"
+        f"<i>yön tahmini değil, yanlış fiyatlama avı · $24/$36/$48 WR</i>\n"
         + "\n".join(lines) + "\n"
         f"💰 Bakiye: ${state['balance']:.2f}\n{sep}"
     )

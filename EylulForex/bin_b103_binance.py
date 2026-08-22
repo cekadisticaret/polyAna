@@ -1,6 +1,6 @@
-"""BIN_B1#03 — Binance USDT-M XAUUSDT Isolated MARKET.
+"""BIN_XAUUSDT — Binance USDT-M XAUUSDT Isolated MARKET $20×10x.
 
-Sinyal `bin_b103_signal.py` (A2#09 Squeeze Momentum). GPSUSDT / CR6 / A139'a girmez.
+Karar D104 (Aktif et) sanal defterinden kopyalanır. GPSUSDT / CR6 / A139'a girmez.
 """
 from __future__ import annotations
 
@@ -18,6 +18,8 @@ _TZ = ZoneInfo("Europe/Istanbul")
 _DIR = Path(__file__).resolve().parent
 _ROOT = _DIR.parent
 _KRIPTO = str(_ROOT / "AgustosKripto")
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 if _KRIPTO not in sys.path:
     sys.path.insert(0, _KRIPTO)
 
@@ -85,6 +87,18 @@ def taker_rate() -> float:
 
 
 def book_ticker() -> dict:
+    try:
+        from binance_fapi_guard import get_book
+        hit = get_book(SYMBOL)
+        if hit and (hit.get("bid") or hit.get("ask")):
+            return {
+                "bid": float(hit.get("bid") or 0),
+                "ask": float(hit.get("ask") or 0),
+                "bid_qty": float(hit.get("bid_qty") or 0),
+                "ask_qty": float(hit.get("ask_qty") or 0),
+            }
+    except Exception:
+        pass
     d = _get("/fapi/v1/ticker/bookTicker", f"symbol={SYMBOL}")
     return {
         "bid": float(d.get("bidPrice") or 0),
@@ -95,6 +109,13 @@ def book_ticker() -> dict:
 
 
 def premium() -> dict:
+    try:
+        from binance_fapi_guard import ws_premium
+        hit = ws_premium(SYMBOL)
+        if hit:
+            return hit
+    except Exception:
+        pass
     d = _get("/fapi/v1/premiumIndex", f"symbol={SYMBOL}")
     return {
         "mark": float(d.get("markPrice") or 0),
@@ -244,9 +265,9 @@ def set_live_mode(live: bool, *, source: str = "dashboard") -> dict:
     c["updated_at_tr"] = datetime.now(_TZ).isoformat(timespec="seconds")
     c["updated_by"] = source
     c["reason"] = (
-        "BIN_B1#03 XAUUSDT Isolated CANLI $50×50x — A2#09"
+        "BIN_XAUUSDT Isolated CANLI $20×10x — D104 ayna"
         if live
-        else "BIN_B1#03 XAUUSDT Isolated sanal $50×50x · kasa $180 — A2#09 · emir yok"
+        else "BIN_XAUUSDT Isolated sanal $20×10x · kasa $180 — D104 ayna · emir yok"
     )
     return save_control(c)
 
@@ -277,13 +298,30 @@ def _hedge(c: BinanceFuturesClient) -> bool:
 def live_position_state(c: BinanceFuturesClient | None = None) -> tuple[str, dict | None]:
     """('open', row) | ('flat', None) | ('unknown', None)."""
     try:
+        from binance_fapi_guard import fapi_blocked, position_state, write_position
+        hit = position_state(SYMBOL)
+        if hit:
+            return hit
+        if fapi_blocked():
+            return "unknown", None
         c = c or _client()
         if not c.configured():
             return "unknown", None
         for r in c.position_risk(SYMBOL) or []:
             amt = float(r.get("positionAmt") or 0)
+            write_position(
+                SYMBOL,
+                amt=amt,
+                entry=float(r.get("entryPrice") or 0),
+                mark=float(r.get("markPrice") or 0),
+                upnl=float(r.get("unRealizedProfit") or 0),
+                leverage=float(r.get("leverage") or 0),
+                margin_type=str(r.get("marginType") or ""),
+                src="rest",
+            )
             if abs(amt) > 0:
                 return "open", r
+        write_position(SYMBOL, amt=0.0, src="rest")
         return "flat", None
     except Exception:
         return "unknown", None
@@ -358,10 +396,18 @@ def live_status(*, force: bool = False) -> dict:
                 out["wallet_at_live"] = pinned
             pos = live_position(c)
             if pos:
+                amt = float(pos.get("positionAmt") or 0)
+                entry = float(pos.get("entryPrice") or 0)
+                mark = float(pos.get("markPrice") or 0)
+                iso = float(pos.get("isolatedWallet") or pos.get("isolatedMargin") or 0)
                 out["position"] = {
-                    "amt": float(pos.get("positionAmt") or 0),
-                    "entry": float(pos.get("entryPrice") or 0),
+                    "amt": amt,
+                    "entry": entry,
+                    "mark": mark,
                     "unrealized": float(pos.get("unRealizedProfit") or 0),
+                    "isolated_wallet": iso,
+                    "liq": float(pos.get("liquidationPrice") or 0),
+                    "notional": abs(float(pos.get("notional") or 0) or (abs(amt) * (mark or entry))),
                     "leverage": int(float(pos.get("leverage") or 0) or 0),
                     "margin_type": pos.get("marginType"),
                 }

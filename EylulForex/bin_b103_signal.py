@@ -1,12 +1,15 @@
-"""BIN_XAUUSDT sinyal — Algoritma işlemler kartından seçilen motor.
+"""BIN_XAUUSDT — seçilen sanal defterin (Aktif et) salt okunur aynası.
 
-Varsayılan `a2_09`. `fx_algo_signals.signal_for_book` yalnız okunur.
+Aç/kapa kararı `fx_algo_{uid}_state.json` açık satırından gelir.
+`signal_for_book` yalnız durum/önizleme içindir; BIN kendi sinyalini koşturmaz.
 GPSUSDT / CEM01 / fx_algo defterlerine yazmaz.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
+from pathlib import Path
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 if _DIR not in sys.path:
@@ -15,7 +18,7 @@ if _DIR not in sys.path:
 from fx_algo_catalog import get_book  # noqa: E402
 from fx_algo_signals import signal_for_book  # noqa: E402
 
-DEFAULT_UID = "a2_09"
+DEFAULT_UID = "d104"
 
 
 def _control() -> dict:
@@ -34,7 +37,7 @@ def current_uid() -> str:
 
 def current_book() -> dict:
     return get_book(current_uid()) or get_book(DEFAULT_UID) or {
-        "uid": DEFAULT_UID, "name": "A2#09", "title": "A2#09 Squeeze Momentum",
+        "uid": DEFAULT_UID, "name": "D104", "title": "D104 · Akış vekili",
     }
 
 
@@ -45,6 +48,29 @@ def engine_info() -> dict:
         "name": b.get("name") or b.get("uid"),
         "title": b.get("title") or b.get("name") or "",
     }
+
+
+def engine_paper_pos() -> dict | None:
+    """Seçilen fx_algo sanal defterin açık satırı — yazmaz."""
+    uid = current_uid()
+    path = Path(_DIR) / "data" / f"fx_algo_{uid}_state.json"
+    if not path.exists():
+        return None
+    try:
+        st = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(st, dict):
+        return None
+    rows = st.get("open_positions")
+    if not isinstance(rows, list):
+        rows = []
+    if not rows and isinstance(st.get("position"), dict):
+        rows = [st["position"]]
+    if not rows and isinstance(st.get("positions"), list):
+        rows = [p for p in st["positions"] if isinstance(p, dict)]
+    row = rows[0] if rows else None
+    return row if isinstance(row, dict) else None
 
 
 def set_engine_uid(uid: str) -> dict:

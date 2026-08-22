@@ -1,5 +1,6 @@
-"""BIN_B1#03 defter — A2#09 çıkışı (24s · 3×ATR · reverse) + XAUUSDT Isolated $50×50x sanal $180.
+"""BIN_XAUUSDT defter — seçilen sanal fx_algo defterin (D104) birebir aynası.
 
+Yön / zaman / motor sanal defterden kopyalanır. Tek fark Isolated $20×10x.
 GPSUSDT / fx_algo_* / CEM01 dosyalarına yazmaz. Emir yalnız `bin_b103_binance`.
 """
 from __future__ import annotations
@@ -20,25 +21,16 @@ for p in (_AGUSTOS, str(_DIR)):
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from atr_profit_lock import (  # noqa: E402
-    LOSS_STOP_MIN_AGE_MIN,
-    atr_from_klines,
-    init_lock_fields,
-    should_loss_stop,
-    should_stop_out,
-    update_lock,
-)
+from atr_profit_lock import atr_from_klines, init_lock_fields  # noqa: E402
 from exit_policy import policy_for  # noqa: E402
-from night_window import is_quiet as _night_quiet, label as _night_label  # noqa: E402
-
 DATA = _DIR / "data"
 _STATE = DATA / "forex_bin_b103_state.json"
 _HIST = DATA / "forex_bin_b103_history.json"
 _LOCK = DATA / "forex_bin_b103.lock"
 _TZ = ZoneInfo("Europe/Istanbul")
 
-MARGIN = 50.0
-LEVERAGE = 50
+MARGIN = 20.0
+LEVERAGE = 10
 SYMBOL = "XAUUSDT"
 MAX_OPEN = 1
 MARGIN_TYPE = "ISOLATED"
@@ -88,6 +80,7 @@ def _empty() -> dict:
         "positions": [],
         "last_reject": None,
         "seq": 0,
+        "bn_flat_src_id": None,
     }
 
 
@@ -181,6 +174,38 @@ def _net_float(pos: dict, mark: float) -> float:
     rate = float(pos.get("taker_rate") or _taker())
     comm_close = abs(mark * qty) * rate
     return round(gross - comm_open - comm_close, 4)
+
+
+def _mark_pnl(pos: dict, mark: float) -> float:
+    """Binance uygulamasıyla aynı: mark-to-mark, kapanış komisyonu yok."""
+    entry = float(pos.get("entry") or pos.get("entry_price") or 0)
+    return _pnl(pos.get("side") or "buy", entry, mark, _qty(pos))
+
+
+def _apply_live_mark(item: dict, live_pos: dict | None, mark_px: float | None) -> dict:
+    """Açık kart = borsa satırı (giriş / mark / PnL / marj / liq)."""
+    pos = live_pos or {}
+    entry = float(pos.get("entry") or item.get("entry") or item.get("entry_price") or 0)
+    qty = abs(float(pos.get("amt") or 0)) or _qty(item)
+    mark = float(pos.get("mark") or 0) or float(mark_px or 0) or entry
+    upnl = pos.get("unrealized")
+    if upnl is None:
+        upnl = _mark_pnl({**item, "entry": entry, "qty": qty}, mark)
+    iso = float(pos.get("isolated_wallet") or 0) or float(item.get("margin") or MARGIN)
+    notional = float(pos.get("notional") or 0) or abs(qty * (mark or entry))
+    item["entry"] = entry
+    item["entry_price"] = entry
+    item["qty"] = qty
+    item["volume"] = qty
+    item["mark"] = _r(mark)
+    item["float_pnl"] = round(float(upnl), 2)
+    item["float_net"] = item["float_pnl"]
+    item["margin"] = round(iso, 2)
+    item["margin_usd"] = item["margin"]
+    item["notional"] = round(notional, 2)
+    item["liq_price"] = float(pos.get("liq") or item.get("liq_price") or 0) or None
+    item["roe"] = round(item["float_pnl"] / iso * 100.0, 2) if iso else None
+    return item
 
 
 def _age_min(pos: dict) -> float:
@@ -296,12 +321,28 @@ def _bn_side(row: dict) -> str | None:
     return "buy" if amt > 0 else "sell"
 
 
+def _um_isolated_empty() -> bool:
+    """Tüm USDT-M isolated boş — fapi positionRisk olmasa da hayalet yok."""
+    try:
+        from binance_um_wallet import fetch
+        acc = fetch() or {}
+        w = float(acc.get("wallet") or 0)
+        a = float(acc.get("available") or 0)
+        u = float(acc.get("unrealized") or 0)
+        return w > 0 and abs(w - a) < 0.08 and abs(u) < 0.08
+    except Exception:
+        return False
+
+
 def _reconcile(st: dict, hist: list, bid: float, ask: float) -> bool:
     if _paper():
         return False
     from bin_b103_binance import live_position_state
     state, row = live_position_state()
     rows = _plist(st)
+    if state == "unknown" and _um_isolated_empty():
+        state = "flat"
+        row = None
     if state == "unknown":
         return False
     if state == "flat":
@@ -309,6 +350,7 @@ def _reconcile(st: dict, hist: list, bid: float, ask: float) -> bool:
             return False
         pos = rows[0]
         _close_record(st, hist, pos, _exit_px(pos.get("side") or "buy", bid, ask), "bn_flat")
+        st["bn_flat_src_id"] = pos.get("mirror_src_id") or st.get("bn_flat_src_id")
         st["positions"] = []
         st["position"] = None
         return True
@@ -367,12 +409,6 @@ def _reconcile(st: dict, hist: list, bid: float, ask: float) -> bool:
 def _open(st: dict, side: str, bid: float, ask: float, signal: str, tf: str, kl: list) -> dict | None:
     rows = _plist(st)
     if rows or len(rows) >= MAX_OPEN:
-        return None
-    if _night_quiet("binb103"):
-        st["last_reject"] = {
-            "side": side, "reason": "gece_penceresi",
-            "detail": _night_label(), "at": _now_iso(),
-        }
         return None
     hint = _open_px(side, bid, ask)
     qty = _qty_for(hint)
@@ -494,89 +530,217 @@ def _locked(fn):
     return wrap
 
 
+def _engine_side(src: dict | None) -> str | None:
+    if not src:
+        return None
+    raw = str(src.get("side") or "").strip().upper()
+    if raw in ("LONG", "BUY", "UP"):
+        return "buy"
+    if raw in ("SHORT", "SELL", "DOWN"):
+        return "sell"
+    sig = str(src.get("signal") or "").strip().upper()
+    if sig == "UP":
+        return "buy"
+    if sig == "DOWN":
+        return "sell"
+    return None
+
+
+def _wait_live_flat(*, tries: int = 8) -> bool:
+    if _paper():
+        return True
+    from bin_b103_binance import live_position_state
+    for _ in range(max(1, tries)):
+        state, _row = live_position_state()
+        if state == "flat":
+            return True
+        time.sleep(0.35)
+    return False
+
+
+def _attach_src(pos: dict, src: dict) -> None:
+    pos["mirror_src_id"] = src.get("id")
+    pos["mirror_uid"] = src.get("uid")
+    if src.get("signal"):
+        pos["signal"] = src.get("signal")
+    if src.get("interval"):
+        pos["interval"] = src.get("interval")
+    pos["mirror"] = True
+
+
+def _sync_unlocked(st: dict, hist: list, bid: float, ask: float, kl: list) -> dict:
+    from bin_b103_signal import engine_info, engine_paper_pos
+
+    _reconcile(st, hist, bid, ask)
+    src = engine_paper_pos()
+    want = _engine_side(src)
+    eng = engine_info()
+    rows = _plist(st)
+    have_pos = rows[0] if rows else None
+    have = (have_pos or {}).get("side")
+    src_id = (src or {}).get("id")
+    have_src = (have_pos or {}).get("mirror_src_id")
+    closed = 0
+    opened = 0
+    action = "hold"
+
+    same_trade = bool(
+        want and have == want and src_id and (not have_src or have_src == src_id)
+    )
+    same_side_no_tag = bool(want and have == want and not have_src)
+
+    if same_trade or same_side_no_tag:
+        if have_pos and src:
+            _attach_src(have_pos, src)
+            st["positions"] = [have_pos]
+            st["position"] = have_pos
+        action = "aligned"
+    elif want is None:
+        for pos in list(rows):
+            if _flatten_one(st, hist, pos, bid, ask, "mirror_flat"):
+                closed += 1
+                action = "close"
+    else:
+        if have_pos:
+            reason = "mirror_reverse" if have and have != want else "mirror_replace"
+            if _flatten_one(st, hist, have_pos, bid, ask, reason):
+                closed += 1
+            else:
+                return {
+                    "ok": False,
+                    "error": "mirror_close_fail",
+                    "closed": closed,
+                    "opened": 0,
+                    "held": len(_plist(st)),
+                    "engine": eng,
+                    "src_id": src_id,
+                    "side": want,
+                    "action": "close_fail",
+                }
+            if not _paper() and not _wait_live_flat():
+                st["last_reject"] = {
+                    "side": want,
+                    "reason": "bn_still_open",
+                    "detail": "ayna kapanış sonrası borsa hâlâ açık",
+                    "at": _now_iso(),
+                }
+                return {
+                    "ok": False,
+                    "error": "bn_still_open",
+                    "closed": closed,
+                    "opened": 0,
+                    "held": len(_plist(st)),
+                    "engine": eng,
+                    "src_id": src_id,
+                    "side": want,
+                    "action": "wait_flat",
+                }
+        skip_src = str(st.get("bn_flat_src_id") or "")
+        if skip_src and src_id and skip_src == str(src_id):
+            st["last_reject"] = {
+                "side": want,
+                "reason": "bn_flat_hold",
+                "detail": "Binance'te elle kapatıldı — aynı D104 satırı açılmaz",
+                "at": _now_iso(),
+            }
+            action = "flat_hold"
+            return {
+                "ok": True,
+                "closed": closed,
+                "opened": 0,
+                "held": 0,
+                "updated": 0,
+                "engine": eng,
+                "src_id": src_id,
+                "side": want,
+                "action": action,
+                "mirror": True,
+            }
+        sig = str((src or {}).get("signal") or ("UP" if want == "buy" else "DOWN"))
+        tf = str((src or {}).get("interval") or "1h")
+        pos = _open(st, want, bid, ask, sig, tf, kl)
+        if pos:
+            _attach_src(pos, src or {})
+            st["positions"] = [pos]
+            st["position"] = pos
+            opened = 1
+            action = "open"
+        else:
+            action = "open_fail"
+
+    return {
+        "ok": True,
+        "closed": closed,
+        "opened": opened,
+        "held": len(_plist(st)),
+        "updated": 0,
+        "engine": eng,
+        "src_id": src_id,
+        "side": want,
+        "action": action,
+        "mirror": True,
+    }
+
+
+@_locked
+def sync_from_engine(bid: float, ask: float, kl: list | None = None) -> dict:
+    """D104 (veya Aktif et motoru) sanal defterle aynı yön/zamanda dur."""
+    if bid <= 0 or ask <= 0:
+        return {"ok": False, "error": "no_quote"}
+    st = _load_state()
+    hist = _load_hist()
+    out = _sync_unlocked(st, hist, bid, ask, kl or [])
+    _atomic(_STATE, st)
+    _atomic(_HIST, hist)
+    return out
+
+
 @_locked
 def open_position(side: str, bid: float, ask: float, *, signal: str, tf: str, kl: list) -> dict | None:
-    if side not in ("buy", "sell") or bid <= 0 or ask <= 0:
+    if bid <= 0 or ask <= 0:
         return None
     st = _load_state()
     hist = _load_hist()
-    _reconcile(st, hist, bid, ask)
-    pos = _open(st, side, bid, ask, signal, tf, kl)
+    out = _sync_unlocked(st, hist, bid, ask, kl or [])
     _atomic(_STATE, st)
     _atomic(_HIST, hist)
-    return pos
+    return st.get("position") if out.get("opened") else None
 
 
 @_locked
 def close_expired(bid: float, ask: float, kl: list) -> dict:
+    if bid <= 0 or ask <= 0:
+        return {"ok": False, "error": "no_quote"}
     st = _load_state()
     hist = _load_hist()
-    _reconcile(st, hist, bid, ask)
-    closed = 0
-    for pos in list(_plist(st)):
-        pos = _ensure_lock(pos, _exit_px(pos.get("side") or "buy", bid, ask), kl)
-        if _hold_expired(pos):
-            if _flatten_one(st, hist, pos, bid, ask, "max_hold"):
-                closed += 1
+    out = _sync_unlocked(st, hist, bid, ask, kl or [])
     _atomic(_STATE, st)
     _atomic(_HIST, hist)
-    return {"ok": True, "closed": closed, "held": len(_plist(st))}
+    return out
 
 
 @_locked
 def close_if_reverse(new_side: str, bid: float, ask: float, kl: list) -> dict:
+    if bid <= 0 or ask <= 0:
+        return {"ok": False, "error": "no_quote"}
     st = _load_state()
     hist = _load_hist()
-    _reconcile(st, hist, bid, ask)
-    closed = 0
-    for pos in list(_plist(st)):
-        pos = _ensure_lock(pos, _exit_px(pos.get("side") or "buy", bid, ask), kl)
-        opp = (pos.get("side") == "buy" and new_side == "sell") or (
-            pos.get("side") == "sell" and new_side == "buy"
-        )
-        if opp and _age_min(pos) >= REVERSE_MIN_AGE_MIN:
-            if _flatten_one(st, hist, pos, bid, ask, "reverse"):
-                closed += 1
+    out = _sync_unlocked(st, hist, bid, ask, kl or [])
     _atomic(_STATE, st)
     _atomic(_HIST, hist)
-    return {"ok": True, "closed": closed, "held": len(_plist(st))}
+    return out
 
 
 @_locked
 def trail(bid: float, ask: float, kl: list) -> dict:
+    if bid <= 0 or ask <= 0:
+        return {"ok": False, "error": "no_quote"}
     st = _load_state()
     hist = _load_hist()
-    _reconcile(st, hist, bid, ask)
-    closed = 0
-    updated = 0
-    remaining = []
-    for pos in list(_plist(st)):
-        px = _exit_px(pos.get("side") or "buy", bid, ask)
-        pos = _ensure_lock(pos, px, kl)
-        net = _net_float(pos, px)
-        pos, ch = update_lock(pos, net)
-        if ch:
-            updated += 1
-        age = _age_min(pos)
-        reason = None
-        if _hold_expired(pos):
-            reason = "max_hold"
-        elif should_loss_stop(pos, net) and age >= LOSS_STOP_MIN_AGE_MIN:
-            reason = "atr_loss"
-        elif should_stop_out(pos, net):
-            reason = "atr_stop"
-        if reason:
-            if _flatten_one(st, hist, pos, bid, ask, reason):
-                closed += 1
-            else:
-                remaining.append(pos)
-        else:
-            remaining.append(pos)
-    st["positions"] = remaining
-    st["position"] = remaining[0] if remaining else None
+    out = _sync_unlocked(st, hist, bid, ask, kl or [])
     _atomic(_STATE, st)
     _atomic(_HIST, hist)
-    return {"ok": True, "closed": closed, "updated": updated, "held": len(remaining)}
+    return out
 
 
 @_locked
@@ -696,16 +860,39 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
     hist = _load_hist()
     rows = []
     float_sum = 0.0
-    for pos in _plist(st):
-        item = dict(pos)
-        if bid and ask:
-            px = _exit_px(pos.get("side") or "buy", bid, ask)
-            item["mark"] = _r(px)
-            item["float_net"] = _net_float(pos, px)
-            item["float_pnl"] = item["float_net"]
-            float_sum += item["float_net"] or 0
-        rows.append(item)
     live = _live_snap()
+    live_pos = live.get("position") if isinstance(live.get("position"), dict) else None
+    mark_px = None
+    if live_pos and live_pos.get("mark"):
+        mark_px = float(live_pos["mark"])
+    elif bid and ask:
+        mark_px = (float(bid) + float(ask)) / 2.0
+        try:
+            from bin_b103_binance import premium
+            pr = premium()
+            if pr.get("mark"):
+                mark_px = float(pr["mark"])
+        except Exception:
+            pass
+    if not mark_px:
+        try:
+            from forex_data import forex_quote
+            q = forex_quote()
+            bq, aq = float(q.get("bid") or 0), float(q.get("ask") or 0)
+            mark_px = (bq + aq) / 2.0 if bq and aq else (bq or aq or None)
+        except Exception:
+            mark_px = None
+    ghost = bool(live.get("enabled") and not live.get("paper") and _um_isolated_empty())
+    if ghost:
+        live_pos = None
+    for pos in _plist(st):
+        if ghost:
+            break
+        item = dict(pos)
+        if mark_px or live_pos:
+            item = _apply_live_mark(item, live_pos, mark_px)
+            float_sum += item.get("float_pnl") or 0
+        rows.append(item)
     if live.get("enabled") and live.get("usdt_wallet") is None:
         try:
             from binance_um_wallet import fetch as _um
@@ -721,7 +908,7 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
         from bin_b103_signal import engine_info
         eng = engine_info()
     except Exception:
-        eng = {"uid": "a2_09", "name": "A2#09", "title": "A2#09 Squeeze Momentum"}
+        eng = {"uid": "d104", "name": "D104", "title": "D104 · Akış vekili"}
     bal = float(st.get("balance") or 0)
     init = float(st.get("init_balance") or 0)
     out = {
@@ -729,7 +916,7 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
         "book": "binb103",
         "id": "binb103",
         "name": "BIN_XAUUSDT",
-        "title": "BIN_XAUUSDT · Isolated $50×50x · " + str(eng.get("name") or "A2#09"),
+        "title": "BIN_XAUUSDT · Isolated $20×10x · " + str(eng.get("name") or "D104") + " ayna",
         "engine": eng,
         "symbol": SYMBOL,
         "dec": _PX,
@@ -753,39 +940,34 @@ def snapshot(bid: float | None = None, ask: float | None = None) -> dict:
         "leverage": LEVERAGE,
         "last_dir": st.get("last_dir"),
         "last_reject": st.get("last_reject"),
-        "night_quiet": _night_quiet("binb103"),
-        "night_window": _night_label(),
+        "night_quiet": False,
+        "night_window": None,
+        "mirror": True,
         "live": live,
         "venue": "binance_usdm",
         "costs": {
             "fee_model": "binance_taker",
-            "note": "BIN_XAUUSDT Isolated $50×50x · " + str(eng.get("name") or "A2#09") + " · 24s/3×ATR",
+            "note": "BIN_XAUUSDT Isolated $20×10x · " + str(eng.get("name") or "D104") + " sanal ayna",
             "venue": "binance_usdm",
             "dec": _PX,
         },
     }
-    if live.get("enabled") and live.get("usdt_wallet") is not None:
-        wallet = float(live["usdt_wallet"])
-        avail = live.get("usdt_available")
-        eq = live.get("usdt_equity")
-        pinned = live.get("wallet_at_live")
-        if pinned is None:
-            pinned = wallet
-        out["balance"] = round(wallet, 2)
-        out["wallet"] = round(wallet, 2)
-        out["available"] = round(float(avail if avail is not None else wallet), 2)
-        out["equity"] = round(float(eq if eq is not None else wallet), 2)
-        out["init_balance"] = round(float(pinned), 2)
-        out["total_pnl"] = round(out["equity"] - out["init_balance"], 2)
-        out["used_margin"] = round(MARGIN, 2) if live.get("position") else 0.0
+    if live.get("usdt_wallet") is not None:
+        out["um_wallet"] = round(float(live["usdt_wallet"]), 2)
+        if live.get("usdt_available") is not None:
+            out["um_available"] = round(float(live["usdt_available"]), 2)
+        if live.get("usdt_equity") is not None:
+            out["um_equity"] = round(float(live["usdt_equity"]), 2)
+    if rows and live_pos and live_pos.get("unrealized") is not None:
+        out["unrealized_pnl"] = round(float(live_pos["unrealized"]), 2)
+        out["float_pnl"] = out["unrealized_pnl"]
+        out["equity"] = round(bal + out["unrealized_pnl"], 2)
+    out["total_pnl"] = round(out["equity"] - init, 2)
     try:
         from desk_meta import attach
-        attach(out, "binb103", hist=hist, positions=rows, state_path=_STATE, init=out.get("init_balance"))
+        attach(out, "binb103", hist=hist, positions=rows, state_path=_STATE, init=init)
     except Exception:
         pass
-    out["init_balance"] = 261.0
-    try:
-        out["total_pnl"] = round(float(out.get("equity") or out.get("balance") or 0) - 261.0, 2)
-    except (TypeError, ValueError):
-        pass
+    out["init_balance"] = round(init, 2)
+    out["total_pnl"] = round(float(out.get("equity") or 0) - out["init_balance"], 2)
     return out

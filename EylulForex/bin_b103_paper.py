@@ -1,8 +1,9 @@
-"""BIN_XAUUSDT cron — seçilen algoritma-islemler motoru, Isolated $50×50x sanal $180.
+"""BIN_XAUUSDT cron — seçilen sanal defterin (D104) birebir aynası, Isolated $20×10x.
 
   python3 EylulForex/bin_b103_paper.py close|open|trail|scan|status
 
-GPSUSDT / fx_algo_runner / CEM01 dokunulmaz. Manuel open yok — cron :05 / */10.
+Yön / zaman sanal `fx_algo_*` defterinden kopyalanır. Kendi sinyalini koşturmaz.
+GPSUSDT / fx_algo_runner / CEM01 dokunulmaz. Manuel open yok — cron D104'dan sonra.
 """
 from __future__ import annotations
 
@@ -13,10 +14,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from bin_b103_book import close_expired, close_if_reverse, open_position, snapshot, trail
-from bin_b103_data import live_quote, signal_klines
-from bin_b103_signal import resolve, side_of
-from night_window import is_quiet as _night_quiet, label as _night_label
+from bin_b103_book import snapshot, sync_from_engine
+from bin_b103_data import live_quote
 
 
 def _quote() -> dict:
@@ -28,69 +27,35 @@ def _ba(q: dict | None = None) -> tuple[float, float]:
     return float(q.get("bid") or 0), float(q.get("ask") or 0)
 
 
-def run_close() -> dict:
+def _sync(tag: str) -> dict:
     bid, ask = _ba()
-    kl = signal_klines("1h", 80)
     if bid <= 0 or ask <= 0:
+        print(f"[bin_b103 {tag}] fiyat yok")
         return {"ok": False, "error": "no_quote"}
-    r = close_expired(bid, ask, kl)
-    print(f"[bin_b103 close] kapanan={r.get('closed')} açık={r.get('held')}")
+    r = sync_from_engine(bid, ask)
+    eng = (r.get("engine") or {}).get("uid") or "?"
+    print(
+        f"[bin_b103 {tag}] ayna {eng} action={r.get('action')} "
+        f"side={r.get('side')} src={r.get('src_id')} "
+        f"closed={r.get('closed')} opened={r.get('opened')} held={r.get('held')}"
+    )
     return r
+
+
+def run_close() -> dict:
+    return _sync("close")
 
 
 def run_trail() -> dict:
-    bid, ask = _ba()
-    kl = signal_klines("1h", 80)
-    if bid <= 0 or ask <= 0:
-        return {"ok": False, "error": "no_quote"}
-    r = trail(bid, ask, kl)
-    print(f"[bin_b103 trail] kapanan={r.get('closed')} kilit={r.get('updated')}")
-    return r
+    return _sync("trail")
 
 
 def run_open() -> dict:
-    if _night_quiet("binb103"):
-        print(f"[bin_b103 open] gece penceresi {_night_label()} — skip")
-        return {"ok": True, "opened": 0, "skip": "gece_penceresi"}
-    bid, ask = _ba()
-    kl1 = signal_klines("1h", 180)
-    kl4 = signal_klines("4h", 120)
-    if bid <= 0 or ask <= 0 or len(kl1) < 30:
-        print("[bin_b103 open] mum/fiyat yok")
-        return {"ok": False, "error": "no_data"}
-    sig = resolve(kl1, kl4)
-    side = side_of(sig.get("direction") or "")
-    if not side:
-        print(f"[bin_b103 open] nötr 1h={sig.get('sig_1h')} 4h={sig.get('sig_4h')}")
-        return {"ok": True, "opened": 0, "signal": sig}
-    kl = kl1 if sig.get("tf") == "1h" else kl4
-    pos = open_position(side, bid, ask, signal=sig["direction"], tf=sig["tf"], kl=kl)
-    print(f"[bin_b103 open] {side} {sig.get('tf')} opened={bool(pos)}")
-    return {"ok": True, "opened": 1 if pos else 0, "signal": sig, "pos": bool(pos)}
+    return _sync("open")
 
 
 def run_scan() -> dict:
-    bid, ask = _ba()
-    kl1 = signal_klines("1h", 180)
-    kl4 = signal_klines("4h", 120)
-    if bid <= 0 or ask <= 0:
-        return {"ok": False, "error": "no_quote"}
-    sig = resolve(kl1, kl4)
-    side = side_of(sig.get("direction") or "")
-    closed = 0
-    opened = 0
-    if side:
-        r = close_if_reverse(side, bid, ask, kl1)
-        closed = int(r.get("closed") or 0)
-        if _night_quiet("binb103"):
-            print(f"[bin_b103 scan] gece penceresi {_night_label()} — open skip")
-        else:
-            kl = kl1 if sig.get("tf") == "1h" else kl4
-            pos = open_position(side, bid, ask, signal=sig["direction"], tf=sig["tf"], kl=kl)
-            opened = 1 if pos else 0
-    trail(bid, ask, kl1)
-    print(f"[bin_b103 scan] reverse={closed} open={opened} dir={sig.get('direction')}")
-    return {"ok": True, "closed": closed, "opened": opened, "signal": sig}
+    return _sync("scan")
 
 
 def run_status() -> dict:

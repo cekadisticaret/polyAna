@@ -14,6 +14,7 @@ import hashlib
 import hmac
 import json
 import os
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -77,6 +78,7 @@ class BinanceFuturesClient:
         *,
         signed: bool = False,
         ignore_ban: bool = False,
+        api_key: bool = False,
     ) -> Any:
         params = dict(params or {})
         headers = {"User-Agent": "aiProject-futures/1.0", "Accept": "application/json"}
@@ -92,6 +94,8 @@ class BinanceFuturesClient:
             headers["X-MBX-APIKEY"] = self.api_key
         else:
             query = urllib.parse.urlencode(params, doseq=True) if params else ""
+            if api_key and self.api_key:
+                headers["X-MBX-APIKEY"] = self.api_key
 
         url = f"{self.base}{path}"
         if "fapi.binance.com" in str(self.base):
@@ -139,11 +143,26 @@ class BinanceFuturesClient:
             ignore_ban: bool = False) -> Any:
         return self._request("GET", path, params, signed=signed, ignore_ban=ignore_ban)
 
-    def post(self, path: str, params: dict | None = None, *, signed: bool = False) -> Any:
-        return self._request("POST", path, params, signed=signed)
+    def post(self, path: str, params: dict | None = None, *, signed: bool = False,
+             api_key: bool = False) -> Any:
+        return self._request("POST", path, params, signed=signed, api_key=api_key)
+
+    def put(self, path: str, params: dict | None = None, *, signed: bool = False,
+            api_key: bool = False) -> Any:
+        return self._request("PUT", path, params, signed=signed, api_key=api_key)
 
     def delete(self, path: str, params: dict | None = None, *, signed: bool = False) -> Any:
         return self._request("DELETE", path, params, signed=signed)
+
+    def listen_key_create(self) -> str:
+        d = self.post("/fapi/v1/listenKey", api_key=True) or {}
+        key = str(d.get("listenKey") or "")
+        if not key:
+            raise BinanceFuturesError("listenKey yok", body=d)
+        return key
+
+    def listen_key_keepalive(self) -> dict:
+        return self.put("/fapi/v1/listenKey", api_key=True) or {}
 
     # ── public market ─────────────────────────────────────────
     def ping(self) -> dict:
@@ -157,15 +176,51 @@ class BinanceFuturesClient:
         return self.get("/fapi/v1/exchangeInfo", params)
 
     def mark_price(self, symbol: str) -> float:
+        try:
+            _root = os.path.dirname(_DIR)
+            if _root not in sys.path:
+                sys.path.insert(0, _root)
+            from binance_fapi_guard import get_mark
+            px = get_mark(symbol)
+            if px:
+                return px
+        except Exception:
+            pass
         data = self.get("/fapi/v1/premiumIndex", {"symbol": symbol.upper()})
         return float(data["markPrice"])
 
     def ticker_price(self, symbol: str) -> float:
+        try:
+            _root = os.path.dirname(_DIR)
+            if _root not in sys.path:
+                sys.path.insert(0, _root)
+            from binance_fapi_guard import get_last, get_mark
+            px = get_last(symbol) or get_mark(symbol)
+            if px:
+                return px
+        except Exception:
+            pass
         data = self.get("/fapi/v1/ticker/price", {"symbol": symbol.upper()})
         return float(data["price"])
 
     def book_ticker(self, symbol: str) -> dict:
-        """GET /fapi/v1/ticker/bookTicker — en iyi alış/satış (maker giriş için)."""
+        """En iyi alış/satış — önce WS, yoksa REST."""
+        try:
+            _root = os.path.dirname(_DIR)
+            if _root not in sys.path:
+                sys.path.insert(0, _root)
+            from binance_fapi_guard import get_book
+            hit = get_book(symbol)
+            if hit and (hit.get("bid") or hit.get("ask")):
+                return {
+                    "symbol": (symbol or "").upper(),
+                    "bid": float(hit.get("bid") or 0),
+                    "ask": float(hit.get("ask") or 0),
+                    "bid_qty": float(hit.get("bid_qty") or 0),
+                    "ask_qty": float(hit.get("ask_qty") or 0),
+                }
+        except Exception:
+            pass
         d = self.get("/fapi/v1/ticker/bookTicker", {"symbol": symbol.upper()})
         return {
             "symbol": d.get("symbol"),
@@ -199,6 +254,16 @@ class BinanceFuturesClient:
         return self.get("/fapi/v1/fundingInfo")
 
     def klines(self, symbol: str, interval: str = "15m", limit: int = 100) -> list:
+        try:
+            _root = os.path.dirname(_DIR)
+            if _root not in sys.path:
+                sys.path.insert(0, _root)
+            from binance_fapi_guard import public_klines
+            raw = public_klines(symbol, interval, int(limit))
+            if raw:
+                return raw
+        except Exception:
+            pass
         return self.get(
             "/fapi/v1/klines",
             {"symbol": symbol.upper(), "interval": interval, "limit": int(limit)},

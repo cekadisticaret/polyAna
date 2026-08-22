@@ -64,6 +64,7 @@ def _load_control() -> dict:
         "b1_05_live_paused": True,
         "b1_mum_live_paused": True,
         "a3a8_signal_strict": True,
+        "user_live_hold": False,
         "updated_at_tr": "",
         "updated_by": "",
     }
@@ -139,9 +140,11 @@ def get_pm_system_control() -> dict:
         for g in _VALID_GROUPS
     }
     strict = bool(c.get("a3a8_signal_strict", True))
+    hold = bool(c.get("user_live_hold"))
     all_paused = all(paused.values())
     return {
         **{f"{g}_paused": v for g, v in paused.items()},
+        "user_live_hold": hold,
         "a3a8_signal_strict": strict,
         "a3a8_signal_mode": "strict" if strict else "loose",
         "a3a8_signal_mode_label": "sıkı (filtreli)" if strict else "gevşek (her saat)",
@@ -161,9 +164,34 @@ def set_a3a8_signal_strict(strict: bool, *, source: str = "dashboard") -> dict:
     return get_pm_system_control()
 
 
+def is_user_live_hold() -> bool:
+    return bool(_load_control().get("user_live_hold"))
+
+
+def set_user_live_hold(hold: bool, *, source: str = "agent") -> dict:
+    """Kullanıcı söyleyene kadar gerçek PM açık olmasın.
+
+    True: tüm Live grupları kilitlenir; hafta sonu açılışı ve dashboard
+    'Aç' tuşu da yeni emir atamaz. False: kilit kalkar, gruplar kapalı kalır
+    (tek tek açmak gerekir).
+    """
+    data = _load_control()
+    data["user_live_hold"] = bool(hold)
+    if hold:
+        for g in _VALID_GROUPS:
+            data[f"{g}_paused"] = True
+    data["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
+    data["updated_by"] = source
+    _save_control(data)
+    return get_pm_system_control()
+
+
 def set_group_paused(group: str, paused: bool, *, source: str = "dashboard") -> dict:
     if group not in _VALID_GROUPS:
         raise ValueError(f"bilinmeyen grup: {group}")
+    if (not paused) and is_user_live_hold():
+        print(f"[PM SYSTEM] user_live_hold — {group} açılmadı", file=sys.stderr)
+        return get_pm_system_control()
     data = _load_control()
     data[f"{group}_paused"] = bool(paused)
     data["updated_at_tr"] = datetime.now(_TZ_TR).isoformat()
@@ -178,6 +206,9 @@ def toggle_group_paused(group: str, *, source: str = "dashboard") -> dict:
 
 def set_pm_open_paused(paused: bool, *, source: str = "dashboard") -> dict:
     """Geriye uyumluluk — üçünü birlikte ayarla."""
+    if (not paused) and is_user_live_hold():
+        print("[PM SYSTEM] user_live_hold — toplu açılış yok", file=sys.stderr)
+        return get_pm_system_control()
     data = _load_control()
     for g in _WEEKEND_GROUPS:
         data[f"{g}_paused"] = bool(paused)
@@ -198,6 +229,9 @@ def weekend_pause_all(*, source: str = "weekend_cron") -> dict:
 
 def weekend_resume_early(*, source: str = "weekend_cron") -> dict:
     """Pazartesi 11:00 — A1/A2/A10 hariç weekend gruplarını aç."""
+    if is_user_live_hold():
+        print("[PM SYSTEM] user_live_hold — Pazartesi erken açılış yok", file=sys.stderr)
+        return get_pm_system_control()
     data = _load_control()
     for g in _WEEKEND_EARLY_GROUPS:
         data[f"{g}_paused"] = False
@@ -209,6 +243,9 @@ def weekend_resume_early(*, source: str = "weekend_cron") -> dict:
 
 def weekend_resume_a1a2a10(*, source: str = "weekend_cron") -> dict:
     """Pazartesi 12:00 — A1 Live + A2 Live + A10 Live aç."""
+    if is_user_live_hold():
+        print("[PM SYSTEM] user_live_hold — Pazartesi A1/A2/A10 açılış yok", file=sys.stderr)
+        return get_pm_system_control()
     data = _load_control()
     for g in _WEEKEND_LATE_GROUPS:
         data[f"{g}_paused"] = False
@@ -252,6 +289,8 @@ def get_usdc_balance() -> float:
 
 def is_dashboard_live_open(label: str) -> bool:
     """Dashboard Live anahtarı açık mı (*_paused=false) — hafta sonu bypass için."""
+    if is_user_live_hold():
+        return False
     group = _label_group(label)
     if group is None:
         return False
@@ -260,6 +299,8 @@ def is_dashboard_live_open(label: str) -> bool:
 
 def is_a2_live_dashboard_open(algo_num: int) -> bool:
     """A2#NN Live dashboard'da açıksa sanal A2#NN hafta sonu da açılabilir."""
+    if is_user_live_hold():
+        return False
     group = f"a2_{int(algo_num):02d}_live"
     if group not in _VALID_GROUPS:
         return False
@@ -271,6 +312,9 @@ def can_open_trade(label: str, tg_send=None) -> bool:
     group = _label_group(label)
     if group is None:
         return True
+    if is_user_live_hold():
+        print(f"[PM SYSTEM] {label} — user_live_hold, gerçek PM yok", file=sys.stderr)
+        return False
     if is_group_paused(group):
         print(f"[PM SYSTEM] {label} — açılış kapalı ({group})", file=sys.stderr)
         return False

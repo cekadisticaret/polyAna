@@ -43,6 +43,19 @@ def net_pnl(gross: float, commission: float) -> float:
     return round(float(gross or 0) - abs(float(commission or 0)), 4)
 
 
+def _fapi_blocked() -> bool:
+    try:
+        import os
+        import sys
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import fapi_blocked  # noqa: WPS433
+        return bool(fapi_blocked())
+    except Exception:
+        return False
+
+
 def get_taker_rate(
     client: Any | None = None,
     symbol: str = "BTCUSDT",
@@ -55,6 +68,8 @@ def get_taker_rate(
     hit = _RATE_CACHE.get(sym)
     if hit and (time.time() - hit[2]) < _RATE_TTL_SEC:
         return hit[0]
+    if _fapi_blocked():
+        return taker_cfg
     if client is not None and getattr(client, "configured", lambda: False)():
         try:
             data = client.commission_rate(sym)
@@ -79,6 +94,8 @@ def get_maker_rate(
     hit = _RATE_CACHE.get(sym)
     if hit and (time.time() - hit[2]) < _RATE_TTL_SEC:
         return hit[1]
+    if _fapi_blocked():
+        return maker_cfg
     if client is not None and getattr(client, "configured", lambda: False)():
         try:
             data = client.commission_rate(sym)

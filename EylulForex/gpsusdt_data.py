@@ -38,14 +38,48 @@ def _dec(px: float) -> int:
     return 6
 
 
+def _fapi_ok() -> bool:
+    try:
+        import sys
+        from pathlib import Path
+        root = str(Path(__file__).resolve().parents[1])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import fapi_ok
+        return bool(fapi_ok())
+    except Exception:
+        return True
+
+
 def _klines_raw(tf: str, limit: int) -> tuple[list[dict], str]:
     iv = tf if tf in _BAR_SEC else "1m"
     lim = max(20, min(int(limit or 240), 500))
     last_err = "yok"
-    for src, url in (
-        ("fapi", f"{_FAPI}/fapi/v1/klines?symbol={SYMBOL}&interval={iv}&limit={lim}"),
-        ("spot", f"{_SPOT}/api/v3/klines?symbol={SYMBOL}&interval={iv}&limit={lim}"),
-    ):
+    sources = []
+    try:
+        import sys
+        from pathlib import Path
+        root = str(Path(__file__).resolve().parents[1])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import public_klines
+        raw = public_klines(SYMBOL, iv, lim)
+        if isinstance(raw, list) and raw:
+            out = []
+            for r in raw:
+                out.append({
+                    "time": int(r[0]) // 1000,
+                    "open": float(r[1]),
+                    "high": float(r[2]),
+                    "low": float(r[3]),
+                    "close": float(r[4]),
+                    "volume": float(r[5] or 0),
+                })
+            return out, "public"
+    except Exception as e:
+        last_err = str(e)[:160]
+    sources.append(("spot", f"{_SPOT}/api/v3/klines?symbol={SYMBOL}&interval={iv}&limit={lim}"))
+    for src, url in sources:
         try:
             rows = _get_json(url)
             if not isinstance(rows, list) or not rows:
@@ -79,10 +113,26 @@ def gps_klines(tf: str, n: int = 120) -> list[dict]:
 
 def _ticker() -> tuple[dict, str]:
     last_err = "yok"
-    for src, url in (
-        ("fapi", f"{_FAPI}/fapi/v1/ticker/bookTicker?symbol={SYMBOL}"),
-        ("spot", f"{_SPOT}/api/v3/ticker/bookTicker?symbol={SYMBOL}"),
-    ):
+    sources = []
+    try:
+        import sys
+        from pathlib import Path
+        root = str(Path(__file__).resolve().parents[1])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import get_book
+        hit = get_book(SYMBOL)
+        if hit and (hit.get("bid") or hit.get("ask")):
+            return {
+                "bidPrice": hit.get("bid"),
+                "askPrice": hit.get("ask"),
+                "bidQty": hit.get("bid_qty"),
+                "askQty": hit.get("ask_qty"),
+            }, "ws"
+    except Exception:
+        pass
+    sources.append(("spot", f"{_SPOT}/api/v3/ticker/bookTicker?symbol={SYMBOL}"))
+    for src, url in sources:
         try:
             d = _get_json(url)
             if isinstance(d, dict) and (d.get("bidPrice") or d.get("askPrice")):
@@ -101,12 +151,15 @@ def gps_tick_score(window_sec: int = 90, limit: int = 500) -> dict:
     start = int((now - window_sec) * 1000)
     data = []
     try:
-        data = _get_json(
-            f"{_FAPI}/fapi/v1/aggTrades?symbol={SYMBOL}&startTime={start}&limit={limit}"
-        )
+        if _fapi_ok():
+            data = _get_json(
+                f"{_FAPI}/fapi/v1/aggTrades?symbol={SYMBOL}&startTime={start}&limit={limit}"
+            )
         if not isinstance(data, list):
             data = []
     except Exception:
+        data = []
+    if not data:
         try:
             data = _get_json(
                 f"{_SPOT}/api/v3/aggTrades?symbol={SYMBOL}&startTime={start}&limit={limit}"
@@ -164,9 +217,16 @@ def gps_quote() -> dict:
     except Exception:
         pass
     try:
-        px = _get_json(f"{_FAPI}/fapi/v1/ticker/price?symbol={SYMBOL}")
-        last = float(px.get("price") or 0) or None
+        import sys
+        from pathlib import Path
+        root = str(Path(__file__).resolve().parents[1])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import get_last, get_mark
+        last = get_last(SYMBOL) or get_mark(SYMBOL)
     except Exception:
+        last = None
+    if not last:
         last = mark or mid
     spot = {}
     try:

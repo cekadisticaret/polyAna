@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Algoritma-islemler — açık pozisyonları kapat, bakiyeyi $300'e sıfırla, cron open'a bırak.
+"""Algoritma-islemler — açık pozisyonları kapat, bakiyeyi $1000'e sıfırla, cron open'a bırak.
 
 Kullanım:
-  python3 algo_islemler_fresh_start.py           # close + reset $300
+  python3 algo_islemler_fresh_start.py           # close + reset $1000
   python3 algo_islemler_fresh_start.py --reset-only   # sadece bakiye (close atla)
-  python3 algo_islemler_fresh_start.py --reset-only --keep-open  # bakiye $300, açık pozisyonlar kalır
+  python3 algo_islemler_fresh_start.py --reset-only --keep-open  # bakiye $1000, açık pozisyonlar kalır
 
 Not: open çalıştırmaz — :05 / :06 cron kendi açar.
 """
@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _TZ_TR = ZoneInfo("Europe/Istanbul")
-_BALANCE = 300.0
+_BALANCE = 1000.0
 
 # poly_dashboard._ALGO_ISLEMLER_KEYS ile birebir aynı olmalı. Dashboard'ı buradan
 # import etmek Flask'ı da çekeceği için liste elle tutuluyor; yeni defter eklerken
@@ -30,7 +30,7 @@ ALGO_ISLEMLER_KEYS = [
     "analiz1", "analiz2",
     "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15",
     "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
-    "c101", "c101_v2", "x101", "e01",
+    "c101", "c101_v2", "x101", "combo",
 ] + [f"a2_{i:02d}" for i in range(1, 18)] + ["a2_05_v2"]
 
 # Dosya adı defter anahtarından farklı olanlar
@@ -40,11 +40,11 @@ _STATE_FILE_KEY = {"melez": "analiz6_v4"}
 _STANDALONE_CLOSE = [
     "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15",
     "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
-    "melez", "c101", "c101_v2", "x101", "e01", "a2_05_v2",
+    "melez", "c101", "c101_v2", "x101", "combo", "a2_05_v2",
 ]
 
 # Betik adı defter anahtarından farklı olanlar
-_CLOSE_SCRIPT = {"melez": "poly_trader_analiz6_v4.py"}
+_CLOSE_SCRIPT = {"melez": "poly_trader_analiz6_v4.py", "combo": "poly_trader_e01.py"}
 
 
 def _state_path(key: str) -> str:
@@ -141,7 +141,7 @@ def _reset_balances(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Algoritma-islemler fresh start ($300)")
+    parser = argparse.ArgumentParser(description="Algoritma-islemler fresh start ($1000)")
     parser.add_argument("--reset-only", action="store_true", help="close atla, sadece bakiye sıfırla")
     parser.add_argument("--keep-open", action="store_true",
                         help="açık pozisyonları state'te bırak (--reset-only ile)")

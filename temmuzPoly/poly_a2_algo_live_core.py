@@ -65,6 +65,8 @@ class A2LiveSpec:
     # (2026-08-12: sanal BTC'ye 0.725'ten girdi, live 0.77'de "profit_low" deyip
     # atladı → aynı saatte sanal 2, live 1 pozisyon). Varsayılan eski davranış.
     min_profit_ratio: float | None = HOURLY_MIN_NET_PROFIT_RATIO
+    # None = taban yok. A2#05: 0.40 — ucuz bilet gerçek paraya gitmesin.
+    min_entry_price: float | None = None
 
 
 def book_tag(spec: A2LiveSpec) -> str:
@@ -353,6 +355,18 @@ async def mirror_open_from_sanal(
         return None, "bad_pos"
     if entry_price <= 0:
         return None, "bad_entry"
+    if spec.min_entry_price is not None:
+        ticket = sanal_pos.get("pm_entry_price")
+        try:
+            ticket_f = float(ticket) if ticket is not None else None
+        except (TypeError, ValueError):
+            ticket_f = None
+        if ticket_f is None or ticket_f < spec.min_entry_price:
+            print(
+                f"[{spec.label} mirror] {sym} — bilet {ticket} < "
+                f"{spec.min_entry_price} fiyat tabanı, atlandı"
+            )
+            return None, "cheap_token"
 
     if now_tr is None:
         now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)

@@ -15,6 +15,7 @@ import sys
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _AGUSTOS = os.path.dirname(_DIR)
 _ROOT = os.path.dirname(_AGUSTOS)
+sys.path.insert(0, _ROOT)
 sys.path.insert(0, _AGUSTOS)
 sys.path.insert(0, _DIR)
 
@@ -66,6 +67,7 @@ TEST_SYMBOLS = _test_cat.TEST_SYMBOLS
 
 _test_sig = _load_test_module("kripto_test_signals", _SIG_PATH)
 signal_for_book = _test_sig.signal_for_book
+build_supertrend_candidates = _test_sig.build_supertrend_candidates
 
 _test_gate = _load_test_module("kripto_test_edge_gate", os.path.join(_DIR, "edge_gate.py"))
 edge_decision = _test_gate.decision
@@ -107,9 +109,31 @@ def is_pro(book: dict) -> bool:
 
 
 def max_opens_for(book: dict) -> int:
-    if (book.get("uid") or "") == "jarvis_v1":
-        return int(book.get("max_opens") or 10)
+    if book.get("max_opens") is not None:
+        return int(book["max_opens"])
     return MAX_OPEN_POSITIONS
+
+
+def skip_symbols_of(book: dict) -> set[str]:
+    out: set[str] = set()
+    for s in book.get("skip_symbols") or []:
+        u = str(s).upper()
+        if u and not u.endswith("USDT"):
+            u += "USDT"
+        if u:
+            out.add(u)
+    return out
+
+
+def skipped_open_symbols(book: dict, opens: list | None) -> set[str]:
+    skip = skip_symbols_of(book)
+    if not skip:
+        return set()
+    return {
+        (p.get("symbol") or "").upper()
+        for p in (opens or [])
+        if (p.get("symbol") or "").upper() in skip
+    }
 
 
 def _build_candidates_for_book(
@@ -126,11 +150,26 @@ def _build_candidates_for_book(
             symbols=TEST_SYMBOLS,
             signal_for_book=signal_for_book,
         )
-    return build_candidates(
-        book, kl_1h, kl_4h, history,
-        symbols=TEST_SYMBOLS,
-        signal_for_book=signal_for_book,
-    )
+    if (book.get("uid") or "") == "cebu":
+        from cebu import CEBU_SYMBOLS, build_cebu_candidates  # noqa: WPS433
+
+        return build_cebu_candidates(
+            book, kl_1h, kl_4h, history,
+            symbols=CEBU_SYMBOLS,
+            signal_for_book=signal_for_book,
+        )
+    if book.get("source") == "analizler" and book.get("source_key") == "a6":
+        rows = build_supertrend_candidates(kl_1h, max_n=max_opens_for(book))
+    else:
+        rows = build_candidates(
+            book, kl_1h, kl_4h, history,
+            symbols=TEST_SYMBOLS,
+            signal_for_book=signal_for_book,
+        )
+    skip = skip_symbols_of(book)
+    if skip:
+        rows = [c for c in rows if (c.get("symbol") or "").upper() not in skip]
+    return rows
 
 
 def _paths(book: dict) -> tuple[str, str]:
@@ -182,10 +221,16 @@ def book_detail(book_id: str, *, recent_limit: int = 30, with_marks: bool = True
     _ensure_state(sp)
     kl = {}
     if with_marks:
-        opens = load_state(sp).get("open_positions") or []
-        syms = sorted({p.get("symbol") for p in opens if p.get("symbol")})
-        if syms:
-            kl = fetch_all_klines(syms, limit=2)
+        try:
+            from binance_fapi_guard import marks_fresh  # noqa: WPS433
+            ws_ok = marks_fresh()
+        except Exception:
+            ws_ok = False
+        if not ws_ok:
+            opens = load_state(sp).get("open_positions") or []
+            syms = sorted({p.get("symbol") for p in opens if p.get("symbol")})
+            if syms:
+                kl = fetch_all_klines(syms, limit=2)
     st = book_status(
         sp, hp,
         label=label(book),
@@ -203,6 +248,11 @@ def book_detail(book_id: str, *, recent_limit: int = 30, with_marks: bool = True
     st["leverage"] = LEVERAGE
     st["max_opens"] = max_opens_for(book)
     st["deposit"] = DEPOSIT
+    if (book.get("uid") or "") == "cebu":
+        from cebu import mapping_display_rows, mapping_summary  # noqa: WPS433
+
+        st["cebu_map"] = mapping_display_rows()
+        st["cebu_meta"] = mapping_summary()
     return st
 
 
@@ -502,11 +552,11 @@ def _pro_expired_symbols(state: dict) -> set[str]:
 
 
 def run_close() -> dict:
-    """Saatlik settle — PRO defterleri hariç.
+    """Çıkış turu — zaman kapanışı yok (exit_policy).
 
-    PRO'da saatlik zorunlu kapanış yok: pozisyon sinyal dönene (scan), ATR
-    stopuna (trail) veya süre sınırına kadar tutulur. Bu turda yalnız süresi
-    dolanlar kapatılır.
+    Kazanan ATR kâr kilidiyle kilitlenir; kaybeden 1h/4h settle ile
+    bekletilmez. Kapanış: ters sinyal (scan) · ATR stop/kilit (trail) ·
+    24s tavan · 3×ATR zarar. PRO'da yalnız süre tavanı bu turda bakılır.
     """
     skipped = _skip_weekend("close")
     if skipped:
@@ -537,6 +587,20 @@ def run_close() -> dict:
             skip.update(skip_add)
             st["atr_skip_syms"] = sorted(skip)
             save_state(sp, st)
+        dead = skipped_open_symbols(book, load_state(sp).get("open_positions"))
+        if (book.get("uid") or "") == "cebu":
+            from cebu import disabled_open_symbols  # noqa: WPS433
+            dead |= disabled_open_symbols(load_state(sp).get("open_positions"))
+        if dead:
+            r_off = close_reversal_positions(
+                sp, hp, label=label(book), reversed_symbols=dead,
+                kl_cache=kl, reason="skip_symbol",
+            )
+            r["closed"] = int(r.get("closed") or 0) + int(r_off.get("closed") or 0)
+            r["closed_symbols"] = list(r.get("closed_symbols") or []) + list(
+                r_off.get("closed_symbols") or []
+            )
+            r["disabled_closed"] = r_off.get("closed_symbols") or []
         results.append({"id": book["uid"], "name": book["name"], **r})
     return {"ok": True, "results": results}
 
@@ -644,7 +708,7 @@ def run_open() -> dict:
     gs = edge_summary()
     print(
         f"[Kripto Test] open {len(ALL_BOOKS)} defter · ${MARGIN_USD:.0f}×{LEVERAGE}x "
-        f"· max {MAX_OPEN_POSITIONS} (JARVIS_V1: 10) · 1h/4h ATR · "
+        f"· max {MAX_OPEN_POSITIONS} (JARVIS_V1: 10 · CEBU: 22) · zaman yok · 24s · 3×ATR · "
         f"kenar kapısı: {gate_blocked} aday reddedildi, "
         f"{len(gs.get('allowed') or [])} çift izinli"
     )
@@ -709,6 +773,11 @@ def run_scan() -> dict:
         reversed_syms = find_reversal_closes(
             book, opens, kl_1h, kl_4h, signal_for_book=signal_for_book,
         )
+        dead = skipped_open_symbols(book, opens)
+        if (book.get("uid") or "") == "cebu":
+            from cebu import disabled_open_symbols  # noqa: WPS433
+            dead |= disabled_open_symbols(opens)
+        reversed_syms = set(reversed_syms) - dead
         if is_pro(book):
             # PRO'da saatlik close yok — süre sınırı bu turda da kontrol edilir
             reversed_syms = set(reversed_syms) | _pro_expired_symbols(st)
@@ -716,6 +785,15 @@ def run_scan() -> dict:
         if reversed_syms:
             r_close = close_reversal_positions(
                 sp, hp, label=label(book), reversed_symbols=reversed_syms, kl_cache=kl_cache,
+            )
+        if dead:
+            r_off = close_reversal_positions(
+                sp, hp, label=label(book), reversed_symbols=dead,
+                kl_cache=kl_cache, reason="skip_symbol",
+            )
+            r_close["closed"] = int(r_close.get("closed") or 0) + int(r_off.get("closed") or 0)
+            r_close["closed_symbols"] = list(r_close.get("closed_symbols") or []) + list(
+                r_off.get("closed_symbols") or []
             )
             total_closed += int(r_close.get("closed") or 0)
 
@@ -767,7 +845,10 @@ def run_scan() -> dict:
 def _build_waiting(kl: dict[str, list], open_syms: set[str]) -> list[dict]:
     votes: dict[str, dict[str, int]] = {s: {"UP": 0, "DOWN": 0} for s in TEST_SYMBOLS}
     # PRO defterleri aynı motorun kopyası — konsensüsü ikiye katlamasınlar
-    vote_books = [b for b in ALL_BOOKS if not is_pro(b)]
+    vote_books = [
+        b for b in ALL_BOOKS
+        if not is_pro(b) and (b.get("uid") or "") not in ("cebu",)
+    ]
     for book in vote_books:
         sigs = signal_for_book(book, kl)
         for sym, d in sigs.items():
@@ -805,7 +886,15 @@ def _build_waiting(kl: dict[str, list], open_syms: set[str]) -> list[dict]:
     return rows
 
 
-def _build_status(*, with_marks: bool = True) -> dict:
+def _fapi_blocked() -> bool:
+    try:
+        from binance_fapi_guard import fapi_blocked  # noqa: WPS433
+        return bool(fapi_blocked())
+    except Exception:
+        return False
+
+
+def _build_status(*, with_marks: bool = True, compute_waiting: bool | None = None) -> dict:
     open_syms: set[str] = set()
     for book in ALL_BOOKS:
         sp, _hp = _paths(book)
@@ -813,10 +902,19 @@ def _build_status(*, with_marks: bool = True) -> dict:
         for p in (load_state(sp).get("open_positions") or []):
             if p.get("symbol"):
                 open_syms.add(p["symbol"])
-    kl = fetch_all_klines(TEST_SYMBOLS, limit=80) if with_marks else {}
-    if with_marks and open_syms:
-        kl_open = fetch_all_klines(sorted(open_syms), limit=2)
-        kl.update(kl_open)
+    # fapi ban'de sinyal turu (70 defter × Binance) atlanır — mark WS / spot.
+    if compute_waiting is None:
+        compute_waiting = bool(with_marks) and not _fapi_blocked()
+    try:
+        from binance_fapi_guard import marks_fresh  # noqa: WPS433
+        ws_ok = marks_fresh()
+    except Exception:
+        ws_ok = False
+    kl: dict[str, list] = {}
+    if with_marks and open_syms and not ws_ok:
+        kl = fetch_all_klines(sorted(open_syms), limit=2)
+    if compute_waiting:
+        kl.update(fetch_all_klines(TEST_SYMBOLS, limit=80))
     # book_status() mutasyonla kl_cache'e "SYM|interval" anahtarları ekler
     # (pozisyon ATR/mark takibi için) — sinyal hesaplaması (signal_for_book)
     # sadece düz sembol anahtarı bekler, kirlenmemiş kopya kullan.
@@ -867,7 +965,11 @@ def _build_status(*, with_marks: bool = True) -> dict:
             -(b.get("wins") or 0),
         )
     )
-    waiting = _build_waiting(kl_plain, open_syms) if with_marks else []
+    if compute_waiting:
+        waiting = _build_waiting(kl_plain, open_syms)
+    else:
+        from virtual_book import read_snapshot  # noqa: WPS433
+        waiting = (read_snapshot("test") or {}).get("waiting") or []
     top_success = compute_top_success(n=6)
     coin_leaders = compute_coin_leaders()
     return {
@@ -895,8 +997,11 @@ def status_block(*, with_marks: bool = True) -> dict:
     return cached_status("test", lambda: _build_status(with_marks=with_marks))
 
 
-def refresh_status_block(*, with_marks: bool = True) -> dict:
-    return refresh_status("test", lambda: _build_status(with_marks=with_marks))
+def refresh_status_block(*, with_marks: bool = True, compute_waiting: bool | None = None) -> dict:
+    return refresh_status(
+        "test",
+        lambda: _build_status(with_marks=with_marks, compute_waiting=compute_waiting),
+    )
 
 
 def run_reset(*, balance: float = DEPOSIT, close_first: bool = True) -> dict:

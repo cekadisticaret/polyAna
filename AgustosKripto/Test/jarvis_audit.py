@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""JARVIS — Kripto Sistem Denetimi (Test + Algoritmalar + Analizler).
+"""JARVIS — Kripto Sistem Denetimi (yalnız /kripto/test).
 
-`skill_audit.py` üzerine kurulu; 118 sanal defterin tamamını tarar.
+`skill_audit.py` üzerine kurulu; aktif sanal defterler Test'tedir.
 Çıktı: `jarvis_audit.json` (JARVIS 2. sekme bunu okur).
 
 Kullanım:
@@ -267,8 +267,11 @@ def _bulgular(ov: dict, mfe: list[dict], exits: list[dict], kons: list[dict],
     return out
 
 
+ACTIVE_GROUPS = {"Test": sa.GROUPS["Test"]}
+
+
 def build_report() -> dict:
-    trades = sa.load_trades()
+    trades = sa.load_trades(ACTIVE_GROUPS)
     ov = sa.overall(trades)
     mfe = sa.mfe_distribution(trades)
     exits = _exit_rows(trades)
@@ -293,7 +296,7 @@ def build_report() -> dict:
 
     # defter sayısı
     books = set()
-    for g, ddir in sa.GROUPS.items():
+    for g, ddir in ACTIVE_GROUPS.items():
         for p in glob.glob(os.path.join(ddir, "*_history.json")):
             books.add(f"{g}·{os.path.basename(p).replace('_history.json', '')}")
 

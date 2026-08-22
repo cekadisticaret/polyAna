@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test defter kataloğu — algoritma-islemler (26) + /algoritma ALGO1."""
+"""Test defter kataloğu — algoritma-islemler + ALGO1 + Analizler A10/ST."""
 from __future__ import annotations
 
 import os
@@ -46,7 +46,7 @@ _ISLEMLER_POLY: list[tuple[str, str, str]] = [
     ("analiz15",   "A15",   "15. Analiz · BTC A6 · ETH A8 · SOL A2"),
     ("b1_01",      "B1#01", "B1#01 · en iyi motor"),
     ("b1_02",      "B1#02", "B1#02 · BTC A15 · ETH A6 · SOL A2#01"),
-    ("b1_mum",     "B1#03", "B1#03 MUM · Sonnet mum confluence 1h ±15"),
+    ("b1_mum",     "B1#03", "B1#03 MUM · Sonnet mum confluence 1h ±15 · KAITO pasif"),
     ("b1_04",      "B1#04", "B1#04 · edge-ağırlıklı küme konsensüsü · 23 motor"),
     ("b1_05",      "B1#05", "B1#05 · coin başına en iyi motor · MUM+MELEZ dahil"),
     ("c101",       "C1#01", "C1#01 · PTB+volatilite olasılık modeli · yön = P(UP) vs %50"),
@@ -61,7 +61,7 @@ _ISLEMLER_A2: list[tuple[str, str, str]] = [
 ALL_BOOKS: list[dict] = []
 
 for key, short, title in _ISLEMLER_POLY:
-    ALL_BOOKS.append({
+    row = {
         "uid": key,
         "book_key": f"test_{key}",
         "name": short,
@@ -69,7 +69,10 @@ for key, short, title in _ISLEMLER_POLY:
         "category": "Poly→Kripto Test",
         "source": "islemler_poly",
         "source_key": key,
-    })
+    }
+    if key == "b1_mum":
+        row["skip_symbols"] = ["KAITOUSDT"]
+    ALL_BOOKS.append(row)
 
 for key, short, title in _ISLEMLER_A2:
     num = int(key.split("_")[1])
@@ -99,6 +102,30 @@ for book in ALGOS_V1:
         "panel": "v1",
         "kind": book.get("kind"),
     })
+
+
+# Analizler sayfasında olup Test'te karşılığı olmayan motorlar.
+# a1/a2 = Test analiz1/analiz2 (aynı predictor). Algoritmalar A1/A2 = a1_*/a2_*.
+# A10 Dual ve A6 Supertrend başka sinyal — eklenmezse kaybolur.
+ALL_BOOKS.append({
+    "uid": "analiz10",
+    "book_key": "test_analiz10",
+    "name": "A10",
+    "title": "10. Analiz Dual · Poly dual core",
+    "category": "Analizler→Kripto Test",
+    "source": "analizler",
+    "source_key": "a10",
+})
+ALL_BOOKS.append({
+    "uid": "analiz_st",
+    "book_key": "test_analiz_st",
+    "name": "A6 ST",
+    "title": "Analizler Supertrend · alt (BTC/ETH yok) · skor seçimi · max 4",
+    "category": "Analizler→Kripto Test",
+    "source": "analizler",
+    "source_key": "a6",
+    "max_opens": 4,
+})
 
 
 # ── PRO defterleri ───────────────────────────────────────────
@@ -136,4 +163,17 @@ ALL_BOOKS.append({
     "source": "jarvis_v1",
     "source_key": "jarvis_v1",
     "max_opens": 10,
+})
+
+# ── CEBU ─────────────────────────────────────────────────────
+# Sabit coin→motor; kota yok (18 aktif coin). BTC/ETH/KAITO/HYPE pasif.
+ALL_BOOKS.append({
+    "uid": "cebu",
+    "book_key": "test_cebu",
+    "name": "CEBU",
+    "title": "CEBU · sabit coin→motor · sinyal gelince aç · max 18 · BTC/ETH/KAITO/HYPE pasif · 24s · 3×ATR · ATR kilit",
+    "category": "Poly→Kripto CEBU",
+    "source": "cebu",
+    "source_key": "cebu",
+    "max_opens": 18,
 })

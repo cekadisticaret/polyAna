@@ -348,17 +348,19 @@ def forex_spot(timeframe: str = "1m", algo: str = "g1") -> dict:
     q["bar_sec"] = _BAR_SEC[tf]
     q["bar_left"] = bar_remaining(tf)
     try:
-        q["rail"] = forex_rail()
+        from forex_data import forex_rail as g1_rail
+        q["rail"] = g1_rail()
     except Exception:
         q["rail"] = {}
     try:
-        q["tick"] = paxg_tick_score()
+        from forex_data import paxg_tick_score as g1_tick
+        q["tick"] = g1_tick()
     except Exception:
         q["tick"] = {"score": 0.0, "n": 0}
     q["signal_tf"] = BOOK_SIGNAL_TF
     q["level_tf"] = BOOK_LEVEL_TF
     try:
-        from oapi_signal import live_signal
+        from forex_signal import live_signal
         q["signal"] = live_signal(BOOK_SIGNAL_TF)
     except Exception as e:
         q["signal"] = {
@@ -366,8 +368,9 @@ def forex_spot(timeframe: str = "1m", algo: str = "g1") -> dict:
             "error": str(e)[:160],
         }
     try:
-        from oapi_signal import sr_levels
-        rows, _ = get_xau_klines(BOOK_LEVEL_TF, 120)
+        from forex_data import get_xau_klines as g1_kl
+        from forex_signal import sr_levels
+        rows, _ = g1_kl(BOOK_LEVEL_TF, 120)
         levels = sr_levels(rows)
     except Exception:
         levels = {}
@@ -422,8 +425,23 @@ def forex_chart(timeframe: str = "1m", price_tf: str | None = None, limit: int |
         "source": src,
         "bar_sec": _BAR_SEC[tf],
         "bar_left": bar_remaining(tf),
-        **{k: q[k] for k in ("mid", "bid", "ask", "spread", "day_high", "day_low", "live_price")},
+        "mid": q.get("mid"),
+        "bid": q.get("bid"),
+        "ask": q.get("ask"),
+        "spread": q.get("spread"),
+        "day_high": q.get("day_high"),
+        "day_low": q.get("day_low"),
+        "live_price": q.get("live_price") or q.get("mid"),
     }
+    if candles:
+        highs = [c["high"] for c in candles]
+        lows = [c["low"] for c in candles]
+        if out["day_high"] is None:
+            out["day_high"] = max(highs)
+        if out["day_low"] is None:
+            out["day_low"] = min(lows)
+        if out["live_price"] is None:
+            out["live_price"] = candles[-1]["close"]
     if plain:
         out["tick"] = {"score": 0.0, "n": 0}
         out["signal"] = {
@@ -440,7 +458,7 @@ def forex_chart(timeframe: str = "1m", price_tf: str | None = None, limit: int |
     except Exception:
         out["tick"] = {"score": 0.0, "n": 0}
     try:
-        from oapi_signal import overlay_signals
+        from forex_signal import overlay_signals
         sig, marks = overlay_signals(tf, candles)
         out["signal"] = sig
         out["signal_markers"] = marks

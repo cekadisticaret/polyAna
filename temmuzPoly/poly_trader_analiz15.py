@@ -12,7 +12,7 @@ Motorlar:
   BTC → A6 MACD Histogram Divergence (#26)
   ETH → A8 Jesse GoldenCross EMA 8/21 (sıkı — kesişim only)
   SOL → A2 poly_predictor (standard, fallback kapalı)
-Sanal bütçe: $300, işlem $12/$16/$20 (sembol WR).
+Sanal bütçe: $1000, işlem $24/$36/$48 (sembol WR).
 NEUTRAL sinyalde işlem yok.
 Hafta sonu duraklama: Cuma 22:00 – Pazartesi 08:00 İST (open; close çalışır).
 """
@@ -40,7 +40,7 @@ from poly_predictor_analysis import _fetch_klines
 from analiz15_signal import SYMBOLS, resolve_live_signal, engine_label
 from pm_trader_helpers import (
     apply_pm_quote, resolve_slot_trade_amount, slot_amount_log, sanal_pnl,
-    symbol_wr_amount, pm_sanal_settle_trade, pm_sanal_slot_candle,
+    symbol_wr_amount_for_book, pm_sanal_settle_trade, pm_sanal_slot_candle,
     SANAL_INITIAL_BALANCE, SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
     SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause, resolve_open_slot_gates,
 )
@@ -59,6 +59,7 @@ LABEL         = "15. ANALİZ"
 ALGO_NAME     = "BTC→A6 · ETH→A8 · SOL→A2"
 
 INITIAL_BALANCE    = SANAL_INITIAL_BALANCE
+BOOK_KEY           = "analiz15"
 TRADE_AMOUNT       = SANAL_TRADE_AMOUNT
 TRADE_AMOUNT_HIGH  = SANAL_TRADE_AMOUNT_HIGH
 TRADE_AMOUNT_LOW   = SANAL_TRADE_AMOUNT_LOW
@@ -68,7 +69,7 @@ _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cum
 
 def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float, bool, bool]:
     """WR tutarı → etkili saat +%40 / zayıf saat -%30."""
-    base = symbol_wr_amount(history, sym)
+    base = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
     return resolve_slot_trade_amount(base, hour_tr, history)
 
 
@@ -304,7 +305,7 @@ async def run_open() -> None:
     for c in candidates:
         sym         = c["sym"]
         direction   = c["direction"]
-        base_amt = symbol_wr_amount(history, sym)
+        base_amt = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
         _sk, dyn_amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
             history, hour_tr, base_amt
         )

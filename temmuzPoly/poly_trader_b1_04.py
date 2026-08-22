@@ -6,7 +6,7 @@ kopyası olan defterleri tek oya indirir ve oyları başabaş fiyata göre ölç
 edge ile ağırlıklandırır. Karar mantığı `b1_04_signal.py` içinde.
 
 Modlar: close / open / preview / weekly / stats
-Cron: :02 close · :07 open (a2 sinyalleri :05'te üretildiği için)
+Cron: :01 close · :02:30 open (kaynak defterler :02'de açtıktan sonra)
 """
 import asyncio
 import json
@@ -249,7 +249,7 @@ async def run_close() -> None:
     print(f"[{LABEL} close] {saat} İST — {len(lines)} pozisyon kapatıldı")
 
 
-# ── OPEN: :07 — konsensüs kararı + pozisyon aç ────────────────
+# ── OPEN: :02:30 — konsensüs kararı + pozisyon aç ────────────────
 async def run_open() -> None:
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)

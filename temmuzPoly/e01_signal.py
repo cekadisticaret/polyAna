@@ -1,13 +1,13 @@
-"""E01 — A1 + C1#01 + A2#05 V2 oy birliği.
+"""COMBO — A1 + C1#01 + A2#05 V2 oy birliği.
 
 Kaynakların o saatteki açık pozisyonuna bakar. Sinyal üretmez.
 Çatışma (biri UP biri DOWN) → açma.
 Sessiz = o defter o coinde pozisyon açmamış.
 
-Kademe (taban $16):
-  1 oy + 2 sessiz → $8
-  2 oy + 1 sessiz → $12
-  3 oy aynı yön  → $24  (tabanın %50 fazlası)
+Kademe (taban $36):
+  1 oy + 2 sessiz → $24
+  2 oy + 1 sessiz → $36
+  3 oy aynı yön  → $48
 """
 from __future__ import annotations
 
@@ -22,8 +22,17 @@ SOURCES = (
     ("a2_05_v2", "A2#05 V2", _DIR / "poly_trader_a2_05_v2_state.json"),
 )
 SYMBOLS = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
-BASE_USD = 16.0
-STAKE_BY_VOTES = {1: 8.0, 2: 12.0, 3: 24.0}
+BASE_USD = 36.0
+STAKE_BY_VOTES = {1: 24.0, 2: 36.0, 3: 48.0}
+
+
+def _stake_by_votes() -> dict[int, float]:
+    try:
+        from pm_trader_helpers import load_sanal_wr_amounts
+        low, mid, high = load_sanal_wr_amounts("combo")
+        return {1: float(low), 2: float(mid), 3: float(high)}
+    except Exception:
+        return dict(STAKE_BY_VOTES)
 
 
 def norm_symbol(sym: str) -> str:
@@ -120,7 +129,7 @@ def decide(symbol: str, hour_tr: int) -> dict:
         }
     direction = "UP" if ups else "DOWN"
     n = len(ballots)
-    stake = float(STAKE_BY_VOTES.get(n) or 0)
+    stake = float(_stake_by_votes().get(n) or 0)
     return {
         "allow": stake > 0,
         "symbol": sym,

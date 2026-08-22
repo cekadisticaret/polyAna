@@ -59,7 +59,7 @@ def _history_fingerprint(runner_mod) -> float:
     latest = 0.0
     for book in runner_mod.ALL_BOOKS:
         uid = book.get("uid") or ""
-        if uid == JARVIS_UID:
+        if uid in (JARVIS_UID, "cebu"):
             continue
         hp = _history_path_for_book(book, runner_mod)
         if hp and os.path.isfile(hp):

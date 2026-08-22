@@ -86,6 +86,7 @@ class A2Config:
     z_gate: tuple[float, float] | None = None
     shadow_log: str | None = None          # atlanan slotları da kaydet (jsonl)
     live_mirror: bool = True               # False = gerçek para aynası hiç çağrılmaz
+    init_balance: float | None = None      # None = SANAL_INITIAL_BALANCE ($1000)
 
 
 Z_PERIOD = 20
@@ -167,7 +168,8 @@ def _load_state(cfg: A2Config) -> dict:
                 return json.load(f)
         except Exception:
             pass
-    return {"balance": SANAL_INITIAL_BALANCE, "open_positions": [], "total_pnl": 0.0}
+    init = float(cfg.init_balance) if cfg.init_balance is not None else SANAL_INITIAL_BALANCE
+    return {"balance": init, "open_positions": [], "total_pnl": 0.0}
 
 
 def _save_state(cfg: A2Config, state: dict) -> None:
@@ -566,7 +568,8 @@ def run_weekly(cfg: A2Config) -> None:
         return
     wins = sum(1 for t in history if t["win"])
     total_pnl = state.get("total_pnl", 0.0)
-    balance = state.get("balance", SANAL_INITIAL_BALANCE)
+    _init = float(cfg.init_balance) if cfg.init_balance is not None else SANAL_INITIAL_BALANCE
+    balance = state.get("balance", _init)
     tg_send_for_cfg(
         cfg,
         f"📊 <b>{cfg.label} HAFTALIK</b>\n"

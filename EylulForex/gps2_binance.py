@@ -13,6 +13,8 @@ from pathlib import Path
 _DIR = Path(__file__).resolve().parent
 _ROOT = _DIR.parent
 _KRIPTO = str(_ROOT / "AgustosKripto")
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 if _KRIPTO not in sys.path:
     sys.path.insert(0, _KRIPTO)
 
@@ -33,6 +35,14 @@ _depth_cache: tuple[float, dict] | None = None
 
 
 def _get(path: str, params: str = "") -> dict | list:
+    try:
+        from binance_fapi_guard import ban_msg, fapi_blocked
+        if fapi_blocked():
+            raise RuntimeError(ban_msg())
+    except RuntimeError:
+        raise
+    except Exception:
+        pass
     url = f"{_FAPI}{path}"
     if params:
         url += "?" + params
@@ -58,6 +68,18 @@ def taker_rate() -> float:
 
 
 def book_ticker() -> dict:
+    try:
+        from binance_fapi_guard import get_book
+        hit = get_book(SYMBOL)
+        if hit and (hit.get("bid") or hit.get("ask")):
+            return {
+                "bid": float(hit.get("bid") or 0),
+                "ask": float(hit.get("ask") or 0),
+                "bid_qty": float(hit.get("bid_qty") or 0),
+                "ask_qty": float(hit.get("ask_qty") or 0),
+            }
+    except Exception:
+        pass
     d = _get("/fapi/v1/ticker/bookTicker", f"symbol={SYMBOL}")
     return {
         "bid": float(d.get("bidPrice") or 0),
@@ -68,6 +90,13 @@ def book_ticker() -> dict:
 
 
 def premium() -> dict:
+    try:
+        from binance_fapi_guard import ws_premium
+        hit = ws_premium(SYMBOL)
+        if hit:
+            return hit
+    except Exception:
+        pass
     d = _get("/fapi/v1/premiumIndex", f"symbol={SYMBOL}")
     return {
         "mark": float(d.get("markPrice") or 0),

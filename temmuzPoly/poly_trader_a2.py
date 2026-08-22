@@ -2,8 +2,8 @@
 """Analiz 2 — 17 kârlı algo sanal trader runner.
 
 Modlar:
-  close [NN|all]  → :02 önceki saat sonuçları
-  open  [NN|all]  → :05:00 yeni işlemler (algo_signals_v2 :04:40 sonrası)
+  close [NN|all]  → önceki saat sonuçları (:01)
+  open  [NN|all]  → yeni işlemler (:02; sinyal :01)
   weekly [NN|all] → haftalık özet
 
 Örnek:

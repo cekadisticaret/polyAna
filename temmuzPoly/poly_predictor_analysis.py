@@ -17,6 +17,7 @@ Backtest (Ara'25–May'26, 6 ay):
 import asyncio
 import json
 import os
+import sys
 import aiohttp
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -175,12 +176,12 @@ def _adx(klines: list[dict], period: int = 14) -> tuple[float, float, float]:
 # ─────────────────────────────────────────────────────────────
 
 async def _fetch_klines(symbol: str, tf: str = "1h", limit: int = 60) -> list[dict]:
-    url = "https://fapi.binance.com/fapi/v1/klines"
-    params = {"symbol": symbol, "interval": tf, "limit": limit}
     try:
-        async with aiohttp.ClientSession() as s:
-            async with s.get(url, params=params, timeout=aiohttp.ClientTimeout(total=10)) as r:
-                data = await r.json()
+        _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import public_klines  # noqa: WPS433
+        data = public_klines(symbol, tf, limit)
         if not isinstance(data, list):
             return []
         return [
@@ -190,7 +191,7 @@ async def _fetch_klines(symbol: str, tf: str = "1h", limit: int = 60) -> list[di
                 "low":       float(k[3]),
                 "close":     float(k[4]),
                 "volume":    float(k[5]),
-                "taker_buy": float(k[9]),
+                "taker_buy": float(k[9]) if len(k) > 9 else 0.0,
             }
             for k in data
         ]

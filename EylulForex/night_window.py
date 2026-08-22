@@ -1,9 +1,7 @@
-"""Gece sessiz penceresi — canlı Binance defterlerinde yeni açılışı durdurur.
+"""Gece sessiz penceresi — şu an kapalı.
 
-Yalnız `open` yolunu keser. close / trail / ATR stopu / reverse kapanışı
-çalışmaya devam eder — açık pozisyon gece boyunca korumasız kalmaz.
-
-Ayar `EylulForex/data/night_window.json`; kod değişikliği gerekmez.
+GPSUSDT ve BIN_XAUUSDT yeni açılışı 22:00–08:00 kesmez.
+Ayar `EylulForex/data/night_window.json`.
 """
 from __future__ import annotations
 
@@ -16,10 +14,10 @@ _TZ = ZoneInfo("Europe/Istanbul")
 _CFG = Path(__file__).resolve().parent / "data" / "night_window.json"
 
 _DEFAULT: dict = {
-    "enabled": True,
+    "enabled": False,
     "start": "22:00",
     "end": "08:00",
-    "books": ["gps", "binb103"],
+    "books": [],
 }
 
 

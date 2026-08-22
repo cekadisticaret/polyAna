@@ -138,7 +138,7 @@ def build_jarvis_coin_mapping(
         test_symbols=test_symbols,
         history_path_for_book=history_path_for_book,
         load_history=load_history,
-        exclude_uids=("jarvis_v1",),
+        exclude_uids=("jarvis_v1", "cebu"),
     )
     book_by_uid = {b["uid"]: b for b in books}
     mapping: dict[str, str] = {}

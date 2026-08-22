@@ -59,12 +59,15 @@ def fetch(*, force: bool = False) -> dict | None:
         c = BinanceFuturesClient()
         if not c.configured():
             return cached
-        # Ban varken public fapi kapalı; imzalı hesap okuması ayrı (dakikada 1).
-        probe = _blocked()
-        if probe and cached and now - float(cached.get("ts") or 0) < 600:
+        if cached and now - float(cached.get("ts") or 0) < 600:
             _mem = (now, cached)
             return dict(cached)
-        acc = c.account(ignore_ban=True) or {}
+        if _blocked():
+            if cached:
+                _mem = (now, cached)
+                return dict(cached)
+            return None
+        acc = c.account() or {}
         wallet = float(acc.get("totalWalletBalance") or 0)
         avail = float(acc.get("availableBalance") or 0)
         upnl = float(acc.get("totalUnrealizedProfit") or 0)
@@ -83,3 +86,27 @@ def fetch(*, force: bool = False) -> dict | None:
             _mem = (now, cached)
             return dict(cached)
         return None
+
+
+def apply_ws(*, wallet: float, available: float | None = None, unrealized: float = 0.0) -> dict:
+    """User-data ACCOUNT_UPDATE — REST yok."""
+    global _mem
+    now = time.time()
+    prev = _load() or {}
+    avail = available
+    if avail is None:
+        try:
+            avail = float(prev.get("available") or wallet)
+        except (TypeError, ValueError):
+            avail = wallet
+    row = {
+        "wallet": round(float(wallet), 4),
+        "available": round(float(avail), 4),
+        "unrealized": round(float(unrealized), 4),
+        "equity": round(float(wallet) + float(unrealized), 4),
+        "ts": now,
+        "src": "user_ws",
+    }
+    _save(row)
+    _mem = (now, row)
+    return dict(row)

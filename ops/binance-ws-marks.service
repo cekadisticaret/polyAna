@@ -1,0 +1,16 @@
+[Unit]
+Description=Binance USD-M websocket mark cache (fstream, REST yok)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/aiProject
+ExecStart=/usr/bin/python3 /root/aiProject/binance_ws_marks.py
+Restart=always
+RestartSec=3
+StandardOutput=append:/tmp/binance_ws_marks.log
+StandardError=append:/tmp/binance_ws_marks.log
+
+[Install]
+WantedBy=multi-user.target

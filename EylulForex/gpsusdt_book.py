@@ -1,4 +1,4 @@
-"""GPSUSDT defter — Binance USDT-M Isolated MARKET $50 × 15x (canlı).
+"""GPSUSDT defter — Binance USDT-M Isolated MARKET $20 × 10x (canlı).
 
 Sinyal / kapı / plan `gpsusdt_signal` + `_binance_plan` — değişmedi.
 Dolum: canlı fapi MARKET; emir gitmezse kâğıt yazılmaz.
@@ -16,8 +16,6 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from night_window import is_quiet as _night_quiet, label as _night_label
-
 _DIR = Path(__file__).resolve().parent / "data"
 _STATE = _DIR / "forex_gpsusdt_state.json"
 _HIST = _DIR / "forex_gpsusdt_history.json"
@@ -30,8 +28,8 @@ def _files(book: str = "gps") -> tuple[Path, Path, Path]:
 _TZ = ZoneInfo("Europe/Istanbul")
 
 INIT_BAL = 500.0
-MARGIN = 50.0
-LEVERAGE = 15          # Binance USDT-M Isolated
+MARGIN = 20.0
+LEVERAGE = 10          # Binance USDT-M Isolated
 SYMBOL = "GPSUSDT"
 VOLUME = 0.10
 HIST_MAX = 400
@@ -55,7 +53,7 @@ LOCK_BE_AT = 0.50       # hedefin yarısı görülünce stop başabaşa
 LOCK_TRAIL_AT = 0.75    # hedefin 3/4'ünde kârın yarısı kilit
 LOCK_BE_USD = 15.0      # +$15 olunca stop başabaşa
 LOCK_TRAIL_USD = 25.0   # +$25 olunca zirve kârın yarısı kilit — +$51'in $22'ye inmesi bir daha olmasın
-TP_MARGIN_PCT = 0.35    # giriş marjının %35'i kârda otomatik kapat ($50 → +$17.5)
+TP_MARGIN_PCT = 0.35    # giriş marjının %35'i kârda otomatik kapat ($20 → +$7)
 COOLDOWN_WIN = 900      # kârlı kapanış sonrası 15 dk
 COOLDOWN_LOSS = 1800    # zararlı kapanış sonrası 30 dk
 COOLDOWN_LOSS_A2 = 300  # Algoritma 2 — zarar sonrası 5 dk
@@ -773,12 +771,6 @@ def _open(st: dict, side: str, bid: float, ask: float, signal: str, plan: dict, 
         return None
     if float(st["balance"]) - MARGIN * len(rows) < MARGIN:
         return None
-    if _night_quiet(book):
-        st["last_reject"] = {
-            "side": side, "reason": "gece_penceresi",
-            "detail": _night_label(), "at": _now_iso(),
-        }
-        return None
     hint = _open_px(side, bid, ask)
     qty = _binance_qty(hint)
     if qty <= 0:
@@ -933,16 +925,14 @@ def apply_signal(
         if direction != (st.get("last_dir") or "NEUTRAL"):
             st["last_dir"] = direction
             dirty = True
+        if (st.get("last_reject") or {}).get("reason") == "gece_penceresi":
+            st["last_reject"] = None
+            dirty = True
 
         if want and not _plist(st) and bool((signal or {}).get("is_stable")):
-            if _night_quiet(book):
-                wait = 0
-                plan = None
-                why = "gece_penceresi"
-            else:
-                wait = _cooling(st, want)
-                plan = None if wait else _binance_plan(want, _open_px(want, bid, ask), _atr5())
-                why = "bekleme" if wait else _plan_reject(plan)
+            wait = _cooling(st, want)
+            plan = None if wait else _binance_plan(want, _open_px(want, bid, ask), _atr5())
+            why = "bekleme" if wait else _plan_reject(plan)
             if why:
                 prev = st.get("last_reject") or {}
                 if prev.get("reason") != why or prev.get("side") != want:
@@ -954,7 +944,7 @@ def apply_signal(
                     "rr": (plan or {}).get("rr"),
                     "risk_usd": (plan or {}).get("risk_usd"),
                     "reward_usd": (plan or {}).get("reward_usd"),
-                    "detail": _night_label() if why == "gece_penceresi" else None,
+                    "detail": None,
                     "at": _now_iso(),
                 }
             elif _open(st, want, bid, ask, direction, plan, book=book):
@@ -1018,9 +1008,9 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "gp
         "margin": MARGIN,
         "leverage": _lev(book),
         "last_dir": st.get("last_dir"),
-        "last_reject": st.get("last_reject"),
-        "night_quiet": _night_quiet(book),
-        "night_window": _night_label(),
+        "last_reject": None if (st.get("last_reject") or {}).get("reason") == "gece_penceresi" else st.get("last_reject"),
+        "night_quiet": False,
+        "night_window": None,
         "halted": bool(st.get("halted")),
         "halt_reason": st.get("halt_reason"),
         "live": _live_snap(),
@@ -1034,7 +1024,7 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "gp
             "notional": MARGIN * LEVERAGE,
             "fee_model": "binance_taker",
             "taker_pct": TAKER_FEE * 100.0,
-            "note": "Binance USDT-M Isolated MARKET $50×15x — canlı emir, taker her tarafta",
+            "note": "Binance USDT-M Isolated MARKET $20×10x — canlı emir, taker her tarafta",
             "venue": "binance_usdm",
             "dec": _PX,
         },

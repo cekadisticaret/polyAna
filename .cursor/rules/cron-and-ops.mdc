@@ -14,48 +14,50 @@ alwaysApply: true
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
 | `1 * * * *` | `temmuzPoly/poly_trader_analiz1.py close` | `/tmp/poly_trader_analiz1.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz1.py open` (**A1** sanal — diğer analizlerden ayrı, :02) | `/tmp/poly_trader_analiz1.log` |
-| `2 * * * *` | `temmuzPoly/poly_trader_analiz{2,5,6,10,15}.py close` | `/tmp/poly_trader_analiz*.log` |
+| `1 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py close` (`/algoritma-islemler`) | `/tmp/poly_trader_analiz*.log` |
+| `2 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py open` | `/tmp/poly_trader_analiz*.log` |
+| `2 * * * *` | `temmuzPoly/poly_trader_analiz{5,10}.py close` (sayfada değil) | `/tmp/poly_trader_analiz*.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py close` (A2 canlı PM SOL $6–8) | `/tmp/poly_trader_analiz2_live.log` |
-| `5 * * * *` | `temmuzPoly/poly_trader_analiz{2,5,6,10,15}.py open` | `/tmp/poly_trader_analiz*.log` |
+| `5 * * * *` | `temmuzPoly/poly_trader_analiz{5,10}.py open` | `/tmp/poly_trader_analiz*.log` |
 | `5 * * * *` | `temmuzPoly/poly_trader_analiz2_live.py open` (`PM_ANALIZ2_REAL_ENABLED`) | `/tmp/poly_trader_analiz2_live.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz10_live.py close` | `/tmp/poly_trader_analiz10_live.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz10_live.py open` (`PM_ANALIZ10_REAL_ENABLED`) | `/tmp/poly_trader_analiz10_live.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py close` | `/tmp/poly_trader_analiz6_v2.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py open` | `/tmp/poly_trader_analiz6_v2.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py close` | `/tmp/poly_trader_analiz6_v3.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py open` | `/tmp/poly_trader_analiz6_v3.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v4.py close` | `/tmp/poly_trader_analiz6_v4.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v4.py open` (**A2#05 X A6V3 MELEZ** — BTC:MACD Div #26 · ETH/SOL:Mean Rev; sanal) | `/tmp/poly_trader_analiz6_v4.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py close` | `/tmp/poly_trader_analiz6_v2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v2.py open` | `/tmp/poly_trader_analiz6_v2.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py close` | `/tmp/poly_trader_analiz6_v3.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v3.py open` | `/tmp/poly_trader_analiz6_v3.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v4.py close` | `/tmp/poly_trader_analiz6_v4.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v4.py open` (**A2#05 X A6V3 MELEZ** — BTC:MACD Div #26 · ETH/SOL:Mean Rev; sanal) | `/tmp/poly_trader_analiz6_v4.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_analiz6_v4.py weekly` | `/tmp/poly_trader_analiz6_v4.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py close` | `/tmp/poly_trader_b1_01.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py open` | `/tmp/poly_trader_b1_01.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_02.py close` | `/tmp/poly_trader_b1_02.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_02.py open` | `/tmp/poly_trader_b1_02.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_mum.py close` | `/tmp/poly_trader_b1_mum.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_mum.py open` | `/tmp/poly_trader_b1_mum.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_04.py close` | `/tmp/poly_trader_b1_04.log` |
-| `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_04.py open` (B1#04 — a2 sinyalleri :05'te üretildiği için :07) | `/tmp/poly_trader_b1_04.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py close` | `/tmp/poly_trader_b1_01.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_01.py open` | `/tmp/poly_trader_b1_01.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_02.py close` | `/tmp/poly_trader_b1_02.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_02.py open` | `/tmp/poly_trader_b1_02.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_mum.py close` | `/tmp/poly_trader_b1_mum.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_mum.py open` | `/tmp/poly_trader_b1_mum.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_04.py close` | `/tmp/poly_trader_b1_04.log` |
+| `2 * * * *` + `sleep 30` | `sleep 30 && cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_04.py open` (B1#04 — kaynak defterler :02 sonrası; **:02:30**) | `/tmp/poly_trader_b1_04.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_04.py weekly` | `/tmp/poly_trader_b1_04.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05.py close` | `/tmp/poly_trader_b1_05.log` |
-| `6 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05.py open` (**B1#05** — coin başına en iyi motor; a2 sinyalleri :05'te ~10 sn'de üretiliyor; sanal) | `/tmp/poly_trader_b1_05.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05.py close` | `/tmp/poly_trader_b1_05.log` |
+| `2 * * * *` + `sleep 30` | `sleep 30 && cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05.py open` (**B1#05** — coin başına en iyi motor; kaynak :02 sonrası; **:02:30**; sanal) | `/tmp/poly_trader_b1_05.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05.py weekly` | `/tmp/poly_trader_b1_05.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05_live.py close` | `/tmp/poly_trader_b1_05_live.log` |
 | `6 * * * *` + `sleep 30` | `sleep 30 && cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05_live.py open` (**B1#05 Live** gerçek PM $4–6 · **:06:30**, sanal :06 sonrası sync · ayarlardan aç/kapa, **varsayılan kapalı**) | `/tmp/poly_trader_b1_05_live.log` |
 | `12 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_05_live.py close` (settle retry) | `/tmp/poly_trader_b1_05_live.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101.py close` | `/tmp/poly_trader_c101.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101.py open` (**C1#01 · OPUS-OHLCV** — PTB+volatilite olasılık modeli, çeyrek Kelly; sanal **$500**) | `/tmp/poly_trader_c101.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101.py open` (**C1#01 · OPUS-OHLCV** — PTB+volatilite olasılık modeli, $24/36/48 WR; sanal **$1000**) | `/tmp/poly_trader_c101.log` |
 | `25 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101.py backfill` (açılmayan slotların sonucunu kalibrasyon günlüğüne işler) | `/tmp/poly_trader_c101_calib.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py close` | `/tmp/poly_trader_c101_v2.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py open` (**C1#01 V2 · GERÇEK ASK** — aynı model, CLOB ask kotasyonu + 3 puan eşik; sanal **$500**) | `/tmp/poly_trader_c101_v2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py open` (**C1#01 V2 · GERÇEK ASK** — aynı model, CLOB ask kotasyonu + 3 puan eşik; sanal **$1000**; **:02**) | `/tmp/poly_trader_c101_v2.log` |
 | `25 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py backfill` | `/tmp/poly_trader_c101_v2_calib.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py close` | `/tmp/poly_trader_x101.log` |
-| `3 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py open` (**X1#01 - 13Analiz** — 13 katman + ask kenarı; sanal **$300**; `:02` close / `:03` open; gerçek PM yok) | `/tmp/poly_trader_x101.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py close` | `/tmp/poly_trader_x101.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py open` (**X1#01 - 13Analiz** — 13 katman + ask kenarı; sanal **$1000**; `:01` close / `:02` open; gerçek PM yok) | `/tmp/poly_trader_x101.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py weekly` | `/tmp/poly_trader_x101.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_e01.py close` | `/tmp/poly_trader_e01.log` |
-| `3 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_e01.py open` (**E01** — A1 + C1#01 + A2#05 V2 oy; çatışmada yok; 1/2/3 oy = $8/$12/$24; sanal **$300**; `:01` close / `:03` open; gerçek PM yok) | `/tmp/poly_trader_e01.log` |
+| `2 * * * *` + `sleep 25` | `sleep 25 && cd /root/aiProject && python3 temmuzPoly/poly_trader_e01.py open` (**COMBO** — A1 + C1#01 + A2#05 V2 oy; çatışmada yok; 1/2/3 oy = $24/$36/$48; sanal **$1000**; `:01` close / `:02:25` open; gerçek PM yok) | `/tmp/poly_trader_e01.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_e01.py weekly` | `/tmp/poly_trader_e01.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py close` | `/tmp/poly_trader_a2_05_v2.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py open` (**A2#05 V2 · Z KAPISI** — A2#05 sinyali + yalnız 1,0 ≤ \|z\| < 1,5; sanal, **gerçek para aynası kapalı**) | `/tmp/poly_trader_a2_05_v2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py open` (**A2#05 V2 · Z KAPISI** — A2#05 sinyali + 1,0 ≤ \|z\| < 1,5; sanal **$1000** · $24/36/48; **gerçek para aynası kapalı**) | `/tmp/poly_trader_a2_05_v2.log` |
 | `25 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py zbackfill` (gölge günlüğü — kapıya takılan slotların sonucunu doldurur) | `/tmp/poly_trader_a2_05_v2_zlog.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py weekly` | `/tmp/poly_trader_a2_05_v2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_b1_mum_live.py close` | `/tmp/poly_trader_b1_mum_live.log` |
@@ -78,15 +80,13 @@ alwaysApply: true
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_a139.py open` (**A1#39 Live** gerçek Binance $20×7x · max 4 · Test H1 Kombinasyon) | `/tmp/crypto_futures_a139.log` |
 | `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_a139.py trail` | `/tmp/crypto_futures_a139_trail.log` |
 | `*/10 * * * *` | `cd /root/aiProject && python3 AgustosKripto/crypto_futures_a139.py scan` | `/tmp/crypto_futures_a139_scan.log` |
+| `2 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 AgustosKripto/crypto_futures_b1_mum.py close` | `/tmp/crypto_futures_b1_mum.log` |
+| `5 * * * *` + `sleep 25` | `sleep 25 && cd /root/aiProject && python3 AgustosKripto/crypto_futures_b1_mum.py open` (**B1#03 MUM Live** Test `b1_mum` ayna · Isolated **$10×20x** · sanal :05 sonrası) | `/tmp/crypto_futures_b1_mum.log` |
+| `*/2 * * * *` + `sleep 15` | `sleep 15 && cd /root/aiProject && python3 AgustosKripto/crypto_futures_b1_mum.py trail` | `/tmp/crypto_futures_b1_mum_trail.log` |
+| `*/10 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 AgustosKripto/crypto_futures_b1_mum.py scan` | `/tmp/crypto_futures_b1_mum_scan.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/kaito_paper.py close` | `/tmp/kaito_paper.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/kaito_paper.py open` (**KAITO kağıt defteri** — cr6 kararları, **gerçek para yok**) | `/tmp/kaito_paper.log` |
 | `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/kaito_paper.py trail` | `/tmp/kaito_paper_trail.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Algoritmalar/runner.py close` | `/tmp/agustos_algoritmalar.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Algoritmalar/runner.py open` | `/tmp/agustos_algoritmalar.log` |
-| `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Algoritmalar/runner.py trail` | `/tmp/agustos_algoritmalar_trail.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Analizler/runner.py close` | `/tmp/agustos_analizler.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Analizler/runner.py open` | `/tmp/agustos_analizler.log` |
-| `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Analizler/runner.py trail` | `/tmp/agustos_analizler_trail.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/runner.py close` | `/tmp/agustos_kripto_test.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/runner.py open` | `/tmp/agustos_kripto_test.log` |
 | `*/2 * * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/runner.py trail` | `/tmp/agustos_kripto_test_trail.log` |
@@ -102,8 +102,8 @@ alwaysApply: true
 | `*/5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/chart_algo_panel.py update_wr` | `/tmp/chart_algo_panel_wr.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py close 5` (yalnız A2#05) | `/tmp/poly_trader_a2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py open 5` (yalnız A2#05) | `/tmp/poly_trader_a2.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py close` | `/tmp/poly_trader_a2.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py open` (A2#05 bu saatte açıksa atlanır) | `/tmp/poly_trader_a2.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py close` (A2 Top-17 · #05 ile aynı :01) | `/tmp/poly_trader_a2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py open` (A2 Top-17 · #05 ile aynı :02; açık olan atlanır) | `/tmp/poly_trader_a2.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2.py weekly` | `/tmp/poly_trader_a2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py close` | `/tmp/poly_trader_a2_02_live.log` |
 | `5 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_02_live.py open` (sanal A2#02 sync) | `/tmp/poly_trader_a2_02_live.log` |
@@ -134,14 +134,14 @@ alwaysApply: true
 | `0 21 * * *` | `cd /root/aiProject && python3 AgustosKripto/Test/jarvis_report.py` (**JARVIS** — 00:00 İST; 69 Kripto Test defterini tarar → `jarvis_report.json` + `jarvis_history.jsonl`; aynı turda 118 defterlik sistem denetimi → `jarvis_audit.json` → `bursaapp.com/kripto/jarvis` iki sekme) | `/tmp/jarvis_report.log` |
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/forex_paper.py` (**Forex** — CEM01 + A2 sanal; **EXNESS** `/forex/cembybit` sanal `$100×500x` kom $0.35 — canlı emir kapalı) | `/tmp/forex_paper.log` |
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/cem02_paper.py` (**CAPITAL** — Capital.com demo oturum; emir yok) | `/tmp/cem02_paper.log` |
-| `*/1 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 EylulForex/oapi_paper.py` (**OPEN API** — cTrader DEMO emir, Kalman+VWAP; trading OAuth; canlı hesaba emir yok) | `/tmp/oapi_paper.log` |
-| `*/1 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 EylulForex/gpsusdt_paper.py` (**GPSUSDT** — Kalman+VWAP aynı; Binance Isolated **CANLI $50×15x**; **22:00–08:00 İST yeni açık yok**; `gpsusdt_live_control.json`) | `/tmp/gpsusdt_paper.log` |
+| `*/1 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 EylulForex/oapi_paper.py` (**OPEN API** — CEM01 Grafik g1 aynası, cTrader DEMO 0.10 lot; canlı hesap yok) | `/tmp/oapi_paper.log` |
+| `*/1 * * * *` + `sleep 10` | `sleep 10 && cd /root/aiProject && python3 EylulForex/gpsusdt_paper.py` (**GPSUSDT** — Kalman+VWAP aynı; Binance Isolated **CANLI $20×10x**; gece penceresi yok; `gpsusdt_live_control.json`) | `/tmp/gpsusdt_paper.log` |
 | `*/1 * * * *` + `sleep 15` | `sleep 15 && cd /root/aiProject && python3 EylulForex/gps2_paper.py` (**GPSUSDT_2** — aynı motor, **sanal $160 · Isolated $50×15x**; emir yok) | `/tmp/gps2_paper.log` |
 | `*/1 * * * *` + `sleep 25` | `sleep 25 && cd /root/aiProject && python3 EylulForex/b103_paper.py` (**B1#03** — CEM01 masası kopyası · B1#03 MUM 1h · sanal $300 · $100×500x) | `/tmp/b103_paper.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py close` | `/tmp/bin_b103_paper.log` |
-| `5 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py open` (**BIN_B1#03** — A2#09; Isolated **$50×50x**; sayfa **CANLI'ya AL** (`paper`/`live_paused`); sanal $180 veya Binance; **22:00–08:00 İST yeni açık yok**; GPSUSDT ayrı) | `/tmp/bin_b103_paper.log` |
-| `*/1 * * * *` + `sleep 35` | `sleep 35 && cd /root/aiProject && python3 EylulForex/bin_b103_paper.py trail` | `/tmp/bin_b103_paper.log` |
-| `*/10 * * * *` | `cd /root/aiProject && python3 EylulForex/bin_b103_paper.py scan` | `/tmp/bin_b103_paper.log` |
+| `2 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 EylulForex/bin_b103_paper.py close` (D104 sanal kapanışından sonra ayna) | `/tmp/bin_b103_paper.log` |
+| `5 * * * *` + `sleep 25` | `sleep 25 && cd /root/aiProject && python3 EylulForex/bin_b103_paper.py open` (**BIN_XAUUSDT** — D104 sanal defterin birebir aynası; Isolated **$20×10x**; sayfa **CANLI'ya AL**; sanal $180 veya Binance; gece penceresi yok; GPSUSDT ayrı) | `/tmp/bin_b103_paper.log` |
+| `*/1 * * * *` + `sleep 35` | `sleep 35 && cd /root/aiProject && python3 EylulForex/bin_b103_paper.py trail` (D104 trail sonrası ayna kapa/aç) | `/tmp/bin_b103_paper.log` |
+| `*/10 * * * *` + `sleep 20` | `sleep 20 && cd /root/aiProject && python3 EylulForex/bin_b103_paper.py scan` | `/tmp/bin_b103_paper.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py close` | `/tmp/fx_algo_runner.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py open` (**Forex Algoritma işlemler** — Poly listesinin XAUUSD sanal kopyası · $1000 · $200×100x · kom $0.35; CEM01/Poly dokunulmaz; manuel open yok) | `/tmp/fx_algo_runner.log` |
 | `*/1 * * * *` | `cd /root/aiProject && python3 EylulForex/fx_algo_runner.py trail` (CEM01 gibi dakikalık mark/stop) | `/tmp/fx_algo_runner.log` |
@@ -170,11 +170,13 @@ alwaysApply: true
 | `poly_15m_a2_algo_trader_core.py`, `poly_trader_5m_real_stats.py`, `analiz32_15m_signal_snapshot.py` + tüm `15m_309` / `15m_316` / `15m_317` / `5m_sol_110` / `15m_309_live` state+history dosyaları | **SİLİNDİ (2026-08-14)** — 15M/5M defterleri sistemden tamamen kaldırıldı; cron satırları (`*/15` open, Pazar weekly, saatlik real_stats) düşürüldü, dashboard kayıtları (`_HEATMAP_SYMS`, `_LIVE_PM_ANALYSES`, `_PM_SYSTEM_ROWS`, `_PM_POSITION_SOURCES`, `_15M_PM_ANALYSES`) ve harita "110 güvenilir slotlar" paneli temizlendi. `pm_orphan_sync._guess_trader` 15m slug'ları artık `None` döndürür (sahipsiz bırakır). `poly_trader_5m_common.py` **kaldı** — Trade Desk 5m/15m kotasyonu onu kullanıyor |
 | `polyManuel/sol_bot.py`, `poly_trader.py` | **YOK** — disk/crontab’ta yok |
 | `freqtrade/` · `jesse/` (A3 Freqtrade + A8 Jesse) | **SİLİNDİ (2026-08-21)** — klasörler, venv, Poly sanal defterler ve Analizler `a3`/`a8` kitapları kaldırıldı. A15’in ETH→A8 EMA kuralı (`a3a8_signal_mode.a8_direction`) duruyor — jesse import etmez. |
+| `AgustosKripto/Algoritmalar/runner.py` · `Analizler/runner.py` | **SAYFA + CRON KALDIRILDI (2026-08-22)** — `/kripto/algoritmalar` ve `/kripto/analizler` → `/kripto/test`; A10 Dual + Supertrend Test’e eklendi; sinyal katalogları duruyor (CR6/Test import) |
 
 ## Zamanlama Notları
 - `bist_signal_hunter` seans dışında çıkar (betik içi saat kontrolü).
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
-- Saatlik analiz `close` **:02**, `open` **:05** (PM settle için 2 dk). **A1 + C1#01 + A2#05 V2:** close **:01**, open **:02**. **A2#05** (ana defter) close **:01**, open **:02** (sinyal `:01`).
+- Saatlik `/algoritma-islemler` sanal: close **:01**, open **:02** (B1#04/#05 **:02:30**, COMBO **:02:25**). Ayna `slot_open_tr` **HH:02**. **:01'de yeni open yok.** Sayfada olmayan A5/A10 + Live PM: close **:02**, open **:05** (B1 Live :06/:06:30).
+- **`/algoritma-islemler` giriş kademesi (34 defter):** sembol WR **$24 / $36 / $48** (veri yok → orta); soğuk saat **−%30**; sıcak saat büyütme kapalı. Canlı PM `/ayarlar` kademeleri ayrı, değişmedi.
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** varsayılan olarak atlanır (**close** çalışır); **dashboard'dan Aç** yapılan Live analiz hafta sonu dahil işlem açar. A10: aynı pencerede open kapalı; Pzt **11:00**’de devam. **`/algoritma-islemler` (tamamı):** A1/A2/A6/V2/V3/MELEZ/A15/B1#01-05 + A2 Top-17 — hafta sonu da open/close devam (7/24 sanal).
 - **AgustosKripto sanal hafta sonu duraklaması KALDIRILDI (2026-08-15):** Algoritmalar + Analizler artık **7/24** — `open` / `close` / `trail` hafta sonu da koşar (`WEEKEND_PAUSE = False`, her iki `runner.py`'de). Test grubu zaten 7/24 idi; üç grup da aynı hizada.
@@ -183,7 +185,9 @@ alwaysApply: true
  - **Geri alma:** ilgili `runner.py`'de `WEEKEND_PAUSE = True`.
  - İlk hafta sonu turu (15.08 00:30, Cumartesi): Algoritmalar 33 + Analizler 7 pozisyon açtı; **18 defter `max_open`'a takıldı** — yeni çıkış rejiminin (uzun tutma → dolu slot → az giriş) kısma mekanizması çalışıyor.
  - **Poly tarafı etkilenmedi** — `pm_weekend_sync.py` ve Poly defterlerinin hafta sonu kuralları ayrı, değişmedi. Algoritmalar sanal: **tüm 51 defter open $30×10x** (komisyon dahil net PnL); A2#05/#06/#07 + A1#11 ek olarak `real_live` işaretli. **Binance Algoritmalar Live (gerçek para)** ayrı sistem — aynı 4 algonun çoğunluk oyu, **$7×20x**; dashboard Live toggle + top-N.
-- **AgustosKripto/Test (`/kripto/test`):** Poly sinyal kaynaklarının (A1/A2 vb.) sanal Binance Futures defterleri — **$100×6x**, deposit $1000/defter, **30 coin** tarama evreni (`AgustosKripto/Test/catalog.py::TEST_SYMBOLS`). Timeframe (1h/4h) coin+algoritma bazlı geçmiş başarıya göre otomatik seçilir. ATR: kâr kilidi + `2.0×ATR$` zarar-stop (min. 10 dk pozisyon yaşı). Komisyon Binance'ten gerçek taker oranı çekilerek hesaplanır (6s dosya cache). `scan` (10 dk) `:05` beklemeden erken sinyal yakalar. Dosya kilidi (`fcntl`) ile cron çakışmaları önlenir. Ana ekranda (`/kripto`) Algoritmalar Live pozisyon kartları yerine her zaman coin bazlı lider tablosu (`coin_leaders`) gösterilir. **69 defter** = 65 Poly aynası (MELEZ dahil) + 4 PRO.
+- **fapi okuma kotası:** canlı fiyat/book/pozisyon/cüzdan `binance_ws_marks.py` (`/market` + `/public` GPS-XAU book + `/private`). Mum `public_klines` **fapi kullanmaz** (spot/data-api; XAU/HYPE yedek). GPS/BIN `live_position_state` + `book_ticker` + cüzdan önce önbellek. Ban emir değil REST ağırlığı.
+- **AgustosKripto/Test (`/kripto/test`, menü Algoritma İşlemler):** Tek kripto sanal ekran — **$100×6x**, deposit $1000/defter, **30 coin**. Çıkış: zaman kapanışı yok · 24s tavan · 3×ATR zarar · ATR kâr kilidi. `scan` (10 dk) `:05` beklemeden erken sinyal yakalar. **73 defter** = 67 ayna (A10 Dual + Supertrend dahil) + 4 PRO + JARVIS_V1 + **CEBU**. B1#03 MUM **KAITO pasif**. `/kripto/algoritmalar` ve `/kripto/analizler` kaldırıldı (301 → `/kripto/test`).
+- **CEBU (`/kripto/cebu`, Test defteri `cebu`):** Sabit coin→motor (SOL A1#08 · XRP B1#03 · DOGE JARVIS_V1 · ADA A1#09 · LINK B1#03 PRO · DOT A1#19 · SUI A1#31 · APT A1#33 · ARB A1#25 · OP A1#30 · INJ A1#34 · TIA A1#32 · FIL B1#03 · ENA A1#28 · WLD A2#01 · UNI/AAVE A1#10 · XLM JARVIS_V1). **BTC / ETH / KAITO / HYPE pasif** — yeni açık yok, varsa sanal kapanır. Kota yok — sinyal gelince açar (max 18). Aynı Test cron (`close` :02 / `open` :05 / `trail` */2 / `scan` */10). Manuel open yok.
 - **Eksik aynalar tamamlandı (2026-08-14):** `/algoritma-islemler`'de olup Test'te olmayan 5 defter tarandı; **4'ü eklendi** (`b1_04` · `b1_05` · `c101` · `c101_v2`). Eklenmeyen tek defter **`a2_05_v2`**: tek farkı Polymarket biletinde fiyat filtresi (bugün 0,30–0,40 bandı) ve futures'ta fiyat-olasılık boyutu olmadığı için kriptoda `a2_05` ile **birebir aynı** sinyali üretirdi; eklenseydi JARVIS'in "kaç defter pozitif" sayımını çift sayımla bozardı. Kripto karşılığı istenirse önce kuralın futures'taki anlamı tanımlanmalı (uydurma parametre eklemek yerine).
  - `b1_04`/`b1_05` mevcut `b1_04_signal` / `b1_05_signal` modüllerini kullanır (arayüz B1#01 ile aynı: `async resolve_live_signal(sym)`). **Majörlerle sınırlı** (`_B1_MAJORS_ONLY`): #04'ün küme ağırlıkları ve #05'in coin→motor eşlemesi Poly geçmişinden geliyor, o geçmiş yalnız BTC/ETH/SOL için var. Ölçüldü: 30 coine açmak b1_04 turunu **2 sn → 34 sn** yapıyor ve tur saatte 6 kez koşuyor. `b1_01`/`b1_02` 30 coinde kalmaya devam ediyor, davranışları değiştirilmedi.
  - `c101` aynası **Polymarket'siz** çalışır: `c101_signal.fair_probability(..., update_baseline=False)` yalnız Binance verisiyle P(UP) üretir, yön = 0,50'den en az `EDGE_MIN` (5 puan) sapma. `update_baseline=False` **şart** — derinlik referansı EWMA'sı Poly defterinin dosyası, ayna kirletmemeli. Bu ayna "C1#01 kâr eder mi"yi değil, projedeki tek emir-akışı beslemeli modelin (derinlik · funding · OI · CVD) **yönü tutturup tutturmadığını** sınar; Poly'deki "piyasa yanlış fiyatlamış mı" tezinin futures'ta karşılığı yok.
@@ -247,7 +251,7 @@ alwaysApply: true
  - **Kalibrasyon günlüğü `c101_calibration.jsonl` bu defterin asıl çıktısı:** açılan **ve açılmayan** her değerlendirme yazılır (saatte 3 satır), `:25` backfill sonucu Binance mumundan doldurur. `calib` modu model vs piyasa **Brier skoru** verir — örneklem işlem sayısının 3-4 katı olur ve `EDGE_MIN` eşiği veriden yeniden ayarlanabilir (14.08'de böyle 5 → 3 yapıldı).
  - Modlar: `close`/`open`/`preview`/`stats`/`calib`/`backfill`/`compare`. `compare` A2#05 ile ortak slotları karşılaştırır. **Gerçek para yolu yok**, Live aynası yok. Karar kriteri WR değil **Brier < piyasa Brier**.
  - İlk canlı okuma (2026-08-13 14:16): BTC model 0,351 vs piyasa 0,345 · ETH 0,295 vs 0,275 · SOL 0,288 vs 0,345. BTC/ETH'de piyasayla 0,6–2,0 puan örtüşme modelin doğru spesifiye edildiğini gösteriyor (bozuk model 20 puan sapardı); kenar SOL'da çıktı.
-- **JARVIS (yeni, 2026-08-14; `/kripto/jarvis`):** Kripto denetim ekranı — **iki sekme:** (1) Kripto Test Analizi · (2) Kripto Sistem Denetimi. Motorlar `jarvis_report.py` (69 Test defteri) + `jarvis_audit.py` (Test+Algoritmalar+Analizler, 118 defter); gece **00:00**'da ikisi birden koşar. Çıktılar `jarvis_report.json` + `jarvis_history.jsonl` (1. sekme, gün gün grafik) ve `jarvis_audit.json` (2. sekme: MFE, drift, konsensüs, CR6 hayaletleri). Rota `/kripto/jarvis`, veri `/kripto/api/jarvis`; sayfa 5 dakikada bir kendini tazeler. Görsel: cyan `#00F2FF` · magenta `#B026FF`/`#FF00FF` · gold `#FFD700` · arka plan `#050A18`. Menü girdisi **üç** kripto sidebar'ında da var (`KRIPTO_JARVIS_HTML` · `KRIPTO_FUTURE_HTML` · `KRIPTO_YAPAY_ZEKA_ANALIZ_HTML`) — yeni kripto sayfası eklerken üçünü birden güncelle. CSS sınıfları `j-` önekli, `_patch_kf_theme` ile çakışmasın diye.
+- **JARVIS (yeni, 2026-08-14; `/kripto/jarvis`):** Kripto denetim ekranı — **iki sekme:** (1) Kripto Test Analizi · (2) Kripto Sistem Denetimi. Motorlar `jarvis_report.py` (Test) + `jarvis_audit.py` (yalnız Test); gece **00:00**'da ikisi birden koşar. Çıktılar `jarvis_report.json` + `jarvis_history.jsonl` (1. sekme, gün gün grafik) ve `jarvis_audit.json` (2. sekme: MFE, drift, konsensüs, CR6 hayaletleri). Rota `/kripto/jarvis`, veri `/kripto/api/jarvis`; sayfa 5 dakikada bir kendini tazeler. Görsel: cyan `#00F2FF` · magenta `#B026FF`/`#FF00FF` · gold `#FFD700` · arka plan `#050A18`. Menü girdisi **üç** kripto sidebar'ında da var (`KRIPTO_JARVIS_HTML` · `KRIPTO_FUTURE_HTML` · `KRIPTO_YAPAY_ZEKA_ANALIZ_HTML`) — yeni kripto sayfası eklerken üçünü birden güncelle. CSS sınıfları `j-` önekli, `_patch_kf_theme` ile çakışmasın diye.
  - **Bulgular veriden otomatik türüyor** (`_bulgular`), elle yazılmış metin yok: komisyon/brüt oranı, kapı eşiği sapması, pozitif SKILL yüzdesi, zamanlı kapanışların payı, ATR katmanının net katkısı, kârlı defter listesi. Eşikler değişirse yorum da değişir.
  - **İlk ölçüm (14.08, 7 gün · 22.092 işlem):** brüt **−$166**, komisyon **$13.046**, net **−$13.211** — yani kayıp tamamen komisyon. Ortalama SKILL **%−0,0044**, 24/54 defter pozitif (yazı-turada 27 beklenir), Bonferroni eşiği |t|≈3,8'e ulaşan yok. Lider `a1_37` (Ichimoku Cloud v2, SKILL +0,1211 · t 1,83). İşlemlerin **%79'u** süre dolduğu için kapanıyor (1h/4h close) ve zararın tamamı orada; ATR katmanı tek pozitif bileşen (**+$1.392**).
  - **`LEADER_MIN_SKILL` DÜZELTİLDİ (2026-08-15):** %0,04 → **%0,10**. Eski değerin yorumu "maker gidiş-dönüş" diyordu ama defterler taker ödüyor; işlem verisinden ölçülen gerçek maliyet %0,10 (yön başına %0,05; $0,591 / $591 notional). Kapı gerçeğin 2,5 katı altındaydı ve masrafını çıkaramayan (defter, coin) çiftlerini "nitelikli" gösteriyordu. Sonuç: coin lider tablosunda `qualifies` artık gerçekten komisyonu aşan satırlar için `true`.
@@ -264,7 +268,9 @@ alwaysApply: true
 - **Sahipsiz defter temizliği:** `python3 AgustosKripto/orphan_scan.py [--archive]` — kataloğdan kaldırılmış ama dosyası kalan defterleri bulur. Bunlar hiçbir `close`/`trail` turunda görülmez, açık pozisyonları sonsuza kadar açık kalır ve muhasebeye girmez. 2026-08-15'te `Analizler/a4` bulundu (6 pozisyon **55 saattir** açık, 353 kapanmış işlem, bakiye $106,06/$300) → `_archive_orphan_20260815/`'e taşındı. Yeni defter silerken bu betiği çalıştır.
 - **Kripto denetim:** `python3 AgustosKripto/skill_audit.py --all` — cron yok, elle. Gerçek para kararı öncesi çalıştır; tek doğru ölçüt SKILL + t, WR değil.
 - **Binance Live DURDURULDU (2026-08-11):** `crypto_futures_live_control.json` → `live_paused: true`. Sebep: denetim brüt kenarın sıfır olduğunu gösterdi (net −$10.027'nin tamamı komisyon). Hayalet pozisyon tıkanıklığı 08-08'den beri kazara koruma sağlıyordu; tıkanıklık açıldığı için açılış elle durduruldu. **Yeniden açmadan önce** `skill_audit.py --all` çalıştır ve eşiği geçen defter sayısını kontrol et. `close`/`trail` çalışmaya devam ediyor.
-- **A1#39 Live (2026-08-18):** CR6 evreni kapalı kaldı. Ayrı defter `crypto_futures_a139.py` Test `/kripto/test/a1_39` (H1 Kombinasyon) motorunu gerçek Binance'te koşturur: $20×7x, max 4, 30 coin, BTC/ETH/BNB dahil, Test çıkış rejimi (24s · 3×ATR · ATR kilit). Kontrol `crypto_futures_a139_control.json`. `/kripto` üst çubuğu + bakiye/işlem kartı bu defteri gösterir. Manuel `open` yok — cron :05 / */10 scan. **DURDURULDU (2026-08-19):** `live_paused: true` — yeni açık yok; `close`/`trail` çalışır.
+- **A1#39 Live (2026-08-18):** CR6 evreni kapalı kaldı. Ayrı defter `crypto_futures_a139.py` Test `/kripto/test/a1_39` (H1 Kombinasyon) motorunu gerçek Binance'te koşturur: $20×7x, max 4, 30 coin, BTC/ETH/BNB dahil, Test çıkış rejimi (24s · 3×ATR · ATR kilit). Kontrol `crypto_futures_a139_control.json`. Manuel `open` yok — cron :05 / */10 scan. **DURDURULDU (2026-08-19):** `live_paused: true` — yeni açık yok; `close`/`trail` çalışır.
+- **B1#03 MUM Live (2026-08-22):** `crypto_futures_b1_mum.py` Test `/kripto/test/b1_mum` **state aynası** — sinyal çözmez; sanal ne açarsa Isolated **$10×20x**, sanal kapanınca kapanır. Binance'te elle kapanırsa yerel `bn_flat` (aynı paper slot tekrar açılmaz). `/kripto` kart PnL = Binance mark. Cron sanal turundan sonra. Manuel open yok.
+- **BIN_XAUUSDT üst sayı (2026-08-22):** sayfa **defter** equity ($180 kasa + XAU float). USDT-M $168 / serbest ayrı yazılır — aynı cüzdanda B1#03 de var; `wallet_at_live` 261 artık başlangıç değil.
 - **KAITO kağıt defteri (yeni, 2026-08-16; `kaito_paper.py`):** "Binance canlıda sadece KAITO açalım" fikrini **kasa riske girmeden** ölçer. cr6 ile birebir: 4 defterin oyu (`algo_05`/`algo_06`/`algo_07`/`algo1_11`), `_combine_votes`, `conviction_filter` vetosu (4/4 birlik açılmaz), $7×20x, ATR kâr kilidi + `exit_policy` (24s tavan · 3×ATR), gerçek taker komisyonu. Farkı: tek pozisyon ve emir defteri yok (giriş mum kapanışından) → sonuç **iyimser taraflı** okunmalı. `stats` ile oku; gölge günlüğü `kaito_paper_shadow.jsonl` açılmayan turların sebebini de yazar.
  - **Neden kağıt:** Kripto Test'in +$1.272'lik KAITO rakamı kenar değil. Gün kümelenmiş **t=+0,76** (9 gün, sıfırdan ayırt edilemez) · 13.08 tek günü +$1.348 yani toplamın tamamından fazla, 12.08 −$646 · en iyi 5 işlem kârın %63'ü, en iyi 20 işlem %152 (gerisi eksi) · LONG −$1.897 (WR %34,2) vs SHORT +$3.169 (WR %60,7). Sebep basit: KAITO aynı pencerede **0,91 → 0,35 (−%61,3)**, neredeyse her gün eksi; defterler çoğunlukla short kaldığı için kazandılar. Bu yön, beceri değil.
  - **Ayrıca strateji uyuşmuyor:** o rakam Kripto Test defterlerinden ($100×6x, 69 Poly aynası); canlı cr6 4 algo çoğunluk oyu ve $7×20x. Test sonucu cr6'nın KAITO'da ne yapacağını söylemiyor — bu defter tam olarak o boşluğu ölçüyor.
@@ -313,11 +319,11 @@ tail -f /tmp/crypto_futures_cr6_trail.log
 tail -f /tmp/crypto_futures_a139.log
 tail -f /tmp/crypto_futures_a139_trail.log
 tail -f /tmp/crypto_futures_a139_scan.log
-tail -f /tmp/agustos_algoritmalar.log
-tail -f /tmp/agustos_algoritmalar_trail.log
-tail -f /tmp/agustos_analizler.log
-tail -f /tmp/agustos_analizler_trail.log
+tail -f /tmp/crypto_futures_b1_mum.log
+tail -f /tmp/crypto_futures_b1_mum_trail.log
+tail -f /tmp/crypto_futures_b1_mum_scan.log
 tail -f /tmp/aiproject_file_watch.log
+tail -f /tmp/binance_ws_marks.log
 tail -f /tmp/backup.log
 tail -f /tmp/crypto_news_monitor.log
 tail -f /tmp/weekly_slot_heatmap_all.log

@@ -1,8 +1,8 @@
-"""E01 — A1 + C1#01 + A2#05 V2 oy defteri. Sanal, gerçek PM yok.
+"""COMBO — A1 + C1#01 + A2#05 V2 oy defteri. Sanal, gerçek PM yok.
 
-Kaynaklar :02'de açar; E01 :03'te onların açık pozisyonuna bakar.
-Çatışmada açmaz. 1 oy $8 · 2 oy $12 · 3 oy $24. Taban $16.
-Cron: :01 close · :03 open.
+Kaynaklar :02'de açar; COMBO :02:25'te onların açık pozisyonuna bakar.
+Çatışmada açmaz. 1 oy $24 · 2 oy $36 · 3 oy $48. Taban $36. Kasa $1000.
+Cron: :01 close · :02+25s open. Betik adı e01 (crontab).
 """
 from __future__ import annotations
 
@@ -40,12 +40,12 @@ BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "")
 CHAT_ID = chat_analiz4()
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 
-STATE_FILE = os.path.join(_DIR, "poly_trader_e01_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_e01_history.json")
-LABEL = "E01"
-BOOK_KEY = "e01"
-ALGO_NAME = "E01 · A1+C101+A2#05V2 oy"
-INITIAL_BALANCE = 300.0
+STATE_FILE = os.path.join(_DIR, "poly_trader_combo_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_combo_history.json")
+LABEL = "COMBO"
+BOOK_KEY = "combo"
+ALGO_NAME = "COMBO · A1+C101+A2#05V2 oy"
+INITIAL_BALANCE = 1000.0
 
 
 def load_state() -> dict:
