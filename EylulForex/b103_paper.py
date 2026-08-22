@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+if (Path(__file__).resolve().parent / ".LOCAL_STOPPED").exists():
+    raise SystemExit(0)
 
 from b103_book import snapshot
 from b103_data import forex_spot

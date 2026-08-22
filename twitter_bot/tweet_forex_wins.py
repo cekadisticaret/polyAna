@@ -18,6 +18,8 @@ from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(_DIR)
+if os.path.exists(os.path.join(_ROOT, "EylulForex", ".LOCAL_STOPPED")):
+    raise SystemExit(0)
 if _DIR not in sys.path:
     sys.path.insert(0, _DIR)
 

@@ -4,6 +4,8 @@ Her saat :01'de çalışır, BTC/ETH/SOL için tepe dönüşü kontrol eder.
 Sinyal varsa A1 Live botuna bildirim gönderir.
 """
 import json
+import os
+import sys
 import urllib.request
 import urllib.parse
 from datetime import datetime, timezone
@@ -28,10 +30,11 @@ BINANCE_BASE = "https://fapi.binance.com"
 
 # ── Binance veri çekme ─────────────────────────────────────────
 def fetch_klines(symbol: str, interval: str = "1h", limit: int = 150) -> pd.DataFrame:
-    url = f"{BINANCE_BASE}/fapi/v1/klines?symbol={symbol}&interval={interval}&limit={limit}"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=10) as r:
-        raw = json.load(r)
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from binance_fapi_guard import public_klines
+    raw = public_klines(symbol, interval, int(limit))
     df = pd.DataFrame(raw, columns=[
         "open_time","open","high","low","close","volume",
         "close_time","qav","trades","tbav","tqav","ignore"

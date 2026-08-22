@@ -15,13 +15,11 @@ import poly_predictor_analysis as ppa  # noqa: E402
 
 
 def _fetch_1h_klines(symbol: str, limit: int = 72) -> list[dict]:
-    url = (
-        f"https://fapi.binance.com/fapi/v1/klines?"
-        f"symbol={symbol}&interval=1h&limit={limit}"
-    )
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        raw = json.load(resp)
+    root = os.path.dirname(_DIR)
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from binance_fapi_guard import public_klines
+    raw = public_klines(symbol, "1h", int(limit))
     out: list[dict] = []
     for k in raw:
         out.append({
@@ -31,7 +29,7 @@ def _fetch_1h_klines(symbol: str, limit: int = 72) -> list[dict]:
             "low": float(k[3]),
             "close": float(k[4]),
             "volume": float(k[5]),
-            "taker_buy": float(k[9]),
+            "taker_buy": float(k[9]) if len(k) > 9 else 0.0,
         })
     return out
 

@@ -12,6 +12,8 @@ import sys
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.abspath(os.path.join(_DIR, ".."))
 sys.path.insert(0, _DIR)
+if os.path.exists(os.path.join(_DIR, ".LOCAL_STOPPED")):
+    raise SystemExit(0)
 
 from forex_data import forex_quote, get_xau_klines  # noqa: E402
 from fx_algo_book import (  # noqa: E402

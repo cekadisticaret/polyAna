@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+if (Path(__file__).resolve().parent / ".LOCAL_STOPPED").exists():
+    raise SystemExit(0)
 
 from bin_b103_book import snapshot, sync_from_engine
 from bin_b103_data import live_quote

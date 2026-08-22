@@ -16,6 +16,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 _DIR = Path(__file__).resolve().parent
+if (_DIR / ".LOCAL_STOPPED").exists():
+    raise SystemExit(0)
 _ROOT = _DIR.parent
 _POLY = _ROOT / "temmuzPoly"
 sys.path.insert(0, str(_POLY))

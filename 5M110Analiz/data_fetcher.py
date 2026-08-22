@@ -14,14 +14,14 @@ BINANCE_FAPI = "https://fapi.binance.com"
 
 async def fetch_klines(symbol: str, interval: str, limit: int) -> List[dict]:
     """aiohttp yoksa da çalışsın diye sync urllib; async imza A31 uyumu."""
-    params = urllib.parse.urlencode({
-        "symbol": symbol, "interval": interval, "limit": limit,
-    })
-    url = f"{BINANCE_FAPI}/fapi/v1/klines?{params}"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "5M110Analiz/1.0"})
-        with urllib.request.urlopen(req, timeout=12) as r:
-            data = json.loads(r.read().decode())
+        import os
+        import sys
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import public_klines
+        data = public_klines(symbol, interval, int(limit))
         if not isinstance(data, list):
             return []
         return [

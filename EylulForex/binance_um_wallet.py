@@ -44,48 +44,16 @@ def _blocked() -> bool:
 
 
 def fetch(*, force: bool = False) -> dict | None:
-    """wallet / available / unrealized / equity — tüm USDT-M hesap."""
+    """wallet / available / unrealized / equity — WS önbelleği, REST yok."""
     global _mem
     now = time.time()
     if not force and _mem and now - _mem[0] < _TTL:
         return dict(_mem[1])
     cached = _load()
-    try:
-        kripto = str(_ROOT / "AgustosKripto")
-        for p in (kripto, str(_DIR), str(_ROOT)):
-            if p not in sys.path:
-                sys.path.insert(0, p)
-        from binance_futures_client import BinanceFuturesClient
-        c = BinanceFuturesClient()
-        if not c.configured():
-            return cached
-        if cached and now - float(cached.get("ts") or 0) < 600:
-            _mem = (now, cached)
-            return dict(cached)
-        if _blocked():
-            if cached:
-                _mem = (now, cached)
-                return dict(cached)
-            return None
-        acc = c.account() or {}
-        wallet = float(acc.get("totalWalletBalance") or 0)
-        avail = float(acc.get("availableBalance") or 0)
-        upnl = float(acc.get("totalUnrealizedProfit") or 0)
-        row = {
-            "wallet": round(wallet, 4),
-            "available": round(avail, 4),
-            "unrealized": round(upnl, 4),
-            "equity": round(wallet + upnl, 4),
-            "ts": now,
-        }
-        _save(row)
-        _mem = (now, row)
-        return dict(row)
-    except Exception:
-        if cached:
-            _mem = (now, cached)
-            return dict(cached)
-        return None
+    if cached:
+        _mem = (now, cached)
+        return dict(cached)
+    return None
 
 
 def apply_ws(*, wallet: float, available: float | None = None, unrealized: float = 0.0) -> dict:

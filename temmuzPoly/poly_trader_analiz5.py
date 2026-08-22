@@ -458,12 +458,37 @@ def tg_send_photo(path: str, caption: str = "") -> None:
 
 # ── Binance veri çekme ────────────────────────────────────────
 def _binance_get(path: str, params: dict | None = None) -> dict | list:
-    base = "https://fapi.binance.com"
-    qs   = urllib.parse.urlencode(params or {})
-    url  = f"{base}{path}?{qs}" if qs else f"{base}{path}"
-    req  = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=10) as r:
-        return json.loads(r.read())
+    """Eski ad — fapi yok. kline/fiyat WS+spot; depth boş."""
+    params = params or {}
+    sym = str(params.get("symbol") or "")
+    if path.endswith("/klines"):
+        root = os.path.dirname(_DIR)
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import public_klines
+        return public_klines(
+            sym,
+            str(params.get("interval") or "1h"),
+            int(params.get("limit") or 60),
+            start_time_ms=params.get("startTime"),
+        )
+    if path.endswith("/ticker/price"):
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import get_last, get_mark
+        px = get_last(sym) or get_mark(sym) or 0
+        return {"price": px}
+    if path.endswith("/premiumIndex"):
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import ws_premium
+        hit = ws_premium(sym) or {}
+        return {"lastFundingRate": hit.get("last_funding_rate") or 0, "markPrice": hit.get("mark") or 0}
+    if path.endswith("/depth"):
+        return {"bids": [], "asks": []}
+    return {}
 
 
 def fetch_klines(symbol: str, limit: int = 60) -> list[dict]:
@@ -473,18 +498,18 @@ def fetch_klines(symbol: str, limit: int = 60) -> list[dict]:
 
 
 def fetch_orderbook(symbol: str) -> dict:
-    return _binance_get("/fapi/v1/depth", {"symbol": symbol, "limit": 20})
+    return {"bids": [], "asks": []}
 
 
 def fetch_funding_rate(symbol: str) -> float:
     data = _binance_get("/fapi/v1/premiumIndex", {"symbol": symbol})
-    return float(data.get("lastFundingRate", 0))
+    return float(data.get("lastFundingRate", 0) or 0)
 
 
 def fetch_price(symbol: str) -> float:
-    """Anlık fiyatı Binance'tan çeker (A9-only sinyaller için)."""
+    """Anlık fiyat — WS mark/last."""
     data = _binance_get("/fapi/v1/ticker/price", {"symbol": symbol})
-    return float(data["price"])
+    return float(data.get("price") or 0)
 
 
 # ── Teknik hesaplamalar ───────────────────────────────────────

@@ -57,13 +57,11 @@ def _fetch_period_candle(symbol: str, ts_period: int, interval: str) -> dict | N
     """Slot başlangıç mumunun open/close (tamamlanmış mum)."""
     try:
         start_ms = int(ts_period) * 1000
-        url = (
-            f"{_BINANCE}/fapi/v1/klines?symbol={symbol}"
-            f"&interval={interval}&startTime={start_ms}&limit=1"
-        )
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=10) as r:
-            rows = json.load(r)
+        root = os.path.dirname(_DIR)
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import public_klines
+        rows = public_klines(symbol, interval, 1, start_time_ms=start_ms)
         if not rows:
             return None
         k = rows[0]

@@ -44,32 +44,8 @@ def _get(path: str, params: dict, *, cache_ttl: int = 0) -> list | dict | None:
                     return json.load(f)
         except Exception:
             pass
-    try:
-        _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        if _root not in sys.path:
-            sys.path.insert(0, _root)
-        from binance_fapi_guard import fapi_blocked, note_418
-        if fapi_blocked():
-            return None
-    except Exception:
-        note_418 = None  # type: ignore
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "c101/1.0"})
-        with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
-            data = json.load(r)
-    except Exception as e:
-        if "418" in str(e) and note_418:
-            note_418(str(e))
-        print(f"[C101 data] {path} hata: {e}")
-        return None
-    if cache_ttl > 0:
-        try:
-            os.makedirs(_CACHE_DIR, exist_ok=True)
-            with open(cp, "w") as f:
-                json.dump(data, f)
-        except Exception:
-            pass
-    return data
+    # fapi REST yok — cache doluysa o, değilse None (WS/spot mum ayrı)
+    return None
 
 
 # ── 1. OHLCV + taker akışı ────────────────────────────────────
@@ -84,12 +60,6 @@ def klines(symbol: str, interval: str = "1h", limit: int = 120) -> list[dict]:
         raw = public_klines(symbol, interval, int(limit))
     except Exception:
         raw = None
-    if not isinstance(raw, list):
-        raw = _get(
-            "/fapi/v1/klines",
-            {"symbol": symbol.upper(), "interval": interval, "limit": int(limit)},
-            cache_ttl=45,
-        )
     if not isinstance(raw, list):
         return []
     out = []

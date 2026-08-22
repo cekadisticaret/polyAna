@@ -256,16 +256,8 @@ def _futures_client():
 
 
 def _seed_positions() -> int:
-    if fapi_blocked():
-        return 0
-    c = _futures_client()
-    if not c.configured():
-        return 0
-    rows = c.position_risk() or []
-    if not isinstance(rows, list):
-        return 0
-    write_positions_bulk(rows, src="rest")
-    return len(rows)
+    """REST yok — son WS önbelleği kalsın."""
+    return 0
 
 
 def _apply_wallet(msg: dict) -> None:
@@ -307,25 +299,8 @@ def _apply_account_update(msg: dict) -> None:
 
 
 def _seed_account() -> bool:
-    if fapi_blocked():
-        return False
-    fx = str(_ROOT / "EylulForex")
-    kripto = str(_ROOT / "AgustosKripto")
-    for p in (fx, kripto, str(_ROOT)):
-        if p not in sys.path:
-            sys.path.insert(0, p)
-    from binance_futures_client import BinanceFuturesClient
-    from binance_um_wallet import apply_ws
-    c = BinanceFuturesClient()
-    if not c.configured():
-        return False
-    acc = c.account() or {}
-    apply_ws(
-        wallet=float(acc.get("totalWalletBalance") or 0),
-        available=float(acc.get("availableBalance") or 0),
-        unrealized=float(acc.get("totalUnrealizedProfit") or 0),
-    )
-    return True
+    """REST yok — cüzdan ACCOUNT_UPDATE ile gelir."""
+    return False
 
 
 async def _run_user() -> None:

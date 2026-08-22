@@ -8,13 +8,12 @@ MOMENTUM_FILTER = os.getenv("PM_MOMENTUM_FILTER", "true").lower() in ("1", "true
 
 
 def fetch_klines(symbol: str, interval: str, limit: int = 10) -> list[dict]:
-    qs = urllib.parse.urlencode({"symbol": symbol, "interval": interval, "limit": limit})
-    req = urllib.request.Request(
-        f"https://fapi.binance.com/fapi/v1/klines?{qs}",
-        headers={"User-Agent": "Mozilla/5.0"},
-    )
-    with urllib.request.urlopen(req, timeout=10) as r:
-        raw = __import__("json").loads(r.read())
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    import sys
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from binance_fapi_guard import public_klines
+    raw = public_klines(symbol, interval, int(limit))
     return [{"open": float(k[1]), "close": float(k[4])} for k in raw]
 
 

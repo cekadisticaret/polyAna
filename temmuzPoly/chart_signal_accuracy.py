@@ -45,14 +45,13 @@ def _save(acc: dict) -> None:
 
 
 def _fetch(pair: str, interval: str, limit: int) -> list[dict]:
-    r = requests.get(
-        f"{FUTURES}/fapi/v1/klines",
-        params={"symbol": pair, "interval": interval, "limit": limit},
-        timeout=12,
-    )
-    r.raise_for_status()
+    root = os.path.dirname(_DIR)
+    if root not in __import__("sys").path:
+        __import__("sys").path.insert(0, root)
+    from binance_fapi_guard import public_klines
+    raw = public_klines(pair, interval, int(limit))
     out: list[dict] = []
-    for x in r.json():
+    for x in raw:
         out.append({
             "time": int(x[0]) // 1000,
             "open": float(x[1]),

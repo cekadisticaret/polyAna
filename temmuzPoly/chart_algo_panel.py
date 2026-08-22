@@ -89,13 +89,11 @@ def _bump(acc: dict, key: str, sym: str, ok: bool) -> None:
 
 def _fetch_kline_at(pair: str, interval: str, open_ts: int) -> dict | None:
     try:
-        r = requests.get(
-            f"{_FUTURES}/fapi/v1/klines",
-            params={"symbol": pair, "interval": interval, "startTime": open_ts * 1000, "limit": 1},
-            timeout=12,
-        )
-        r.raise_for_status()
-        rows = r.json()
+        root = os.path.dirname(_DIR)
+        if root not in _sys.path:
+            _sys.path.insert(0, root)
+        from binance_fapi_guard import public_klines
+        rows = public_klines(pair, interval, 1, start_time_ms=open_ts * 1000)
         if not rows:
             return None
         x = rows[0]

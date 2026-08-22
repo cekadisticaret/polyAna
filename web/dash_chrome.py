@@ -94,6 +94,13 @@ body[data-world] .main-right{
   body[data-world] .desk{padding-top:0}
   body[data-world] .chart-full{margin-top:0;height:auto;max-height:none}
 }
+#fapi-ban-bar{
+  display:none;position:fixed;top:52px;left:220px;right:0;z-index:46;
+  padding:8px 16px;background:#3a2208;color:#f5c16c;
+  font:700 12px/1.35 Sora,system-ui,sans-serif;
+  border-bottom:1px solid rgba(245,166,35,.35);text-align:center;
+}
+@media(max-width:800px){#fapi-ban-bar{left:0;top:0}}
 """
     )
 
@@ -103,7 +110,37 @@ def _bar(world: str) -> str:
     for key, lab, href, _a, _i in WORLDS:
         on = " on" if key == world else ""
         pills.append(f'<a class="dash-world{on}" href="{href}">{lab}</a>')
-    return '<nav class="dash-worldbar" aria-label="Dünya">' + "".join(pills) + "</nav>"
+    return (
+        '<nav class="dash-worldbar" aria-label="Dünya">' + "".join(pills) + "</nav>"
+        + '<div id="fapi-ban-bar" hidden></div>'
+        + _ban_script()
+    )
+
+
+def _ban_script() -> str:
+    return r"""<script>
+(function(){
+  function paint(d){
+    var el=document.getElementById('fapi-ban-bar');
+    if(!el) return;
+    if(d&&d.blocked){
+      el.hidden=false; el.style.display='block';
+      el.textContent=d.msg||'Binance fapi IP ban — sayfa WS ile çalışır, emir yok';
+    }else{
+      el.hidden=true; el.style.display='none';
+    }
+  }
+  window.showAppErr=function(s,fb){
+    if(/fapi\s+(IP\s+)?ban/i.test(String(s||''))){ paint({blocked:true,msg:s}); return; }
+    alert(s||fb||'hata');
+  };
+  function tick(){
+    fetch('/poly/api/fapi-status',{cache:'no-store'}).then(function(r){return r.json();}).then(paint).catch(function(){});
+  }
+  tick();
+  setInterval(tick,60000);
+})();
+</script>"""
 
 
 def strip_sidebar_world_links(html: str) -> str:

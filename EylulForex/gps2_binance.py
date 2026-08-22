@@ -35,20 +35,10 @@ _depth_cache: tuple[float, dict] | None = None
 
 
 def _get(path: str, params: str = "") -> dict | list:
-    try:
-        from binance_fapi_guard import ban_msg, fapi_blocked
-        if fapi_blocked():
-            raise RuntimeError(ban_msg())
-    except RuntimeError:
-        raise
-    except Exception:
-        pass
-    url = f"{_FAPI}{path}"
-    if params:
-        url += "?" + params
-    req = urllib.request.Request(url, headers=_UA)
-    with urllib.request.urlopen(req, timeout=12) as r:
-        return json.loads(r.read().decode())
+    from binance_fapi_guard import FapiReadDenied, ban_msg, fapi_blocked
+    if fapi_blocked():
+        raise RuntimeError(ban_msg())
+    raise FapiReadDenied(f"fapi okuma kapalı {path}")
 
 
 def exchange_filters() -> dict:
@@ -80,6 +70,12 @@ def book_ticker() -> dict:
             }
     except Exception:
         pass
+    try:
+        from binance_fapi_guard import fapi_blocked
+        if fapi_blocked():
+            return {"bid": 0.0, "ask": 0.0, "bid_qty": 0.0, "ask_qty": 0.0}
+    except Exception:
+        pass
     d = _get("/fapi/v1/ticker/bookTicker", f"symbol={SYMBOL}")
     return {
         "bid": float(d.get("bidPrice") or 0),
@@ -95,6 +91,12 @@ def premium() -> dict:
         hit = ws_premium(SYMBOL)
         if hit:
             return hit
+    except Exception:
+        pass
+    try:
+        from binance_fapi_guard import fapi_blocked
+        if fapi_blocked():
+            return {"mark": 0.0, "index": 0.0, "last_funding_rate": 0.0, "next_funding_time": 0}
     except Exception:
         pass
     d = _get("/fapi/v1/premiumIndex", f"symbol={SYMBOL}")

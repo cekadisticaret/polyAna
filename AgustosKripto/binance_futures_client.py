@@ -33,6 +33,8 @@ if os.path.exists(_ENV_FILE):
 
 _MAINNET = "https://fapi.binance.com"
 _TESTNET = "https://testnet.binancefuture.com"
+# Ban sonrası okuma fırtınası olmasın: GET yalnız emir teyidi.
+_GET_ALLOW = frozenset({"/fapi/v1/order"})
 
 
 class BinanceFuturesError(RuntimeError):
@@ -81,6 +83,8 @@ class BinanceFuturesClient:
         api_key: bool = False,
     ) -> Any:
         params = dict(params or {})
+        if method.upper() == "GET" and path not in _GET_ALLOW:
+            raise BinanceFuturesError(f"fapi GET kapalı: {path}", status=0)
         headers = {"User-Agent": "aiProject-futures/1.0", "Accept": "application/json"}
         if signed:
             if not self.configured():
@@ -124,9 +128,11 @@ class BinanceFuturesClient:
 
         req = urllib.request.Request(url, data=data, headers=headers, method=method.upper())
         try:
-            with urllib.request.urlopen(req, timeout=20) as r:
-                raw = r.read().decode()
-                return json.loads(raw) if raw else {}
+            from binance_fapi_guard import allow_fapi
+            with allow_fapi():
+                with urllib.request.urlopen(req, timeout=20) as r:
+                    raw = r.read().decode()
+                    return json.loads(raw) if raw else {}
         except urllib.error.HTTPError as e:
             body = e.read().decode(errors="replace")
             try:
@@ -166,119 +172,94 @@ class BinanceFuturesClient:
 
     # ── public market ─────────────────────────────────────────
     def ping(self) -> dict:
-        return self.get("/fapi/v1/ping")
+        return {}
 
     def server_time(self) -> int:
-        return int(self.get("/fapi/v1/time")["serverTime"])
+        return int(time.time() * 1000)
 
     def exchange_info(self, symbol: str | None = None) -> dict:
-        params = {"symbol": symbol} if symbol else None
-        return self.get("/fapi/v1/exchangeInfo", params)
+        return {"symbols": []}
 
     def mark_price(self, symbol: str) -> float:
-        try:
-            _root = os.path.dirname(_DIR)
-            if _root not in sys.path:
-                sys.path.insert(0, _root)
-            from binance_fapi_guard import get_mark
-            px = get_mark(symbol)
-            if px:
-                return px
-        except Exception:
-            pass
-        data = self.get("/fapi/v1/premiumIndex", {"symbol": symbol.upper()})
-        return float(data["markPrice"])
+        _root = os.path.dirname(_DIR)
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import get_mark
+        px = get_mark(symbol)
+        if not px:
+            raise BinanceFuturesError(f"mark WS yok: {symbol}", status=0)
+        return float(px)
 
     def ticker_price(self, symbol: str) -> float:
-        try:
-            _root = os.path.dirname(_DIR)
-            if _root not in sys.path:
-                sys.path.insert(0, _root)
-            from binance_fapi_guard import get_last, get_mark
-            px = get_last(symbol) or get_mark(symbol)
-            if px:
-                return px
-        except Exception:
-            pass
-        data = self.get("/fapi/v1/ticker/price", {"symbol": symbol.upper()})
-        return float(data["price"])
+        _root = os.path.dirname(_DIR)
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import get_last, get_mark
+        px = get_last(symbol) or get_mark(symbol)
+        if not px:
+            raise BinanceFuturesError(f"last WS yok: {symbol}", status=0)
+        return float(px)
 
     def book_ticker(self, symbol: str) -> dict:
-        """En iyi alış/satış — önce WS, yoksa REST."""
-        try:
-            _root = os.path.dirname(_DIR)
-            if _root not in sys.path:
-                sys.path.insert(0, _root)
-            from binance_fapi_guard import get_book
-            hit = get_book(symbol)
-            if hit and (hit.get("bid") or hit.get("ask")):
-                return {
-                    "symbol": (symbol or "").upper(),
-                    "bid": float(hit.get("bid") or 0),
-                    "ask": float(hit.get("ask") or 0),
-                    "bid_qty": float(hit.get("bid_qty") or 0),
-                    "ask_qty": float(hit.get("ask_qty") or 0),
-                }
-        except Exception:
-            pass
-        d = self.get("/fapi/v1/ticker/bookTicker", {"symbol": symbol.upper()})
+        _root = os.path.dirname(_DIR)
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import get_book
+        hit = get_book(symbol)
+        if not hit or not (hit.get("bid") or hit.get("ask")):
+            raise BinanceFuturesError(f"book WS yok: {symbol}", status=0)
         return {
-            "symbol": d.get("symbol"),
-            "bid": float(d.get("bidPrice") or 0),
-            "ask": float(d.get("askPrice") or 0),
-            "bid_qty": float(d.get("bidQty") or 0),
-            "ask_qty": float(d.get("askQty") or 0),
+            "symbol": (symbol or "").upper(),
+            "bid": float(hit.get("bid") or 0),
+            "ask": float(hit.get("ask") or 0),
+            "bid_qty": float(hit.get("bid_qty") or 0),
+            "ask_qty": float(hit.get("ask_qty") or 0),
         }
 
     def premium_index(self, symbol: str | None = None) -> Any:
-        """GET /fapi/v1/premiumIndex — sembol verilmezse tüm perp'ler.
-
-        `lastFundingRate` bir sonraki ödemede uygulanacak orandır.
-        """
-        params = {"symbol": symbol.upper()} if symbol else None
-        return self.get("/fapi/v1/premiumIndex", params)
+        if not symbol:
+            return {}
+        _root = os.path.dirname(_DIR)
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import ws_premium
+        return ws_premium(symbol) or {}
 
     def funding_rate_history(self, symbol: str, limit: int = 100) -> list:
-        """GET /fapi/v1/fundingRate — geçmiş funding ödemeleri."""
-        return self.get(
-            "/fapi/v1/fundingRate",
-            {"symbol": symbol.upper(), "limit": int(limit)},
-        )
+        return []
 
     def funding_info(self) -> list:
-        """GET /fapi/v1/fundingInfo — sembol başına fundingIntervalHours + cap/floor.
-
-        Tüm semboller 8 saatte bir ödemez; volatil altlarda interval 4 saat.
-        Yıllıklandırma için bu alan şart.
-        """
-        return self.get("/fapi/v1/fundingInfo")
+        return []
 
     def klines(self, symbol: str, interval: str = "15m", limit: int = 100) -> list:
-        try:
-            _root = os.path.dirname(_DIR)
-            if _root not in sys.path:
-                sys.path.insert(0, _root)
-            from binance_fapi_guard import public_klines
-            raw = public_klines(symbol, interval, int(limit))
-            if raw:
-                return raw
-        except Exception:
-            pass
-        return self.get(
-            "/fapi/v1/klines",
-            {"symbol": symbol.upper(), "interval": interval, "limit": int(limit)},
-        )
+        _root = os.path.dirname(_DIR)
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import public_klines
+        return public_klines(symbol, interval, int(limit)) or []
 
     # ── account / trade (signed) ──────────────────────────────
     def balance(self) -> list:
-        return self.get("/fapi/v2/balance", signed=True)
+        return []
 
     def account(self, *, ignore_ban: bool = False) -> dict:
-        return self.get("/fapi/v2/account", signed=True, ignore_ban=ignore_ban)
+        fx = os.path.join(os.path.dirname(_DIR), "EylulForex")
+        if fx not in sys.path:
+            sys.path.insert(0, fx)
+        from binance_um_wallet import fetch
+        w = fetch() or {}
+        return {
+            "totalWalletBalance": w.get("wallet") or 0,
+            "availableBalance": w.get("available") or 0,
+            "totalUnrealizedProfit": w.get("unrealized") or 0,
+        }
 
     def position_risk(self, symbol: str | None = None) -> list:
-        params = {"symbol": symbol.upper()} if symbol else None
-        return self.get("/fapi/v2/positionRisk", params, signed=True)
+        _root = os.path.dirname(_DIR)
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import cached_positions
+        return cached_positions(symbol)
 
     def set_leverage(self, symbol: str, leverage: int) -> dict:
         return self.post(

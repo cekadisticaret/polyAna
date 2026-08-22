@@ -26,9 +26,9 @@ assert _spec.loader is not None
 _spec.loader.exec_module(_agc)
 ALGOS_V1 = _agc.ALGOS_V1
 
-# 30 coin — işlem bekleyen tarama evreni (Binance Futures hacmine göre güncel + likit)
+# 28 coin — BTC/ETH yok (2026-08-22); işlem bekleyen tarama evreni
 TEST_SYMBOLS: list[str] = [
-    "BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
+    "SOLUSDT", "BNBUSDT", "XRPUSDT",
     "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT",
     "LTCUSDT", "NEARUSDT", "SUIUSDT", "APTUSDT", "ARBUSDT",
     "OPUSDT", "INJUSDT", "TIAUSDT", "FILUSDT", "ATOMUSDT",

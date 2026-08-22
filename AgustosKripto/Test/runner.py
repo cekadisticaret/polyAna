@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import sys
+import time
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _AGUSTOS = os.path.dirname(_DIR)
@@ -114,8 +115,11 @@ def max_opens_for(book: dict) -> int:
     return MAX_OPEN_POSITIONS
 
 
+_GLOBAL_SKIP_SYMBOLS = frozenset({"BTCUSDT", "ETHUSDT"})
+
+
 def skip_symbols_of(book: dict) -> set[str]:
-    out: set[str] = set()
+    out: set[str] = set(_GLOBAL_SKIP_SYMBOLS)
     for s in book.get("skip_symbols") or []:
         u = str(s).upper()
         if u and not u.endswith("USDT"):
@@ -357,8 +361,16 @@ def _leader_sort_key(r: dict):
     )
 
 
+_PAIRS_CACHE: dict = {"ts": 0.0, "data": None}
+_PAIRS_TTL = 90.0
+
+
 def _collect_pairs() -> dict:
     """(coin, algo) → istatistik kovası; tüm Test defterlerini tarar."""
+    now = time.time()
+    hit = _PAIRS_CACHE.get("data")
+    if hit is not None and now - float(_PAIRS_CACHE.get("ts") or 0) < _PAIRS_TTL:
+        return hit
     buckets: dict[tuple[str, str], dict] = {}
     for book in ALL_BOOKS:
         hp = _history_path_for_book(book)
@@ -393,6 +405,8 @@ def _collect_pairs() -> dict:
                     b["longs"].append(v)
                 elif t.get("side") == "SHORT":
                     b["shorts"].append(v)
+    _PAIRS_CACHE["ts"] = now
+    _PAIRS_CACHE["data"] = buckets
     return buckets
 
 
@@ -930,7 +944,7 @@ def _build_status(*, with_marks: bool = True, compute_waiting: bool | None = Non
             label=label(book),
             kl_cache=kl if with_marks else {},
             live_marks=with_marks,
-            recent_limit=30,
+            recent_limit=0,
         )
         st["id"] = book["uid"]
         st["name"] = book["name"]

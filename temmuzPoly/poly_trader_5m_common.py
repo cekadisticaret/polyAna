@@ -103,16 +103,27 @@ def tg_send_photo(path: str, caption: str = "") -> None:
 
 # ── Binance Veri ──────────────────────────────────────────────
 def _binance_get(path: str, params: dict | None = None) -> dict | list:
-    base = "https://fapi.binance.com"
-    qs   = urllib.parse.urlencode(params or {})
-    url  = f"{base}{path}?{qs}" if qs else f"{base}{path}"
-    req  = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=10) as r:
-        return json.loads(r.read())
+    params = params or {}
+    if path.endswith("/klines"):
+        root = os.path.dirname(os.path.abspath(__file__))
+        root = os.path.dirname(root)
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import public_klines
+        return public_klines(
+            str(params.get("symbol") or ""),
+            str(params.get("interval") or "5m"),
+            int(params.get("limit") or 150),
+        )
+    if path.endswith("/premiumIndex"):
+        return {"lastFundingRate": 0}
+    if path.endswith("/depth"):
+        return {"bids": [], "asks": []}
+    return {}
 
 
 def fetch_klines_5m(symbol: str, limit: int = 150) -> list[dict]:
-    """5 dakikalık Binance futures klines."""
+    """5 dakikalık mum — spot public."""
     raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "5m", "limit": limit})
     return [{"open_time": int(k[0]), "open":   float(k[1]), "high":  float(k[2]),
              "low":    float(k[3]), "close": float(k[4]),

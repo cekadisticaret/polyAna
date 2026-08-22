@@ -68,17 +68,6 @@ def get_taker_rate(
     hit = _RATE_CACHE.get(sym)
     if hit and (time.time() - hit[2]) < _RATE_TTL_SEC:
         return hit[0]
-    if _fapi_blocked():
-        return taker_cfg
-    if client is not None and getattr(client, "configured", lambda: False)():
-        try:
-            data = client.commission_rate(sym)
-            taker = float(data.get("takerCommissionRate") or taker_cfg)
-            maker = float(data.get("makerCommissionRate") or _maker)
-            _RATE_CACHE[sym] = (taker, maker, time.time())
-            return taker
-        except Exception as e:
-            print(f"[fee_utils] commissionRate {sym}: {e}")
     return taker_cfg
 
 
@@ -94,17 +83,6 @@ def get_maker_rate(
     hit = _RATE_CACHE.get(sym)
     if hit and (time.time() - hit[2]) < _RATE_TTL_SEC:
         return hit[1]
-    if _fapi_blocked():
-        return maker_cfg
-    if client is not None and getattr(client, "configured", lambda: False)():
-        try:
-            data = client.commission_rate(sym)
-            taker = float(data.get("takerCommissionRate") or _taker_cfg)
-            maker = float(data.get("makerCommissionRate") or maker_cfg)
-            _RATE_CACHE[sym] = (taker, maker, time.time())
-            return maker
-        except Exception as e:
-            print(f"[fee_utils] commissionRate {sym}: {e}")
     return maker_cfg
 
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import sys
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
@@ -45,12 +46,18 @@ MOMENTUM_FILTER_ENABLED = False
 
 # ── Binance veri ──────────────────────────────────────────────
 def _binance_get(path: str, params: dict | None = None) -> dict | list:
-    base = "https://fapi.binance.com"
-    qs = urllib.parse.urlencode(params or {})
-    url = f"{base}{path}?{qs}" if qs else f"{base}{path}"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=10) as r:
-        return json.loads(r.read())
+    params = params or {}
+    if path.endswith("/klines"):
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import public_klines
+        return public_klines(
+            str(params.get("symbol") or ""),
+            str(params.get("interval") or "5m"),
+            int(params.get("limit") or 80),
+        )
+    return {}
 
 
 def fetch_klines_5m(symbol: str = SYMBOL, limit: int = KLINES_LIMIT) -> list[dict]:

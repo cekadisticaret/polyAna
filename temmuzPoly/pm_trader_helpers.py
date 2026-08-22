@@ -8,6 +8,11 @@ from datetime import datetime, timedelta, timezone
 from decimal import ROUND_DOWN, Decimal
 from zoneinfo import ZoneInfo
 
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+import binance_fapi_guard  # noqa: E402,F401  — fapi okuma kesici
+
 _PM_CLOB_HOST = "https://clob.polymarket.com"
 _PM_GAMMA_URL = "https://gamma-api.polymarket.com/events"
 _PM_HEADERS   = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
@@ -1106,36 +1111,23 @@ def sanal_pnl(pos: dict, win: bool) -> float:
 
 
 def pm_sanal_slot_candle(symbol: str, entry_time_tr: str) -> tuple[float, float] | None:
-    """PM slot saatinin Binance 1h open/close (İST entry_time_tr).
-
-    Önce futures (`fapi`); 418/ban olursa spot data API, sonra `api.binance.com`.
-    """
+    """PM slot saatinin Binance 1h open/close (İST entry_time_tr). Spot mum."""
     try:
         et = datetime.fromisoformat(entry_time_tr.replace("Z", "+00:00")).astimezone(_TZ_TR)
     except Exception:
         return None
     slot = et.replace(minute=0, second=0, microsecond=0)
     ms = int(slot.timestamp() * 1000)
-    urls = (
-        f"https://fapi.binance.com/fapi/v1/klines?symbol={symbol}&interval=1h&startTime={ms}&limit=1",
-        f"https://data-api.binance.vision/api/v3/klines?symbol={symbol}&interval=1h&startTime={ms}&limit=1",
-        f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1h&startTime={ms}&limit=1",
-    )
-    last_err = None
-    for url in urls:
-        try:
-            with urllib.request.urlopen(url, timeout=15) as r:
-                data = json.loads(r.read())
-        except Exception as e:
-            last_err = e
-            continue
-        if not data:
-            continue
-        k = data[0]
-        return float(k[1]), float(k[4])
-    if last_err is not None:
-        print(f"[pm_sanal_slot_candle] {symbol} {slot:%H:%M} mum yok: {last_err}")
-    return None
+    try:
+        from binance_fapi_guard import public_klines
+        data = public_klines(symbol, "1h", 1, start_time_ms=ms)
+    except Exception as e:
+        print(f"[pm_sanal_slot_candle] {symbol} {slot:%H:%M} mum yok: {e}")
+        return None
+    if not data:
+        return None
+    k = data[0]
+    return float(k[1]), float(k[4])
 
 
 def pm_sanal_settle_trade(pos: dict, hour_open: float, hour_close: float) -> dict:

@@ -20,6 +20,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "EylulForex"))
 
+import binance_fapi_guard  # noqa: E402,F401  — fapi okuma kesici, import sırasında takılır
+
 from dash_chrome import patch_dash_chrome, world_for_html  # noqa: E402
 
 from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_CEMBYBIT_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML, FOREX_GPSUSDT_HTML, FOREX_GPS_ISLEMLER_HTML, FOREX_GPS2_HTML, FOREX_GPS2_ISLEMLER_HTML, FOREX_BINB103_HTML, FOREX_BINB103_ISLEMLER_HTML, FOREX_B103_HTML, FOREX_B103_ISLEMLER_HTML, FOREX_FX_ALGOS_HTML, FOREX_CEM02_HTML, FOREX_CEM02_ISLEMLER_HTML, FOREX_OAPI_HTML, FOREX_OAPI_ISLEMLER_HTML, FOREX_YZA_HTML
@@ -445,17 +447,35 @@ def _enrich_entry_time_fields(t: dict) -> dict:
     return out
 
 
+_HIST_JSON_CACHE: dict[str, tuple[float, int, list]] = {}
+
+
+def _read_history_json(path: str) -> list:
+    """mtime cache — /poly yenilemesi onlarca history dosyasını tekrar okumasın."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return []
+    hit = _HIST_JSON_CACHE.get(path)
+    if hit and hit[0] == st.st_mtime and hit[1] == st.st_size:
+        return hit[2]
+    try:
+        with open(path, encoding="utf-8") as f:
+            raw = json.load(f)
+        if not isinstance(raw, list):
+            raw = []
+    except Exception:
+        return []
+    hist = [_enrich_entry_time_fields(t) for t in raw if isinstance(t, dict)]
+    _HIST_JSON_CACHE[path] = (st.st_mtime, st.st_size, hist)
+    return hist
+
+
 def _load_trader_history(key: str) -> list:
     path = _trader_history_path(key)
     if not os.path.exists(path):
         return []
-    try:
-        with open(path) as f:
-            hist = json.load(f)
-    except Exception:
-        return []
-    hist = [_enrich_entry_time_fields(t) for t in hist]
-    return _filter_hist_for(key, hist)
+    return _filter_hist_for(key, list(_read_history_json(path)))
 
 
 def _auto_label(key: str) -> str:
@@ -524,16 +544,7 @@ def _load_heatmap_history(key: str) -> list:
     allowed = set(_allowed_syms_for(key))
     hist: list = []
     for k in _heatmap_history_keys(key):
-        path = _trader_history_path(k)
-        if not os.path.exists(path):
-            continue
-        try:
-            with open(path) as f:
-                raw = json.load(f)
-        except Exception:
-            continue
-        for t in raw:
-            row = _enrich_entry_time_fields(t)
+        for row in _read_history_json(_trader_history_path(k)):
             sym = row.get("symbol", "").replace("USDT", "")
             if sym in allowed:
                 hist.append(row)
@@ -568,6 +579,45 @@ def _no_cache_api(response):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
         response.headers["Pragma"] = "no-cache"
     return response
+
+
+_FOREX_REMOTE_URL = (os.getenv("FOREX_REMOTE_URL") or "").rstrip("/")
+_FOREX_REMOTE_TOKEN = (os.getenv("FOREX_REMOTE_TOKEN") or "").strip()
+
+
+@app.before_request
+def _proxy_forex_remote():
+    """Forex motor CoptC'de — sayfa burada, API orada."""
+    if not _FOREX_REMOTE_URL:
+        return None
+    path = request.path or ""
+    if not (path.startswith("/poly/api/forex") or path.startswith("/forex/api")):
+        return None
+    url = _FOREX_REMOTE_URL + path
+    if request.query_string:
+        url += "?" + request.query_string.decode("utf-8", "replace")
+    data = request.get_data() or None
+    headers = {"Accept": "application/json", "User-Agent": "aiProject-forex-proxy"}
+    if _FOREX_REMOTE_TOKEN:
+        headers["X-Forex-Remote"] = _FOREX_REMOTE_TOKEN
+    ct = request.headers.get("Content-Type")
+    if ct:
+        headers["Content-Type"] = ct
+    req = urllib.request.Request(url, data=data, headers=headers, method=request.method)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            body = resp.read()
+            out = make_response(body, resp.status)
+            out.headers["Content-Type"] = resp.headers.get("Content-Type") or "application/json"
+            out.headers["Cache-Control"] = "no-store"
+            return out
+    except urllib.error.HTTPError as e:
+        body = e.read() if e.fp else b'{"ok":false,"error":"remote_http"}'
+        out = make_response(body, e.code)
+        out.headers["Content-Type"] = e.headers.get("Content-Type") or "application/json"
+        return out
+    except Exception as e:
+        return jsonify({"ok": False, "error": "forex_remote", "detail": str(e)[:200]}), 502
 
 # nginx reverse proxy arkasında çalışırken URL scheme ve host'u düzelt
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -627,13 +677,27 @@ def _binance_get(base: str, path: str, params=None):
 
 
 def _binance(path, params=None):
-    """Futures önce; 418/403/429 (WAF) olursa spot eşdeğerine düş."""
+    """Spot önce. fapi yalnız eşdeğeri yoksa ve ban yoksa — sayfa yükü ban uzatmasın."""
+    spot_path = _FAPI_TO_SPOT.get(path)
+    if spot_path:
+        return _binance_get(_BINANCE_SPOT, spot_path, params)
+    try:
+        from binance_fapi_guard import fapi_blocked
+        if fapi_blocked():
+            raise RuntimeError("fapi_blocked")
+    except RuntimeError:
+        raise
+    except Exception:
+        pass
     try:
         return _binance_get(_BINANCE, path, params)
     except urllib.error.HTTPError as e:
-        spot_path = _FAPI_TO_SPOT.get(path)
-        if e.code in (403, 418, 429) and spot_path:
-            return _binance_get(_BINANCE_SPOT, spot_path, params)
+        if e.code in (403, 418, 429):
+            try:
+                from binance_fapi_guard import note_418
+                note_418(str(e) or str(e.code))
+            except Exception:
+                pass
         raise
 
 def get_price(symbol: str) -> float:
@@ -644,24 +708,21 @@ def get_price(symbol: str) -> float:
             return float(px)
     except Exception:
         pass
-    return float(_binance("/fapi/v1/ticker/price", {"symbol": symbol})["price"])
+    try:
+        return float(_binance_get(_BINANCE_SPOT, "/api/v3/ticker/price", {"symbol": symbol})["price"])
+    except Exception:
+        return 0.0
 
 def get_klines(symbol: str, interval="15m", limit=80, start_time_ms: int | None = None):
-    if start_time_ms is None:
-        try:
-            from binance_fapi_guard import public_klines
-            raw = public_klines(symbol, interval, int(limit))
-            if raw:
-                return [{"t": int(k[0]), "o": float(k[1]), "h": float(k[2]),
-                         "l": float(k[3]), "c": float(k[4]), "v": float(k[5])} for k in raw]
-        except Exception:
-            pass
-    params = {"symbol": symbol, "interval": interval, "limit": limit}
-    if start_time_ms is not None:
-        params["startTime"] = int(start_time_ms)
-    raw = _binance("/fapi/v1/klines", params)
-    return [{"t": int(k[0]), "o": float(k[1]), "h": float(k[2]),
-             "l": float(k[3]), "c": float(k[4]), "v": float(k[5])} for k in raw]
+    try:
+        from binance_fapi_guard import public_klines
+        raw = public_klines(symbol, interval, int(limit), start_time_ms=start_time_ms)
+        if raw:
+            return [{"t": int(k[0]), "o": float(k[1]), "h": float(k[2]),
+                     "l": float(k[3]), "c": float(k[4]), "v": float(k[5])} for k in raw]
+    except Exception:
+        pass
+    return []
 
 
 _trade_chart_cache: dict[tuple, tuple[float, dict]] = {}
@@ -877,7 +938,8 @@ def _save_pm_home_display(data: dict) -> dict:
 
 
 def get_pm_home_display_key() -> str:
-    key = str(_load_pm_home_display().get("book_key") or _PM_HOME_DISPLAY_DEFAULT)
+    raw = str(_load_pm_home_display().get("book_key") or _PM_HOME_DISPLAY_DEFAULT)
+    key = _normalize_algo_book_id(raw)
     if key not in _ALGO_ISLEMLER_KEYS:
         return _PM_HOME_DISPLAY_DEFAULT
     return key
@@ -1908,8 +1970,30 @@ def _filter_systems_min_trades(
     return out
 
 
+_HARITA_TABS_CACHE: dict = {"ts": 0.0, "rows": None}
+_HARITA_TABS_TTL = 45.0
+
+
 def _harita_tabs_filtered() -> list[tuple[str, str]]:
-    return _filter_systems_min_trades(_HARITA_TAB_ANALYSES, heatmap=True)
+    now = time.time()
+    rows = _HARITA_TABS_CACHE.get("rows")
+    if rows is not None and now - float(_HARITA_TABS_CACHE.get("ts") or 0) < _HARITA_TABS_TTL:
+        return list(rows)
+    rows = _filter_systems_min_trades(_HARITA_TAB_ANALYSES, heatmap=True)
+    _HARITA_TABS_CACHE["ts"] = now
+    _HARITA_TABS_CACHE["rows"] = rows
+    return list(rows)
+
+
+def _harita_tabs_for_page() -> list[tuple[str, str]]:
+    """Sayfa HTML'i history taramasın — cache varsa onu, yoksa tüm sekmeler."""
+    rows = _HARITA_TABS_CACHE.get("rows")
+    if rows:
+        return list(rows)
+    return [
+        (k, lab) for k, lab in _HARITA_TAB_ANALYSES
+        if k not in _REMOVED_ANALYSES and k not in _LIVE_PM_ANALYSES
+    ]
 
 
 def _harita_tabs_html(tabs: list[tuple[str, str]] | None = None) -> str:
@@ -2749,8 +2833,18 @@ def _algo_islemler_candidates() -> list[str]:
     return [k for k in _ALGO_ISLEMLER_KEYS if k not in _REMOVED_ANALYSES]
 
 
+_BEST_HOURLY_CACHE: dict = {}
+_BEST_SLOTS_CACHE: dict = {}
+_BEST_SYM_CACHE: dict = {}
+_POLY_STATS_TTL = 30.0
+
+
 def _best_hourly_analiz(min_trades: int = 30) -> dict | None:
     """1s analizler arasından en yüksek genel WR (yeterli işlem şartı)."""
+    now = time.time()
+    hit = _BEST_HOURLY_CACHE.get(min_trades)
+    if hit and now - hit[0] < _POLY_STATS_TTL:
+        return hit[1]
     best: dict | None = None
     for key in _hourly_analiz_candidates():
         hist = _load_heatmap_history(key)
@@ -2775,6 +2869,7 @@ def _best_hourly_analiz(min_trades: int = 30) -> dict | None:
             or (wr == best["total_wr"] and total > best["total"])
         ):
             best = row
+    _BEST_HOURLY_CACHE[min_trades] = (now, best)
     return best
 
 
@@ -2817,6 +2912,11 @@ def _hour_slots_for_history(hist: list, *, min_trades: int = 3) -> list[dict]:
 
 def _best_hour_slots_across_analyses(*, top_n: int = 3, min_trades: int = 3) -> tuple[list[dict], list[dict]]:
     """Tüm 1s analizlerde saat slotlarını tara; her saat için en iyi/kötü analizi seç, top/bottom N döndür."""
+    now = time.time()
+    ck = (top_n, min_trades)
+    hit = _BEST_SLOTS_CACHE.get(ck)
+    if hit and now - hit[0] < _POLY_STATS_TTL:
+        return hit[1]
     # hour -> best / worst row (analiz dahil)
     best_by_hour: dict[int, dict] = {}
     worst_by_hour: dict[int, dict] = {}
@@ -2861,13 +2961,20 @@ def _best_hour_slots_across_analyses(*, top_n: int = 3, min_trades: int = 3) -> 
         worst_by_hour.values(),
         key=lambda x: (x["wr"], -x["bad_days"], -x["t"]),
     )[:top_n]
-    return top_slots, bottom_slots
+    out = (top_slots, bottom_slots)
+    _BEST_SLOTS_CACHE[ck] = (now, out)
+    return out
 
 
 def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) -> list[dict]:
     """Her sembol için 1s analizler arasından en yüksek WR (kısa etiket: A1, A10…). 15m hariç."""
     from collections import defaultdict
     target = syms or list(_ACTIVE_SYMS)  # BTC, ETH, SOL
+    now = time.time()
+    ck = (tuple(target), min_trades)
+    hit = _BEST_SYM_CACHE.get(ck)
+    if hit and now - hit[0] < _POLY_STATS_TTL:
+        return list(hit[1])
     # Yalnızca 1 saatlik ana sanal analizler — 15m / A2#xx / live hariç
     candidates = _algo_islemler_candidates() + [
         k for k in _hourly_analiz_candidates() if k not in _ALGO_ISLEMLER_KEYS
@@ -2902,7 +3009,9 @@ def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) 
                     "analiz_short": short,
                     "analiz_label": _ANALYSIS_LABELS.get(key, key),
                 }
-    return [best[s] for s in target if s in best]
+    out = [best[s] for s in target if s in best]
+    _BEST_SYM_CACHE[ck] = (now, out)
+    return list(out)
 
 
 def _analiz_sym_wr(analiz_key: str, syms: list[str] | None = None, min_trades: int = 1) -> list[dict]:
@@ -4390,7 +4499,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260817-forex-mt"
+_DASH_UI_VER = "20260822-forex-coptc"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -15030,10 +15139,22 @@ function renderBooks(books, homeKey){
   </div>`;
   }).join('') + '</div>';
 }
+let _booksLoadGen = 0;
+let _lastBooks = [];
+function paintHomeDisplay(bookId){
+  const key = String(bookId || '').toLowerCase();
+  _lastBooks = (_lastBooks || []).map(b => ({
+    ...b,
+    is_home_display: String(b.id || '').toLowerCase() === key,
+  }));
+  if (_lastBooks.length && !DETAIL_ID) renderBooks(_lastBooks, key);
+}
 async function setHomeDisplay(bookId, btn){
   if(!bookId) return;
   const prev = btn ? btn.textContent : '';
   if(btn){ btn.disabled = true; btn.textContent = '…'; }
+  paintHomeDisplay(bookId);
+  _booksLoadGen++;
   try{
     const r = await fetch('/poly/api/pm-home-display', {
       method:'POST',
@@ -15046,6 +15167,7 @@ async function setHomeDisplay(bookId, btn){
       if(btn){ btn.disabled = false; btn.textContent = prev; }
       return;
     }
+    paintHomeDisplay(d.book_key || bookId);
     await load();
   }catch(e){
     alert(String(e));
@@ -15109,6 +15231,7 @@ function renderDetail(book, skipEdit){
   if(!skipEdit) renderAmountPanel(book);
 }
 async function load(){
+  const gen = ++_booksLoadGen;
   try{
     if(DETAIL_ID){
       const r = await fetch('/poly/api/a2-algoritmalar/' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
@@ -15130,7 +15253,9 @@ async function load(){
       document.getElementById('algo-books').innerHTML = '<div class="empty">hata: '+(d&&d.error?d.error:'yüklenemedi')+'</div>';
       return;
     }
+    if (gen !== _booksLoadGen) return;
     const books = d.books || [];
+    _lastBooks = books;
     const pnl = d.total_pnl||0;
     const histSum = d.total_trades != null ? d.total_trades
       : books.reduce((a,b)=>a+Number(b.history_n||0),0);
@@ -15584,7 +15709,7 @@ h1{font-size:22px;font-weight:800;margin-bottom:6px}
 <div class="main">
   <div class="page-head">
     <h1>Lider Analizi</h1>
-    <div class="subtitle" id="subtitle">Kripto Test defterleri · 30 coin · PnL sıralı</div>
+    <div class="subtitle" id="subtitle">Kripto Test defterleri · 28 coin · BTC/ETH yok · PnL sıralı</div>
   </div>
   <div class="toolbar">
     <input class="search" id="search" type="search" placeholder="Coin ara (BTC, ETH…)" autocomplete="off">
@@ -16207,13 +16332,13 @@ def page_algoritma_islemler_detail(book_id):
 @app.route("/poly/")
 def dashboard():
     if _auth_required(): return redirect("/poly/login")
-    # HTML içinde Jinja {{ harita_heatmap_syms }} var — render edilmezse tüm Overview JS kırılır
-    tabs = _harita_tabs_filtered()
+    # History taramadan HTML ver — Jinja derlemesi de her istekte 80KB JS'i tarardı
+    tabs = _harita_tabs_for_page()
     labels = {k: v for k, v in tabs}
     hm_syms = {k: v for k, v in _HEATMAP_SYMS.items() if k in labels}
-    html = render_template_string(
-        HTML,
-        harita_heatmap_syms=json.dumps(hm_syms, ensure_ascii=False),
+    html = HTML.replace(
+        "{{ harita_heatmap_syms|safe }}",
+        json.dumps(hm_syms, ensure_ascii=False),
     )
     resp = make_response(html)
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
@@ -16709,7 +16834,7 @@ body.kf-overview .kf-right-panel{display:block}
   <div class="head">
     <div>
       <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">…</span></div>
-        <div class="page-sub" id="page-sub">B1#03 MUM Live · $10×20x · Test b1_mum ayna</div>
+        <div class="page-sub" id="page-sub">CEBU Live · $7×20x · Test cebu ayna</div>
     </div>
     <button type="button" class="wbtn" title="Yenile" onclick="refreshOverviewFast(true)" style="width:40px;height:40px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);cursor:pointer;font-size:18px">↻</button>
   </div>
@@ -16721,18 +16846,18 @@ body.kf-overview .kf-right-panel{display:block}
           <div class="kf-ov-tag">BINANCE BAKİYE</div>
           <div class="kf-ov-lbl">USDT cüzdan</div>
           <div class="kf-ov-bal" id="kf-bal">—</div>
-          <div class="kf-ov-sub" id="kf-books-sub">B1#03 MUM Live · yükleniyor…</div>
+          <div class="kf-ov-sub" id="kf-books-sub">CEBU Live · yükleniyor…</div>
         </div>
         <div class="kf-ov-wallet cash" id="kf-pnl-card">
           <div class="kf-ov-tag">NET P&L</div>
-          <div class="kf-ov-lbl">B1#03 kapanmış + açık</div>
+          <div class="kf-ov-lbl">CEBU kapanmış + açık</div>
           <div class="kf-ov-bal" id="kf-pnl">—</div>
           <div class="kf-ov-sub" id="kf-open-sub">açık pozisyon —</div>
         </div>
       </div>
-      <div class="section-title">Açık işlemler · B1#03 MUM Live</div>
+      <div class="section-title">Açık işlemler · CEBU Live</div>
       <div class="positions" id="kf-live-opens" style="margin-bottom:18px"><div class="empty">yükleniyor…</div></div>
-      <div class="section-title">Kapanmış işlemler · B1#03 MUM Live</div>
+      <div class="section-title">Kapanmış işlemler · CEBU Live</div>
       <div class="kf-closed-list" id="kf-live-closed"><div class="empty">yükleniyor…</div></div>
       <div class="section-title">Coin bazlı en yetenekli algoritma</div>
       <div class="kf-leaders-box" id="positions"><div class="empty">yükleniyor…</div></div>
@@ -16782,7 +16907,7 @@ body.kf-overview .kf-right-panel{display:block}
     <div class="head">
       <div>
         <div class="page-title">Geçmiş işlemler</div>
-        <div class="page-sub">B1#03 MUM Live kapanmış pozisyonlar</div>
+        <div class="page-sub">CEBU Live kapanmış pozisyonlar</div>
       </div>
     </div>
     <div class="panel">
@@ -16829,7 +16954,7 @@ body.kf-overview .kf-right-panel{display:block}
     <div class="head">
       <div>
         <div class="page-title">Algoritma İşlemler</div>
-        <div class="page-sub">Poly + ALGO1 + A10 Dual + Supertrend + JARVIS_V1 + CEBU → sanal Binance · $1000 · $100×6x · max 4 (CEBU 18) · zaman kapanışı yok · 24s tavan · 3×ATR · ATR kilit · 73 defter · 30 coin · 7/24</div>
+        <div class="page-sub">Poly + ALGO1 + A10 Dual + Supertrend + JARVIS_V1 + CEBU → sanal Binance · $1000 · $100×6x · max 4 (CEBU 18) · zaman kapanışı yok · 24s tavan · 3×ATR · ATR kilit · 73 defter · 28 coin · BTC/ETH yok · 7/24</div>
       </div>
       <div class="chip" id="test-sum">—</div>
     </div>
@@ -16839,7 +16964,7 @@ body.kf-overview .kf-right-panel{display:block}
         <div id="test-books"><div class="empty">yükleniyor…</div></div>
       </div>
       <div class="section wait-rail">
-        <div class="section-title">İşlem Bekleyen · 30 coin</div>
+        <div class="section-title">İşlem Bekleyen · 28 coin · BTC/ETH yok</div>
         <div class="wait-list" id="test-waiting"><div class="empty">yükleniyor…</div></div>
       </div>
     </div>
@@ -17462,7 +17587,7 @@ function renderA139Opens(lv){
   }
   const cards = lv.cards || [];
   if(!cards.length){
-    box.innerHTML = '<div class="empty">Açık işlem yok · sanal B1#03 açınca ayna $10×20x</div>';
+    box.innerHTML = '<div class="empty">Açık işlem yok · sanal CEBU açınca ayna $7×20x</div>';
     return;
   }
   box.innerHTML = cards.map(p => {
@@ -17472,7 +17597,7 @@ function renderA139Opens(lv){
     const name = p.name || (p.symbol||'').replace('USDT','');
     const lock = p.lock_armed
       ? ('ATR kilit · stop $' + Number(p.stop_upnl||0).toFixed(2))
-      : (p.mirror_note || 'sanal B1#03 ayna');
+      : (p.mirror_note || 'sanal CEBU ayna');
     const qtyAttr = (p.qty != null && isFinite(Number(p.qty))) ? String(p.qty) : '';
     const symAttr = String(p.symbol || '').replace(/"/g, '');
     const opened = fmtTrWhen(p.entry_time_tr);
@@ -17486,7 +17611,7 @@ function renderA139Opens(lv){
       + '<div class="pos-pct '+pnlCls+'">'+fmtMoney(u)+roe+'</div></div>'
       + '<div class="pos-entry">Giriş'+(opened?(' · '+opened):'')+' · $'+fmtPx(p.entry_price)
       + ' → mark $'+fmtPx(p.current)+' · '+(p.interval||'1h')+' · $'
-      + Number(p.margin_usd||10).toFixed(0)+'×'+(p.leverage||20)+'x</div>'
+      + Number(p.margin_usd||7).toFixed(0)+'×'+(p.leverage||20)+'x</div>'
       + '<div class="pos-slot">'+lock+'</div>'
       + '<div class="close-btn-wrap"><button type="button" class="close-btn" data-sym="'+symAttr+'" data-qty="'+qtyAttr+'" onclick="closeA139Pos(this)">Pozisyonu Kapat</button></div>'
       + '</div>';
@@ -17548,7 +17673,7 @@ function renderOverview(d){
   }
   const booksSub = document.getElementById('kf-books-sub');
   if(booksSub){
-    const avail = usdt.available != null ? ('kullanılabilir $' + Number(usdt.available).toFixed(2)) : 'B1#03 MUM Live $10×20x';
+    const avail = usdt.available != null ? ('kullanılabilir $' + Number(usdt.available).toFixed(2)) : 'CEBU Live $7×20x';
     booksSub.textContent = usdt.cached
       ? (avail + ' · son okunan')
       : (lv.error ? (avail + ' · Binance geçici kapalı') : avail);
@@ -17560,7 +17685,7 @@ function renderOverview(d){
     openSub.textContent = openN + ' açık · ' + closedTxt;
   }
   const waitN = document.getElementById('kf-wait-n');
-  if(waitN) waitN.textContent = String(d.symbols_n || 30);
+  if(waitN) waitN.textContent = String(d.symbols_n || 28);
   const waitHint = document.getElementById('kf-wait-hint');
   if(waitHint){
     const sigN = (d.waiting||[]).filter(w => w.signal === 'UP' || w.signal === 'DOWN').length;
@@ -17630,8 +17755,8 @@ async function toggleBinanceLive(){
   const bar = document.getElementById('live-bar');
   const pausing = !(bar && bar.classList.contains('paused'));
   const msg = pausing
-    ? 'B1#03 MUM Live kapatılsın mı? Yeni ayna açılmaz; açık canlı pozisyonlar sanal kapanınca kapanır. Test sanal defteri etkilenmez.'
-    : "B1#03 MUM Live açılsın mı? /kripto/test/b1_mum ne açarsa Binance Isolated $10×20x açılır.";
+    ? 'CEBU Live kapatılsın mı? Yeni ayna açılmaz; açık canlı pozisyonlar sanal kapanınca kapanır. Test sanal defteri etkilenmez.'
+    : "CEBU Live açılsın mı? /kripto/test/cebu ne açarsa Binance Isolated $7×20x açılır.";
   if(!confirm(msg)) return;
   if(btn){ btn.disabled = true; btn.textContent = '…'; }
   try{
@@ -17640,7 +17765,7 @@ async function toggleBinanceLive(){
       body: JSON.stringify({toggle: true}),
     });
     const d = await r.json();
-    if(!d.ok){ alert(d.error || 'kontrol hatası'); if(btn) btn.disabled=false; return; }
+    if(!d.ok){ (window.showAppErr||alert)(d.error || 'kontrol hatası'); if(btn) btn.disabled=false; return; }
     await refreshLiveBar();
   }catch(e){
     alert(String(e));
@@ -17652,7 +17777,7 @@ async function refresh(){
   await refreshLiveBar();
 }
 async function closeCr6(symbol, qty, btn){
-  if(!confirm(symbol + ' B1#03 MUM Live pozisyonunu kapat?')) return;
+  if(!confirm(symbol + ' CEBU Live pozisyonunu kapat?')) return;
   btn.classList.add('loading'); btn.textContent = 'Kapatılıyor…';
   try{
     const body = {symbol, strategy:'B1_MUM'};
@@ -17662,7 +17787,7 @@ async function closeCr6(symbol, qty, btn){
       body: JSON.stringify(body)
     });
     const d = await r.json();
-    if(!d.ok){ alert(d.error || 'kapatma hatası'); btn.textContent='Pozisyonu Kapat'; btn.classList.remove('loading'); return; }
+    if(!d.ok){ (window.showAppErr||alert)(d.error || 'kapatma hatası'); btn.textContent='Pozisyonu Kapat'; btn.classList.remove('loading'); return; }
     await refreshOverviewFast(true);
     await refreshLiveBar();
   }catch(e){
@@ -18839,7 +18964,10 @@ def api_forex_bin_b103_live():
         want = not bool(body.get("paused", body.get("live_paused")))
     else:
         return _json_nocache({"ok": False, "error": "toggle veya live gerekli"}, 400)
-    out = switch_live(want)
+    try:
+        out = switch_live(want)
+    except Exception as e:
+        return _json_nocache({"ok": False, "error": str(e)[:200]}, 400)
     return _json_nocache(out)
 
 
@@ -18970,6 +19098,18 @@ def api_crypto_futures_open():
         return jsonify({"ok": False, "error": str(e)}), 400
 
 
+@app.route("/poly/api/fapi-status")
+def api_fapi_status():
+    """Ban kalan süre — REST yok, yalnız /tmp damgası."""
+    try:
+        from binance_fapi_guard import status as fapi_status
+        d = fapi_status()
+        d["ok"] = True
+        return _json_nocache(d)
+    except Exception:
+        return _json_nocache({"ok": True, "blocked": False, "left_sec": 0, "msg": ""})
+
+
 @app.route("/poly/api/kripto/overview")
 def api_kripto_overview():
     """Kripto overview — snapshot tabanlı hızlı yükleme (Binance yok)."""
@@ -19038,7 +19178,7 @@ def api_kripto_overview():
         "total_balance": snap.get("total_balance"),
         "total_pnl": snap.get("total_pnl"),
         "total_open": snap.get("total_open") or 0,
-        "symbols_n": snap.get("symbols_n") or 30,
+        "symbols_n": snap.get("symbols_n") or 28,
         "count": snap.get("count"),
         "recent_test_trades": recent_test,
         "recent_live_trades": recent_live,
@@ -19141,7 +19281,7 @@ def api_crypto_futures_live_control():
 
 @app.route("/poly/api/crypto-futures/b1-mum")
 def api_crypto_futures_b1_mum():
-    """B1#03 MUM Live açık pozisyonlar + Binance bakiye."""
+    """CEBU Live açık pozisyonlar + Binance bakiye."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     sys.path.insert(0, _DIR_KRIPTO)
@@ -19154,7 +19294,7 @@ def api_crypto_futures_b1_mum():
 
 @app.route("/poly/api/crypto-futures/b1-mum-control", methods=["GET", "POST"])
 def api_crypto_futures_b1_mum_control():
-    """B1#03 MUM Live aç/kapa — Test sanal + A139/CR6 etkilenmez."""
+    """CEBU Live aç/kapa — Test sanal + A139/CR6 etkilenmez."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     sys.path.insert(0, _DIR_KRIPTO)
@@ -19264,7 +19404,7 @@ def api_crypto_futures_a139_control():
 
 @app.route("/poly/api/crypto-futures/b1-mum-history")
 def api_crypto_futures_b1_mum_history():
-    """B1#03 MUM Live kapanmış işlem geçmişi."""
+    """CEBU Live kapanmış işlem geçmişi."""
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     sys.path.insert(0, _DIR_KRIPTO)
@@ -19278,7 +19418,7 @@ def api_crypto_futures_b1_mum_history():
                 "symbol": sym,
                 "name": sym.replace("USDT", "") if sym.endswith("USDT") else sym,
                 "side": t.get("side"),
-                "algo": t.get("algo") or "B1#03",
+                "algo": t.get("algo") or "CEBU",
                 "leverage": t.get("leverage"),
                 "margin_usd": t.get("margin_usd"),
                 "entry_price": t.get("entry_price"),
@@ -19490,42 +19630,47 @@ def _kripto_test_coin_leaders() -> list:
     return mod.compute_coin_leaders()
 
 
+def _slim_agustos_list(data: dict) -> dict:
+    """Liste yanıtından recent_history çıkar — 73 defter × 30 işlem sayfayı şişiriyordu."""
+    books = data.get("books")
+    if not books:
+        return data
+    out = dict(data)
+    slim = []
+    for b in books:
+        if isinstance(b, dict) and "recent_history" in b:
+            nb = dict(b)
+            nb.pop("recent_history", None)
+            slim.append(nb)
+        else:
+            slim.append(b)
+    out["books"] = slim
+    return out
+
+
 def _agustos_status_or_snap(rel_dir: str, snap_key: str):
-    """Önce disk snapshot (ms), yoksa canlı build; prewarm arka planda taze tutar."""
+    """Disk snapshot'ı anında dön — istek yolunda 73 defter kurulmaz."""
     if _DIR_KRIPTO not in sys.path:
         sys.path.insert(0, _DIR_KRIPTO)
     from virtual_book import read_snapshot  # noqa: WPS433
     expected = _expected_agustos_book_count(rel_dir)
-    # Test: 5 dk taze snapshot yeter — yoksa 30 dk bayat bile anında dönsün (70s bekleme yok)
-    snap_ttl = 300.0 if snap_key == "test" else None
-    snap = read_snapshot(snap_key, max_age=snap_ttl)
-    snap_books = _snapshot_book_count(snap)
-    if snap is not None and expected and snap_books < expected:
-        print(
-            f"[agustos] {snap_key} snapshot eksik "
-            f"({snap_books}/{expected}) — bayat döndürülüyor, arka planda yenilenecek",
-            flush=True,
-        )
-        out = dict(snap)
-        out["_stale_snapshot"] = True
-        out["_snapshot_partial"] = True
-        return out
+    snap = read_snapshot(snap_key, max_age=86400.0)
+    if snap is None:
+        snap = read_snapshot(snap_key, max_age=1e12)
     if snap is not None:
-        return snap
-    if snap_key == "test":
-        stale = read_snapshot(snap_key, max_age=1800.0)
-        if stale is not None:
-            if expected and _snapshot_book_count(stale) < expected:
-                _AGUSTOS_RUNNER_CACHE.pop(rel_dir, None)
-            else:
-                out = dict(stale)
-                out["_stale_snapshot"] = True
-                return out
-    mod = _load_agustos_runner(rel_dir)
-    try:
-        return mod.refresh_status_block(with_marks=True)
-    except Exception:
-        return mod.status_block(with_marks=True)
+        if expected and _snapshot_book_count(snap) < expected:
+            snap = dict(snap)
+            snap["_stale_snapshot"] = True
+            snap["_snapshot_partial"] = True
+        return _slim_agustos_list(snap)
+    return {
+        "ok": True,
+        "kind": snap_key,
+        "books": [],
+        "count": 0,
+        "waiting": [],
+        "_warming": True,
+    }
 
 
 @app.route("/poly/api/kripto/algoritmalar")
@@ -19646,6 +19791,11 @@ def _agustos_prewarm_loop():
     except Exception as e:
         print(f"[agustos prewarm] ws-marks: {e}", flush=True)
     _t.sleep(3)
+    try:
+        _harita_tabs_filtered()
+        _best_analiz_by_symbol(min_trades=5)
+    except Exception as e:
+        print(f"[agustos prewarm] poly-hist: {e}", flush=True)
     while True:
         # Yalnız Test — Algoritmalar/Analizler sayfaları kaldırıldı
         for rel in ("Test",):

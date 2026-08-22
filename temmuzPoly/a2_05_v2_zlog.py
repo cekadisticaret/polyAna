@@ -58,11 +58,12 @@ def _hour_ms(ts_tr: str) -> int:
 
 
 def _fetch_close(symbol: str, open_ms: int) -> float | None:
-    url = (f"https://fapi.binance.com/fapi/v1/klines?symbol={symbol}"
-           f"&interval=1h&startTime={open_ms}&limit=1")
     try:
-        with urllib.request.urlopen(url, timeout=20) as r:
-            data = json.load(r)
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import public_klines
+        data = public_klines(symbol, "1h", 1, start_time_ms=open_ms)
     except Exception as e:
         print(f"[zlog] {symbol} mum hatası: {e}", file=sys.stderr)
         return None

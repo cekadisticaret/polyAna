@@ -1,37 +1,101 @@
 """Binance Futures (fapi) IP ban — ortak devre kesici + public kline + WS mark.
 
-418 / -1003 gelince `until` yazılır; süre dolana kadar fapi'ye yeni istek yok.
-Public veri spot/data-api'ye düşer; canlı emir ban bitene kadar bekler.
-Aynı (sembol, tf, limit) 25 sn süreç içi önbellekte — B1/A2 aynı mumu tekrar çekmesin.
-
-Mark / last: `binance_ws_marks.py` fstream yazar (`/tmp/binance_mark_cache.json`).
-`get_mark` / `get_last` REST'e gitmez.
+Okuma (klines/ticker/depth/premium) fapi'ye gitmez — urllib/requests kesilir.
+Mum spot/data-api + `/tmp` dosya önbelleği (cron süreçleri paylaşır).
+Emir / listenKey yalnız `allow_fapi()` ile geçer (binance_futures_client).
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import threading
 import time
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
 from pathlib import Path
 
 _FILE = Path("/tmp/binance_fapi_ban.json")
 _RE = re.compile(r"banned until (\d+)", re.I)
 _KLINE_CACHE: dict[str, tuple[float, list]] = {}
 _KLINE_TTL = 25.0
+_KLINE_DIR = Path("/tmp/binance_kline_cache")
+_KLINE_FILE_TTL = 25.0
+_KLINE_HIST_TTL = 300.0
 MARK_CACHE_FILE = Path("/tmp/binance_mark_cache.json")
 MARK_LOCK_FILE = Path("/tmp/binance_ws_marks.lock")
 MARK_MAX_AGE = 20.0
 _mark_mem: tuple[float, dict] = (0.0, {})
-# fapi kline kasıtlı yok — IP ban'in ana kaynağı. Spot / data-api.
 _KLINE_HOSTS = (
     "https://data-api.binance.vision/api/v3/klines",
     "https://api.binance.com/api/v3/klines",
 )
-_FAPI_KLINE = "https://fapi.binance.com/fapi/v1/klines"
-_FUTURES_ONLY = frozenset({"XAUUSDT", "HYPEUSDT"})
+_tls = threading.local()
+_block_installed = False
+_ORIG_URLOPEN = urllib.request.urlopen
+
+
+class FapiReadDenied(RuntimeError):
+    """Ham fapi REST — okuma yasak."""
+
+
+@contextmanager
+def allow_fapi():
+    """Yalnız imzalı emir / listenKey."""
+    old = bool(getattr(_tls, "allow", False))
+    _tls.allow = True
+    try:
+        yield
+    finally:
+        _tls.allow = old
+
+
+def _fapi_url(url) -> bool:
+    if hasattr(url, "get_full_url"):
+        url = url.get_full_url()
+    elif hasattr(url, "full_url"):
+        url = url.full_url
+    return "fapi.binance.com" in str(url)
+
+
+def _urlopen_guarded(url, *args, **kwargs):
+    if _fapi_url(url) and not bool(getattr(_tls, "allow", False)):
+        raise FapiReadDenied("fapi REST kapalı — WS / public_klines")
+    return _ORIG_URLOPEN(url, *args, **kwargs)
+
+
+def install_fapi_read_block() -> None:
+    """urllib + requests: fapi.binance.com yalnız allow_fapi ile."""
+    global _block_installed
+    if _block_installed:
+        return
+    urllib.request.urlopen = _urlopen_guarded  # type: ignore[assignment]
+    try:
+        import requests.sessions
+        orig = requests.sessions.Session.request
+
+        def _req(self, method, url, *a, **kw):
+            if _fapi_url(url) and not bool(getattr(_tls, "allow", False)):
+                raise FapiReadDenied("fapi REST kapalı — WS / public_klines")
+            return orig(self, method, url, *a, **kw)
+
+        requests.sessions.Session.request = _req  # type: ignore[method-assign]
+    except Exception:
+        pass
+    try:
+        import aiohttp.client
+        orig_aio = aiohttp.client.ClientSession._request
+
+        async def _aio(self, method, str_or_url, *a, **kw):
+            if _fapi_url(str_or_url) and not bool(getattr(_tls, "allow", False)):
+                raise FapiReadDenied("fapi REST kapalı — WS / public_klines")
+            return await orig_aio(self, method, str_or_url, *a, **kw)
+
+        aiohttp.client.ClientSession._request = _aio  # type: ignore[method-assign]
+    except Exception:
+        pass
+    _block_installed = True
 
 
 def ban_until() -> float:
@@ -58,6 +122,16 @@ def ban_msg() -> str:
     return f"Binance fapi IP ban · {m}dk {s}sn kaldı"
 
 
+def status() -> dict:
+    left = max(0, int(ban_until() - time.time()))
+    blocked = left > 0
+    return {
+        "blocked": blocked,
+        "left_sec": left,
+        "msg": ban_msg() if blocked else "",
+    }
+
+
 def note_418(text: str = "", extra_sec: float = 90.0) -> float:
     until = 0.0
     m = _RE.search(str(text or ""))
@@ -77,53 +151,58 @@ def note_418(text: str = "", extra_sec: float = 90.0) -> float:
     return until
 
 
-def public_klines(symbol: str, interval: str = "1h", limit: int = 80) -> list:
-    """Ham Binance kline satırları. Ban'de fapi atlanır; 25 sn süreç önbelleği."""
+def _kline_file(ck: str) -> Path:
+    safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in ck)
+    return _KLINE_DIR / f"{safe}.json"
+
+
+def public_klines(
+    symbol: str,
+    interval: str = "1h",
+    limit: int = 80,
+    start_time_ms: int | None = None,
+) -> list:
+    """Ham kline — yalnız spot/data-api. fapi yok. Süreç + dosya önbelleği."""
     sym = (symbol or "").upper()
-    ck = f"{sym}|{interval}|{int(limit)}"
+    start = int(start_time_ms) if start_time_ms else 0
+    ck = f"{sym}|{interval}|{int(limit)}|{start}"
     now = time.time()
+    ttl = _KLINE_HIST_TTL if start else _KLINE_TTL
     hit = _KLINE_CACHE.get(ck)
-    if hit and now - hit[0] < _KLINE_TTL:
+    if hit and now - hit[0] < ttl:
         return hit[1]
-    blocked = fapi_blocked()
+    fp = _kline_file(ck)
+    try:
+        if fp.is_file() and now - fp.stat().st_mtime < ttl:
+            raw = json.loads(fp.read_text())
+            if isinstance(raw, list) and raw:
+                _KLINE_CACHE[ck] = (now, raw)
+                return raw
+    except Exception:
+        pass
+    qs = f"symbol={sym}&interval={interval}&limit={int(limit)}"
+    if start:
+        qs += f"&startTime={start}"
     last_err: Exception | None = None
     for base in _KLINE_HOSTS:
-        if blocked and "fapi.binance.com" in base:
-            continue
-        url = f"{base}?symbol={sym}&interval={interval}&limit={int(limit)}"
+        url = f"{base}?{qs}"
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "aiProject/1.0"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with _ORIG_URLOPEN(req, timeout=10) as resp:
                 raw = json.load(resp)
             if isinstance(raw, list) and raw:
                 _KLINE_CACHE[ck] = (now, raw)
+                try:
+                    _KLINE_DIR.mkdir(parents=True, exist_ok=True)
+                    tmp = Path(str(fp) + ".tmp")
+                    tmp.write_text(json.dumps(raw, separators=(",", ":")))
+                    os.replace(tmp, fp)
+                except OSError:
+                    pass
                 return raw
         except Exception as e:
             last_err = e
-            if isinstance(e, urllib.error.HTTPError) and e.code == 418:
-                note_418(str(e) or "418")
-                blocked = True
             continue
-    if last_err and not (sym in _FUTURES_ONLY and not fapi_blocked()):
-        raise last_err
-    if sym in _FUTURES_ONLY and not fapi_blocked():
-        url = f"{_FAPI_KLINE}?symbol={sym}&interval={interval}&limit={int(limit)}"
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "aiProject/1.0"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                raw = json.load(resp)
-            if isinstance(raw, list) and raw:
-                _KLINE_CACHE[ck] = (now, raw)
-                return raw
-        except urllib.error.HTTPError as e:
-            if e.code == 418:
-                note_418(str(e) or "418")
-            if last_err:
-                raise last_err
-            raise
-        except Exception:
-            if last_err:
-                raise last_err
     if last_err:
         raise last_err
     return []
@@ -342,6 +421,19 @@ def write_positions_bulk(items: list[dict], *, src: str = "rest") -> None:
     _pos_mem = (POS_CACHE_FILE.stat().st_mtime, payload)
 
 
+def cached_positions(symbol: str | None = None) -> list[dict]:
+    """WS/önbellek pozisyon satırları — fapi GET yok."""
+    want = (symbol or "").upper() or None
+    out: list[dict] = []
+    for r in (_load_pos().get("rows") or {}).values():
+        if not isinstance(r, dict):
+            continue
+        if want and str(r.get("symbol") or "").upper() != want:
+            continue
+        out.append(r)
+    return out
+
+
 def position_state(symbol: str, max_age: float | None = None) -> tuple[str, dict | None] | None:
     """Taze önbellek: ('open', row) | ('flat', None). Yok/bayat: None."""
     d = _load_pos()
@@ -362,3 +454,6 @@ def position_state(symbol: str, max_age: float | None = None) -> tuple[str, dict
     if abs(amt) > 0:
         return "open", row
     return "flat", None
+
+
+install_fapi_read_block()

@@ -201,126 +201,58 @@ async def _fetch_klines(symbol: str, tf: str = "1h", limit: int = 60) -> list[di
 
 
 async def _fetch_cvd(symbol: str) -> tuple[float, float]:
-    async def get_ratio(tf: str, limit: int) -> float:
-        url = "https://fapi.binance.com/fapi/v1/klines"
-        params = {"symbol": symbol, "interval": tf, "limit": limit}
+    def get_ratio(tf: str, limit: int) -> float:
         try:
-            async with aiohttp.ClientSession() as s:
-                async with s.get(url, params=params, timeout=aiohttp.ClientTimeout(total=8)) as r:
-                    data = await r.json()
+            _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            if _root not in sys.path:
+                sys.path.insert(0, _root)
+            from binance_fapi_guard import public_klines
+            data = public_klines(symbol, tf, limit)
             if not isinstance(data, list):
                 return 0.0
             total_vol = sum(float(k[5]) for k in data)
-            taker_buy = sum(float(k[9]) for k in data)
+            taker_buy = sum(float(k[9]) for k in data if len(k) > 9)
             if total_vol == 0:
                 return 0.0
             return (2 * taker_buy - total_vol) / total_vol
         except Exception:
             return 0.0
 
-    cvd_5m, cvd_30m = await asyncio.gather(
-        get_ratio("5m", 6),
-        get_ratio("30m", 2),
-    )
-    return cvd_5m, cvd_30m
+    return get_ratio("5m", 6), get_ratio("30m", 2)
 
 
 async def _fetch_orderbook_imbalance(symbol: str) -> float:
-    url = "https://fapi.binance.com/fapi/v1/depth"
-    params = {"symbol": symbol, "limit": 20}
-    try:
-        async with aiohttp.ClientSession() as s:
-            async with s.get(url, params=params, timeout=aiohttp.ClientTimeout(total=8)) as r:
-                data = await r.json()
-        bid_vol = sum(float(b[1]) for b in data["bids"])
-        ask_vol = sum(float(a[1]) for a in data["asks"])
-        total = bid_vol + ask_vol
-        return bid_vol / total if total > 0 else 0.5
-    except Exception:
-        return 0.5
+    return 0.5
 
 
 async def _fetch_large_trades(symbol: str) -> float:
-    url = "https://fapi.binance.com/fapi/v1/aggTrades"
-    params = {"symbol": symbol, "limit": 1000}
-    try:
-        async with aiohttp.ClientSession() as s:
-            async with s.get(url, params=params, timeout=aiohttp.ClientTimeout(total=8)) as r:
-                trades = await r.json()
-        if not trades:
-            return 0.5
-        sizes = sorted([float(t["q"]) for t in trades], reverse=True)
-        threshold = sizes[max(0, len(sizes) // 10)]
-        large = [t for t in trades if float(t["q"]) >= threshold]
-        if not large:
-            return 0.5
-        buy_vol  = sum(float(t["q"]) for t in large if not t["m"])
-        sell_vol = sum(float(t["q"]) for t in large if t["m"])
-        total = buy_vol + sell_vol
-        return buy_vol / total if total > 0 else 0.5
-    except Exception:
-        return 0.5
+    return 0.5
 
 
 async def _fetch_taker_ratio(symbol: str) -> float:
-    url = "https://fapi.binance.com/futures/data/takerlongshortRatio"
-    params = {"symbol": symbol, "period": "5m", "limit": 1}
-    try:
-        async with aiohttp.ClientSession() as s:
-            async with s.get(url, params=params, timeout=aiohttp.ClientTimeout(total=8)) as r:
-                data = await r.json()
-        if data and isinstance(data, list):
-            buy  = float(data[0]["buyVol"])
-            sell = float(data[0]["sellVol"])
-            total = buy + sell
-            return buy / total if total > 0 else 0.5
-        return 0.5
-    except Exception:
-        return 0.5
+    return 0.5
 
 
 async def _fetch_funding_rate(symbol: str) -> float:
-    url = "https://fapi.binance.com/fapi/v1/premiumIndex"
-    params = {"symbol": symbol}
     try:
-        async with aiohttp.ClientSession() as s:
-            async with s.get(url, params=params, timeout=aiohttp.ClientTimeout(total=8)) as r:
-                data = await r.json()
-        return float(data.get("lastFundingRate", 0))
+        _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from binance_fapi_guard import ws_premium
+        hit = ws_premium(symbol)
+        if hit:
+            return float(hit.get("last_funding_rate") or 0)
     except Exception:
-        return 0.0
+        pass
+    return 0.0
 
 
 async def _fetch_long_short_ratio(symbol: str) -> float:
-    url = "https://fapi.binance.com/futures/data/globalLongShortAccountRatio"
-    params = {"symbol": symbol, "period": "5m", "limit": 1}
-    try:
-        async with aiohttp.ClientSession() as s:
-            async with s.get(url, params=params, timeout=aiohttp.ClientTimeout(total=8)) as r:
-                data = await r.json()
-        if data and isinstance(data, list):
-            return float(data[0]["longAccount"])
-        return 0.5
-    except Exception:
-        return 0.5
+    return 0.5
 
 
 async def _fetch_liquidations(symbol: str) -> tuple[float, float]:
-    url = "https://fapi.binance.com/fapi/v1/allForceOrders"
-    params = {"symbol": symbol, "limit": 100}
-    try:
-        async with aiohttp.ClientSession() as s:
-            async with s.get(url, params=params, timeout=aiohttp.ClientTimeout(total=8)) as r:
-                data = await r.json()
-        if not isinstance(data, list):
-            return 0.0, 0.0
-        long_liq  = sum(float(t.get("q", 0)) * float(t.get("ap", t.get("p", 0)))
-                        for t in data if t.get("S") == "SELL")
-        short_liq = sum(float(t.get("q", 0)) * float(t.get("ap", t.get("p", 0)))
-                        for t in data if t.get("S") == "BUY")
-        return long_liq, short_liq
-    except Exception:
-        return 0.0, 0.0
+    return 0.0, 0.0
 
 
 # ─────────────────────────────────────────────────────────────

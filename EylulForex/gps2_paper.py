@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+if (Path(__file__).resolve().parent / ".LOCAL_STOPPED").exists():
+    raise SystemExit(0)
 
 from gps2_book import snapshot
 from gps2_data import gps_spot

@@ -123,27 +123,36 @@ def _bollinger(closes: list[float], period: int = 20, mult: float = 2.0):
     return mid + mult * std, mid, mid - mult * std
 
 
-def _binance_get(path: str, params: dict) -> any:
-    qs = urllib.parse.urlencode(params)
-    url = f"https://fapi.binance.com{path}?{qs}"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=10) as r:
-        return json.loads(r.read())
+def _public_klines(symbol: str, interval: str, limit: int) -> list:
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from binance_fapi_guard import public_klines
+    return public_klines(symbol, interval, int(limit))
 
 
 def fetch_klines(symbol: str, limit: int = 60) -> list[dict]:
-    raw = _binance_get("/fapi/v1/klines", {"symbol": symbol, "interval": "1h", "limit": limit})
+    raw = _public_klines(symbol, "1h", limit)
     return [{"open": float(k[1]), "high": float(k[2]), "low": float(k[3]),
              "close": float(k[4]), "volume": float(k[5])} for k in raw]
 
 
 def fetch_orderbook(symbol: str) -> dict:
-    return _binance_get("/fapi/v1/depth", {"symbol": symbol, "limit": 20})
+    return {"bids": [], "asks": []}
 
 
 def fetch_funding_rate(symbol: str) -> float:
-    data = _binance_get("/fapi/v1/premiumIndex", {"symbol": symbol})
-    return float(data.get("lastFundingRate", 0))
+    try:
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from binance_fapi_guard import ws_premium
+        hit = ws_premium(symbol)
+        if hit:
+            return float(hit.get("last_funding_rate") or 0)
+    except Exception:
+        pass
+    return 0.0
 
 
 def algo_trend(klines: list[dict]) -> tuple[int, str]:

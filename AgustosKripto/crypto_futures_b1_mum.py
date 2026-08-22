@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""B1#03 MUM Live — Test `/kripto/test/b1_mum` sanal defterin Binance aynası.
+"""CEBU Live — Test `/kripto/test/cebu` sanal defterin Binance aynası.
 
 Sinyal çözmez. Sanal state'te ne açıksa aynı coin/yön açılır, sanal kapanınca
-canlı da kapanır. Tek fark Isolated $10×20x.
+canlı da kapanır. Isolated $7×20x.
 
 A1#39 Live / CR6 dokunulmaz. Manuel open yok — cron sanal turundan sonra.
 
@@ -49,16 +49,16 @@ from fee_utils import get_taker_rate, net_pnl  # noqa: E402
 from virtual_book import now_tr_iso  # noqa: E402
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
-PAPER_STATE = os.path.join(_TEST, "data", "test_b1_mum_state.json")
-PAPER_HIST = os.path.join(_TEST, "data", "test_b1_mum_history.json")
+PAPER_STATE = os.path.join(_TEST, "data", "test_cebu_state.json")
+PAPER_HIST = os.path.join(_TEST, "data", "test_cebu_history.json")
 STATE_FILE = os.path.join(_DIR, "crypto_futures_b1_mum_state.json")
 HISTORY_FILE = os.path.join(_DIR, "crypto_futures_b1_mum_history.json")
 CONTROL_FILE = os.path.join(_DIR, "crypto_futures_b1_mum_control.json")
 USDT_CACHE_FILE = os.path.join(_DIR, "crypto_futures_b1_mum_usdt.json")
 MARK_CACHE_FILE = os.path.join(_DIR, "crypto_futures_b1_mum_marks.json")
-LABEL = "B1#03 MUM Live"
-ALGO_NAME = "B1#03 MUM · Sonnet mum confluence 1h ±15"
-MARGIN_USD = 10.0
+LABEL = "CEBU Live"
+ALGO_NAME = "CEBU · sabit coin→motor"
+MARGIN_USD = 7.0
 LEVERAGE = 20
 STATE_LOCK_WAIT_SEC = 90.0
 
@@ -72,7 +72,7 @@ def get_live_control() -> dict:
         "live_paused": False,
         "updated_at_tr": None,
         "updated_by": None,
-        "reason": "Test b1_mum ayna · $10×20x",
+        "reason": "Test cebu ayna · $7×20x",
     }
     if os.path.exists(CONTROL_FILE):
         try:
@@ -402,24 +402,14 @@ def _public_marks(symbols: list[str]) -> dict[str, float]:
         if len(hit) == len(want):
             return hit
     out: dict[str, float] = {}
-    blocked = False
     try:
-        from binance_fapi_guard import fapi_blocked  # noqa: WPS433
-        blocked = bool(fapi_blocked())
+        from binance_fapi_guard import get_last, get_mark
+        for s in want:
+            px = get_mark(s) or get_last(s)
+            if px:
+                out[s] = float(px)
     except Exception:
-        blocked = False
-    if not blocked:
-        try:
-            rows = _client().premium_index()
-            if isinstance(rows, dict):
-                rows = [rows]
-            for r in rows or []:
-                sym = str((r or {}).get("symbol") or "").upper()
-                px = float((r or {}).get("markPrice") or 0)
-                if sym in want and px > 0:
-                    out[sym] = px
-        except Exception:
-            pass
+        pass
     if len(out) < len(want):
         for host in (
             "https://data-api.binance.vision/api/v3/ticker/price",
@@ -527,7 +517,7 @@ def _place(paper: dict) -> dict | None:
         "side": side,
         "signal": paper.get("signal") or ("UP" if side == "LONG" else "DOWN"),
         "score": paper.get("score"),
-        "algo": ALGO_NAME,
+        "algo": paper.get("cebu_src_name") or paper.get("algo") or ALGO_NAME,
         "interval": paper.get("interval") or "1h",
         "qty": float(r.get("qty") or 0),
         "leverage": LEVERAGE,
@@ -680,9 +670,10 @@ def _enrich(
             mark_src = "public"
     if mark <= 0 and refresh_price:
         try:
-            mark = _client().mark_price(pos["symbol"])
+            from binance_fapi_guard import get_last, get_mark
+            mark = float(get_mark(pos["symbol"]) or get_last(pos["symbol"]) or 0)
             if mark > 0:
-                mark_src = "binance"
+                mark_src = "ws"
         except Exception:
             mark = 0
     if mark <= 0:
@@ -713,7 +704,7 @@ def _enrich(
         "liq_price": float(live.get("liquidation_price") or 0) or None,
         "mark_src": mark_src,
         "lock_armed": False,
-        "mirror_note": "sanal B1#03 ayna",
+        "mirror_note": "sanal CEBU ayna",
     }
 
 
@@ -789,7 +780,7 @@ def status_block(*, refresh_price: bool = True) -> dict:
         "ok": True,
         "label": LABEL,
         "algo": ALGO_NAME,
-        "book_uid": "b1_mum",
+        "book_uid": "cebu",
         "margin_usd": MARGIN_USD,
         "leverage": LEVERAGE,
         "live_paused": bool(ctrl.get("live_paused")),
@@ -814,7 +805,7 @@ def status_block(*, refresh_price: bool = True) -> dict:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="B1#03 MUM Live — Test b1_mum Binance aynası")
+    p = argparse.ArgumentParser(description="CEBU Live — Test cebu Binance aynası")
     p.add_argument("cmd", choices=["open", "close", "trail", "scan", "status", "reconcile"])
     args = p.parse_args()
     if args.cmd == "open":

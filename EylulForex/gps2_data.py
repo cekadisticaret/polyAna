@@ -151,23 +151,13 @@ def gps_tick_score(window_sec: int = 90, limit: int = 500) -> dict:
     start = int((now - window_sec) * 1000)
     data = []
     try:
-        if _fapi_ok():
-            data = _get_json(
-                f"{_FAPI}/fapi/v1/aggTrades?symbol={SYMBOL}&startTime={start}&limit={limit}"
-            )
+        data = _get_json(
+            f"{_SPOT}/api/v3/aggTrades?symbol={SYMBOL}&startTime={start}&limit={limit}"
+        )
         if not isinstance(data, list):
             data = []
     except Exception:
         data = []
-    if not data:
-        try:
-            data = _get_json(
-                f"{_SPOT}/api/v3/aggTrades?symbol={SYMBOL}&startTime={start}&limit={limit}"
-            )
-            if not isinstance(data, list):
-                data = []
-        except Exception:
-            data = []
     buy = sell = 0.0
     for t in data:
         qty = float(t.get("q") or 0)
