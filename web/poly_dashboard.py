@@ -18,17 +18,26 @@ from flask import Flask, jsonify, make_response, render_template_string, request
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "temmuzPoly"))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "EylulForex"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "AgustosKripto"))
 
 import binance_fapi_guard  # noqa: E402,F401  — fapi okuma kesici, import sırasında takılır
 
 from dash_chrome import patch_dash_chrome, world_for_html  # noqa: E402
+from bahis.pages import BAHIS_HTML  # noqa: E402
+from bahis.site import BAHIS_SITE_HTML  # noqa: E402
+from bahis.site_match import SITE_MATCH_HTML  # noqa: E402
+from bahis.site_results import SITE_RESULTS_HTML  # noqa: E402
+from bahis import match_intel as bahis_intel  # noqa: E402
+from bahis import league as bahis_league  # noqa: E402
+from bahis import players as bahis_players  # noqa: E402
+from bahis import engines as bahis_engines  # noqa: E402
+from bahis import results as bahis_results  # noqa: E402
 
-from forex_pages import FOREX_HTML, FOREX_GRAFIK_HTML, FOREX_CEMBYBIT_HTML, FOREX_ISLEMLER_HTML, FOREX_ALGO2_HTML, FOREX_GPSUSDT_HTML, FOREX_GPS_ISLEMLER_HTML, FOREX_GPS2_HTML, FOREX_GPS2_ISLEMLER_HTML, FOREX_BINB103_HTML, FOREX_BINB103_ISLEMLER_HTML, FOREX_B103_HTML, FOREX_B103_ISLEMLER_HTML, FOREX_FX_ALGOS_HTML, FOREX_CEM02_HTML, FOREX_CEM02_ISLEMLER_HTML, FOREX_OAPI_HTML, FOREX_OAPI_ISLEMLER_HTML, FOREX_YZA_HTML
+# Forex sayfaları bu sunucuda yok — motor CoptC; /forex → /poly
 
 _DIR_POLY = os.path.join(os.path.dirname(__file__), "..", "temmuzPoly")
 _DIR_KRIPTO = os.path.join(os.path.dirname(__file__), "..", "AgustosKripto")
-_DIR_FOREX = os.path.join(os.path.dirname(__file__), "..", "EylulForex")
+_DIR_FOREX = ""  # motor CoptC — yerel EylulForex silindi
 _DIR_SONNET = os.path.join(os.path.dirname(__file__), "..", "Sonnet")
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _ENV_FILE = os.path.join(_ROOT, ".env")
@@ -59,6 +68,7 @@ _HEATMAP_SYMS = {
     "c101_v2": ["BTC", "ETH", "SOL"],
     "x101": ["BTC", "ETH", "SOL"],
     "combo": ["BTC", "ETH", "SOL"],
+    "combo2": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz5":  ["BTC", "SOL"],
@@ -94,6 +104,9 @@ _ALGO_BOOK_ALIASES: dict[str, str] = {
     "e_01": "combo",
     "e1": "combo",
     "e1_01": "combo",
+    "e02": "combo2",
+    "e_02": "combo2",
+    "e2": "combo2",
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Algoritma performansı / harita / analizler — gerçek PM (Live) gösterilmez; sanal karşılığı kullanılır
@@ -134,14 +147,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo",
+    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
     "analiz10",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
@@ -169,6 +182,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "c101_v2":    "C1#01 V2 · GERÇEK ASK",
     "x101":       "X1#01 - 13Analiz",
     "combo":      "COMBO · A1+C101+V2 oy",
+    "combo2":     "COMBO2 · BTC→C1#01 · ETH/SOL→COMBO",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz10":   "10. Analiz",
@@ -192,13 +206,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz10", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz10_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "analiz1": 1000, "analiz2": 1000, "analiz6": 1000, "analiz6_v2": 1000,
     "analiz6_v3": 1000, "analiz10": 300, "analiz15": 1000, "b1_01": 1000, "b1_02": 1000, "b1_mum": 1000,
-    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000,
+    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000, "combo2": 1000,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -253,6 +267,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "c101_v2": "C1#01 V2",
     "x101": "X1#01",
     "combo": "COMBO",
+    "combo2": "COMBO2",
     "analiz10": "A10",
     "analiz3": "A3",
     "analiz8": "A8",
@@ -284,10 +299,34 @@ _ANALYSIS_LABELS[_A2_05_V2] = "A2#05 V2 · FİYAT TABANI"
 _OVERVIEW_INIT_BAL[_A2_05_V2] = 1000
 _OVERVIEW_SHORT_LABELS[_A2_05_V2] = "A2#05 V2"
 
+# /algoritma-islemler + /poly/api/mirror: 5 sarı kart başta, kendi içinde bakiye → P&L → WR
+_ALGO_FEATURED_KEYS: list[str] = ["combo", "c101", "a2_05_v2", "analiz1", "combo2"]
+_ALGO_FEATURED_SORT = "featured_then_balance_pnl_wr"
+
+
+def _algo_featured_group(bid: str) -> int:
+    """0 = 5 sarı (bakiye sırası) · 1 = kalanlar."""
+    return 0 if bid in _ALGO_FEATURED_KEYS else 1
+
+
+def _sort_algo_islemler_books(books: list, id_field: str = "id") -> list:
+    """5 featured başta (kendi içinde bakiye → P&L → WR); kalanlar aynı ölçü."""
+    feat = set(_ALGO_FEATURED_KEYS)
+    books.sort(key=lambda b: (
+        _algo_featured_group(b.get(id_field) or b.get("book") or b.get("id")),
+        -float(b.get("balance") or 0),
+        -float(b.get("total_pnl") or 0),
+        -float(b.get("wr") or -1),
+    ))
+    for b in books:
+        bid = b.get(id_field) or b.get("book") or b.get("id")
+        b["featured"] = bid in feat
+    return books
+
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
 ] + _A2_KEYS + [_A2_05_V2]
 
 _HEATMAP_ORDER.extend(_A2_KEYS + [_A2_05_V2])
@@ -312,7 +351,8 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("c101",       "C1#01 · OPUS-OHLCV",    1000, "PTB+volatilite olasılık · Gamma mid · 5 puan kenar · $24/36/48"),
     ("c101_v2",    "C1#01 V2 · GERÇEK ASK", 1000, "Aynı model, CLOB best_ask kotasyonu · 3 puan kenar eşiği"),
     ("x101",       "X1#01 - 13Analiz",      1000, "13 katman kapısı · C101 model + gerçek ask kenarı · BTC/ETH/SOL"),
-    ("combo",      "COMBO · A1+C101+V2 oy", 1000, "A1 + C1#01 + A2#05 V2 oy · çatışmada yok · 1/2/3 oy = $24/$36/$48"),
+    ("combo",      "COMBO · A1+C101+V2 oy", 1000, "A1 + C1#01 + A2#05 V2 oy · çatışmada yok · sembol WR $16/24/32 · ask ≤ 0,50"),
+    ("combo2",     "COMBO2 · BTC→C1#01 · ETH/SOL→COMBO", 1000, "Kart eşlemesi: BTC C1#01 · ETH/SOL COMBO · sabit $64"),
     ("a2_05_v2",   "A2#05 V2 · Z KAPISI", 1000, "A2#05 sinyali + yalnız 1,0 ≤ |z| < 1,5 · $24/36/48"),
     ("analiz10",   "10. Analiz",            300,  "Çift Konsensüs Sanal $10"),
 ]
@@ -585,6 +625,30 @@ _FOREX_REMOTE_URL = (os.getenv("FOREX_REMOTE_URL") or "").rstrip("/")
 _FOREX_REMOTE_TOKEN = (os.getenv("FOREX_REMOTE_TOKEN") or "").strip()
 
 
+def _maybe_clear_gps_ghost(path: str, body: bytes) -> bytes:
+    """Binance -2022 / lot 0 iken CoptC hayalet GPS kartını API'den düşür."""
+    p = (path or "").lower()
+    if "gps" not in p:
+        return body
+    try:
+        d = json.loads(body)
+    except Exception:
+        return body
+    if not isinstance(d, dict):
+        return body
+    detail = str((d.get("last_reject") or {}).get("detail") or "")
+    if "-2022" not in detail and "ReduceOnly" not in detail:
+        return body
+    d["positions"] = []
+    d["open_count"] = 0
+    live = d.get("live") if isinstance(d.get("live"), dict) else {}
+    live["position"] = None
+    d["live"] = live
+    d["last_reject"] = None
+    d["ghost_cleared"] = True
+    return json.dumps(d, ensure_ascii=False).encode()
+
+
 @app.before_request
 def _proxy_forex_remote():
     """Forex motor CoptC'de — sayfa burada, API orada."""
@@ -607,6 +671,8 @@ def _proxy_forex_remote():
     try:
         with urllib.request.urlopen(req, timeout=20) as resp:
             body = resp.read()
+            if request.method == "GET":
+                body = _maybe_clear_gps_ghost(path, body)
             out = make_response(body, resp.status)
             out.headers["Content-Type"] = resp.headers.get("Content-Type") or "application/json"
             out.headers["Cache-Control"] = "no-store"
@@ -2580,7 +2646,7 @@ def api_kripto_analyst_feed():
     })
 
 
-_FOREX_ANALYST_FEED_FILE = os.path.join(_DIR_FOREX, "data", "forex_analyst_feed.jsonl")
+_FOREX_ANALYST_FEED_FILE = ""  # CoptC proxy; yerel feed yok
 
 
 def _read_forex_analyst_feed() -> list[dict]:
@@ -2647,6 +2713,80 @@ def api_kripto_analyst_leaders():
     payload["ok"] = True
     payload["generated_at_tr"] = datetime.now(_TZ_TR).isoformat()
     return jsonify(payload)
+
+
+def _public_lider_row(r: dict, rank: int) -> dict:
+    return {
+        "rank": rank,
+        "key": r.get("key"),
+        "label": r.get("label"),
+        "wr": r.get("wr"),
+        "trades": r.get("total"),
+        "pnl": r.get("pnl"),
+    }
+
+
+def _lider_token_ok() -> bool:
+    expected = (os.environ.get("LIDER_API_TOKEN") or "").strip()
+    if not expected:
+        return False
+    got = (
+        request.headers.get("X-Lider-Token")
+        or request.args.get("token")
+        or ""
+    ).strip()
+    if got.lower().startswith("bearer "):
+        got = got[7:].strip()
+    return bool(got) and secrets.compare_digest(got, expected)
+
+
+def _public_kripto_lider(top: int = 3) -> dict:
+    """Lider Analiz — Genel Top 10'un ve her coinin ilk 3'ü."""
+    top = max(1, min(int(top), 10))
+    rows = _build_kripto_test_leader_rows()
+    pack = _kripto_leader_payload(rows, sym_limit=top, overall_limit=top)
+    return {
+        "ok": True,
+        "top": top,
+        "min_trades": pack["min_trades"],
+        "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
+        "overall": [_public_lider_row(r, i + 1) for i, r in enumerate(pack["overall"])],
+        "coins": {
+            sym: [_public_lider_row(r, i + 1) for i, r in enumerate(lst)]
+            for sym, lst in (pack.get("by_symbol") or {}).items()
+        },
+        "symbols": pack.get("symbols") or [],
+    }
+
+
+def _public_json(payload, status: int = 200):
+    resp = jsonify(payload)
+    resp.status_code = status
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Lider-Token, Authorization"
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.route("/kripto/api/lider", methods=["GET", "OPTIONS"])
+@app.route("/kripto/api/lider/", methods=["GET", "OPTIONS"])
+@app.route("/site/api/lider", methods=["GET", "OPTIONS"])
+@app.route("/site/api/lider/", methods=["GET", "OPTIONS"])
+def api_kripto_lider_public():
+    """Genel ilk 3 + her coin ilk 3. `X-Lider-Token` veya `?token=`. Tanımsızsa kapalı."""
+    if request.method == "OPTIONS":
+        return _public_json({"ok": True})
+    if not _lider_token_ok():
+        return _public_json({"ok": False, "error": "unauthorized"}, 401)
+    try:
+        top = int(request.args.get("top") or 3)
+    except (TypeError, ValueError):
+        top = 3
+    try:
+        return _public_json(_public_kripto_lider(top))
+    except Exception as e:
+        return _public_json({"ok": False, "error": str(e)[:200]}, 500)
 
 
 @app.route("/poly/api/analyst/leaders")
@@ -3345,7 +3485,12 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
         category = "Poly sanal · COMBO"
         panel = "poly_combo"
         name = short or label
-        title = "A1 + C1#01 + A2#05 V2 oy · $24/36/48"
+        title = "A1 + C1#01 + A2#05 V2 oy · sembol WR $16/24/32 · ask ≤ 0,50"
+    elif key == "combo2":
+        category = "Poly sanal · COMBO2"
+        panel = "poly_combo"
+        name = short or label
+        title = "BTC→C1#01 · ETH/SOL→COMBO · sabit $64"
     elif key == "a2_05_v2":
         category = "Poly sanal · A2#05 V2"
         panel = "poly_a2"
@@ -3425,18 +3570,14 @@ def _build_single_poly_book(key: str, *, include_history: bool = False) -> dict 
 
 
 def _build_a2_poly_books() -> dict:
-    """Poly sanal A6 + A2 Top-17 defterleri — bakiyeye göre sıralı, tamamı listelenir."""
+    """Poly sanal defterler — 5 featured başta (kendi içinde bakiye), sonrası bakiyeye göre."""
     books = []
     for key in _ALGO_ISLEMLER_KEYS:
         row = _build_single_poly_book(key)
         if not row:
             continue
         books.append(row)
-    books.sort(key=lambda b: (
-        float(b.get("balance") or 0),
-        float(b.get("total_pnl") or 0),
-        float(b.get("wr") or -1),
-    ), reverse=True)
+    _sort_algo_islemler_books(books, "id")
     home_key = get_pm_home_display_key()
     for b in books:
         b["is_home_display"] = b.get("id") == home_key
@@ -3447,6 +3588,8 @@ def _build_a2_poly_books() -> dict:
         "home_display_book": home_key,
         "home_display_label": get_pm_home_display_label(home_key),
         "count": len(books),
+        "sort": _ALGO_FEATURED_SORT,
+        "featured": list(_ALGO_FEATURED_KEYS),
         "total_balance": round(sum(float(b.get("balance") or 0) for b in books), 2),
         "total_pnl": round(sum(float(b.get("total_pnl") or 0) for b in books), 2),
         "total_open": sum(int(b.get("open_count") or 0) for b in books),
@@ -3951,6 +4094,7 @@ def _mirror_book_row(key: str, *, open_count: int | None = None) -> dict:
             "wins": wins,
             "losses": hist_n - wins,
             "wr": row.get("wr"),
+            "featured": key in _ALGO_FEATURED_KEYS,
         }
     n_open = open_count if open_count is not None else 0
     return {
@@ -3968,12 +4112,13 @@ def _mirror_book_row(key: str, *, open_count: int | None = None) -> dict:
         "wins": 0,
         "losses": 0,
         "wr": None,
+        "featured": key in _ALGO_FEATURED_KEYS,
     }
 
 
 @app.route("/poly/api/mirror")
 def api_mirror_index():
-    """Defter listesi — /algoritma-islemler ile aynı sıra: bakiye → net PnL → WR."""
+    """Defter listesi — /algoritma-islemler ile aynı sıra: 5 featured başta (kendi içinde bakiye)."""
     if not _mirror_token_ok():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     now = datetime.now(_TZ_TR)
@@ -3983,18 +4128,15 @@ def api_mirror_index():
     for k in _ALGO_ISLEMLER_KEYS:
         n_slot = len(_mirror_rows(k, with_market=False, current_only=not include_all))
         books.append(_mirror_book_row(k, open_count=n_slot))
-    books.sort(key=lambda b: (
-        float(b.get("balance") or 0),
-        float(b.get("total_pnl") or 0),
-        float(b.get("wr") or -1),
-    ), reverse=True)
+    _sort_algo_islemler_books(books, "book")
     return jsonify({
         "ok": True,
         "server_time_tr": now.isoformat(timespec="seconds"),
         "active_slot": slot,
         "active_slot_a2_05": _mirror_active_slot(now, "a2_05"),
         "count": len(books),
-        "sort": "balance_desc,total_pnl_desc,wr_desc",
+        "sort": _ALGO_FEATURED_SORT,
+        "featured": list(_ALGO_FEATURED_KEYS),
         "filter": "all" if include_all else "current_slot",
         "policy": _mirror_policy(),
         "books": books,
@@ -4499,7 +4641,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260822-forex-coptc"
+_DASH_UI_VER = "20260823-site-biten"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -4880,6 +5022,16 @@ _CEMBOT_FOREX_BRAND_HTML = (
     f'<span class="cembot-word">'
     f'<span class="cembot-cem">cem</span>'
     f'<span class="cembot-bot">FOREX</span>'
+    f'<span class="cembot-clock" data-cembot-clock>—:—:—</span>'
+    f'</span></a>'
+)
+
+_CEMBOT_BAHIS_BRAND_HTML = (
+    f'<a class="cembot" href="/bahis" aria-label="Cem Bahis">'
+    f'<span class="cembot-mark">{_CEMBOT_MARK_SVG}</span>'
+    f'<span class="cembot-word">'
+    f'<span class="cembot-cem">cem</span>'
+    f'<span class="cembot-bot">BAHIS</span>'
     f'<span class="cembot-clock" data-cembot-clock>—:—:—</span>'
     f'</span></a>'
 )
@@ -11801,10 +11953,7 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
     <a class="nav-item" href="/kripto" style="display:inline-flex;margin:0;border:1px solid #2a2a2a;border-radius:12px;padding:12px 16px;color:#c8f135;font-weight:700;text-decoration:none">
       <span class="nav-dot" style="background:#c8f135"></span>Kripto'ya Geç
     </a>
-    <a class="nav-item" href="/forex/home" style="display:inline-flex;margin:8px 0 0;border:1px solid #2a2a2a;border-radius:12px;padding:12px 16px;color:#d4af37;font-weight:700;text-decoration:none">
-      <span class="nav-dot" style="background:#d4af37"></span>Forex'e Geç
-    </a>
-    <div class="setting-desc" style="margin-top:8px">Kripto = Binance Futures · Forex = ayrı panel</div>
+    <div class="setting-desc" style="margin-top:8px">Kripto = Binance Futures</div>
   </div>
 
   <div class="settings-card">
@@ -14808,6 +14957,13 @@ body{
 }
 .book-card:hover{border-color:rgba(200,241,53,.4);transform:translateY(-1px);background:rgba(255,255,255,.04)}
 .book-card.book-active{border-color:rgba(0,242,255,.45);box-shadow:0 0 0 1px rgba(0,242,255,.18)}
+.book-card.book-featured{
+  border-color:rgba(212,175,55,.72);
+  box-shadow:0 0 0 1px rgba(212,175,55,.28), inset 0 0 22px rgba(212,175,55,.06);
+  background:linear-gradient(180deg, rgba(212,175,55,.08), rgba(16,24,32,.4));
+}
+.book-card.book-featured:hover{border-color:#e4c15a;background:linear-gradient(180deg, rgba(212,175,55,.12), rgba(16,24,32,.5))}
+.book-card.book-featured.book-active{border-color:#e8c96a;box-shadow:0 0 0 1px rgba(232,201,106,.4)}
 .book-activate{
   display:inline-flex;align-items:center;gap:5px;align-self:flex-start;
   border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);
@@ -15056,19 +15212,19 @@ function posCard(p){
   const pmEp = p.pm_entry_price != null ? Number(p.pm_entry_price).toFixed(3) : '—';
   const payoutHtml = payout > 0
     ? `<span class="live-close-val" style="color:var(--green)">$${payout.toFixed(2)}</span>
-       <span class="pos-pct pos" style="margin-left:8px">${net >= 0 ? '+' : ''}$${net.toFixed(2)} net</span>`
+       <span class="pos-pct pos" style="margin-left:8px">${net >= 0 ? '+' : ''}$${net.toFixed(2)} Poly kâr</span>`
     : '<span style="color:var(--muted);font-size:12px">PM kotasyonu yok</span>';
   return `<div class="pos-card ${dirClass}">
     <div class="pos-top">
       <div class="pos-name">${p.name || (p.symbol||'').replace('USDT','')}</div>
       <span class="pos-dir ${dc}">${p.dir_tr || (up ? 'YÜKSELİR' : 'DÜŞER')}</span>
     </div>
-    <div class="pos-current">$${spent.toFixed(2)}</div>
-    <div class="pos-pct">risk · PM @ ${pmEp}</div>
+    <div class="pos-current">${payout > 0 ? ((net>=0?'+':'')+'$'+net.toFixed(2)) : '—'}</div>
+    <div class="pos-pct">Poly kâr · risk $${spent.toFixed(2)} @ ${pmEp}</div>
     <div class="pos-entry">Spot giriş: $${fmtPx(p.entry_price)}</div>
     <div class="pos-slot">${slot}</div>
     <div class="pos-close-row">
-      <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">KAZANIRSA (PM kotasyonu)</div>
+      <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">KAZANIRSA (Poly CLOB)</div>
       ${payoutHtml}
     </div>
   </div>`;
@@ -15098,7 +15254,11 @@ function histRow(t){
 function renderBooks(books, homeKey){
   const el = document.getElementById('algo-books');
   const activeKey = String(homeKey || '').toLowerCase();
+  const featSet = {combo:1, c101:1, a2_05_v2:1, analiz1:1, combo2:1};
   const sorted = (books||[]).slice().sort((a,b)=>{
+    const ia = featSet[a.id] ? 0 : 1;
+    const ib = featSet[b.id] ? 0 : 1;
+    if (ia !== ib) return ia - ib;
     const ba = Number(a.balance||0), bb = Number(b.balance||0);
     if (bb !== ba) return bb - ba;
     const pa = Number(a.total_pnl||0), pb = Number(b.total_pnl||0);
@@ -15116,7 +15276,10 @@ function renderBooks(books, homeKey){
     const wr = b.wr != null ? ('WR ' + b.wr + '%') : 'WR —';
     const title = b.name || b.label || b.id;
     const sub = b.title || b.category || '';
-    const opens = (b.cards||[]).map(c => (c.name||'') + ' ' + (c.side==='LONG'?'UP':'DOWN')).join(' · ') || 'açık yok';
+    const opens = (b.cards||[]).map(c => {
+      const k = c.win_profit != null ? ((c.win_profit>=0?'+':'')+'$'+Number(c.win_profit).toFixed(0)) : '';
+      return (c.name||'') + ' ' + (c.side==='LONG'?'UP':'DOWN') + (k?' '+k:'');
+    }).join(' · ') || 'açık yok';
     const href = '/algoritma-islemler/' + encodeURIComponent(b.id);
     const since = b.started_at_label || '';
     const sinceTitle = b.started_since_reset ? 'Sıfırlama sonrası dönem' : 'İlk işlem';
@@ -15124,7 +15287,7 @@ function renderBooks(books, homeKey){
     const actCls = isActive ? ' on' : '';
     const actLbl = isActive ? '✓ Poly overview aktif' : 'Poly overview\'da aktif et';
   return `<div class="book-card-wrap">
-    <a class="book-card${isActive ? ' book-active' : ''}" href="${href}">
+    <a class="book-card${isActive ? ' book-active' : ''}${b.featured || featSet[b.id] ? ' book-featured' : ''}" href="${href}">
       ${since ? `<div class="book-since" title="${sinceTitle}">${since}</div>` : ''}
       <div class="bt">${title}</div>
       <div class="bs">${sub} · ${wr} · ${histN} işlem</div>
@@ -16828,13 +16991,13 @@ body.kf-overview .kf-right-panel{display:block}
   <div id="view-dash">
   <div class="live-bar" id="live-bar">
     <div class="live-bar-actions">
-      <button type="button" class="live-toggle" id="live-toggle-btn" onclick="toggleBinanceLive()">Kapat</button>
+      <button type="button" class="live-toggle" id="live-toggle-btn" disabled>Sanal</button>
     </div>
   </div>
   <div class="head">
     <div>
       <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">…</span></div>
-        <div class="page-sub" id="page-sub">CEBU Live · $7×20x · Test cebu ayna</div>
+        <div class="page-sub" id="page-sub">CEBU sanal · Test defteri · Binance live kapalı</div>
     </div>
     <button type="button" class="wbtn" title="Yenile" onclick="refreshOverviewFast(true)" style="width:40px;height:40px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);cursor:pointer;font-size:18px">↻</button>
   </div>
@@ -16846,7 +17009,7 @@ body.kf-overview .kf-right-panel{display:block}
           <div class="kf-ov-tag">BINANCE BAKİYE</div>
           <div class="kf-ov-lbl">USDT cüzdan</div>
           <div class="kf-ov-bal" id="kf-bal">—</div>
-          <div class="kf-ov-sub" id="kf-books-sub">CEBU Live · yükleniyor…</div>
+          <div class="kf-ov-sub" id="kf-books-sub">CEBU sanal · yükleniyor…</div>
         </div>
         <div class="kf-ov-wallet cash" id="kf-pnl-card">
           <div class="kf-ov-tag">NET P&L</div>
@@ -17751,6 +17914,8 @@ function renderLiveBar(d){
   btn.disabled = !envOn ? true : false;
 }
 async function toggleBinanceLive(){
+  alert('CEBU yalnız sanal. Binance live kapalı.');
+  return;
   const btn = document.getElementById('live-toggle-btn');
   const bar = document.getElementById('live-bar');
   const pausing = !(bar && bar.classList.contains('paused'));
@@ -18310,6 +18475,142 @@ def page_kripto_future():
     return KRIPTO_FUTURE_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
+@app.route("/bahis")
+@app.route("/bahis/")
+def page_bahis():
+    if _auth_required():
+        return _login_redirect()
+    return BAHIS_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
+@app.route("/site")
+@app.route("/site/")
+def page_bahis_site():
+    return BAHIS_SITE_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
+@app.route("/site/mac/<mid>")
+@app.route("/site/mac/<mid>/")
+def page_site_match(mid):
+    return SITE_MATCH_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
+@app.route("/site/biten")
+@app.route("/site/biten/")
+def page_site_finished():
+    return SITE_RESULTS_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
+@app.route("/site/api/finished")
+def site_api_finished():
+    return jsonify(bahis_results.finished(limit=int(request.args.get("limit") or 60)))
+
+
+@app.route("/site/api/match")
+def site_api_match():
+    mid = (request.args.get("id") or "").strip()
+    if not mid:
+        return jsonify({"ok": False, "error": "id gerekli"}), 400
+    return jsonify(bahis_intel.detail(mid))
+
+
+@app.route("/site/api/summary")
+def site_api_summary():
+    return jsonify(bahis_league.summary())
+
+
+@app.route("/site/api/matches")
+def site_api_matches():
+    return jsonify(bahis_league.list_matches(
+        season=request.args.get("season") or None,
+        team=request.args.get("team") or None,
+        status=request.args.get("status") or "all",
+    ))
+
+
+@app.route("/site/api/h2h")
+def site_api_h2h():
+    a = request.args.get("a") or ""
+    b = request.args.get("b") or ""
+    if not a or not b:
+        return jsonify({"error": "a,b gerekli"}), 400
+    return jsonify(bahis_league.pair_h2h(a, b))
+
+
+@app.route("/bahis/api/summary")
+def bahis_api_summary():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    return jsonify(bahis_league.summary())
+
+
+@app.route("/bahis/api/matches")
+def bahis_api_matches():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    return jsonify(bahis_league.list_matches(
+        season=request.args.get("season") or None,
+        team=request.args.get("team") or None,
+        status=request.args.get("status") or "all",
+    ))
+
+
+@app.route("/bahis/api/h2h")
+def bahis_api_h2h():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    a = request.args.get("a") or ""
+    b = request.args.get("b") or ""
+    if not a or not b:
+        return jsonify({"error": "a,b gerekli"}), 400
+    return jsonify(bahis_league.pair_h2h(a, b))
+
+
+@app.route("/bahis/api/players")
+def bahis_api_players():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    kind = (request.args.get("kind") or "list").strip()
+    if kind == "summary":
+        return jsonify(bahis_players.summary(request.args.get("season")))
+    if kind == "leaders":
+        return jsonify(bahis_players.leaders(
+            request.args.get("season"),
+            request.args.get("stat") or "goals",
+            int(request.args.get("limit") or 25),
+        ))
+    if kind == "squad":
+        return jsonify(bahis_players.squad(request.args.get("team")))
+    pid = request.args.get("id")
+    if pid:
+        return jsonify(bahis_players.player(int(pid)))
+    return jsonify(bahis_players.list_players(
+        season=request.args.get("season"),
+        team=request.args.get("team"),
+        q=request.args.get("q"),
+        sort=request.args.get("sort") or "goals",
+        limit=int(request.args.get("limit") or 80),
+    ))
+
+
+@app.route("/bahis/api/engines")
+def bahis_api_engines():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    return jsonify({"ok": True, "engines": bahis_engines.list_engines()})
+
+
+@app.route("/bahis/api/preds")
+def bahis_api_preds():
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    return jsonify(bahis_engines.run(
+        request.args.get("engine") or None,
+        team=request.args.get("team") or None,
+        limit=int(request.args.get("limit") or 24),
+    ))
+
+
 @app.route("/kripto/gecmis")
 @app.route("/kripto/gecmis/")
 @app.route("/kripto/grafik")
@@ -18351,209 +18652,27 @@ def page_kripto_future_legacy():
     return redirect("/kripto", code=301)
 
 
-@app.route("/forex")
-@app.route("/forex/")
-def page_forex_root():
-    """Eski /forex 301 cache'ini aş — tarayıcı bu URL'yi /poly sanıyor."""
-    resp = redirect("/forex/home", code=302)
+def _forex_gone():
+    resp = redirect("/poly", code=302)
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     resp.headers["Pragma"] = "no-cache"
     return resp
 
 
-@app.route("/forex/home")
-@app.route("/forex/home/")
-def page_forex():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/home")
-    return FOREX_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/yapay-zeka-analiz")
-@app.route("/forex/yapay-zeka-analiz/")
-def page_forex_yapay_zeka_analiz():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/yapay-zeka-analiz")
-    return FOREX_YZA_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/grafik")
-@app.route("/forex/grafik/")
-def page_forex_grafik():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/grafik")
-    return FOREX_GRAFIK_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/b103")
-@app.route("/forex/b103/")
-def page_forex_b103():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/b103")
-    return FOREX_B103_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/b103/islemler")
-@app.route("/forex/b103/islemler/")
-def page_forex_b103_islemler():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/b103/islemler")
-    return FOREX_B103_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/cembybit")
-@app.route("/forex/cembybit/")
-@app.route("/forex/exness")
-@app.route("/forex/exness/")
-def page_forex_cembybit():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/cembybit")
-    return FOREX_CEMBYBIT_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/algo2")
-@app.route("/forex/algo2/")
-def page_forex_algo2():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/algo2")
-    return FOREX_ALGO2_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/cem02")
-@app.route("/forex/cem02/")
-def page_forex_cem02():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/cem02")
-    return FOREX_CEM02_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/cem02/islemler")
-@app.route("/forex/cem02/islemler/")
-def page_forex_cem02_islemler():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/cem02/islemler")
-    return FOREX_CEM02_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/openapi")
-@app.route("/forex/openapi/")
-def page_forex_openapi():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/openapi")
-    return FOREX_OAPI_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/openapi/islemler")
-@app.route("/forex/openapi/islemler/")
-def page_forex_openapi_islemler():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/openapi/islemler")
-    return FOREX_OAPI_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/openapi/connect")
-def page_forex_openapi_connect():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/openapi/connect")
-    from ctrader_api import app_configured, oauth_url
-    if not app_configured():
-        return redirect("/forex/openapi")
-    return redirect(oauth_url())
-
-
-@app.route("/forex/openapi/oauth")
-def page_forex_openapi_oauth():
-    """cTrader redirect — code 60 sn; giriş bekletmeden token al."""
-    code = str(request.args.get("code") or "").strip()
-    if not code:
-        if _auth_required():
-            return redirect("/poly/login?next=/forex/openapi")
-        return redirect("/forex/openapi")
-    try:
-        from ctrader_api import exchange_code
-        exchange_code(code)
-    except Exception as e:
-        print(f"[oapi oauth] {type(e).__name__}: {e}", flush=True)
-        return redirect("/forex/openapi?oapi=err")
-    return redirect("/forex/openapi?oapi=ok")
-
-
-@app.route("/forex/gpsusdt")
-@app.route("/forex/gpsusdt/")
-def page_forex_gpsusdt():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/gpsusdt")
-    return FOREX_GPSUSDT_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/gpsusdt/islemler")
-@app.route("/forex/gpsusdt/islemler/")
-def page_forex_gpsusdt_islemler():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/gpsusdt/islemler")
-    return FOREX_GPS_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/gpsusdt2")
-@app.route("/forex/gpsusdt2/")
-def page_forex_gpsusdt2():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/gpsusdt2")
-    return FOREX_GPS2_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/gpsusdt2/islemler")
-@app.route("/forex/gpsusdt2/islemler/")
-def page_forex_gpsusdt2_islemler():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/gpsusdt2/islemler")
-    return FOREX_GPS2_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/bin-b103")
-@app.route("/forex/bin-b103/")
-def page_forex_bin_b103():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/bin-b103")
-    return FOREX_BINB103_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/bin-b103/islemler")
-@app.route("/forex/bin-b103/islemler/")
-def page_forex_bin_b103_islemler():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/bin-b103/islemler")
-    return FOREX_BINB103_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/islemler")
-@app.route("/forex/islemler/")
-def page_forex_islemler():
-    if _auth_required():
-        return redirect("/poly/login?next=/forex/islemler")
-    return FOREX_ISLEMLER_HTML, 200, _ISLEMLER_NOCACHE
-
-
-@app.route("/forex/algoritma-islemler")
-@app.route("/forex/algoritma-islemler/")
-@app.route("/forex/algoritma-islemler/<uid>")
-def page_forex_fx_algos(uid=None):
-    if _auth_required():
-        nxt = "/forex/algoritma-islemler"
-        if uid:
-            nxt += "/" + uid
-        return redirect("/poly/login?next=" + nxt)
-    return FOREX_FX_ALGOS_HTML, 200, _ISLEMLER_NOCACHE
+@app.route("/forex")
+@app.route("/forex/")
+@app.route("/forex/<path:rest>")
+def page_forex_gone(rest=None):
+    """Sayfa CoptC'de; bursaapp /forex kabuğu kalktı. /forex/api before_request'te proxy."""
+    if rest and str(rest).startswith("api"):
+        return jsonify({"ok": False, "error": "forex_moved"}), 404
+    return _forex_gone()
 
 
 @app.route("/xau")
 @app.route("/xau/")
-@app.route("/forex/izle")
-@app.route("/forex/izle/")
 def page_forex_public():
-    """Girişsiz paylaşım — aynı XAUUSD grafik, sol menü kapalı."""
-    html = FOREX_GRAFIK_HTML.replace('id="fx-page"', 'id="fx-page" class="fx-public"', 1)
-    return html, 200, _ISLEMLER_NOCACHE
+    return _forex_gone()
 
 
 @app.route("/poly/api/forex/spot")
@@ -19315,6 +19434,8 @@ def api_crypto_futures_b1_mum_control():
                 "enabled": _opens_allowed(),
                 "env_enabled": _env_enabled(),
             })
+        if os.path.exists(os.path.join(_DIR_KRIPTO, ".CEBU_VIRTUAL_ONLY")):
+            return jsonify({"ok": False, "error": "cebu_virtual_only"}), 403
         body = request.get_json(force=True) if request.is_json else {}
         ctrl = None
         if body.get("toggle"):
@@ -19947,18 +20068,15 @@ for _html_name in (
     "ANALIZLER_HTML", "GECMIS_HTML", "ALGORITMA_HTML", "ALGORITMA_ISLEMLER_HTML", "AYARLAR_HTML",
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
     "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
-    "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML",     "FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML",
-    "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML", "FOREX_GPSUSDT_HTML", "FOREX_GPS_ISLEMLER_HTML",
-    "FOREX_GPS2_HTML", "FOREX_GPS2_ISLEMLER_HTML",
-    "FOREX_BINB103_HTML", "FOREX_BINB103_ISLEMLER_HTML",
-    "FOREX_B103_HTML", "FOREX_B103_ISLEMLER_HTML",
-    "FOREX_FX_ALGOS_HTML", "FOREX_CEM02_HTML", "FOREX_CEM02_ISLEMLER_HTML",
-    "FOREX_OAPI_HTML", "FOREX_OAPI_ISLEMLER_HTML", "FOREX_YZA_HTML",
+    "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML", "BAHIS_HTML", "BAHIS_SITE_HTML",
+    "SITE_MATCH_HTML", "SITE_RESULTS_HTML",
 ):
     _html = globals()[_html_name]
-    if _html_name in ("FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML", "FOREX_ISLEMLER_HTML", "FOREX_ALGO2_HTML", "FOREX_GPSUSDT_HTML", "FOREX_GPS_ISLEMLER_HTML", "FOREX_GPS2_HTML", "FOREX_GPS2_ISLEMLER_HTML", "FOREX_BINB103_HTML", "FOREX_BINB103_ISLEMLER_HTML", "FOREX_B103_HTML", "FOREX_B103_ISLEMLER_HTML", "FOREX_FX_ALGOS_HTML", "FOREX_CEM02_HTML", "FOREX_CEM02_ISLEMLER_HTML", "FOREX_OAPI_HTML", "FOREX_OAPI_ISLEMLER_HTML", "FOREX_YZA_HTML"):
-        _html = _html.replace("__FOREX_BRAND__", _CEMBOT_FOREX_BRAND_HTML)
-        _html = _patch_cembot_brand(_html)
+    if _html_name in ("BAHIS_SITE_HTML", "SITE_MATCH_HTML", "SITE_RESULTS_HTML"):
+        _html = _patch_cache_bust(_html)
+    elif _html_name == "BAHIS_HTML":
+        _html = _html.replace("__ENGINES__", json.dumps(bahis_engines.list_engines(), ensure_ascii=False))
+        _html = _html.replace("__BAHIS_BRAND__", "")
         _html = _patch_cache_bust(_html)
     elif _html_name in ("KRIPTO_FUTURE_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML"):
         # Kripto kendi menüsü — Poly nav / PM Kar enjekte etme
@@ -19985,7 +20103,7 @@ for _html_name in (
         _html = _patch_cembot_brand(_html)
     else:
         _html = _patch_cembot_brand(_html)
-    if _html_name != "LOGIN_HTML":
+    if _html_name not in ("LOGIN_HTML", "BAHIS_SITE_HTML", "SITE_MATCH_HTML", "SITE_RESULTS_HTML"):
         _html = patch_dash_chrome(_html, world_for_html(_html_name))
     globals()[_html_name] = _patch_cache_bust(_html)
 
