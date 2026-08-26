@@ -3212,7 +3212,7 @@ def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) 
         hist = _load_heatmap_history(key)
         if not hist:
             continue
-        buckets: dict[str, dict] = defaultdict(lambda: {"w": 0, "t": 0})
+        buckets: dict[str, dict] = defaultdict(lambda: {"w": 0, "t": 0, "pnl": 0.0})
         for t in hist:
             sym = (t.get("symbol") or "").replace("USDT", "")
             if sym not in target:
@@ -3220,18 +3220,30 @@ def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) 
             buckets[sym]["t"] += 1
             if t.get("win"):
                 buckets[sym]["w"] += 1
+            try:
+                buckets[sym]["pnl"] += float(t.get("pnl") or 0)
+            except (TypeError, ValueError):
+                pass
         short = _OVERVIEW_SHORT_LABELS.get(key, _ANALYSIS_LABELS.get(key, key))
         for sym, v in buckets.items():
             if v["t"] < min_trades:
                 continue
             wr = round(v["w"] / v["t"] * 100, 1)
+            pnl = round(v["pnl"], 2)
             prev = best.get(sym)
-            if prev is None or wr > prev["wr"] or (wr == prev["wr"] and v["t"] > prev["t"]):
+            better = (
+                prev is None
+                or wr > prev["wr"]
+                or (wr == prev["wr"] and pnl > float(prev.get("pnl") or 0))
+                or (wr == prev["wr"] and pnl == float(prev.get("pnl") or 0) and v["t"] > prev["t"])
+            )
+            if better:
                 best[sym] = {
                     "sym": sym,
                     "wr": wr,
                     "w": v["w"],
                     "t": v["t"],
+                    "pnl": pnl,
                     "analiz": key,
                     "analiz_short": short,
                     "analiz_label": _ANALYSIS_LABELS.get(key, key),
@@ -3239,6 +3251,27 @@ def _best_analiz_by_symbol(syms: list[str] | None = None, min_trades: int = 10) 
     out = [best[s] for s in target if s in best]
     _BEST_SYM_CACHE[ck] = (now, out)
     return list(out)
+
+
+def _sym_best_card(min_trades: int = 5) -> dict:
+    """Coin başına en yüksek WR algoritma + o çiftin net P&L (overview / algo listesi)."""
+    rows = _best_analiz_by_symbol(min_trades=min_trades)
+    total = sum(int(r.get("t") or 0) for r in rows)
+    wins = sum(int(r.get("w") or 0) for r in rows)
+    pnl = round(sum(float(r.get("pnl") or 0) for r in rows), 2)
+    shorts: list[str] = []
+    for r in rows:
+        s = r.get("analiz_short") or r.get("analiz")
+        if s and s not in shorts:
+            shorts.append(s)
+    return {
+        "items": rows,
+        "total": total,
+        "total_wins": wins,
+        "total_wr": round(wins / total * 100, 1) if total else 0.0,
+        "total_pnl": pnl,
+        "analiz_short": " · ".join(shorts) if shorts else "—",
+    }
 
 
 def _analiz_sym_wr(analiz_key: str, syms: list[str] | None = None, min_trades: int = 1) -> list[dict]:
@@ -3831,7 +3864,65 @@ def _regime_book_stats(books: list[dict]) -> dict:
     }
 
 
-def _algo_consensus_votes(books: list[dict], list_books: list[dict] | None = None) -> dict:
+def _card_dir(card: dict) -> str | None:
+    side = str(card.get("side") or "").upper()
+    dir_tr = str(card.get("dir_tr") or "").upper()
+    if side in ("LONG", "UP") or dir_tr in ("YÜKSELİR", "YUKSELIR"):
+        return "UP"
+    if side in ("SHORT", "DOWN") or dir_tr in ("DÜŞER", "DUSER"):
+        return "DOWN"
+    return None
+
+
+def _symbest_vote_group(slot_books: list[dict] | None) -> dict:
+    """Her coinde en yüksek WR algoritmanın :05 yönü — TOP4 kaynağı."""
+    by_id = {str(b.get("id") or ""): b for b in (slot_books or [])}
+    items = _best_analiz_by_symbol(min_trades=5)
+    coins = []
+    used = []
+    for r in items:
+        key = str(r.get("analiz") or "")
+        book = by_id.get(key)
+        if book:
+            used.append(book)
+        winner = None
+        for card in (book or {}).get("cards") or []:
+            name = str(card.get("name") or card.get("symbol") or "").replace("USDT", "").upper()
+            name = name.split("·")[0].strip()
+            if name != str(r.get("sym") or "").upper():
+                continue
+            winner = _card_dir(card)
+            break
+        short = r.get("analiz_short") or key or "—"
+        if winner == "UP":
+            label, votes, up, down, n = f"yükselir · {short}", 1, 1, 0, 1
+        elif winner == "DOWN":
+            label, votes, up, down, n = f"düşer · {short}", 1, 0, 1, 1
+        else:
+            label, votes, up, down, n = f"açık yok · {short}", 0, 0, 0, 0
+        coins.append({
+            "symbol": r.get("sym"),
+            "up": up,
+            "down": down,
+            "n": n,
+            "winner": winner,
+            "label": label,
+            "votes": votes,
+            "analiz": key,
+            "analiz_short": short,
+            "text": f"{r.get('sym')} → {short} {winner or 'bekliyor'}",
+        })
+    return {
+        "regime": "symbest",
+        "label": "Sembol",
+        "books": len(items),
+        "coins": coins,
+        "stats": _regime_book_stats(used),
+    }
+
+
+def _algo_consensus_votes(books: list[dict], list_books: list[dict] | None = None,
+                          slot_books: list[dict] | None = None) -> dict:
     """:05 açık yön — yalnız listedeki en iyi N defter (net P&L)."""
     now = datetime.now(_TZ_TR)
     slot_h = now.hour if now.minute >= 5 else (now.hour - 1) % 24
@@ -3865,6 +3956,7 @@ def _algo_consensus_votes(books: list[dict], list_books: list[dict] | None = Non
             "coins": _vote_coins_from_books(vb),
             "stats": _regime_book_stats(lb),
         })
+    groups.append(_symbest_vote_group(slot_books if slot_books is not None else books))
     votes["groups"] = groups
     votes["source_ids"] = [b.get("id") for b in (src or [])]
     try:
@@ -3911,31 +4003,36 @@ def _build_a2_poly_books() -> dict:
             vote_books.append(built[5])
     _remember_best_slots(best_map)
     _sort_algo_islemler_books(books, "id")
-    try:
-        from vote_paper import list_top_books
-        vote_rows = list_top_books()
-    except Exception:
-        vote_rows = []
-    top_n = [b for b in books if not b.get("vote_paper") and str(b.get("id") or "") not in ("top1", "top2", "top3")][:_VOTE_TOP_N]
+    _TOP_SKIP = ("top1", "top2", "top3", "top4")
+    top_n = [b for b in books if not b.get("vote_paper") and str(b.get("id") or "") not in _TOP_SKIP][:_VOTE_TOP_N]
     top_ids = {b.get("id") for b in top_n}
     vote_top = [b for b in vote_books if b.get("id") in top_ids]
     home_key = get_pm_home_display_key()
     for b in books:
         b["is_home_display"] = b.get("id") == home_key
+    votes = _algo_consensus_votes(vote_top, list_books=top_n, slot_books=vote_books)
+    try:
+        from vote_paper import list_top_books
+        vote_rows = list_top_books()
+    except Exception:
+        vote_rows = []
+    all_books = (vote_rows or []) + books
+    _sort_algo_islemler_books(all_books, "id")
     out = {
         "ok": True,
         "panel_filter": "poly_algo",
-        "books": (vote_rows or []) + books,
-        "votes": _algo_consensus_votes(vote_top, list_books=top_n),
+        "books": all_books,
+        "votes": votes,
         "home_display_book": home_key,
         "home_display_label": get_pm_home_display_label(home_key),
-        "count": len(books),
+        "count": len(all_books),
         "sort": _ALGO_FEATURED_SORT,
         "featured": list(_ALGO_FEATURED_KEYS),
         "total_balance": round(sum(float(b.get("balance") or 0) for b in books), 2),
         "total_pnl": round(sum(float(b.get("total_pnl") or 0) for b in books), 2),
         "total_open": sum(int(b.get("open_count") or 0) for b in books),
         "total_trades": sum(int(b.get("history_n") or 0) for b in books),
+        "sym_best": _sym_best_card(min_trades=5),
     }
     _A2_BOOKS_CACHE["ts"] = now
     _A2_BOOKS_CACHE["data"] = out
@@ -4495,6 +4592,163 @@ def _mirror_rows(key: str, *, with_market: bool, current_only: bool = True) -> l
     return rows
 
 
+def _mirror_is_top(key: str) -> bool:
+    try:
+        sys.path.insert(0, _DIR_POLY)
+        from vote_paper import is_top_key
+        return is_top_key(key)
+    except Exception:
+        return False
+
+
+def _mirror_top_book_row(key: str, *, open_count: int | None = None, book: dict | None = None) -> dict:
+    """TOP1–4 özeti — ayna listesi / detay."""
+    sys.path.insert(0, _DIR_POLY)
+    from vote_paper import STAKE, build_top_book
+    row = book if book is not None else build_top_book(key)
+    if not row:
+        return {
+            "book": key,
+            "open_minute": 5,
+            "best_slot": 5,
+            "short": key.upper(),
+            "label": key,
+            "open": 0,
+            "open_total": 0,
+            "initial_balance": 1000.0,
+            "sanal_balance": 1000.0,
+            "balance": 1000.0,
+            "total_pnl": 0.0,
+            "pnl": 0.0,
+            "trades": 0,
+            "wins": 0,
+            "losses": 0,
+            "wr": None,
+            "featured": False,
+            "regime": "live",
+            "regime_label": key,
+            "vote_paper": True,
+            "stake": STAKE,
+        }
+    hist_n = int(row.get("history_n") or 0)
+    wins = int(row.get("wins") or 0)
+    total_pnl = float(row.get("total_pnl") or 0)
+    bal = round(float(row.get("balance") or 1000), 2)
+    n_open = open_count if open_count is not None else int(row.get("open_count") or 0)
+    return {
+        "book": row.get("id") or key,
+        "open_minute": 5,
+        "best_slot": 5,
+        "short": row.get("name") or key,
+        "label": row.get("title") or row.get("label") or key,
+        "open": n_open,
+        "open_total": int(row.get("open_count") or n_open),
+        "initial_balance": 1000.0,
+        "sanal_balance": bal,
+        "balance": bal,
+        "total_pnl": total_pnl,
+        "pnl": total_pnl,
+        "trades": hist_n,
+        "wins": wins,
+        "losses": max(0, hist_n - wins),
+        "wr": row.get("wr"),
+        "featured": False,
+        "regime": row.get("regime"),
+        "regime_label": row.get("regime_label"),
+        "vote_paper": True,
+        "stake": STAKE,
+    }
+
+
+def _mirror_top_rows(key: str, *, with_market: bool, current_only: bool = True) -> list[dict]:
+    """TOP1–4 açık $48 kâğıt işlemleri — ayna satırı."""
+    sys.path.insert(0, _DIR_POLY)
+    from algo_consensus_log import current_slot
+    from vote_paper import STAKE, TOP_KEYS, load_book, normalize_top_key
+    kid = normalize_top_key(key)
+    spec = TOP_KEYS.get(kid or "")
+    if not spec:
+        return []
+    rg, _name, _title = spec
+    paper = load_book()
+    sid, hour, day = current_slot()
+    now = datetime.now(_TZ_TR)
+    pol = _mirror_policy()
+    rows: list[dict] = []
+    for hrow in paper.get("hours") or []:
+        here = hrow.get("id") == sid
+        if current_only and not here:
+            continue
+        try:
+            slot_h = int(hrow.get("slot_hour") if hrow.get("slot_hour") is not None else hour)
+        except (TypeError, ValueError):
+            slot_h = hour
+        slot_date = str(hrow.get("slot_date") or day)
+        saved = hrow.get("saved_at_tr")
+        for g in hrow.get("groups") or []:
+            if (g.get("regime") or "") != rg:
+                continue
+            for t in g.get("trades") or []:
+                if t.get("pnl") is not None or t.get("dir") not in ("UP", "DOWN"):
+                    continue
+                if t.get("pm_spent") is None:
+                    continue
+                sym = str(t.get("symbol") or "")
+                up = t.get("dir") == "UP"
+                entry_tr = f"{slot_date}T{slot_h:02d}:05:00+03:00"
+                age = None
+                try:
+                    t0 = datetime.fromisoformat(str(saved or entry_tr).replace("Z", "+00:00"))
+                    if t0.tzinfo is None:
+                        t0 = t0.replace(tzinfo=_TZ_TR)
+                    age = int((now - t0.astimezone(_TZ_TR)).total_seconds())
+                except Exception:
+                    pass
+                raw = sym if str(sym).endswith("USDT") else f"{sym}USDT"
+                row = {
+                    "symbol": sym,
+                    "symbol_raw": raw,
+                    "dir": t.get("dir"),
+                    "side": "LONG" if up else "SHORT",
+                    "amount_usd": t.get("pm_spent") or t.get("stake") or STAKE,
+                    "spot_entry": None,
+                    "algo_name": t.get("source_short") or t.get("source_algo"),
+                    "pm_slug": t.get("pm_slug"),
+                    "pm_title": t.get("pm_title"),
+                    "pm_entry_price": t.get("pm_entry_price"),
+                    "pm_size": t.get("pm_size"),
+                    "entry_time_tr": entry_tr,
+                    "is_current_slot": here,
+                    "stale": not here,
+                    "age_sec": age,
+                    "position_id": f"{kid}:{slot_date}:{slot_h:02d}:{sym}",
+                    "vote_paper": True,
+                }
+                row.update(_mirror_slot_fields(slot_h, None))
+                if with_market and row.get("pm_slug"):
+                    mk = _mirror_market(row["pm_slug"])
+                    row["pm_token_id"] = mk.get("up_token") if up else mk.get("down_token")
+                    row["pm_price_now"] = mk.get("up_price") if up else mk.get("down_price")
+                    row["pm_mid_price"] = mk.get("up_mid") if up else mk.get("down_mid")
+                    row["pm_quote_src"] = mk.get("up_src") if up else mk.get("down_src")
+                    row["pm_tick_size"] = mk.get("tick_size")
+                    row["pm_neg_risk"] = mk.get("neg_risk")
+                    row["pm_closed"] = mk.get("closed")
+                    if mk.get("error"):
+                        row["pm_market_error"] = mk["error"]
+                    ref, cur = row.get("pm_entry_price"), row.get("pm_price_now")
+                    if ref and cur:
+                        row["pm_price_drift_pct"] = round((cur - ref) / ref * 100, 1)
+                    row.update(_mirror_copy_decision(row, pol))
+                    row["entry_price_min"] = pol["entry_price_min"]
+                    row["entry_price_max"] = pol["entry_price_max"]
+                    row["min_stake_usd"] = _mirror_min_stake(row.get("pm_price_now"), pol)
+                else:
+                    row.update(_mirror_block("no_market_data", "fiyat verisi istenmedi (market=0)"))
+                rows.append(row)
+    return rows
+
+
 def _mirror_book_row(key: str, *, open_count: int | None = None) -> dict:
     """Defter özeti — /algoritma-islemler ile aynı metrikler (bakiye, net PnL, WR)."""
     init_bal = float(_OVERVIEW_INIT_BAL.get(key, 300) or 300)
@@ -4624,6 +4878,17 @@ def api_mirror_index():
     for k in _ALGO_ISLEMLER_KEYS:
         n_slot = len(_mirror_rows(k, with_market=False, current_only=not include_all))
         books.append(_mirror_book_row(k, open_count=n_slot))
+    top_rows = []
+    try:
+        sys.path.insert(0, _DIR_POLY)
+        from vote_paper import list_top_books
+        for b in list_top_books():
+            kid = str(b.get("id") or "")
+            n_slot = len(_mirror_top_rows(kid, with_market=False, current_only=not include_all))
+            top_rows.append(_mirror_top_book_row(kid, open_count=n_slot, book=b))
+    except Exception:
+        top_rows = []
+    books = top_rows + books
     _sort_algo_islemler_books(books, "book")
     open_m = _mirror_open_minute(None)
     return jsonify({
@@ -4648,7 +4913,8 @@ def api_mirror_book(book_id: str):
     if not _mirror_token_ok():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     key = _normalize_algo_book_id(book_id)
-    if key not in _ALGO_ISLEMLER_KEYS:
+    is_top = _mirror_is_top(key)
+    if not is_top and key not in _ALGO_ISLEMLER_KEYS:
         return jsonify({"ok": False, "error": "not found",
                         "hint": "defter listesi: /poly/api/mirror"}), 404
     try:
@@ -4657,11 +4923,16 @@ def api_mirror_book(book_id: str):
         return jsonify({"ok": False, "error": "slot 02/05/07"}), 400
     with_market = (request.args.get("market") or "1").lower() not in ("0", "false", "no")
     include_all = (request.args.get("all") or "").lower() in ("1", "true", "yes")
-    rows = _mirror_rows(key, with_market=with_market, current_only=not include_all)
+    if is_top:
+        rows = _mirror_top_rows(key, with_market=with_market, current_only=not include_all)
+        info = _mirror_top_book_row(key, open_count=len(rows))
+        open_m = 5
+    else:
+        rows = _mirror_rows(key, with_market=with_market, current_only=not include_all)
+        info = _mirror_book_row(key, open_count=len(rows))
+        open_m = _mirror_open_minute(key)
     now = datetime.now(_TZ_TR)
-    slot = _mirror_active_slot(now, key)
-    info = _mirror_book_row(key, open_count=len(rows))
-    open_m = _mirror_open_minute(key)
+    slot = _mirror_active_slot(now, None if is_top else key)
     return jsonify({
         "ok": True,
         **info,
@@ -7318,7 +7589,7 @@ GRAFIK_HTML = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Grafik — A1 — PolyMarket</title>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2316a34a'/><text x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold'>P</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8f135'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='900' fill='%230d0d0d'>G</text></svg>">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;overflow:hidden}
@@ -11147,7 +11418,7 @@ _CAT_EMOJI = {
 
 
 def _build_algo_v2_panel_html() -> str:
-    parts = ['<div id="algo-panel-2" style="display:none">']
+    parts = ['<div id="algo-panel-2">']
     last_cat = None
     for num, cat, name in _ALGO_V2_DEFS:
         if cat != last_cat:
@@ -11370,7 +11641,17 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
     display:flex; align-items:center; gap:8px;
   }
   .section-title::after { content:""; flex:1; height:1px; background:#1e1e1e; }
+  .algo-tabs { display:none; }
+  #algo-panel-1, #algo-panel-2 { display:none; }
   .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  #algo-all-grid { margin-top:18px; }
+  .card-family {
+    font-size:9px; font-weight:800; letter-spacing:.4px;
+    padding:3px 6px; border-radius:7px; flex-shrink:0;
+    background:#121212; border:1px solid rgba(255,255,255,.12); color:#888;
+  }
+  .card-family.a2 { color:#4ade80; border-color:rgba(74,222,128,.35); }
+  .card-family.a1 { color:#c8f135; border-color:rgba(200,241,53,.35); }
   @media(max-width:700px){ .grid { grid-template-columns:1fr; } }
 
   /* ── Kartlar — neon kutucuk (sleep-widget dil) ── */
@@ -11617,6 +11898,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
     </div>
   </div>
 
+  <div id="algo-all-grid" class="grid"></div>
   <div id="algo-panel-1">
   <!-- TREND -->
   <div class="section-title">📈 Trend Takip</div>
@@ -12285,44 +12567,43 @@ function renderCbTotal(accData, tab){
   }
 }
 
+function flattenAlgoList(){
+  const dest = document.getElementById("algo-all-grid");
+  if(!dest || dest.dataset.ready) return;
+  const p1 = document.getElementById("algo-panel-1");
+  const p2 = document.getElementById("algo-panel-2");
+  const cards = [];
+  if(p1) cards.push(...p1.querySelectorAll(".card"));
+  if(p2) cards.push(...p2.querySelectorAll(".card"));
+  cards.forEach(c => {
+    if(!c.querySelector(".card-family")){
+      const isV2 = c.dataset.panel === "2" || (c.querySelector("[id^='sigs-v2-']") != null);
+      const tag = document.createElement("div");
+      tag.className = "card-family " + (isV2 ? "a2" : "a1");
+      tag.textContent = isV2 ? "A2" : "A1";
+      const top = c.querySelector(".card-top");
+      if(top) top.insertBefore(tag, top.firstChild);
+    }
+    dest.appendChild(c);
+  });
+  dest.dataset.ready = "1";
+}
+
 function refreshActiveTabUI(){
   const sub = document.getElementById("page-sub");
   if(sub) sub.textContent = "ALGO1 (34 oy) + ALGO2 (17 oy) — BTC / ETH / SOL — 1 saatlik konsensüs";
-  // Her iki konsensüs her zaman yan yana
+  flattenAlgoList();
   renderBothConsensus();
   renderCbTotal(_accData, 1);
   renderCbTotal(_accDataV2, 2);
-  if(_activeTab === 1){
-    renderSignals(_signalsData, "", null);
-    renderRanking(_accData, ALGO_NAMES, REMOVED_ALGOS);
-    renderSymRanking(_accData, _activeSym, ALGO_NAMES, REMOVED_ALGOS);
-    updateCardAccBadges(_accData, "", 39, REMOVED_ALGOS);
-    sortCardsByAccuracy(_accData, "algo-panel-1", REMOVED_ALGOS);
-    renderTopSymAlgos(_accData, ALGO_NAMES, REMOVED_ALGOS);
-  } else {
-    renderSignals(_signalsDataV2, "v2-", V2_IDS);
-    renderRanking(_accDataV2, ALGO_NAMES_V2);
-    renderSymRanking(_accDataV2, _activeSym, ALGO_NAMES_V2);
-    updateCardAccBadges(_accDataV2, "v2-", 17);
-    sortCardsByAccuracy(_accDataV2, "algo-panel-2");
-    renderTopSymAlgos(_accDataV2, ALGO_NAMES_V2);
-  }
+  renderSignals(_signalsData, "", null);
+  renderSignals(_signalsDataV2, "v2-", V2_IDS);
+  renderRanking(_accData, ALGO_NAMES, REMOVED_ALGOS);
+  renderSymRanking(_accData, _activeSym, ALGO_NAMES, REMOVED_ALGOS);
+  updateCardAccBadges(_accData, "", 39, REMOVED_ALGOS);
+  updateCardAccBadges(_accDataV2, "v2-", 17);
+  renderTopSymAlgos(_accData, ALGO_NAMES, REMOVED_ALGOS);
 }
-
-function switchAlgoTab(tab){
-  _activeTab = tab;
-  try { sessionStorage.setItem("algo_active_tab", String(tab)); } catch (_) {}
-  const p1 = document.getElementById("algo-panel-1");
-  const p2 = document.getElementById("algo-panel-2");
-  if(p1) p1.style.display = tab === 1 ? "" : "none";
-  if(p2) p2.style.display = tab === 2 ? "" : "none";
-  document.getElementById("algo-tab-1").classList.toggle("active", tab === 1);
-  document.getElementById("algo-tab-2").classList.toggle("active", tab === 2);
-  refreshActiveTabUI();
-}
-
-document.getElementById("algo-tab-1").addEventListener("click", () => switchAlgoTab(1));
-document.getElementById("algo-tab-2").addEventListener("click", () => switchAlgoTab(2));
 
 async function loadAccuracy(){
   try{
@@ -15439,6 +15720,7 @@ ALGORITMA_ISLEMLER_HTML = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Algoritma işlemler — A2 Top 17 Poly</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c8f135'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif' font-weight='900' fill='%230d0d0d'>A</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -15467,14 +15749,50 @@ body{
 .nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:var(--accent)}
 .sidebar-footer{margin-top:auto;font-size:11px;color:#555;padding:12px;display:flex;align-items:center;gap:6px}
 .sidebar-footer .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
-.main{flex:1;padding:24px 28px;min-width:0;max-width:1400px}
+.main{flex:1;padding:24px 28px;min-width:0;max-width:none}
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
 .page-title{font-size:28px;font-weight:800;letter-spacing:-.5px}
 .page-sub{font-size:12px;color:var(--muted);margin-top:4px}
 .chip{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:12px;font-weight:700;white-space:nowrap}
 .section{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
 .section-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
-.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.book-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.book-split{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.book-split-pane{min-width:0}
+.book-split-h{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.book-split-right{padding-left:18px;border-left:1px solid var(--line)}
+.book-tops{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(220px,.78fr);gap:12px;margin-bottom:16px;align-items:stretch}
+.book-tops .book-grid{display:contents}
+.book-tops .book-card-wrap{min-width:0;height:100%}
+.book-tops .book-card{height:100%}
+.sym-best{
+  position:relative;overflow:hidden;border-radius:16px;padding:10px 12px 10px;
+  background:linear-gradient(145deg,#5b21b6 0%,#7c3aed 42%,#a21caf 100%);
+  color:#fff;border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 12px 28px rgba(91,33,182,.28);height:100%;min-height:0;
+  display:flex;flex-direction:column;
+}
+.sym-best::before{content:'';position:absolute;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.12);top:-28px;right:-20px;pointer-events:none}
+.sym-best-h{font-size:11px;font-weight:800;letter-spacing:-.2px;position:relative;z-index:1;flex-shrink:0}
+.sym-best-h span{font-size:10px;font-weight:600;opacity:.7}
+.sym-best-row{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:4px;position:relative;z-index:1;flex-shrink:0}
+.sym-best-wr{font-size:22px;font-weight:800;letter-spacing:-.8px;line-height:1}
+.sym-best-pnl{font-size:14px;font-weight:800}
+.sym-best-pnl.pos{color:#39ff8e}.sym-best-pnl.neg{color:#fda4af}
+.sym-best-meta{font-size:10px;opacity:.75;margin-top:3px;position:relative;z-index:1;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sym-best-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px;position:relative;z-index:1;flex:1;min-height:0}
+.sym-best-chip{
+  text-align:center;padding:6px 4px;border-radius:12px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);
+  color:inherit;text-decoration:none;display:flex;flex-direction:column;justify-content:center;
+}
+.sym-best-chip:hover{background:rgba(255,255,255,.18)}
+.sym-best-chip .n{font-size:12px;font-weight:800;margin-bottom:2px}
+.sym-best-chip .a{display:inline-block;font-size:10px;font-weight:800;color:#111;background:rgba(255,255,255,.92);border-radius:999px;padding:2px 7px;margin:2px 0 5px}
+.sym-best-chip .p{font-size:16px;font-weight:800;color:#39ff8e}
+.sym-best-chip .p.mid{color:#fde047}
+.sym-best-chip .c{font-size:10px;opacity:.75;margin-top:2px}
+.sym-best-chip .c b.pos{color:#39ff8e}.sym-best-chip .c b.neg{color:#fda4af}
 .book-card-wrap{display:flex;flex-direction:column;gap:8px}
 .book-card{
   background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
@@ -15505,6 +15823,11 @@ body{
   box-shadow:none;
 }
 .book-card.regime-live:hover{border-color:rgba(176,38,255,.5)}
+.book-card.regime-symbest{
+  border-color:rgba(0,242,255,.32);
+  box-shadow:none;
+}
+.book-card.regime-symbest:hover{border-color:rgba(0,242,255,.55)}
 .book-card.book-wr-best{
   background:rgba(57,255,142,.16);
   border-color:rgba(57,255,142,.4);
@@ -15523,6 +15846,7 @@ body{
 .regime-chip.range{color:#39ff8e;border:1px solid rgba(57,255,142,.45);background:rgba(57,255,142,.1)}
 .regime-chip.trend{color:#c8f135;border:1px solid rgba(200,241,53,.4);background:rgba(200,241,53,.1)}
 .regime-chip.live{color:#d08cff;border:1px solid rgba(176,38,255,.5);background:rgba(176,38,255,.14)}
+.regime-chip.symbest{color:#00f2ff;border:1px solid rgba(0,242,255,.5);background:rgba(0,242,255,.12)}
 .regime-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
 .regime-f{
   border:1px solid var(--line);background:var(--card2);color:var(--muted);
@@ -15571,9 +15895,11 @@ body{
 .vote-group.range{border-left-color:#39ff8e}
 .vote-group.trend{border-left-color:#c8f135}
 .vote-group.live{border-left-color:#b026ff}
+.vote-group.symbest{border-left-color:#00f2ff}
 .vote-group.range .vote-group-h{color:#39ff8e}
 .vote-group.trend .vote-group-h{color:#c8f135}
 .vote-group.live .vote-group-h{color:#d08cff}
+.vote-group.symbest .vote-group-h{color:#00f2ff}
 .vote-group-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1}
 .book-regime{margin-bottom:22px}
 .book-regime-h{
@@ -15750,11 +16076,18 @@ body{
 @media(max-width:1100px){
   .detail-layout{grid-template-columns:1fr}
   .edit-panel{position:relative;top:0;max-height:none}
+  .book-split{grid-template-columns:1fr}
+  .book-split-right{padding-left:0;border-left:none;padding-top:16px;border-top:1px solid var(--line)}
+  .book-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .book-tops{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .book-tops .book-grid{display:contents}
 }
 @media(max-width:860px){
   body{flex-direction:column}
   .sidebar{width:100%;height:auto;position:relative;border-right:none;border-bottom:1px solid var(--line)}
   .main{padding:16px}
+  .book-grid{grid-template-columns:1fr}
+  .book-tops{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -16133,6 +16466,10 @@ function bookCardHtml(b, homeKey, wrBest){
       title="Poly /poly overview bu defterden devam eder">${actLbl}</button>`}
   </div>`;
 }
+function isVoteTopBook(b){
+  const id = String((b && b.id) || '').toLowerCase();
+  return !!(b && (b.vote_paper || id === 'top1' || id === 'top2' || id === 'top3' || id === 'top4'));
+}
 function sortBooksByPnl(arr){
   return (arr||[]).slice().sort((a,b)=>{
     const pa = Number(a.total_pnl||0), pb = Number(b.total_pnl||0);
@@ -16143,24 +16480,81 @@ function sortBooksByPnl(arr){
     return Number(b.balance||0) - Number(a.balance||0);
   });
 }
-function renderBooks(books, homeKey){
+function sortBooksByWr(arr){
+  return (arr||[]).slice().sort((a,b)=>{
+    const na = Number(a.history_n||0) >= 6, nb = Number(b.history_n||0) >= 6;
+    if (na !== nb) return nb ? 1 : -1;
+    const ha = a.wr == null ? -1 : Number(a.wr);
+    const hb = b.wr == null ? -1 : Number(b.wr);
+    if (hb !== ha) return hb - ha;
+    return Number(b.total_pnl||0) - Number(a.total_pnl||0);
+  });
+}
+function moneyTxt(v){
+  const n = Number(v||0);
+  return (n>=0?'+':'') + n.toFixed(2);
+}
+function symBestHtml(sb){
+  const items = (sb && sb.items) || [];
+  if(!items.length) return '';
+  const wr = sb.total_wr == null ? '—' : String(sb.total_wr).replace('.',',')+'%';
+  const pnl = Number(sb.total_pnl||0);
+  const chips = items.map(sv => {
+    const wrCls = Number(sv.wr) >= 55 ? '' : ' mid';
+    const algo = sv.analiz_short || sv.analiz || '—';
+    const href = sv.analiz ? '/algoritma-islemler/'+encodeURIComponent(sv.analiz) : '#';
+    const p = Number(sv.pnl||0);
+    return `<a class="sym-best-chip" href="${href}" title="${sv.analiz_label || algo}">
+      <div class="n">${sv.sym}</div>
+      <div class="a">${algo}</div>
+      <div class="p${wrCls}">${String(sv.wr).replace('.',',')}%</div>
+      <div class="c">${sv.w}/${sv.t} · <b class="${p>=0?'pos':'neg'}">${moneyTxt(p)}</b></div>
+    </a>`;
+  }).join('');
+  return `<div class="sym-best">
+    <div class="sym-best-h">Sembol başarı <span>· coin başına en iyi</span></div>
+    <div class="sym-best-row">
+      <div class="sym-best-wr">${wr}</div>
+      <div class="sym-best-pnl ${pnl>=0?'pos':'neg'}">${moneyTxt(pnl)}</div>
+    </div>
+    <div class="sym-best-meta">${sb.analiz_short||'—'} · ${sb.total||0} işlem</div>
+    <div class="sym-best-chips">${chips}</div>
+  </div>`;
+}
+function renderBooks(books, homeKey, symBest){
   const el = document.getElementById('algo-books');
-  const rows = sortBooksByPnl((books||[]).filter(b => !_regimeFilter || (b.regime||'live') === _regimeFilter));
+  if (symBest) _lastSymBest = symBest;
+  const rows = (books||[]).filter(b => !_regimeFilter || (b.regime||'live') === _regimeFilter);
   if(!rows.length){
     el.innerHTML = '<div class="empty">defter yok</div>';
     return;
   }
+  const tops = sortBooksByPnl(['top1','top2','top3','top4'].map(id => rows.find(b => String(b.id||'').toLowerCase() === id)).filter(Boolean));
+  const ranked = rows.filter(b => !isVoteTopBook(b));
+  const byPnl = sortBooksByPnl(ranked);
+  const byWr = sortBooksByWr(ranked);
   let bestWr = -1;
-  rows.forEach(b => {
+  ranked.forEach(b => {
     if (Number(b.history_n||0) >= 6 && b.wr != null && Number(b.wr) > bestWr) bestWr = Number(b.wr);
   });
-  el.innerHTML = '<div class="book-grid">'+rows.map(b => {
-    const wrBest = bestWr >= 0 && Number(b.history_n||0) >= 6 && b.wr != null && Number(b.wr) === bestWr;
-    return bookCardHtml(b, homeKey, wrBest);
-  }).join('')+'</div>';
+  const card = b => bookCardHtml(b, homeKey, !isVoteTopBook(b) && bestWr >= 0 && Number(b.history_n||0) >= 6 && b.wr != null && Number(b.wr) === bestWr);
+  const bestCard = symBestHtml(_lastSymBest);
+  el.innerHTML =
+    '<div class="book-split-h">Oy defteri</div>'
+    + '<div class="book-tops">'
+      + '<div class="book-grid">'+(tops.length?tops.map(card).join(''):'')+'</div>'
+      + bestCard
+    + '</div>'
+    + '<div class="book-split">'
+      + '<div class="book-split-pane"><div class="book-split-h">En çok kazandıran</div>'
+      + '<div class="book-grid">'+byPnl.map(card).join('')+'</div></div>'
+      + '<div class="book-split-pane book-split-right"><div class="book-split-h">WR en yüksek</div>'
+      + '<div class="book-grid">'+byWr.map(card).join('')+'</div></div>'
+    + '</div>';
 }
 let _booksLoadGen = 0;
 let _lastBooks = [];
+let _lastSymBest = null;
 function paintHomeDisplay(bookId){
   const key = String(bookId || '').toLowerCase();
   _lastBooks = (_lastBooks || []).map(b => ({
@@ -16377,7 +16771,7 @@ async function load(){
       + ' · ' + histSum + ' işlem'
       + ' · açık ' + (d.total_open||0);
     renderVotes(d.votes);
-    renderBooks(books, d.home_display_book);
+    renderBooks(books, d.home_display_book, d.sym_best);
   } catch(e){
     console.error(e);
     const el = DETAIL_ID ? document.getElementById('detail-positions') : document.getElementById('algo-books');

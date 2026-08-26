@@ -1,6 +1,7 @@
-"""İlk 10'un rejim oyu — $48 sanal Poly dolum. TOP1–3 sayılmaz.
+"""İlk 10'un rejim oyu + coin-en-iyi — $48 sanal Poly dolum. TOP1–4 sayılmaz.
 
 Grup BTC/ETH/SOL'de çoğunluk varsa o yöne $48 girer.
+TOP4 her coinde o anki en yüksek WR algoritmanın :05 yönünü izler.
 Dolum `pm_sanal_quote` (VWAP + taker ücret); tutarsa `pm_win_profit`,
 tutmazsa −(spent+fee). Gerçek emir yok.
 
@@ -18,7 +19,7 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 BOOK_FILE = os.path.join(_DIR, "vote_paper.json")
 STAKE = 48.0
 KEEP_DAYS = 90
-REGIMES = ("range", "trend", "live")
+REGIMES = ("range", "trend", "live", "symbest")
 
 
 def _now():
@@ -191,6 +192,8 @@ def _trades_from_group(g: dict, now: datetime) -> list[dict]:
             "actual": None,
             "win": None,
             "pnl": None,
+            "source_algo": c.get("analiz"),
+            "source_short": c.get("analiz_short"),
         }
         _quote_trade(t, now)
         out.append(t)
@@ -221,6 +224,27 @@ def record_from_votes(votes: dict, now: datetime | None = None) -> dict:
             return book
         if prev.get("saved_at_tr"):
             filled = False
+            have = {g.get("regime"): g for g in (prev.get("groups") or [])}
+            for g in votes.get("groups") or []:
+                rg = g.get("regime")
+                trades = _trades_from_group(g, now)
+                if not trades:
+                    continue
+                old = have.get(rg)
+                if old is None:
+                    prev.setdefault("groups", []).append({
+                        "regime": rg,
+                        "label": g.get("label"),
+                        "books": int(g.get("books") or 0),
+                        "trades": trades,
+                    })
+                    have[rg] = prev["groups"][-1]
+                    filled = True
+                    continue
+                if not (old.get("trades") or []):
+                    old["trades"] = trades
+                    old["books"] = int(g.get("books") or old.get("books") or 0)
+                    filled = True
             for g in prev.get("groups") or []:
                 for t in g.get("trades") or []:
                     if _quote_trade(t, now):
@@ -484,11 +508,13 @@ TOP_KEYS = {
     "top1": ("range", "TOP1 · Durgun", "İlk 10 durgun oyu · $48 Poly dolum"),
     "top2": ("trend", "TOP2 · Trend", "İlk 10 trend oyu · $48 Poly dolum"),
     "top3": ("live", "TOP3 · Canlı", "İlk 10 canlı oyu · $48 Poly dolum"),
+    "top4": ("symbest", "TOP4 · Sembol", "Coin başına en iyi · $48 Poly dolum"),
 }
 TOP_ALIASES = {
     "top1": "top1", "top1-durgun": "top1", "top1_durgun": "top1",
     "top2": "top2", "top2-trend": "top2", "top2_trend": "top2",
     "top3": "top3", "top3-canli": "top3", "top3_canli": "top3", "top3-canlı": "top3",
+    "top4": "top4", "top4-sembol": "top4", "top4_sembol": "top4",
 }
 
 
@@ -527,9 +553,11 @@ def build_top_book(key: str, *, include_history: bool = False) -> dict | None:
                 if t.get("pm_spent") is None:
                     continue
                 up = t.get("dir") == "UP"
+                src = t.get("source_short") or ""
+                shown = f"{t.get('symbol')} · {src}" if src else t.get("symbol")
                 if t.get("pnl") is None:
                     cards.append({
-                        "name": t.get("symbol"),
+                        "name": shown,
                         "symbol": t.get("symbol"),
                         "side": "LONG" if up else "SHORT",
                         "dir_tr": "YÜKSELİR" if up else "DÜŞER",
@@ -580,7 +608,7 @@ def build_top_book(key: str, *, include_history: bool = False) -> dict | None:
         "open_count": len(cards),
         "cards": cards,
         "regime": rg,
-        "regime_label": {"range": "Durgun", "trend": "Trend", "live": "Canlı"}.get(rg, rg),
+        "regime_label": {"range": "Durgun", "trend": "Trend", "live": "Canlı", "symbest": "Sembol"}.get(rg, rg),
         "started_at_label": "26.08.2026",
         "margin_usd": STAKE,
         "leverage": 1,
@@ -594,7 +622,7 @@ def build_top_book(key: str, *, include_history: bool = False) -> dict | None:
 
 def list_top_books() -> list[dict]:
     out = []
-    for k in ("top1", "top2", "top3"):
+    for k in ("top1", "top2", "top3", "top4"):
         b = build_top_book(k)
         if b:
             out.append(b)

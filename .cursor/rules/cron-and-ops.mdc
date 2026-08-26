@@ -68,7 +68,7 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py close --slot 05` (69 defter **:05 kopya** settle; :02 dosyalarına dokunmaz; live ayna yok) | `/tmp/slot_trader_t05.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py close --slot 07` (69 defter **:07 kopya** settle) | `/tmp/slot_trader_t07.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py open --slot 05` (aynı 35 algoritma, o anki CLOB ask; **sanal $1000**; gerçek PM yok) | `/tmp/slot_trader_t05.log` |
-| `8 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_consensus_log.py run` (**:05 ortak oy** kaydı + bitmiş saat 1h sonuç; **ilk 8** rejim oyu $48 Poly dolum `vote_paper`; emir yok) | `/tmp/algo_consensus.log` |
+| `8 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_consensus_log.py run` (**:05 ortak oy** kaydı + bitmiş saat 1h sonuç; **ilk 10** rejim oyu $48 Poly dolum `vote_paper` + TOP4 sembol; emir yok) | `/tmp/algo_consensus.log` |
 | `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py open --slot 07` | `/tmp/slot_trader_t07.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py close` | `/tmp/poly_trader_a2_05_v2.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_a2_05_v2.py open` (**A2#05 V2 · Z KAPISI** — A2#05 sinyali + 1,0 ≤ \|z\| < 1,5; sanal **$1000** · $24/36/48; **gerçek para aynası kapalı**) | `/tmp/poly_trader_a2_05_v2.log` |
