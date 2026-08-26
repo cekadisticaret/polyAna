@@ -58,6 +58,11 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `25 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_c101_v2.py backfill` | `/tmp/poly_trader_c101_v2_calib.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py close` | `/tmp/poly_trader_x101.log` |
 | `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py open` (**X1#01 - 13Analiz** — 13 katman + ask kenarı; sanal **$1000**; `:01` close / `:02` open; gerçek PM yok) | `/tmp/poly_trader_x101.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/f1_signal.py` (F1-01…07 :02 open için erken) | `/tmp/f1_signals.log` |
+| `4 * * * *` + `sleep 40` | `sleep 40 && cd /root/aiProject && python3 temmuzPoly/f1_signal.py` | `/tmp/f1_signals.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_f1.py close` | `/tmp/poly_trader_f1.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_f1.py open` (**F1-01…07 ALGO3** — HMM/MVRV/SOPR/OI/KAMA/Chandelier/Funding; sanal **$1000**; gerçek PM yok) | `/tmp/poly_trader_f1.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_f1.py weekly` | `/tmp/poly_trader_f1.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_x101.py weekly` | `/tmp/poly_trader_x101.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_e01.py close` | `/tmp/poly_trader_e01.log` |
 | `2 * * * *` + `sleep 25` | `sleep 25 && cd /root/aiProject && python3 temmuzPoly/poly_trader_e01.py open` (**COMBO** — A1 + C1#01 + A2#05 V2 oy; çatışmada yok; sembol WR $16/$24/$32; **ask ≤ 0,50**; sanal **$1000**; `:01` close / `:02:25` open; gerçek PM yok) | `/tmp/poly_trader_e01.log` |
@@ -65,8 +70,8 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_e02.py close` | `/tmp/poly_trader_e02.log` |
 | `2 * * * *` + `sleep 40` | `sleep 40 && cd /root/aiProject && python3 temmuzPoly/poly_trader_e02.py open` (**COMBO2** — BTC←C1#01 · ETH/SOL←COMBO; **sabit $64**; sanal **$1000**; `:01` close / `:02:40` open; gerçek PM yok) | `/tmp/poly_trader_e02.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_e02.py weekly` | `/tmp/poly_trader_e02.log` |
-| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py close --slot 05` (69 defter **:05 kopya** settle; :02 dosyalarına dokunmaz; live ayna yok) | `/tmp/slot_trader_t05.log` |
-| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py close --slot 07` (69 defter **:07 kopya** settle) | `/tmp/slot_trader_t07.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py close --slot 05` (76 defter **:05 kopya** settle; :02 dosyalarına dokunmaz; live ayna yok) | `/tmp/slot_trader_t05.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py close --slot 07` (76 defter **:07 kopya** settle) | `/tmp/slot_trader_t07.log` |
 | `5 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py open --slot 05` (aynı 35 algoritma, o anki CLOB ask; **sanal $1000**; gerçek PM yok) | `/tmp/slot_trader_t05.log` |
 | `8 * * * *` | `cd /root/aiProject && python3 temmuzPoly/algo_consensus_log.py run` (**:05 ortak oy** kaydı + bitmiş saat 1h sonuç; **ilk 10** rejim oyu $48 Poly dolum `vote_paper` + TOP4 sembol; emir yok) | `/tmp/algo_consensus.log` |
 | `7 * * * *` | `cd /root/aiProject && python3 temmuzPoly/slot_trader.py open --slot 07` | `/tmp/slot_trader_t07.log` |
@@ -177,7 +182,7 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 - `bist_signal_hunter` seans dışında çıkar (betik içi saat kontrolü).
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
 - Saatlik `/algoritma-islemler` sanal: close **:01**, open **:02** (B1#04/#05 **:02:30**, COMBO **:02:25**, COMBO2 **:02:40**). Aynı 69 algoritmanın **:05 / :07 kopyaları** ayrı dosyada (`*_t05_*` / `*_t07_*`, `slot_trader.py`); close **:01**, open **:05** / **:07**. Ayna API her defterin **:02/:05/:07** içinden en çok kazandıran (net P&L) dilimini yayınlar (`open_minute` / `best_slot` defter bazında; `?slot=` yalnız teşhis). **:01'de yeni open yok.** Sayfada olmayan A5 + Live PM: close **:02**, open **:05** (B1 Live :06/:06:30). **10. Analiz (sanal + live) kaldırıldı (2026-08-24).**
-- **`/algoritma-islemler` giriş kademesi (69 defter):** sembol WR **$24 / $36 / $48** (veri yok → orta); **COMBO** **$16 / $24 / $32**; **COMBO2 sabit $64** (WR/soğuk saat yok); soğuk saat **−%30** (COMBO2 hariç); sıcak saat büyütme kapalı. Canlı PM `/ayarlar` kademeleri ayrı, değişmedi.
+- **`/algoritma-islemler` giriş kademesi (76 defter):** sembol WR **$24 / $36 / $48** (veri yok → orta); **COMBO** **$16 / $24 / $32**; **COMBO2 sabit $64** (WR/soğuk saat yok); soğuk saat **−%30** (COMBO2 hariç); sıcak saat büyütme kapalı. Canlı PM `/ayarlar` kademeleri ayrı, değişmedi.
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** varsayılan olarak atlanır (**close** çalışır); **dashboard'dan Aç** yapılan Live analiz hafta sonu dahil işlem açar. **`/algoritma-islemler` (tamamı):** A1 Top-34 + A1/A2/A6/V2/V3/MELEZ/A15/B1#01-05 + COMBO/COMBO2 + A2 Top-17 — hafta sonu da open/close devam (7/24 sanal).
 - **AgustosKripto sanal hafta sonu duraklaması KALDIRILDI (2026-08-15):** Algoritmalar + Analizler artık **7/24** — `open` / `close` / `trail` hafta sonu da koşar (`WEEKEND_PAUSE = False`, her iki `runner.py`'de). Test grubu zaten 7/24 idi; üç grup da aynı hizada.
@@ -308,6 +313,8 @@ tail -f /tmp/poly_trader_b1_mum_live.log
 tail -f /tmp/poly_trader_b1_05.log
 tail -f /tmp/poly_trader_c101.log
 tail -f /tmp/poly_trader_x101.log
+tail -f /tmp/f1_signals.log
+tail -f /tmp/poly_trader_f1.log
 tail -f /tmp/poly_trader_e01.log
 tail -f /tmp/poly_trader_e02.log
 tail -f /tmp/poly_trader_c101_calib.log

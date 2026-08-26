@@ -115,6 +115,13 @@ _ALGO_BOOK_ALIASES: dict[str, str] = {
     "e02": "combo2",
     "e_02": "combo2",
     "e2": "combo2",
+    "f1-01": "f1_01", "f101": "f1_01", "f1#01": "f1_01",
+    "f1-02": "f1_02", "f102": "f1_02", "f1#02": "f1_02",
+    "f1-03": "f1_03", "f103": "f1_03", "f1#03": "f1_03",
+    "f1-04": "f1_04", "f104": "f1_04", "f1#04": "f1_04",
+    "f1-05": "f1_05", "f105": "f1_05", "f1#05": "f1_05",
+    "f1-06": "f1_06", "f106": "f1_06", "f1#06": "f1_06",
+    "f1-07": "f1_07", "f107": "f1_07", "f1#07": "f1_07",
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Algoritma performansı / harita / analizler — gerçek PM (Live) gösterilmez; sanal karşılığı kullanılır
@@ -317,6 +324,21 @@ _ANALYSIS_LABELS[_A2_05_V2] = "A2#05 V2 · FİYAT TABANI"
 _OVERVIEW_INIT_BAL[_A2_05_V2] = 1000
 _OVERVIEW_SHORT_LABELS[_A2_05_V2] = "A2#05 V2"
 
+try:
+    from f1_signal import F1_META as _F1_META  # noqa: E402
+except ImportError:
+    _F1_META = []
+
+_F1_KEYS: list[str] = []
+_F1_REGIME = {1: "live", 2: "range", 3: "range", 4: "live", 5: "trend", 6: "trend", 7: "live"}
+for _num, _name, *_rest in _F1_META:
+    _f1k = f"f1_{_num:02d}"
+    _F1_KEYS.append(_f1k)
+    _HEATMAP_SYMS[_f1k] = ["BTC", "ETH", "SOL"]
+    _ANALYSIS_LABELS[_f1k] = f"F1#{_num:02d} {_name}"
+    _OVERVIEW_INIT_BAL[_f1k] = 1000
+    _OVERVIEW_SHORT_LABELS[_f1k] = f"F1#{_num:02d}"
+
 # /algoritma-islemler + /poly/api/mirror: 5 sarı kart başta, kendi içinde bakiye → P&L → WR
 # Kart + ayna: defterin :02/:05/:07 içinden en çok kazandıran (net P&L) dilim.
 _ALGO_FEATURED_KEYS: list[str] = ["combo", "c101", "a2_05_v2", "analiz1", "combo2"]
@@ -352,7 +374,7 @@ def _sort_algo_islemler_books(books: list, id_field: str = "id") -> list:
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
     "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
-] + _A1_KEYS + _A2_KEYS + [_A2_05_V2]
+] + _A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS
 
 # Motor tipi → piyasa rejimi (ölçülmüş WR değil).
 # range = durgun / yatay · trend = yönlü · live = kırılım / vol / karma.
@@ -382,6 +404,8 @@ _NAMED_REGIME = {
     "combo": "live", "combo2": "live",
     "a2_05_v2": "range",
 }
+for _num, _name, *_rest in _F1_META:
+    _NAMED_REGIME[f"f1_{_num:02d}"] = _F1_REGIME.get(_num, "live")
 
 
 def _algo_regime(key: str) -> str:
@@ -397,10 +421,10 @@ def _algo_regime(key: str) -> str:
     return "live"
 
 
-_HEATMAP_ORDER.extend(_A1_KEYS + _A2_KEYS + [_A2_05_V2])
-_OVERVIEW_ACTIVE_ORDER.extend(_A1_KEYS + _A2_KEYS + [_A2_05_V2])
-_HISTORY_ORDER.extend(_A1_KEYS + _A2_KEYS + [_A2_05_V2])
-_ANALYSIS_ORDER.extend(_A1_KEYS + _A2_KEYS + [_A2_05_V2])
+_HEATMAP_ORDER.extend(_A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS)
+_OVERVIEW_ACTIVE_ORDER.extend(_A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS)
+_HISTORY_ORDER.extend(_A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS)
+_ANALYSIS_ORDER.extend(_A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS)
 
 # Analizler sayfası kayıtları (A2 dahil)
 _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
@@ -432,6 +456,9 @@ for _num, _name in _A1_META:
 for _num, _name, *_rest in _A2_META:
     _a2k = f"a2_{_num:02d}"
     _ANALIZLER_SYSTEMS.append((_a2k, f"A2#{_num:02d} {_name}", 1000, f"Top17 algo · sanal $24/36/48"))
+for _num, _name, *_rest in _F1_META:
+    _f1k = f"f1_{_num:02d}"
+    _ANALIZLER_SYSTEMS.append((_f1k, f"F1#{_num:02d} {_name}", 1000, "ALGO3 · sanal $24/36/48"))
 
 # 15M A2 Top3 kaldırıldı (309/316/317)
 _M15_A2_SPECS: list[tuple[str, str, str, str]] = []
@@ -3052,7 +3079,7 @@ def _hourly_analiz_candidates() -> list[str]:
         and k not in _REMOVED_ANALYSES
         and not _is_15m_analiz_key(k)
     ]
-    extra = [k for k in (_A1_KEYS + _A2_KEYS) if k not in base]
+    extra = [k for k in (_A1_KEYS + _A2_KEYS + _F1_KEYS) if k not in base]
     return base + extra
 
 
@@ -3632,6 +3659,16 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
         panel = "poly_a2"
         name = short or label
         title = "Mean reversion · 1,0 ≤ |z| < 1,5 · $24/36/48"
+    elif key.startswith("f1_"):
+        category = "Poly sanal · F1 ALGO3"
+        panel = "poly_f1"
+        if short and short != label:
+            name = short
+            rest = label[len(short):].strip() if label.startswith(short) else label
+            title = rest or label
+        else:
+            name = label
+            title = label
     elif key.startswith("a1_"):
         category = "Poly sanal · A1 Top-34"
         panel = "poly_a1_top"

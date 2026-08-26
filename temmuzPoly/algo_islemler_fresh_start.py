@@ -20,6 +20,12 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
+if _DIR not in sys.path:
+    sys.path.insert(0, _DIR)
+from poly_slot_paths import COPY_SLOTS, SLOT_INIT_BAL, with_slot_tag  # noqa: E402
+from poly_trader_a1 import A1_KEYS  # noqa: E402
+from poly_trader_f1 import F1_KEYS  # noqa: E402
+
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 _BALANCE = 1000.0
 
@@ -30,8 +36,8 @@ ALGO_ISLEMLER_KEYS = [
     "analiz1", "analiz2",
     "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15",
     "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
-    "c101", "c101_v2", "x101", "combo",
-] + [f"a2_{i:02d}" for i in range(1, 18)] + ["a2_05_v2"]
+    "c101", "c101_v2", "x101", "combo", "combo2",
+] + list(A1_KEYS) + [f"a2_{i:02d}" for i in range(1, 18)] + ["a2_05_v2"] + list(F1_KEYS)
 
 # Dosya adı defter anahtarından farklı olanlar
 _STATE_FILE_KEY = {"melez": "analiz6_v4"}
@@ -40,19 +46,25 @@ _STATE_FILE_KEY = {"melez": "analiz6_v4"}
 _STANDALONE_CLOSE = [
     "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15",
     "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
-    "melez", "c101", "c101_v2", "x101", "combo", "a2_05_v2",
+    "melez", "c101", "c101_v2", "x101", "combo", "combo2", "a2_05_v2",
 ]
 
 # Betik adı defter anahtarından farklı olanlar
-_CLOSE_SCRIPT = {"melez": "poly_trader_analiz6_v4.py", "combo": "poly_trader_e01.py"}
+_CLOSE_SCRIPT = {
+    "melez": "poly_trader_analiz6_v4.py",
+    "combo": "poly_trader_e01.py",
+    "combo2": "poly_trader_e02.py",
+}
 
 
-def _state_path(key: str) -> str:
-    return os.path.join(_DIR, f"poly_trader_{_STATE_FILE_KEY.get(key, key)}_state.json")
+def _state_path(key: str, slot: int = 2) -> str:
+    path = os.path.join(_DIR, f"poly_trader_{_STATE_FILE_KEY.get(key, key)}_state.json")
+    return with_slot_tag(path, slot)
 
 
-def _history_path(key: str) -> str:
-    return os.path.join(_DIR, f"poly_trader_{_STATE_FILE_KEY.get(key, key)}_history.json")
+def _history_path(key: str, slot: int = 2) -> str:
+    path = os.path.join(_DIR, f"poly_trader_{_STATE_FILE_KEY.get(key, key)}_history.json")
+    return with_slot_tag(path, slot)
 
 
 def _run_close_all() -> None:
@@ -64,15 +76,22 @@ def _run_close_all() -> None:
             continue
         print(f"[close] {key} …")
         subprocess.run([py, script, "close"], cwd=_DIR, check=False)
+    a1 = os.path.join(_DIR, "poly_trader_a1.py")
+    if os.path.isfile(a1):
+        print("[close] A1 Top-34 (batch) …")
+        subprocess.run([py, a1, "close", "all"], cwd=_DIR, check=False)
     a2 = os.path.join(_DIR, "poly_trader_a2.py")
     if os.path.isfile(a2):
         print("[close] A2 Top-17 (batch) …")
         subprocess.run([py, a2, "close", "all"], cwd=_DIR, check=False)
+    f1 = os.path.join(_DIR, "poly_trader_f1.py")
+    if os.path.isfile(f1):
+        print("[close] F1-01…07 (batch) …")
+        subprocess.run([py, f1, "close", "all"], cwd=_DIR, check=False)
 
 
-def _archive_history(key: str, stamp: str) -> int:
+def _archive_history_path(path: str, stamp: str) -> int:
     """Geçmişi tarihli klasöre taşı, defteri boş bırak. Silme yok, taşıma var."""
-    path = _history_path(key)
     if not os.path.exists(path):
         return 0
     try:
@@ -90,6 +109,10 @@ def _archive_history(key: str, stamp: str) -> int:
     with open(path, "w", encoding="utf-8") as f:
         json.dump([], f)
     return n
+
+
+def _archive_history(key: str, stamp: str) -> int:
+    return _archive_history_path(_history_path(key), stamp)
 
 
 def _reset_balances(
@@ -137,6 +160,38 @@ def _reset_balances(
         reset_n += 1
         extra = f"  ({open_n} açık)" if keep_open and open_n else ""
         print(f"  reset {key} → ${_BALANCE:.0f}{extra}")
+    for slot in COPY_SLOTS:
+        for key in ALGO_ISLEMLER_KEYS:
+            path = _state_path(key, slot)
+            hist_path = _history_path(key, slot)
+            if os.path.exists(path):
+                try:
+                    with open(path, encoding="utf-8") as f:
+                        state = json.load(f)
+                except Exception:
+                    print(f"  ATLANDI {key} t{slot:02d} — state okunamadı")
+                    continue
+            else:
+                state = {"balance": SLOT_INIT_BAL, "open_positions": [], "total_pnl": 0.0}
+            if wipe_history and os.path.exists(hist_path):
+                archived += _archive_history_path(hist_path, stamp)
+            elif not os.path.exists(hist_path):
+                with open(hist_path, "w", encoding="utf-8") as f:
+                    json.dump([], f)
+            open_n = len(state.get("open_positions") or [])
+            if keep_open:
+                kept_open += open_n
+            else:
+                cleared_open += open_n
+                state["open_positions"] = []
+            state["balance"] = SLOT_INIT_BAL
+            state["total_pnl"] = 0.0
+            state["balance_reset_at_tr"] = now_tr.isoformat()
+            state["balance_reset_note"] = f"t{slot:02d} reset ${SLOT_INIT_BAL:.0f}"
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(state, f, indent=2, ensure_ascii=False)
+            reset_n += 1
+            print(f"  reset {key} t{slot:02d} → ${SLOT_INIT_BAL:.0f}")
     return reset_n, cleared_open, archived, kept_open
 
 
@@ -155,9 +210,12 @@ def main() -> None:
 
     if args.check:
         eksik = [k for k in ALGO_ISLEMLER_KEYS if not os.path.exists(_state_path(k))]
-        print(f"{len(ALGO_ISLEMLER_KEYS)} defter tanımlı, {len(eksik)} tanesinin state dosyası yok")
+        print(f"{len(ALGO_ISLEMLER_KEYS)} defter tanımlı, {len(eksik)} tanesinin :02 state dosyası yok")
         for k in eksik:
             print(f"  EKSİK {k} → {os.path.basename(_state_path(k))}")
+        for slot in COPY_SLOTS:
+            miss = [k for k in ALGO_ISLEMLER_KEYS if not os.path.exists(_state_path(k, slot))]
+            print(f"  t{slot:02d}: {len(miss)} state yok (ilk reset/close oluşturur)")
         return
 
     if args.keep_open and not args.reset_only:
