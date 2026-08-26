@@ -37,6 +37,9 @@ PM_ORDER_INTERACTIVE_RETRY_SEC = 2
 _PM_CLIENT = None
 _PM_CLIENT_TS = 0.0
 _PM_CLIENT_TTL_SEC = 300.0  # API key yeniden türetmeyi kes
+_PM_CLIENT_FAIL_TS = 0.0
+_PM_CLIENT_FAIL_TTL = 25.0  # CLOB down iken her poll 3× retry yapmasın
+_PM_CLIENT_INITING = False
 _PM_CLIENT_LOCK = None
 
 
@@ -49,10 +52,11 @@ def _pm_client_lock():
 
 
 def pm_invalidate_client() -> None:
-    global _PM_CLIENT, _PM_CLIENT_TS
+    global _PM_CLIENT, _PM_CLIENT_TS, _PM_CLIENT_FAIL_TS
     with _pm_client_lock():
         _PM_CLIENT = None
         _PM_CLIENT_TS = 0.0
+        _PM_CLIENT_FAIL_TS = 0.0
 
 
 def _pm_order_not_ready(err: str | None) -> bool:
@@ -138,7 +142,7 @@ def _is_algo_islemler_label(label: str) -> bool:
     if not label:
         return False
     u = label.strip().upper()
-    if u == "A2" or u.startswith("A2#"):
+    if u == "A2" or u.startswith("A2#") or u.startswith("A1#"):
         return True
     for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#", "C1#", "X1#", "E01", "COMBO"):
         if label.startswith(prefix):
@@ -262,6 +266,10 @@ def wr_tier_amount(
 
 
 def sanal_wr_amount_defaults(book_key: str) -> tuple[float, float, float]:
+    if book_key == "combo":
+        return (16.0, 24.0, 32.0)
+    if book_key == "combo2":
+        return (64.0, 64.0, 64.0)
     return SANAL_WR_DEFAULT
 
 
@@ -318,7 +326,6 @@ _PM_LIVE_SETTINGS_FILE = os.path.join(
 _PM_LIVE_AMOUNT_DEFAULTS: dict[str, tuple[float, float, float]] = {
     "a1": (8.0, 10.0, 12.0),
     "a2": (6.0, 7.0, 8.0),
-    "a10": (8.0, 10.0, 12.0),
     "a6": (8.0, 10.0, 12.0),
     "a6v2": (8.0, 10.0, 12.0),
     "a6v3": (8.0, 10.0, 12.0),
@@ -378,8 +385,13 @@ def pm_live_wr_amount(
 
 
 def pm_get_client(*, force: bool = False):
-    """Clob client — API key türetmeyi TTL boyunca cache'le (her emirde ~sn kaybı olmasın)."""
-    global _PM_CLIENT, _PM_CLIENT_TS
+    """Clob client — API key türetmeyi TTL boyunca cache'le (her emirde ~sn kaybı olmasın).
+
+    CLOB 400/timeout olunca 3 paralel retry dashboard'u 60 sn kilitliyordu.
+    Tek uçuş + 4 sn tavan + 25 sn fail cache: liste/grafik poll'u beklemeyi kessin.
+    """
+    global _PM_CLIENT, _PM_CLIENT_TS, _PM_CLIENT_FAIL_TS, _PM_CLIENT_INITING
+    import threading
     from py_clob_client_v2 import ClobClient
     pk = os.getenv("POLY_PRIVATE_KEY", "")
     funder = os.getenv("POLY_FUNDER", "")
@@ -391,27 +403,52 @@ def pm_get_client(*, force: bool = False):
             and (now - _PM_CLIENT_TS) < _PM_CLIENT_TTL_SEC
         ):
             return _PM_CLIENT
-    last_err = None
-    for attempt in range(3):
+        if (
+            not force
+            and _PM_CLIENT_FAIL_TS
+            and (now - _PM_CLIENT_FAIL_TS) < _PM_CLIENT_FAIL_TTL
+        ):
+            raise RuntimeError("Polymarket client yok (son deneme başarısız)")
+        if _PM_CLIENT_INITING:
+            raise RuntimeError("Polymarket client kuruluyor")
+        _PM_CLIENT_INITING = True
+    box: dict = {"client": None, "err": None}
+
+    def _init():
         try:
             temp = ClobClient(host=_PM_CLOB_HOST, chain_id=137, key=pk)
             creds = temp.create_or_derive_api_key()
             if creds is None:
-                time.sleep(0.5)
-                continue
-            client = ClobClient(
+                box["err"] = RuntimeError("api key yok")
+                return
+            box["client"] = ClobClient(
                 host=_PM_CLOB_HOST, chain_id=137, key=pk,
                 creds=creds, signature_type=1, funder=funder,
             )
-            with _pm_client_lock():
-                _PM_CLIENT = client
-                _PM_CLIENT_TS = time.time()
-            return client
         except Exception as e:
-            last_err = e
-            print(f"[PM] Client init ({attempt+1}/3): {e}", file=sys.stderr)
-            time.sleep(0.5)
-    raise RuntimeError(f"Polymarket client oluşturulamadı: {last_err}")
+            box["err"] = e
+            print(f"[PM] Client init: {e}", file=sys.stderr)
+
+    try:
+        th = threading.Thread(target=_init, daemon=True)
+        th.start()
+        th.join(4.0)
+        if th.is_alive():
+            with _pm_client_lock():
+                _PM_CLIENT_FAIL_TS = time.time()
+            raise RuntimeError("Polymarket client timeout")
+        if box["client"] is not None:
+            with _pm_client_lock():
+                _PM_CLIENT = box["client"]
+                _PM_CLIENT_TS = time.time()
+                _PM_CLIENT_FAIL_TS = 0.0
+            return box["client"]
+        with _pm_client_lock():
+            _PM_CLIENT_FAIL_TS = time.time()
+        raise RuntimeError(f"Polymarket client oluşturulamadı: {box['err']}")
+    finally:
+        with _pm_client_lock():
+            _PM_CLIENT_INITING = False
 
 
 def pm_get_balance() -> float:
@@ -949,6 +986,7 @@ def pm_sanal_quote(symbol: str, direction: str, amount_usd: float, now: datetime
     tp, size, spent = fill["price"], fill["size"], fill["spent"]
     if not (0.02 <= tp <= 0.98):
         return None
+    fee = pm_taker_fee(size, tp)
     return {
         "pm_slug": pm["slug"],
         "pm_title": pm.get("title", ""),
@@ -957,10 +995,12 @@ def pm_sanal_quote(symbol: str, direction: str, amount_usd: float, now: datetime
         "pm_quote_src": fill["src"],
         "pm_fill_vwap": fill["vwap"],
         "pm_mid_price": round(mid, 4),
-        "pm_fee": pm_taker_fee(size, tp),
+        "pm_fee": fee,
         "pm_spent": spent,
         "pm_size": size,
         "to_win": size,
+        "pm_win_payout": size,
+        "pm_win_profit": round(size - spent - fee, 2),
     }
 
 
@@ -1019,12 +1059,17 @@ def pm_payout_fields(pos: dict) -> dict:
     spent, size, ep = pm_stake_fields(pos)
     live = size > 0 and spent > 0
     fee = pm_position_fee(pos) if live else 0.0
+    stamped = pos.get("pm_win_profit")
+    try:
+        stamped = float(stamped) if stamped is not None else None
+    except (TypeError, ValueError):
+        stamped = None
     return {
         "pm_spent": round(spent, 2),
         "pm_size": round(size, 2) if size > 0 else 0.0,
         "to_win": round(size, 2) if size > 0 else 0.0,
         "win_payout": round(size, 2) if size > 0 else None,
-        "win_profit": round(size - spent - fee, 2) if live else None,
+        "win_profit": stamped if stamped is not None else (round(size - spent - fee, 2) if live else None),
         "win_profit_gross": round(size - spent, 2) if live else None,
         "pm_fee": round(fee, 4) if live else None,
         "pm_entry_price": ep if ep > 0 else None,
