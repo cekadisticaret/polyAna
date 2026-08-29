@@ -1,7 +1,7 @@
 """COMBO — A1 + C1#01 + A2#05 V2 oy defteri. Sanal, gerçek PM yok.
 
 Kaynaklar :02'de açar; COMBO :02:25'te onların açık pozisyonuna bakar.
-Çatışmada açmaz. 1 oy $24 · 2 oy $36 · 3 oy $48. Taban $36. Kasa $1000.
+Çatışmada açmaz. Kademe sembol WR $16/$24/$32. Ask ≤ 0,50. Kasa $1000.
 Cron: :01 close · :02+25s open. Betik adı e01 (crontab).
 """
 from __future__ import annotations
@@ -30,9 +30,13 @@ sys.path.insert(0, _DIR)
 from e01_signal import SYMBOLS, decide  # noqa: E402
 from pm_trader_helpers import (  # noqa: E402
     apply_pm_quote,
+    pm_tg_stake,
     pm_sanal_settle_trade,
     pm_sanal_slot_candle,
+    resolve_open_slot_gates,
     skip_if_weekend_pause,
+    slot_amount_log,
+    symbol_wr_amount_for_book,
 )
 from telegram_poly_channels import chat_analiz4  # noqa: E402
 
@@ -46,6 +50,8 @@ LABEL = "COMBO"
 BOOK_KEY = "combo"
 ALGO_NAME = "COMBO · A1+C101+A2#05V2 oy"
 INITIAL_BALANCE = 1000.0
+# Ask tavanı: yalnız p≤0.50 — kazanç ≥ zarar. Üstünü açma.
+COMBO_MAX_ASK = float(os.getenv("COMBO_MAX_ASK") or 0.50)
 
 
 def load_state() -> dict:
@@ -118,10 +124,15 @@ def run_open() -> None:
             skipped.append((sym, dec.get("reason") or "kapı kapalı"))
             print(f"[{LABEL} open] {sym} — {dec.get('reason')} · {dec.get('detail')}")
             continue
-        stake = float(dec.get("stake") or 0)
+        base_amt = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
+        _sk, stake, hot_boost, cold_cut, _note = resolve_open_slot_gates(
+            history, now_tr.hour, base_amt
+        )
+        slot_amount_log(LABEL, now_tr.hour, base_amt, stake, hot_boost, cold_cut)
         if stake <= 0 or stake > balance:
             skipped.append((sym, "bakiye/kademe"))
             continue
+        dec["stake"] = stake
         pos = {
             "symbol": sym,
             "predicted_dir": dec["direction"],
@@ -131,6 +142,8 @@ def run_open() -> None:
             "entry_dow": now_tr.weekday(),
             "entry_is_weekend": now_tr.weekday() >= 5,
             "amount": stake,
+            "hot_hour_boost": hot_boost,
+            "cold_hour_cut": cold_cut,
             "algo_signal": dec["direction"],
             "algo_name": ALGO_NAME,
             "e01_votes": dec.get("votes"),
@@ -139,8 +152,20 @@ def run_open() -> None:
             "e01_silent": dec.get("silent"),
         }
         apply_pm_quote(pos, sym, dec["direction"], stake, now)
+        if pos.get("entry_skip"):
+            skipped.append((sym, pos["entry_skip"]))
+            print(f"[{LABEL} open] {sym} — {pos['entry_skip']}")
+            continue
         if not pos.get("pm_slug"):
             skipped.append((sym, "PM dolum yok"))
+            continue
+        ask = float(pos.get("pm_entry_price") or 0)
+        if ask > COMBO_MAX_ASK:
+            skipped.append((sym, f"ask {ask:.2f} > {COMBO_MAX_ASK:.2f}"))
+            print(
+                f"[{LABEL} open] {sym} {dec['direction']} — "
+                f"ask {ask:.2f} > {COMBO_MAX_ASK:.2f} (kazanç/zarar dengesiz, atlandı)"
+            )
             continue
         state["open_positions"].append(pos)
         open_syms.add(sym)
@@ -161,7 +186,7 @@ def run_open() -> None:
         name = sym.replace("USDT", "")
         icon = "📈" if dec["direction"] == "UP" else "📉"
         lines.append(
-            f"{icon} <b>{name}</b>  {dec['direction']}  💵{stake:.2f}$\n"
+            f"{icon} <b>{name}</b>  {dec['direction']}  {pm_tg_stake(pos)}\n"
             f"   {dec.get('votes')} oy · {dec.get('detail')}"
             f" · ask {float(pos.get('pm_entry_price') or 0):.2f}"
         )

@@ -18,6 +18,7 @@ from datetime import datetime
 _DIR = os.path.dirname(os.path.abspath(__file__))
 BOOK_FILE = os.path.join(_DIR, "vote_paper.json")
 STAKE = 48.0
+INIT_BAL = 1000.0
 KEEP_DAYS = 90
 REGIMES = ("range", "trend", "live", "symbest")
 
@@ -56,15 +57,72 @@ def _lock_run(fn):
 
 def load_book() -> dict:
     if not os.path.exists(BOOK_FILE):
-        return {"stake": STAKE, "hours": [], "updated_at_tr": None}
+        return {"stake": STAKE, "hours": [], "updated_at_tr": None, "init_bal": INIT_BAL}
     try:
         with open(BOOK_FILE, encoding="utf-8") as f:
             data = json.load(f)
     except Exception:
-        return {"stake": STAKE, "hours": [], "updated_at_tr": None}
+        return {"stake": STAKE, "hours": [], "updated_at_tr": None, "init_bal": INIT_BAL}
     data.setdefault("hours", [])
     data.setdefault("stake", STAKE)
+    data.setdefault("init_bal", INIT_BAL)
     return data
+
+
+def _parse_tr(raw) -> datetime | None:
+    if not raw:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(raw))
+    except Exception:
+        return None
+    if dt.tzinfo is None:
+        from zoneinfo import ZoneInfo
+        dt = dt.replace(tzinfo=ZoneInfo("Europe/Istanbul"))
+    return dt
+
+
+def _reset_at(book: dict) -> datetime | None:
+    return _parse_tr((book or {}).get("balance_reset_at_tr"))
+
+
+def _row_after_reset(row: dict, reset_at: datetime | None) -> bool:
+    if reset_at is None:
+        return True
+    dt = _parse_tr(row.get("saved_at_tr"))
+    if dt is None:
+        try:
+            dt = _slot_dt(row)
+        except Exception:
+            return False
+    return dt >= reset_at
+
+
+def _persist(book: dict, hours: list, now: datetime) -> dict:
+    """Saatleri yaz; reset damgası ve diğer üst alanlar silinmesin."""
+    out = dict(book)
+    out["stake"] = STAKE
+    out["hours"] = hours
+    out["updated_at_tr"] = now.isoformat(timespec="seconds")
+    out.setdefault("init_bal", INIT_BAL)
+    _atomic_write(BOOK_FILE, out)
+    return out
+
+
+def reset_score(now: datetime | None = None, init_bal: float = INIT_BAL) -> dict:
+    """Skoru $1000 / P&L 0. Geçmiş saatler durur, damgadan sonrası sayılır. Emir yok."""
+    now = now or _now()
+
+    def _write():
+        book = load_book()
+        book["init_bal"] = float(init_bal)
+        book["balance_reset_at_tr"] = now.isoformat(timespec="seconds")
+        book["balance_reset_note"] = f"oy defteri TOP1–4 reset ${float(init_bal):.0f} — geçmiş korundu"
+        book["updated_at_tr"] = now.isoformat(timespec="seconds")
+        _atomic_write(BOOK_FILE, book)
+        return book
+
+    return _lock_run(_write)
 
 
 def _prune(hours: list) -> list:
@@ -250,12 +308,7 @@ def record_from_votes(votes: dict, now: datetime | None = None) -> dict:
                     if _quote_trade(t, now):
                         filled = True
             if filled:
-                book = {
-                    "stake": STAKE,
-                    "hours": hours,
-                    "updated_at_tr": now.isoformat(timespec="seconds"),
-                }
-                _atomic_write(BOOK_FILE, book)
+                book = _persist(book, hours, now)
             return book
         groups = []
         for g in votes.get("groups") or []:
@@ -282,12 +335,7 @@ def record_from_votes(votes: dict, now: datetime | None = None) -> dict:
         }
         by_id[sid] = row
         hours = _prune(sorted(by_id.values(), key=lambda h: h.get("id") or ""))
-        book = {
-            "stake": STAKE,
-            "hours": hours,
-            "updated_at_tr": now.isoformat(timespec="seconds"),
-        }
-        _atomic_write(BOOK_FILE, book)
+        book = _persist(book, hours, now)
         return book
 
     return _lock_run(_write)
@@ -330,12 +378,7 @@ def resolve_pending(now: datetime | None = None) -> dict:
                     changed = True
                 g["trades"] = trades
         if changed:
-            book = {
-                "stake": STAKE,
-                "hours": _prune(hours),
-                "updated_at_tr": now.isoformat(timespec="seconds"),
-            }
-            _atomic_write(BOOK_FILE, book)
+            book = _persist(book, _prune(hours), now)
         return book
 
     return _lock_run(_write)
@@ -343,7 +386,10 @@ def resolve_pending(now: datetime | None = None) -> dict:
 
 def _hour_trades(book: dict, regime: str, slot_id: str | None) -> list[dict]:
     out = []
+    reset_at = _reset_at(book)
     for row in book.get("hours") or []:
+        if not _row_after_reset(row, reset_at):
+            continue
         if slot_id and row.get("id") != slot_id:
             continue
         for g in row.get("groups") or []:
@@ -368,6 +414,7 @@ def _fill_payload(t: dict) -> dict:
 
 def stats_by_regime(book: dict | None = None, slot_id: str | None = None) -> dict:
     book = book if book is not None else load_book()
+    reset_at = _reset_at(book)
     out = {}
     for rg in REGIMES:
         wins = n = 0
@@ -377,6 +424,8 @@ def stats_by_regime(book: dict | None = None, slot_id: str | None = None) -> dic
         slot_open = False
         trades_now = []
         for row in book.get("hours") or []:
+            if not _row_after_reset(row, reset_at):
+                continue
             sid = row.get("id")
             here = sid == slot_id if slot_id else False
             for g in row.get("groups") or []:
@@ -486,12 +535,7 @@ def repair_quotes(now: datetime | None = None) -> dict:
                         if _recompute_pnl(t) and t.get("pnl") != old:
                             changed = True
         if changed:
-            book = {
-                "stake": STAKE,
-                "hours": hours,
-                "updated_at_tr": now.isoformat(timespec="seconds"),
-            }
-            _atomic_write(BOOK_FILE, book)
+            book = _persist(book, hours, now)
         return book
 
     return _lock_run(_write)
@@ -543,7 +587,10 @@ def build_top_book(key: str, *, include_history: bool = False) -> dict | None:
     wr = st.get("wr")
     cards = []
     recent = []
+    reset_at = _reset_at(book)
     for row in book.get("hours") or []:
+        if not _row_after_reset(row, reset_at):
+            continue
         for g in row.get("groups") or []:
             if (g.get("regime") or "") != rg:
                 continue
@@ -583,7 +630,12 @@ def build_top_book(key: str, *, include_history: bool = False) -> dict | None:
                 })
     recent.reverse()
     recent = recent[:100]
-    init = 1000.0
+    init = float(book.get("init_bal") or INIT_BAL)
+    reset_dt = _reset_at(book)
+    if reset_dt is not None:
+        started = reset_dt.strftime("%d.%m.%Y")
+    else:
+        started = "26.08.2026"
     return {
         "id": kid,
         "key": kid,
@@ -609,7 +661,8 @@ def build_top_book(key: str, *, include_history: bool = False) -> dict | None:
         "cards": cards,
         "regime": rg,
         "regime_label": {"range": "Durgun", "trend": "Trend", "live": "Canlı", "symbest": "Sembol"}.get(rg, rg),
-        "started_at_label": "26.08.2026",
+        "started_at_label": started,
+        "balance_reset_at_tr": book.get("balance_reset_at_tr"),
         "margin_usd": STAKE,
         "leverage": 1,
         "slots": {s: {"slot": s, "wr": wr, "history_n": n, "wins": wins,

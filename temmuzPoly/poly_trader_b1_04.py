@@ -323,6 +323,9 @@ async def run_open() -> None:
             "consensus_net":    net,
         }
         apply_pm_quote(pos, sym, direction, dyn_amount, now)
+        if pos.get("entry_skip"):
+            print(f"[{LABEL} open] {sym} — {pos['entry_skip']}")
+            continue
         state["open_positions"].append(pos)
 
         name = sym.replace("USDT", "")

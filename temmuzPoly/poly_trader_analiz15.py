@@ -333,6 +333,9 @@ async def run_open() -> None:
             "algo_name":        c.get("algo_name", ALGO_NAME),
         }
         apply_pm_quote(pos, sym, direction, dyn_amount, now)
+        if pos.get("entry_skip"):
+            print(f"[{LABEL} open] {sym} — {pos['entry_skip']}")
+            continue
         state["open_positions"].append(pos)
 
     save_state(state)

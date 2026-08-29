@@ -216,6 +216,8 @@ def main() -> None:
         for slot in COPY_SLOTS:
             miss = [k for k in ALGO_ISLEMLER_KEYS if not os.path.exists(_state_path(k, slot))]
             print(f"  t{slot:02d}: {len(miss)} state yok (ilk reset/close oluşturur)")
+        vp = os.path.join(_DIR, "vote_paper.json")
+        print(f"  oy defteri TOP1–4: {'var' if os.path.exists(vp) else 'YOK'} ({os.path.basename(vp)})")
         return
 
     if args.keep_open and not args.reset_only:
@@ -232,6 +234,12 @@ def main() -> None:
     reset_n, cleared, archived, kept = _reset_balances(
         now_tr, wipe_history=args.wipe_history, keep_open=args.keep_open,
     )
+    try:
+        from vote_paper import reset_score as _vote_reset
+        _vote_reset(now_tr)
+        print("  reset TOP1–4 oy defteri → $1000 (geçmiş korundu)")
+    except Exception as e:
+        print(f"  ATLANDI oy defteri TOP1–4 — {e}")
     nxt = (now_tr.hour + 1) % 24
     arc = f"\n  Arşivlenen işlem: {archived}" if args.wipe_history else ""
     open_line = (

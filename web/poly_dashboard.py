@@ -2698,10 +2698,30 @@ def _leader_board(rows: list[dict], *, sym: str | None = None, limit: int = 8) -
     return _lb(rows, sym=sym, limit=limit)
 
 
-def _kripto_test_symbol_list() -> list[str]:
-    """Test tarama evreni — USDT suffix'siz."""
+def _kripto_test_scan_symbols() -> list[str]:
+    """Canlı tarama — day_movers aktif 30+30; bayatsa hacim yedeği.
+
+    `from catalog import` kullanma: Algoritmalar/catalog sys.modules'ta
+    aynı adı tutuyor, scan_symbols yok → 500.
+    """
     mod = _load_agustos_runner("Test")
-    return [s.replace("USDT", "") for s in mod.TEST_SYMBOLS]
+    return list(mod.scan_symbols())
+
+
+def _kripto_movers_asof() -> str | None:
+    path = os.path.join(_DIR_KRIPTO, "Test", "data", "day_movers.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        asof = data.get("asof_tr")
+        return str(asof) if asof else None
+    except Exception:
+        return None
+
+
+def _kripto_test_symbol_list() -> list[str]:
+    """Test tarama evreni — day_movers aktif, USDT suffix'siz."""
+    return [s.replace("USDT", "") for s in _kripto_test_scan_symbols()]
 
 
 def _kripto_leader_payload(
@@ -2715,6 +2735,8 @@ def _kripto_leader_payload(
         "min_trades": _ALGO_STATS_MIN_TRADES,
         "overall": _leader_board(rows, limit=overall_limit),
         "symbols": syms,
+        "source": "day_movers",
+        "movers_asof_tr": _kripto_movers_asof(),
         "by_symbol": {
             sym: _leader_board(rows, sym=sym, limit=sym_limit) for sym in syms
         },
@@ -2809,7 +2831,7 @@ def _build_kripto_test_leader_rows() -> list[dict]:
 
     return build_leader_rows(
         mod.ALL_BOOKS,
-        test_symbols=mod.TEST_SYMBOLS,
+        test_symbols=_kripto_test_scan_symbols(),
         history_path_for_book=mod._history_path_for_book,
         load_history=mod.load_history,
     )
@@ -2870,6 +2892,8 @@ def _public_kripto_lider(top: int = 3) -> dict:
             for sym, lst in (pack.get("by_symbol") or {}).items()
         },
         "symbols": pack.get("symbols") or [],
+        "source": pack.get("source") or "day_movers",
+        "movers_asof_tr": pack.get("movers_asof_tr"),
     }
 
 
@@ -4701,18 +4725,21 @@ def _mirror_top_rows(key: str, *, with_market: bool, current_only: bool = True) 
     """TOP1–4 açık $48 kâğıt işlemleri — ayna satırı."""
     sys.path.insert(0, _DIR_POLY)
     from algo_consensus_log import current_slot
-    from vote_paper import STAKE, TOP_KEYS, load_book, normalize_top_key
+    from vote_paper import STAKE, TOP_KEYS, load_book, normalize_top_key, _row_after_reset, _reset_at
     kid = normalize_top_key(key)
     spec = TOP_KEYS.get(kid or "")
     if not spec:
         return []
     rg, _name, _title = spec
     paper = load_book()
+    reset_at = _reset_at(paper)
     sid, hour, day = current_slot()
     now = datetime.now(_TZ_TR)
     pol = _mirror_policy()
     rows: list[dict] = []
     for hrow in paper.get("hours") or []:
+        if not _row_after_reset(hrow, reset_at):
+            continue
         here = hrow.get("id") == sid
         if current_only and not here:
             continue
@@ -17253,10 +17280,10 @@ h1{font-size:22px;font-weight:800;margin-bottom:6px}
 <div class="main">
   <div class="page-head">
     <h1>Lider Analizi</h1>
-    <div class="subtitle" id="subtitle">Kripto Test defterleri · 28 coin · BTC/ETH yok · PnL sıralı</div>
+    <div class="subtitle" id="subtitle">Kripto Test defterleri · 24s hareket (aktif) · BTC/ETH yok · PnL sıralı</div>
   </div>
   <div class="toolbar">
-    <input class="search" id="search" type="search" placeholder="Coin ara (BTC, ETH…)" autocomplete="off">
+    <input class="search" id="search" type="search" placeholder="Coin ara (PROM, ENA…)" autocomplete="off">
     <span class="coin-count" id="coin-count"></span>
   </div>
   <div id="content"><div id="loading">Yükleniyor…</div></div>
@@ -17286,8 +17313,11 @@ function renderPage(){
   const q = (document.getElementById('search').value || '').trim().toUpperCase();
   const syms = (leaderData.symbols || []).filter(s => !q || s.includes(q));
   const min = leaderData.min_trades || 5;
+  const asof = (leaderData.movers_asof_tr || '').replace('T', ' ').slice(0, 16);
   document.getElementById('subtitle').textContent =
-    'Kripto Test sanal defterleri · min. ' + min + ' işlem · PnL sıralı';
+    'Kripto Test · 24s hareket (aktif ' + (leaderData.symbols || []).length
+    + ' coin) · min. ' + min + ' işlem · PnL sıralı'
+    + (asof ? ' · ' + asof : '');
   document.getElementById('coin-count').textContent = syms.length + ' / ' + (leaderData.symbols || []).length + ' coin';
   let html = '<div class="overall-card"><div class="section-title">Genel · Top ' + (leaderData.overall || []).length + '</div>'
     + renderLeaderRows(leaderData.overall) + '</div>';
@@ -18503,7 +18533,7 @@ body.kf-overview .kf-right-panel{display:block}
     <div class="head">
       <div>
         <div class="page-title">Algoritma İşlemler</div>
-        <div class="page-sub">Poly + ALGO1 + A10 Dual + Supertrend + JARVIS_V1 + CEBU → sanal Binance · $1000 · $100×6x · max 4 (CEBU 18) · zaman kapanışı yok · 24s tavan · 3×ATR · ATR kilit · 73 defter · 28 coin · BTC/ETH yok · 7/24</div>
+        <div class="page-sub">Poly + ALGO1 + A10 Dual + Supertrend + JARVIS_V1 + CEBU → sanal Binance · $1000 · $100×6x · max 8 (JARVIS 10 · CEBU 8) · zaman kapanışı yok · 24s tavan · 3×ATR · ATR kilit · 73 defter · USDT-M evren · 24s hareket · BTC/ETH yok · 7/24</div>
       </div>
       <div class="chip" id="test-sum">—</div>
     </div>
@@ -18513,7 +18543,7 @@ body.kf-overview .kf-right-panel{display:block}
         <div id="test-books"><div class="empty">yükleniyor…</div></div>
       </div>
       <div class="section wait-rail">
-        <div class="section-title">İşlem Bekleyen · 28 coin · BTC/ETH yok</div>
+        <div class="section-title">İşlem Bekleyen · hacim dilimi · BTC/ETH yok</div>
         <div class="wait-list" id="test-waiting"><div class="empty">yükleniyor…</div></div>
       </div>
     </div>
@@ -18530,7 +18560,7 @@ body.kf-overview .kf-right-panel{display:block}
     </div>
     <div class="panel" style="grid-template-columns:1fr">
       <div class="section" id="detail-map-wrap" style="display:none;margin-bottom:16px">
-        <div class="section-title">CEBU · coin → motor</div>
+        <div class="section-title">CEBU · Lider Analiz · coin → en iyi motor</div>
         <div class="cebu-map" id="detail-map"></div>
       </div>
       <div class="section">
@@ -19588,9 +19618,10 @@ function renderBookDetail(book, kind){
       mapWrap.style.display = 'block';
       mapEl.innerHTML = rows.map(r => {
         const off = !!r.disabled;
-        const live = off ? 'PASİF'
-          : (r.jarvis_live && r.algo && r.algo !== r.pin_name
-            ? (r.pin_name + ' → ' + r.algo) : (r.algo || r.pin_name || '—'));
+        const live = off ? 'PASİF' : (
+          (r.algo || r.pin_name || '—')
+          + (r.pnl != null ? (' · $' + Number(r.pnl).toFixed(0)) : '')
+        );
         return `<div class="cebu-chip${off?' is-off':''}"><div class="cs">${r.symbol||''}</div><div class="ca">${live}</div></div>`;
       }).join('');
     } else {

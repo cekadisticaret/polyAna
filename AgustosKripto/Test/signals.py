@@ -45,18 +45,26 @@ def _bars_ohlc(kl: list) -> list:
 
 
 def _kl_to_predict(kl: list) -> list:
-    return [
-        {
-            "open_time": 0,
+    """open_time: UTC ms — VWAP günlük reset RangeIndex ile patlamasın."""
+    out = []
+    for x in kl:
+        t = x.get("t") or x.get("open_time") or x.get("openTime") or 0
+        try:
+            t = int(t)
+        except (TypeError, ValueError):
+            t = 0
+        if t and t < 10_000_000_000:  # saniye ise ms
+            t *= 1000
+        out.append({
+            "open_time": t,
             "open": x.get("o", x.get("open", 0)),
             "high": x.get("h", x.get("high", 0)),
             "low": x.get("l", x.get("low", 0)),
             "close": x.get("c", x.get("close", 0)),
             "volume": x.get("v", x.get("volume", 0)),
             "taker_buy": 0,
-        }
-        for x in kl
-    ]
+        })
+    return out
 
 
 def _run_async(coro):

@@ -2,8 +2,10 @@
 """Test defter kataloğu — algoritma-islemler + ALGO1 + Analizler A10/ST."""
 from __future__ import annotations
 
+import json
 import os
 import sys
+import time
 
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 _POLY = os.path.join(_ROOT, "temmuzPoly")
@@ -26,15 +28,153 @@ assert _spec.loader is not None
 _spec.loader.exec_module(_agc)
 ALGOS_V1 = _agc.ALGOS_V1
 
-# 28 coin — BTC/ETH yok (2026-08-22); işlem bekleyen tarama evreni
-TEST_SYMBOLS: list[str] = [
-    "SOLUSDT", "BNBUSDT", "XRPUSDT",
-    "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT",
-    "LTCUSDT", "NEARUSDT", "SUIUSDT", "APTUSDT", "ARBUSDT",
-    "OPUSDT", "INJUSDT", "TIAUSDT", "FILUSDT", "ATOMUSDT",
-    "HYPEUSDT", "ZECUSDT", "KAITOUSDT", "ENAUSDT", "WLDUSDT",
-    "TAOUSDT", "ONDOUSDT", "UNIUSDT", "AAVEUSDT", "XLMUSDT",
+_UNIVERSE_FILE = os.path.join(os.path.dirname(__file__), "um_universe.txt")
+_MOVERS_FILE = os.path.join(os.path.dirname(__file__), "data", "day_movers.json")
+_MOVERS_MAX_AGE = float(os.environ.get("TEST_MOVERS_MAX_AGE", str(90 * 60)))
+_SCAN_N = int(os.environ.get("TEST_SCAN_N", "60"))
+_SCAN_FALLBACK = [
+    "BNBUSDT", "XRPUSDT", "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT",
+    "DOTUSDT", "LTCUSDT", "NEARUSDT", "SUIUSDT", "APTUSDT", "ARBUSDT",
+    "OPUSDT", "INJUSDT", "TIAUSDT", "FILUSDT", "ATOMUSDT", "HYPEUSDT",
+    "ZECUSDT", "KAITOUSDT", "ENAUSDT", "WLDUSDT", "TAOUSDT", "ONDOUSDT",
+    "UNIUSDT", "AAVEUSDT", "XLMUSDT", "CRVUSDT", "SEIUSDT", "NEARUSDT",
 ]
+
+
+def _load_universe() -> list[str]:
+    try:
+        with open(_UNIVERSE_FILE) as f:
+            raw = f.read()
+    except OSError:
+        raw = ""
+    out: list[str] = []
+    seen: set[str] = set()
+    for tok in raw.replace(",", " ").split():
+        base = tok.strip().upper()
+        if not base or base.startswith("#"):
+            continue
+        if base.endswith("USDT"):
+            sym = base
+        else:
+            sym = base + "USDT"
+        if sym in seen:
+            continue
+        seen.add(sym)
+        out.append(sym)
+    return out
+
+
+TEST_UNIVERSE: list[str] = _load_universe()
+
+
+def _marks_rows() -> dict:
+    try:
+        if _ROOT not in sys.path:
+            sys.path.insert(0, _ROOT)
+        from binance_fapi_guard import _load_marks  # noqa: WPS433
+        rows = (_load_marks().get("rows") or {})
+        return rows if isinstance(rows, dict) else {}
+    except Exception:
+        return {}
+
+
+def _is_active(sym: str, marks: dict, last: float = 0.0) -> bool:
+    """Futures’ta kotasyon veya 24s last varsa aktif."""
+    if last > 0:
+        return True
+    row = marks.get(sym) if marks else None
+    if not isinstance(row, dict):
+        return False
+    try:
+        return float(row.get("mark") or row.get("last") or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def _movers_scan(cap: int, allow: set[str], marks: dict) -> list[str]:
+    """*/30 day_movers — 24s artan+azalan, yalnız aktif."""
+    try:
+        age = time.time() - os.path.getmtime(_MOVERS_FILE)
+        if age > _MOVERS_MAX_AGE:
+            return []
+        with open(_MOVERS_FILE) as f:
+            data = json.load(f)
+    except Exception:
+        return []
+    if not isinstance(data, dict):
+        return []
+    last_by: dict[str, float] = {}
+    rows = list(data.get("up") or []) + list(data.get("down") or [])
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        try:
+            last_by[str(r.get("symbol") or "").upper()] = float(r.get("last") or 0)
+        except (TypeError, ValueError):
+            pass
+    ordered: list[str] = []
+    for s in data.get("scan") or []:
+        if isinstance(s, str) and s not in ordered:
+            ordered.append(s.upper())
+    if not ordered:
+        rows.sort(key=lambda r: abs(float(r.get("pct") or 0)), reverse=True)
+        for r in rows:
+            if isinstance(r, dict):
+                ordered.append(str(r.get("symbol") or "").upper())
+    out: list[str] = []
+    for sym in ordered:
+        if not sym or sym not in allow or sym in out:
+            continue
+        if not _is_active(sym, marks, last_by.get(sym, 0.0)):
+            continue
+        out.append(sym)
+        if len(out) >= cap:
+            break
+    return out
+
+
+def scan_symbols(n: int | None = None) -> list[str]:
+    """Yeni açık / sinyal taraması — 24s hareket (aktif), tavan TEST_SCAN_N.
+
+    Kaynak: `day_movers.json` (*/30). Dosya yok/bayatsa hacim yedeği.
+    """
+    cap = _SCAN_N if n is None else int(n)
+    allow = set(TEST_UNIVERSE)
+    marks = _marks_rows()
+    movers = _movers_scan(cap, allow, marks)
+    if len(movers) >= 10:
+        return movers
+    scored: list[tuple[float, str]] = []
+    for sym in TEST_UNIVERSE:
+        row = marks.get(sym)
+        if not isinstance(row, dict):
+            continue
+        try:
+            qv = float(row.get("quote_vol") or 0)
+        except (TypeError, ValueError):
+            qv = 0.0
+        if qv > 0:
+            scored.append((qv, sym))
+    scored.sort(reverse=True)
+    top = [s for _qv, s in scored[:cap]]
+    if len(top) >= max(8, cap // 2):
+        return top
+    have_px = []
+    for sym in TEST_UNIVERSE:
+        row = marks.get(sym)
+        if isinstance(row, dict) and (row.get("mark") or row.get("last")):
+            have_px.append(sym)
+    mixed: list[str] = []
+    for s in _SCAN_FALLBACK + have_px:
+        if s in allow and s not in mixed:
+            mixed.append(s)
+        if len(mixed) >= cap:
+            break
+    return mixed or list(TEST_UNIVERSE[:cap])
+
+
+# Canlı tarama evreni (hacim dilimi). Tam liste: TEST_UNIVERSE.
+TEST_SYMBOLS: list[str] = scan_symbols()
 
 _ISLEMLER_POLY: list[tuple[str, str, str]] = [
     ("analiz1",    "A1",    "1. Analiz · RSI+MACD+EMA"),
@@ -120,11 +260,11 @@ ALL_BOOKS.append({
     "uid": "analiz_st",
     "book_key": "test_analiz_st",
     "name": "A6 ST",
-    "title": "Analizler Supertrend · alt (BTC/ETH yok) · skor seçimi · max 4",
+    "title": "Analizler Supertrend · alt (BTC/ETH yok) · skor seçimi · max 8",
     "category": "Analizler→Kripto Test",
     "source": "analizler",
     "source_key": "a6",
-    "max_opens": 4,
+    "max_opens": 8,
 })
 
 
@@ -166,14 +306,14 @@ ALL_BOOKS.append({
 })
 
 # ── CEBU ─────────────────────────────────────────────────────
-# Sabit coin→motor; kota yok (18 aktif coin). BTC/ETH/KAITO/HYPE pasif.
+# Lider Analiz 1. sıra; eşzamanlı max 8. BTC/ETH/KAITO/HYPE pasif.
 ALL_BOOKS.append({
     "uid": "cebu",
     "book_key": "test_cebu",
     "name": "CEBU",
-    "title": "CEBU · sabit coin→motor · sinyal gelince aç · max 18 · BTC/ETH/KAITO/HYPE pasif · 24s · 3×ATR · ATR kilit",
+    "title": "CEBU · Lider Analiz 1. sıra · sinyal gelince aç · max 8 · BTC/ETH/KAITO/HYPE pasif · 24s · 3×ATR · ATR kilit",
     "category": "Poly→Kripto CEBU",
     "source": "cebu",
     "source_key": "cebu",
-    "max_opens": 18,
+    "max_opens": 8,
 })

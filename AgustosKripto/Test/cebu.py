@@ -1,50 +1,33 @@
 #!/usr/bin/env python3
-"""CEBU — coin başına sabit motor. Sinyal gelince açar; 4-slot kotası yok.
+"""CEBU — Lider Analiz 1. sıra motor. Sinyal gelince açar; max 8 eşzamanlı.
 
-Çıkış Test runner politikası: ATR kâr kilidi · 24s tavan · 3×ATR zarar.
-Saatlik 1s/4s settle yok. DOGE/XLM JARVIS_V1 eşlemesini o anki motora çözer.
+`/kripto/lider-analiz` ile aynı kural (`leader_mapping`): coin bazında
+PnL → WR → işlem. Evren day_movers aktif 60. Pin yok.
+BTC / ETH / KAITO / HYPE pasif. Çıkış: ATR kilit · 24s · 3×ATR.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 from typing import Callable
+
+from leader_mapping import MIN_TRADES, build_jarvis_coin_mapping
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 if _DIR not in sys.path:
     sys.path.insert(0, _DIR)
 
-CEBU_UID = "cebu"
-# BTC / ETH / KAITO / HYPE pasif — eşlemede durur, sinyal/açılış yok.
-DISABLED_SYMBOLS = frozenset({"BTC", "ETH", "KAITO", "HYPE"})
-# Aktif eşlenen her coin aynı anda açık kalabilir — kota yok, sinyal = aday.
-MAX_OPENS = 18
+DATA = os.path.join(_DIR, "data")
+MAPPING_FILE = os.path.join(DATA, "cebu_mapping.json")
 
-# USDT'siz sembol → Test defter uid. JARVIS_V1 runtime'da çözülür.
-MAPPING: dict[str, str] = {
-    "BTC": "a1_32",
-    "ETH": "a1_20",
-    "SOL": "a1_08",
-    "XRP": "b1_mum",
-    "DOGE": "jarvis_v1",
-    "ADA": "a1_09",
-    "LINK": "pro_b1_mum",
-    "DOT": "a1_19",
-    "SUI": "a1_31",
-    "APT": "a1_33",
-    "ARB": "a1_25",
-    "OP": "a1_30",
-    "INJ": "a1_34",
-    "TIA": "a1_32",
-    "FIL": "b1_mum",
-    "HYPE": "analiz6",
-    "KAITO": "a1_36",
-    "ENA": "a1_28",
-    "WLD": "a2_01",
-    "UNI": "a1_10",
-    "AAVE": "a1_10",
-    "XLM": "jarvis_v1",
-}
+CEBU_UID = "cebu"
+DISABLED_SYMBOLS = frozenset({"BTC", "ETH", "KAITO", "HYPE"})
+MAX_OPENS = 8
+_META_UIDS = frozenset({CEBU_UID, "jarvis_v1"})
+
+_cache: dict = {"fp": None, "map": {}, "meta": {}}
+
 
 def _base(sym: str) -> str:
     return (sym or "").upper().replace("USDT", "")
@@ -52,12 +35,6 @@ def _base(sym: str) -> str:
 
 def is_disabled(sym: str) -> bool:
     return _base(sym) in DISABLED_SYMBOLS
-
-
-CEBU_SYMBOLS: list[str] = [
-    f"{base}USDT" for base in MAPPING if base not in DISABLED_SYMBOLS
-]
-_META_UIDS = frozenset({CEBU_UID, "jarvis_v1"})
 
 
 def is_cebu_book(book: dict) -> bool:
@@ -79,36 +56,89 @@ def _load_runner():
     return mod
 
 
-def _jarvis_mapping() -> dict[str, str]:
-    from jarvis_v1 import build_mapping  # noqa: WPS433
+def _fingerprint(runner_mod) -> float:
+    latest = 0.0
+    movers = os.path.join(_DIR, "data", "day_movers.json")
+    if os.path.isfile(movers):
+        latest = os.path.getmtime(movers)
+    for book in runner_mod.ALL_BOOKS:
+        uid = book.get("uid") or ""
+        if uid in _META_UIDS:
+            continue
+        hp = runner_mod._history_path_for_book(book)
+        if hp and os.path.isfile(hp):
+            latest = max(latest, os.path.getmtime(hp))
+    return latest
 
-    return build_mapping()
+
+def build_mapping(*, force: bool = False) -> dict[str, str]:
+    """USDT'siz sembol → Lider Analiz 1. sıra uid. Pin yok."""
+    r = _load_runner()
+    fp = _fingerprint(r)
+    if not force and _cache["map"] and _cache.get("fp") == fp:
+        return dict(_cache["map"])
+
+    symbols = list(r.scan_symbols())
+    mapping, meta, _rows = build_jarvis_coin_mapping(
+        r.ALL_BOOKS,
+        symbols,
+        {},
+        history_path_for_book=r._history_path_for_book,
+        load_history=r.load_history,
+    )
+    mapping = {
+        k: v for k, v in mapping.items()
+        if k not in DISABLED_SYMBOLS and v not in _META_UIDS
+    }
+    meta = {
+        **meta,
+        "updated_at_tr": str(r.now_tr()),
+        "min_trades": MIN_TRADES,
+        "source": "lider_analiz",
+        "history_fingerprint": fp,
+        "disabled": sorted(DISABLED_SYMBOLS),
+    }
+    meta["labels"] = {k: v for k, v in (meta.get("labels") or {}).items() if k in mapping}
+    meta["coin_stats"] = {k: v for k, v in (meta.get("coin_stats") or {}).items() if k in mapping}
+    meta["symbols"] = [s.replace("USDT", "") for s in symbols if _base(s) not in DISABLED_SYMBOLS]
+    _cache["fp"] = fp
+    _cache["map"] = mapping
+    _cache["meta"] = meta
+    try:
+        os.makedirs(DATA, exist_ok=True)
+        with open(MAPPING_FILE, "w", encoding="utf-8") as f:
+            json.dump({"mapping": mapping, **meta}, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+    return dict(mapping)
+
+
+def cebu_symbols() -> list[str]:
+    """Açık aday evreni — lideri olan aktif coinler."""
+    return [f"{base}USDT" for base in build_mapping()]
+
+
+# Eski import adı — her çağrıda taze liste için cebu_symbols() kullan.
+CEBU_SYMBOLS = []
+
+
+def resolve_motor_uid(base: str) -> str | None:
+    key = _base(base)
+    if key in DISABLED_SYMBOLS:
+        return None
+    uid = build_mapping().get(key)
+    if not uid or uid in _META_UIDS:
+        return None
+    return uid
 
 
 def disabled_open_symbols(opens: list | None) -> set[str]:
-    """Pasif coinlerde hâlâ açık kalan sanal pozisyonlar — kapatılacak."""
     out: set[str] = set()
     for pos in opens or []:
         sym = (pos.get("symbol") or "").upper()
         if sym and is_disabled(sym):
             out.add(sym)
     return out
-
-
-def resolve_motor_uid(base: str) -> str | None:
-    """Pin → gerçek motor uid. JARVIS_V1 pinleri lider eşlemesine açılır."""
-    key = _base(base)
-    if key in DISABLED_SYMBOLS:
-        return None
-    uid = MAPPING.get(key)
-    if not uid:
-        return None
-    if uid == "jarvis_v1":
-        resolved = _jarvis_mapping().get(key)
-        if not resolved or resolved in _META_UIDS:
-            return None
-        return resolved
-    return uid
 
 
 def _label_for(uid: str, book_by_uid: dict[str, dict]) -> str:
@@ -121,14 +151,14 @@ def resolve_signals(
     all_books: list[dict],
     signal_fn: Callable[[dict, dict[str, list]], dict[str, str]],
 ) -> dict[str, str]:
-    """Yalnız eşlenen coinlerde kaynak motorun sinyalini birleştir."""
+    mapping = build_mapping()
     book_by_uid = {b["uid"]: b for b in all_books}
     by_uid: dict[str, list[str]] = {}
     for sym in kl_by_symbol:
         base = _base(sym)
-        if base not in MAPPING or base in DISABLED_SYMBOLS:
+        if base in DISABLED_SYMBOLS:
             continue
-        uid = resolve_motor_uid(base)
+        uid = mapping.get(base)
         if uid and uid in book_by_uid:
             by_uid.setdefault(uid, []).append(sym)
 
@@ -150,35 +180,52 @@ def resolve_signals(
 
 
 def mapping_display_rows() -> list[dict]:
+    mapping = build_mapping()
+    meta = _cache.get("meta") or {}
+    labels = meta.get("labels") or {}
+    stats = meta.get("coin_stats") or {}
     r = _load_runner()
     book_by_uid = {b["uid"]: b for b in r.ALL_BOOKS}
-    jmap = _jarvis_mapping()
     rows: list[dict] = []
-    for base, pin in MAPPING.items():
+    for base in meta.get("symbols") or list(mapping):
         off = base in DISABLED_SYMBOLS
-        resolved = None if off else resolve_motor_uid(base)
-        pin_name = _label_for(pin, book_by_uid) if pin != "jarvis_v1" else "JARVIS_V1"
+        uid = None if off else mapping.get(base)
+        st = stats.get(base) or {}
+        name = "PASİF" if off else (labels.get(base) or _label_for(uid or "", book_by_uid) or "—")
         rows.append({
             "symbol": base,
-            "pin_uid": pin,
-            "pin_name": pin_name,
-            "uid": resolved,
-            "algo": "PASİF" if off else (_label_for(resolved, book_by_uid) if resolved else pin_name),
+            "pin_uid": uid,
+            "pin_name": name,
+            "uid": uid,
+            "algo": name,
             "disabled": off,
-            "jarvis_live": (not off) and pin == "jarvis_v1",
-            "jarvis_src": jmap.get(base) if (not off and pin == "jarvis_v1") else None,
+            "jarvis_live": False,
+            "jarvis_src": None,
+            "pnl": st.get("pnl"),
+            "wr": st.get("wr"),
+            "trades": st.get("trades") or st.get("total"),
         })
+    rows.sort(key=lambda x: (
+        0 if x.get("uid") else 1,
+        -float(x.get("pnl") or 0),
+        x["symbol"],
+    ))
     return rows
 
 
 def mapping_summary() -> dict:
+    mapping = build_mapping()
+    meta = _cache.get("meta") or {}
     return {
         "uid": CEBU_UID,
         "max_opens": MAX_OPENS,
-        "mapped_coins": len(MAPPING) - len(DISABLED_SYMBOLS),
+        "mapped_coins": len(mapping),
         "disabled": sorted(DISABLED_SYMBOLS),
-        "mapping": {k: v for k, v in MAPPING.items() if k not in DISABLED_SYMBOLS},
+        "source": "lider_analiz",
+        "min_trades": MIN_TRADES,
+        "mapping": dict(mapping),
         "rows": mapping_display_rows(),
+        "updated_at_tr": meta.get("updated_at_tr"),
     }
 
 
@@ -195,16 +242,19 @@ def build_cebu_candidates(
     from engine import MIN_TF_TRADES, _tf_score, _tf_stats, choose_timeframe
 
     r = _load_runner()
+    mapping = build_mapping()
     book_by_uid = {b["uid"]: b for b in r.ALL_BOOKS}
     sig1_cache: dict[str, dict[str, str]] = {}
     sig4_cache: dict[str, dict[str, str]] = {}
     hist_cache: dict[str, list] = {}
     rows: list[dict] = []
 
-    want = [s for s in symbols if _base(s) in MAPPING and _base(s) not in DISABLED_SYMBOLS]
+    want = symbols or cebu_symbols()
     for sym in want:
         base = _base(sym)
-        src_uid = resolve_motor_uid(base)
+        if base in DISABLED_SYMBOLS:
+            continue
+        src_uid = mapping.get(base)
         if not src_uid:
             continue
         src_book = book_by_uid.get(src_uid)
@@ -242,7 +292,6 @@ def build_cebu_candidates(
             continue
         wr, pnl, n = _tf_stats(src_hist, sym, tf)
         score = _tf_score(wr, pnl, n) if n >= MIN_TF_TRADES else 50.0
-        pin = MAPPING.get(base) or src_uid
         rows.append({
             "symbol": sym,
             "side": "LONG" if sig == "UP" else "SHORT",
@@ -251,7 +300,7 @@ def build_cebu_candidates(
             "interval": tf,
             "cebu_src": src_uid,
             "cebu_src_name": src_book.get("name") or src_uid,
-            "cebu_pin": pin,
+            "cebu_pin": src_uid,
         })
 
     rows.sort(key=lambda x: (-x["score"], x["symbol"]))

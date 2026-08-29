@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Kripto Test runner — Poly sinyalleri, sanal Binance futures ($1000 / $100×6x / 30 coin).
+"""Kripto Test runner — Poly sinyalleri, sanal Binance futures ($1000 / $100×6x / max 8).
 
 Poly trader ve Algoritmalar runner'a dokunmaz; ayrı data/ defterleri.
 
@@ -64,6 +64,8 @@ def _load_test_module(stem: str, path: str):
 
 _test_cat = _load_test_module("kripto_test_catalog", _CAT_PATH)
 ALL_BOOKS = _test_cat.ALL_BOOKS
+TEST_UNIVERSE = _test_cat.TEST_UNIVERSE
+scan_symbols = _test_cat.scan_symbols
 TEST_SYMBOLS = _test_cat.TEST_SYMBOLS
 
 _test_sig = _load_test_module("kripto_test_signals", _SIG_PATH)
@@ -89,12 +91,17 @@ MIN_HOLD_MINUTES = _test_eng.MIN_HOLD_MINUTES
 
 DATA = os.path.join(_DIR, "data")
 _ALGO_DATA = os.path.join(_AGUSTOS, "Algoritmalar", "data")
-_TEST_SYM_SET = {s.replace("USDT", "") for s in TEST_SYMBOLS}
+_TEST_SYM_SET = {s.replace("USDT", "") for s in TEST_UNIVERSE}
+
+
+def _live_syms() -> list[str]:
+    """Hacme göre tarama dilimi — her tur taze."""
+    return scan_symbols()
 
 DEPOSIT = 1000.0
 MARGIN_USD = 100.0
 LEVERAGE = 6
-MAX_OPEN_POSITIONS = 4
+MAX_OPEN_POSITIONS = 8
 
 # ── PRO rejimi ───────────────────────────────────────────────
 # Ölçüm: saatlik zorunlu kapanış 1 yılda A2#05'e 34.692 işlem × $0,58 komisyon
@@ -151,15 +158,15 @@ def _build_candidates_for_book(
 
         return build_jarvis_candidates(
             book, kl_1h, kl_4h, history,
-            symbols=TEST_SYMBOLS,
+            symbols=_live_syms(),
             signal_for_book=signal_for_book,
         )
     if (book.get("uid") or "") == "cebu":
-        from cebu import CEBU_SYMBOLS, build_cebu_candidates  # noqa: WPS433
+        from cebu import cebu_symbols, build_cebu_candidates  # noqa: WPS433
 
         return build_cebu_candidates(
             book, kl_1h, kl_4h, history,
-            symbols=CEBU_SYMBOLS,
+            symbols=cebu_symbols(),
             signal_for_book=signal_for_book,
         )
     if book.get("source") == "analizler" and book.get("source_key") == "a6":
@@ -167,12 +174,15 @@ def _build_candidates_for_book(
     else:
         rows = build_candidates(
             book, kl_1h, kl_4h, history,
-            symbols=TEST_SYMBOLS,
+            symbols=_live_syms(),
             signal_for_book=signal_for_book,
         )
     skip = skip_symbols_of(book)
     if skip:
         rows = [c for c in rows if (c.get("symbol") or "").upper() not in skip]
+    uni = set(TEST_UNIVERSE)
+    if uni:
+        rows = [c for c in rows if (c.get("symbol") or "").upper() in uni]
     return rows
 
 
@@ -483,7 +493,7 @@ def compute_coin_leaders(*, min_trades: int | None = None) -> list[dict]:
         }
 
     out: list[dict] = []
-    for sym in sorted({s.replace("USDT", "") for s in TEST_SYMBOLS}):
+    for sym in sorted({s.replace("USDT", "") for s in _live_syms()}):
         cands = sorted(by_symbol.get(sym) or [], key=_leader_sort_key)
         if not cands:
             out.append({
@@ -682,8 +692,9 @@ def run_open() -> dict:
     skipped = _skip_weekend("open")
     if skipped:
         return skipped
-    kl_1h = fetch_all_klines(TEST_SYMBOLS, limit=80, interval="1h")
-    kl_4h = fetch_all_klines(TEST_SYMBOLS, limit=80, interval="4h")
+    live = _live_syms()
+    kl_1h = fetch_all_klines(live, limit=80, interval="1h")
+    kl_4h = fetch_all_klines(live, limit=80, interval="4h")
     results = []
     gate_blocked = 0
     for book in ALL_BOOKS:
@@ -705,8 +716,8 @@ def run_open() -> dict:
             sp, hp,
             label=label(book),
             candidates=cands,
-            kl_cache={**{f"{s}|1h": kl_1h.get(s, []) for s in TEST_SYMBOLS},
-                      **{f"{s}|4h": kl_4h.get(s, []) for s in TEST_SYMBOLS}},
+            kl_cache={**{f"{s}|1h": kl_1h.get(s, []) for s in live},
+                      **{f"{s}|4h": kl_4h.get(s, []) for s in live}},
             margin_usd=MARGIN_USD,
             leverage=LEVERAGE,
             max_opens=max_opens_for(book),
@@ -722,7 +733,7 @@ def run_open() -> dict:
     gs = edge_summary()
     print(
         f"[Kripto Test] open {len(ALL_BOOKS)} defter · ${MARGIN_USD:.0f}×{LEVERAGE}x "
-        f"· max {MAX_OPEN_POSITIONS} (JARVIS_V1: 10 · CEBU: 22) · zaman yok · 24s · 3×ATR · "
+        f"· max {MAX_OPEN_POSITIONS} (JARVIS_V1: 10 · CEBU: 8) · zaman yok · 24s · 3×ATR · "
         f"kenar kapısı: {gate_blocked} aday reddedildi, "
         f"{len(gs.get('allowed') or [])} çift izinli"
     )
@@ -769,11 +780,12 @@ def run_scan() -> dict:
     skipped = _skip_weekend("scan")
     if skipped:
         return skipped
-    kl_1h = fetch_all_klines(TEST_SYMBOLS, limit=80, interval="1h")
-    kl_4h = fetch_all_klines(TEST_SYMBOLS, limit=80, interval="4h")
+    live = _live_syms()
+    kl_1h = fetch_all_klines(live, limit=80, interval="1h")
+    kl_4h = fetch_all_klines(live, limit=80, interval="4h")
     kl_cache = {
-        **{f"{s}|1h": kl_1h.get(s, []) for s in TEST_SYMBOLS},
-        **{f"{s}|4h": kl_4h.get(s, []) for s in TEST_SYMBOLS},
+        **{f"{s}|1h": kl_1h.get(s, []) for s in live},
+        **{f"{s}|4h": kl_4h.get(s, []) for s in live},
     }
     results = []
     total_closed = 0
@@ -857,7 +869,8 @@ def run_scan() -> dict:
 
 
 def _build_waiting(kl: dict[str, list], open_syms: set[str]) -> list[dict]:
-    votes: dict[str, dict[str, int]] = {s: {"UP": 0, "DOWN": 0} for s in TEST_SYMBOLS}
+    live = _live_syms()
+    votes: dict[str, dict[str, int]] = {s: {"UP": 0, "DOWN": 0} for s in live}
     # PRO defterleri aynı motorun kopyası — konsensüsü ikiye katlamasınlar
     vote_books = [
         b for b in ALL_BOOKS
@@ -873,7 +886,7 @@ def _build_waiting(kl: dict[str, list], open_syms: set[str]) -> list[dict]:
             elif d == "DOWN":
                 votes[sym]["DOWN"] += 1
     rows = []
-    for sym in TEST_SYMBOLS:
+    for sym in live:
         kl_list = kl.get(sym) or []
         price = float(kl_list[-1]["c"]) if kl_list else None
         up, dn = votes[sym]["UP"], votes[sym]["DOWN"]
@@ -928,7 +941,7 @@ def _build_status(*, with_marks: bool = True, compute_waiting: bool | None = Non
     if with_marks and open_syms and not ws_ok:
         kl = fetch_all_klines(sorted(open_syms), limit=2)
     if compute_waiting:
-        kl.update(fetch_all_klines(TEST_SYMBOLS, limit=80))
+        kl.update(fetch_all_klines(_live_syms(), limit=80))
     # book_status() mutasyonla kl_cache'e "SYM|interval" anahtarları ekler
     # (pozisyon ATR/mark takibi için) — sinyal hesaplaması (signal_for_book)
     # sadece düz sembol anahtarı bekler, kirlenmemiş kopya kullan.
@@ -994,7 +1007,8 @@ def _build_status(*, with_marks: bool = True, compute_waiting: bool | None = Non
         "margin_usd": MARGIN_USD,
         "leverage": LEVERAGE,
         "max_opens": MAX_OPEN_POSITIONS,
-        "symbols_n": len(TEST_SYMBOLS),
+        "symbols_n": len(_live_syms()),
+        "universe_n": len(TEST_UNIVERSE),
         "total_balance": round(tot_bal, 2),
         "total_pnl": round(tot_pnl, 4),
         "total_open": tot_open,

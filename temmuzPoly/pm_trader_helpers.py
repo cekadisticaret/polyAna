@@ -1008,6 +1008,9 @@ def apply_pm_quote(pos: dict, symbol: str, direction: str, amount: float, now: d
     q = pm_sanal_quote(symbol, direction, amount, now)
     if q:
         pos.update(q)
+        ok, msg = pm_hourly_profit_entry_ok(pos)
+        if not ok:
+            pos["entry_skip"] = msg
     return pos
 
 
@@ -1016,21 +1019,25 @@ HOURLY_MIN_NET_PROFIT_RATIO = 0.5
 
 
 def pm_net_profit(pos: dict) -> float:
+    """Kazanırsa net kâr: ödeme − harcama − taker ücret."""
     spent, size, _ = pm_stake_fields(pos)
     if spent <= 0 or size <= 0:
         return 0.0
-    return round(size - spent, 2)
+    return round(size - spent - pm_position_fee(pos), 2)
 
 
 def pm_hourly_profit_entry_ok(
     pos: dict,
     min_ratio: float = HOURLY_MIN_NET_PROFIT_RATIO,
 ) -> tuple[bool, str]:
-    """PM kotasyonunda net kazanç (to_win − spent) >= stake × min_ratio ise True."""
+    """Kazanırsa net kâr (ödeme − harcama − ücret) >= stake × min_ratio ise True.
+
+    Sinyale dokunmaz — yalnız kasa: $10 girişte en az $5 net kâr yoksa açılmaz.
+    """
     spent, size, ep = pm_stake_fields(pos)
     if size <= 0 or ep <= 0 or not pos.get("pm_slug"):
         return False, "PM kotasyonu yok — işlem açılmaz (2× stake kullanılmaz)"
-    net = round(size - spent, 2)
+    net = pm_net_profit(pos)
     need = round(spent * min_ratio, 2)
     if net >= need:
         return True, ""
@@ -1038,7 +1045,7 @@ def pm_hourly_profit_entry_ok(
     got_pct = int(round(net / spent * 100)) if spent else 0
     return (
         False,
-        f"PM kazanç düşük: +${net:.2f} (%{got_pct}) < %{need_pct} (+${need:.2f} gerekli, @{ep:.2f})",
+        f"PM net kâr düşük: +${net:.2f} (%{got_pct}) < %{need_pct} (+${need:.2f} gerekli, @{ep:.2f})",
     )
 
 

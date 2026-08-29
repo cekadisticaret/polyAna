@@ -1,7 +1,8 @@
-"""X1#01 - 13Analiz — sanal Poly saatlik defter.
+"""COMBO2 — BTC←C1#01 · ETH/SOL←COMBO. Sanal, gerçek PM yok.
 
-BTC/ETH/SOL. Gerçek PM emri yok. Cron: :01 close · :02 open.
-Başlangıç $300. Kapı: x101_signal (13 katman, ask kenarı).
+Kaynaklar :02 / :02:25'te açar; COMBO2 :02:40'ta onların açık pozisyonunu kopyalar.
+Her işlem sabit $64. Kasa $1000. Ask tavanı yok (kaynak kapısı geçerli).
+Cron: :01 close · :02+40s open. Betik adı e02.
 """
 from __future__ import annotations
 
@@ -11,7 +12,7 @@ import sys
 import urllib.parse
 import urllib.request
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,29 +27,28 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, _DIR)
 
+from e02_signal import SYMBOLS, decide  # noqa: E402
 from pm_trader_helpers import (  # noqa: E402
     apply_pm_quote,
-    pm_best_ask,
-    pm_find_market,
+    pm_tg_stake,
     pm_sanal_settle_trade,
     pm_sanal_slot_candle,
-    resolve_slot_trade_amount,
     skip_if_weekend_pause,
-    symbol_wr_amount_for_book,
+    slot_amount_log,
 )
 from telegram_poly_channels import chat_analiz4  # noqa: E402
-from x101_signal import SYMBOLS, decide  # noqa: E402
 
 BOT_TOKEN = os.getenv("TELEGRAM_ANALIZ4_BOT_TOKEN", "")
 CHAT_ID = chat_analiz4()
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 
-STATE_FILE = os.path.join(_DIR, "poly_trader_x101_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_x101_history.json")
-LABEL = "X1#01 - 13Analiz"
-BOOK_KEY = "x101"
-ALGO_NAME = "X1#01 - 13Analiz"
+STATE_FILE = os.path.join(_DIR, "poly_trader_combo2_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_combo2_history.json")
+LABEL = "COMBO2"
+BOOK_KEY = "combo2"
+ALGO_NAME = "COMBO2 · BTC→C1#01 · ETH/SOL→COMBO"
 INITIAL_BALANCE = 1000.0
+FIXED_STAKE = 64.0
 
 
 def load_state() -> dict:
@@ -99,36 +99,6 @@ def _wr(wins: int, total: int) -> str:
     return f"%{wins/total*100:.0f} ({wins}/{total})" if total else "veri yok"
 
 
-def pm_prices(symbol: str, now_utc: datetime) -> dict | None:
-    et_hour = (now_utc - timedelta(hours=4)).hour
-    pm = pm_find_market(symbol, et_hour, now_utc)
-    if not pm or pm.get("closed"):
-        return None
-    op = pm.get("outcome_prices") or []
-    if len(op) < 2:
-        return None
-    try:
-        up_mid, down_mid = float(op[0]), float(op[1])
-    except (ValueError, TypeError):
-        return None
-    up_ask = pm_best_ask(pm["up_token"])
-    down_ask = pm_best_ask(pm["down_token"])
-    up_p = up_ask if up_ask is not None else up_mid
-    down_p = down_ask if down_ask is not None else down_mid
-    if not (0.01 < up_p < 0.99 and 0.01 < down_p < 0.99):
-        return None
-    return {
-        "slug": pm["slug"],
-        "title": pm.get("title", ""),
-        "up": up_p,
-        "down": down_p,
-        "quote_src": "ask" if (up_ask is not None and down_ask is not None) else "mid",
-        "up_mid": round(up_mid, 4),
-        "down_mid": round(down_mid, 4),
-        "overround": round(up_p + down_p - 1.0, 4),
-    }
-
-
 def run_open() -> None:
     now = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
@@ -143,35 +113,37 @@ def run_open() -> None:
     opened, skipped = [], []
 
     for sym in SYMBOLS:
-        mkt = pm_prices(sym, now)
-        dec = decide(
-            sym, now_tr, mkt=mkt, history=history,
-            open_syms=open_syms, balance=balance,
-        )
-        if not dec.get("allow"):
-            skipped.append((sym, dec.get("verdict") or "kapı kapalı"))
+        if sym in open_syms:
+            skipped.append((sym, "zaten açık"))
             continue
-        base = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
-        stake, _hot, _cold = resolve_slot_trade_amount(base, now_tr.hour, history)
+        dec = decide(sym, now_tr.hour)
+        if not dec.get("allow"):
+            skipped.append((sym, dec.get("reason") or "kapı kapalı"))
+            print(f"[{LABEL} open] {sym} — {dec.get('reason')} · {dec.get('detail')}")
+            continue
+        stake = FIXED_STAKE
+        hot_boost = cold_cut = False
+        slot_amount_log(LABEL, now_tr.hour, stake, stake, hot_boost, cold_cut)
         if stake <= 0 or stake > balance:
             skipped.append((sym, "bakiye/kademe"))
             continue
         pos = {
             "symbol": sym,
             "predicted_dir": dec["direction"],
-            "entry_price": (dec.get("model") or {}).get("ptb"),
+            "entry_price": None,
             "entry_time_tr": now_tr.isoformat(),
             "entry_hour_tr": now_tr.hour,
             "entry_dow": now_tr.weekday(),
             "entry_is_weekend": now_tr.weekday() >= 5,
             "amount": stake,
+            "hot_hour_boost": hot_boost,
+            "cold_hour_cut": cold_cut,
             "algo_signal": dec["direction"],
             "algo_name": ALGO_NAME,
-            "x101_score": dec.get("score"),
-            "x101_verdict": dec.get("verdict"),
-            "x101_edge": dec.get("edge"),
-            "x101_regime": dec.get("regime"),
-            "x101_checklist": dec.get("checklist"),
+            "e02_source": dec.get("source"),
+            "e02_source_label": dec.get("source_label"),
+            "e02_reason": dec.get("reason"),
+            "e02_detail": dec.get("detail"),
         }
         apply_pm_quote(pos, sym, dec["direction"], stake, now)
         if pos.get("entry_skip"):
@@ -184,14 +156,14 @@ def run_open() -> None:
         state["open_positions"].append(pos)
         open_syms.add(sym)
         opened.append((sym, dec, stake, pos))
-        print(f"[{LABEL} open] {sym} {dec['direction']} skor {dec['score']} "
-              f"kenar +{(dec.get('edge') or 0)*100:.1f}p ${stake:.2f}")
+        print(
+            f"[{LABEL} open] {sym} {dec['direction']} "
+            f"${stake:.2f} · {dec.get('detail')}"
+        )
 
     save_state(state)
-    for sym, reason in skipped:
-        print(f"[{LABEL} open] {sym} — {reason}")
     if not opened:
-        print(f"[{LABEL} open] {saat} İST — kapı açılmadı")
+        print(f"[{LABEL} open] {saat} İST — kaynak sessiz")
         return
 
     sep = "━" * 26
@@ -200,14 +172,14 @@ def run_open() -> None:
         name = sym.replace("USDT", "")
         icon = "📈" if dec["direction"] == "UP" else "📉"
         lines.append(
-            f"{icon} <b>{name}</b>  {dec['direction']}  💵{stake:.2f}$\n"
-            f"   skor {dec['score']:.0f} · kenar +{(dec.get('edge') or 0)*100:.1f}p"
+            f"{icon} <b>{name}</b>  {dec['direction']}  {pm_tg_stake(pos)}\n"
+            f"   {dec.get('detail')}"
             f" · ask {float(pos.get('pm_entry_price') or 0):.2f}"
         )
     next_h = f"{(now_tr.hour + 1) % 24:02d}:00"
     tg_send(
         f"{sep}\n🧪 <b>{LABEL}</b>  {now_tr:%d.%m.%Y} {now_tr.hour:02d}:00→{next_h}\n"
-        f"<i>13 katman · ask kenarı · sanal $300</i>\n"
+        f"<i>BTC→C1#01 · ETH/SOL→COMBO · sanal $1000</i>\n"
         + "\n".join(lines) + "\n"
         f"💰 Bakiye: ${state['balance']:.2f}\n{sep}"
     )
@@ -252,9 +224,8 @@ def run_close() -> None:
             "pnl": pnl,
             "algo_signal": pos.get("algo_signal"),
             "algo_name": pos.get("algo_name", ALGO_NAME),
-            "x101_score": pos.get("x101_score"),
-            "x101_edge": pos.get("x101_edge"),
-            "x101_regime": pos.get("x101_regime"),
+            "e02_source": pos.get("e02_source"),
+            "e02_detail": pos.get("e02_detail"),
         }
         for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug",
                   "pm_fee", "pm_quote_src", "pm_mid_price"):
@@ -284,19 +255,13 @@ def run_close() -> None:
 
 
 def run_preview() -> None:
-    now = datetime.now(timezone.utc)
-    now_tr = now.astimezone(_TZ_TR)
-    print(f"{LABEL} önizleme — {now_tr:%d.%m.%Y %H:%M} İST")
-    hist = load_history()
+    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
+    print(f"{LABEL} önizleme — {now_tr:%d.%m.%Y %H:%M} İST  saat {now_tr.hour:02d}")
     for sym in SYMBOLS:
-        mkt = pm_prices(sym, now)
-        dec = decide(sym, now_tr, mkt=mkt, history=hist, balance=INITIAL_BALANCE)
-        print(f"\n{sym}  {dec['verdict']}")
-        print(f"  skor {dec['score']:.1f}  aday {dec.get('candidate')}  "
-              f"kenar {((dec.get('edge') or 0)*100):+.1f}p")
-        for it in dec.get("checklist") or []:
-            mark = "✓" if it["ok"] else "·"
-            print(f"  {mark} {it['id']:2}. {it['name']:12} {it['score']:5.1f}  {it['reason']}")
+        dec = decide(sym, now_tr.hour)
+        flag = "AÇ" if dec.get("allow") else "YOK"
+        print(f"  {sym:8s} {flag:3s}  {dec.get('direction') or '—':4s}  "
+              f"{dec.get('detail')}")
 
 
 def run_stats() -> None:

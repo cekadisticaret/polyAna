@@ -42,8 +42,8 @@ sys.path.insert(0, _DIR)
 
 from c101_signal import SYMBOLS, evaluate, fair_probability, stake_for  # noqa: E402
 from pm_trader_helpers import (  # noqa: E402
-    pm_find_market, pm_sanal_settle_trade, pm_sanal_slot_candle,
-    pm_taker_fee, skip_if_weekend_pause,
+    apply_pm_quote, pm_find_market, pm_sanal_settle_trade, pm_sanal_slot_candle,
+    pm_tg_stake, skip_if_weekend_pause,
     symbol_wr_amount_for_book, COMBO_FAMILY_INIT,
 )
 from telegram_poly_channels import chat_analiz4  # noqa: E402
@@ -240,8 +240,6 @@ def run_open() -> None:
             skipped.append((sym, "bakiye yetersiz", ev))
             continue
 
-        price = ev["pm_price"]
-        size = round(stake / price, 2)
         pos = {
             "symbol": sym,
             "predicted_dir": ev["direction"],
@@ -253,20 +251,8 @@ def run_open() -> None:
             "amount": stake,
             "algo_signal": ev["direction"],
             "algo_name": ALGO_NAME,
-            # PM sanal kotasyonu — pm_stake_fields / sanal_pnl bu alanları okur
-            "pm_slug": mkt["slug"],
-            "pm_title": mkt["title"],
-            "pm_token_dir": ev["direction"],
-            "pm_entry_price": price,
-            "pm_spent": round(size * price, 2),
-            "pm_size": size,
-            "to_win": size,
-            "pm_fee": pm_taker_fee(size, price),
-            "pm_quote_src": mkt.get("quote_src", "mid"),
-            "pm_mid_price": mkt.get("up_mid") if ev["direction"] == "UP" else mkt.get("down_mid"),
-            # C101'e özgü teşhis alanları
             "c101_p_model": ev["p_model"],
-            "c101_pm_price": price,
+            "c101_pm_price": ev["pm_price"],
             "c101_edge": ev["edge"],
             "c101_kelly": ev["kelly_used"],
             "c101_stake_mode": "wr_24_36_48",
@@ -276,12 +262,29 @@ def run_open() -> None:
             "c101_tilt": model["tilt"],
             "c101_depth_mult": model["depth_mult"],
         }
+        apply_pm_quote(pos, sym, ev["direction"], stake, now)
+        if pos.get("entry_skip"):
+            calib["traded"] = False
+            calib["skip_reason"] = pos["entry_skip"]
+            calib_append(calib)
+            skipped.append((sym, pos["entry_skip"], ev))
+            continue
+        if not pos.get("pm_slug") or not pos.get("pm_size"):
+            calib["traded"] = False
+            calib["skip_reason"] = "PM dolum yok"
+            calib_append(calib)
+            skipped.append((sym, "PM dolum yok", ev))
+            continue
         state["open_positions"].append(pos)
-        balance_note = f"{stake:.2f}"
-        opened.append((sym, ev, model, stake))
+        opened.append((sym, ev, model, stake, pos))
         calib_append(calib)
-        print(f"[{LABEL} open] {sym} {ev['direction']} @{price:.2f} "
-              f"model {ev['p_model']:.3f} kenar +{ev['edge']*100:.1f}p stake ${balance_note}")
+        print(
+            f"[{LABEL} open] {sym} {ev['direction']} "
+            f"@{float(pos.get('pm_entry_price') or 0):.2f} "
+            f"model {ev['p_model']:.3f} kenar +{ev['edge']*100:.1f}p "
+            f"stake ${float(pos.get('pm_spent') or stake):.2f} "
+            f"kâr ${float(pos.get('pm_win_profit') or 0):.2f}"
+        )
 
     save_state(state)
 
@@ -294,14 +297,14 @@ def run_open() -> None:
 
     sep = "━" * 26
     lines = []
-    for sym, ev, model, stake in opened:
+    for sym, ev, model, stake, pos in opened:
         name = sym.replace("USDT", "")
         icon = "📈" if ev["direction"] == "UP" else "📉"
         dir_tr = "YÜKSELİR" if ev["direction"] == "UP" else "DÜŞER"
         h_wins = sum(1 for t in history if t["symbol"] == sym and t["win"])
         h_tot = sum(1 for t in history if t["symbol"] == sym)
         lines.append(
-            f"{icon} <b>{name}</b>  {dir_tr}  💵{stake:.2f}$\n"
+            f"{icon} <b>{name}</b>  {dir_tr}  {pm_tg_stake(pos)}\n"
             f"   🎯 model {ev['p_model']*100:.1f}%  vs  piyasa {ev['pm_price']*100:.0f}%"
             f"  →  kenar <b>+{ev['edge']*100:.1f} puan</b>\n"
             f"   📏 PTB {model['ptb']:.2f} · spot {model['spot']:.2f}"
