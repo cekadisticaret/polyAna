@@ -36,7 +36,7 @@ ALGO_ISLEMLER_KEYS = [
     "analiz1", "analiz2",
     "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15",
     "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
-    "c101", "c101_v2", "x101", "combo", "combo2",
+    "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
 ] + list(A1_KEYS) + [f"a2_{i:02d}" for i in range(1, 18)] + ["a2_05_v2"] + list(F1_KEYS)
 
 # Dosya adı defter anahtarından farklı olanlar
@@ -46,7 +46,7 @@ _STATE_FILE_KEY = {"melez": "analiz6_v4"}
 _STANDALONE_CLOSE = [
     "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15",
     "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05",
-    "melez", "c101", "c101_v2", "x101", "combo", "combo2", "a2_05_v2",
+    "melez", "c101", "c101_v2", "x101", "combo", "combo2", "a2_05_v2", "f16v2",
 ]
 
 # Betik adı defter anahtarından farklı olanlar

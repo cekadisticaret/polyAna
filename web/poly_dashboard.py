@@ -27,6 +27,7 @@ from bahis.pages import BAHIS_HTML  # noqa: E402
 from bahis.site import BAHIS_SITE_HTML  # noqa: E402
 from bahis.site_match import SITE_MATCH_HTML  # noqa: E402
 from bahis.site_results import SITE_RESULTS_HTML  # noqa: E402
+from bahis.site_coupons import SITE_COUPONS_HTML  # noqa: E402
 from bahis import match_intel as bahis_intel  # noqa: E402
 from bahis import league as bahis_league  # noqa: E402
 from bahis import players as bahis_players  # noqa: E402
@@ -78,6 +79,7 @@ _HEATMAP_SYMS = {
     "x101": ["BTC", "ETH", "SOL"],
     "combo": ["BTC", "ETH", "SOL"],
     "combo2": ["BTC", "ETH", "SOL"],
+    "f16v2": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz5":  ["BTC", "SOL"],
@@ -122,6 +124,13 @@ _ALGO_BOOK_ALIASES: dict[str, str] = {
     "f1-05": "f1_05", "f105": "f1_05", "f1#05": "f1_05",
     "f1-06": "f1_06", "f106": "f1_06", "f1#06": "f1_06",
     "f1-07": "f1_07", "f107": "f1_07", "f1#07": "f1_07",
+    "f16": "analiz1",
+    "f1_16": "analiz1",
+    "f1-16": "analiz1",
+    "f1#16": "analiz1",
+    "f16-v2": "f16v2",
+    "f16_v2": "f16v2",
+    "f1#16v2": "f16v2",
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Algoritma performansı / harita / analizler — gerçek PM (Live) gösterilmez; sanal karşılığı kullanılır
@@ -162,14 +171,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
+    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
 _HISTORY_ORDER_GECMIS = [
@@ -179,7 +188,7 @@ _HISTORY_ORDER_GECMIS = [
     *_HISTORY_ORDER,
 ]
 _ANALYSIS_LABELS: dict[str, str] = {
-    "analiz1":    "1. Analiz",
+    "analiz1":    "F16",
     "analiz2":    "2. Analiz (SOL)",
     "analiz3":    "3. Analiz Freqtrade",
     "analiz6":    "6. Analiz",
@@ -195,8 +204,9 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "c101":       "C1#01 · OPUS-OHLCV",
     "c101_v2":    "C1#01 V2 · GERÇEK ASK",
     "x101":       "X1#01 - 13Analiz",
-    "combo":      "COMBO · A1+C101+V2 oy",
+    "combo":      "COMBO · F16+C101+V2 oy",
     "combo2":     "COMBO2 · BTC→C1#01 · ETH/SOL→COMBO",
+    "f16v2":      "F16V2 · BTC/SOL F16 · ETH A2#03",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz2_live": "A2 Live",
@@ -218,13 +228,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "analiz1": 1000, "analiz2": 1000, "analiz6": 1000, "analiz6_v2": 1000,
     "analiz6_v3": 1000, "analiz15": 1000, "b1_01": 1000, "b1_02": 1000, "b1_mum": 1000,
-    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000, "combo2": 1000,
+    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000, "combo2": 1000, "f16v2": 1000,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -261,7 +271,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "a2_06_live": "A2#06L",
     "a2_07_live": "A2#07L",
     "analiz15_live": "A15L",
-    "analiz1": "A1",
+    "analiz1": "F16",
     "analiz2": "A2",
     "analiz6": "A6",
     "analiz6_v2": "A6V2",
@@ -278,6 +288,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "x101": "X1#01",
     "combo": "COMBO",
     "combo2": "COMBO2",
+    "f16v2": "F16V2",
     "analiz3": "A3",
     "analiz8": "A8",
 }
@@ -342,7 +353,13 @@ for _num, _name, *_rest in _F1_META:
 # /algoritma-islemler + /poly/api/mirror: 5 sarı kart başta, kendi içinde bakiye → P&L → WR
 # Kart + ayna: defterin :02/:05/:07 içinden en çok kazandıran (net P&L) dilim.
 _ALGO_FEATURED_KEYS: list[str] = ["combo", "c101", "a2_05_v2", "analiz1", "combo2"]
+_WATCH_PIN_KEYS: list[str] = ["analiz1", "a2_03", "a2_05", "f16v2"]
+_WATCH_PIN_LABEL = {"analiz1": "F16", "a2_03": "A2#03", "a2_05": "A2#05", "f16v2": "F16V2"}
 _ALGO_FEATURED_SORT = "best_slot_pnl"
+_TR_MONTH_SHORT = (
+    "Oca", "Şub", "Mar", "Nis", "May", "Haz",
+    "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
+)
 _VOTE_TOP_N = 10
 _REGIME_ORDER = ("range", "trend", "live")
 _REGIME_SORT_I = {"range": 0, "trend": 1, "live": 2}
@@ -373,7 +390,7 @@ def _sort_algo_islemler_books(books: list, id_field: str = "id") -> list:
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
 ] + _A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS
 
 # Motor tipi → piyasa rejimi (ölçülmüş WR değil).
@@ -401,7 +418,7 @@ _NAMED_REGIME = {
     "b1_01": "live", "b1_02": "live", "b1_mum": "live",
     "b1_04": "live", "b1_05": "live",
     "c101": "live", "c101_v2": "live", "x101": "live",
-    "combo": "live", "combo2": "live",
+    "combo": "live", "combo2": "live", "f16v2": "live",
     "a2_05_v2": "range",
 }
 for _num, _name, *_rest in _F1_META:
@@ -428,7 +445,7 @@ _ANALYSIS_ORDER.extend(_A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS)
 
 # Analizler sayfası kayıtları (A2 dahil)
 _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
-    ("analiz1",    "1. Analiz",             1000, "RSI+MACD+EMA · $24/36/48"),
+    ("analiz1",    "F16",                   1000, "RSI+MACD+EMA · $24/36/48"),
     ("analiz2",    "2. Analiz (SOL)",       1000, "A1 motoru SOL only · $24/36/48"),
     ("analiz6",    "6. Analiz",             1000, "MACD Div #26 (BTC/SOL) · RSI Div #38 (ETH)"),
     ("analiz6_v2", "6. Analiz V2",          1000, "MACD Div #26 (BTC) · RSI Div #38 (ETH) · SOL yok"),
@@ -443,8 +460,9 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("c101",       "C1#01 · OPUS-OHLCV",    1000, "PTB+volatilite olasılık · Gamma mid · 5 puan kenar · $24/36/48"),
     ("c101_v2",    "C1#01 V2 · GERÇEK ASK", 1000, "Aynı model, CLOB best_ask kotasyonu · 3 puan kenar eşiği"),
     ("x101",       "X1#01 - 13Analiz",      1000, "13 katman kapısı · C101 model + gerçek ask kenarı · BTC/ETH/SOL"),
-    ("combo",      "COMBO · A1+C101+V2 oy", 1000, "A1 + C1#01 + A2#05 V2 oy · çatışmada yok · sembol WR $16/24/32 · ask ≤ 0,50"),
+    ("combo",      "COMBO · F16+C101+V2 oy", 1000, "F16 + C1#01 + A2#05 V2 oy · çatışmada yok · sembol WR $16/24/32 · ask ≤ 0,50"),
     ("combo2",     "COMBO2 · BTC→C1#01 · ETH/SOL→COMBO", 1000, "Kart eşlemesi: BTC C1#01 · ETH/SOL COMBO · sabit $64"),
+    ("f16v2",      "F16V2",                 1000, "BTC/SOL→F16 predict · ETH→A2#03 Stoch RSI"),
     ("a2_05_v2",   "A2#05 V2 · Z KAPISI", 1000, "A2#05 sinyali + yalnız 1,0 ≤ |z| < 1,5 · $24/36/48"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
@@ -3604,7 +3622,7 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
     if m1:
         num = int(m1.group(1))
     if key == "analiz1":
-        category = "Poly sanal · 1. Analiz"
+        category = "Poly sanal · F16"
         panel = "poly_a1"
         name = short or label
         title = "RSI+MACD+EMA (BTC/SOL)"
@@ -3612,7 +3630,7 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
         category = "Poly sanal · 2. Analiz"
         panel = "poly_a2_sol"
         name = short or label
-        title = "A1 motoru · SOL only"
+        title = "F16 motoru · SOL only"
     elif key == "analiz6":
         category = "Poly sanal · 6. Analiz"
         panel = "poly_a6"
@@ -3638,6 +3656,11 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
         panel = "poly_a15"
         name = short or label
         title = "BTC→A6 · ETH→A8 · SOL→A2"
+    elif key == "f16v2":
+        category = "Poly sanal · F16V2"
+        panel = "poly_f16v2"
+        name = short or label
+        title = "BTC/SOL→F16 predict · ETH→A2#03 Stoch RSI"
     elif key == "b1_01":
         category = "Poly sanal · B1#01"
         panel = "poly_b1"
@@ -3739,6 +3762,16 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
                 "slot_label": t.get("pm_title") or t.get("pm_slug") or "",
             })
     started_iso, started_label = _poly_book_started_at(state, hist_stats, hist, reset_at)
+    month_ym = datetime.now(_TZ_TR).strftime("%Y-%m")
+    month_pnl = 0.0
+    month_n = 0
+    for t in hist_stats:
+        if str(t.get("exit_time_tr") or "").startswith(month_ym):
+            try:
+                month_pnl += float(t.get("pnl") or 0)
+            except (TypeError, ValueError):
+                continue
+            month_n += 1
     row = {
         "id": key,
         "key": key,
@@ -3766,6 +3799,10 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
         "leverage": 1,
         "regime": _algo_regime(key),
         "regime_label": _REGIME_LABEL.get(_algo_regime(key), "Canlı"),
+        "month_ym": month_ym,
+        "month_pnl": round(month_pnl, 2),
+        "month_n": month_n,
+        "watch_pin": key in _WATCH_PIN_KEYS,
     }
     try:
         sys.path.insert(0, _DIR_POLY)
@@ -4028,6 +4065,99 @@ def _algo_consensus_votes(books: list[dict], list_books: list[dict] | None = Non
     return votes
 
 
+def _ym_tr_label(ym: str) -> str:
+    try:
+        y, m = ym.split("-")
+        return f"{_TR_MONTH_SHORT[int(m) - 1]} {y[2:]}"
+    except Exception:
+        return ym
+
+
+def _bt_ranked_monthly(path: str, book_id: str) -> tuple[dict[str, float], float, str]:
+    """(monthly_pnl, year_pnl, period) from a 1Y JSON."""
+    try:
+        data = json.loads(open(path, encoding="utf-8").read())
+    except Exception:
+        return {}, 0.0, ""
+    rows = data.get("ranked") or data.get("algos") or data.get("results") or []
+    hit = next((r for r in rows if str(r.get("id") or "") == book_id), None)
+    if not hit:
+        return {}, 0.0, str(data.get("period") or "")
+    monthly = {str(k): float(v) for k, v in (hit.get("monthly_pnl") or {}).items()}
+    return monthly, float(hit.get("total_pnl") or 0), str(hit.get("period") or data.get("period") or "")
+
+
+_WATCH_BT_CACHE: dict = {"sig": "", "data": None}
+
+
+def _watch_month_backtest(books: list | None = None) -> dict:
+    """F16 / A2#03 / A2#05 — bu ay 1Y backtest vs canlı settle."""
+    now = datetime.now(_TZ_TR)
+    ym = now.strftime("%Y-%m")
+    p_all = os.path.join(_DIR_POLY, "backtest_algo_islemler_1y.json")
+    p_sel = os.path.join(_DIR_POLY, "backtest_selected_algos_1y.json")
+    try:
+        sig = f"{ym}:{os.path.getmtime(p_all):.0f}:{os.path.getmtime(p_sel):.0f}"
+    except OSError:
+        sig = ym
+    cached = _WATCH_BT_CACHE.get("data")
+    if cached and _WATCH_BT_CACHE.get("sig") == sig:
+        live_map = {str(b.get("id")): b for b in (books or [])}
+        rows = []
+        for row in cached.get("rows") or []:
+            live = live_map.get(row["id"]) or {}
+            rows.append({
+                **row,
+                "live_pnl": float(live.get("month_pnl") or 0),
+                "live_n": int(live.get("month_n") or 0),
+            })
+        return {**cached, "rows": rows}
+
+    sources = {
+        "analiz1": (p_sel, "analiz1"),
+        "a2_03": (p_all, "a2_03"),
+        "a2_05": (p_all, "a2_05"),
+    }
+    live_map = {str(b.get("id")): b for b in (books or [])}
+    rows = []
+    for key in _WATCH_PIN_KEYS:
+        src = sources.get(key)
+        if src:
+            path, bid = src
+            monthly, year_pnl, period = _bt_ranked_monthly(path, bid)
+        else:
+            monthly, year_pnl, period = {}, 0.0, ""
+        use_ym = ym if ym in monthly else (max(monthly) if monthly else ym)
+        rows.append({
+            "id": key,
+            "label": _WATCH_PIN_LABEL.get(key, key),
+            "month": use_ym,
+            "month_label": _ym_tr_label(use_ym),
+            "pnl": round(float(monthly.get(use_ym) or 0), 2),
+            "year_pnl": round(year_pnl, 2),
+            "period": period,
+            "note": (
+                "predict() · 15.08–15.08" if key == "analiz1"
+                else "canlı · 1Y yok" if key == "f16v2"
+                else "30.08–30.08"
+            ),
+            "live_pnl": float((live_map.get(key) or {}).get("month_pnl") or 0),
+            "live_n": int((live_map.get(key) or {}).get("month_n") or 0),
+        })
+    out = {
+        "month": ym,
+        "month_label": _ym_tr_label(ym),
+        "rows": rows,
+    }
+    _WATCH_BT_CACHE["sig"] = sig
+    _WATCH_BT_CACHE["data"] = {
+        "month": out["month"],
+        "month_label": out["month_label"],
+        "rows": [{k: v for k, v in r.items() if k not in ("live_pnl", "live_n")} for r in rows],
+    }
+    return out
+
+
 _A2_BOOKS_CACHE: dict = {"ts": 0.0, "data": None}
 _A2_BOOKS_CACHE_TTL = 4.0
 
@@ -4079,6 +4209,16 @@ def _build_a2_poly_books() -> dict:
         vote_rows = []
     all_books = (vote_rows or []) + books
     _sort_algo_islemler_books(all_books, "id")
+    watch_bt = _watch_month_backtest(books)
+    bt_by_id = {r["id"]: r for r in (watch_bt.get("rows") or [])}
+    for b in all_books:
+        info = bt_by_id.get(str(b.get("id") or ""))
+        if not info:
+            continue
+        b["bt_month"] = info.get("month")
+        b["bt_month_label"] = info.get("month_label")
+        b["bt_month_pnl"] = info.get("pnl")
+        b["bt_year_pnl"] = info.get("year_pnl")
     out = {
         "ok": True,
         "panel_filter": "poly_algo",
@@ -4089,6 +4229,8 @@ def _build_a2_poly_books() -> dict:
         "count": len(all_books),
         "sort": _ALGO_FEATURED_SORT,
         "featured": list(_ALGO_FEATURED_KEYS),
+        "watch_pin": list(_WATCH_PIN_KEYS),
+        "watch_backtest": watch_bt,
         "total_balance": round(sum(float(b.get("balance") or 0) for b in books), 2),
         "total_pnl": round(sum(float(b.get("total_pnl") or 0) for b in books), 2),
         "total_open": sum(int(b.get("open_count") or 0) for b in books),
@@ -14537,7 +14679,7 @@ HTML = r"""<!DOCTYPE html>
       <button class="hm-filter" data-sym="SOL"  onclick="setHmFilter(this,'SOL')">SOL</button>
     </div>
   </div>
-  <div id="hm-subtitle-main" style="font-size:13px;color:#666;margin-bottom:20px">1. Analiz — gün × saat kazanma oranı (tüm geçmiş)</div>
+  <div id="hm-subtitle-main" style="font-size:13px;color:#666;margin-bottom:20px">F16 — gün × saat kazanma oranı (tüm geçmiş)</div>
 
   <!-- Özet stat kartları -->
   <div id="hm-top" style="display:grid;grid-template-columns:200px 1fr;gap:14px;margin-bottom:20px;align-items:start">
@@ -15517,7 +15659,7 @@ function hmTextColor(wr, t) {
 async function loadHeatmap() {
   const analiz = _panelAnaliz || 'analiz1';
   updateMainHmSymFilters(analiz);
-  const lbl = ({analiz1:'1. Analiz',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz6:'6. Analiz',analiz15:'15. Analiz'})[analiz] || analiz;
+  const lbl = ({analiz1:'F16',analiz2:'2. Analiz (SOL)',analiz2_live:'A2 Live',analiz3:'3. Analiz Freqtrade',analiz5:'A1 Live',analiz8:'8. Analiz Jesse',analiz6:'6. Analiz',analiz15:'15. Analiz'})[analiz] || analiz;
   const sub = document.getElementById('hm-subtitle-main');
   if (sub) sub.textContent = `${lbl} — gün × saat kazanma oranı`;
   try {
@@ -15829,6 +15971,27 @@ body{
 .book-tops .book-grid{display:contents}
 .book-tops .book-card-wrap{min-width:0;height:100%}
 .book-tops .book-card{height:100%}
+.book-card.book-watch{border-color:rgba(245,193,74,.38);box-shadow:0 0 0 1px rgba(245,193,74,.1) inset}
+.book-bt{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:11px;display:flex;justify-content:space-between;gap:8px;color:var(--muted)}
+.book-bt b{font-weight:800}
+.book-bt .pos{color:var(--green)}.book-bt .neg{color:var(--red)}
+.watch-bt{
+  position:relative;overflow:hidden;border-radius:16px;padding:12px 14px;
+  background:linear-gradient(160deg,#0f1a2e 0%,#13233d 55%,#1a2a18 100%);
+  color:#fff;border:1px solid rgba(245,193,74,.28);
+  box-shadow:0 12px 28px rgba(8,16,32,.35);height:100%;min-height:0;
+  display:flex;flex-direction:column;
+}
+.watch-bt-h{font-size:11px;font-weight:800;letter-spacing:-.2px;color:#f5c14a}
+.watch-bt-h span{font-size:10px;font-weight:600;opacity:.75;color:#c8d4e8}
+.watch-bt-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.08)}
+.watch-bt-row:last-of-type{border-bottom:0}
+.watch-bt-row .n{font-size:13px;font-weight:800}
+.watch-bt-row .bt{font-size:15px;font-weight:800}
+.watch-bt-row .bt.pos,.watch-bt .pos{color:#39ff8e}
+.watch-bt-row .bt.neg,.watch-bt .neg{color:#fda4af}
+.watch-bt-row .lv{font-size:11px;color:#8b95a8}
+.watch-bt-meta{font-size:10px;color:#8b95a8;margin-top:auto;padding-top:8px;line-height:1.35}
 .sym-best{
   position:relative;overflow:hidden;border-radius:16px;padding:10px 12px 10px;
   background:linear-gradient(145deg,#5b21b6 0%,#7c3aed 42%,#a21caf 100%);
@@ -15919,6 +16082,21 @@ body{
 .regime-f.on{color:var(--txt);border-color:rgba(200,241,53,.45);background:rgba(200,241,53,.12)}
 .regime-f.range.on{color:#39ff8e;border-color:rgba(57,255,142,.5);background:rgba(57,255,142,.12)}
 .regime-f.live.on{color:#d08cff;border-color:rgba(176,38,255,.55);background:rgba(176,38,255,.14)}
+.regime-f.cpn.on{color:#f5c518;border-color:rgba(245,197,24,.5);background:rgba(245,197,24,.12)}
+.cpn-bank{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 14px;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.cpn-bank b{font-size:16px}
+.cpn-bank span,.cpn-bank a{font-size:12px;color:var(--muted)}
+.cpn-bank a{color:#f5c518}
+.cpn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.cpn-card{padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card2)}
+.cpn-card.won{background:linear-gradient(180deg,rgba(34,197,94,.22),rgba(34,197,94,.06));border-color:rgba(34,197,94,.5)}
+.cpn-card.lost{background:linear-gradient(180deg,rgba(239,68,68,.22),rgba(239,68,68,.06));border-color:rgba(239,68,68,.5)}
+.cpn-card .h{display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;letter-spacing:.04em;margin-bottom:8px}
+.cpn-card.won .h{color:#39ff8e}
+.cpn-card.lost .h{color:#ff6b7a}
+.cpn-leg{font-size:12px;margin:4px 0;color:var(--txt)}
+.cpn-leg i{font-style:normal;color:var(--muted);font-size:11px}
+.cpn-foot{margin-top:8px;font-size:12px;font-weight:800;display:flex;justify-content:space-between}
 .mkt-tape{
   display:flex;flex-wrap:wrap;align-items:stretch;gap:10px;
   margin:-4px 0 16px;padding:12px 14px;border-radius:16px;
@@ -16204,6 +16382,7 @@ body{
         <button type="button" class="regime-f range" data-r="range" onclick="setRegimeFilter('range')">Durgun · yeşil</button>
         <button type="button" class="regime-f" data-r="trend" onclick="setRegimeFilter('trend')">Trend · sarı</button>
         <button type="button" class="regime-f live" data-r="live" onclick="setRegimeFilter('live')">Canlı · mor</button>
+        <button type="button" class="regime-f cpn" data-r="coupons" onclick="setRegimeFilter('coupons')">Kupon sonuçları</button>
       </div>
       <div id="algo-books"><div class="empty">yükleniyor…</div></div>
     </div>
@@ -16490,10 +16669,54 @@ function setRegimeFilter(r){
   document.querySelectorAll('#regime-filters .regime-f').forEach(btn => {
     btn.classList.toggle('on', (btn.getAttribute('data-r') || '') === _regimeFilter);
   });
-  if (_lastBooks.length && !DETAIL_ID) renderBooks(_lastBooks);
+  if (DETAIL_ID) return;
+  if (_regimeFilter === 'coupons') { renderCouponResults(); return; }
+  if (_lastBooks.length) renderBooks(_lastBooks, undefined, _lastSymBest, _lastWatchBt);
+}
+function couponMoney(n){
+  return Number(n||0).toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:2})+' TL';
+}
+function couponResultCard(c){
+  const st = c.status === 'won' ? 'won' : 'lost';
+  const lbl = st === 'won' ? 'KAZANDI' : 'KAYBETTİ';
+  const legs = (c.legs||[]).map(l => {
+    const hit = l.hit===true ? 'TUTTU' : (l.hit===false ? 'TUTMADI' : '');
+    const sc = (l.hg!=null && l.ag!=null) ? ` ${l.hg}–${l.ag}` : '';
+    return `<div class="cpn-leg">${l.home||''} vs ${l.away||''} · ${l.sel_box||l.sel||''} @ ${Number(l.odds||0).toFixed(2)} <i>${hit}${sc}</i></div>`;
+  }).join('');
+  const pnl = Number(c.pnl||0);
+  return `<article class="cpn-card ${st}">
+    <div class="h"><span>${c.league_short||''} · ${c.when||c.day||''}</span><span>${lbl}</span></div>
+    ${legs}
+    <div class="cpn-foot"><span>${couponMoney(c.stake||200)}</span><span class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${couponMoney(pnl)}</span></div>
+  </article>`;
+}
+async function renderCouponResults(){
+  const el = document.getElementById('algo-books');
+  if (!el) return;
+  el.innerHTML = '<div class="empty">kuponlar yükleniyor…</div>';
+  try {
+    const d = await (await fetch('/site/api/coupons?tab=done&limit=80',{cache:'no-store'})).json();
+    const st = d.stats || {};
+    const head = `<div class="cpn-bank">
+      <b>Kasa ${couponMoney(st.balance)}</b>
+      <span>açık ${st.open||0} · kilitli ${couponMoney(st.locked||0)}</span>
+      <span>hafta ${(st.week&&st.week.pnl>=0)?'+':''}${couponMoney((st.week&&st.week.pnl)||0)}</span>
+      <a href="/site/kuponlar?tab=done">MATCHDAY kuponlar →</a>
+    </div>`;
+    const rows = d.coupons || [];
+    if (!rows.length){
+      el.innerHTML = head + '<div class="empty">Henüz bitmiş kupon yok. Maçlar bitince kazanan yeşil, kaybeden kırmızı burada durur.</div>';
+      return;
+    }
+    el.innerHTML = head + '<div class="cpn-grid">'+rows.map(couponResultCard).join('')+'</div>';
+  } catch (e) {
+    el.innerHTML = '<div class="empty">kuponlar alınamadı</div>';
+  }
 }
 function bookCardHtml(b, homeKey, wrBest){
   const featSet = {combo:1, c101:1, a2_05_v2:1, analiz1:1, combo2:1};
+  const watchPin = !!(b && b.watch_pin);
   const activeKey = String(homeKey || '').toLowerCase();
   const pnl = Number(b.total_pnl||0);
   const upnl = Number(b.unrealized_pnl||0);
@@ -16505,7 +16728,6 @@ function bookCardHtml(b, homeKey, wrBest){
     const k = c.win_profit != null ? ((c.win_profit>=0?'+':'')+'$'+Number(c.win_profit).toFixed(0)) : '';
     return (c.name||'') + ' ' + (c.side==='LONG'?'UP':'DOWN') + (k?' '+k:'');
   }).join(' · ') || 'açık yok';
-  const href = '/algoritma-islemler/' + encodeURIComponent(b.id);
   const since = b.started_at_label || '';
   const sinceTitle = b.started_since_reset ? 'Sıfırlama sonrası dönem' : 'İlk işlem';
   const isActive = String(b.id||'').toLowerCase() === activeKey || !!b.is_home_display;
@@ -16513,8 +16735,14 @@ function bookCardHtml(b, homeKey, wrBest){
   const actLbl = isActive ? '✓ Poly overview aktif' : 'Poly overview\'da aktif et';
   const regime = b.regime || 'live';
   const regimeLbl = b.regime_label || (regime === 'range' ? 'Durgun' : regime === 'trend' ? 'Trend' : 'Canlı');
+  const btLine = (b.bt_month_pnl != null || b.month_pnl != null) ? `<div class="book-bt">
+      <span>Bu ay canlı <b class="${Number(b.month_pnl||0)>=0?'pos':'neg'}">${moneyTxt(b.month_pnl)}</b></span>
+      <span>1Y ${b.bt_month_label||''} <b class="${Number(b.bt_month_pnl||0)>=0?'pos':'neg'}">${moneyTxt(b.bt_month_pnl)}</b></span>
+    </div>` : '';
+  const hrefId = (watchPin && String(b.id||'') === 'analiz1') ? 'f16' : (b.id || '');
+  const href = '/algoritma-islemler/' + encodeURIComponent(hrefId);
   return `<div class="book-card-wrap">
-    <a class="book-card regime-${regime}${isActive ? ' book-active' : ''}${b.featured || featSet[b.id] ? ' book-featured' : ''}${wrBest ? ' book-wr-best' : ''}" href="${href}">
+    <a class="book-card regime-${regime}${isActive ? ' book-active' : ''}${b.featured || featSet[b.id] ? ' book-featured' : ''}${wrBest ? ' book-wr-best' : ''}${watchPin ? ' book-watch' : ''}" href="${href}">
       <div class="book-since${b.wr == null ? ' wait' : ''}" title="${since ? (sinceTitle + ' · ' + since) : 'Seçili dilim WR'}">${b.wr == null ? 'WR —' : ('WR %'+String(b.wr).replace('.',','))}</div>
       <div class="bt">${title}</div>
       <div class="bs">${sub} · ${histN} işlem · ${padSlot(b.best_slot || b.open_minute || 5)}</div>
@@ -16524,6 +16752,7 @@ function bookCardHtml(b, homeKey, wrBest){
       <div class="br"><span>Net P&L</span><b class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(2)}</b></div>
       <div class="br"><span>Anlık net</span><b class="${upnl>=0?'pos':'neg'}">${upnl>=0?'+':''}${upnl.toFixed(2)}</b></div>
       <div class="book-opens">${b.open_count||0} açık · ${opens}</div>
+      ${watchPin ? btLine : ''}
     </a>
     ${b.vote_paper || b.no_home ? '' : `<button type="button" class="book-activate${actCls}" ${isActive ? 'disabled' : ''}
       onclick="setHomeDisplay('${String(b.id).replace(/'/g, '')}', this)"
@@ -16585,16 +16814,37 @@ function symBestHtml(sb){
     <div class="sym-best-chips">${chips}</div>
   </div>`;
 }
-function renderBooks(books, homeKey, symBest){
+function watchBtHtml(wb){
+  const rows = (wb && wb.rows) || [];
+  if(!rows.length) return '';
+  const body = rows.map(r => {
+    const bt = Number(r.pnl||0), lv = Number(r.live_pnl||0);
+    return `<div class="watch-bt-row">
+      <span class="n">${r.label||r.id}</span>
+      <span class="bt ${bt>=0?'pos':'neg'}">${moneyTxt(bt)}$</span>
+      <span class="lv">canlı ${moneyTxt(lv)}$</span>
+    </div>`;
+  }).join('');
+  return `<div class="watch-bt">
+    <div class="watch-bt-h">1Y aylık net $ <span>· ${wb.month_label||''} · coin fiyatı değil</span></div>
+    ${body}
+    <div class="watch-bt-meta">Büyük sayı = o ayın walk-forward kâr/zararı (kasa $). Canlı = bu ay sanal settle. F16 Ağu yalnız 1–15 · A2 tam ay · F16V2 henüz 1Y yok.</div>
+  </div>`;
+}
+function renderBooks(books, homeKey, symBest, watchBt){
   const el = document.getElementById('algo-books');
   if (symBest) _lastSymBest = symBest;
-  const rows = (books||[]).filter(b => !_regimeFilter || (b.regime||'live') === _regimeFilter);
+  if (watchBt) _lastWatchBt = watchBt;
+  if (_regimeFilter === 'coupons') { renderCouponResults(); return; }
+  const all = books||[];
+  const rows = all.filter(b => !_regimeFilter || (b.regime||'live') === _regimeFilter);
   if(!rows.length){
     el.innerHTML = '<div class="empty">defter yok</div>';
     return;
   }
-  const tops = sortBooksByPnl(['top1','top2','top3','top4'].map(id => rows.find(b => String(b.id||'').toLowerCase() === id)).filter(Boolean));
-  const ranked = rows.filter(b => !isVoteTopBook(b));
+  const WATCH_IDS = ['analiz1','a2_03','a2_05','f16v2'];
+  const watch = WATCH_IDS.map(id => all.find(b => String(b.id||'').toLowerCase() === id)).filter(Boolean);
+  const ranked = rows.filter(b => !isVoteTopBook(b) && !WATCH_IDS.includes(String(b.id||'').toLowerCase()));
   const byPnl = sortBooksByPnl(ranked);
   const byWr = sortBooksByWr(ranked);
   let bestWr = -1;
@@ -16602,12 +16852,12 @@ function renderBooks(books, homeKey, symBest){
     if (Number(b.history_n||0) >= 6 && b.wr != null && Number(b.wr) > bestWr) bestWr = Number(b.wr);
   });
   const card = b => bookCardHtml(b, homeKey, !isVoteTopBook(b) && bestWr >= 0 && Number(b.history_n||0) >= 6 && b.wr != null && Number(b.wr) === bestWr);
-  const bestCard = symBestHtml(_lastSymBest);
+  const side = watchBtHtml(_lastWatchBt) || symBestHtml(_lastSymBest);
   el.innerHTML =
-    '<div class="book-split-h">Oy defteri</div>'
+    '<div class="book-split-h">İzleme · F16 · A2#03 · A2#05 · F16V2</div>'
     + '<div class="book-tops">'
-      + '<div class="book-grid">'+(tops.length?tops.map(card).join(''):'')+'</div>'
-      + bestCard
+      + '<div class="book-grid">'+(watch.length?watch.map(card).join(''):'')+'</div>'
+      + side
     + '</div>'
     + '<div class="book-split">'
       + '<div class="book-split-pane"><div class="book-split-h">En çok kazandıran</div>'
@@ -16619,13 +16869,14 @@ function renderBooks(books, homeKey, symBest){
 let _booksLoadGen = 0;
 let _lastBooks = [];
 let _lastSymBest = null;
+let _lastWatchBt = null;
 function paintHomeDisplay(bookId){
   const key = String(bookId || '').toLowerCase();
   _lastBooks = (_lastBooks || []).map(b => ({
     ...b,
     is_home_display: String(b.id || '').toLowerCase() === key,
   }));
-  if (_lastBooks.length && !DETAIL_ID) renderBooks(_lastBooks, key);
+  if (_lastBooks.length && !DETAIL_ID) renderBooks(_lastBooks, key, _lastSymBest, _lastWatchBt);
 }
 async function setHomeDisplay(bookId, btn){
   if(!bookId) return;
@@ -16835,7 +17086,7 @@ async function load(){
       + ' · ' + histSum + ' işlem'
       + ' · açık ' + (d.total_open||0);
     renderVotes(d.votes);
-    renderBooks(books, d.home_display_book, d.sym_best);
+    renderBooks(books, d.home_display_book, d.sym_best, d.watch_backtest);
   } catch(e){
     console.error(e);
     const el = DETAIL_ID ? document.getElementById('detail-positions') : document.getElementById('algo-books');
@@ -19928,6 +20179,16 @@ def page_site_finished():
     return SITE_RESULTS_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
+@app.route("/site/kuponlar")
+@app.route("/site/kuponlar/")
+@app.route("/bahis/kuponlar")
+@app.route("/bahis/kuponlar/")
+def page_site_coupons():
+    if request.path.startswith("/bahis/") and _auth_required():
+        return _login_redirect()
+    return SITE_COUPONS_HTML, 200, {"Content-Type": "text/html; charset=utf-8"}
+
+
 def _bahis_set_league():
     from bahis.leagues_cfg import set_league
     return set_league(request.args.get("league") or "tr")
@@ -20059,6 +20320,69 @@ def bahis_api_preds():
         team=request.args.get("team") or None,
         limit=int(request.args.get("limit") or 24),
         league=request.args.get("league"),
+    ))
+
+
+@app.route("/bahis/api/coupon")
+@app.route("/site/api/coupon")
+def bahis_api_coupon():
+    if request.path.startswith("/bahis/") and _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    _bahis_set_league()
+    from bahis import coupon as bahis_coupon
+    return jsonify(bahis_coupon.upcoming_preds(
+        team=request.args.get("team") or None,
+        limit=int(request.args.get("limit") or 24),
+    ))
+
+
+@app.route("/bahis/api/clv")
+@app.route("/site/api/clv")
+def bahis_api_clv():
+    if request.path.startswith("/bahis/") and _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    from bahis import value as bahis_value
+    from bahis.results import load as load_book
+    pack = load_book()
+    return jsonify({
+        "ok": True,
+        "book": pack.get("clv") or {},
+        "log": bahis_value.clv_stats(),
+        "orders": False,
+    })
+
+
+@app.route("/bahis/api/backtest")
+@app.route("/site/api/backtest")
+def bahis_api_backtest():
+    if request.path.startswith("/bahis/") and _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    _bahis_set_league()
+    from bahis import calib as bahis_calib
+    if request.args.get("run") in ("1", "true", "yes"):
+        return jsonify(bahis_calib.run(request.args.get("league")))
+    return jsonify(bahis_calib.load(request.args.get("league")))
+
+
+@app.route("/bahis/api/risk")
+@app.route("/site/api/risk")
+def bahis_api_risk():
+    if request.path.startswith("/bahis/") and _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    from bahis.risk import snapshot
+    return jsonify({"ok": True, **snapshot()})
+
+
+@app.route("/bahis/api/coupons")
+@app.route("/site/api/coupons")
+def bahis_api_coupons():
+    if request.path.startswith("/bahis/") and _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    from bahis.coupon_book import listing
+    return jsonify(listing(
+        league=request.args.get("league") or "all",
+        limit=int(request.args.get("limit") or 80),
+        tab=request.args.get("tab") or "open",
     ))
 
 
@@ -21527,10 +21851,10 @@ for _html_name in (
     "HARITA_HTML", "GRAFIK_HTML", "ISLEMLER_HTML", "HTML", "KRIPTO_FUTURE_HTML",
     "LOGIN_HTML", "YAPAY_ZEKA_ANALIZ_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
     "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML", "BAHIS_HTML", "BAHIS_SITE_HTML",
-    "SITE_MATCH_HTML", "SITE_RESULTS_HTML",
+    "SITE_MATCH_HTML", "SITE_RESULTS_HTML", "SITE_COUPONS_HTML",
 ):
     _html = globals()[_html_name]
-    if _html_name in ("BAHIS_SITE_HTML", "SITE_MATCH_HTML", "SITE_RESULTS_HTML"):
+    if _html_name in ("BAHIS_SITE_HTML", "SITE_MATCH_HTML", "SITE_RESULTS_HTML", "SITE_COUPONS_HTML"):
         _html = _patch_cache_bust(_html)
     elif _html_name == "BAHIS_HTML":
         _html = _html.replace("__ENGINES__", json.dumps(bahis_engines.list_engines(), ensure_ascii=False))
@@ -21561,7 +21885,7 @@ for _html_name in (
         _html = _patch_cembot_brand(_html)
     else:
         _html = _patch_cembot_brand(_html)
-    if _html_name not in ("LOGIN_HTML", "BAHIS_SITE_HTML", "SITE_MATCH_HTML", "SITE_RESULTS_HTML"):
+    if _html_name not in ("LOGIN_HTML", "BAHIS_SITE_HTML", "SITE_MATCH_HTML", "SITE_RESULTS_HTML", "SITE_COUPONS_HTML"):
         _html = patch_dash_chrome(_html, world_for_html(_html_name))
     globals()[_html_name] = _patch_cache_bust(_html)
 

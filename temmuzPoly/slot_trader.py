@@ -48,6 +48,7 @@ _STANDALONE: dict[str, str] = {
     "combo": "poly_trader_e01",
     "combo2": "poly_trader_e02",
     "a2_05_v2": "poly_trader_a2_05_v2",
+    "f16v2": "poly_trader_f16v2",
 }
 _A1_BATCH = "a1"
 _A2_BATCH = "a2"

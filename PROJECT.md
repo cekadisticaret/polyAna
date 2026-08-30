@@ -26,19 +26,27 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `web/dash_chrome.py` | Ortak üst bar POLY / KRİPTO / **BAHİS** — dünya aksanı; login hariç HTML yaması; **mobilde (≤800px) gizli**; `#fapi-ban-bar` medya kuralında `{ #` boşluğu (Jinja `{#` yorumu `/algoritma` `/harita` 500 yapmasın) |
 | `bahis/` | Bahis paketi — TR + EPL + La Liga + Serie A + Bundesliga + Ligue 1 + Brasileirão |
 | `bahis/pages.py` | **BAHİS** Green Betting — maç + oyuncu + motor başına tahmin sekmesi; üstte **SITE** → `/site` |
-| `bahis/engines.py` | Motorlar: Dixon · Poisson · Elo · xG · Ensemble · Bankroll; `GET /bahis/api/engines` |
-| `bahis/dixon_coles.py` | Dixon-Coles Poisson (`dixonColes.js`) — yakın fikstür 1X2 / 2.5 / KG; emir yok |
+| `bahis/engines.py` | Motorlar: Dixon · Poisson · Elo · xG · Ensemble · Bankroll · Kupon · Backtest; `GET /bahis/api/engines` |
+| `bahis/dixon_coles.py` | Dixon-Coles + ELO λ karışımı — 1X2 / 2.5 / KG; emir yok |
 | `bahis/elo.py` | ELO + RD (`elo.js`) — 1X2; emir yok |
-| `bahis/bankroll_preds.py` | ¼ Kelly (`bankroll_manager.py`) — Dixon olasılığı × piyasa oranı; stake önerir, emir yok |
+| `bahis/bankroll_preds.py` | ¼ Kelly — Dixon × vig’siz (fair) implied; min kenar %4; emir yok |
 | `bahis/dixonColes.js` | Dixon-Coles JS kaynağı |
 | `bahis/elo.js` | ELO JS kaynağı |
-| `bahis/bankroll_manager.py` | Kelly + risk tavanı — kupon settle sonra bağlanacak |
+| `bahis/bankroll_manager.py` | ¼ Kelly + fair kenar + kupon 1/√n; emir yok |
 | `bahis/site.py` | Herkese açık `/site` — MATCHDAY; maç kartı → `/site/mac/<id>`; emir yok |
 | `bahis/site_match.py` | Maç detay — Poisson/Elo/xG/ensemble/MC + tüm İddaa pazarları |
 | `bahis/site_results.py` | `/site/biten` — bitmiş maç + TUTTU/TUTMADI |
 | `bahis/results.py` | Tahmin defteri okuma · `GET /site/api/finished` |
-| `bahis/results_fetch.py` | Saatlik 7 lig skor çekimi · `results_book.json` |
-| `bahis/match_intel.py` | Ensemble + MC + value/Kelly + overround/örneklem uyarıları; log `preds_log.csv` |
+| `bahis/results_fetch.py` | Saatlik 7 lig skor + Fotmob fikstür yenileme · `results_book.json` · FD 300/404 = henüz yok |
+| `bahis/features.py` | 5 sezon gol/xG/şut/korner/kart · oran açılış-kapanış · dinlenme · Fotmob sakatlık; DC+ELO λ |
+| `bahis/value.py` | Overround (de-vig) · fair kenar ≥%4 · CLV günlüğü `data/clv_log.jsonl` |
+| `bahis/coupon.py` | Greedy kâğıt kupon · aynı maç matris birleşik · Kelly /√n · emir yok |
+| `bahis/coupon_book.py` | Sanal kupon · 5 gün · 200 TL · settle skorla · AÇIK/BİTEN · emir yok |
+| `bahis/site_coupons.py` | `/site/kuponlar` · AÇIK/BİTEN sekmeleri · ayak TUTTU/TUTMADI; canlı bahis yok |
+| `bahis/calib.py` | Walk-forward (ELO maç-maç · DC sezon) · Brier / log-loss · oranlı P&L |
+| `bahis/risk.py` | Circuit breaker · günlük %8 · haftalık %20 · DD %25 |
+| `bahis/notify.py` | Value Telegram (LAB) · ANALİZ1’e düşmez · emir yok |
+| `bahis/match_intel.py` | DC+ELO λ ensemble + MC + value/Kelly + dinlenme/sakatlık uyarısı; log `preds_log.csv` |
 | `temmuzPoly/pm_trader_helpers.py` | Sanal açıkta CLOB `pm_sanal_fill` + `pm_win_profit`; giriş kapısı net kâr ≥ stake × %50 (sinyale dokunmaz) |
 | `bahis/league.py` | Lig başına 10 sezon + güncel fikstür; `?league=`; H2H + form; emir yok |
 | `bahis/leagues_cfg.py` | 7 lig kaydı (TR/EPL/ES/IT/DE/FR/BR) + Fotmob/football-data kodları |
@@ -46,7 +54,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `bahis/players.py` | Oyuncu API — `data/players.json` (Fotmob 10 sezon) |
 | `bahis/players_fetch.py` | Fotmob oyuncu çekici — `python3 bahis/players_fetch.py [epl …]` |
 | `bahis/data/` | football-data CSV (T1/E0/SP1/I1/D1/F1/BRA) + fikstür + oyuncu JSON |
-| `web/poly_dashboard.py` | Poly dashboard **5050** — `/poly/grafik` mum analizi; `/algoritma-islemler` A1 Top-34 + A2 Top-17 + A6/V2/V3/A15/B1 (7/24 sanal), **76 defterin tamamı listelenir** (X1#01 + COMBO + COMBO2 + **F1-01…07** dahil); üstte **BTC/ETH/SOL oy özeti** (yalnız listedeki **ilk 10** net P&L defteri, TOP1–4 hariç · :05 açık yön + grup başarı/P&L); TOP4 coin başına en iyi algo; kartta **durgun=yeşil / trend=sarı / canlı=mor** dış bant (motor tipi) + **:02/:05/:07 WR** çipleri, detayda dilim butonları; liste **iki sütun**: sol tüm defterler net P&L · sağ WR (her biri 3’lü ızgara); üstte TOP1–4 + sağda coin başına en iyi algo (WR+P&L); `/poly/yapay-zeka-analiz` Poly Algo Analist bildirim akışı + Lider Analizi; `/kripto/yapay-zeka-analiz` Kripto Test AI Analist bildirim akışı; **`/kripto/lider-analiz`** Kripto Test lider tablosu (`day_movers` aktif 30+30, genel + coin bazlı PnL/WR); **`/kripto/jarvis`** JARVIS denetim ekranı (cyan/magenta/gold HUD, iki sekme: Kripto Test Analizi + Kripto Sistem Denetimi; veri `/kripto/api/jarvis` → `jarvis_report.json` + `jarvis_audit.json`, gece 00:00 tazelenir, CSS sınıfları `j-` önekli); `/kripto` coin liderleri **SKILL + t** ile sıralanır (WR değil); **`/bahis`** BAHİS kabuğu; **`/site`** herkese açık Green Casino + kupon (şifre yok); **`/forex` yok** (CoptC) |
+| `web/poly_dashboard.py` | Poly dashboard **5050** — `/poly/grafik` mum analizi; `/algoritma-islemler` A1 Top-34 + A2 Top-17 + A6/V2/V3/A15/B1 (7/24 sanal), **76 defterin tamamı listelenir** (X1#01 + COMBO + COMBO2 + **F1-01…07** dahil); üstte **BTC/ETH/SOL oy özeti** (yalnız listedeki **ilk 10** net P&L defteri, TOP1–4 hariç · :05 açık yön + grup başarı/P&L); TOP4 coin başına en iyi algo; kartta **durgun=yeşil / trend=sarı / canlı=mor** dış bant (motor tipi); **Kupon sonuçları** sekmesi MATCHDAY bitmiş kuponları gösterir + **:02/:05/:07 WR** çipleri, detayda dilim butonları; liste **iki sütun**: sol tüm defterler net P&L · sağ WR (her biri 3’lü ızgara); üstte F16 · A2#03 · A2#05 · F16V2 + 1Y aylık net $ kenarı (TOP1–4 kartı yok); `/poly/yapay-zeka-analiz` Poly Algo Analist bildirim akışı + Lider Analizi; `/kripto/yapay-zeka-analiz` Kripto Test AI Analist bildirim akışı; **`/kripto/lider-analiz`** Kripto Test lider tablosu (`day_movers` aktif 30+30, genel + coin bazlı PnL/WR); **`/kripto/jarvis`** JARVIS denetim ekranı (cyan/magenta/gold HUD, iki sekme: Kripto Test Analizi + Kripto Sistem Denetimi; veri `/kripto/api/jarvis` → `jarvis_report.json` + `jarvis_audit.json`, gece 00:00 tazelenir, CSS sınıfları `j-` önekli); `/kripto` coin liderleri **SKILL + t** ile sıralanır (WR değil); **`/bahis`** BAHİS kabuğu; **`/site`** herkese açık Green Casino + kupon (şifre yok); **`/forex` yok** (CoptC) |
 | `web/poly_dashboard.py` `/forex` | **Yok** — `/forex` ve `/xau` → `/poly`; motor CoptC |
 | `AgustosKripto/binance_um_wallet.py` | Tek USDT-M cüzdan önbelleği (CEBU / user-ws); REST yok |
 | `temmuzPoly/repair_a2_sanal_settlement.py` | A2 sanal geçmişi PM slot open/close ile yeniden hesaplar (Binance 1h). |
@@ -120,7 +128,9 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/pm_balance_guard.py` | PM USDC bakiye + Live anahtarları; **`user_live_hold`** gerçek PM'i kullanıcı açana kadar kilitler (hafta sonu / dashboard Aç aşamaz) |
 | `temmuzPoly/pm_weekend_sync.py` | Cum 22:00 / Pzt 11:00 İST — A1 Live + A2 dashboard anahtarlarını otomatik kapat/aç |
 | `temmuzPoly/btc_analiz1_algo.py` | 1. Analiz tam algoritma (standalone kopya, poly_predictor ile aynı) |
-| `temmuzPoly/poly_trader_analiz1.py` | 1. Analiz sanal (BTC+SOL); **$1000** · $24/36/48 WR; PM net kazanç ≥%50 yoksa giriş yok; top-3 saatte +%50; 12:00 yarı; **hafta sonu da açık** |
+| `temmuzPoly/poly_trader_analiz1.py` | **F16** sanal (eski 1. Analiz · BTC+SOL); **$1000** · $24/36/48 WR; PM net kazanç ≥%50 yoksa giriş yok; top-3 saatte +%50; 12:00 yarı; **hafta sonu da açık** |
+| `temmuzPoly/f16v2_signal.py` | F16V2 sinyal — BTC/SOL `predict()` · ETH A2#03 `stoch_rsi` |
+| `temmuzPoly/poly_trader_f16v2.py` | **F16V2** sanal (BTC/SOL F16 · ETH A2#03); **$1000** · $24/36/48; kâr kapısı; gerçek PM yok |
 | `temmuzPoly/poly_trader_analiz2.py` | 2. Analiz sanal (SOL only; $300; PM net kazanç ≥%50 yoksa giriş yok; **ALLOW_FALLBACK=False**) |
 | `temmuzPoly/poly_trader_analiz2_live.py` | 2. Analiz **canlı PM** SOL; slot gate zayıf saat -%30; PM net ≥%50 |
 | `temmuzPoly/backtest_common.py` | 1Y walk-forward backtest ortak yardımcılar |
@@ -179,6 +189,10 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/analiz6_v4_backfill.py` | MELEZ geçmişini A6V3 (BTC) + A2#05 (ETH/SOL) defterlerinin gerçek kararlarından walk-forward kurar (`--write`); kayıtlar `backfilled: true` |
 | `temmuzPoly/backtest_a2_a6_melez_1y.py` | A2#05 · A6V3 · MELEZ — 1Y walk-forward backtest (BTC/ETH/SOL); ay ay Telegram (`--telegram`) |
 | `temmuzPoly/backtest_selected_algos_1y.py` | Seçili 8 defter — 1Y walk-forward; $1000 · $24/36/48; model ask + PM ücreti; aylık P&L Telegram |
+| `temmuzPoly/backtest_algo_islemler_1y.py` | `/algoritma-islemler` 1Y Poly walk-forward — ask+fee · $24/36/48; çıktı `backtest_algo_islemler_1y.json` |
+| `temmuzPoly/algoritma-islemler-1y-poly.pdf` | 1Y sıralama PDF — indir `https://bursaapp.com/download/algoritma-islemler-1y-poly.pdf` |
+| `/algoritma-islemler` izleme | Üst sıra F16 · A2#03 · A2#05 · F16V2 + o ayın 1Y backtest kenarı |
+| `temmuzPoly/pdf_a203_a205_f16_aylik.py` | A2#03 · A2#05 · F16 1Y aylık PDF — `a203-a205-f16-aylik.pdf` |
 | `temmuzPoly/backtest_e01_family_1y.py` | A1 · C101 · A2#05 · COMBO — 1Y walk-forward, $1000 · $24/36/48, aylık P&L |
 | `temmuzPoly/poly_trader_analiz6_v2_live.py` | A6V2 Live gerçek PM (BTC+ETH); dashboard toggle |
 | `temmuzPoly/poly_trader_analiz6_v3_live.py` | A6V3 Live gerçek PM (BTC+ETH+SOL); dashboard toggle |
@@ -218,7 +232,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 - `BistAnaliz/backup.py` — `59 23 * * *` → `/tmp/backup.log`
 - `/algoritma-islemler` sanal: `close` **:01** / `open` **:02** (B1#04/#05 `:02:30`, COMBO `:02:25`, COMBO2 `:02:40`). Aynı defterlerin **:05/:07 kopyaları** (F1 dahil) (`slot_trader.py`): close **:01** / open **:05** / **:07**. A5 + Live PM: `close` **:02** / `open` **:05**
 - `temmuzPoly/poly_trader_a1.py close/open` — A1 Top-34 sanal ($1000 · $24/36/48); gerçek PM yok; hafta sonu da çalışır
-- `temmuzPoly/poly_trader_analiz1.py close/open` — 1. Analiz BTC+SOL **sanal** ($1000 · $24/36/48); hafta sonu da çalışır
+- `temmuzPoly/poly_trader_analiz1.py close/open` — **F16** BTC+SOL **sanal** ($1000 · $24/36/48); hafta sonu da çalışır
+- `temmuzPoly/poly_trader_f16v2.py close/open` — **F16V2** BTC/SOL F16 · ETH A2#03 **sanal** ($1000 · $24/36/48); `:01` close / `:02` open; gerçek PM yok
 - `temmuzPoly/poly_trader_analiz1.py weekly` — Cumartesi 21:00 haftalık 1 ısı haritası
 - `temmuzPoly/poly_trader_analiz1.py daily` — her gün 00:00 İST günlük işlem geçmişi (TG)
 - `temmuzPoly/poly_trader_analiz2.py close/open` — 2. Analiz **SOL only** sanal ($300, $12-16-20 WR); open Cum 22:00–Paz 18:00 İST kapalı

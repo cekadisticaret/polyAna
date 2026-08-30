@@ -1,16 +1,14 @@
 """
-Poly Sanal Trader
-Modlar:
-  close   → :01  (1 * * * *): önceki saatin sonuçlarını kapatır, bildirir
-  open    → :02  (2 * * * *): yeni tahmin, işlem açar
-  preview → 45 geçe      (45 * * * *): bir sonraki saatin geçmiş başarı oranlarını bildirir
-  weekly  → Cumartesi 21:00: haftalık ısı haritası görseli üretir, Telegram'a gönderir
-  daily   → Her gün 00:00 İST: önceki günün kapanan işlemleri Telegram'a gönderir
-  stats   → manuel: detaylı başarı raporu
+F16V2 — BTC/SOL F16 predict() · ETH A2#03 Stochastic RSI
 
-Algoritma: poly_predictor_analysis.py — değiştirilmedi.
-Sanal bütçe: $300 başlangıç, her işlem $10.
-Hafta sonu duraklama: Cuma 22:00 – Pazar 18:00 İST (open/preview atlanır; close açık pozisyon varsa çalışır).
+Modlar:
+  close   → :01 — önceki saatin sonuçlarını kapatır
+  open    → :02 — sembol bazlı sinyal ile işlem açar
+  preview → log
+  weekly  → Cumartesi 21:00 — haftalık ısı haritası
+  stats   → manuel detaylı rapor
+
+Sanal $1000 · $24/36/48. Gerçek PM yok. Live ayna yok.
 """
 import asyncio
 import json
@@ -21,34 +19,44 @@ import urllib.parse
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
+# .env yükle
+_ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+if os.path.exists(_ENV_FILE):
+    with open(_ENV_FILE) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from poly_predictor_analysis import predict, _fetch_klines
+from poly_predictor_analysis import _fetch_klines
+from f16v2_signal import SYMBOLS, resolve_live_signal, engine_label
 from pm_trader_helpers import (
     apply_pm_quote, resolve_slot_trade_amount, slot_amount_log, sanal_pnl,
-    trades_for_exit_day, format_daily_history_tg,
-    pm_sanal_settle_trade, pm_sanal_slot_candle,
-    skip_if_weekend_pause, resolve_open_slot_gates, pm_hourly_profit_entry_ok,
-    symbol_wr_amount_for_book, COMBO_FAMILY_INIT,
-    pm_tg_stake,
+    symbol_wr_amount_for_book, pm_sanal_settle_trade, pm_sanal_slot_candle,
+    SANAL_TRADE_AMOUNT, SANAL_TRADE_AMOUNT_HIGH,
+    SANAL_TRADE_AMOUNT_LOW, skip_if_weekend_pause, resolve_open_slot_gates,
+    pm_hourly_profit_entry_ok, COMBO_FAMILY_INIT, pm_tg_stake,
 )
 from telegram_poly_channels import chat_analiz1
 
-# ── Config ────────────────────────────────────────────────────
 BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
-CHAT_ID   = chat_analiz1()  # yalnız F16 — TELEGRAM_ANALIZ1_CHAT_ID
+CHAT_ID   = chat_analiz1()
 _TZ_TR    = ZoneInfo("Europe/Istanbul")
 
 _DIR          = os.path.dirname(os.path.abspath(__file__))
-STATE_FILE    = os.path.join(_DIR, "poly_trader_analiz1_state.json")
-HISTORY_FILE  = os.path.join(_DIR, "poly_trader_analiz1_history.json")
-WEEKLY_IMG    = "/tmp/poly_weekly_heatmap.png"
+STATE_FILE    = os.path.join(_DIR, "poly_trader_f16v2_state.json")
+HISTORY_FILE  = os.path.join(_DIR, "poly_trader_f16v2_history.json")
+WEEKLY_IMG    = "/tmp/poly_f16v2_weekly_heatmap.png"
+LABEL         = "F16V2"
+ALGO_NAME     = "BTC/SOL→F16 · ETH→A2#03"
 
 INITIAL_BALANCE    = COMBO_FAMILY_INIT
-TRADE_AMOUNT       = 36.0
-TRADE_AMOUNT_HIGH  = 48.0
-TRADE_AMOUNT_LOW   = 24.0
-BOOK_KEY           = "analiz1"
-SYMBOLS         = ["BTCUSDT", "SOLUSDT"]  # XRP/DOGE/BNB pasif
+BOOK_KEY           = "f16v2"
+TRADE_AMOUNT       = SANAL_TRADE_AMOUNT
+TRADE_AMOUNT_HIGH  = SANAL_TRADE_AMOUNT_HIGH
+TRADE_AMOUNT_LOW   = SANAL_TRADE_AMOUNT_LOW
 _DAYS_TR        = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
 _DAYS_FULL_TR   = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
 
@@ -57,6 +65,10 @@ def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float,
     """WR tutarı → etkili saat +%40 / zayıf saat -%30."""
     base = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
     return resolve_slot_trade_amount(base, hour_tr, history)
+
+
+async def _resolve_signal(symbol: str) -> tuple[str | None, float | None, str]:
+    return await resolve_live_signal(symbol)
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -155,7 +167,7 @@ async def run_close() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
     saat   = now_tr.strftime("%H:%M")
-    if skip_if_weekend_pause("F16", "close", now_tr):
+    if skip_if_weekend_pause(LABEL, "close", now_tr):
         return
 
     tarih  = now_tr.strftime("%d.%m.%Y")
@@ -164,7 +176,7 @@ async def run_close() -> None:
     history = load_history()
 
     if not state["open_positions"]:
-        print(f"[F16 close] {saat} İST — açık pozisyon yok")
+        print(f"[F16V2 close] {saat} İST — açık pozisyon yok")
         return
 
     lines      = []
@@ -204,14 +216,9 @@ async def run_close() -> None:
             "amount":           amount,
             "exit_time_tr":     now_tr.isoformat(),
             "pnl":              pnl,
-            "ind_rsi_vote":     pos.get("ind_rsi_vote"),
-            "ind_rsi_ok":       (pos.get("ind_rsi_vote") == actual) if pos.get("ind_rsi_vote") else None,
-            "ind_macd_vote":    pos.get("ind_macd_vote"),
-            "ind_macd_ok":      (pos.get("ind_macd_vote") == actual) if pos.get("ind_macd_vote") else None,
-            "ind_ema_vote":     pos.get("ind_ema_vote"),
-            "ind_ema_ok":       ((pos.get("ind_ema_vote") == actual)
-                                 if pos.get("ind_ema_vote") and pos.get("ind_ema_vote") != "NEUTRAL"
-                                 else None),
+            "algo_signal":      pos.get("algo_signal"),
+            "algo_name":        pos.get("algo_name", ALGO_NAME),
+            "algo_ok":          (pos.get("algo_signal") == actual) if pos.get("algo_signal") else None,
         }
         for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug",
                   "pm_fee", "pm_quote_src", "pm_mid_price"):
@@ -229,7 +236,7 @@ async def run_close() -> None:
 
     if failed_pos:
         names = ", ".join(p["symbol"].replace("USDT", "") for p in failed_pos)
-        print(f"[F16 close] {saat} — fiyat alınamadı: {names}")
+        print(f"[F16V2 close] {saat} — fiyat alınamadı: {names}")
     save_state(state)
     save_history(history)
 
@@ -246,17 +253,17 @@ async def run_close() -> None:
 
     msg = (
         f"{sep}\n"
-        f"🏁 <b>F16 — {saat_round} Sonuçlar</b>\n"
+        f"🏁 <b>{LABEL} — {saat_round} Sonuçlar</b>\n"
         + "\n".join(lines) + "\n"
         f"Bu tur: {'+'if toplam_pnl>=0 else ''}{toplam_pnl:.0f}$  |  Bakiye: ${state['balance']:.2f}\n"
         f"{pnl_icon} Toplam P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Genel: {genel} ({closed_all} işlem)\n"
         f"{sep}"
     )
     tg_send(msg)
-    print(f"[F16 close] {saat} İST — {len(lines)} pozisyon kapatıldı")
+    print(f"[F16V2 close] {saat} İST — {len(lines)} pozisyon kapatıldı")
 
 
-# ── OPEN: :02 — yeni tahmin + pozisyon aç ─────────────────
+# ── OPEN: 5 geçe — yeni tahmin + pozisyon aç ─────────────────
 async def run_open() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
@@ -271,42 +278,43 @@ async def run_open() -> None:
     state   = load_state()
     history = load_history()
 
-    if skip_if_weekend_pause("F16", "open", now_tr, history=history):
+    if skip_if_weekend_pause(LABEL, "open", now_tr, history=history):
         return
     cold_skip, _, _, _, cold_note = resolve_open_slot_gates(history, hour_tr, 0)
     if cold_skip:
-        print(f"[F16 open] {saat} — {cold_note} · işlem yok")
+        print(f"[{LABEL} open] {saat} — {cold_note} · işlem yok")
         return
 
-    # Tüm sembolleri tahmin et
+    # Sembol bazlı sinyal
     candidates = []
     for sym in SYMBOLS:
-        pred_obj = await predict(sym)
-        if pred_obj is None:
+        direction, price, algo_name = await _resolve_signal(sym)
+        if direction is None:
+            if price is not None:
+                print(f"[{LABEL} open] {sym} — NEUTRAL ({algo_name}), işlem yok")
             continue
-        candidates.append({"sym": sym, "pred_obj": pred_obj})
+        candidates.append({"sym": sym, "direction": direction, "price": price, "algo_name": algo_name})
 
-    opened = []
+    # Tüm sinyaller için pozisyon aç
     for c in candidates:
         sym         = c["sym"]
-        pred_obj    = c["pred_obj"]
-        ind_ema_raw = pred_obj.trend.upper()
+        direction   = c["direction"]
         base_amt = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
         _sk, dyn_amount, hot_boost, cold_cut, gate_note = resolve_open_slot_gates(
             history, hour_tr, base_amt
         )
         if gate_note and hot_boost:
-            print(f"[F16 open] 🔥 {gate_note}")
+            print(f"[{LABEL} open] 🔥 {gate_note}")
         else:
-            slot_amount_log("F16", hour_tr, base_amt, dyn_amount, hot_boost, cold_cut)
+            slot_amount_log(LABEL, hour_tr, base_amt, dyn_amount, hot_boost, cold_cut)
         try:
             klines = await _fetch_klines(sym, "1h", 3)
-            entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else pred_obj.current_price
+            entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else c["price"]
         except Exception:
-            entry_price = pred_obj.current_price
+            entry_price = c["price"]
         pos = {
             "symbol":           sym,
-            "predicted_dir":    pred_obj.predicted_dir,
+            "predicted_dir":    direction,
             "entry_price":      entry_price,
             "entry_time_tr":    now_tr.isoformat(),
             "entry_hour_tr":    hour_tr,
@@ -315,58 +323,56 @@ async def run_open() -> None:
             "amount":           dyn_amount,
             "hot_hour_boost":   hot_boost,
             "cold_hour_cut":    cold_cut,
-            "ind_rsi_vote":     "UP" if pred_obj.rsi < 50 else "DOWN",
-            "ind_rsi_val":      round(pred_obj.rsi, 1),
-            "ind_macd_vote":    "UP" if pred_obj.macd_bull else "DOWN",
-            "ind_ema_vote":     ("UP" if "YUKARI" in ind_ema_raw
-                                 else "DOWN" if "AŞAĞI" in ind_ema_raw
-                                 else "NEUTRAL"),
+            "algo_signal":      direction,
+            "algo_name":        c.get("algo_name", ALGO_NAME),
         }
-        apply_pm_quote(pos, sym, pred_obj.predicted_dir, dyn_amount, now)
+        apply_pm_quote(pos, sym, direction, dyn_amount, now)
+        if pos.get("entry_skip"):
+            print(f"[{LABEL} open] {sym} — {pos['entry_skip']}")
+            continue
         ok, skip_msg = pm_hourly_profit_entry_ok(pos)
         if not ok:
-            print(f"[F16 open] {sym} — {skip_msg}")
+            print(f"[{LABEL} open] {sym} — {skip_msg}")
             continue
         state["open_positions"].append(pos)
-        opened.append({"sym": sym, "pred_obj": pred_obj, "entry_price": entry_price, "pos": pos,
-                       "hot_boost": hot_boost, "cold_cut": cold_cut, "dyn_amount": dyn_amount})
 
     save_state(state)
 
     next_h = f"{(hour_tr + 1) % 24:02d}:00"
     lines  = []
-    for c in opened:
+    for c in candidates:
         sym      = c["sym"]
-        pred_obj = c["pred_obj"]
+        direction = c["direction"]
         name     = sym.replace("USDT", "")
-        conf     = max(pred_obj.prob_up, pred_obj.prob_down) * 100
-        dir_icon = "📈" if pred_obj.predicted_dir == "UP" else "📉"
-        dir_tr   = "YÜKSELİR" if pred_obj.predicted_dir == "UP" else "DÜŞER"
+        dir_icon = "📈" if direction == "UP" else "📉"
+        dir_tr   = "YÜKSELİR" if direction == "UP" else "DÜŞER"
         hour_wins, hour_total = get_stats(history, sym, hour_tr)
         sym_wins, sym_total = get_symbol_stats(history, sym)
-        entry_price = c["entry_price"]
-        tags = ""
-        if c["hot_boost"]:
+        pos_amount, hot_boost, cold_cut = _resolve_trade_amount(history, sym, hour_tr)
+        try:
+            klines = await _fetch_klines(sym, "1h", 3)
+            entry_price = klines[-2]["close"] if klines and len(klines) >= 2 else c["price"]
+        except Exception:
+            entry_price = c["price"]
+        tags = f"  📊 {c.get('algo_name', ALGO_NAME)}"
+        if hot_boost:
             tags += "  🔥+%50"
-        if c["cold_cut"]:
+        if cold_cut:
             tags += "  ⚠️12:00 yarı"
-        pm_line = pm_tg_stake(c["pos"])
-        pm_detail = f"   {pm_line}\n" if pm_line else f"   💵 ${c['dyn_amount']:.0f}\n"
         lines.append(
-            f"{dir_icon} <b>{name}</b>  {dir_tr}  konf:%{conf:.0f}  giriş:{entry_price:.2f}{tags}\n"
-            f"{pm_detail}"
+            f"{dir_icon} <b>{name}</b>  {dir_tr}  giriş:{entry_price:.2f}  💵{pos_amount:.0f}${tags}\n"
             f"   🕐 {hour_tr:02d}:00→{next_h} İST başarı: {_wr(hour_wins, hour_total)}"
             f"  |  genel: {_wr(sym_wins, sym_total)}"
         )
 
     sep = "━" * 26
     if not lines:
-        print(f"[F16 open] {saat} İST — işlem yok")
+        print(f"[F16V2 open] {saat} İST — işlem yok")
         return
 
     msg = (
         f"{sep}\n"
-        f"🆕 <b>F16 — {saat} - {next_h} Yeni İşlemler</b>\n"
+        f"🆕 <b>{LABEL} — {saat} - {next_h} Yeni İşlemler</b>  🔶 SANAL  📊 {ALGO_NAME}\n"
         + "\n".join(lines) + "\n"
         f"{sep}\n"
         f"💰 Ana: ${state['balance'] - sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.2f}  |  📂 Açık: {len(state['open_positions'])} poz ${sum(p.get('amount', TRADE_AMOUNT) for p in state['open_positions']):.0f}  |  Toplam: ${state['balance']:.2f}\n"
@@ -374,14 +380,14 @@ async def run_open() -> None:
     )
 
     tg_send(msg)
-    print(f"[F16 open] {saat} İST — {len(lines)} yeni işlem açıldı")
+    print(f"[F16V2 open] {saat} İST — {len(lines)} yeni işlem açıldı")
 
 
 # ── PREVIEW: 45 geçe — bir sonraki saatin başarı oranı önizleme
 def run_preview() -> None:
     now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
-    if skip_if_weekend_pause("F16", "preview", now_tr):
+    if skip_if_weekend_pause(LABEL, "preview", now_tr):
         return
     next_hour = (now_tr.hour + 1) % 24
     dow       = now_tr.weekday()
@@ -415,13 +421,13 @@ def run_preview() -> None:
 
     sep = "━" * 26
     msg = (
-        f"🔭 <b>F16 — {tarih} {next_hour:02d}:00 İST ÖNİZLEME</b>\n{sep}\n"
+        f"🔭 <b>{LABEL} — {tarih} {next_hour:02d}:00 İST ÖNİZLEME</b>\n{sep}\n"
         + "\n".join(lines) +
         f"\n{sep}\n"
         f"<i>Geçmiş başarı oranları — 05'te işlem açılacak</i>"
     )
     print(msg.replace("<b>", "").replace("</b>", ""))
-    print(f"[F16 preview] {now_tr.strftime('%H:%M')} İST — {next_hour:02d}:00 önizleme (TG atlanıyor)")
+    print(f"[F16V2 preview] {now_tr.strftime('%H:%M')} İST — {next_hour:02d}:00 önizleme (TG atlanıyor)")
 
 
 # ── WEEKLY: Pazar 00:00 — ısı haritası görseli ───────────────
@@ -533,7 +539,7 @@ def run_weekly() -> None:
     sym_line = "   |   ".join(sym_stats)
 
     ax.set_title(
-        f"F16 — Haftalık Başarı Haritası  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
+        f"{LABEL} — Haftalık Başarı Haritası  ({now_tr.strftime('%d.%m.%Y %H:%M İST')})\n"
         f"Toplam: {total} işlem  |  {genel}  |  Bakiye: ${balance:.2f}  |  P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$\n"
         f"{sym_line}",
         color="#4fc3f7", fontsize=9, fontweight="bold", pad=10
@@ -553,7 +559,7 @@ def run_weekly() -> None:
     plt.close()
 
     caption = (
-        f"📊 F16 Haftalık Rapor — {now_tr.strftime('%d.%m.%Y %H:%M İST')}\n"
+        f"📊 {LABEL} Haftalık Rapor — {now_tr.strftime('%d.%m.%Y %H:%M İST')}\n"
         f"Toplam {total} işlem | {genel} başarı | ${balance:.2f}"
     )
     tg_send_photo(WEEKLY_IMG, caption)
@@ -561,42 +567,39 @@ def run_weekly() -> None:
     ind_lines = _ind_stats_lines(history)
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
     tg_send(
-        f"📊 <b>F16 HAFTALIK İSTATİSTİKLER</b>\n"
+        f"📊 <b>{LABEL} HAFTALIK İSTATİSTİKLER</b>\n"
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Toplam: {total} işlem  |  {genel} başarı\n"
         f"{pnl_icon} P&L: {'+'if total_pnl>=0 else ''}{total_pnl:.2f}$  |  Bakiye: ${balance:.2f}\n"
         f"\n🔬 <b>Algoritma İsabet Oranı</b>\n" + "\n".join(ind_lines)
     )
-    print(f"[F16 weekly] haftalık görsel gönderildi — {total} işlem")
+    print(f"[F16V2 weekly] haftalık görsel gönderildi — {total} işlem")
 
 
 # ── İndikatör isabet yardımcısı ───────────────────────────────
 def _ind_stats_lines(history: list) -> list[str]:
-    checks = [("RSI", "ind_rsi_ok"), ("MACD", "ind_macd_ok"), ("EMA", "ind_ema_ok")]
+    algo_names = sorted({
+        t.get("algo_name", ALGO_NAME)
+        for t in history
+        if t.get("algo_name")
+    })
+    if not algo_names:
+        algo_names = [ALGO_NAME]
     lines = []
-    for label, key in checks:
-        vals = [t[key] for t in history if t.get(key) is not None]
+    for algo in algo_names:
+        vals = [
+            t["algo_ok"] for t in history
+            if t.get("algo_ok") is not None and t.get("algo_name", ALGO_NAME) == algo
+        ]
         if vals:
-            w   = sum(1 for v in vals if v)
-            n   = len(vals)
+            w = sum(1 for v in vals if v)
+            n = len(vals)
             bar = "🟢" if w / n >= 0.6 else "🟡" if w / n >= 0.5 else "🔴"
-            lines.append(f"  {bar} {label}: {_wr(w, n)}")
+            lines.append(f"  {bar} {algo}: {_wr(w, n)}")
         else:
-            lines.append(f"  ⚪ {label}: veri yok")
+            lines.append(f"  ⚪ {algo}: veri yok")
     return lines
-
-
-# ── DAILY: Gece yarısı — önceki günün işlem geçmişi ───────────
-def run_daily() -> None:
-    from datetime import timedelta
-
-    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    day = (now_tr - timedelta(days=1)).date()
-    trades = trades_for_exit_day(load_history(), day)
-    for msg in format_daily_history_tg("F16", trades, day, now_tr):
-        tg_send(msg)
-    print(f"[F16 daily] {day} — {len(trades)} işlem gönderildi")
 
 
 # ── STATS: Manuel detaylı rapor ──────────────────────────────
@@ -606,7 +609,7 @@ def run_stats() -> None:
     now_tr  = datetime.now(timezone.utc).astimezone(_TZ_TR)
 
     if not history:
-        tg_send("📊 <b>F16 STATS</b>\nHenüz veri yok.")
+        tg_send(f"📊 <b>{LABEL} STATS</b>\nHenüz veri yok.")
         return
 
     total    = len(history)
@@ -615,7 +618,7 @@ def run_stats() -> None:
     pnl_icon  = "🟢" if total_pnl >= 0 else "🔴"
 
     parts = [
-        f"📊 <b>F16 İSTATİSTİKLER</b>",
+        f"📊 <b>{LABEL} İSTATİSTİKLER</b>",
         f"{now_tr.strftime('%d.%m.%Y %H:%M')} İST",
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"Toplam: {total} işlem  |  {_wr(wins_all, total)}",
@@ -685,7 +688,7 @@ def run_stats() -> None:
         parts.append(f"  {wk}{bar} {_DAYS_TR[d]}  {_wr(w, n)}")
 
     tg_send("\n".join(parts))
-    print("[F16 stats] gönderildi")
+    print("[F16V2 stats] gönderildi")
 
 
 # ── Giriş noktası ─────────────────────────────────────────────
@@ -697,8 +700,6 @@ if __name__ == "__main__":
         run_preview()
     elif mode == "weekly":
         run_weekly()
-    elif mode == "daily":
-        run_daily()
     elif mode == "stats":
         run_stats()
     else:
