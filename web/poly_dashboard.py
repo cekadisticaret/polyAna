@@ -350,9 +350,9 @@ for _num, _name, *_rest in _F1_META:
     _OVERVIEW_INIT_BAL[_f1k] = 1000
     _OVERVIEW_SHORT_LABELS[_f1k] = f"F1#{_num:02d}"
 
-# /algoritma-islemler + /poly/api/mirror: 5 sarı kart başta, kendi içinde bakiye → P&L → WR
+# /algoritma-islemler + /poly/api/mirror: featured sarı kartlar, kendi içinde bakiye → P&L → WR
 # Kart + ayna: defterin :02/:05/:07 içinden en çok kazandıran (net P&L) dilim.
-_ALGO_FEATURED_KEYS: list[str] = ["combo", "c101", "a2_05_v2", "analiz1", "combo2"]
+_ALGO_FEATURED_KEYS: list[str] = ["combo", "c101", "a2_05_v2", "analiz1", "combo2", "f16v2"]
 _WATCH_PIN_KEYS: list[str] = ["analiz1", "a2_03", "a2_05", "f16v2"]
 _WATCH_PIN_LABEL = {"analiz1": "F16", "a2_03": "A2#03", "a2_05": "A2#05", "f16v2": "F16V2"}
 _ALGO_FEATURED_SORT = "best_slot_pnl"
@@ -368,7 +368,7 @@ _BEST_SLOT_TTL = 30.0
 
 
 def _algo_featured_group(bid: str) -> int:
-    """0 = 5 sarı (bakiye sırası) · 1 = kalanlar."""
+    """0 = featured sarı (bakiye sırası) · 1 = kalanlar."""
     return 0 if bid in _ALGO_FEATURED_KEYS else 1
 
 
@@ -4163,7 +4163,7 @@ _A2_BOOKS_CACHE_TTL = 4.0
 
 
 def _build_a2_poly_books() -> dict:
-    """Poly sanal defterler — 5 featured başta (kendi içinde bakiye), sonrası bakiyeye göre."""
+    """Poly sanal defterler — featured sarı kartlar + kalanlar (net P&L)."""
     now = time.time()
     hit = _A2_BOOKS_CACHE.get("data")
     if hit and now - float(_A2_BOOKS_CACHE.get("ts") or 0) < _A2_BOOKS_CACHE_TTL:
@@ -16715,7 +16715,7 @@ async function renderCouponResults(){
   }
 }
 function bookCardHtml(b, homeKey, wrBest){
-  const featSet = {combo:1, c101:1, a2_05_v2:1, analiz1:1, combo2:1};
+  const featSet = {combo:1, c101:1, a2_05_v2:1, analiz1:1, combo2:1, f16v2:1};
   const watchPin = !!(b && b.watch_pin);
   const activeKey = String(homeKey || '').toLowerCase();
   const pnl = Number(b.total_pnl||0);

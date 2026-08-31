@@ -7,7 +7,6 @@ from algo_signals import fetch_klines as _algo_fetch_klines, stoch_rsi
 from poly_predictor_analysis import predict
 
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
-_F16_SYMS = frozenset({"BTCUSDT", "SOLUSDT"})
 
 SYMBOL_ENGINE: dict[str, str] = {
     "BTCUSDT": "F16 predict",
@@ -20,9 +19,13 @@ def engine_label(symbol: str) -> str:
     return SYMBOL_ENGINE.get(symbol, "?")
 
 
-async def resolve_live_signal(symbol: str) -> tuple[str | None, float | None, str]:
+async def resolve_live_signal(
+    symbol: str,
+    hour_tr: int | None = None,
+) -> tuple[str | None, float | None, str]:
     engine = engine_label(symbol)
-    if symbol in _F16_SYMS:
+
+    if symbol in ("BTCUSDT", "SOLUSDT"):
         try:
             pred = await predict(symbol)
         except Exception:

@@ -23,7 +23,7 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `1 * * * *` | `temmuzPoly/poly_trader_analiz1.py close` | `/tmp/poly_trader_analiz1.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz1.py open` (**F16** sanal — eski A1 / 1. Analiz, :02) | `/tmp/poly_trader_analiz1.log` |
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_f16v2.py close` | `/tmp/poly_trader_f16v2.log` |
-| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_f16v2.py open` (**F16V2** — BTC/SOL F16 · ETH A2#03 Stoch RSI; sanal **$1000**; gerçek PM yok) | `/tmp/poly_trader_f16v2.log` |
+| `2 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_f16v2.py open` (**F16V2** — BTC/SOL F16 · ETH A2#03; sanal **$1000**; **:02**; gerçek PM yok) | `/tmp/poly_trader_f16v2.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_f16v2.py weekly` | `/tmp/poly_trader_f16v2.log` |
 | `1 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py close` (`/algoritma-islemler`) | `/tmp/poly_trader_analiz*.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py open` | `/tmp/poly_trader_analiz*.log` |

@@ -312,7 +312,7 @@ Başka bir sunucunun ":06'da A6V3 ne açtı?" diye sorup aynı işlemi kendi tar
 | Uç | Ne döner |
 |---|---|
 | `GET /kripto/api/lider` | Lider Analiz — Genel ilk 3 + her coin ilk 3 (`overall` · `coins`); `X-Lider-Token` / `?token=` · `.env` `LIDER_API_TOKEN` (yoksa `401`); CORS `*`; `?top=` 1–10. Aynı uç `/site/api/lider` |
-| `GET /poly/api/mirror` | 76 defter + **TOP1–4** (hepsi net P&L çoktan aza, `vote_paper: true`) |
+| `GET /poly/api/mirror` | 76 defter + **TOP1–4** (hepsi net P&L çoktan aza, `vote_paper: true`); `featured`: COMBO · C101 · A2#05 V2 · F16 · COMBO2 · **F16V2** |
 | `GET /poly/api/mirror/<defter>` | Aktif slot pozisyonları + defter özeti; `top1`–`top4` $48 kâğıt açıklar; pozisyonda `slot_tr` · `entry_hour_tr` · `prediction_tr` |
 | `GET /poly/api/consensus` | Algoritma oyu şeridi — :05 BTC/ETH/SOL çoğunluk + başarı %; `X-Mirror-Token` / `?token=` · `MIRROR_API_TOKEN`; CORS `*` |
 

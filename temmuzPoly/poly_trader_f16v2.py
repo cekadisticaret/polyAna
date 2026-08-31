@@ -3,7 +3,7 @@ F16V2 — BTC/SOL F16 predict() · ETH A2#03 Stochastic RSI
 
 Modlar:
   close   → :01 — önceki saatin sonuçlarını kapatır
-  open    → :02 — sembol bazlı sinyal ile işlem açar
+  open    → :02 — BTC/SOL F16 · ETH A2#03
   preview → log
   weekly  → Cumartesi 21:00 — haftalık ısı haritası
   stats   → manuel detaylı rapor
@@ -67,8 +67,8 @@ def _resolve_trade_amount(history: list, sym: str, hour_tr: int) -> tuple[float,
     return resolve_slot_trade_amount(base, hour_tr, history)
 
 
-async def _resolve_signal(symbol: str) -> tuple[str | None, float | None, str]:
-    return await resolve_live_signal(symbol)
+async def _resolve_signal(symbol: str, hour_tr: int | None = None) -> tuple[str | None, float | None, str]:
+    return await resolve_live_signal(symbol, hour_tr)
 
 
 # ── State ─────────────────────────────────────────────────────
@@ -288,7 +288,7 @@ async def run_open() -> None:
     # Sembol bazlı sinyal
     candidates = []
     for sym in SYMBOLS:
-        direction, price, algo_name = await _resolve_signal(sym)
+        direction, price, algo_name = await _resolve_signal(sym, hour_tr)
         if direction is None:
             if price is not None:
                 print(f"[{LABEL} open] {sym} — NEUTRAL ({algo_name}), işlem yok")
