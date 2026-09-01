@@ -1,0 +1,40 @@
+{% extends "_shell.html" %}
+{% block title %}Ekle · BursaApp{% endblock %}
+{% block hello %}Yer ekle{% endblock %}
+{% block sub %}Taslak gönderilir, admin onaylayınca yayınlanır{% endblock %}
+{% block search %}{% endblock %}
+{% block main %}
+<div class="panel form-card wide">
+  {% if err %}<p class="flash err">{{ err }}</p>{% endif %}
+  <form method="post" class="form">
+    <label>Kategori
+      <select name="category" required>
+        <option value="">Seç…</option>
+        {% for c in categories %}
+        <option value="{{ c.key }}" {% if preset==c.key %}selected{% endif %}>{{ c.label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Başlık<input name="title" required></label>
+    <label>İlçe
+      <select name="ilce">
+        <option value="">—</option>
+        {% for ad in ilceler %}<option>{{ ad }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Adres<input name="address"></label>
+    <label>Telefon<input name="phone"></label>
+    <label>Web<input name="web" type="url" placeholder="https://"></label>
+    <label>Saat / süre<input name="hours_text"></label>
+    <label>Fiyat bandı<input name="price_band"></label>
+    <label>Mekan / salon<input name="venue_name" placeholder="oyun veya film için"></label>
+    <label>Başlangıç (etkinlikte zorunlu)<input type="datetime-local" name="starts_at"></label>
+    <label>Bitiş<input type="datetime-local" name="ends_at"></label>
+    <label>Kısa özet<textarea name="blurb" rows="2"></textarea></label>
+    <label>Detay<textarea name="body" rows="4"></textarea></label>
+    <label>Görsel URL<input name="img_url" type="url" placeholder="https://"></label>
+    <label>Etiketler (virgülle)<input name="tags" placeholder="tarihi, populer"></label>
+    <button type="submit" class="btn">Gönder · onay beklesin</button>
+  </form>
+</div>
+{% endblock %}

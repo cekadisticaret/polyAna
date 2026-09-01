@@ -1,0 +1,72 @@
+{% extends "_shell.html" %}
+{% block title %}{{ cat.label }} · BursaApp{% endblock %}
+{% block hello %}{{ cat.label }}{% endblock %}
+{% block sub %}{% if cat.key=='food' %}İlçe ilçe, yüksek puandan düşüğe. Puan Google listesi — sitede oy yok.{% elif cat.key=='visit' %}Gerçek duraklar, mekanın kendi fotoğrafı. Bursaray yok — o metro.{% elif cat.key=='hotel' %}Termal Çekirge, şehir, Uludağ kayak. Rezervasyon siteden yapılmaz.{% elif cat.key=='camp' %}Milli park ve göl kampları. Çadır / karavan — emir yok.{% elif cat.key=='concert' %}Yaklaşan konserler üstte. Bilet siteden satılmaz.{% elif cat.key=='theater' %}Yakın tarihli oyunlar, sonra salonlar. Bilet siteden yok.{% elif cat.key=='cinema' %}Vizyondaki filmler + salonlar. Seans değişir, teyit et.{% elif cat.key=='event' %}Şehir takvimi: fuar, festival, sahne. Bilet siteden yok.{% elif cat.key=='hospital' %}Devlet, özel, üniversite. Karttaki hekimler o hastaneye bağlı.{% elif cat.key=='doctor' %}Branşa göre hekim. Hastane sayfasına bağlı. Randevu / tıbbi tavsiye yok.{% elif cat.key=='vet' %}Oda kayıtlı klinik ve hayvan hastanesi. Randevu siteden yok.{% else %}{{ cat.hint }}{% endif %}{% endblock %}
+{% block main %}
+<div class="chips">
+  <a class="chip {{ 'on' if not chip_on else '' }}" href="{{ cat.path }}{% if q %}?q={{ q }}{% endif %}">Tümü</a>
+  {% for ad in chip_items %}
+  <a class="chip {{ 'on' if chip_on==ad else '' }}" href="{{ cat.path }}?{{ chip_param }}={{ ad }}{% if q %}&amp;q={{ q }}{% endif %}">{{ ad }}</a>
+  {% endfor %}
+</div>
+{% if cal %}
+<section class="panel" id="takvim">
+  <h3>Takvim · {{ cal.month_label }}</h3>
+  <div class="cal-grid">
+    {% for w in ['P','S','Ç','P','C','C','P'] %}<span>{{ w }}</span>{% endfor %}
+    {% for d in cal.cal_cells %}
+      {% if d is none %}<button type="button" disabled>&nbsp;</button>
+      {% elif d == cal.today %}<button type="button" class="today" title="bugün">{{ d }}</button>
+      {% elif d in cal.ev_days %}<a class="ev" href="/yer/{{ cal.ev_slug.get(d, '') }}" title="{{ cal.ev_map.get(d, '') }}">{{ d }}</a>
+      {% else %}<button type="button">{{ d }}</button>{% endif %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% if groups %}
+  {% for g in groups %}
+  <section class="ilce-block" id="grp-{{ g.label }}">
+    <div class="sec-h">
+      <h2>{{ g.label }}</h2>
+      <span class="see">{{ g.places|length }} yer{% if cat.key=='food' %} · ★ yüksekten{% endif %}</span>
+    </div>
+    <div class="cards">
+      {% for p in g.places %}
+      <a class="place-card" href="/yer/{{ p.slug }}">
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+        <div class="body">
+          <h3>{{ p.title }}</h3>
+          <div class="meta">
+            <span>{% if cat.key=='doctor' %}{{ p.price_band }}{% if p.hospital_title %} · {{ p.hospital_title }}{% endif %}{% elif p.when %}{{ p.when }}{% if p.venue_name %} · {{ p.venue_name }}{% endif %}{% else %}{{ p.price_band or p.hours_text }}{% if p.address %} · {{ p.ilce }}{% endif %}{% endif %}</span>
+            {% if p.rating_admin %}<span class="star" title="Google listesi">★ {{ '%.1f'|format(p.rating_admin) }}</span>{% endif %}
+          </div>
+          {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+{% elif places %}
+<div class="cards">
+  {% for p in places %}
+  <a class="place-card" href="/yer/{{ p.slug }}">
+    {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+    <div class="body">
+      <h3>{{ p.title }}</h3>
+      <div class="meta">
+        <span>{% if p.when %}{{ p.when }}{% if p.venue_name %} · {{ p.venue_name }}{% else %} · {{ p.ilce }}{% endif %}{% else %}{{ p.ilce }}{% if p.venue_name %} · {{ p.venue_name }}{% endif %}{% endif %}</span>
+        {% if p.rating_admin %}<span class="star">★ {{ '%.1f'|format(p.rating_admin) }}</span>{% endif %}
+      </div>
+      {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-box">
+  <p>Bu kategoride henüz yayınlı kayıt yok.</p>
+  <p>Yakında — veya <a href="/hesap/ekle?cat={{ cat.key }}">sen ekle</a>.</p>
+</div>
+{% endif %}
+{% endblock %}

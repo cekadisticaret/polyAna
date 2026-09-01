@@ -1,0 +1,68 @@
+{% extends "_shell.html" %}
+{% block title %}{{ place.title if place else 'Bulunamadı' }} · BursaApp{% endblock %}
+{% block hello %}{{ place.title if place else 'Bulunamadı' }}{% endblock %}
+{% block sub %}{{ place.ilce if place else 'Yayınlı kayıt yok' }}{% endblock %}
+{% block main %}
+{% if not place %}
+<div class="empty-box">
+  <p>Bu kayıt yayınlı değil veya yok.</p>
+  <a href="/">Keşfet’e dön</a>
+</div>
+{% else %}
+<article class="detail">
+  {% if place.img_url %}<img class="hero" src="{{ place.img_url }}" alt="{{ place.title }}">{% endif %}
+  <p class="blurb">{{ place.blurb }}</p>
+  {% if place.body and place.body != place.blurb %}<div class="body-text">{{ place.body }}</div>{% endif %}
+  <dl class="facts">
+    {% if place.address %}<div><dt>Adres</dt><dd>{{ place.address }}</dd></div>{% endif %}
+    {% if place.hours_text %}<div><dt>Saat</dt><dd>{{ place.hours_text }}</dd></div>{% endif %}
+    {% if place.price_band %}<div><dt>{% if place.category=='doctor' %}Branş{% elif place.category in ('concert','vet','hospital') %}Tür{% else %}Fiyat{% endif %}</dt><dd>{{ place.price_band }}</dd></div>{% endif %}
+    {% if place.phone %}<div><dt>Tel</dt><dd>{{ place.phone }}</dd></div>{% endif %}
+    {% if place.web %}<div><dt>Web</dt><dd><a href="{{ place.web }}" target="_blank" rel="noopener">{{ place.web }}</a></dd></div>{% endif %}
+    {% if hospital %}<div><dt>Hastane</dt><dd><a href="/yer/{{ hospital.slug }}">{{ hospital.title }}</a>{% if hospital.ilce %} · {{ hospital.ilce }}{% endif %}</dd></div>{% elif place.venue_name and place.category!='doctor' %}<div><dt>Mekan</dt><dd>{{ place.venue_name }}</dd></div>{% endif %}
+    {% if place.starts_at %}<div><dt>Tarih</dt><dd>{{ place.starts_at }}{% if place.ends_at %} – {{ place.ends_at }}{% endif %}</dd></div>{% endif %}
+  </dl>
+  <p><a class="btn" href="{{ place.maps }}" target="_blank" rel="noopener">Haritada aç</a></p>
+</article>
+{% if units %}
+<div class="sec-h"><h2>Kampüs birimleri</h2></div>
+<div class="cards">
+  {% for u in units %}
+  <a class="place-card" href="/yer/{{ u.slug }}">
+    {% if u.img_url %}<img src="{{ u.img_url }}" alt="{{ u.title }}" loading="lazy">{% endif %}
+    <div class="body"><h3>{{ u.title }}</h3><div class="meta"><span>{{ u.price_band or u.ilce }}</span></div></div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% if staff_groups %}
+<div class="sec-h"><h2>Bu hastanedeki hekimler</h2><span class="see">{{ staff|length }} kişi · resmi kadro</span></div>
+{% for g in staff_groups %}
+<section class="ilce-block">
+  <div class="sec-h"><h2>{{ g.label }}</h2><span class="see">{{ g.places|length }}</span></div>
+  <div class="cards">
+    {% for s in g.places %}
+    <a class="place-card" href="/yer/{{ s.slug }}">
+      {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}" loading="lazy">{% endif %}
+      <div class="body"><h3>{{ s.title }}</h3><div class="meta"><span>{{ s.price_band }}</span></div></div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% elif place.category=='hospital' %}
+<div class="empty-box"><p>Bu hastanenin açık hekim listesi yok. MHRS / 182 veya hastane telefonu.</p></div>
+{% endif %}
+{% if similar %}
+<div class="sec-h"><h2>Benzerler</h2></div>
+<div class="cards">
+  {% for s in similar %}
+  <a class="place-card" href="/yer/{{ s.slug }}">
+    {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}" loading="lazy">{% endif %}
+    <div class="body"><h3>{{ s.title }}</h3><div class="meta"><span>{{ s.ilce }}</span></div></div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

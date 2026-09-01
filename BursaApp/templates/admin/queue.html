@@ -1,0 +1,40 @@
+{% extends "_shell.html" %}
+{% block title %}Admin kuyruk · BursaApp{% endblock %}
+{% block hello %}Onay kuyruğu{% endblock %}
+{% block sub %}Bekleyen / onaylı / red{% endblock %}
+{% block search %}{% endblock %}
+{% block main %}
+<div class="chips">
+  <a class="chip {{ 'on' if status=='pending' else '' }}" href="/admin?status=pending">Bekleyen ({{ counts.pending }})</a>
+  <a class="chip {{ 'on' if status=='approved' else '' }}" href="/admin?status=approved">Onaylı ({{ counts.approved }})</a>
+  <a class="chip {{ 'on' if status=='rejected' else '' }}" href="/admin?status=rejected">Red ({{ counts.rejected }})</a>
+</div>
+{% if rows %}
+<table class="qtable">
+  <thead><tr><th>Başlık</th><th>Kat</th><th>İlçe</th><th></th></tr></thead>
+  <tbody>
+  {% for p in rows %}
+    <tr>
+      <td>{{ p.title }}<br><small>{{ p.blurb[:80] }}</small></td>
+      <td>{{ p.category }}</td>
+      <td>{{ p.ilce }}</td>
+      <td class="acts">
+        <a href="/admin/places/{{ p.id }}">düzenle</a>
+        {% if p.status != 'approved' %}
+        <form method="post" action="/admin/places/{{ p.id }}/approve"><button class="btn sm">Onay</button></form>
+        {% endif %}
+        {% if p.status != 'rejected' %}
+        <form method="post" action="/admin/places/{{ p.id }}/reject">
+          <input name="reason" placeholder="red sebebi" size="12">
+          <button class="btn sm ghost" type="submit">Red</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">Bu durumda kayıt yok.</p>
+{% endif %}
+{% endblock %}

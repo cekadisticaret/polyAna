@@ -1,0 +1,153 @@
+[
+  {
+    "slug": "celik-palas",
+    "title": "Çelik Palas",
+    "ilce": "Osmangazi",
+    "address": "Çekirge Cad. No:79, Osmangazi",
+    "hours_text": "termal · 5*",
+    "price_band": "termal",
+    "phone": "444 0 168",
+    "web": "https://www.hotelcelikpalas.com/",
+    "featured": true,
+    "wiki": "Çelik Palas",
+    "search": "Çelik Palas Bursa hotel",
+    "tags": ["termal", "cekirge", "tarihi"],
+    "blurb": "1935, Atatürk’ün isteği. Giulio Mongeri. Kültürpark karşı, termal spa. Bursa’nın ikon oteli."
+  },
+  {
+    "slug": "kervansaray-thermal",
+    "title": "Kervansaray Thermal",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Mah. Çıta Sok. No:16, Osmangazi",
+    "hours_text": "termal · 5*",
+    "price_band": "termal",
+    "web": "https://www.kervansarayhotels.com.tr/",
+    "search": "Kervansaray Thermal Bursa",
+    "tags": ["termal", "cekirge"],
+    "blurb": "Çekirge / Kükürtlü. Kongre + kaplıca + havuz. Klasik termal zincir."
+  },
+  {
+    "slug": "ramada-cekirge",
+    "title": "Ramada Çekirge Thermal & Spa",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü, Mutlular Cad. No:5, Osmangazi",
+    "hours_text": "termal",
+    "price_band": "termal",
+    "search": "Ramada Bursa Çekirge hotel",
+    "tags": ["termal", "cekirge"],
+    "blurb": "Wyndham. Çekirge termal hattı, spa."
+  },
+  {
+    "slug": "movenpick-cekirge",
+    "title": "Mövenpick Thermal Spa Bursa",
+    "ilce": "Osmangazi",
+    "address": "Çekirge, Osmangazi",
+    "hours_text": "termal · 5*",
+    "price_band": "termal",
+    "search": "Mövenpick Bursa thermal hotel",
+    "tags": ["termal", "cekirge"],
+    "blurb": "Çekirge. Termal + spa, şehir manzarası."
+  },
+  {
+    "slug": "gonluferah",
+    "title": "Gönlüferah Thermal",
+    "ilce": "Osmangazi",
+    "address": "Çekirge, Osmangazi",
+    "hours_text": "termal",
+    "price_band": "termal",
+    "search": "Gönlüferah Thermal Hotel Bursa",
+    "tags": ["termal", "tarihi"],
+    "blurb": "1890’lardan. Çekirge’nin eski termal aile oteli."
+  },
+  {
+    "slug": "almira-hotel",
+    "title": "Almira Hotel Thermal & Convention",
+    "ilce": "Osmangazi",
+    "address": "Çekirge / Kükürtlü, Osmangazi",
+    "hours_text": "termal · kongre",
+    "price_band": "termal",
+    "search": "Almira Hotel Bursa",
+    "tags": ["termal", "kongre"],
+    "blurb": "Büyük kongre + termal. Çekirge sırtı."
+  },
+  {
+    "slug": "marigold-thermal",
+    "title": "Marigold Thermal & Spa",
+    "ilce": "Osmangazi",
+    "address": "Çekirge, Osmangazi",
+    "hours_text": "termal",
+    "price_band": "termal",
+    "search": "Marigold Thermal Spa Hotel Bursa",
+    "tags": ["termal"],
+    "blurb": "Çekirge termal. Spa ağırlıklı."
+  },
+  {
+    "slug": "hilton-bursa",
+    "title": "Hilton Bursa Convention & Spa",
+    "ilce": "Osmangazi",
+    "address": "Osmangazi, Bursa",
+    "hours_text": "şehir · 5*",
+    "price_band": "şehir",
+    "search": "Hilton Bursa Convention Center",
+    "tags": ["sehir", "kongre"],
+    "blurb": "Şehir / kongre. Termal Çekirge hattından ayrı, iş oteli."
+  },
+  {
+    "slug": "sheraton-bursa",
+    "title": "Sheraton Bursa Hotel",
+    "ilce": "Nilüfer",
+    "address": "Odunluk, Nilüfer",
+    "hours_text": "şehir · 5*",
+    "price_band": "şehir",
+    "featured": true,
+    "search": "Sheraton Bursa Hotel Odunluk",
+    "tags": ["sehir", "nilufer"],
+    "blurb": "Odunluk iş hattı. AVM / ofis bölgesi. Şehir oteli, termal değil."
+  },
+  {
+    "slug": "aloft-bursa",
+    "title": "Aloft Bursa",
+    "ilce": "Nilüfer",
+    "address": "Nilüfer, Bursa",
+    "hours_text": "şehir",
+    "price_band": "şehir",
+    "search": "Aloft by Marriott Bursa Hotel",
+    "tags": ["sehir"],
+    "blurb": "Marriott. Nilüfer, çağdaş şehir oteli."
+  },
+  {
+    "slug": "grand-yazici-uludag",
+    "title": "Grand Yazıcı Uludağ",
+    "ilce": "Osmangazi",
+    "address": "Uludağ 1. Gelişim / Kirazlı, Osmangazi",
+    "hours_text": "kayak · kış",
+    "price_band": "uludag",
+    "featured": true,
+    "web": "https://grandyaziciotel.com/",
+    "search": "Grand Yazıcı Uludağ hotel",
+    "tags": ["uludag", "kayak"],
+    "blurb": "Oteller 1. bölge. Pist yanı, tam pansiyon kış. Yazın da açık dönemleri var."
+  },
+  {
+    "slug": "beceren-uludag",
+    "title": "Beceren Hotel Uludağ",
+    "ilce": "Osmangazi",
+    "address": "Uludağ Oteller bölgesi, Osmangazi",
+    "hours_text": "kayak",
+    "price_band": "uludag",
+    "search": "Beceren Hotel Uludağ",
+    "tags": ["uludag", "kayak"],
+    "blurb": "Uludağ’ın klasik aile otellerinden. Pist yürüyüş mesafesi."
+  },
+  {
+    "slug": "karinna-uludag",
+    "title": "Karinna Hotel Uludağ",
+    "ilce": "Osmangazi",
+    "address": "Uludağ 2. bölge, Osmangazi",
+    "hours_text": "kayak",
+    "price_band": "uludag",
+    "search": "Karinna Hotel Uludağ",
+    "tags": ["uludag"],
+    "blurb": "2. bölge. Orman köşkü havası, kayak."
+  }
+]

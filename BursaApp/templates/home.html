@@ -1,0 +1,78 @@
+{% extends "_shell.html" %}
+{% block hello %}Keşfet{% endblock %}
+{% block sub %}Öne çıkan yerler ve bu ayın etkinlikleri{% endblock %}
+{% block main %}
+<div class="sec-h">
+  <h2>Öne çıkan</h2>
+  <a class="see" href="/gezilecek">Tümü ›</a>
+</div>
+<div class="cards">
+  {% for p in featured %}
+  <a class="place-card" href="/yer/{{ p.slug }}">
+    <img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">
+    <div class="body">
+      <h3>{{ p.title }}</h3>
+      <div class="meta">
+        <span>{{ p.hours_text or p.category_label }} · {{ p.ilce }}</span>
+        {% if p.rating_admin %}<span class="star">★ {{ '%.1f'|format(p.rating_admin) }}</span>{% endif %}
+      </div>
+    </div>
+  </a>
+  {% else %}
+  <p class="empty">Henüz öne çıkan yer yok. <a href="/hesap/ekle">Sen ekle</a>.</p>
+  {% endfor %}
+</div>
+
+<div class="split">
+  <section class="panel" id="etkinlik">
+    <h3>Etkinlik · {{ month_label }}</h3>
+    <div class="cal-grid">
+      {% for w in ['P','S','Ç','P','C','C','P'] %}
+      <span>{{ w }}</span>
+      {% endfor %}
+      {% for d in cal_cells %}
+        {% if d is none %}
+        <button type="button" disabled>&nbsp;</button>
+        {% elif d == today %}
+        <button type="button" class="today" title="bugün">{{ d }}</button>
+        {% elif d in ev_days %}
+        <a class="ev" href="/yer/{{ ev_slug.get(d, '') }}" title="{{ ev_map.get(d, '') }}">{{ d }}</a>
+        {% else %}
+        <button type="button">{{ d }}</button>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <p class="cal-note">
+      {% for e in events[:8] %}
+        <a href="/yer/{{ e.slug }}">{{ e.starts_at.day if e.starts_at else '?' }} · {{ e.title }}</a>{% if not loop.last %} · {% endif %}
+      {% else %}
+        Bu ay yayınlı etkinlik yok. <a href="/etkinlikler">Takvim</a>
+      {% endfor %}
+      {% if events|length > 8 %}<a href="/etkinlikler"> · tümü ›</a>{% endif %}
+    </p>
+  </section>
+  <section class="panel">
+    <h3>Listeler</h3>
+    {% for p in listed %}
+    <a class="resort" href="/yer/{{ p.slug }}">
+      <img src="{{ p.img_url }}" alt="">
+      <div>
+        <b>{{ p.title }}</b>
+        <i>{{ p.ilce }}</i>
+      </div>
+      <span class="px">{{ p.price_band or p.category_label }}</span>
+    </a>
+    {% else %}
+    <p class="empty">Liste boş.</p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}
+{% block aside %}
+{{ super() }}
+<div class="weather">
+  <div>{{ weather.label or 'Hava' }}</div>
+  <b>{{ weather.temp_c or '—' }}°</b>
+  <p>{{ weather.hint or '' }}</p>
+</div>
+{% endblock %}

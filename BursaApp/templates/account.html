@@ -1,0 +1,30 @@
+{% extends "_shell.html" %}
+{% block title %}Hesabım · BursaApp{% endblock %}
+{% block hello %}Hesabım{% endblock %}
+{% block sub %}Eklediklerin ve onay durumu{% endblock %}
+{% block search %}{% endblock %}
+{% block main %}
+<p><a class="btn" href="/hesap/ekle">Yeni ekle</a></p>
+{% if places %}
+<table class="qtable">
+  <thead><tr><th>Başlık</th><th>Kategori</th><th>Durum</th><th></th></tr></thead>
+  <tbody>
+  {% for p in places %}
+    <tr>
+      <td>{{ p.title }}</td>
+      <td>{{ p.category }}</td>
+      <td><span class="badge {{ p.status }}">{{ p.status }}</span>
+        {% if p.status=='rejected' and p.reject_reason %}<small>{{ p.reject_reason }}</small>{% endif %}
+      </td>
+      <td>{% if p.status=='approved' %}<a href="/yer/{{ p.slug }}">gör</a>{% else %}onay bekliyor{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-box">
+  <p>Henüz bir şey eklemedin.</p>
+  <a href="/hesap/ekle">İlk kaydı gönder</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,209 @@
+{
+  "city": "Bursa",
+  "ilce_n": 17,
+  "weather": {
+    "label": "Açık",
+    "temp_c": 24,
+    "hint": "Uludağ serin · merkez ılık"
+  },
+  "events": [
+    {"day": 6, "title": "Cumalıkızık pazarı"},
+    {"day": 12, "title": "Koza Han el sanatları"},
+    {"day": 19, "title": "Uludağ doğa yürüyüşü"},
+    {"day": 27, "title": "İskender günü · Çekirge"}
+  ],
+  "places": [
+    {
+      "id": "ulu-cami",
+      "title": "Ulu Cami",
+      "ilce": "Osmangazi",
+      "tags": ["tarihi", "populer"],
+      "rating": 4.8,
+      "sure": "1–2 saat",
+      "img": "https://images.unsplash.com/photo-1541435852774-01755bfd5db5?auto=format&fit=crop&w=900&q=80",
+      "blurb": "Yıldırım Bayezid’in 1399 ulu camisi. Yirmi kubbe, şadırvan avlu.",
+      "featured": true,
+      "list_price": "ücretsiz"
+    },
+    {
+      "id": "cumalikizik",
+      "title": "Cumalıkızık",
+      "ilce": "Yıldırım",
+      "tags": ["koy", "populer", "doga"],
+      "rating": 4.7,
+      "sure": "yarım gün",
+      "img": "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=900&q=80",
+      "blurb": "Osmanlı köyü, UNESCO. Dar sokak, ev kahvaltısı, kestane.",
+      "featured": true,
+      "list_price": "köy"
+    },
+    {
+      "id": "uludag",
+      "title": "Uludağ",
+      "ilce": "Osmangazi",
+      "tags": ["dag", "populer", "uludag"],
+      "rating": 4.6,
+      "sure": "1 gün",
+      "img": "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=900&q=80",
+      "blurb": "Kayak, teleferik Teferrüç–Sarıalan, yazın yayla.",
+      "featured": true,
+      "list_price": "teleferik"
+    },
+    {
+      "id": "yesil-turbe",
+      "title": "Yeşil Türbe",
+      "ilce": "Yıldırım",
+      "tags": ["tarihi", "populer"],
+      "rating": 4.7,
+      "sure": "45 dk",
+      "img": "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Çelebi Mehmet’in türbesi. İznik çinisi, Yeşil Cami yanı.",
+      "featured": false,
+      "list_price": "ücretsiz"
+    },
+    {
+      "id": "koza-han",
+      "title": "Koza Han",
+      "ilce": "Osmangazi",
+      "tags": ["tarihi", "populer"],
+      "rating": 4.6,
+      "sure": "1 saat",
+      "img": "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=700&q=80",
+      "blurb": "1491 ipek hanı. Avlu çay, kozadan ipek, Kapalıçarşı kapısı.",
+      "featured": false,
+      "list_price": "çarşı"
+    },
+    {
+      "id": "tophane",
+      "title": "Tophane",
+      "ilce": "Osmangazi",
+      "tags": ["tarihi", "manzara"],
+      "rating": 4.5,
+      "sure": "1 saat",
+      "img": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Osman ve Orhan Gazi türbeleri, saat kulesi, şehir manzarası.",
+      "featured": false,
+      "list_price": "ücretsiz"
+    },
+    {
+      "id": "muradiye",
+      "title": "Muradiye Külliyesi",
+      "ilce": "Osmangazi",
+      "tags": ["tarihi"],
+      "rating": 4.5,
+      "sure": "1–2 saat",
+      "img": "https://images.unsplash.com/photo-1524231757912-21f4fe3a7480?auto=format&fit=crop&w=700&q=80",
+      "blurb": "II. Murad külliyesi ve şehzade türbeleri. Sakin bahçe.",
+      "featured": false,
+      "list_price": "ücretsiz"
+    },
+    {
+      "id": "golyazi",
+      "title": "Gölyazı",
+      "ilce": "Nilüfer",
+      "tags": ["koy", "doga", "yakinimda"],
+      "rating": 4.6,
+      "sure": "yarım gün",
+      "img": "https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Uluabat Gölü yarımadası. Gün batımı, balık, Apollonia izi.",
+      "featured": false,
+      "list_price": "göl"
+    },
+    {
+      "id": "suuctu",
+      "title": "Suuçtu Şelalesi",
+      "ilce": "Mustafakemalpaşa",
+      "tags": ["doga"],
+      "rating": 4.4,
+      "sure": "yarım gün",
+      "img": "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Orman içi düşüş. İlkbahar en gür, piknik alanları.",
+      "featured": false,
+      "list_price": "doğa"
+    },
+    {
+      "id": "iskender",
+      "title": "İskender",
+      "ilce": "Osmangazi",
+      "tags": ["yemek", "populer"],
+      "rating": 4.9,
+      "sure": "öğün",
+      "img": "https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Kebapçı İskender’in şehri. Tereyağı, yoğurt, pide üstü döner.",
+      "featured": false,
+      "list_price": "öğün"
+    },
+    {
+      "id": "pideli-kofte",
+      "title": "Pideli köfte",
+      "ilce": "Osmangazi",
+      "tags": ["yemek"],
+      "rating": 4.6,
+      "sure": "öğün",
+      "img": "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Bursa usulü ızgara köfte, pide, salça, tereyağı.",
+      "featured": false,
+      "list_price": "öğün"
+    },
+    {
+      "id": "kemalpasa",
+      "title": "Kemalpaşa tatlısı",
+      "ilce": "Mustafakemalpaşa",
+      "tags": ["yemek"],
+      "rating": 4.5,
+      "sure": "tatlı",
+      "img": "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Peynirli hamur, şerbet, fıstık. MKPaşa’nın adıyla anılır.",
+      "featured": false,
+      "list_price": "tatlı"
+    },
+    {
+      "id": "kestane-sekeri",
+      "title": "Kestane şekeri",
+      "ilce": "Osmangazi",
+      "tags": ["yemek"],
+      "rating": 4.4,
+      "sure": "hediye",
+      "img": "https://images.unsplash.com/photo-1511381939415-e44015466831?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Bursa’nın hediyesi. Kestane şekeri, kabuklu veya kaymaklı.",
+      "featured": false,
+      "list_price": "hediye"
+    },
+    {
+      "id": "cekirge-hamam",
+      "title": "Çekirge hamamları",
+      "ilce": "Osmangazi",
+      "tags": ["hamam", "yakinimda"],
+      "rating": 4.5,
+      "sure": "2 saat",
+      "img": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Kükürtlü ve Eski Kaplıca. Çekirge sırtı, Osmanlı kaplıcası.",
+      "featured": false,
+      "list_price": "kaplıca"
+    },
+    {
+      "id": "teleferik",
+      "title": "Teleferik",
+      "ilce": "Osmangazi",
+      "tags": ["ulasim", "uludag"],
+      "rating": 4.6,
+      "sure": "45 dk",
+      "img": "https://images.unsplash.com/photo-1605540436531-9590e5f789d4?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Teferrüç–Kadı Yayla–Sarıalan. Dünyanın uzun hatlarından.",
+      "featured": false,
+      "list_price": "hat"
+    },
+    {
+      "id": "bursaray",
+      "title": "Bursaray",
+      "ilce": "Nilüfer",
+      "tags": ["ulasim", "yakinimda"],
+      "rating": 4.3,
+      "sure": "şehir",
+      "img": "https://images.unsplash.com/photo-1474487548417-371679098edc?auto=format&fit=crop&w=700&q=80",
+      "blurb": "Metro Emek–Şehir Hastanesi / Üniversite. BursaKart ile.",
+      "featured": false,
+      "list_price": "ray"
+    }
+  ]
+}

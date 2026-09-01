@@ -1,0 +1,786 @@
+[
+  {
+    "slug": "aci-a-bulent-oktay",
+    "title": "Prof. Dr. A. BÜLENT OKTAY",
+    "hospital": "acibadem-bursa",
+    "price_band": "Üroloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Üroloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-abdullah-zorluoglu",
+    "title": "Prof. Dr. ABDULLAH ZORLUOĞLU",
+    "hospital": "acibadem-bursa",
+    "price_band": "Genel cerrahi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Genel cerrahi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ali-aydinlar-k",
+    "title": "Prof. Dr. ALİ AYDINLAR K",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-bulent-orhan",
+    "title": "Prof. Dr. BÜLENT ORHAN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Onkoloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Onkoloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-erkan-ozcan",
+    "title": "Prof. Dr. ERKAN ÖZCAN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Psikiyatri",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Psikiyatri · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ethem-kumbay",
+    "title": "Prof. Dr. ETHEM KUMBAY",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-hakan-seckin-b",
+    "title": "Prof. Dr. HAKAN SEÇKİN B",
+    "hospital": "acibadem-bursa",
+    "price_band": "Beyin cerrahisi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Beyin cerrahisi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-hakan-coskun",
+    "title": "Prof. Dr. HAKAN COŞKUN",
+    "hospital": "acibadem-bursa",
+    "price_band": "KBB",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "KBB · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-hayati-ozkan-k",
+    "title": "Prof. Dr. HAYATİ ÖZKAN K",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-levent-erisen-k",
+    "title": "Prof. Dr. LEVENT ERİŞEN K",
+    "hospital": "acibadem-bursa",
+    "price_band": "KBB",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "KBB · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-lutfi-ozkan-r",
+    "title": "Prof. Dr. LÜTFİ ÖZKAN R",
+    "hospital": "acibadem-bursa",
+    "price_band": "Onkoloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Onkoloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-mehmet-karadag",
+    "title": "Prof. Dr. MEHMET KARADAĞ",
+    "hospital": "acibadem-bursa",
+    "price_band": "Göğüs",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Göğüs · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-muammer-doygun",
+    "title": "Prof. Dr. MUAMMER DOYGUN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Beyin cerrahisi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Beyin cerrahisi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-murat-samli",
+    "title": "Prof. Dr. MURAT ŞAMLI",
+    "hospital": "acibadem-bursa",
+    "price_band": "Üroloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Üroloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-namik-sahin-o",
+    "title": "Prof. Dr. NAMIK ŞAHİN O",
+    "hospital": "acibadem-bursa",
+    "price_band": "Ortopedi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Ortopedi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ozkan-kanat",
+    "title": "Prof. Dr. ÖZKAN KANAT",
+    "hospital": "acibadem-bursa",
+    "price_band": "Onkoloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Onkoloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-salim-basol-tekin-he",
+    "title": "Prof. Dr. SALİM BAŞOL TEKİN He",
+    "hospital": "acibadem-bursa",
+    "price_band": "Hematoloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Hematoloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-sahin-zeteroglu-k",
+    "title": "Prof. Dr. ŞAHİN ZETEROĞLU K",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kadın doğum",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kadın doğum · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-tufan-bilgin-ka",
+    "title": "Prof. Dr. TUFAN BİLGİN Ka",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kadın doğum",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kadın doğum · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ersoy-hazneci-d",
+    "title": "Doç. Dr. ERSOY HAZNECİ D",
+    "hospital": "acibadem-bursa",
+    "price_band": "Cildiye",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Cildiye · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-hikmet-aktas-g",
+    "title": "Doç. Dr. HİKMET AKTAŞ G",
+    "hospital": "acibadem-bursa",
+    "price_band": "Genel cerrahi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Genel cerrahi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-imam-bakir-bati-k",
+    "title": "Doç. Dr. İMAM BAKIR BATI K",
+    "hospital": "acibadem-bursa",
+    "price_band": "Nakil",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Nakil · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-mehmet-ozgur-akkurt",
+    "title": "Doç. Dr. MEHMET ÖZGÜR AKKURT",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kadın doğum",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kadın doğum · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-murat-saylik",
+    "title": "Doç. Dr. MURAT SAYLIK",
+    "hospital": "acibadem-bursa",
+    "price_band": "Ortopedi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Ortopedi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-nefise-nazli-yenigul-ka",
+    "title": "Doç. Dr. NEFİSE NAZLI YENİGÜL Ka",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kadın doğum",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kadın doğum · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-oguz-kaan-unal",
+    "title": "Doç. Dr. OĞUZ KAAN ÜNAL",
+    "hospital": "acibadem-bursa",
+    "price_band": "Endokrin",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Endokrin · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-osman-serhat-guner",
+    "title": "Doç. Dr. OSMAN SERHAT GÜNER",
+    "hospital": "acibadem-bursa",
+    "price_band": "Genel cerrahi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Genel cerrahi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-saim-sag-k",
+    "title": "Doç. Dr. SAİM SAĞ K",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ahmet-gulen",
+    "title": "Uzm. Dr. AHMET GÜLEN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Çocuk",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Çocuk · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-alper-tunga-ozbek",
+    "title": "Uzm. Dr. ALPER TUNGA ÖZBEK",
+    "hospital": "acibadem-bursa",
+    "price_band": "Çocuk",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Çocuk · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-arzu-ertem-cengiz-g",
+    "title": "Uzm. Dr. ARZU ERTEM CENGİZ G",
+    "hospital": "acibadem-bursa",
+    "price_band": "Göğüs",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Göğüs · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-asli-saran-ikizler-ra",
+    "title": "Uzm. Dr. ASLI SARAN İKİZLER Ra",
+    "hospital": "acibadem-bursa",
+    "price_band": "Onkoloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Onkoloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-begum-uzsezer-guler",
+    "title": "Uzm. Dr. BEGÜM UZSEZER GÜLER",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kadın doğum",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kadın doğum · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-cansu-yilmaz",
+    "title": "Uzm. Dr. CANSU YILMAZ",
+    "hospital": "acibadem-bursa",
+    "price_band": "Çocuk",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Çocuk · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-cem-tangay",
+    "title": "Uzm. Dr. CEM TANGAY",
+    "hospital": "acibadem-bursa",
+    "price_band": "Ortopedi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Ortopedi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-cagri-cimentepe-sezer-p",
+    "title": "Uzm. Dr. ÇAĞRI ÇİMENTEPE SEZER P",
+    "hospital": "acibadem-bursa",
+    "price_band": "Psikiyatri",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Psikiyatri · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-demet-alagoz",
+    "title": "Uzm. Dr. DEMET ALAGÖZ",
+    "hospital": "acibadem-bursa",
+    "price_band": "Çocuk",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Çocuk · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-elif-kulahci-aslan-k",
+    "title": "Uzm. Dr. ELİF KÜLAHÇI ASLAN K",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kadın doğum",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kadın doğum · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ercan-bicakci-ga",
+    "title": "Uzm. Dr. ERCAN BİÇAKCİ Ga",
+    "hospital": "acibadem-bursa",
+    "price_band": "Gastroenteroloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Gastroenteroloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-eren-erseven",
+    "title": "Uzm. Dr. EREN ERSEVEN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Çocuk",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Çocuk · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ertugrul-mehmetoglu",
+    "title": "Uzm. Dr. ERTUĞRUL MEHMETOĞLU",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ertunc-karadag",
+    "title": "Uzm. Dr. ERTUNÇ KARADAĞ",
+    "hospital": "acibadem-bursa",
+    "price_band": "Çocuk",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Çocuk · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-fatma-erbay-apaydin",
+    "title": "Uzm. Dr. FATMA ERBAY APAYDIN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Enfeksiyon",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Enfeksiyon · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ferhat-erdem-ugras",
+    "title": "Uzm. Dr. FERHAT ERDEM UĞRAŞ",
+    "hospital": "acibadem-bursa",
+    "price_band": "Genel cerrahi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Genel cerrahi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-hamza-furkan-sen",
+    "title": "Uzm. Dr. HAMZA FURKAN ŞEN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kadın doğum",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kadın doğum · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ismail-yavuz-aktug-ku",
+    "title": "Uzm. Dr. İSMAİL YAVUZ AKTUĞ Ku",
+    "hospital": "acibadem-bursa",
+    "price_band": "KBB",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "KBB · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-kamran-aliyev",
+    "title": "Uzm. Dr. KAMRAN ALIYEV",
+    "hospital": "acibadem-bursa",
+    "price_band": "Göğüs",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Göğüs · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-mahmut-ozyilmaz",
+    "title": "Uzm. Dr. MAHMUT ÖZYILMAZ",
+    "hospital": "acibadem-bursa",
+    "price_band": "Plastik",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Plastik · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-mahmut-esat-danisoglu",
+    "title": "Uzm. Dr. MAHMUT ESAT DANIŞOĞLU",
+    "hospital": "acibadem-bursa",
+    "price_band": "Üroloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Üroloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-mehmet-meric-g",
+    "title": "Uzm. Dr. MEHMET MERİÇ G",
+    "hospital": "acibadem-bursa",
+    "price_band": "Gastroenteroloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Gastroenteroloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-mehmet-soner-sarmasik",
+    "title": "Uzm. Dr. MEHMET SONER SARMAŞIK",
+    "hospital": "acibadem-bursa",
+    "price_band": "Çocuk",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Çocuk · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-murat-yildirim",
+    "title": "Uzm. Dr. MURAT YILDIRIM",
+    "hospital": "acibadem-bursa",
+    "price_band": "FTR",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "FTR · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-mutlu-duran",
+    "title": "Uzm. Dr. MUTLU DURAN",
+    "hospital": "acibadem-bursa",
+    "price_band": "KBB",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "KBB · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-osman-ozdabakoglu",
+    "title": "Uzm. Dr. OSMAN ÖZDABAKOĞLU",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ozden-zeki-pinar-d",
+    "title": "Uzm. Dr. ÖZDEN ZEKİ PINAR D",
+    "hospital": "acibadem-bursa",
+    "price_band": "Cildiye",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Cildiye · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-salih-gulten-b",
+    "title": "Uzm. Dr. SALİH GÜLTEN B",
+    "hospital": "acibadem-bursa",
+    "price_band": "Nakil",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Nakil · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-seher-tutkun",
+    "title": "Uzm. Dr. SEHER TUTKUN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Cildiye",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Cildiye · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-serdar-deger",
+    "title": "Uzm. Dr. SERDAR DEĞER",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-senol-coskun",
+    "title": "Uzm. Dr. ŞENOL COŞKUN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-tamer-turan",
+    "title": "Uzm. Dr. TAMER TURAN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-tarik-candan",
+    "title": "Uzm. Dr. TARIK CANDAN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Göğüs",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Göğüs · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-ugur-kaya",
+    "title": "Uzm. Dr. UĞUR KAYA",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-utkan-topcu",
+    "title": "Uzm. Dr. UTKAN TOPÇU",
+    "hospital": "acibadem-bursa",
+    "price_band": "Beyin cerrahisi",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Beyin cerrahisi · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-umit-eren-n",
+    "title": "Uzm. Dr. ÜMİT EREN N",
+    "hospital": "acibadem-bursa",
+    "price_band": "Nöroloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Nöroloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-yelda-erturk",
+    "title": "Uzm. Dr. YELDA ERTÜRK",
+    "hospital": "acibadem-bursa",
+    "price_band": "Göz",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Göz · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-yusuf-akturk",
+    "title": "Uzm. Dr. YUSUF AKTÜRK",
+    "hospital": "acibadem-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Kalp · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-yusuf-izzet-gungormus-g",
+    "title": "Uzm. Dr. YUSUF İZZET GÜNGÖRMÜŞ G",
+    "hospital": "acibadem-bursa",
+    "price_band": "Göz",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Göz · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-zeynep-sagirkaya",
+    "title": "Uzm. Dr. ZEYNEP SAĞIRKAYA",
+    "hospital": "acibadem-bursa",
+    "price_band": "FTR",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "FTR · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-zuhal-baskan",
+    "title": "Uzm. Dr. ZUHAL BAŞKAN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Onkoloji",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Onkoloji · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-coskun",
+    "title": "Dt. AYŞEGÜL COŞKUN",
+    "hospital": "acibadem-bursa",
+    "price_band": "Diş",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Diş · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "aci-kasapoglu",
+    "title": "Dt. BEYHAN KASAPOĞLU",
+    "hospital": "acibadem-bursa",
+    "price_band": "Diş",
+    "web": "https://www.acibadem.com.tr/doktorlar/bursa-hastanesi/",
+    "blurb": "Diş · Acıbadem Bursa resmi kadro."
+  },
+  {
+    "slug": "jimer-selim-akgun",
+    "title": "Opr. Dr. Selim Akgün",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Kadın doğum",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Kadın doğum · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-yasar-sen",
+    "title": "Prof. Dr. Yaşar Şen",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Çocuk",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Çocuk · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-sukru-aydin-duzgun",
+    "title": "Prof. Dr. Şükrü Aydın Düzgün",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Genel cerrahi",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Genel cerrahi · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-oner-gelisken",
+    "title": "Prof. Dr. Öner Gelişken",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Göz",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Göz · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-tahsin-yakut",
+    "title": "Prof. Dr. Tahsin Yakut",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Genetik",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Genetik · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-tanju-m-basarir-ozkan",
+    "title": "Prof. Dr. Tanju M. Başarır Özkan",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Çocuk",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Çocuk · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-mehmet-bayrak",
+    "title": "Doç. Dr. Mehmet Bayrak",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Kadın doğum",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Kadın doğum · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-fatma-cigdem-dogulu",
+    "title": "Doç. Dr. Fatma Çiğdem Doğulu",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Nöroloji",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Nöroloji · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-bilge-cetinkaya",
+    "title": "Doç. Dr. Bilge Çetinkaya",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Kadın doğum",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Kadın doğum · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-tayfur-cift",
+    "title": "Doç. Dr. Tayfur Çift",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Kadın doğum",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Kadın doğum · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-fatma-nurgul-tasgoz",
+    "title": "Doç. Dr. Fatma Nurgül Taşgöz",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Kadın doğum",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Kadın doğum · Jimer resmi kadro."
+  },
+  {
+    "slug": "jimer-fatma-nuray-sozeri-altiner",
+    "title": "Opr. Dr. Fatma Nuray Sözeri Altıner",
+    "hospital": "jimer-hastanesi",
+    "price_band": "Kadın doğum",
+    "web": "https://jimer.com.tr/tr/hekimler/jimer-hastanesi",
+    "blurb": "Kadın doğum · Jimer resmi kadro."
+  },
+  {
+    "slug": "ngm-birtan-ozturk",
+    "title": "Op. Dr. Birtan Öztürk",
+    "hospital": "nilufer-goz-merkezi",
+    "price_band": "Göz",
+    "web": "https://www.gozvakfi.com/merkezler/nilufer-goz-merkezi-bursa/",
+    "blurb": "Göz · Göz Vakfı Nilüfer resmi kadro."
+  },
+  {
+    "slug": "ngm-haluk-erturk",
+    "title": "Prof. Dr. Haluk Ertürk",
+    "hospital": "nilufer-goz-merkezi",
+    "price_band": "Göz",
+    "web": "https://www.gozvakfi.com/merkezler/nilufer-goz-merkezi-bursa/",
+    "blurb": "Göz · Göz Vakfı Nilüfer resmi kadro."
+  },
+  {
+    "slug": "ngm-berkant-kaderli",
+    "title": "Prof. Dr. Berkant Kaderli",
+    "hospital": "nilufer-goz-merkezi",
+    "price_band": "Göz",
+    "web": "https://www.gozvakfi.com/merkezler/nilufer-goz-merkezi-bursa/",
+    "blurb": "Göz · Göz Vakfı Nilüfer resmi kadro."
+  },
+  {
+    "slug": "ngm-ahmet-tuncer-ozmen",
+    "title": "Prof. Dr. Ahmet Tuncer Özmen",
+    "hospital": "nilufer-goz-merkezi",
+    "price_band": "Göz",
+    "web": "https://www.gozvakfi.com/merkezler/nilufer-goz-merkezi-bursa/",
+    "blurb": "Göz · Göz Vakfı Nilüfer resmi kadro."
+  },
+  {
+    "slug": "ngm-ali-osman-zeyrek",
+    "title": "Op. Dr. Ali Osman Zeyrek",
+    "hospital": "nilufer-goz-merkezi",
+    "price_band": "Göz",
+    "web": "https://www.gozvakfi.com/merkezler/nilufer-goz-merkezi-bursa/",
+    "blurb": "Göz · Göz Vakfı Nilüfer resmi kadro."
+  },
+  {
+    "slug": "ngm-erdinc-usta",
+    "title": "Op. Dr. Erdinç Usta",
+    "hospital": "nilufer-goz-merkezi",
+    "price_band": "Göz",
+    "web": "https://www.gozvakfi.com/merkezler/nilufer-goz-merkezi-bursa/",
+    "blurb": "Göz · Göz Vakfı Nilüfer resmi kadro."
+  },
+  {
+    "slug": "ngm-yeliz-acar",
+    "title": "Op. Dr. Yeliz Acar",
+    "hospital": "nilufer-goz-merkezi",
+    "price_band": "Göz",
+    "web": "https://www.gozvakfi.com/merkezler/nilufer-goz-merkezi-bursa/",
+    "blurb": "Göz · Göz Vakfı Nilüfer resmi kadro."
+  },
+  {
+    "slug": "mp-busra-neslisah-arslan",
+    "title": "Uzm. Dr. Büşra Neslişah Arslan",
+    "hospital": "medical-park-bursa",
+    "price_band": "Dahiliye",
+    "web": "https://www.medicalpark.com.tr/hastanelerimiz/medicalpark-bursa-hastanesi",
+    "blurb": "Dahiliye · Medical Park Bursa resmi kadro."
+  },
+  {
+    "slug": "mp-hakan-akay",
+    "title": "Uzm. Dr. Hakan Akay",
+    "hospital": "medical-park-bursa",
+    "price_band": "Dahiliye",
+    "web": "https://www.medicalpark.com.tr/hastanelerimiz/medicalpark-bursa-hastanesi",
+    "blurb": "Dahiliye · Medical Park Bursa resmi kadro."
+  },
+  {
+    "slug": "mp-halil-esenli",
+    "title": "Uzm. Dr. Halil Eşenli",
+    "hospital": "medical-park-bursa",
+    "price_band": "Dahiliye",
+    "web": "https://www.medicalpark.com.tr/hastanelerimiz/medicalpark-bursa-hastanesi",
+    "blurb": "Dahiliye · Medical Park Bursa resmi kadro."
+  },
+  {
+    "slug": "mp-ismail-aslanhan",
+    "title": "Uzm. Dr. İsmail Aslanhan",
+    "hospital": "medical-park-bursa",
+    "price_band": "Dahiliye",
+    "web": "https://www.medicalpark.com.tr/hastanelerimiz/medicalpark-bursa-hastanesi",
+    "blurb": "Dahiliye · Medical Park Bursa resmi kadro."
+  },
+  {
+    "slug": "mp-mevlut-ozgur-taskapilioglu",
+    "title": "Prof. Dr. Mevlüt Özgür Taşkapılıoğlu",
+    "hospital": "medical-park-bursa",
+    "price_band": "Beyin cerrahisi",
+    "web": "https://www.medicalpark.com.tr/hastanelerimiz/medicalpark-bursa-hastanesi",
+    "blurb": "Beyin cerrahisi · Medical Park Bursa resmi kadro."
+  },
+  {
+    "slug": "mp-turgut-kuytu",
+    "title": "Dr. Öğr. Üyesi Turgut Kuytu",
+    "hospital": "medical-park-bursa",
+    "price_band": "Beyin cerrahisi",
+    "web": "https://www.medicalpark.com.tr/hastanelerimiz/medicalpark-bursa-hastanesi",
+    "blurb": "Beyin cerrahisi · Medical Park Bursa resmi kadro."
+  },
+  {
+    "slug": "mp-mehmet-cem-basel",
+    "title": "Dr. Öğr. Üyesi Mehmet Cem Başel",
+    "hospital": "medical-park-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.medicalpark.com.tr/hastanelerimiz/medicalpark-bursa-hastanesi",
+    "blurb": "Kalp · Medical Park Bursa resmi kadro."
+  },
+  {
+    "slug": "mp-aydin-dursun",
+    "title": "Dr. Öğr. Üyesi Aydın Dursun",
+    "hospital": "medical-park-bursa",
+    "price_band": "Kalp",
+    "web": "https://www.medicalpark.com.tr/hastanelerimiz/medicalpark-bursa-hastanesi",
+    "blurb": "Kalp · Medical Park Bursa resmi kadro."
+  }
+]

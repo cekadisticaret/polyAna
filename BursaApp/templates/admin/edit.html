@@ -1,0 +1,48 @@
+{% extends "_shell.html" %}
+{% block title %}Düzenle · {{ p.title }}{% endblock %}
+{% block hello %}Düzenle{% endblock %}
+{% block sub %}{{ p.title }} · {{ p.status }}{% endblock %}
+{% block search %}{% endblock %}
+{% block main %}
+<div class="panel form-card wide">
+  <form method="post" class="form">
+    <label>Durum
+      <select name="status">
+        {% for s in ['pending','approved','rejected'] %}
+        <option value="{{ s }}" {% if p.status==s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Kategori
+      <select name="category">
+        {% for c in categories %}
+        <option value="{{ c.key }}" {% if p.category==c.key %}selected{% endif %}>{{ c.label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Başlık<input name="title" value="{{ p.title }}" required></label>
+    <label>İlçe
+      <select name="ilce">
+        {% for ad in ilceler %}<option {% if p.ilce==ad %}selected{% endif %}>{{ ad }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Adres<input name="address" value="{{ p.address }}"></label>
+    <label>Telefon<input name="phone" value="{{ p.phone }}"></label>
+    <label>Web<input name="web" value="{{ p.web }}"></label>
+    <label>Saat<input name="hours_text" value="{{ p.hours_text }}"></label>
+    <label>Fiyat<input name="price_band" value="{{ p.price_band }}"></label>
+    <label>Mekan<input name="venue_name" value="{{ p.venue_name }}"></label>
+    <label>Enlem<input name="lat" value="{{ p.lat or '' }}"></label>
+    <label>Boylam<input name="lng" value="{{ p.lng or '' }}"></label>
+    <label>Puan<input name="rating_admin" value="{{ p.rating_admin or '' }}"></label>
+    <label class="check"><input type="checkbox" name="featured" value="1" {% if p.featured %}checked{% endif %}> Öne çıkar</label>
+    <label>Başlangıç<input type="datetime-local" name="starts_at" value="{{ p.starts_at.strftime('%Y-%m-%dT%H:%M') if p.starts_at else '' }}"></label>
+    <label>Bitiş<input type="datetime-local" name="ends_at" value="{{ p.ends_at.strftime('%Y-%m-%dT%H:%M') if p.ends_at else '' }}"></label>
+    <label>Özet<textarea name="blurb" rows="2">{{ p.blurb }}</textarea></label>
+    <label>Detay<textarea name="body" rows="4">{{ p.body }}</textarea></label>
+    <label>Görsel URL<input name="img_url" value="{{ p.img_url }}"></label>
+    <label>Etiketler<input name="tags" value="{{ tags_text }}"></label>
+    <button type="submit" class="btn">Kaydet</button>
+  </form>
+</div>
+{% endblock %}
