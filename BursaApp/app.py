@@ -102,7 +102,7 @@ init_db()
 @app.context_processor
 def _inject():
     from seo import resolve_seo, site_base
-    from seo_status import google_verification_token
+    from seo_status import ga_measurement_id, google_verification_token
     from mail_verify import VERIFY_DAYS, can_review, verify_banner
 
     user = load_user()
@@ -115,6 +115,7 @@ def _inject():
         "ilceler": ILCELER,
         "mekan_taxonomy": MEKAN_TAXONOMY,
         "google_site_verification": google_verification_token(),
+        "ga_measurement_id": ga_measurement_id(),
         "site_url": site_base(),
         "seo": resolve_seo(),
     }
@@ -516,7 +517,7 @@ def marketler():
             sub=sub,
             ilce=ilce,
             sub_chips=subcategories_for("market"),
-            ilceler=["Osmangazi", "Nilüfer", "Yıldırım", "Mudanya", "Gemlik", "İnegöl", "Kestel"],
+            ilceler=list(ILCELER),
             lat=lat,
             lng=lng,
             radius=int(radius),
@@ -593,6 +594,72 @@ def veterinerler():
         )
     finally:
         db.close()
+
+
+def _load_nobetci_feed() -> dict:
+    import json as _json
+
+    path = os.path.join(_DIR, "data", "nobetci_eczaneler.json")
+    if not os.path.isfile(path):
+        return {"ok": False, "pharmacies": [], "total": 0, "duty_date": "", "attribution": ""}
+    try:
+        return _json.loads(open(path, encoding="utf-8").read())
+    except Exception:
+        return {"ok": False, "pharmacies": [], "total": 0, "duty_date": "", "attribution": ""}
+
+
+@app.route("/nobetci-eczaneler")
+def nobetci_eczaneler():
+    from seo import page as seo_page
+
+    ilce = (request.args.get("ilce") or "").strip()
+    feed = _load_nobetci_feed()
+    items = list(feed.get("pharmacies") or [])
+    if ilce:
+        items = [p for p in items if (p.get("district") or "") == ilce]
+    districts = sorted({p.get("district") for p in (feed.get("pharmacies") or []) if p.get("district")})
+    by = {}
+    for p in items:
+        by.setdefault(p.get("district") or "Diğer", []).append(p)
+    groups = []
+    for ad in list(ILCELER) + [k for k in by if k not in ILCELER]:
+        if ad in by:
+            groups.append({"label": ad, "places": by.pop(ad)})
+    for ad, plist in by.items():
+        groups.append({"label": ad, "places": plist})
+    return render_template(
+        "nobetci_eczaneler.html",
+        feed=feed,
+        groups=groups,
+        places=items,
+        ilce=ilce,
+        districts=districts,
+        nav="pharmacy",
+        seo=seo_page(
+            title="Bursa nöbetçi eczaneler",
+            description="Bugün Bursa nöbetçi eczaneleri — ilçe, telefon, Google Maps konum.",
+            path="/nobetci-eczaneler",
+        ),
+    )
+
+
+@app.route("/nobetci-eczaneler/<slug>")
+def nobetci_eczane_detail(slug: str):
+    from seo import page as seo_page
+
+    feed = _load_nobetci_feed()
+    place = next((p for p in (feed.get("pharmacies") or []) if p.get("slug") == slug), None)
+    return render_template(
+        "nobetci_eczane_detail.html",
+        place=place,
+        feed=feed,
+        nav="pharmacy",
+        seo=seo_page(
+            title=(place["name"] if place else "Nöbetçi eczane") + " · Bursa",
+            description=(place.get("address") if place else "Bursa nöbetçi eczane") or "",
+            path=f"/nobetci-eczaneler/{slug}",
+        ),
+    )
 
 
 @app.route("/kamp")
@@ -766,8 +833,14 @@ def category_list():
         )
         places = [place_public(p) for p in rows]
         if hospital:
+            band_f = (request.args.get("band") or "").strip()
+            if band_f:
+                places = [p for p in places if (p.get("price_band") or "") == band_f]
+                total = len(places)
+            # Öne çıkan + yüksek puan önce (özel kaybolmasın)
             places.sort(
                 key=lambda p: (
+                    0 if p.get("featured") else 1,
                     -(float(p["rating"]) if p.get("rating") is not None else -1.0),
                     (p.get("title") or ""),
                 )
@@ -827,6 +900,9 @@ def category_list():
                         p["hospital_slug"] = h.slug
         from seo import for_category
 
+        hosp_band = (request.args.get("band") or "").strip() if hospital else ""
+        hospital_bands = ("Özel", "Devlet", "Üniversite", "Kampüs", "Göz", "Diş") if hospital else ()
+
         return render_template(
             "list.html",
             cat=cat,
@@ -840,6 +916,8 @@ def category_list():
             chip_param=chip_param,
             chip_on=chip_on,
             sub_chips=sub_chips,
+            hosp_band=hosp_band,
+            hospital_bands=hospital_bands,
             cal=_cal(_month_shows(db)) if cat["key"] == "event" else None,
             nav=cat["key"],
             seo=for_category(
@@ -923,14 +1001,23 @@ def bursaspor_page():
             except Exception:
                 standings = []
 
+        feed = {"news": [], "desk": {}, "generated_at": "", "disclaimer": ""}
+        fp = _os.path.join(_DIR, "data", "bursaspor_feed.json")
+        if _os.path.isfile(fp):
+            try:
+                feed = _json.loads(open(fp, encoding="utf-8").read())
+            except Exception:
+                pass
+
         return render_template(
             "bursaspor.html",
             matches=matches,
             standings=standings,
+            feed=feed,
             nav="bursaspor",
             seo=seo_page(
-                title="Bursaspor maç fikstürü 2026-27",
-                description="Bursaspor Trendyol 1. Lig maç listesi, puan durumu, skorlar ve bilet bilgisi.",
+                title="Bursaspor haber · maç masası · fikstür 2026-27",
+                description="Bursaspor haber özetleri, maç analizi, Trendyol 1. Lig puan durumu ve fikstür.",
                 path="/bursaspor",
             ),
         )

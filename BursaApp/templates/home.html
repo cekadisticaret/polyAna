@@ -6,7 +6,7 @@
 {% set cat_ico = {
   'food':'🍽','visit':'🌿','hotel':'🏨','camp':'⛺','shop':'🛍','market':'🛒',
   'sport':'💪','family':'👨‍👩‍👧','concert':'🎵','theater':'🎭','cinema':'🎬','fun':'🎳',
-  'event':'📅','org':'🏛','hospital':'🏨','doctor':'🩺','vet':'🐾'
+  'event':'📅','org':'🏛','hospital':'🏨','doctor':'🩺','vet':'🐾','pharmacy':'💊'
 } %}
 <section class="wa-hero">
   <div>
@@ -41,6 +41,7 @@
     <div class="wa-features">
       <a class="wa-feat" href="/hastaneler"><div class="ico ico-hospital" style="background:var(--sky)" aria-hidden="true"></div><b>Hastaneler</b><i>Sağlık</i></a>
       <a class="wa-feat" href="/doktorlar"><div class="ico" style="background:var(--mint)">🩺</div><b>Doktorlar</b><i>Branş</i></a>
+      <a class="wa-feat" href="/nobetci-eczaneler"><div class="ico" style="background:#e8f5e9">💊</div><b>Nöbetçi eczane</b><i>Bugün</i></a>
       <a class="wa-feat" href="/veterinerler"><div class="ico" style="background:var(--sand)">🐾</div><b>Veteriner</b><i>Klinik</i></a>
       <a class="wa-feat" href="/marketler"><div class="ico" style="background:var(--lilac)">🛒</div><b>Marketler</b><i>Yakın + kampanya</i></a>
       <a class="wa-feat" href="/sinema"><div class="ico" style="background:var(--lilac)">🎬</div><b>Sinema</b><i>Vizyon</i></a>
@@ -99,6 +100,7 @@
         {% for c in categories if c.key in ('hospital','doctor','vet') %}
         <a class="wa-cat" href="{{ c.path }}"><span>{{ cat_ico.get(c.key, '•') }}</span><b>{{ c.label }}</b><i>{{ c.hint }}</i></a>
         {% endfor %}
+        <a class="wa-cat" href="/nobetci-eczaneler"><span>💊</span><b>Nöbetçi eczaneler</b><i>Bugünkü nöbet listesi</i></a>
       </div>
     </div>
     <div class="wa-cat-group">

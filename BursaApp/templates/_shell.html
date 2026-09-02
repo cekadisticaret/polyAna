@@ -38,6 +38,16 @@
   {% if google_site_verification %}
   <meta name="google-site-verification" content="{{ google_site_verification }}">
   {% endif %}
+  {% if ga_measurement_id %}
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ ga_measurement_id }}');
+  </script>
+  {% endif %}
   {% if seo %}
   {% for block in seo.to_json_ld_scripts() %}
   <script type="application/ld+json">{{ block|safe }}</script>
@@ -63,6 +73,7 @@
       {% endif %}
       {% if nav_user %}
       <a class="wa-btn wa-btn-forest" href="/hesap/profil"><span>{{ nav_user.name.split()[0] }}</span></a>
+      <a class="wa-btn wa-btn-ghost" href="/cikis" title="Çıkış" aria-label="Çıkış yap">Çıkış</a>
       {% else %}
       <a class="wa-btn wa-btn-forest" href="/giris"><span>Giriş</span></a>
       {% endif %}
@@ -74,13 +85,15 @@
     <a class="{{ 'on' if nav=='visit' else '' }}" href="/gezilecek">🌿 Gezilecek</a>
     <a class="{{ 'on' if nav=='food' else '' }}" href="/yeme-icme">🍽 Yeme-içme</a>
     <a class="{{ 'on' if nav=='market' else '' }}" href="/marketler">🛒 Marketler</a>
-    <a class="{{ 'on' if nav in ('hospital','doctor','vet') else '' }}" href="/hastaneler">🏨 Sağlık</a>
+    <a class="{{ 'on' if nav in ('hospital','doctor','vet','pharmacy') else '' }}" href="/hastaneler">🏨 Sağlık</a>
     <a class="{{ 'on' if nav in ('concert','event','theater') else '' }}" href="/konserler">🎵 Etkinlik</a>
     <a class="{{ 'on' if nav=='bursaspor' else '' }}" href="/bursaspor">🟢 Bursaspor</a>
     <details class="wa-nav-more">
       <summary>⋯ Daha fazla</summary>
       <div class="wa-nav-drop">
+        <a href="/hastaneler">Hastaneler</a>
         <a href="/doktorlar">Doktorlar</a>
+        <a href="/nobetci-eczaneler"><b>Nöbetçi eczaneler</b></a>
         <a href="/veterinerler">Veterinerler</a>
         <a href="/oteller">Oteller</a>
         <a href="/kamp">Kamp</a>
@@ -159,7 +172,7 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
     Ana
   </a>
-  <a class="{{ 'on' if nav in ('visit','food','yakin','market','hospital','doctor','vet','camp','hotel') else '' }}" href="/#kategoriler">
+  <a class="{{ 'on' if nav in ('visit','food','yakin','market','hospital','doctor','vet','pharmacy','camp','hotel') else '' }}" href="/#kategoriler">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
     Keşfet
   </a>

@@ -227,6 +227,16 @@ body.is-mobile-app{-webkit-font-smoothing:antialiased}
 .chip{padding:8px 14px;border-radius:999px;background:#fff;box-shadow:var(--shadow);font-size:13px;font-weight:700;color:var(--muted)}
 .chip.on{background:var(--forest);color:#fff}
 
+/* Sağlık alt sekmeler */
+.health-tabs{
+  display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;
+}
+.health-tab{
+  padding:10px 14px;border-radius:999px;background:#fff;box-shadow:var(--shadow);
+  font-size:13px;font-weight:800;color:var(--muted);text-decoration:none;
+}
+.health-tab.on{background:var(--forest);color:#fff}
+
 /* Liste — bölge açılır seçici (sağda) */
 .list-bar{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -526,6 +536,49 @@ body.is-mobile-app{-webkit-font-smoothing:antialiased}
 .standings{width:100%;border-collapse:collapse;font-size:14px}
 .standings th,.standings td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left}
 .standings tr.is-bursaspor{background:var(--mint);font-weight:800}
+
+/* —— Bursaspor masa + haber —— */
+.bs-hero{margin-bottom:18px;background:linear-gradient(135deg,#0d3b2e 0%,#1a5c45 48%,#0f4a36 100%);color:#f2fff8;border:0}
+.bs-hero a{color:#b8f5d4}
+.bs-kicker{letter-spacing:.12em;text-transform:uppercase;font-size:12px;font-weight:800;opacity:.85;margin:0 0 8px}
+.bs-updated,.bs-disc{color:rgba(242,255,248,.75)!important}
+.bs-desk{margin-bottom:20px;border-left:4px solid #1a5c45}
+.bs-desk-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.bs-desk-top h2{margin:0}
+.bs-form{display:flex;gap:6px}
+.bs-form span{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff}
+.bs-form-G{background:#1a7a4c}.bs-form-B{background:#6b7280}.bs-form-M{background:#b45309}
+.bs-analysis{line-height:1.55;margin:12px 0 16px}
+.bs-desk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bs-note{background:var(--mint,#e8f6ef);border-radius:16px;padding:14px 16px}
+.bs-note h3{margin:0 0 8px;font-size:15px}
+.bs-note p{margin:0;line-height:1.5;font-size:14px}
+.bs-news{margin-bottom:22px}
+.bs-news-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px;
+}
+.bs-news-card{
+  display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);
+  border-radius:18px;overflow:hidden;box-shadow:var(--shadow);min-height:100%;
+}
+.bs-news-media{display:block;aspect-ratio:16/10;background:#0d3b2e;overflow:hidden}
+.bs-news-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+.bs-news-card:hover .bs-news-media img{transform:scale(1.04)}
+.bs-news-ph{width:100%;height:100%;background:linear-gradient(135deg,#0d3b2e,#1a5c45 55%,#0f4a36)}
+.bs-news-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.bs-news-body h3{margin:0;font-size:16px;line-height:1.35}
+.bs-news-body h3 a{color:inherit;text-decoration:none}
+.bs-news-body h3 a:hover{color:var(--forest)}
+.bs-news-body p{margin:0;line-height:1.5;color:#334;font-size:14px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.bs-news-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px;color:#6b7280}
+.bs-tag{background:#0d3b2e;color:#d7ffe9;padding:3px 8px;border-radius:999px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:10px}
+.topic-transfer .bs-tag{background:#1e3a5f}
+.topic-mac .bs-tag{background:#14532d}
+.topic-yonetim .bs-tag{background:#7c2d12}
+.topic-kadro .bs-tag{background:#4c1d95}
+@media(max-width:700px){
+  .bs-desk-grid,.bs-news-grid{grid-template-columns:1fr}
+}
 .album-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .album-grid figure{margin:0;border-radius:18px;overflow:hidden;aspect-ratio:1;box-shadow:var(--shadow)}
 .album-grid img{width:100%;height:100%;object-fit:cover}

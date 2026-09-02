@@ -646,6 +646,11 @@ def sitemap_static_urls() -> list[dict[str, Any]]:
     for c in CATEGORIES:
         add(c["path"], "daily", "0.85")
 
+    # kategori dışı kamuya açık sayfalar
+    add("/bursaspor", "daily", "0.85")
+    add("/nobetci-eczaneler", "hourly", "0.9")
+    add("/album", "weekly", "0.6")
+
     for slug in SEO_LANDINGS:
         add(f"/{slug}", "weekly", "0.9")
 

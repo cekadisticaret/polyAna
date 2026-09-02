@@ -13,7 +13,7 @@ CATEGORIES = (
     {"key": "hotel", "path": "/oteller", "label": "Oteller", "hint": "termal, şehir, Uludağ kayak"},
     {"key": "camp", "path": "/kamp", "label": "Kamp", "hint": "milli park, göl, karavan"},
     {"key": "shop", "path": "/alisveris", "label": "Alışveriş", "hint": "AVM, mağaza, outlet, hediyelik"},
-    {"key": "market", "path": "/marketler", "label": "Marketler", "hint": "Migros, BİM, A101, Şok, semt pazarı"},
+    {"key": "market", "path": "/marketler", "label": "Marketler", "hint": "Migros, Gross, File, BİM, A101, Şok"},
     {"key": "sport", "path": "/spor", "label": "Spor", "hint": "fitness, pilates, yüzme, halı saha"},
     {"key": "family", "path": "/aile", "label": "Aile", "hint": "park, piknik, çocuk aktivitesi"},
     {"key": "concert", "path": "/konserler", "label": "Konserler", "hint": "salon, açıkhava, stadyum"},
@@ -98,7 +98,6 @@ MEKAN_TAXONOMY = {
         ("toptan", "Toptan"),
         ("semt-pazari", "Semt pazarı"),
         ("organik", "Organik / yerel"),
-        ("bakkal", "Bakkal"),
         ("kozmetik", "Kozmetik market"),
     ),
     "sport": (

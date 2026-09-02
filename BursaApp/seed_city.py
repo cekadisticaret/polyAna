@@ -122,6 +122,9 @@ def main() -> None:
         b = seed_file(db, os.path.join(_DIR, "data", "sports.json"), "sport")
         c = seed_file(db, os.path.join(_DIR, "data", "family.json"), "family")
         m = seed_file(db, os.path.join(_DIR, "data", "markets.json"), "market")
+        # köy bakkal / küçük bakkal — yayından çıkar
+        for p in db.query(Place).filter(Place.category == "market", Place.subcategory == "bakkal").all():
+            p.status = "rejected"
         db.flush()
         camp_n = seed_market_campaigns(db)
         food_n = backfill_food_sub(db)

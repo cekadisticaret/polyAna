@@ -1,0 +1,54 @@
+{% extends "_shell.html" %}
+{% block hello %}Nöbetçi eczaneler{% endblock %}
+{% block sub %}Bugün Bursa · günlük otomatik liste{% endblock %}
+{% block main %}
+{% include "_health_tabs.html" %}
+<section class="panel" style="margin-bottom:16px">
+  <p>Bugünkü nöbetçi eczaneler ilçe sırasıyla. Detaya girince konumu Google Maps’te açabilirsiniz (mobilde uygulama açılır).</p>
+  {% if feed.duty_date %}<p class="empty">Nöbet tarihi: <b>{{ feed.duty_date }}</b>{% if feed.fetched_at %} · güncellendi {{ feed.fetched_at }}{% endif %}</p>{% endif %}
+</section>
+
+{% if districts %}
+<div class="list-bar">
+  <div class="list-bar-meta">
+    <span class="list-bar-hint">{{ feed.total or places|length }} eczane</span>
+  </div>
+  <label class="ilce-pick">
+    <span class="ilce-pick-lab">Bölge</span>
+    <select class="ilce-select" aria-label="İlçe seç"
+      onchange="if(this.value) location.href=this.value">
+      <option value="/nobetci-eczaneler" {% if not ilce %}selected{% endif %}>Tüm ilçeler</option>
+      {% for ad in districts %}
+      <option value="/nobetci-eczaneler?ilce={{ ad }}" {% if ilce==ad %}selected{% endif %}>{{ ad }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</div>
+{% endif %}
+
+{% if groups %}
+  {% for g in groups %}
+  <section class="ilce-block" id="grp-{{ g.label }}">
+    <div class="sec-h">
+      <h2>{{ g.label }}</h2>
+      <span class="see">{{ g.places|length }} eczane</span>
+    </div>
+    <div class="cards" style="display:block">
+      {% for p in g.places %}
+      <a class="place-card" href="/nobetci-eczaneler/{{ p.slug }}" style="display:grid;grid-template-columns:1fr;padding:14px;margin-bottom:10px">
+        <div class="body" style="padding:0">
+          <h3 style="margin:0 0 6px">{{ p.name }}</h3>
+          <div class="meta">
+            <span>{{ p.district }}{% if p.address %} · {{ p.address }}{% endif %}</span>
+          </div>
+          {% if p.phone %}<p class="blurb" style="margin:8px 0 0">☎ {{ p.phone }}</p>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+{% else %}
+<div class="empty-box"><p>Liste henüz yok veya bu ilçede nöbetçi bulunamadı. Cron her sabah/akşam çeker.</p></div>
+{% endif %}
+{% endblock %}

@@ -62,8 +62,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BursaApp/seed_food_expand.py` | Yeme-içme genişletme · OSM cafe/bar + kahvaltı/meyhane/cantık · kafe→cafe |
 | `BursaApp/enrich_visit_gallery.py` | Gezilecek kapak+galeri (Wikimedia) · `extra.gallery` · Instagram scrape yok |
 | `BursaApp/templates/camps.html` | Kamp keşif — Airbnb tarzı grid · kategori şeridi · harita FAB |
-| `BursaApp/templates/home.html` | Ana sayfa hero: 12 kaliteli Bursa foto crossfade slider (~5.5 sn) |
-| `BursaApp/templates/_shell.html` | Site kabuğu · sağ alt WhatsApp anlık destek (0553 546 9948) |
+| `BursaApp/enrich_food_venues.py` | Yeme-içme kapak+menü enrich (Commons · top ~80 · `static/cache/food-venue/`) |
+| `BursaApp/templates/_shell.html` | Site kabuğu · GA4 `G-HTBTD54V3D` · WhatsApp destek · e-posta onay şeridi |
  Bursa dijital şehir — `bursaapp.com/` · Flask **5051** · Bugün/Akşam/Yakınımda/Hafta sonu · üye puan/yorum · `/poly` ayrı |
 | `BursaApp/feed_social.py` | Profil Feeds: post · ziyaret · albüm · etkinlik gideceğim sayacı |
 | `BursaApp/app.py` | Keşfet hub + `/album` + `/hesap/profil` Feeds + `/hesap/ayarlar` + e-posta onay + yer foto + `/yer/<slug>/gidecegim` |
@@ -91,6 +91,10 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BursaApp/data/family.json` | Aile: park, piknik, zoo, çocuk · `/aile` |
 | `BursaApp/data/album.json` | Bursa albüm görselleri · `/album` |
 | `BursaApp/data/bursaspor_standings.json` | 1. Lig puan durumu tablosu · `/bursaspor` |
+| `BursaApp/bursaspor_feed.py` | Bursaspor haber RSS + özgün özet + maç masası · `data/bursaspor_feed.json` · cron **06:00/18:00 İST** (`0 3,15 * * *` UTC) · log `/tmp/bursaspor_feed.log` |
+| `BursaApp/data/bursaspor_feed.json` | `/bursaspor` gündem + maç masası çıktısı |
+| `BursaApp/nobetci_eczane_fetch.py` | Bursa nöbetçi eczane (eczaneadresi.com public API) · `data/nobetci_eczaneler.json` · cron **07:00/19:00 İST** (`0 4,16 * * *` UTC) · log `/tmp/nobetci_eczane.log` |
+| `BursaApp/seed_health.py` | Hastane + doktor upsert (`venue_name` = hastane slug) · devlet MHRS poliklinik kartları |
 | `BursaApp/seed_city.py` | shop/sport/family/**market** seed + market kampanya + food subcategory + koordinat backfill |
 | `BursaApp/data/places_visit.json` | Gezilecek: UNESCO + köy + dağ + İznik · Wikimedia gerçek foto · Bursaray yok |
 | `BursaApp/data/hotels.json` | Oteller (eski çekirdek liste) · `/oteller` |

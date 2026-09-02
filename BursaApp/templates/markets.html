@@ -28,11 +28,20 @@
   <a class="chip {{ 'on' if sub==key else '' }}" href="/marketler?sub={{ key }}{% if ilce %}&amp;ilce={{ ilce }}{% endif %}">{{ lab }}</a>
   {% endfor %}
 </div>
-<div class="chips">
-  <a class="chip {{ 'on' if not ilce else '' }}" href="/marketler{% if sub %}?sub={{ sub }}{% endif %}">İlçe: tümü</a>
-  {% for ad in ilceler %}
-  <a class="chip {{ 'on' if ilce==ad else '' }}" href="/marketler?ilce={{ ad }}{% if sub %}&amp;sub={{ sub }}{% endif %}">{{ ad }}</a>
-  {% endfor %}
+<div class="list-bar">
+  <div class="list-bar-meta">
+    <span class="list-bar-hint">{% if places %}{{ places|length }} market{% else %}Zincir marketler{% endif %}</span>
+  </div>
+  <label class="ilce-pick">
+    <span class="ilce-pick-lab">Bölge</span>
+    <select class="ilce-select" aria-label="İlçe seç"
+      onchange="if(this.value) location.href=this.value">
+      <option value="/marketler{% if sub %}?sub={{ sub }}{% endif %}" {% if not ilce %}selected{% endif %}>Tüm ilçeler</option>
+      {% for ad in ilceler %}
+      <option value="/marketler?ilce={{ ad }}{% if sub %}&amp;sub={{ sub }}{% endif %}" {% if ilce==ad %}selected{% endif %}>{{ ad }}</option>
+      {% endfor %}
+    </select>
+  </label>
 </div>
 {% endif %}
 

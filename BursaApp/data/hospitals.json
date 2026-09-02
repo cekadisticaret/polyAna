@@ -12,8 +12,15 @@
     "wiki": "Bursa City Hospital",
     "search": "Bursa Şehir Hastanesi Doğanköy",
     "copy": "teleferik",
-    "tags": ["devlet", "sehir", "mhrs"],
-    "blurb": "Kampüste genel, kalp, onkoloji, kadın doğum-çocuk. Hekim MHRS / 182."
+    "tags": [
+      "devlet",
+      "sehir",
+      "mhrs"
+    ],
+    "blurb": "Kampüste genel, kalp, onkoloji, kadın doğum-çocuk. Hekim MHRS / 182.",
+    "lat": 40.2218,
+    "lng": 28.8705,
+    "rating": 3.6
   },
   {
     "slug": "sehir-kadin-dogum",
@@ -26,8 +33,12 @@
     "price_band": "Kampüs",
     "venue_name": "bursa-sehir-hastanesi",
     "copy": "emir-sultan",
-    "tags": ["kadin-dogum", "mhrs"],
-    "blurb": "Kampüs kadın hastalıkları ve doğum. Hekim MHRS."
+    "tags": [
+      "kadin-dogum",
+      "mhrs"
+    ],
+    "blurb": "Kampüs kadın hastalıkları ve doğum. Hekim MHRS.",
+    "rating": 3.7
   },
   {
     "slug": "sehir-cocuk",
@@ -40,8 +51,12 @@
     "price_band": "Kampüs",
     "venue_name": "bursa-sehir-hastanesi",
     "copy": "cumalikizik",
-    "tags": ["cocuk", "mhrs"],
-    "blurb": "Kampüs çocuk + yenidoğan. Hekim MHRS."
+    "tags": [
+      "cocuk",
+      "mhrs"
+    ],
+    "blurb": "Kampüs çocuk + yenidoğan. Hekim MHRS.",
+    "rating": 3.7
   },
   {
     "slug": "sehir-kalp-damar",
@@ -54,8 +69,12 @@
     "price_band": "Kampüs",
     "venue_name": "bursa-sehir-hastanesi",
     "copy": "eski-kaplica",
-    "tags": ["kalp", "mhrs"],
-    "blurb": "Kampüs kalp hastanesi. Anjiyo, KVC. Hekim MHRS."
+    "tags": [
+      "kalp",
+      "mhrs"
+    ],
+    "blurb": "Kampüs kalp hastanesi. Anjiyo, KVC. Hekim MHRS.",
+    "rating": 3.8
   },
   {
     "slug": "sehir-onkoloji",
@@ -68,8 +87,12 @@
     "price_band": "Kampüs",
     "venue_name": "bursa-sehir-hastanesi",
     "copy": "muradiye",
-    "tags": ["onkoloji", "mhrs"],
-    "blurb": "Kampüs onkoloji. Hekim MHRS."
+    "tags": [
+      "onkoloji",
+      "mhrs"
+    ],
+    "blurb": "Kampüs onkoloji. Hekim MHRS.",
+    "rating": 3.8
   },
   {
     "slug": "acibadem-bursa",
@@ -84,8 +107,13 @@
     "wiki": "Acıbadem Healthcare Group",
     "search": "Acıbadem Bursa Hastanesi Nilüfer",
     "copy": "panorama-1326",
-    "tags": ["ozel", "nakil", "tup-bebek"],
-    "blurb": "2006. Nakil, tüp bebek, KVC. Hekim listesi hastane sayfasında bağlı."
+    "tags": [
+      "ozel",
+      "nakil",
+      "tup-bebek"
+    ],
+    "blurb": "2006. Nakil, tüp bebek, KVC. Hekim listesi hastane sayfasında bağlı.",
+    "rating": 4.4
   },
   {
     "slug": "medical-park-bursa",
@@ -100,8 +128,12 @@
     "wiki": "Medical Park",
     "search": "Medical Park Bursa Hastanesi Fevzi Çakmak",
     "copy": "tophane",
-    "tags": ["ozel", "kvc"],
-    "blurb": "Fevzi Çakmak 3. basamak. Açık hekim kadrosu bağlı."
+    "tags": [
+      "ozel",
+      "kvc"
+    ],
+    "blurb": "Fevzi Çakmak 3. basamak. Açık hekim kadrosu bağlı.",
+    "rating": 4.2
   },
   {
     "slug": "buu-tip-hastanesi",
@@ -116,8 +148,14 @@
     "wiki": "Bursa Uludağ University",
     "search": "Uludağ Üniversitesi Tıp Fakültesi Hastanesi Görükle",
     "copy": "uludag",
-    "tags": ["universite", "egitim"],
-    "blurb": "Eğitim araştırma. Hekim listesi anabilim dalı / MHRS."
+    "tags": [
+      "universite",
+      "egitim"
+    ],
+    "blurb": "Eğitim araştırma. Hekim listesi anabilim dalı / MHRS.",
+    "lat": 40.221,
+    "lng": 28.87,
+    "rating": 3.9
   },
   {
     "slug": "jimer-hastanesi",
@@ -130,8 +168,12 @@
     "price_band": "Özel",
     "search": "Jimer Hastanesi Bursa",
     "copy": "hanlar-kapalicarsi",
-    "tags": ["ozel", "kadin-dogum"],
-    "blurb": "Özel. Kadın doğum ve çocuk ağırlıklı resmi kadro bağlı."
+    "tags": [
+      "ozel",
+      "kadin-dogum"
+    ],
+    "blurb": "Özel. Kadın doğum ve çocuk ağırlıklı resmi kadro bağlı.",
+    "rating": 4.0
   },
   {
     "slug": "doruk-hastanesi",
@@ -144,8 +186,12 @@
     "price_band": "Özel",
     "search": "Doruk Nilüfer Hastanesi Bursa",
     "copy": "inkaya-cinari",
-    "tags": ["ozel", "doruk"],
-    "blurb": "Doruk Sağlık Grubu Nilüfer. Hekim doruktip.com."
+    "tags": [
+      "ozel",
+      "doruk"
+    ],
+    "blurb": "Doruk Sağlık Grubu Nilüfer. Hekim doruktip.com.",
+    "rating": 4.1
   },
   {
     "slug": "doruk-cekirge",
@@ -158,8 +204,13 @@
     "price_band": "Özel",
     "search": "Doruk Bursa Hastanesi Çekirge",
     "copy": "eski-kaplica",
-    "tags": ["ozel", "doruk", "cekirge"],
-    "blurb": "Doruk Çekirge. Hekim doruktip.com."
+    "tags": [
+      "ozel",
+      "doruk",
+      "cekirge"
+    ],
+    "blurb": "Doruk Çekirge. Hekim doruktip.com.",
+    "rating": 4.1
   },
   {
     "slug": "doruk-yildirim",
@@ -172,8 +223,12 @@
     "price_band": "Özel",
     "search": "Doruk Yıldırım Hastanesi",
     "copy": "yesil-cami",
-    "tags": ["ozel", "doruk"],
-    "blurb": "Doruk Yıldırım. Hekim doruktip.com."
+    "tags": [
+      "ozel",
+      "doruk"
+    ],
+    "blurb": "Doruk Yıldırım. Hekim doruktip.com.",
+    "rating": 4.0
   },
   {
     "slug": "ali-osman-sonmez-onkoloji",
@@ -186,8 +241,14 @@
     "price_band": "Devlet",
     "search": "Ali Osman Sönmez Onkoloji Hastanesi Bursa",
     "copy": "yesil-cami",
-    "tags": ["onkoloji", "devlet"],
-    "blurb": "Devlet onkoloji. Hekim MHRS."
+    "tags": [
+      "onkoloji",
+      "devlet"
+    ],
+    "blurb": "Devlet onkoloji. Hekim MHRS.",
+    "lat": 40.2055,
+    "lng": 29.068,
+    "rating": 3.9
   },
   {
     "slug": "nilufer-adsm",
@@ -200,8 +261,12 @@
     "price_band": "Diş",
     "search": "Nilüfer Ağız ve Diş Sağlığı Merkezi Beşevler",
     "copy": "koza-han",
-    "tags": ["dis", "devlet"],
-    "blurb": "Devlet diş. Hekim MHRS / 182."
+    "tags": [
+      "dis",
+      "devlet"
+    ],
+    "blurb": "Devlet diş. Hekim MHRS / 182.",
+    "rating": 3.8
   },
   {
     "slug": "osmangazi-adsm",
@@ -214,8 +279,12 @@
     "price_band": "Diş",
     "search": "Osmangazi Ağız ve Diş Sağlığı Merkezi Bursa",
     "copy": "ulu-cami",
-    "tags": ["dis", "devlet"],
-    "blurb": "Devlet diş. Hekim MHRS."
+    "tags": [
+      "dis",
+      "devlet"
+    ],
+    "blurb": "Devlet diş. Hekim MHRS.",
+    "rating": 3.7
   },
   {
     "slug": "yildirim-adsm",
@@ -228,8 +297,12 @@
     "price_band": "Diş",
     "search": "Yıldırım Ağız ve Diş Sağlığı Merkezi Bursa",
     "copy": "yesil-cami",
-    "tags": ["dis", "devlet"],
-    "blurb": "Devlet diş. Hekim MHRS."
+    "tags": [
+      "dis",
+      "devlet"
+    ],
+    "blurb": "Devlet diş. Hekim MHRS.",
+    "rating": 3.6
   },
   {
     "slug": "nilufer-goz-merkezi",
@@ -242,8 +315,12 @@
     "price_band": "Göz",
     "search": "Nilüfer Göz Merkezi Lefkoşa Caddesi",
     "copy": "inkaya-cinari",
-    "tags": ["goz", "katarakt"],
-    "blurb": "Göz Vakfı. Hekim listesi bu merkeze bağlı."
+    "tags": [
+      "goz",
+      "katarakt"
+    ],
+    "blurb": "Göz Vakfı. Hekim listesi bu merkeze bağlı.",
+    "rating": 4.3
   },
   {
     "slug": "bursa-retina-goz",
@@ -256,8 +333,12 @@
     "price_band": "Göz",
     "search": "Bursa Retina Göz Hastanesi Sanayi Caddesi",
     "copy": "teleferik",
-    "tags": ["goz", "retina"],
-    "blurb": "Retina ve katarakt. Hekim kurum sitesinde."
+    "tags": [
+      "goz",
+      "retina"
+    ],
+    "blurb": "Retina ve katarakt. Hekim kurum sitesinde.",
+    "rating": 4.2
   },
   {
     "slug": "bursa-goz-merkezi",
@@ -270,7 +351,216 @@
     "price_band": "Göz",
     "search": "Bursa Göz Merkezi Yıldırım",
     "copy": "yesil-turbe",
-    "tags": ["goz"],
-    "blurb": "Yıldırım özel göz."
+    "tags": [
+      "goz"
+    ],
+    "blurb": "Yıldırım özel göz.",
+    "rating": 4.1
+  },
+  {
+    "slug": "yuksek-ihtisas-bursa",
+    "title": "SBÜ Bursa Yüksek İhtisas EAH",
+    "ilce": "Yıldırım",
+    "address": "Mimar Sinan Mah. Emniyet Cad. Yıldırım",
+    "phone": "0224 360 50 50",
+    "web": "https://www.yteah.saglik.gov.tr/",
+    "hours_text": "7/24 acil",
+    "price_band": "Devlet",
+    "featured": true,
+    "lat": 40.2015,
+    "lng": 29.0785,
+    "rating": 3.8,
+    "tags": [
+      "devlet",
+      "eah",
+      "mhrs"
+    ],
+    "blurb": "Eğitim araştırma. Branş poliklinikleri MHRS / 182."
+  },
+  {
+    "slug": "cekirge-devlet",
+    "title": "Çekirge Devlet Hastanesi",
+    "ilce": "Osmangazi",
+    "address": "Çekirge, Osmangazi",
+    "phone": "0224 237 90 00",
+    "web": "https://cekirgedh.saglik.gov.tr/",
+    "hours_text": "7/24 acil",
+    "price_band": "Devlet",
+    "featured": true,
+    "lat": 40.2038,
+    "lng": 28.9995,
+    "rating": 3.7,
+    "tags": [
+      "devlet",
+      "cekirge",
+      "mhrs"
+    ],
+    "blurb": "Çekirge devlet hastanesi. Hekim MHRS."
+  },
+  {
+    "slug": "dortcelik-cocuk",
+    "title": "Dörtçelik Çocuk Hastalıkları Hastanesi",
+    "ilce": "Osmangazi",
+    "address": "Osmangazi / Bursa",
+    "phone": "0224 270 20 20",
+    "web": "https://dortcelik.saglik.gov.tr/",
+    "hours_text": "7/24 çocuk",
+    "price_band": "Devlet",
+    "lat": 40.1955,
+    "lng": 29.045,
+    "rating": 3.8,
+    "tags": [
+      "devlet",
+      "cocuk",
+      "mhrs"
+    ],
+    "blurb": "Çocuk hastalıkları. Hekim MHRS."
+  },
+  {
+    "slug": "ilker-celikcan-ftr",
+    "title": "İlker Çelikcan Fizik Tedavi Hastanesi",
+    "ilce": "Osmangazi",
+    "address": "Osmangazi / Bursa",
+    "phone": "",
+    "web": "https://bursaism.saglik.gov.tr/",
+    "hours_text": "Mesai · MHRS",
+    "price_band": "Devlet",
+    "lat": 40.198,
+    "lng": 29.055,
+    "rating": 3.6,
+    "tags": [
+      "devlet",
+      "ftr",
+      "mhrs"
+    ],
+    "blurb": "Fizik tedavi ve rehabilitasyon. Hekim MHRS."
+  },
+  {
+    "slug": "inegol-devlet",
+    "title": "İnegöl Devlet Hastanesi",
+    "ilce": "İnegöl",
+    "address": "Burhaniye Mah. İnegöl",
+    "phone": "0224 715 10 00",
+    "web": "https://inegoldh.saglik.gov.tr/",
+    "hours_text": "7/24 acil",
+    "price_band": "Devlet",
+    "lat": 40.0788,
+    "lng": 29.5135,
+    "rating": 3.7,
+    "tags": [
+      "devlet",
+      "inegol",
+      "mhrs"
+    ],
+    "blurb": "İnegöl devlet. Hekim MHRS / 182."
+  },
+  {
+    "slug": "gemlik-devlet",
+    "title": "Gemlik Devlet Hastanesi",
+    "ilce": "Gemlik",
+    "address": "Gemlik merkez",
+    "phone": "0224 513 12 00",
+    "web": "https://gemlikdh.saglik.gov.tr/",
+    "hours_text": "7/24 acil",
+    "price_band": "Devlet",
+    "lat": 40.4308,
+    "lng": 29.1555,
+    "rating": 3.6,
+    "tags": [
+      "devlet",
+      "gemlik",
+      "mhrs"
+    ],
+    "blurb": "Gemlik devlet. Hekim MHRS."
+  },
+  {
+    "slug": "mkp-devlet",
+    "title": "Mustafakemalpaşa Devlet Hastanesi",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Mustafakemalpaşa merkez",
+    "phone": "",
+    "web": "https://bursaism.saglik.gov.tr/",
+    "hours_text": "7/24 acil",
+    "price_band": "Devlet",
+    "lat": 40.0385,
+    "lng": 28.4085,
+    "rating": 3.5,
+    "tags": [
+      "devlet",
+      "mhrs"
+    ],
+    "blurb": "MKP devlet. Hekim MHRS."
+  },
+  {
+    "slug": "karacabey-devlet",
+    "title": "Karacabey Devlet Hastanesi",
+    "ilce": "Karacabey",
+    "address": "Karacabey merkez",
+    "phone": "",
+    "web": "https://bursaism.saglik.gov.tr/",
+    "hours_text": "7/24 acil",
+    "price_band": "Devlet",
+    "lat": 40.2135,
+    "lng": 28.361,
+    "rating": 3.5,
+    "tags": [
+      "devlet",
+      "mhrs"
+    ],
+    "blurb": "Karacabey devlet. Hekim MHRS."
+  },
+  {
+    "slug": "mudanya-devlet",
+    "title": "Mudanya Devlet Hastanesi",
+    "ilce": "Mudanya",
+    "address": "Mudanya merkez",
+    "phone": "",
+    "web": "https://bursaism.saglik.gov.tr/",
+    "hours_text": "7/24 acil",
+    "price_band": "Devlet",
+    "lat": 40.3752,
+    "lng": 28.883,
+    "rating": 3.5,
+    "tags": [
+      "devlet",
+      "mhrs"
+    ],
+    "blurb": "Mudanya devlet. Hekim MHRS."
+  },
+  {
+    "slug": "kestel-devlet",
+    "title": "Kestel Devlet Hastanesi",
+    "ilce": "Kestel",
+    "address": "Kestel merkez",
+    "phone": "",
+    "web": "https://bursaism.saglik.gov.tr/",
+    "hours_text": "Mesai · MHRS",
+    "price_band": "Devlet",
+    "lat": 40.1982,
+    "lng": 29.2125,
+    "rating": 3.5,
+    "tags": [
+      "devlet",
+      "mhrs"
+    ],
+    "blurb": "Kestel devlet. Hekim MHRS."
+  },
+  {
+    "slug": "gursu-cuneyt-yildiz",
+    "title": "Gürsu Cüneyt Yıldız Devlet Hastanesi",
+    "ilce": "Gürsu",
+    "address": "Gürsu merkez",
+    "phone": "",
+    "web": "https://bursaism.saglik.gov.tr/",
+    "hours_text": "Mesai · MHRS",
+    "price_band": "Devlet",
+    "lat": 40.2185,
+    "lng": 29.165,
+    "rating": 3.5,
+    "tags": [
+      "devlet",
+      "mhrs"
+    ],
+    "blurb": "Gürsu devlet. Hekim MHRS."
   }
 ]

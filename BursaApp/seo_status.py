@@ -36,6 +36,14 @@ def google_verification_token() -> str:
     return str(_load_cfg().get("google_site_verification") or "").strip()
 
 
+def ga_measurement_id() -> str:
+    """GA4 Measurement ID (G-XXXX). Env > seo_config."""
+    env = (os.environ.get("GA_MEASUREMENT_ID") or os.environ.get("GOOGLE_ANALYTICS_ID") or "").strip()
+    if env:
+        return env
+    return str(_load_cfg().get("ga_measurement_id") or "").strip()
+
+
 def gsc_connected() -> bool:
     """Domain DNS doğrulama veya manuel işaret — HTML meta şart değil."""
     cfg = _load_cfg()

@@ -2,6 +2,17 @@
 {% block hello %}{{ cat.label }}{% endblock %}
 {% block sub %}{% if cat.key=='food' %}Alt tür ve ilçe filtreleri. BursaApp puanı varsa onu, yoksa listedeki puanı gösterir.{% elif cat.key=='visit' %}Gerçek duraklar, mekanın kendi fotoğrafı. Bursaray yok — o metro.{% elif cat.key=='hotel' %}Termal Çekirge, şehir, Uludağ kayak. Rezervasyon siteden yapılmaz.{% elif cat.key=='camp' %}İnsanların gerçekten gittiği Uludağ, deniz, göl ve ücretsiz koylar. Çadır / karavan — emir yok.{% elif cat.key=='shop' %}AVM, mağaza, outlet, hediyelik, yerel ürün.{% elif cat.key=='sport' %}Fitness, pilates, yüzme, tenis, halı saha.{% elif cat.key=='family' %}Park, piknik, çocuk alanı, aile aktivitesi.{% elif cat.key=='concert' %}Yaklaşan konserler üstte. Bilet siteden satılmaz.{% elif cat.key=='theater' %}Yakın tarihli oyunlar, sonra salonlar. Bilet siteden yok.{% elif cat.key=='cinema' %}Vizyondaki filmler + salonlar. Seans değişir, teyit et.{% elif cat.key=='event' %}Şehir takvimi: fuar, festival, sahne. Bilet siteden yok.{% elif cat.key=='hospital' %}Devlet, özel, üniversite. Karttaki hekimler o hastaneye bağlı.{% elif cat.key=='doctor' %}Branşa göre hekim. Hastane sayfasına bağlı. Randevu / tıbbi tavsiye yok.{% elif cat.key=='vet' %}Oda kayıtlı klinik ve hayvan hastanesi. Randevu siteden yok.{% elif cat.key=='fun' %}Canlı müzik, bar, bowling, escape, AVM. Bilet / rezervasyon siteden yok.{% elif cat.key=='org' %}Etkinliği üreten kurum — takvim değil. Bilet siteden yok.{% else %}{{ cat.hint }}{% endif %}{% endblock %}
 {% block main %}
+{% if cat.key in ('hospital','doctor') %}
+{% include "_health_tabs.html" %}
+{% endif %}
+{% if cat.key == 'hospital' and hospital_bands %}
+<div class="chips">
+  <a class="chip {{ 'on' if not hosp_band else '' }}" href="/hastaneler{% if ilce %}?ilce={{ ilce }}{% endif %}">Tümü</a>
+  {% for b in hospital_bands %}
+  <a class="chip {{ 'on' if hosp_band==b else '' }}" href="/hastaneler?band={{ b|urlencode }}{% if ilce %}&amp;ilce={{ ilce }}{% endif %}">{{ b }}</a>
+  {% endfor %}
+</div>
+{% endif %}
 {% if sub_chips %}
 <div class="chips">
   <a class="chip {{ 'on' if not sub else '' }}" href="{{ cat.path }}{% if ilce %}?ilce={{ ilce }}{% endif %}{% if q %}{{ '&' if ilce else '?' }}q={{ q }}{% endif %}">Tümü</a>
@@ -11,23 +22,32 @@
 </div>
 {% endif %}
 
-{% if chip_param == 'ilce' %}
+{% if chip_param == 'ilce' or chip_param == 'spec' %}
 <div class="list-bar">
   <div class="list-bar-meta">
     {% if cat.key == 'hospital' %}
     <span class="list-bar-hint">★ Puana göre · yüksekten</span>
+    {% elif cat.key == 'doctor' %}
+    <span class="list-bar-hint">{% if chip_on %}{{ chip_on }}{% else %}Tüm branşlar{% endif %}{% if total %} · {{ total }} hekim{% endif %}</span>
     {% elif total %}
     <span class="list-bar-hint">{{ total }} yer</span>
     {% endif %}
   </div>
   <label class="ilce-pick">
-    <span class="ilce-pick-lab">Bölge</span>
-    <select class="ilce-select" aria-label="İlçe seç"
+    <span class="ilce-pick-lab">{% if chip_param == 'spec' %}Branş{% else %}Bölge{% endif %}</span>
+    <select class="ilce-select" aria-label="{% if chip_param == 'spec' %}Branş seç{% else %}İlçe seç{% endif %}"
       onchange="if(this.value) location.href=this.value">
-      <option value="{{ cat.path }}{% if sub %}?sub={{ sub }}{% endif %}{% if q %}{{ '&' if sub else '?' }}q={{ q }}{% endif %}" {% if not ilce %}selected{% endif %}>Tüm ilçeler</option>
+      {% if chip_param == 'spec' %}
+      <option value="{{ cat.path }}{% if q %}?q={{ q }}{% endif %}" {% if not chip_on %}selected{% endif %}>Tüm branşlar</option>
       {% for ad in chip_items %}
-      <option value="{{ cat.path }}?ilce={{ ad }}{% if sub %}&amp;sub={{ sub }}{% endif %}{% if q %}&amp;q={{ q }}{% endif %}" {% if chip_on==ad %}selected{% endif %}>{{ ad }}</option>
+      <option value="{{ cat.path }}?spec={{ ad|urlencode }}{% if q %}&amp;q={{ q }}{% endif %}" {% if chip_on==ad %}selected{% endif %}>{{ ad }}</option>
       {% endfor %}
+      {% else %}
+      <option value="{{ cat.path }}{% if sub %}?sub={{ sub }}{% endif %}{% if q %}{{ '&' if sub else '?' }}q={{ q }}{% endif %}{% if hosp_band %}{{ '&' if (sub or q) else '?' }}band={{ hosp_band|urlencode }}{% endif %}" {% if not ilce %}selected{% endif %}>Tüm ilçeler</option>
+      {% for ad in chip_items %}
+      <option value="{{ cat.path }}?ilce={{ ad }}{% if sub %}&amp;sub={{ sub }}{% endif %}{% if q %}&amp;q={{ q }}{% endif %}{% if hosp_band %}&amp;band={{ hosp_band|urlencode }}{% endif %}" {% if chip_on==ad %}selected{% endif %}>{{ ad }}</option>
+      {% endfor %}
+      {% endif %}
     </select>
   </label>
 </div>

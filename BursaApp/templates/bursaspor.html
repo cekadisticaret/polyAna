@@ -1,10 +1,80 @@
 {% extends "_shell.html" %}
 {% block hello %}Bursaspor{% endblock %}
-{% block sub %}2026-27 · Trendyol 1. Lig{% endblock %}
+{% block sub %}2026-27 · Trendyol 1. Lig · Maç masası{% endblock %}
 {% block main %}
-<section class="panel" style="margin-bottom:18px">
-  <p>Yeşil beyazlıların sezon fikstürü ve lig tablosu. Skor / bilet admin panelinden güncellenir. Resmi: <a href="https://www.bursaspor.org.tr/" target="_blank" rel="noopener">bursaspor.org.tr</a></p>
+<section class="bs-hero panel">
+  <p class="bs-kicker">Yeşil · Beyaz · Timsah</p>
+  <p>Haber özetleri, maç masası ve sezon fikstürü. Skor / bilet admin panelinden; resmi kulüp sitesi
+    <a href="https://www.bursaspor.org.tr/" target="_blank" rel="noopener">bursaspor.org.tr</a>.</p>
+  {% if feed.generated_at %}
+  <p class="empty bs-updated">Son derleme: {{ feed.generated_at }} · günde 2 kez otomatik</p>
+  {% endif %}
 </section>
+
+{% set desk = feed.desk or {} %}
+{% if desk.analysis %}
+<section class="bs-desk panel">
+  <div class="bs-desk-top">
+    <h2>Maç masası</h2>
+    {% if desk.form %}
+    <div class="bs-form" aria-label="Son form">
+      {% for ch in desk.form %}
+      <span class="bs-form-{{ ch }}">{{ ch }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <p class="bs-analysis">{{ desk.analysis }}</p>
+  <div class="bs-desk-grid">
+    {% if desk.preview %}
+    <article class="bs-note">
+      <h3>Önizleme</h3>
+      <p>{{ desk.preview }}</p>
+      {% if desk.next_match %}
+      <p class="meta">
+        {{ desk.next_match.home }} vs {{ desk.next_match.away }}
+        {% if desk.next_match.kickoff %} · {{ desk.next_match.kickoff }}{% endif %}
+        {% if desk.next_match.venue %} · {{ desk.next_match.venue }}{% endif %}
+      </p>
+      {% endif %}
+    </article>
+    {% endif %}
+    {% if desk.review %}
+    <article class="bs-note">
+      <h3>Maç arkası</h3>
+      <p>{{ desk.review }}</p>
+    </article>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{% if feed.news %}
+<section class="bs-news panel">
+  <h2 style="margin-top:0">Gündem</h2>
+  <div class="bs-news-grid">
+  {% for n in feed.news %}
+    <article class="bs-news-card topic-{{ n.topic or 'genel' }}">
+      <a class="bs-news-media" href="{{ n.url or '#' }}" {% if n.url %}target="_blank" rel="noopener noreferrer"{% endif %}>
+        {% if n.img_url %}
+        <img src="{{ n.img_url }}" alt="" loading="lazy" decoding="async">
+        {% else %}
+        <div class="bs-news-ph"></div>
+        {% endif %}
+      </a>
+      <div class="bs-news-body">
+        <div class="bs-news-meta">
+          <span class="bs-tag">{{ n.topic or 'genel' }}</span>
+          <span>{{ n.source }}</span>
+        </div>
+        <h3>{% if n.url %}<a href="{{ n.url }}" target="_blank" rel="noopener noreferrer">{{ n.title }}</a>{% else %}{{ n.title }}{% endif %}</h3>
+        <p>{{ n.blurb }}</p>
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 {% if standings %}
 <section class="panel" style="margin-bottom:22px;overflow-x:auto">
