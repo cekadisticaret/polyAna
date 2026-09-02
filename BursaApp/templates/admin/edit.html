@@ -1,48 +1,92 @@
-{% extends "_shell.html" %}
-{% block title %}Düzenle · {{ p.title }}{% endblock %}
-{% block hello %}Düzenle{% endblock %}
-{% block sub %}{{ p.title }} · {{ p.status }}{% endblock %}
-{% block search %}{% endblock %}
-{% block main %}
-<div class="panel form-card wide">
-  <form method="post" class="form">
-    <label>Durum
-      <select name="status">
-        {% for s in ['pending','approved','rejected'] %}
-        <option value="{{ s }}" {% if p.status==s %}selected{% endif %}>{{ s }}</option>
-        {% endfor %}
+{% extends "admin/_layout.html" %}
+{% block title %}{% if is_new %}Yeni yer{% else %}Düzenle · {{ place.title }}{% endif %}{% endblock %}
+{% block header_title %}{% if is_new %}Yeni yer ekle{% else %}Yer düzenle{% endif %}{% endblock %}
+{% block content %}
+<div class="card"><div class="card-body">
+  <form method="post" enctype="multipart/form-data" class="row">
+    <div class="col-12 mb-3">
+      <h5 class="text-primary">Temel bilgiler</h5>
+    </div>
+    <div class="col-md-6 mb-3"><label class="form-label">Başlık</label><input class="form-control" name="title" value="{{ place.title }}" required></div>
+    <div class="col-md-6 mb-3"><label class="form-label">Slug</label><input class="form-control" name="slug" value="{{ place.slug }}" placeholder="otomatik üretilebilir"></div>
+    <div class="col-md-3 mb-3"><label class="form-label">Kategori</label>
+      <select class="form-control" name="category">{% for c in categories %}<option value="{{ c.key }}" {% if place.category==c.key %}selected{% endif %}>{{ c.label }}</option>{% endfor %}</select>
+    </div>
+    <div class="col-md-3 mb-3"><label class="form-label">Alt tür / branş kodu</label><input class="form-control" name="subcategory" value="{{ place.subcategory or '' }}"></div>
+    <div class="col-md-3 mb-3"><label class="form-label">İlçe</label>
+      <select class="form-control" name="ilce"><option value="">—</option>{% for ad in ilceler %}<option {% if place.ilce==ad %}selected{% endif %}>{{ ad }}</option>{% endfor %}</select>
+    </div>
+    <div class="col-md-3 mb-3"><label class="form-label">Durum</label>
+      <select class="form-control" name="status">
+        {% for s in ['approved','pending','rejected'] %}<option value="{{ s }}" {% if place.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}
       </select>
-    </label>
-    <label>Kategori
-      <select name="category">
-        {% for c in categories %}
-        <option value="{{ c.key }}" {% if p.category==c.key %}selected{% endif %}>{{ c.label }}</option>
-        {% endfor %}
+    </div>
+    <div class="col-md-8 mb-3"><label class="form-label">Adres</label><input class="form-control" name="address" value="{{ place.address }}"></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Telefon</label><input class="form-control" name="phone" value="{{ place.phone }}"></div>
+    <div class="col-md-6 mb-3"><label class="form-label">Web</label><input class="form-control" name="web" value="{{ place.web }}"></div>
+    <div class="col-md-3 mb-3"><label class="form-label">Instagram</label><input class="form-control" name="instagram" value="{{ place.instagram or '' }}"></div>
+    <div class="col-md-3 mb-3"><label class="form-label">WhatsApp</label><input class="form-control" name="whatsapp" value="{{ place.whatsapp or '' }}"></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Saat</label><input class="form-control" name="hours_text" value="{{ place.hours_text }}"></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Fiyat / branş / tür (price_band)</label><input class="form-control" name="price_band" value="{{ place.price_band }}" placeholder="örn. İskender · Üroloji · Özel"></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Mekan / hastane slug</label><input class="form-control" name="venue_name" value="{{ place.venue_name }}" placeholder="doktor→hastane slug"></div>
+    <div class="col-md-3 mb-3"><label class="form-label">Enlem</label><input class="form-control" name="lat" value="{{ place.lat or '' }}"></div>
+    <div class="col-md-3 mb-3"><label class="form-label">Boylam</label><input class="form-control" name="lng" value="{{ place.lng or '' }}"></div>
+    <div class="col-md-2 mb-3"><label class="form-label">Admin puan</label><input class="form-control" name="rating_admin" value="{{ place.rating_admin or '' }}"></div>
+    <div class="col-md-2 mb-3"><label class="form-label">Kişi başı TL</label><input class="form-control" name="est_meal_tl" value="{{ place.est_meal_tl or 0 }}"></div>
+    <div class="col-md-2 mb-3"><label class="form-label">Plan</label>
+      <select class="form-control" name="plan_tier">
+        {% for t in ['free','pro','premium'] %}<option value="{{ t }}" {% if (place.plan_tier or 'free')==t %}selected{% endif %}>{{ t }}</option>{% endfor %}
       </select>
-    </label>
-    <label>Başlık<input name="title" value="{{ p.title }}" required></label>
-    <label>İlçe
-      <select name="ilce">
-        {% for ad in ilceler %}<option {% if p.ilce==ad %}selected{% endif %}>{{ ad }}</option>{% endfor %}
-      </select>
-    </label>
-    <label>Adres<input name="address" value="{{ p.address }}"></label>
-    <label>Telefon<input name="phone" value="{{ p.phone }}"></label>
-    <label>Web<input name="web" value="{{ p.web }}"></label>
-    <label>Saat<input name="hours_text" value="{{ p.hours_text }}"></label>
-    <label>Fiyat<input name="price_band" value="{{ p.price_band }}"></label>
-    <label>Mekan<input name="venue_name" value="{{ p.venue_name }}"></label>
-    <label>Enlem<input name="lat" value="{{ p.lat or '' }}"></label>
-    <label>Boylam<input name="lng" value="{{ p.lng or '' }}"></label>
-    <label>Puan<input name="rating_admin" value="{{ p.rating_admin or '' }}"></label>
-    <label class="check"><input type="checkbox" name="featured" value="1" {% if p.featured %}checked{% endif %}> Öne çıkar</label>
-    <label>Başlangıç<input type="datetime-local" name="starts_at" value="{{ p.starts_at.strftime('%Y-%m-%dT%H:%M') if p.starts_at else '' }}"></label>
-    <label>Bitiş<input type="datetime-local" name="ends_at" value="{{ p.ends_at.strftime('%Y-%m-%dT%H:%M') if p.ends_at else '' }}"></label>
-    <label>Özet<textarea name="blurb" rows="2">{{ p.blurb }}</textarea></label>
-    <label>Detay<textarea name="body" rows="4">{{ p.body }}</textarea></label>
-    <label>Görsel URL<input name="img_url" value="{{ p.img_url }}"></label>
-    <label>Etiketler<input name="tags" value="{{ tags_text }}"></label>
-    <button type="submit" class="btn">Kaydet</button>
+    </div>
+    <div class="col-md-3 mb-3 form-check mt-4"><input class="form-check-input" type="checkbox" name="featured" value="1" {% if place.featured %}checked{% endif %}><label class="form-check-label">Öne çıkar</label></div>
+    <div class="col-md-6 mb-3"><label class="form-label">Başlangıç</label><input class="form-control" type="datetime-local" name="starts_at" value="{{ place.starts_at.strftime('%Y-%m-%dT%H:%M') if place.starts_at else '' }}"></div>
+    <div class="col-md-6 mb-3"><label class="form-label">Bitiş</label><input class="form-control" type="datetime-local" name="ends_at" value="{{ place.ends_at.strftime('%Y-%m-%dT%H:%M') if place.ends_at else '' }}"></div>
+    <div class="col-12 mb-3"><label class="form-label">Özet</label><textarea class="form-control" name="blurb" rows="2">{{ place.blurb }}</textarea></div>
+    <div class="col-12 mb-3"><label class="form-label">Detay</label><textarea class="form-control" name="body" rows="4">{{ place.body }}</textarea></div>
+    <div class="col-md-8 mb-3"><label class="form-label">Kapak görsel URL</label><input class="form-control" name="img_url" value="{{ place.img_url }}"></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Kapak yükle</label><input class="form-control" type="file" name="img_file" accept="image/*"></div>
+    {% if place.img_url %}
+    <div class="col-12 mb-3"><img src="{{ place.img_url }}" alt="" style="max-height:160px;border-radius:8px"></div>
+    {% endif %}
+    <div class="col-md-8 mb-3"><label class="form-label">Etiketler</label><input class="form-control" name="tags" value="{{ tags|join(', ') }}"></div>
+
+    <div class="col-12 mt-2 mb-2"><hr><h5 class="text-primary">Bilet (konser / etkinlik)</h5></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Bilet fiyatı</label><input class="form-control" name="ticket_price" value="{{ place.ticket_price or '' }}" placeholder="900–1000 TL"></div>
+    <div class="col-md-8 mb-3"><label class="form-label">Bilet linki</label><input class="form-control" name="ticket_url" value="{{ place.ticket_url or '' }}" placeholder="https://biletix.com/…"></div>
+
+    <div class="col-12 mt-2 mb-2"><hr><h5 class="text-primary">Menü (restoran)</h5>
+      <small class="text-muted">Her satır: <code>Yemek adı | fiyat | not</code></small>
+    </div>
+    <div class="col-md-6 mb-3"><label class="form-label">Menü satırları</label><textarea class="form-control" name="menu_lines" rows="8" placeholder="İskender porsiyon | 420 TL | tereyağlı&#10;Pideli köfte | 380 TL">{{ menu_lines }}</textarea></div>
+    <div class="col-md-6 mb-3"><label class="form-label">Menü metin (serbest)</label><textarea class="form-control" name="menu_text" rows="8">{{ place.menu_text or '' }}</textarea></div>
+
+    <div class="col-12 mt-2 mb-2"><hr><h5 class="text-primary">Hizmet · ücret · kadro (hastane / veteriner / doktor)</h5></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Hizmet alanları</label><textarea class="form-control" name="services_text" rows="6" placeholder="Acil&#10;Kardiyoloji&#10;MR / BT">{{ services_text }}</textarea></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Ücretler</label><textarea class="form-control" name="fee_lines" rows="6" placeholder="Muayene | 1500 TL | özel&#10;Kontrol | 800 TL">{{ fee_lines }}</textarea>
+      <input class="form-control mt-2" name="fee_note" value="{{ extra.fee_note or '' }}" placeholder="Ücret notu (SGK, paket…)">
+    </div>
+    <div class="col-md-4 mb-3"><label class="form-label">Kadro / hekimler</label><textarea class="form-control" name="staff_lines" rows="6" placeholder="Dr. Ayşe Yılmaz · Dahiliye&#10;Vet. Mehmet Kaya · Cerrahi">{{ staff_lines }}</textarea></div>
+    <div class="col-12 mb-3"><label class="form-label">Branş / uzmanlık detayı (doktor)</label><textarea class="form-control" name="specialty_detail" rows="2">{{ extra.specialty_detail or '' }}</textarea></div>
+
+    <div class="col-12 mt-2 mb-2"><hr><h5 class="text-primary">Galeri</h5>
+      <small class="text-muted">URL’ler satır satır. Ek foto yükleyebilirsiniz.</small>
+    </div>
+    <div class="col-md-8 mb-3"><textarea class="form-control" name="gallery_urls" rows="4" placeholder="/static/food/…">{{ gallery_urls }}</textarea></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Galeriye foto ekle</label><input class="form-control" type="file" name="gallery_file" accept="image/*"></div>
+
+    <div class="col-12 mt-3">
+      <button class="btn btn-primary" type="submit">Kaydet</button>
+      {% if not is_new %}
+      <a class="btn btn-outline-dark" href="/yer/{{ place.slug }}" target="_blank">Sitede gör</a>
+      <a class="btn btn-outline-dark" href="/admin?status={{ place.status }}">Geri</a>
+      <button class="btn btn-outline-danger float-end" type="submit" form="del-form" onclick="return confirm('Silinsin mi?')">Sil</button>
+      {% else %}
+      <a class="btn btn-outline-dark" href="/admin">İptal</a>
+      {% endif %}
+    </div>
   </form>
-</div>
+  {% if not is_new %}
+  <form id="del-form" method="post" action="/admin/{{ place.id }}/delete"></form>
+  {% endif %}
+</div></div>
 {% endblock %}

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Tarihli tiyatro / konser / film / etkinlik. Foto visit kopyası."""
+"""Tarihli tiyatro / konser / film / etkinlik.
+
+Kapak foto: önce mevcut gerçek dosya / events_fetch çıktısı korunur;
+yoksa visit yedek kopyası (cron `events_fetch.py` gece günceller).
+"""
 from __future__ import annotations
 
 import json
@@ -24,15 +28,18 @@ def parse_iso(s: str | None):
 def photo(kind: str, raw: dict) -> str:
     slug = raw["slug"]
     dest_dir = os.path.join(_DIR, "static", kind)
-    dest = os.path.join(dest_dir, f"{slug}.jpg")
-    if os.path.isfile(dest) and os.path.getsize(dest) > 4000:
-        return f"/static/{kind}/{slug}.jpg"
+    for ext in (".jpg", ".png", ".webp", ".avif"):
+        dest = os.path.join(dest_dir, f"{slug}{ext}")
+        if os.path.isfile(dest) and os.path.getsize(dest) > 4000:
+            return f"/static/{kind}/{slug}{ext}"
+    # seed yedek — gerçek poster için events_fetch.py
     copy = raw.get("copy") or "tophane"
     src = os.path.join(_DIR, "static", "visit", f"{copy}.jpg")
     if not os.path.isfile(src):
         src = os.path.join(_DIR, "static", "concert", "kulturpark-acikhava.jpg")
     if os.path.isfile(src):
         os.makedirs(dest_dir, exist_ok=True)
+        dest = os.path.join(dest_dir, f"{slug}.jpg")
         shutil.copy(src, dest)
         return f"/static/{kind}/{slug}.jpg"
     return ""

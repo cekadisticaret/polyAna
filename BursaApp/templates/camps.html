@@ -1,0 +1,133 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else 'Kamp · BursaApp' }}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<style>
+/* Airbnb-benzeri kamp keşif grid’i — BursaApp paleti */
+.kp-page{margin:-6px 0 0}
+.kp-cats{
+  display:flex;align-items:stretch;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;padding:4px 0 12px;border-bottom:1px solid rgba(27,59,43,.08);margin-bottom:18px;
+}
+.kp-cats::-webkit-scrollbar{display:none}
+.kp-cat{
+  flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;
+  min-width:72px;padding:8px 10px 10px;color:#6B7A72;text-decoration:none;border-bottom:2px solid transparent;
+  font-size:12px;font-weight:700;white-space:nowrap;
+}
+.kp-cat .ic{font-size:22px;line-height:1;opacity:.85}
+.kp-cat.on{color:#1A2E24;border-bottom-color:#1A2E24}
+.kp-cat.on .ic{opacity:1}
+.kp-cat:hover{color:#1A2E24}
+.kp-filter{
+  flex:0 0 auto;margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:8px;
+  border:1px solid rgba(27,59,43,.18);border-radius:999px;padding:10px 14px;font-weight:700;font-size:13px;
+  background:#fff;color:#1A2E24;text-decoration:none;white-space:nowrap;
+}
+.kp-note{font-size:12px;color:#6B7A72;margin:0 0 14px;line-height:1.45}
+
+.kp-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;
+}
+@media (min-width:720px){.kp-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 16px}}
+@media (min-width:1100px){.kp-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 18px}}
+
+.kp-card{display:block;color:inherit;text-decoration:none;min-width:0}
+.kp-media{
+  position:relative;aspect-ratio:1/1;border-radius:14px;overflow:hidden;background:#E8F2EA;margin-bottom:10px;
+}
+.kp-media img{width:100%;height:100%;object-fit:cover;display:block}
+.kp-media .ph{width:100%;height:100%;display:grid;place-items:center;font-size:42px;color:#6B7A72}
+.kp-badge{
+  position:absolute;left:10px;top:10px;background:rgba(255,255,255,.95);color:#1A2E24;
+  font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+.kp-heart{
+  position:absolute;right:10px;top:10px;width:30px;height:30px;display:grid;place-items:center;
+  color:#fff;font-size:18px;text-shadow:0 1px 4px rgba(0,0,0,.45);filter:drop-shadow(0 1px 2px rgba(0,0,0,.3));
+}
+.kp-dots{
+  position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:4px;pointer-events:none;
+}
+.kp-dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.45);display:block}
+.kp-dots i.on{background:#fff;transform:scale(1.15)}
+
+.kp-row1{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0}
+.kp-loc{font-size:14px;font-weight:700;letter-spacing:-.2px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kp-star{font-size:13px;font-weight:600;flex:0 0 auto;white-space:nowrap}
+.kp-sub{margin:2px 0 0;font-size:13px;color:#6B7A72;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.kp-meta{margin:2px 0 0;font-size:13px;color:#6B7A72}
+.kp-price{margin:6px 0 0;font-size:14px;font-weight:700}
+.kp-price u{text-decoration:underline;text-underline-offset:3px}
+
+.kp-map-fab{
+  position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:50;
+  display:inline-flex;align-items:center;gap:8px;background:#1A2E24;color:#fff;
+  border-radius:999px;padding:12px 18px;font-weight:700;font-size:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);text-decoration:none;
+}
+.kp-map-fab:hover{background:#244A38;color:#fff}
+.kp-empty{padding:40px 12px;text-align:center;color:#6B7A72}
+</style>
+{% endblock %}
+{% block main %}
+<div class="kp-page">
+  <nav class="kp-cats" aria-label="Kamp filtreleri">
+    <a class="kp-cat {{ 'on' if not vibe else '' }}" href="/kamp"><span class="ic">⛺</span>Tümü</a>
+    <a class="kp-cat {{ 'on' if vibe=='instagram' else '' }}" href="/kamp?vibe=instagram"><span class="ic">⭐</span>Favori</a>
+    <a class="kp-cat {{ 'on' if vibe=='uludag' else '' }}" href="/kamp?vibe=uludag"><span class="ic">🏔</span>Uludağ</a>
+    <a class="kp-cat {{ 'on' if vibe=='deniz' else '' }}" href="/kamp?vibe=deniz"><span class="ic">🌊</span>Deniz</a>
+    <a class="kp-cat {{ 'on' if vibe=='gol' else '' }}" href="/kamp?vibe=gol"><span class="ic">💧</span>Göl</a>
+    <a class="kp-cat {{ 'on' if vibe=='yayla' else '' }}" href="/kamp?vibe=yayla"><span class="ic">🌿</span>Yayla</a>
+    <a class="kp-cat {{ 'on' if vibe=='kanyon' else '' }}" href="/kamp?vibe=kanyon"><span class="ic">🪨</span>Kanyon</a>
+    <a class="kp-cat {{ 'on' if vibe=='ucretsiz' else '' }}" href="/kamp?vibe=ucretsiz"><span class="ic">🆓</span>Ücretsiz</a>
+    <a class="kp-cat {{ 'on' if vibe=='balikesir' else '' }}" href="/kamp?vibe=balikesir"><span class="ic">🛤</span>Balıkesir</a>
+    <a class="kp-filter" href="/harita?cat=camp">Filtreler</a>
+  </nav>
+
+  <p class="kp-note">{{ places|length }} yer · Gitmeden orman/yangın ve kayıt kurallarını teyit et. Rezervasyon siteden yapılmaz.</p>
+
+  {% if places %}
+  <div class="kp-grid">
+    {% for p in places %}
+    {% set city = (p.extra.city if p.extra else '') or '' %}
+    {% set loc = ((city ~ ', ' ~ p.ilce) if city and p.ilce else (p.ilce or city or 'Bursa')) %}
+    {% set band = (p.price_band or '')|lower %}
+    {% if 'ücretsiz' in band or 'ucretsiz' in band %}
+      {% set price_label = 'Ücretsiz' %}
+    {% elif 'tesis' in band or 'milli' in band %}
+      {% set price_label = (p.price_band or 'Tesisli') %}
+    {% else %}
+      {% set price_label = (p.price_band or p.hours_text or 'Kamp alanı') %}
+    {% endif %}
+    {% set n_dots = (p.extra.gallery|length if p.extra and p.extra.gallery else 0) %}
+    {% if n_dots < 1 %}{% set n_dots = 3 if p.img_url else 0 %}{% endif %}
+    <a class="kp-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+      <div class="kp-media">
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">⛺</div>{% endif %}
+        {% if p.featured %}<span class="kp-badge">Misafir favorisi</span>{% endif %}
+        <span class="kp-heart" aria-hidden="true">♡</span>
+        {% if n_dots > 1 %}
+        <span class="kp-dots" aria-hidden="true">
+          {% for i in range(n_dots if n_dots < 6 else 5) %}<i class="{{ 'on' if i==0 else '' }}"></i>{% endfor %}
+        </span>
+        {% endif %}
+      </div>
+      <div class="kp-row1">
+        <p class="kp-loc">{{ loc }}</p>
+        {% if p.rating %}<span class="kp-star">★ {{ '%.2f'|format(p.rating) }}</span>{% endif %}
+      </div>
+      <p class="kp-sub">{{ p.title }}</p>
+      <p class="kp-meta">{{ p.hours_text or p.subcategory_label or 'Kamp' }}</p>
+      <p class="kp-price"><u>{{ price_label }}</u></p>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="kp-empty"><p>Bu filtrede kamp yok.</p><a href="/kamp">Tümüne dön</a></div>
+  {% endif %}
+</div>
+
+<a class="kp-map-fab" href="/harita?cat=camp">🗺 Haritada göster</a>
+{% endblock %}

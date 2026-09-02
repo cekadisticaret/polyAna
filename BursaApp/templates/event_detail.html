@@ -1,0 +1,297 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else (place.title ~ ' · BursaApp') }}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block main %}
+{% if not place %}
+<div class="empty-box"><p>Bu etkinlik yayınlı değil veya yok.</p><a href="/etkinlikler">Etkinliklere dön</a></div>
+{% else %}
+{% set ex = place.extra or {} %}
+{% set platforms = ex.platforms if ex.platforms else [] %}
+{% set rules = ex.rules if ex.rules else [] %}
+{% set about = ex.about or place.body or place.blurb or '' %}
+{% set cover = place.img_url or '' %}
+{% set cat_lab = place.subcategory_label or place.category_label or 'Etkinlik' %}
+{% set is_eventish = place.category in ('event','concert','theater','cinema') %}
+
+<article class="ev-page">
+  {# —— HERO —— #}
+  <section class="ev-hero">
+    {% if cover %}<img class="ev-hero-bg" src="{{ cover }}" alt="{{ place.title }}" decoding="async">{% endif %}
+    <div class="ev-hero-veil"></div>
+    <div class="ev-hero-copy">
+      <p class="ev-kicker">{{ cat_lab }}{% if place.ilce %} · {{ place.ilce }}{% endif %}</p>
+      <h1 class="ev-title">{{ place.title }}</h1>
+      <ul class="ev-meta">
+        {% if place.when_long or place.when or place.hours_text %}
+        <li><span>Tarih</span><b>{{ place.when_long or place.when or place.hours_text }}</b></li>
+        {% endif %}
+        {% if place.venue_name or place.address %}
+        <li><span>Mekan</span><b>{{ place.venue_name or place.address }}{% if place.ilce %} · {{ place.ilce }}{% endif %}</b></li>
+        {% endif %}
+        {% if place.ticket_price or ex.price_min or place.price_band %}
+        <li><span>Bilet</span><b>{{ place.ticket_price or ex.price_min or place.price_band }}{% if ex.price_max and ex.price_max != (place.ticket_price or ex.price_min) %} – {{ ex.price_max }}{% endif %}</b></li>
+        {% endif %}
+      </ul>
+      {% if place.starts_ts %}
+      <div class="ev-count" data-starts="{{ place.starts_ts }}" aria-live="polite">
+        <div><b class="d">–</b><i>gün</i></div>
+        <div><b class="h">–</b><i>saat</i></div>
+        <div><b class="m">–</b><i>dk</i></div>
+        <div><b class="s">–</b><i>sn</i></div>
+      </div>
+      {% endif %}
+      <div class="ev-cta">
+        {% if place.ticket_url %}
+        <a class="ev-btn primary" href="{{ place.ticket_url }}" target="_blank" rel="noopener">Bilet karşılaştır / al</a>
+        {% endif %}
+        {% if place.maps %}
+        <a class="ev-btn ghost" href="{{ place.maps }}" target="_blank" rel="noopener">Yol tarifi</a>
+        {% endif %}
+        <a class="ev-btn ghost" href="#gidecegim">{{ going_count or 0 }} kişi gidecek</a>
+      </div>
+    </div>
+  </section>
+
+  {# —— GİDECEĞİM —— #}
+  <section class="ev-going" id="gidecegim">
+    <div>
+      <b>{{ going_count or 0 }} kişi bu etkinliğe gidecek</b>
+      <p>Gidecekler listesini ileride burada tanıştıracağız.</p>
+    </div>
+    {% if nav_user %}
+    <form method="post" action="/yer/{{ place.slug }}/gidecegim">
+      <button class="ev-btn primary" type="submit">{{ '✓ Gideceğim (vazgeç)' if is_going else 'Ben de gideceğim' }}</button>
+    </form>
+    {% else %}
+    <a class="ev-btn primary" href="/giris?next={{ place.path or ('/yer/' ~ place.slug) }}">Giriş yap · gideceğim</a>
+    {% endif %}
+  </section>
+
+  {# —— BİLET / PLATFORM —— #}
+  <section class="ev-sec" id="bilet">
+    <div class="ev-sec-h">
+      <h2>Bilet</h2>
+      <p>Satış resmi platformlarda — BursaApp üzerinden satış yok.</p>
+    </div>
+    {% if platforms %}
+    <div class="ev-plat-grid">
+      {% for pl in platforms %}
+      <a class="ev-plat{% if pl.cheapest %} cheap{% endif %}" href="{{ place.ticket_url or place.web or '#' }}" target="_blank" rel="noopener">
+        {% if pl.cheapest %}<em>En uygun</em>{% endif %}
+        <strong>{{ pl.name }}</strong>
+        <span>başlayan</span>
+        <b>{{ pl.from_price }}</b>
+      </a>
+      {% endfor %}
+    </div>
+    {% elif place.ticket_price or place.ticket_url %}
+    <div class="ev-plat-grid">
+      <a class="ev-plat cheap" href="{{ place.ticket_url or place.web or '#' }}" target="_blank" rel="noopener">
+        <em>Bilet</em>
+        <strong>{{ place.price_band or 'Satış' }}</strong>
+        <span>başlayan</span>
+        <b>{{ place.ticket_price or place.price_band }}</b>
+      </a>
+    </div>
+    {% else %}
+    <p class="ev-muted">Bilet bilgisi henüz eklenmedi.</p>
+    {% endif %}
+  </section>
+
+  {# —— HAKKINDA —— #}
+  <section class="ev-sec ev-about" id="hakkinda">
+    <div class="ev-about-main">
+      <h2>Etkinlik hakkında</h2>
+      <div class="ev-prose">{{ about }}</div>
+    </div>
+    <aside class="ev-facts">
+      {% if place.when_long or place.hours_text %}
+      <div><span>📅</span><div><b>Tarih / saat</b><i>{{ place.when_long or place.hours_text }}</i></div></div>
+      {% endif %}
+      {% if place.venue_name %}
+      <div><span>🏛</span><div><b>Mekan</b><i>{{ place.venue_name }}</i></div></div>
+      {% endif %}
+      {% if place.address and place.address != place.venue_name %}
+      <div><span>📍</span><div><b>Adres</b><i>{{ place.address }}{% if place.ilce %} · {{ place.ilce }}{% endif %}</i></div></div>
+      {% elif place.ilce %}
+      <div><span>📍</span><div><b>İlçe</b><i>{{ place.ilce }}, Bursa</i></div></div>
+      {% endif %}
+      {% if place.ticket_price or ex.price_min %}
+      <div><span>🎟</span><div><b>Fiyat</b><i>{{ place.ticket_price or ex.price_min }}{% if ex.price_max %} · üst {{ ex.price_max }}{% endif %}</i></div></div>
+      {% endif %}
+      <div><span>🏷</span><div><b>Tür</b><i>{{ cat_lab }}</i></div></div>
+      {% if place.web %}
+      <div><span>🔗</span><div><b>Kaynak</b><i><a href="{{ place.web }}" target="_blank" rel="noopener">Etkinlik sayfası</a></i></div></div>
+      {% endif %}
+    </aside>
+  </section>
+
+  {% if rules %}
+  <section class="ev-sec" id="kurallar">
+    <div class="ev-sec-h"><h2>Etkinlik kuralları</h2></div>
+    <ul class="ev-rules">
+      {% for r in rules %}
+      <li>{{ r }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {# —— MEKANIN DİĞER ETKİNLİKLERİ —— #}
+  {% if venue_events %}
+  <section class="ev-sec" id="mekan">
+    <div class="ev-sec-h">
+      <h2>{{ place.venue_name or 'Mekan' }} · diğer etkinlikler</h2>
+      <a href="/tiyatro">Tümü →</a>
+    </div>
+    <div class="ev-venue-row">
+      {% for s in venue_events %}
+      <a class="ev-venue-card" href="{{ s.path or ('/yer/' ~ s.slug) }}">
+        {% if s.img_url %}<img src="{{ s.img_url }}" alt="" loading="lazy">{% endif %}
+        <div>
+          <b>{{ s.title }}</b>
+          <span>{{ s.when or s.hours_text or s.ilce }}{% if s.ticket_price %} · {{ s.ticket_price }}{% endif %}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# —— FOTO —— #}
+  <section class="ev-sec panel" id="galeri">
+    <h2 style="margin-top:0">Bu etkinlik için fotoğraflar</h2>
+    <p class="ev-muted">Sahne / mekan karelerini paylaş — onaydan sonra burada görünür.</p>
+    {% if user_photos %}
+    <div class="gallery-row" style="display:flex;gap:8px;overflow-x:auto;margin:0 0 12px">
+      {% for ph in user_photos %}
+      <figure style="margin:0">
+        <img src="{{ ph.img_url }}" alt="" style="height:140px;border-radius:10px;object-fit:cover" loading="lazy">
+        {% if ph.caption %}<figcaption class="empty" style="font-size:12px">{{ ph.caption }}</figcaption>{% endif %}
+      </figure>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">Henüz bu etkinliğe ait onaylı foto yok — ilk kareyi sen ekle.</p>
+    {% endif %}
+    {% if nav_user %}
+    <form method="post" action="/yer/{{ place.slug }}/foto" enctype="multipart/form-data" class="form">
+      <label>Etkinlik fotoğrafı<input type="file" name="photo" accept="image/*" required></label>
+      <label>Kısa not<input name="caption" maxlength="280" placeholder="Örn. salondan / afiş"></label>
+      <button class="btn" type="submit">Gönder (onaya düşer)</button>
+    </form>
+    {% else %}
+    <p class="empty"><a href="/giris?next={{ place.path or ('/yer/' ~ place.slug) }}">Giriş yap</a> ve bu etkinlik için foto ekle.</p>
+    {% endif %}
+  </section>
+
+  {# —— DEĞERLENDİRME —— #}
+  <section class="ev-sec panel rv-panel" id="yorumlar">
+    <h3>Etkinlik değerlendirmesi</h3>
+    {% if my_review and my_review.status == 'pending' %}
+    <p class="flash ok">Yorumun onay bekliyor — yayınlanınca burada görünür.</p>
+    {% endif %}
+    {% if can_review %}
+    <form method="post" action="/yer/{{ place.slug }}/yorum" class="form review-form rv-form" enctype="multipart/form-data" data-review-ui>
+      <p class="empty">Sahne · Anlatım · Atmosfer · Fiyat/değer (1–5) — admin onayına düşer</p>
+      {% set dims_labels = [
+        ('score_food', 'Sahne', my_review.score_food if my_review else 5),
+        ('score_service', 'Anlatım', my_review.score_service if my_review else 5),
+        ('score_atmosphere', 'Atmosfer', my_review.score_atmosphere if my_review else 5),
+        ('score_price', 'Fiyat/değer', my_review.score_price if my_review else 5)
+      ] %}
+      <div class="rv-stars">
+        {% for name, lab, val in dims_labels %}
+        <div class="rv-dim" data-name="{{ name }}" data-value="{{ val }}">
+          <div class="rv-dim-top"><span>{{ lab }}</span><b class="rv-val">{{ val }}</b></div>
+          <div class="rv-star-row" role="group" aria-label="{{ lab }} puanı">
+            {% for i in range(1,6) %}
+            <button type="button" class="rv-star{% if i <= val %} on{% endif %}" data-n="{{ i }}" aria-label="{{ i }} yıldız">★</button>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="{{ name }}" value="{{ val }}">
+        </div>
+        {% endfor %}
+      </div>
+      <label class="rv-body">Yorum<textarea name="body" rows="3" placeholder="Oyunu / konseri kısaca anlat — spoiler yazma">{{ my_review.body if my_review else '' }}</textarea></label>
+      <button type="submit" class="btn rv-submit">{{ 'Güncelle (yeniden onaya)' if my_review else 'Etkinliği puanla' }}</button>
+    </form>
+    {% else %}
+    {% include "_review_gate.html" %}
+    {% endif %}
+    {% for r in reviews %}
+    <div class="review-item rv-item">
+      <div class="rv-item-head">
+        <div><b>{{ r.user_name }}</b><span class="rv-overall">★ {{ r.overall }}</span></div>
+        <div class="rv-mini">
+          <span>Sahne {{ r.score_food }}</span>
+          <span>Anlatım {{ r.score_service }}</span>
+          <span>Atmosfer {{ r.score_atmosphere }}</span>
+          <span>Değer {{ r.score_price }}</span>
+        </div>
+      </div>
+      {% if r.body %}<p>{{ r.body }}</p>{% endif %}
+      {% if r.img_url %}<img class="review-photo" src="{{ r.img_url }}" alt="" loading="lazy">{% endif %}
+    </div>
+    {% else %}
+    <p class="empty">Henüz onaylı etkinlik değerlendirmesi yok.</p>
+    {% endfor %}
+  </section>
+
+  {% if similar %}
+  <section class="ev-sec">
+    <div class="ev-sec-h"><h2>Benzer etkinlikler</h2><a href="/etkinlikler">Takvim →</a></div>
+    <div class="cards">
+      {% for s in similar %}
+      <a class="place-card" href="{{ s.path or ('/yer/' ~ s.slug) }}">
+        {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}" loading="lazy">{% endif %}
+        <div class="body"><h3>{{ s.title }}</h3><div class="meta"><span>{{ s.when or s.ilce }}</span>{% if s.ticket_price %}<span>{{ s.ticket_price }}</span>{% endif %}</div></div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</article>
+
+<script>
+(function(){
+  var box=document.querySelector('.ev-count[data-starts]');
+  if(box){
+    var t=parseInt(box.getAttribute('data-starts'),10)*1000;
+    function tick(){
+      var left=Math.max(0, t-Date.now());
+      var s=Math.floor(left/1000);
+      var d=Math.floor(s/86400); s%=86400;
+      var h=Math.floor(s/3600); s%=3600;
+      var m=Math.floor(s/60); s%=60;
+      box.querySelector('.d').textContent=d;
+      box.querySelector('.h').textContent=h;
+      box.querySelector('.m').textContent=m;
+      box.querySelector('.s').textContent=s;
+    }
+    tick(); setInterval(tick,1000);
+  }
+  document.querySelectorAll('[data-review-ui] .rv-dim').forEach(function(dim){
+    var input=dim.querySelector('input[type=hidden]');
+    var valEl=dim.querySelector('.rv-val');
+    var stars=dim.querySelectorAll('.rv-star');
+    function paint(n){
+      stars.forEach(function(s){ s.classList.toggle('on', parseInt(s.getAttribute('data-n'),10)<=n); });
+      if(valEl) valEl.textContent=String(n);
+      if(input) input.value=String(n);
+    }
+    stars.forEach(function(s){
+      s.addEventListener('click', function(){ paint(parseInt(s.getAttribute('data-n'),10)); });
+      s.addEventListener('mouseenter', function(){
+        var n=parseInt(s.getAttribute('data-n'),10);
+        stars.forEach(function(x){ x.classList.toggle('hover', parseInt(x.getAttribute('data-n'),10)<=n); });
+      });
+    });
+    dim.querySelector('.rv-star-row').addEventListener('mouseleave', function(){
+      stars.forEach(function(x){ x.classList.remove('hover'); });
+    });
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

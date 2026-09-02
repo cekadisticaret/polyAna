@@ -1,0 +1,25 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Sahiplenme · Admin{% endblock %}
+{% block header_title %}Sahiplenme talepleri{% endblock %}
+{% block content %}
+<div class="card"><div class="card-body"><div class="table-responsive">
+<table class="table ba-table">
+  <thead><tr><th>ID</th><th>Yer</th><th>Üye</th><th>Not</th><th>Tarih</th><th></th></tr></thead>
+  <tbody>
+  {% for it in items %}
+  <tr>
+    <td>{{ it.claim.id }}</td>
+    <td>{% if it.place %}{{ it.place.title }}{% else %}-{% endif %}</td>
+    <td>{% if it.user %}{{ it.user.email }}{% else %}-{% endif %}</td>
+    <td>{{ it.claim.note }}</td>
+    <td>{{ it.claim.created_at.strftime('%d.%m.%Y %H:%M') if it.claim.created_at else '-' }}</td>
+    <td class="text-end">
+      <form method="post" action="/admin/claims/{{ it.claim.id }}/approve" style="display:inline"><button class="btn btn-xs btn-success">Onay</button></form>
+      <form method="post" action="/admin/claims/{{ it.claim.id }}/reject" style="display:inline"><button class="btn btn-xs btn-danger">Red</button></form>
+    </td>
+  </tr>
+  {% else %}<tr><td colspan="6">Bekleyen talep yok</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div></div></div>
+{% endblock %}

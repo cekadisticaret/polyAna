@@ -1,0 +1,20 @@
+[
+  {"pos": 1, "team": "Amed Sportif", "p": 8, "w": 5, "d": 2, "l": 1, "gf": 14, "ga": 7, "pts": 17},
+  {"pos": 2, "team": "Erzurumspor FK", "p": 8, "w": 4, "d": 3, "l": 1, "gf": 12, "ga": 6, "pts": 15},
+  {"pos": 3, "team": "Çorum FK", "p": 8, "w": 4, "d": 2, "l": 2, "gf": 11, "ga": 8, "pts": 14},
+  {"pos": 4, "team": "Bandırmaspor", "p": 8, "w": 4, "d": 2, "l": 2, "gf": 10, "ga": 8, "pts": 14},
+  {"pos": 5, "team": "Bursaspor", "p": 8, "w": 4, "d": 1, "l": 3, "gf": 13, "ga": 10, "pts": 13},
+  {"pos": 6, "team": "Esenler Erokspor", "p": 8, "w": 3, "d": 3, "l": 2, "gf": 9, "ga": 8, "pts": 12},
+  {"pos": 7, "team": "Boluspor", "p": 8, "w": 3, "d": 3, "l": 2, "gf": 8, "ga": 7, "pts": 12},
+  {"pos": 8, "team": "İstanbulspor", "p": 8, "w": 3, "d": 2, "l": 3, "gf": 10, "ga": 11, "pts": 11},
+  {"pos": 9, "team": "Manisa FK", "p": 8, "w": 3, "d": 2, "l": 3, "gf": 9, "ga": 10, "pts": 11},
+  {"pos": 10, "team": "Ümraniyespor", "p": 8, "w": 2, "d": 4, "l": 2, "gf": 8, "ga": 8, "pts": 10},
+  {"pos": 11, "team": "Pendikspor", "p": 8, "w": 2, "d": 3, "l": 3, "gf": 7, "ga": 9, "pts": 9},
+  {"pos": 12, "team": "Sakaryaspor", "p": 8, "w": 2, "d": 3, "l": 3, "gf": 7, "ga": 10, "pts": 9},
+  {"pos": 13, "team": "Keçiörengücü", "p": 8, "w": 2, "d": 2, "l": 4, "gf": 6, "ga": 10, "pts": 8},
+  {"pos": 14, "team": "Ankaragücü", "p": 8, "w": 2, "d": 2, "l": 4, "gf": 7, "ga": 11, "pts": 8},
+  {"pos": 15, "team": "Gençlerbirliği", "p": 8, "w": 1, "d": 4, "l": 3, "gf": 6, "ga": 9, "pts": 7},
+  {"pos": 16, "team": "Adana Demirspor", "p": 8, "w": 1, "d": 3, "l": 4, "gf": 5, "ga": 11, "pts": 6},
+  {"pos": 17, "team": "Şanlıurfaspor", "p": 8, "w": 1, "d": 2, "l": 5, "gf": 5, "ga": 12, "pts": 5},
+  {"pos": 18, "team": "New Team", "p": 8, "w": 1, "d": 1, "l": 6, "gf": 4, "ga": 14, "pts": 4}
+]

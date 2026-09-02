@@ -1,0 +1,73 @@
+{% extends "_shell.html" %}
+{% block title %}Yakınımda · BursaApp{% endblock %}
+{% block hello %}Yakınımda{% endblock %}
+{% block sub %}{{ data.radius_m }} metre · {{ data.total }} yer{% endblock %}
+{% block main %}
+{% if used_fallback %}
+<p class="flash ok" id="geo-note">Konum izni yok — Osmangazi merkez varsayıldı. <button type="button" class="btn sm" id="geo-btn">Konumumu kullan</button></p>
+{% else %}
+<p class="empty" id="geo-note"><button type="button" class="btn sm" id="geo-btn">Konumu yenile</button>
+  · yarıçap:
+  <a href="?lat={{ data.lat }}&amp;lng={{ data.lng }}&amp;r=500">500 m</a> ·
+  <a href="?lat={{ data.lat }}&amp;lng={{ data.lng }}&amp;r=1000">1 km</a> ·
+  <a href="?lat={{ data.lat }}&amp;lng={{ data.lng }}&amp;r=2000">2 km</a>
+</p>
+{% endif %}
+
+{% if data.tip %}
+<div class="panel tip-card">
+  <h3>Sana yakın</h3>
+  <p><b>{{ data.tip.distance_m }} m</b> uzaklıkta
+    {% if data.tip.rating %}★ {{ '%.1f'|format(data.tip.rating) }} puanlı{% endif %}
+    <a href="/yer/{{ data.tip.slug }}">{{ data.tip.title }}</a>
+  </p>
+</div>
+{% endif %}
+
+{% if data.counts %}
+<div class="today-preview">
+  {% for k, n in data.counts.items() %}
+  <span class="today-chip"><b>{{ k }}</b><span>{{ n }}</span></span>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if data.places %}
+<div class="cards">
+  {% for p in data.places %}
+  <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+    {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+    <div class="body">
+      <h3>{{ p.title }}</h3>
+      <div class="meta">
+        <span>{{ p.distance_m }} m · {{ p.category_label }}{% if p.subcategory_label %} · {{ p.subcategory_label }}{% endif %}</span>
+        {% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-box">
+  <p>Bu yarıçapta kayıt yok. Yarıçapı büyüt veya <a href="/yeme-icme">listelere</a> bak.</p>
+</div>
+{% endif %}
+<script>
+(function(){
+  var btn = document.getElementById('geo-btn');
+  if (!btn || !navigator.geolocation) return;
+  btn.addEventListener('click', function(){
+    btn.disabled = true;
+    btn.textContent = 'Konum alınıyor…';
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var lat = pos.coords.latitude.toFixed(6);
+      var lng = pos.coords.longitude.toFixed(6);
+      location.href = '/yakinimda?lat=' + lat + '&lng=' + lng + '&r={{ data.radius_m }}';
+    }, function(){
+      btn.disabled = false;
+      btn.textContent = 'İzin verilmedi — tekrar dene';
+    }, {enableHighAccuracy:true, timeout:10000});
+  });
+})();
+</script>
+{% endblock %}

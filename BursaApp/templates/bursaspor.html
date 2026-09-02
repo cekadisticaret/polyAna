@@ -1,0 +1,62 @@
+{% extends "_shell.html" %}
+{% block hello %}Bursaspor{% endblock %}
+{% block sub %}2026-27 · Trendyol 1. Lig{% endblock %}
+{% block main %}
+<section class="panel" style="margin-bottom:18px">
+  <p>Yeşil beyazlıların sezon fikstürü ve lig tablosu. Skor / bilet admin panelinden güncellenir. Resmi: <a href="https://www.bursaspor.org.tr/" target="_blank" rel="noopener">bursaspor.org.tr</a></p>
+</section>
+
+{% if standings %}
+<section class="panel" style="margin-bottom:22px;overflow-x:auto">
+  <h2 style="margin-top:0">Lig puan durumu</h2>
+  <p class="empty">Trendyol 1. Lig · bilgilendirme tablosu (haftalık güncellenir)</p>
+  <table class="standings">
+    <thead>
+      <tr><th>#</th><th>Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>A</th><th>Y</th><th>Av</th><th>P</th></tr>
+    </thead>
+    <tbody>
+    {% for r in standings %}
+      <tr class="{% if 'Bursaspor' in r.team %}is-bursaspor{% endif %}">
+        <td>{{ r.pos }}</td>
+        <td>{{ r.team }}</td>
+        <td>{{ r.p }}</td>
+        <td>{{ r.w }}</td>
+        <td>{{ r.d }}</td>
+        <td>{{ r.l }}</td>
+        <td>{{ r.gf }}</td>
+        <td>{{ r.ga }}</td>
+        <td>{{ r.gf - r.ga }}</td>
+        <td><b>{{ r.pts }}</b></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<div class="sec-h"><h2>Fikstür</h2></div>
+<div class="cards" style="display:block">
+{% for m in matches %}
+<article class="place-card" style="display:grid;grid-template-columns:1fr;padding:14px;margin-bottom:10px">
+  <div class="meta" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+    <span>{% if m.week %}{{ m.week }}. hafta{% else %}Hazırlık / Kupa{% endif %} · {{ m.competition }}</span>
+    <span>{% if m.is_home %}🏠 İç saha{% else %}✈️ Deplasman{% endif %}</span>
+  </div>
+  <h3 style="margin:8px 0">{{ m.home_team }} {% if m.played %}<b>{{ m.home_score }}–{{ m.away_score }}</b>{% else %}<span class="muted">vs</span>{% endif %} {{ m.away_team }}</h3>
+  <div class="meta">
+    {% if m.kickoff_at %}<span>{{ m.kickoff_at }}</span>{% endif %}
+    {% if m.venue %}<span>· {{ m.venue }}</span>{% endif %}
+  </div>
+  {% if m.ticket_price or m.ticket_url %}
+  <p style="margin:10px 0 0">
+    {% if m.ticket_price %}<b>{{ m.ticket_price }}</b>{% endif %}
+    {% if m.ticket_url %} · <a class="btn sm" href="{{ m.ticket_url }}" target="_blank" rel="noopener">Bilet</a>{% endif %}
+  </p>
+  {% endif %}
+  {% if m.note %}<p class="muted" style="margin:6px 0 0">{{ m.note }}</p>{% endif %}
+</article>
+{% else %}
+<p class="empty">Fikstür henüz yüklenmedi.</p>
+{% endfor %}
+</div>
+{% endblock %}

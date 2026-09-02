@@ -1,0 +1,15 @@
+{% extends "_shell.html" %}
+{% block title %}BursaApp Öneriyor{% endblock %}
+{% block hello %}⭐ BursaApp Öneriyor{% endblock %}
+{% block sub %}Editöryel seçkiler{% endblock %}
+{% block main %}
+{% for e in editorials %}
+<a class="hub-row" href="/oneriyor/{{ e.slug }}">
+  <span class="hub-ico">⭐</span>
+  <div><b>{{ e.title }}</b><i>{{ e.blurb }}</i></div>
+  <span class="hub-go">›</span>
+</a>
+{% else %}
+<div class="empty-box"><p>Henüz liste yok.</p></div>
+{% endfor %}
+{% endblock %}

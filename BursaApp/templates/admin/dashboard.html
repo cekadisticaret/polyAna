@@ -1,0 +1,102 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Dashboard · BursaApp Admin{% endblock %}
+{% block header_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="form-head mb-4">
+  <h2 class="font-w600 mb-0">BursaApp özeti</h2>
+  <p class="mb-0">Ziyaretçi · SEO · üyeler · yerler · kuyruklar</p>
+</div>
+{% if seo_status %}
+<div class="card mb-3 border-{% if seo_status.grade=='iyi' %}success{% elif seo_status.grade=='uyarı' %}warning{% else %}danger{% endif %}">
+  <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <h4 class="mb-1">SEO durum: <span class="{% if seo_status.grade=='iyi' %}text-success{% elif seo_status.grade=='uyarı' %}text-warning{% else %}text-danger{% endif %}">{{ seo_status.grade|upper }}</span>
+        <small class="text-muted">({{ seo_status.ok_n }}/{{ seo_status.total }})</small></h4>
+      <p class="mb-0 text-muted">
+        Google doğrulama: <b>{% if seo_status.google_connected or seo_status.google_token_set %}bağlı{% else %}eksik{% endif %}</b>
+        · Sitemap yer {{ seo_status.sitemap_places }} · İçerik bulgu {{ seo_status.audit_issues }}
+      </p>
+      <small class="text-muted">{{ seo_status.gsc_note }}</small>
+    </div>
+    <a class="btn btn-primary" href="/admin/seo">SEO paneli →</a>
+  </div>
+</div>
+{% endif %}
+<div class="row ba-kpi">
+  <div class="col-xl-3 col-sm-6"><div class="card"><div class="card-body"><h2 class="chart-num font-w600 mb-0 text-success">{{ kpi.today_visitors|default(0) }}</h2><h5 class="mb-0">Bugün tekil ziyaretçi</h5><small class="text-muted">Sayfa: {{ kpi.today_pageviews|default(0) }} · 7g tekil: {{ kpi.d7_visitors|default(0) }}</small></div></div></div>
+  <div class="col-xl-3 col-sm-6"><div class="card"><div class="card-body"><h2 class="chart-num font-w600 mb-0">{{ kpi.total_visitors|default(0) }}</h2><h5 class="mb-0">Toplam tekil ziyaretçi</h5><small class="text-muted">Sayfa görüntüleme: {{ kpi.total_pageviews|default(0) }}</small></div></div></div>
+  <div class="col-xl-3 col-sm-6"><div class="card"><div class="card-body"><h2 class="chart-num font-w600 mb-0">{{ kpi.users }}</h2><h5 class="mb-0">Üye</h5><small class="text-muted">7g kayıt: {{ kpi.registers_7d }} · giriş: {{ kpi.logins_7d }}</small></div></div></div>
+  <div class="col-xl-3 col-sm-6"><div class="card"><div class="card-body"><h2 class="chart-num font-w600 mb-0 text-warning">{{ kpi.pending_places }}</h2><h5 class="mb-0">Onay bekleyen yer</h5><small class="text-muted">Foto {{ kpi.pending_photos }} · Yorum {{ kpi.reviews }}</small></div></div></div>
+</div>
+{% if traffic and traffic.series %}
+<div class="card mt-3"><div class="card-header border-0"><h4 class="card-title">Son {{ traffic.series|length }} gün trafik</h4></div>
+  <div class="card-body pt-0"><div class="table-responsive"><table class="table ba-table table-sm">
+    <thead><tr><th>Gün</th><th>Ziyaretçi</th><th>Sayfa</th></tr></thead>
+    <tbody>
+    {% for s in traffic.series|reverse %}
+    <tr><td>{{ s.day }}</td><td><b>{{ s.visitors }}</b></td><td>{{ s.pageviews }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <small class="text-muted">Anonim cookie · bot /admin /static sayılmaz · gün = İstanbul</small>
+  </div>
+</div>
+{% endif %}
+<div class="row ba-kpi mt-2">
+  <div class="col-xl-3 col-sm-6"><div class="card"><div class="card-body"><h2 class="chart-num font-w600 mb-0">{{ kpi.places }}</h2><h5 class="mb-0">Yayınlı yer</h5><small class="text-muted">Restoran {{ kpi.restaurants }} · Market {{ kpi.markets }}</small></div></div></div>
+  <div class="col-xl-3 col-sm-6"><div class="card"><div class="card-body"><h2 class="chart-num font-w600 mb-0">{{ kpi.hospitals }}</h2><h5 class="mb-0">Hastane</h5><small class="text-muted">Otel {{ kpi.hotels }} · Etkinlik {{ kpi.events }}</small></div></div></div>
+  <div class="col-xl-3 col-sm-6"><div class="card"><div class="card-body"><h2 class="chart-num font-w600 mb-0">{{ kpi.reviews }}</h2><h5 class="mb-0">Yorum</h5><small class="text-muted">Favori {{ kpi.favorites }} · Kampanya kuyruk {{ kpi.pending_campaigns }}</small></div></div></div>
+  <div class="col-xl-3 col-sm-6"><div class="card"><div class="card-body"><h2 class="chart-num font-w600 mb-0">{{ kpi.submits_7d }}</h2><h5 class="mb-0">7g yeni gönderim</h5><small class="text-muted">Bursaspor maç {{ kpi.matches }} · <a href="/admin/seo">SEO →</a></small></div></div></div>
+</div>
+{% if by_cat %}
+<div class="card mt-3"><div class="card-header border-0"><h4 class="card-title">Kategori dağılımı</h4></div>
+  <div class="card-body pt-0"><div class="d-flex flex-wrap gap-2">
+  {% for cat, cnt in by_cat %}
+    <span class="badge badge-light">{{ cat }}: <b>{{ cnt }}</b></span>
+  {% endfor %}
+  </div></div>
+</div>
+{% endif %}
+<div class="row mt-3">
+  <div class="col-xl-6">
+    <div class="card"><div class="card-header border-0"><h4 class="card-title">Son kayıt olanlar</h4></div>
+      <div class="card-body pt-0"><div class="table-responsive"><table class="table ba-table">
+        <thead><tr><th>#</th><th>Ad</th><th>E-posta</th><th>Rol</th><th>Tarih</th></tr></thead>
+        <tbody>
+        {% for u in recent_users %}
+        <tr><td>{{ u.id }}</td><td>{{ u.name }}</td><td>{{ u.email }}</td><td>{{ u.role }}</td><td>{{ u.created_at.strftime('%d.%m.%Y %H:%M') if u.created_at else '-' }}</td></tr>
+        {% else %}<tr><td colspan="5">Henüz üye yok</td></tr>{% endfor %}
+        </tbody>
+      </table></div><a href="/admin/users" class="btn btn-sm btn-primary">Tüm üyeler</a></div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="card"><div class="card-header border-0"><h4 class="card-title">Son aktiviteler</h4></div>
+      <div class="card-body pt-0"><div class="table-responsive"><table class="table ba-table">
+        <thead><tr><th>Tür</th><th>Başlık</th><th>Kim</th><th>Zaman</th></tr></thead>
+        <tbody>
+        {% for a in recent_activity %}
+        <tr><td><span class="badge badge-primary">{{ a.kind }}</span></td><td>{{ a.title }}</td><td>{{ a.email or '-' }}</td><td>{{ a.created_at.strftime('%d.%m %H:%M') if a.created_at else '-' }}</td></tr>
+        {% else %}<tr><td colspan="4">Kayıt yok</td></tr>{% endfor %}
+        </tbody>
+      </table></div><a href="/admin/activity" class="btn btn-sm btn-primary">Tüm aktivite</a></div>
+    </div>
+  </div>
+</div>
+<div class="card"><div class="card-header border-0"><h4 class="card-title">Onay bekleyen yerler</h4></div>
+  <div class="card-body pt-0"><div class="table-responsive"><table class="table ba-table">
+    <thead><tr><th>Başlık</th><th>Kategori</th><th>İlçe</th><th></th></tr></thead>
+    <tbody>
+    {% for p in pending %}
+    <tr>
+      <td>{{ p.title }}</td><td>{{ p.category }}</td><td>{{ p.ilce }}</td>
+      <td class="text-end">
+        <a class="btn btn-xs btn-outline-dark" href="/admin/{{ p.id }}/edit">Düzenle</a>
+        <form method="post" action="/admin/{{ p.id }}/approve" style="display:inline"><button class="btn btn-xs btn-success">Onayla</button></form>
+      </td>
+    </tr>
+    {% else %}<tr><td colspan="4">Kuyruk boş</td></tr>{% endfor %}
+    </tbody>
+  </table></div></div>
+</div>
+{% endblock %}

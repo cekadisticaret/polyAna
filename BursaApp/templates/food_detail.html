@@ -1,0 +1,38 @@
+{% extends "_shell.html" %}
+{% block hello %}{{ food.emoji }} {{ food.title }}{% endblock %}
+{% block sub %}{{ food.seo_desc }}{% endblock %}
+{% block main %}
+<article class="detail ny-detail">
+  {% if food.img %}
+  <img class="ny-hero" src="{{ food.img }}" alt="{{ food.title }} — Bursa" width="1200" height="800" loading="eager">
+  {% endif %}
+  <div class="facts">
+    <div><dt>Tarihçe</dt><dd>{{ food.history }}</dd></div>
+    <div><dt>Nerede yenir?</dt><dd>{{ food.where }}</dd></div>
+    <div><dt>Fiyat seviyesi</dt><dd>{{ food.price_level }} · kişi başı ~{{ food.est_tl }} TL</dd></div>
+  </div>
+</article>
+<div class="sec-h"><h2>En iyi mekanlar</h2></div>
+<div class="cards">
+  {% for p in places %}
+  <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+    {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+    <div class="body">
+      <h3>{{ p.title }}</h3>
+      <div class="meta"><span>{{ p.ilce }}</span>{% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}</div>
+    </div>
+  </a>
+  {% else %}
+  <p class="empty">Henüz eşleşen mekan yok. <a href="/yeme-icme">Yeme-içmeye bak</a>.</p>
+  {% endfor %}
+</div>
+{% if reviews %}
+<div class="sec-h"><h2>Kullanıcı yorumları</h2></div>
+{% for r in reviews %}
+<div class="review-item panel" style="margin-bottom:8px">
+  <div class="meta"><b>{{ r.user_name }}</b> · ★ {{ r.overall }}</div>
+  {% if r.body %}<p>{{ r.body }}</p>{% endif %}
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

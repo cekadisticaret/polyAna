@@ -1,0 +1,137 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else 'Veterinerler · BursaApp' }}{% endblock %}
+{% block hello %}Veterinerler{% endblock %}
+{% block sub %}Oda kayıtlı klinik ve hayvan hastanesi — randevu siteden yok{% endblock %}
+{% block main %}
+
+<div class="vet-near-bar">
+  <div>
+    <b>Yakınındaki klinikleri bul</b>
+    <p class="empty" style="margin:4px 0 0">Konumuna göre en yakından uzağa sıralar.</p>
+  </div>
+  <button type="button" class="ff-btn" id="vet-geo-btn">Yakın veterinerleri bul</button>
+</div>
+
+<div class="mk-tabs" style="margin-top:14px">
+  <a class="mk-tab {{ 'on' if tab=='hepsi' else '' }}" href="/veterinerler{% if ilce %}?ilce={{ ilce }}{% endif %}{% if sub %}{{ '&' if ilce else '?' }}sub={{ sub }}{% endif %}">Tümü</a>
+  <a class="mk-tab {{ 'on' if tab=='yakin' else '' }}" href="/veterinerler?tab=yakin{% if lat and lng %}&amp;lat={{ lat }}&amp;lng={{ lng }}{% endif %}">Yakınıma göre</a>
+</div>
+
+{% if tab == 'yakin' %}
+<p class="empty" id="geo-note">
+  {% if used_fallback %}Konum alınamadı — Osmangazi merkez varsayıldı. Butona basıp konumunu aç.{% else %}Konumuna göre sıralı · {{ '%.4f'|format(lat) }}, {{ '%.4f'|format(lng) }}{% endif %}
+  · <button type="button" class="btn sm" id="vet-geo-btn-2">Konumu yenile</button>
+</p>
+{% endif %}
+
+{% if tab == 'hepsi' and sub_chips %}
+<div class="chips">
+  <a class="chip {{ 'on' if not sub else '' }}" href="/veterinerler{% if ilce %}?ilce={{ ilce }}{% endif %}">Tümü</a>
+  {% for key, lab in sub_chips %}
+  <a class="chip {{ 'on' if sub==key else '' }}" href="/veterinerler?sub={{ key }}{% if ilce %}&amp;ilce={{ ilce }}{% endif %}">{{ lab }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+{% if tab == 'hepsi' %}
+<div class="chips">
+  <a class="chip {{ 'on' if not ilce else '' }}" href="/veterinerler{% if sub %}?sub={{ sub }}{% endif %}">İlçe: tümü</a>
+  {% for ad in ilceler %}
+  <a class="chip {{ 'on' if ilce==ad else '' }}" href="/veterinerler?ilce={{ ad }}{% if sub %}&amp;sub={{ sub }}{% endif %}">{{ ad }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if tab == 'yakin' and places %}
+<p class="empty"><b>{{ places|length }}</b> veteriner · en yakından uzağa</p>
+<div class="cards">
+  {% for p in places %}
+  <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+    {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🐾</div>{% endif %}
+    <div class="body">
+      <h3>{{ p.title }}</h3>
+      <div class="meta">
+        <span>
+          {% if p.distance_m is defined and p.distance_m is not none %}
+            {% if p.distance_m < 1000 %}<b>{{ p.distance_m }} m</b> · {% else %}<b>{{ '%.1f'|format(p.distance_m / 1000) }} km</b> · {% endif %}
+          {% endif %}
+          {{ p.ilce }}{% if p.subcategory_label %} · {{ p.subcategory_label }}{% endif %}
+        </span>
+        {% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+      </div>
+      {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+{% elif groups %}
+  {% for g in groups %}
+  <section class="ilce-block">
+    <div class="sec-h">
+      <h2>{{ g.label }}</h2>
+      <span class="see">{{ g.places|length }} klinik</span>
+    </div>
+    <div class="cards">
+      {% for p in g.places %}
+      <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🐾</div>{% endif %}
+        <div class="body">
+          <h3>{{ p.title }}</h3>
+          <div class="meta">
+            <span>{{ p.subcategory_label or p.price_band or p.hours_text }}{% if p.address %} · {{ p.ilce }}{% endif %}</span>
+            {% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+          </div>
+          {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+{% elif places %}
+<div class="cards">
+  {% for p in places %}
+  <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+    {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🐾</div>{% endif %}
+    <div class="body">
+      <h3>{{ p.title }}</h3>
+      <div class="meta">
+        <span>{{ p.ilce }}</span>
+        {% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-box"><p>Bu filtrede veteriner yok.</p></div>
+{% endif %}
+
+<script>
+(function(){
+  function goNear(btn){
+    if (!navigator.geolocation) {
+      location.href = '/veterinerler?tab=yakin';
+      return;
+    }
+    btn.disabled = true;
+    var old = btn.textContent;
+    btn.textContent = 'Konum alınıyor…';
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var lat = pos.coords.latitude.toFixed(6);
+      var lng = pos.coords.longitude.toFixed(6);
+      location.href = '/veterinerler?tab=yakin&lat=' + lat + '&lng=' + lng;
+    }, function(){
+      btn.disabled = false;
+      btn.textContent = old;
+      alert('Konum izni verilmedi. Ayarlardan konum açıp tekrar dene.');
+    }, {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+  }
+  ['vet-geo-btn','vet-geo-btn-2'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function(){ goNear(b); });
+  });
+})();
+</script>
+{% endblock %}

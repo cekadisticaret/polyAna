@@ -1,0 +1,16 @@
+{% extends "_shell.html" %}
+{% block title %}Favorilerim · BursaApp{% endblock %}
+{% block hello %}Favorilerim{% endblock %}
+{% block sub %}Kaydettiklerin{% endblock %}
+{% block main %}
+<div class="cards">
+  {% for p in places %}
+  <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+    {% if p.img_url %}<img src="{{ p.img_url }}" alt="" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+    <div class="body"><h3>{{ p.title }}</h3><div class="meta"><span>{{ p.ilce }}</span></div></div>
+  </a>
+  {% else %}
+  <div class="empty-box"><p>Favori yok.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

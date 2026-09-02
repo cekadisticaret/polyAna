@@ -1,147 +1,981 @@
 [
   {
+    "slug": "cobankaya-kamp",
+    "title": "Çobankaya Kamp Alanı",
+    "ilce": "Osmangazi",
+    "address": "Çobankaya, Uludağ Milli Parkı (~1740 m)",
+    "hours_text": "çadır · karavan · resmi kayıt",
+    "price_band": "milli park",
+    "subcategory": "uludag",
+    "featured": true,
+    "vibe": "instagram",
+    "lat": 40.1255,
+    "lng": 29.0985,
+    "search": "Çobankaya Uludağ kamp alanı",
+    "wiki": "Uludağ",
+    "copy": "uludag",
+    "tags": [
+      "uludag",
+      "cadir",
+      "karavan",
+      "milli-park",
+      "instagram"
+    ],
+    "blurb": "Instagram’da en çok paylaşılan Uludağ kampı. Kaynak suyu, WC/duş, büfe; Softaboğan yürüyüşü ~20 dk.",
+    "body": "Uludağ Milli Parkı içinde ~1740 m. 2026 sezonunda resmi çadır/karavan kaydı alınan alanlardan. Yiğitali–Karabelen HGS gişesi veya teleferik Kurbağa Kaya + yürüyüş. Ateş doğrudan toprağa yasak — ayaklı mangal/ocak. Gece 7–10°C’ye düşebilir; yazın ova sıcağından kaçış için favori.",
+    "facilities": [
+      "kaynak suyu",
+      "WC/duş",
+      "büfe/market",
+      "çam gölgesi",
+      "çadır",
+      "karavan"
+    ],
+    "tips": "Erken gel, çeşme yakını düzlük tut. Softaboğan Şelalesi ve Bakacak seyir terası yakın.",
+    "rating_admin": 4.8
+  },
+  {
     "slug": "sarialan-kamp",
     "title": "Sarıalan Kamp Alanı",
     "ilce": "Osmangazi",
     "address": "Sarıalan, teleferik son durak, Uludağ Milli Park",
-    "hours_text": "çadır · bungalov",
+    "hours_text": "çadır · bungalov · baraka",
     "price_band": "milli park",
+    "subcategory": "uludag",
     "featured": true,
+    "vibe": "tesisli",
+    "lat": 40.108,
+    "lng": 29.12,
     "search": "Sarıalan Uludağ kamp",
     "copy": "teleferik",
-    "tags": ["uludag", "cadir", "milli-park"],
-    "blurb": "Valilik: 350 çadır, 12 bungalov, 29 baraka. Teleferik sonu 1650 m. Temmuz–Eylül milli park kiralama."
+    "tags": [
+      "uludag",
+      "cadir",
+      "bungalov",
+      "milli-park"
+    ],
+    "blurb": "Teleferik sonu ~1650 m. Valilik: yüzlerce çadır + bungalov/baraka. Yaz sezonu resmi kiralama.",
+    "body": "Uludağ’ın en bilinen resmi kamp üslerinden. Teleferikle çıkış kolay; Temmuz–Eylül yoğun. Milli park kuralları ve kayıt zorunluluğu için Doğa Koruma duyurularını kontrol et.",
+    "facilities": [
+      "çadır",
+      "bungalov",
+      "baraka",
+      "milli park"
+    ],
+    "tips": "Hafta sonu yer tutmak zor — kayıt / erken varış.",
+    "rating_admin": 4.6
   },
   {
-    "slug": "cobankaya-kamp",
-    "title": "Çobankaya Kamp",
-    "ilce": "Osmangazi",
-    "address": "Çobankaya, Uludağ (oteller yolundan sol)",
-    "hours_text": "çadır",
-    "price_band": "milli park",
+    "slug": "golyazi-kamp",
+    "title": "Gölyazı · Uluabat Gün Batımı",
+    "ilce": "Nilüfer",
+    "address": "Gölyazı / Uluabat Gölü kıyısı, Nilüfer",
+    "hours_text": "çadır · gün batımı · işaretli alan",
+    "price_band": "göl",
+    "subcategory": "gol",
     "featured": true,
-    "search": "Çobankaya Uludağ kamp",
-    "copy": "uludag",
-    "tags": ["uludag", "cadir"],
-    "blurb": "Orman içi. Ateş yere yasak, mangal ocağı. Büfe var. Teleferik veya minibüs."
+    "vibe": "instagram",
+    "lat": 40.166,
+    "lng": 28.675,
+    "search": "Gölyazı Uluabat göl",
+    "copy": "golyazi",
+    "tags": [
+      "gol",
+      "instagram",
+      "gun-batimi",
+      "uluabat"
+    ],
+    "blurb": "Bursa’nın en Instagram’lık gün batımı. Köy içi rastgele çadır yasak olabilir — işaretli/izinli alanı kullan.",
+    "body": "Uluabat yarımadası ve balıkçı köyü manzarası yüzünden hafta sonu çok kalabalık. Kamp için köy dokusunu bozmadan belirlenmiş alanlara kur; çöpünü götür. Gün batımı için batı kıyısı.",
+    "facilities": [
+      "manzara",
+      "köy restoranları",
+      "fotoğraf"
+    ],
+    "tips": "Konaklama için yakındaki işaretli kamp / glamping noktalarını tercih et.",
+    "rating_admin": 4.9
   },
   {
-    "slug": "karabelen-kamp",
-    "title": "Karabelen Yaylası",
-    "ilce": "Osmangazi",
-    "address": "Karabelen, Uludağ milli park girişi (~22 km)",
-    "hours_text": "günübirlik · piknik",
-    "price_band": "milli park",
-    "search": "Karabelen Uludağ",
-    "copy": "uludag",
-    "tags": ["uludag", "piknik"],
-    "blurb": "Ana giriş. 1000 kişi/gün piknik, çeşme, WC. Yaz şenlikleri. Gece kampı sınırlı — tabela oku."
-  },
-  {
-    "slug": "kirazliyayla-kamp",
-    "title": "Kirazlıyayla",
-    "ilce": "Osmangazi",
-    "address": "Kirazlıyayla, Sarıalan–oteller geçişi",
-    "hours_text": "günübirlik",
-    "price_band": "milli park",
-    "search": "Kirazlıyayla Uludağ",
-    "copy": "uludag",
-    "tags": ["uludag", "yayla"],
-    "blurb": "2000 kişi/gün piknik. Gölcük / sanatoryum göleti yürüyüşü. Büfe, çocuk alanı."
-  },
-  {
-    "slug": "suuctu-kamp",
-    "title": "Suuçtu Kamp · Tabiat Parkı",
-    "ilce": "Mustafakemalpaşa",
-    "address": "Suuçtu Tabiat Parkı, MKPaşa",
-    "hours_text": "çadır · piknik",
-    "price_band": "tabiat parkı",
+    "slug": "kapanca-korsan-limani",
+    "title": "Kapanca Korsan Limanı",
+    "ilce": "Mudanya",
+    "address": "Kapanca / Korsan Limanı, Eşkel–Zeytinbağı arası, Mudanya",
+    "hours_text": "ücretsiz · çadır · karavan",
+    "price_band": "ücretsiz",
+    "subcategory": "deniz",
     "featured": true,
-    "search": "Suuçtu Şelalesi kamp",
-    "copy": "suuctu",
-    "tags": ["selale", "cadir"],
-    "blurb": "Şelale kenarı tabiat parkı. Piknik + çadır. İlkbahar su yüksek. Ateş kuralına uy."
+    "vibe": "instagram",
+    "lat": 40.379,
+    "lng": 28.724,
+    "search": "Kapanca Korsan Limanı Mudanya",
+    "tags": [
+      "deniz",
+      "ucretsiz",
+      "mudanya",
+      "instagram",
+      "tarih"
+    ],
+    "blurb": "Mudanya–Eşkel koyu. Ücretsiz, sessiz, gün batımı + antik liman kalıntıları. Instagram’da sık çıkan kıyı kampı.",
+    "body": "Bursa merkeze ~47–50 km (~1 saat). Toplu taşıma yok; araçla Mudanya → Trilye/Zeytinbağı → Kapanca tabela. Tuvalet/çeşme yok — su ve marketi köyden al. Rüzgarlı kıyı: çadırı sağlam kazıkla kur, suya çok yaklaşma.",
+    "facilities": [
+      "deniz manzarası",
+      "çadır",
+      "karavan",
+      "trekking"
+    ],
+    "tips": "İhtiyaçları Trilye/Eşkel’de topla. Gece şebeke zayıf olabilir.",
+    "rating_admin": 4.85
   },
   {
-    "slug": "sadagi-kamp",
-    "title": "Sadağı Kanyonu Kamp",
-    "ilce": "Diğer",
-    "address": "Sadağı Köyü, Orhaneli",
-    "hours_text": "çadır · kanyon",
-    "price_band": "kanyon",
-    "search": "Sadağı Kanyonu kamp",
-    "tags": ["kanyon", "orhaneli"],
-    "blurb": "Orhaneli. Kanyon + dere. Macera kampı; yağmurda dere şişer."
+    "slug": "eskel-kamp",
+    "title": "Eşkel / Esence Kıyı Kampı",
+    "ilce": "Mudanya",
+    "address": "Eşkel – Esence (Mesudiye) kıyısı, Mudanya",
+    "hours_text": "çadır · karavan · plaj",
+    "price_band": "deniz",
+    "subcategory": "deniz",
+    "featured": true,
+    "vibe": "deniz",
+    "lat": 40.37,
+    "lng": 28.75,
+    "search": "Eşkel Mudanya kamp plaj",
+    "tags": [
+      "deniz",
+      "mudanya",
+      "karavan",
+      "plaj"
+    ],
+    "blurb": "İmralı manzaralı düzlükler. Karavanlıların sık uğradığı Mudanya kıyı hattı.",
+    "body": "Kapanca’ya yakın alternatif. Plaj ve gün batımı; bazı noktalarda büfe/restoran. Girişler genelde ücretsiz — yerel tabela ve orman/kıyı kurallarını oku.",
+    "facilities": [
+      "plaj",
+      "çadır",
+      "karavan"
+    ],
+    "tips": "Yazın kalabalık; erken yer seç.",
+    "rating_admin": 4.6
   },
   {
     "slug": "iznik-golu-kamp",
     "title": "İznik Gölü Kamp",
     "ilce": "İznik",
-    "address": "İznik–Gemlik yolu, göl kıyısı",
+    "address": "İznik Gölü kıyısı (belgeli işletmeler + doğal noktalar)",
     "hours_text": "çadır · karavan · glamping",
     "price_band": "göl",
+    "subcategory": "gol",
     "featured": true,
-    "search": "İznik Gölü kamp alanı",
+    "vibe": "gol",
+    "lat": 40.43,
+    "lng": 29.72,
+    "search": "İznik Gölü kamp",
     "copy": "iznik-surlar",
-    "tags": ["gol", "karavan"],
-    "blurb": "Göl kenarı. Seyir Kamp vb. belgeli işletmeler + kendi çadır. Valilik: yelken/yüzme eğitimi."
-  },
-  {
-    "slug": "golyazi-kamp",
-    "title": "Gölyazı Kamp",
-    "ilce": "Nilüfer",
-    "address": "Gölyazı / Uluabat kıyısı, Nilüfer",
-    "hours_text": "çadır · gün batımı",
-    "price_band": "göl",
-    "search": "Gölyazı kamp alanı",
-    "copy": "golyazi",
-    "tags": ["gol", "instagram"],
-    "blurb": "Uluabat. Gün batımı. Köy içinde rastgele çadır yasak olabilir — işaretli alanı kullan."
-  },
-  {
-    "slug": "misi-kamp",
-    "title": "Misi Kamp · Karavan",
-    "ilce": "Nilüfer",
-    "address": "Gümüştepe (Misi), Nilüfer",
-    "hours_text": "karavan · bungalov",
-    "price_band": "karavan",
-    "search": "Misi Kamp Karavan Bursa",
-    "copy": "misi",
-    "tags": ["karavan", "koy"],
-    "blurb": "Misi / Çamlık hattı. Elektrik-sulu karavan parkı. Merkeze yakın doğa."
-  },
-  {
-    "slug": "oylat-kamp",
-    "title": "Oylat Kamp",
-    "ilce": "İnegöl",
-    "address": "Oylat, İnegöl",
-    "hours_text": "çadır · termal",
-    "price_band": "orman",
-    "search": "Oylat kamp alanı",
-    "copy": "oylat",
-    "tags": ["termal", "orman"],
-    "blurb": "Mağara + kaplıca yanında orman kampı. Kamp sonrası termal."
+    "tags": [
+      "gol",
+      "karavan",
+      "glamping",
+      "iznik"
+    ],
+    "blurb": "Göl kenarı klasik rota. Belgeli kampingler + kendi çadır; nem ve sabah çiği için mat şart.",
+    "body": "Valilik ve Bursa turizm portallarında kamp/karavan rotası. Tarihi İznik surlarıyla kombine gün planı yapılır. Doğrudan suya sıfır nemli zemine kurma.",
+    "facilities": [
+      "göl",
+      "çadır",
+      "karavan",
+      "yelken/yüzme (sezon)"
+    ],
+    "tips": "Tesisli işletme mi serbest alan mı netleştir — hizmet seviyesi çok farklı.",
+    "rating_admin": 4.6
   },
   {
     "slug": "dagyenice-kamp",
     "title": "Dağyenice Göleti",
     "ilce": "Nilüfer",
-    "address": "Dağyenice, Nilüfer",
-    "hours_text": "çadır · gölet",
+    "address": "Dağyenice, Nilüfer (Doğancı hattı)",
+    "hours_text": "çadır · gölet · hafta sonu",
     "price_band": "gölet",
-    "search": "Dağyenice Göleti kamp",
-    "tags": ["golet", "doga"],
-    "blurb": "Nilüfer orman göleti. Sakin çadır. Hafta sonu kalabalık."
+    "subcategory": "gol",
+    "featured": true,
+    "vibe": "yakin",
+    "lat": 40.12,
+    "lng": 28.95,
+    "search": "Dağyenice Göleti Bursa",
+    "tags": [
+      "golet",
+      "nilufer",
+      "yakin",
+      "trekking"
+    ],
+    "blurb": "Merkeze yakın (≈30 dk) hafta sonu favorisi. Gölet yansıması + Uludağ yürüyüş parkurları.",
+    "body": "Yapay gölet; kuruyan ağaç yansımaları fotoğraf için popüler. Balık tutma ve sakin çadır. Hafta sonu yoğun — erken git.",
+    "facilities": [
+      "gölet",
+      "çadır",
+      "piknik",
+      "yürüyüş"
+    ],
+    "tips": "Kolay ulaşım diye ekipmanı hafife alma: su, ışık, mat.",
+    "rating_admin": 4.75
+  },
+  {
+    "slug": "suuctu-kamp",
+    "title": "Suuçtu Şelalesi · Tabiat Parkı",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Suuçtu Tabiat Parkı, Mustafakemalpaşa",
+    "hours_text": "çadır · piknik · şelale",
+    "price_band": "tabiat parkı",
+    "subcategory": "selale",
+    "featured": true,
+    "vibe": "instagram",
+    "lat": 39.95,
+    "lng": 28.55,
+    "search": "Suuçtu Şelalesi",
+    "copy": "suuctu",
+    "tags": [
+      "selale",
+      "cadir",
+      "tabiat-parki",
+      "instagram"
+    ],
+    "blurb": "Şelale + tabiat parkı. İlkbaharda su yüksek; mangal/ateş kurallarına uy.",
+    "body": "Mustafakemalpaşa’nın en bilinen doğa duraklarından. Piknik + çadır; giriş/ücret ve mevsim kısıtını park tabelasından teyit et.",
+    "facilities": [
+      "şelale",
+      "piknik",
+      "çadır",
+      "yürüyüş"
+    ],
+    "tips": "Yağmur sonrası kaygan zemin.",
+    "rating_admin": 4.6
+  },
+  {
+    "slug": "kocayayla-kamp",
+    "title": "Kocayayla · Keles",
+    "ilce": "Keles",
+    "address": "Kocayayla, Keles",
+    "hours_text": "yayla · çadır · bungalov",
+    "price_band": "yayla",
+    "subcategory": "yayla",
+    "featured": true,
+    "vibe": "yayla",
+    "lat": 39.92,
+    "lng": 29.23,
+    "search": "Kocayayla Keles kamp",
+    "tags": [
+      "yayla",
+      "keles",
+      "bungalov",
+      "piknik"
+    ],
+    "blurb": "Yazın serin yayla. Masa, WC, büfe, oyun parkı, bungalov; resmi turizm listesinde.",
+    "body": "Keles yakınında geniş yayla. Rüzgarlı düzlüklerde çadır kazığını sıkı çak. Toplu taşıma Keles’e kadar, oradan taksi/araç.",
+    "facilities": [
+      "WC",
+      "büfe",
+      "piknik masası",
+      "bungalov",
+      "trekking"
+    ],
+    "tips": "Açık arazide rüzgar — gergi iplerini ihmal etme.",
+    "rating_admin": 4.6
+  },
+  {
+    "slug": "ericek-goleti-kamp",
+    "title": "Ericek Göleti",
+    "ilce": "Gürsu",
+    "address": "Ericek Göleti / Gürsu Adrenalin Park çevresi",
+    "hours_text": "çadır · karavan · bungalov",
+    "price_band": "gölet",
+    "subcategory": "gol",
+    "featured": true,
+    "vibe": "macera",
+    "lat": 40.22,
+    "lng": 29.2,
+    "search": "Ericek Göleti Gürsu",
+    "tags": [
+      "golet",
+      "gursu",
+      "adrenalin",
+      "bungalov"
+    ],
+    "blurb": "Merkeze ~35 km. Gölet + zipline/ATV parkı. Tesisli alan ücretli; serbest kampta hizmet yok.",
+    "body": "Gürsu Adrenalin Park bungalov, çadır ve karavan seçenekleri sunuyor. Kendi başına kurarsan tuvalet/duş/elektrik beklemeyebilirsin. Özel araç şart.",
+    "facilities": [
+      "gölet",
+      "zipline",
+      "bungalov",
+      "çadır",
+      "karavan"
+    ],
+    "tips": "Tesis mi serbest alan mı netleştir; fiyat için işletmeyi ara.",
+    "rating_admin": 4.6
+  },
+  {
+    "slug": "sadagi-kamp",
+    "title": "Sadağı Kanyonu",
+    "ilce": "Orhaneli",
+    "address": "Sadağı Köyü, Orhaneli",
+    "hours_text": "çadır · kanyon · macera",
+    "price_band": "kanyon",
+    "subcategory": "kanyon",
+    "featured": true,
+    "vibe": "macera",
+    "lat": 39.95,
+    "lng": 28.95,
+    "search": "Sadağı Kanyonu Orhaneli",
+    "tags": [
+      "kanyon",
+      "orhaneli",
+      "macera",
+      "dere"
+    ],
+    "blurb": "Dere + kanyon. Macera kampı; yağmurda dere şişer — yüksek noktaya kur.",
+    "body": "Resmi turizm kaynaklarında kamp rotası. Zemin kaygan olabilir; yalnız başına gece için tecrübe önerilir.",
+    "facilities": [
+      "kanyon",
+      "dere",
+      "çadır",
+      "trekking"
+    ],
+    "tips": "Hava tahminini mutlaka kontrol et.",
+    "rating_admin": 4.6
+  },
+  {
+    "slug": "oylat-kamp",
+    "title": "Oylat Kamp · Termal",
+    "ilce": "İnegöl",
+    "address": "Oylat, İnegöl",
+    "hours_text": "çadır · orman · termal",
+    "price_band": "orman",
+    "subcategory": "orman",
+    "featured": false,
+    "vibe": "termal",
+    "lat": 39.95,
+    "lng": 29.6,
+    "search": "Oylat İnegöl",
+    "copy": "oylat",
+    "tags": [
+      "termal",
+      "orman",
+      "inegol"
+    ],
+    "blurb": "Mağara + kaplıca yanında orman. Kamp sonrası termal planı popüler.",
+    "body": "İnegöl Oylat hattı. Orman kampı + termal tesisler; sezon yoğunluğu yüksek.",
+    "facilities": [
+      "orman",
+      "termal yakın",
+      "çadır"
+    ],
+    "tips": "Termal rezervasyonunu ayrı yap."
+  },
+  {
+    "slug": "misi-kamp",
+    "title": "Misi · Karavan / Çamlık",
+    "ilce": "Nilüfer",
+    "address": "Gümüştepe (Misi), Nilüfer",
+    "hours_text": "karavan · bungalov · merkeze yakın",
+    "price_band": "karavan",
+    "subcategory": "karavan",
+    "featured": false,
+    "vibe": "yakin",
+    "lat": 40.18,
+    "lng": 28.95,
+    "search": "Misi Nilüfer kamp",
+    "copy": "misi",
+    "tags": [
+      "karavan",
+      "misi",
+      "yakin"
+    ],
+    "blurb": "Tarihi Misi köyü hattı. Elektrik-sulu karavan parkı arayanlar için pratik.",
+    "body": "Şehirden kısa mesafe doğa. Köy dokusu + çamlık; rastgele çadır yerine işletmeli/işaretli nokta seç.",
+    "facilities": [
+      "karavan",
+      "bungalov",
+      "köy"
+    ],
+    "tips": "Hafta sonu köy içi park yeri dar."
+  },
+  {
+    "slug": "karabelen-kamp",
+    "title": "Karabelen · Milli Park Girişi",
+    "ilce": "Osmangazi",
+    "address": "Karabelen gişeleri, Uludağ (~22 km)",
+    "hours_text": "günübirlik · piknik",
+    "price_band": "milli park",
+    "subcategory": "uludag",
+    "featured": false,
+    "vibe": "piknik",
+    "lat": 40.15,
+    "lng": 29.05,
+    "search": "Karabelen Uludağ",
+    "copy": "uludag",
+    "tags": [
+      "uludag",
+      "piknik",
+      "milli-park"
+    ],
+    "blurb": "Ana giriş hattı. Piknik + çeşme/WC. Gece kampı sınırlı — tabela oku.",
+    "body": "Çobankaya/Sarıalan’a giderken geçilen nokta. Yaz şenlikleri ve günübirlik yoğunluk.",
+    "facilities": [
+      "piknik",
+      "çeşme",
+      "WC"
+    ],
+    "tips": "Gece konaklama için Çobankaya/Sarıalan tercih et."
+  },
+  {
+    "slug": "kirazliyayla-kamp",
+    "title": "Kirazlıyayla",
+    "ilce": "Osmangazi",
+    "address": "Kirazlıyayla, Uludağ",
+    "hours_text": "günübirlik · yayla",
+    "price_band": "milli park",
+    "subcategory": "uludag",
+    "featured": false,
+    "vibe": "piknik",
+    "lat": 40.12,
+    "lng": 29.11,
+    "search": "Kirazlıyayla Uludağ",
+    "copy": "uludag",
+    "tags": [
+      "uludag",
+      "yayla",
+      "piknik"
+    ],
+    "blurb": "Piknik kapasitesi yüksek. Gölcük / sanatoryum göleti yürüyüşü.",
+    "body": "Büfe ve çocuk alanı olan yayla düzlüğü. Gece kampından çok günübirlik.",
+    "facilities": [
+      "piknik",
+      "büfe",
+      "çocuk alanı"
+    ],
+    "tips": "Kamp için resmi Sarıalan/Çobankaya daha uygun."
   },
   {
     "slug": "kayapa-kamp",
     "title": "Kayapa Göleti",
     "ilce": "Nilüfer",
     "address": "Kayapa, Nilüfer",
-    "hours_text": "çadır · gölet",
+    "hours_text": "çadır · gölet · ücretsiz/yarı-tesis",
     "price_band": "gölet",
-    "search": "Kayapa Göleti kamp Bursa",
-    "tags": ["golet"],
-    "blurb": "Nilüfer. Gölet kenarı, ücretsiz/yarı-tesisli. Çöpünü götür."
+    "subcategory": "gol",
+    "featured": false,
+    "vibe": "ucretsiz",
+    "lat": 40.2,
+    "lng": 28.88,
+    "search": "Kayapa Göleti Bursa",
+    "tags": [
+      "golet",
+      "ucretsiz",
+      "nilufer"
+    ],
+    "blurb": "Nilüfer gölet kenarı. Tesis az — çöpünü götür, suyunla gel.",
+    "body": "Ücretsiz doğa kampı arayanların listelerinde. Tuvalet/elektrik beklenmemeli.",
+    "facilities": [
+      "gölet",
+      "çadır"
+    ],
+    "tips": "Orman yangını sezonunda ateş yasağına dikkat."
+  },
+  {
+    "slug": "barakli-goleti-kamp",
+    "title": "Baraklı Göleti",
+    "ilce": "Keles",
+    "address": "Baraklı Göleti, Keles çevresi",
+    "hours_text": "çadır · gölet · ücretsiz doğa",
+    "price_band": "ücretsiz",
+    "subcategory": "gol",
+    "featured": false,
+    "vibe": "ucretsiz",
+    "lat": 39.95,
+    "lng": 29.15,
+    "search": "Baraklı Göleti Keles",
+    "tags": [
+      "golet",
+      "ucretsiz",
+      "keles"
+    ],
+    "blurb": "Resmi turizm listelerinde geçen sakin gölet kampı. Tamamen kendi kendine yeterlilik.",
+    "body": "Tesisli kamping değil; su, ışık, tuvalet kampçıda. Güncel orman giriş kısıtlarını kontrol et.",
+    "facilities": [
+      "gölet",
+      "çadır"
+    ],
+    "tips": "2026 yaz orman duyurularını oku."
+  },
+  {
+    "slug": "softabogan-kamp",
+    "title": "Softaboğan Şelalesi çevresi",
+    "ilce": "Osmangazi",
+    "address": "Softaboğan, Çobankaya yürüyüş hattı, Uludağ",
+    "hours_text": "yürüyüş · günübirlik · yakın kamp üssü Çobankaya",
+    "price_band": "şelale",
+    "subcategory": "selale",
+    "featured": false,
+    "vibe": "instagram",
+    "lat": 40.13,
+    "lng": 29.09,
+    "search": "Softaboğan Şelalesi Uludağ",
+    "tags": [
+      "selale",
+      "uludag",
+      "trekking",
+      "instagram"
+    ],
+    "blurb": "Çobankaya’dan ~20 dk patika. Şelale fotoğraf noktası; geceyi Çobankaya’da geçir.",
+    "body": "Şelale alanında yoğun kamp kurulmaz; düzlüklerde günübirlik. Konaklama için milli park kayıtlı Çobankaya.",
+    "facilities": [
+      "şelale",
+      "trekking"
+    ],
+    "tips": "Islak kayaya basma; dönüşü karanlıkta planlama."
+  },
+  {
+    "slug": "karacabey-longoz-kamp",
+    "title": "Karacabey Longoz Ormanları",
+    "ilce": "Karacabey",
+    "address": "Karacabey Longozu / Dalyan Gölü çevresi",
+    "hours_text": "çadır · orman · nilüfer mevsimi",
+    "price_band": "orman",
+    "subcategory": "orman",
+    "featured": true,
+    "vibe": "instagram",
+    "lat": 40.35,
+    "lng": 28.45,
+    "search": "Karacabey Longoz Ormanı",
+    "tags": [
+      "orman",
+      "longoz",
+      "karacabey",
+      "instagram",
+      "kus"
+    ],
+    "blurb": "Nilüfer açınca efsane. İlkbahar–yaz; sineğe hazırlıklı gel.",
+    "body": "Obilet ve turizm listelerinde klasik Bursa kampı. Longoz + Dalyan Gölü. Girişte işletmeler var; orman içinde ateş kurallarına uy.",
+    "facilities": [
+      "orman",
+      "göl",
+      "yürüyüş",
+      "kuş gözlemi"
+    ],
+    "tips": "Nilüfer sezonunu kaçırma; sinek kovucu şart.",
+    "rating_admin": 4.7
+  },
+  {
+    "slug": "saitabat-kamp",
+    "title": "Saitabat Şelalesi",
+    "ilce": "Kestel",
+    "address": "Saitabat, Kestel",
+    "hours_text": "çadır · şelale · piknik",
+    "price_band": "şelale",
+    "subcategory": "selale",
+    "featured": true,
+    "vibe": "instagram",
+    "lat": 40.15,
+    "lng": 29.35,
+    "search": "Saitabat Şelalesi Bursa",
+    "copy": "suuctu",
+    "tags": [
+      "selale",
+      "kestel",
+      "instagram",
+      "piknik"
+    ],
+    "blurb": "Kestel’de şelale + restoran/piknik. Yazın gölgede serin.",
+    "body": "Obilet listesinde. Şelale çevresinde düzlükler; işletme ve piknik alanı var. Hafta sonu kalabalık.",
+    "facilities": [
+      "şelale",
+      "restoran",
+      "piknik",
+      "çadır"
+    ],
+    "tips": "Balık restoranı açık mı kontrol et.",
+    "rating_admin": 4.6
+  },
+  {
+    "slug": "sansarak-kanyon-kamp",
+    "title": "Sansarak Kanyonu",
+    "ilce": "İznik",
+    "address": "Sansarak Köyü, İznik",
+    "hours_text": "çadır · kanyon · trekking",
+    "price_band": "kanyon",
+    "subcategory": "kanyon",
+    "featured": true,
+    "vibe": "macera",
+    "lat": 40.48,
+    "lng": 29.65,
+    "search": "Sansarak Kanyonu İznik",
+    "tags": [
+      "kanyon",
+      "iznik",
+      "macera",
+      "trekking"
+    ],
+    "blurb": "İznik Gölü yakını kanyon. Soğuk su + macera.",
+    "body": "Sansarak Köyü’nden yürüyüş. Obilet/E-Kamp listelerinde. Yağmurda dere riski.",
+    "facilities": [
+      "kanyon",
+      "trekking",
+      "çadır"
+    ],
+    "tips": "Su ayakkabısı ve hava tahmini.",
+    "rating_admin": 4.5
+  },
+  {
+    "slug": "gokoz-kamp",
+    "title": "Gököz Natural Park",
+    "ilce": "Keles",
+    "address": "Gököz, Keles",
+    "hours_text": "çadır · bungalov · tesisli",
+    "price_band": "tesisli",
+    "subcategory": "yayla",
+    "featured": false,
+    "vibe": "tesisli",
+    "lat": 39.9,
+    "lng": 29.2,
+    "search": "Gököz Natural Park Keles",
+    "tags": [
+      "yayla",
+      "keles",
+      "bungalov",
+      "tesisli"
+    ],
+    "blurb": "Keles hattında tesisli doğal park kampı.",
+    "body": "KampGo/listelerde ücretli tesis. Bungalov ve çadır; rezervasyon için işletmeyi ara.",
+    "facilities": [
+      "bungalov",
+      "çadır",
+      "WC"
+    ],
+    "tips": "Ücret ve kapasiteyi ara.",
+    "rating_admin": 4.3
+  },
+  {
+    "slug": "ketenlik-yayla-kamp",
+    "title": "Ketenlik Yaylası",
+    "ilce": "Osmangazi",
+    "address": "Ketenlik Yaylası, Uludağ çevresi",
+    "hours_text": "yayla · ücretsiz · çadır",
+    "price_band": "ücretsiz",
+    "subcategory": "yayla",
+    "featured": false,
+    "vibe": "ucretsiz",
+    "lat": 40.1,
+    "lng": 29.05,
+    "search": "Ketenlik Yaylası Uludağ",
+    "tags": [
+      "yayla",
+      "uludag",
+      "ucretsiz"
+    ],
+    "blurb": "Uludağ çevresi ücretsiz yayla düzlüğü.",
+    "body": "Listelerde ücretsiz kamp. Tesis az — kendi kendine yeterlilik.",
+    "facilities": [
+      "yayla",
+      "çadır"
+    ],
+    "tips": "Orman duyurularını oku.",
+    "rating_admin": 4.2
+  },
+  {
+    "slug": "dalyan-golu-kamp",
+    "title": "Dalyan Gölü · Longoz",
+    "ilce": "Karacabey",
+    "address": "Dalyan Gölü, Karacabey Longozu içi",
+    "hours_text": "çadır · göl · longoz",
+    "price_band": "göl",
+    "subcategory": "gol",
+    "featured": false,
+    "vibe": "gol",
+    "lat": 40.355,
+    "lng": 28.44,
+    "search": "Dalyan Gölü Karacabey",
+    "tags": [
+      "gol",
+      "longoz",
+      "karacabey"
+    ],
+    "blurb": "Longoz içindeki göl kıyısı. Sakin alternatif.",
+    "body": "Karacabey Longozu içinde. Sinek yoğun olabilir.",
+    "facilities": [
+      "göl",
+      "çadır",
+      "orman"
+    ],
+    "tips": "Longoz giriş kurallarını oku.",
+    "rating_admin": 4.4
+  },
+  {
+    "slug": "caylak-selalesi-kamp",
+    "title": "Çaylak Şelalesi",
+    "ilce": "Susurluk",
+    "address": "Çaylak Şelalesi, Susurluk · Balıkesir",
+    "hours_text": "ücretsiz · şelale · çadır",
+    "price_band": "ücretsiz",
+    "subcategory": "selale",
+    "featured": true,
+    "vibe": "ucretsiz",
+    "lat": 39.95,
+    "lng": 28.15,
+    "search": "Çaylak Şelalesi Susurluk",
+    "tags": [
+      "balikesir",
+      "selale",
+      "ucretsiz",
+      "susurluk"
+    ],
+    "blurb": "Bursa’ya en yakın Balıkesir kaçışı. Ücretsiz şelale kampı.",
+    "body": "Enuygun/blog listelerinde sık geçer. Susurluk; Bursa’dan ~1–1,5 saat. Tesis sınırlı.",
+    "facilities": [
+      "şelale",
+      "çadır"
+    ],
+    "tips": "Yağmurda dere şişer.",
+    "rating_admin": 4.5,
+    "city": "Balıkesir"
+  },
+  {
+    "slug": "seytan-sofrasi-kamp",
+    "title": "Şeytan Sofrası Kamp",
+    "ilce": "Ayvalık",
+    "address": "Şeytan Sofrası çevresi, Ayvalık · Balıkesir",
+    "hours_text": "ücretsiz · manzara · çadır",
+    "price_band": "ücretsiz",
+    "subcategory": "deniz",
+    "featured": true,
+    "vibe": "instagram",
+    "lat": 39.32,
+    "lng": 26.68,
+    "search": "Şeytan Sofrası Ayvalık",
+    "tags": [
+      "balikesir",
+      "ayvalik",
+      "deniz",
+      "ucretsiz",
+      "instagram"
+    ],
+    "blurb": "Ayvalık gün batımı ikonu. Ücretsiz doğa kampı.",
+    "body": "Balıkesir rehberlerinde klasik. Araçla çıkış; rüzgarlı tepe — çadırı sağlam kur.",
+    "facilities": [
+      "manzara",
+      "çadır",
+      "gün batımı"
+    ],
+    "tips": "Su ve çöpünü götür.",
+    "rating_admin": 4.8,
+    "city": "Balıkesir"
+  },
+  {
+    "slug": "ortunc-koyu-kamp",
+    "title": "Ortunç Koyu",
+    "ilce": "Ayvalık",
+    "address": "Ortunç Koyu, Cunda · Ayvalık",
+    "hours_text": "ücretsiz · koy · çadır",
+    "price_band": "ücretsiz",
+    "subcategory": "deniz",
+    "featured": true,
+    "vibe": "deniz",
+    "lat": 39.35,
+    "lng": 26.65,
+    "search": "Ortunç Koyu Cunda",
+    "tags": [
+      "balikesir",
+      "cunda",
+      "deniz",
+      "ucretsiz",
+      "ayvalik"
+    ],
+    "blurb": "Cunda’nın sakin koyu. Ücretsiz kıyı kampı.",
+    "body": "Enuygun/Kaşifiz listelerinde. Tesis yok — kendi kendine yeterlilik.",
+    "facilities": [
+      "koy",
+      "çadır",
+      "yüzme"
+    ],
+    "tips": "Erken yer tut; yazın dolu.",
+    "rating_admin": 4.7,
+    "city": "Balıkesir"
+  },
+  {
+    "slug": "kucukova-koyu-kamp",
+    "title": "Küçükova Koyu",
+    "ilce": "Erdek",
+    "address": "Küçükova, Kapıdağ · Erdek",
+    "hours_text": "ücretsiz · deniz · çadır",
+    "price_band": "ücretsiz",
+    "subcategory": "deniz",
+    "featured": true,
+    "vibe": "deniz",
+    "lat": 40.45,
+    "lng": 27.85,
+    "search": "Küçükova Koyu Erdek",
+    "tags": [
+      "balikesir",
+      "erdek",
+      "deniz",
+      "ucretsiz",
+      "kapidag"
+    ],
+    "blurb": "Kapıdağ yarımadası ücretsiz koy. Bursa’ya görece yakın.",
+    "body": "Erdek listelerinde. Ateş yasağı olabilir; tabela oku.",
+    "facilities": [
+      "deniz",
+      "çadır"
+    ],
+    "tips": "Market Erdek’ten.",
+    "rating_admin": 4.6,
+    "city": "Balıkesir"
+  },
+  {
+    "slug": "hasan-boguldu-kamp",
+    "title": "Hasan Boğuldu",
+    "ilce": "Edremit",
+    "address": "Hasanboğuldu Göleti, Zeytinli · Edremit",
+    "hours_text": "gölet · kazdağı · çadır",
+    "price_band": "gölet",
+    "subcategory": "gol",
+    "featured": true,
+    "vibe": "gol",
+    "lat": 39.6,
+    "lng": 26.95,
+    "search": "Hasan Boğuldu Edremit",
+    "tags": [
+      "balikesir",
+      "edremit",
+      "kazdagi",
+      "golet",
+      "instagram"
+    ],
+    "blurb": "Kazdağı etekleri gölet. Serin yaz kaçışı.",
+    "body": "Ücretsiz/doğal alan; ateş yasağı yaygın.",
+    "facilities": [
+      "gölet",
+      "orman",
+      "çadır"
+    ],
+    "tips": "Hafta sonu erken git.",
+    "rating_admin": 4.7,
+    "city": "Balıkesir"
+  },
+  {
+    "slug": "kapidag-camping",
+    "title": "Kapıdağ Camping",
+    "ilce": "Erdek",
+    "address": "Kapıdağ, Erdek · Balıkesir",
+    "hours_text": "tesisli · deniz · karavan",
+    "price_band": "tesisli",
+    "subcategory": "deniz",
+    "featured": false,
+    "vibe": "tesisli",
+    "lat": 40.42,
+    "lng": 27.82,
+    "search": "Kapıdağ Camping Erdek",
+    "tags": [
+      "balikesir",
+      "erdek",
+      "tesisli",
+      "karavan",
+      "deniz"
+    ],
+    "blurb": "Erdek tesisli kamp. Duş/elektrik arayanlar için.",
+    "body": "Ücretli kamping; rezervasyon otelden/işletmeden.",
+    "facilities": [
+      "deniz",
+      "karavan",
+      "duş",
+      "elektrik"
+    ],
+    "tips": "Fiyatı işletmeye sor.",
+    "rating_admin": 4.4,
+    "city": "Balıkesir"
+  },
+  {
+    "slug": "kazdagi-kamp",
+    "title": "Kazdağı Kamp · Zeytinli",
+    "ilce": "Edremit",
+    "address": "Zeytinli, Edremit · Kazdağları",
+    "hours_text": "orman · tesisli · çadır",
+    "price_band": "tesisli",
+    "subcategory": "orman",
+    "featured": false,
+    "vibe": "tesisli",
+    "lat": 39.58,
+    "lng": 26.92,
+    "search": "Kazdağı Kamp Zeytinli",
+    "tags": [
+      "balikesir",
+      "kazdagi",
+      "edremit",
+      "orman",
+      "tesisli"
+    ],
+    "blurb": "Kazdağı orman kampı. Serin yaz, organik kahvaltı kültürü.",
+    "body": "Ücretli tesis listelerinde. Milli park kuralları geçerli olabilir.",
+    "facilities": [
+      "orman",
+      "çadır",
+      "kahvaltı"
+    ],
+    "tips": "Sezon yoğun — erken rezervasyon.",
+    "rating_admin": 4.6,
+    "city": "Balıkesir"
+  },
+  {
+    "slug": "sarimsakli-kamp",
+    "title": "Sarımsaklı Plaj Kamp",
+    "ilce": "Ayvalık",
+    "address": "Sarımsaklı, Ayvalık",
+    "hours_text": "plaj · ücretsiz/yarı · çadır",
+    "price_band": "deniz",
+    "subcategory": "deniz",
+    "featured": false,
+    "vibe": "deniz",
+    "lat": 39.28,
+    "lng": 26.68,
+    "search": "Sarımsaklı Ayvalık plaj",
+    "tags": [
+      "balikesir",
+      "ayvalik",
+      "deniz",
+      "plaj"
+    ],
+    "blurb": "Ayvalık’ın uzun plaj hattı. Yaz kampı.",
+    "body": "Ücretsiz noktalar + işletmeli alanlar yan yana; tabela oku.",
+    "facilities": [
+      "plaj",
+      "çadır"
+    ],
+    "tips": "Rüzgarlı günlerde çadır kazığı.",
+    "rating_admin": 4.3,
+    "city": "Balıkesir"
+  },
+  {
+    "slug": "cataldag-goleti-kamp",
+    "title": "Çataldağ Göleti",
+    "ilce": "Susurluk",
+    "address": "Çataldağ Göleti, Susurluk · Balıkesir",
+    "hours_text": "ücretsiz · gölet · çadır",
+    "price_band": "ücretsiz",
+    "subcategory": "gol",
+    "featured": false,
+    "vibe": "ucretsiz",
+    "lat": 39.85,
+    "lng": 28.25,
+    "search": "Çataldağ Göleti Susurluk",
+    "tags": [
+      "balikesir",
+      "susurluk",
+      "golet",
+      "ucretsiz"
+    ],
+    "blurb": "Susurluk göleti — Bursa’ya yakın ücretsiz kamp.",
+    "body": "Balıkesir ücretsiz listelerinde. Tesis yok.",
+    "facilities": [
+      "gölet",
+      "çadır"
+    ],
+    "tips": "Çöpünü götür.",
+    "rating_admin": 4.2,
+    "city": "Balıkesir"
   }
 ]

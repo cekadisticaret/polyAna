@@ -1,0 +1,29 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Aktivite · Admin{% endblock %}
+{% block header_title %}Aktivite / girişler{% endblock %}
+{% block content %}
+<div class="mb-3 d-flex flex-wrap gap-2">
+  <a class="btn btn-sm {{ 'btn-primary' if not kind else 'btn-outline-primary' }}" href="/admin/activity">Tümü</a>
+  {% for k in kinds %}
+  <a class="btn btn-sm {{ 'btn-primary' if kind==k else 'btn-outline-primary' }}" href="/admin/activity?kind={{ k }}">{{ k }}</a>
+  {% endfor %}
+</div>
+<div class="card"><div class="card-body"><div class="table-responsive">
+<table class="table ba-table">
+  <thead><tr><th>Zaman</th><th>Tür</th><th>Başlık</th><th>Detay</th><th>E-posta</th><th>IP</th><th>Path</th></tr></thead>
+  <tbody>
+  {% for a in rows %}
+  <tr>
+    <td>{{ a.created_at.strftime('%d.%m.%Y %H:%M:%S') if a.created_at else '-' }}</td>
+    <td><span class="badge badge-primary">{{ a.kind }}</span></td>
+    <td>{{ a.title }}</td>
+    <td>{{ a.detail }}</td>
+    <td>{{ a.email }}</td>
+    <td>{{ a.ip }}</td>
+    <td><small>{{ a.path }}</small></td>
+  </tr>
+  {% else %}<tr><td colspan="7">Aktivite yok — giriş/kayıt oldukça dolar</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div></div></div>
+{% endblock %}

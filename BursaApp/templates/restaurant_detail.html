@@ -1,0 +1,237 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else (place.title ~ ' · BursaApp') }}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block main %}
+{% if not place %}
+<div class="empty-box"><p>Bu restoran yayınlı değil veya yok.</p><a href="/yeme-icme">Yeme-içme’ye dön</a></div>
+{% else %}
+{% set ex = place.extra or {} %}
+{% set menu = ex.menu if ex.menu else [] %}
+{% set gallery = ex.gallery if ex.gallery else [] %}
+{% set menu_url = ex.menu_url if ex.menu_url else (place.web or '') %}
+{% set cover = place.img_url or (gallery[0] if gallery else '') %}
+{% set gals = gallery if gallery else ([cover] if cover else []) %}
+
+{# —— 1. HERO —— #}
+<section class="rd-hero">
+  {% if cover %}<img class="rd-hero-bg" src="{{ cover }}" alt="{{ place.title }}" decoding="async">{% endif %}
+  <div class="rd-hero-veil"></div>
+  <div class="rd-hero-copy">
+    <p class="rd-kicker">{{ place.subcategory_label or place.price_band or 'Bursa lezzeti' }}{% if place.ilce %} · {{ place.ilce }}{% endif %}</p>
+    <h1 class="rd-title">{{ place.title }}</h1>
+    {% if place.blurb %}<p class="rd-lead">{{ place.blurb }}</p>{% endif %}
+    <div class="rd-cta-row">
+      {% if place.phone %}<a class="wa-btn wa-btn-orange" href="tel:{{ place.phone }}">Ara · {{ place.phone }}</a>{% endif %}
+      {% if place.maps %}<a class="wa-btn wa-btn-ghost" href="{{ place.maps }}" target="_blank" rel="noopener">Yol tarifi</a>{% endif %}
+      {% if menu_url %}<a class="wa-btn wa-btn-forest" href="{{ menu_url }}" target="_blank" rel="noopener">Sitede menü</a>{% endif %}
+    </div>
+    {% if place.rating %}
+    <div class="rd-rating-pill">
+      <span>★ {{ '%.1f'|format(place.rating) }}</span>
+      {% if place.rating_count %}<small>{{ place.rating_count }} değerlendirme</small>{% else %}<small>liste puanı</small>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{# —— 2. MENÜ —— #}
+<section class="rd-sec" id="menu">
+  <div class="rd-sec-h">
+    <h2>Menümüz</h2>
+    {% if menu_url %}<a href="{{ menu_url }}" target="_blank" rel="noopener">Tam menü →</a>{% endif %}
+  </div>
+  {% if menu %}
+  <div class="rd-menu-grid">
+    {% for it in menu[:8] %}
+    <article class="rd-menu-card">
+      <div class="rd-menu-img">
+        {% if gals[loop.index0 % gals|length] %}
+        <img src="{{ gals[loop.index0 % gals|length] }}" alt="{{ it.name }}" loading="lazy">
+        {% else %}
+        <div class="rd-menu-ph">🍽</div>
+        {% endif %}
+      </div>
+      <h3>{{ it.name }}</h3>
+      {% if it.note %}<p>{{ it.note }}</p>{% elif place.blurb %}<p>{{ place.blurb[:90] }}{% if place.blurb|length > 90 %}…{% endif %}</p>{% endif %}
+      {% if it.price %}<span class="rd-price">{{ it.price }}</span>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% if menu|length > 8 or menu_url %}
+  <div class="rd-center">
+    {% if menu_url %}
+    <a class="wa-btn wa-btn-orange" href="{{ menu_url }}" target="_blank" rel="noopener">Tam menüyü gör</a>
+    {% else %}
+    <a class="wa-btn wa-btn-orange" href="#menu-full">Tüm menü listesi</a>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% elif place.menu_text %}
+  <div class="rd-panel" id="menu-full">
+    <pre class="rd-menu-pre">{{ place.menu_text }}</pre>
+    {% if menu_url %}<p><a class="wa-btn wa-btn-orange" href="{{ menu_url }}" target="_blank" rel="noopener">Sitedeki menü</a></p>{% endif %}
+  </div>
+  {% else %}
+  <div class="rd-panel rd-empty-menu">
+    <p>Henüz menü satırı eklenmedi.
+      {% if menu_url %}Resmi menü için <a href="{{ menu_url }}" target="_blank" rel="noopener">restoran sitesine</a> bakın.{% else %}İşletme sahibi admin / sahiplenme ile menü ekleyebilir.{% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+  {% if menu and menu|length > 4 %}
+  <div class="rd-panel" id="menu-full" style="margin-top:18px">
+    <h3 style="margin-top:0">Tüm kalemler</h3>
+    <ul class="rd-menu-list">
+      {% for it in menu %}
+      <li><span><b>{{ it.name }}</b>{% if it.note %} · {{ it.note }}{% endif %}</span>{% if it.price %}<b>{{ it.price }}</b>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</section>
+
+{# —— 3. HAKKINDA + BİLGİLER —— #}
+<section class="rd-sec rd-about">
+  <div class="rd-about-text">
+    <h2>{% if place.subcategory_label %}{{ place.subcategory_label|upper }}{% else %}BURSA'DA{% endif %} · {{ place.title|upper }}</h2>
+    <p>{{ place.body or place.blurb or 'Bu restoran BursaApp rehberinde yer alıyor.' }}</p>
+    <div class="rd-cta-row">
+      {% if place.web %}<a class="wa-btn wa-btn-orange" href="{{ place.web }}" target="_blank" rel="noopener">Web sitesi</a>{% endif %}
+      {% if place.instagram %}<a class="wa-btn wa-btn-ghost" href="{% if place.instagram.startswith('http') %}{{ place.instagram }}{% else %}https://instagram.com/{{ place.instagram.lstrip('@') }}{% endif %}" target="_blank" rel="noopener">Instagram</a>{% endif %}
+      <a class="wa-btn wa-btn-ghost" href="#yorumlar">Yorumlar</a>
+    </div>
+  </div>
+  <div class="rd-facts-grid">
+    {% if place.hours_text %}
+    <div class="rd-fact"><span class="rd-ico">🕐</span><div><b>Saat</b><i>{{ place.hours_text }}</i></div></div>
+    {% endif %}
+    {% if place.address %}
+    <div class="rd-fact"><span class="rd-ico">📍</span><div><b>Adres</b><i>{{ place.address }}{% if place.ilce %} · {{ place.ilce }}{% endif %}</i></div></div>
+    {% endif %}
+    {% if place.phone %}
+    <div class="rd-fact"><span class="rd-ico">📞</span><div><b>Telefon</b><i><a href="tel:{{ place.phone }}">{{ place.phone }}</a></i></div></div>
+    {% endif %}
+    {% if place.est_meal_tl %}
+    <div class="rd-fact"><span class="rd-ico">₺</span><div><b>Kişi başı</b><i>~{{ place.est_meal_tl }} TL</i></div></div>
+    {% endif %}
+    {% if place.whatsapp %}
+    <div class="rd-fact"><span class="rd-ico">💬</span><div><b>WhatsApp</b><i><a href="https://wa.me/{{ place.whatsapp|replace(' ','')|replace('+','') }}" target="_blank" rel="noopener">{{ place.whatsapp }}</a></i></div></div>
+    {% endif %}
+    {% if place.price_band %}
+    <div class="rd-fact"><span class="rd-ico">🍽</span><div><b>Mutfak</b><i>{{ place.subcategory_label or place.price_band }}</i></div></div>
+    {% endif %}
+  </div>
+</section>
+
+{# —— 4. NEDEN / PROMO —— #}
+<section class="rd-sec rd-promo">
+  <div class="rd-promo-visual">
+    {% if cover %}<img src="{{ cover }}" alt="" loading="lazy">{% endif %}
+    <div class="rd-stamp">{{ place.title.split()[0] if place.title else 'Bursa' }}</div>
+  </div>
+  <div class="rd-promo-cards">
+    <div class="rd-dark-card">
+      <span class="rd-ico">★</span>
+      <h3>{% if place.rating %}{{ '%.1f'|format(place.rating) }} / 5{% else %}BursaApp önerisi{% endif %}</h3>
+      <p>{% if place.rating_count %}{{ place.rating_count }} üye değerlendirmesi{% else %}Liste puanı · sen de yorumla{% endif %}</p>
+      <a class="wa-btn wa-btn-orange" href="#yorumlar">Değerlendir</a>
+    </div>
+    <div class="rd-dark-card">
+      <span class="rd-ico">📍</span>
+      <h3>{{ place.ilce or 'Bursa' }}</h3>
+      <p>{{ place.address or 'Adres haritada' }}</p>
+      {% if place.maps %}<a class="wa-btn wa-btn-orange" href="{{ place.maps }}" target="_blank" rel="noopener">Haritada aç</a>{% endif %}
+    </div>
+  </div>
+</section>
+
+{# —— 5. GALERİ —— #}
+{% if gals|length %}
+<section class="rd-sec">
+  <div class="rd-sec-h"><h2>Atmosfer</h2></div>
+  <div class="rd-gallery">
+    {% for g in gals[:6] %}
+    <figure class="rd-gal-item"><img src="{{ g }}" alt="{{ place.title }}" loading="lazy"></figure>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# —— 6. SOSYAL —— #}
+<section class="rd-sec rd-social">
+  <div>
+    {% if place.instagram %}<p class="rd-handle">{{ place.instagram if place.instagram.startswith('@') else '@' ~ place.instagram.lstrip('@').split('/')[-1] }}</p>{% endif %}
+    <h2>Bursa’da lezzet keşfi</h2>
+    <p>Bu restoran BursaApp rehberinde. Favorile, rota’ya ekle, yorumunu onay sonrası paylaş.</p>
+    <div class="rd-cta-row">
+      {% if nav_user %}
+      <form method="post" action="/favori/{{ place.slug }}" style="display:inline">
+        <button class="wa-btn wa-btn-orange" type="submit">{{ '❤️ Favoride' if is_fav else '♡ Favorile' }}</button>
+      </form>
+      {% endif %}
+      <a class="wa-btn wa-btn-ghost" href="/yer/{{ place.slug }}/sahiplen">İşletme sahibi misiniz?</a>
+    </div>
+  </div>
+</section>
+
+{# boyut skorları #}
+{% if dims and dims.count %}
+<section class="rd-sec">
+  <div class="dim-grid rd-dims">
+    <div><span>Yemek</span><b>★ {{ dims.food }}</b></div>
+    <div><span>Hizmet</span><b>★ {{ dims.service }}</b></div>
+    <div><span>Atmosfer</span><b>★ {{ dims.atmosphere }}</b></div>
+    <div><span>Fiyat</span><b>★ {{ dims.price }}</b></div>
+  </div>
+</section>
+{% endif %}
+
+{# —— YORUMLAR —— #}
+<section class="rd-sec panel" id="yorumlar">
+  <h2 style="margin-top:0">Değerlendirmeler</h2>
+  {% if my_review and my_review.status == 'pending' %}
+  <p class="flash ok">Yorumun onay bekliyor — yayınlanınca burada görünür.</p>
+  {% endif %}
+  {% if can_review %}
+  <form method="post" action="/yer/{{ place.slug }}/yorum" class="form review-form" enctype="multipart/form-data">
+    <p class="empty">Yemek · Hizmet · Atmosfer · Fiyat (1–5) — admin onayına düşer</p>
+    <div class="score-row">
+      <label>Yemek<select name="score_food">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_food if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+      <label>Hizmet<select name="score_service">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_service if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+      <label>Atmosfer<select name="score_atmosphere">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_atmosphere if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+      <label>Fiyat<select name="score_price">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_price if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+    </div>
+    <label>Yorum<textarea name="body" rows="3" placeholder="İsteğe bağlı">{{ my_review.body if my_review else '' }}</textarea></label>
+    <label>Foto (isteğe bağlı)<input type="file" name="photo" accept="image/*"></label>
+    <button type="submit" class="btn">{{ 'Güncelle (yeniden onaya)' if my_review else 'Gönder' }}</button>
+  </form>
+  {% else %}
+  {% include "_review_gate.html" %}
+  {% endif %}
+  {% for r in reviews %}
+  <div class="review-item">
+    <div class="meta"><b>{{ r.user_name }}</b> · ★ {{ r.overall }}</div>
+    {% if r.body %}<p>{{ r.body }}</p>{% endif %}
+    {% if r.img_url %}<img class="review-photo" src="{{ r.img_url }}" alt="" loading="lazy">{% endif %}
+  </div>
+  {% else %}
+  <p class="empty">Henüz onaylı üye değerlendirmesi yok.</p>
+  {% endfor %}
+</section>
+
+{% if similar %}
+<section class="rd-sec">
+  <div class="rd-sec-h"><h2>Yakın lezzetler</h2><a href="/yeme-icme">Tümü →</a></div>
+  <div class="cards">
+    {% for s in similar %}
+    <a class="place-card" href="{{ s.path or ('/yer/' ~ s.slug) }}">
+      {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}" loading="lazy">{% endif %}
+      <div class="body"><h3>{{ s.title }}</h3><div class="meta"><span>{{ s.ilce }}</span>{% if s.rating %}<span class="star">★ {{ '%.1f'|format(s.rating) }}</span>{% endif %}</div></div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

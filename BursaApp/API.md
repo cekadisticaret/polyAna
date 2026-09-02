@@ -2,34 +2,32 @@
 
 Taban: `https://bursaapp.com/api/v1`  
 Hata: `{ "ok": false, "error": "..." }`  
-Sayfalama: `limit` (max 100) · `offset`  
 Auth: cookie `bursaapp_session` **veya** `Authorization: Bearer <jwt>`
 
-## Public (onaylı)
+## Public
 
-`GET /categories`  
-`GET /places?category=food|visit|hotel|camp|concert|theater|cinema|fun|event|org|hospital|doctor|vet&ilce=&spec=&q=&from=&to=`  
-`spec` = doktor branşı (Kalp, Göz…) veya konser türü. Doktor kaydında `venue_name` = hastane slug.
-`GET /places/<slug>`  
-`GET /events?from=&to=`  
-Tarihli kayıt: `theater` / `concert` / `cinema` / `event` · `starts_at` · Keşfet takvimi bunları birleştirir.
+`GET /categories` · `GET /places` (`category`,`ilce`,`sub`,`q`,`from`,`to`)  
+`GET /places/<slug>` · `GET /places/<slug>/reviews`  
+`GET /events`  
+`GET /discover/today|tonight|nearby|weekend`  
+`GET /map` — koordinatlı mekanlar  
+`GET /route?budget=&people=` — 1 günlük rota  
+`POST /ai` `{prompt}` — kural tabanlı AI rota (gerçek mekanlar)
 
-Yalnız `status=approved`. Yayınlanmayan kayıt dönmez.
+## HTML keşif (aynı sunucu)
+
+`/` hub · `/bugun` `/bu-aksam` `/yakinimda` `/hafta-sonu`  
+`/rota` `/ai` `/harita` `/kampanyalar` `/kuponlar` `/oneriyor`  
+`/bursa-da-ne-yenir` · `/bursa-iskender` …  
+`/ilce/<slug>` · `/bursa-restoranlari` · `/nilufer-restoranlari`  
+`/premium` · `/etkinlik/ekle` · `/isletme`
 
 ## Üye
 
-`POST /auth/register` `{email,password,name}` → `{user, token}`  
-`POST /auth/login` `{email,password}` → `{user, token}`  
-`POST /places` taslak (`pending`). Etkinlikte `starts_at` zorunlu.  
-`GET /me/places`
+`POST /places/<slug>/reviews` · favori HTML `POST /favori/<slug>`  
+Sahiplenme `POST /yer/<slug>/sahiplen` · bildirim `/hesap/bildirimler`
 
-Place gövdesi: `title, category, ilce, address, lat, lng, phone, web, hours_text, price_band, blurb, body, img_url, tags, starts_at, ends_at, venue_name`
+## Admin
 
-## Admin (`role=admin`)
-
-`GET /admin/queue?status=pending|approved|rejected|all`  
-`POST /admin/places/<id>/approve`  
-`POST /admin/places/<id>/reject` `{reason}`  
-`PATCH /admin/places/<id>`
-
-Kayıt / ekle: IP başına dakikada 5.
+`/admin` kuyruk · `/admin/dashboard` KPI · `/admin/claims` sahiplenme  
+Kampanya/ödeme stub — gerçek tahsilat yok.

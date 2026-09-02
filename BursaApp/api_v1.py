@@ -6,8 +6,9 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request
 
 from auth import admin_required, hash_password, load_user, login_required, login_user, make_token, rate_ok, verify_password
-from catalog import CAT_KEYS, CATEGORIES, parse_dt, place_mine, place_public, query_places, tags_dump, unique_slug
-from models import Place, SessionLocal, User
+from catalog import CAT_KEYS, CATEGORIES, MEKAN_TAXONOMY, parse_dt, place_mine, place_public, query_places, tags_dump, unique_slug
+from discover import FALLBACK_LAT, FALLBACK_LNG, nearby, today_bursa, tonight, weekend, weekend_plan
+from models import Place, Review, SessionLocal, User, clamp_score, recompute_place_rating, review_dimension_avgs
 
 bp = Blueprint("api_v1", __name__, url_prefix="/api/v1")
 
@@ -34,7 +35,7 @@ def _paging():
 
 @bp.route("/categories")
 def categories():
-    return jsonify({"ok": True, "categories": list(CATEGORIES)})
+    return jsonify({"ok": True, "categories": list(CATEGORIES), "taxonomy": MEKAN_TAXONOMY})
 
 
 @bp.route("/places")
@@ -47,6 +48,7 @@ def places():
             category=request.args.get("category"),
             ilce=request.args.get("ilce"),
             price_band=request.args.get("spec") or request.args.get("price_band"),
+            subcategory=request.args.get("sub") or request.args.get("subcategory"),
             q=request.args.get("q"),
             from_=request.args.get("from"),
             to=request.args.get("to"),
@@ -66,7 +68,121 @@ def place_one(slug: str):
         p = db.query(Place).filter(Place.slug == slug, Place.status == "approved").first()
         if p is None:
             return _err("bulunamadı", 404)
-        return jsonify({"ok": True, "place": place_public(p)})
+        d = place_public(p)
+        d["dimensions"] = review_dimension_avgs(db, p.id)
+        return jsonify({"ok": True, "place": d})
+    finally:
+        db.close()
+
+
+@bp.route("/places/<slug>/reviews")
+def place_reviews(slug: str):
+    limit, offset = _paging()
+    db = SessionLocal()
+    try:
+        p = db.query(Place).filter(Place.slug == slug, Place.status == "approved").first()
+        if p is None:
+            return _err("bulunamadı", 404)
+        qry = db.query(Review).filter(Review.place_id == p.id, Review.status == "approved").order_by(Review.updated_at.desc())
+        total = qry.count()
+        rows = qry.offset(offset).limit(limit).all()
+        return jsonify({
+            "ok": True,
+            "reviews": [r.public() for r in rows],
+            "dimensions": review_dimension_avgs(db, p.id),
+            "rating_avg": p.rating_avg,
+            "rating_count": p.rating_count,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        })
+    finally:
+        db.close()
+
+
+@bp.route("/places/<slug>/reviews", methods=["POST"])
+@login_required
+def place_review_post(slug: str):
+    if not rate_ok("review", limit=20):
+        return _err("çok sık deneme", 429)
+    user = load_user()
+    body = _json()
+    db = SessionLocal()
+    try:
+        p = db.query(Place).filter(Place.slug == slug, Place.status == "approved").first()
+        if p is None:
+            return _err("bulunamadı", 404)
+        rev = db.query(Review).filter(Review.place_id == p.id, Review.user_id == user.id).first()
+        if rev is None:
+            rev = Review(place_id=p.id, user_id=user.id)
+            db.add(rev)
+        rev.score_food = clamp_score(body.get("score_food"))
+        rev.score_service = clamp_score(body.get("score_service"))
+        rev.score_atmosphere = clamp_score(body.get("score_atmosphere"))
+        rev.score_price = clamp_score(body.get("score_price"))
+        rev.body = (body.get("body") or "").strip()[:2000]
+        rev.status = "pending"
+        from datetime import datetime as _dt
+        rev.updated_at = _dt.utcnow()
+        db.flush()
+        recompute_place_rating(db, p)
+        db.commit()
+        return jsonify({"ok": True, "review": rev.public(), "pending": True, "message": "admin onayı bekleniyor"})
+    finally:
+        db.close()
+
+
+@bp.route("/discover/today")
+def discover_today():
+    db = SessionLocal()
+    try:
+        return jsonify({"ok": True, **today_bursa(db)})
+    finally:
+        db.close()
+
+
+@bp.route("/discover/tonight")
+def discover_tonight():
+    couple = (request.args.get("mode") or "") == "couple"
+    db = SessionLocal()
+    try:
+        return jsonify({"ok": True, **tonight(db, couple=couple)})
+    finally:
+        db.close()
+
+
+@bp.route("/discover/nearby")
+def discover_nearby():
+    db = SessionLocal()
+    try:
+        try:
+            lat = float(request.args.get("lat"))
+            lng = float(request.args.get("lng"))
+        except (TypeError, ValueError):
+            lat, lng = FALLBACK_LAT, FALLBACK_LNG
+        try:
+            radius = float(request.args.get("r") or 500)
+        except (TypeError, ValueError):
+            radius = 500
+        return jsonify({"ok": True, **nearby(db, lat, lng, max(200, min(radius, 5000)))})
+    finally:
+        db.close()
+
+
+@bp.route("/discover/weekend")
+def discover_weekend():
+    plan = (request.args.get("plan") or "") == "1"
+    try:
+        people = max(1, min(int(request.args.get("people") or 2), 8))
+    except ValueError:
+        people = 2
+    db = SessionLocal()
+    try:
+        data = weekend(db)
+        out = {"ok": True, **data}
+        if plan:
+            out["plan"] = weekend_plan(db, people=people)
+        return jsonify(out)
     finally:
         db.close()
 
@@ -109,12 +225,25 @@ def register():
     try:
         if db.query(User).filter(User.email == email).first():
             return _err("bu e-posta kayıtlı")
-        u = User(email=email, password_hash=hash_password(password), name=name, role="user")
+        u = User(email=email, password_hash=hash_password(password), name=name, role="user", email_verified=False)
+        from mail_verify import new_email_token, send_verify_email
+
+        u.email_token = new_email_token()
         db.add(u)
         db.commit()
         db.refresh(u)
+        try:
+            send_verify_email(email=email, name=name, token=u.email_token)
+        except Exception:
+            pass
+        try:
+            from notify import notify_register
+
+            notify_register(name=name, email=email, user_id=u.id, source="api")
+        except Exception:
+            pass
         login_user(u)
-        return jsonify({"ok": True, "user": u.public(), "token": make_token(u)})
+        return jsonify({"ok": True, "user": u.public(), "token": make_token(u), "email_verify_sent": True})
     finally:
         db.close()
 
@@ -153,7 +282,7 @@ def _fill_place(p: Place, body: dict, *, is_admin: bool, db) -> str | None:
     p.category = cat
     p.ilce = (body.get("ilce") or p.ilce or "").strip()
     p.address = (body.get("address") or "").strip() if "address" in body else (p.address or "")
-    for key in ("phone", "web", "hours_text", "price_band", "blurb", "body", "img_url", "venue_name"):
+    for key in ("phone", "web", "hours_text", "price_band", "blurb", "body", "img_url", "venue_name", "subcategory"):
         if key in body:
             setattr(p, key, (body.get(key) or "").strip())
     if "lat" in body:

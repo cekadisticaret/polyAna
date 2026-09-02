@@ -1,0 +1,65 @@
+{% extends "_shell.html" %}
+{% block title %}Profil ayarları · BursaApp{% endblock %}
+{% block hello %}Profil ayarları{% endblock %}
+{% block sub %}Fotoğraf · şifre · isim görünümü · e-posta onayı{% endblock %}
+{% block main %}
+<section class="panel" style="margin-bottom:18px">
+  <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+    <div class="prof-avatar">
+      {% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}
+    </div>
+    <div>
+      <h2 style="margin:0">{{ u.name }}</h2>
+      <p class="empty" style="margin:6px 0 0">{{ u.email }}
+        {% if u.email_verified %}<span class="badge approved">Onaylı</span>
+        {% else %}<span class="badge pending">E-posta onayı bekliyor</span>{% endif %}
+      </p>
+      <p class="empty">Yorumlarda görünen: <b>{{ u.display_name() }}</b></p>
+    </div>
+  </div>
+</section>
+
+<section class="panel" style="margin-bottom:18px">
+  <h3 style="margin-top:0">Profil fotoğrafı</h3>
+  <form method="post" action="/hesap/profil" enctype="multipart/form-data" class="form">
+    <input type="hidden" name="action" value="avatar">
+    <label>Fotoğraf<input type="file" name="avatar" accept="image/*" required></label>
+    <button class="btn" type="submit">Yükle</button>
+  </form>
+</section>
+
+<section class="panel" style="margin-bottom:18px">
+  <h3 style="margin-top:0">Yorumlarda isim</h3>
+  <form method="post" action="/hesap/profil" class="form">
+    <input type="hidden" name="action" value="display_name">
+    <label style="display:flex;gap:10px;align-items:center">
+      <input type="checkbox" name="show_full_name" value="1" {% if u.show_full_name %}checked{% endif %}>
+      İsmim yorumlarda tam görünsün (kapalıysa C.. K.. gibi)
+    </label>
+    <button class="btn" type="submit">Kaydet</button>
+  </form>
+</section>
+
+<section class="panel" style="margin-bottom:18px">
+  <h3 style="margin-top:0">Şifre güncelle</h3>
+  <form method="post" action="/hesap/profil" class="form">
+    <input type="hidden" name="action" value="password">
+    <label>Mevcut şifre<input type="password" name="current_password" required autocomplete="current-password"></label>
+    <label>Yeni şifre (min 8)<input type="password" name="new_password" required minlength="8" autocomplete="new-password"></label>
+    <label>Yeni şifre tekrar<input type="password" name="new_password2" required minlength="8" autocomplete="new-password"></label>
+    <button class="btn" type="submit">Şifreyi güncelle</button>
+  </form>
+</section>
+
+{% if not u.email_verified %}
+<section class="panel" style="border-color:rgba(185,28,28,.35)">
+  <h3 style="margin-top:0;color:#B91C1C">E-posta onayı zorunlu</h3>
+  <p class="empty">Mailindeki onay linkine bas. {{ verify_days|default(7) }} gün içinde onaylamazsan üyelik iptal edilir. Onaysız hesap yorum yazamaz.</p>
+  <form method="post" action="/hesap/ayarlar">
+    <input type="hidden" name="action" value="resend_verify">
+    <button class="btn" type="submit">Onay mailini tekrar gönder</button>
+  </form>
+</section>
+{% endif %}
+<p><a href="/hesap">← Hesaba dön</a></p>
+{% endblock %}

@@ -1,0 +1,74 @@
+[
+  {
+    "slug": "eski-kaplica",
+    "title": "Eski Kaplica",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/eski-kaplica.jpg"
+  },
+  {
+    "slug": "teleferik",
+    "title": "Teleferik",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/teleferik.jpg"
+  },
+  {
+    "slug": "koza-han",
+    "title": "Koza Han",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/koza-han.jpg"
+  },
+  {
+    "slug": "iznik-surlar",
+    "title": "Iznik Surlar",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/iznik-surlar.jpg"
+  },
+  {
+    "slug": "emir-sultan",
+    "title": "Emir Sultan",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/emir-sultan.jpg"
+  },
+  {
+    "slug": "tophane",
+    "title": "Tophane",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/tophane.jpg"
+  },
+  {
+    "slug": "yesil-cami",
+    "title": "Yesil Cami",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/yesil-cami.jpg"
+  },
+  {
+    "slug": "kale-sokak",
+    "title": "Kale Sokak",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/kale-sokak.jpg"
+  },
+  {
+    "slug": "soganli-botanik",
+    "title": "Soganli Botanik",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/soganli-botanik.jpg"
+  },
+  {
+    "slug": "hanlar-kapalicarsi",
+    "title": "Hanlar Kapalicarsi",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/hanlar-kapalicarsi.jpg"
+  },
+  {
+    "slug": "cumalikizik",
+    "title": "Cumalikizik",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/cumalikizik.jpg"
+  },
+  {
+    "slug": "panorama-1326",
+    "title": "Panorama 1326",
+    "credit": "BursaApp yerel arşiv (Wikimedia seed kopyası)",
+    "img_url": "/static/album/panorama-1326.jpg"
+  }
+]

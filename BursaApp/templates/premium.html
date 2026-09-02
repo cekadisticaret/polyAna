@@ -1,0 +1,29 @@
+{% extends "_shell.html" %}
+{% block title %}Premium · BursaApp{% endblock %}
+{% block hello %}İşletme paketleri{% endblock %}
+{% block sub %}Sandbox ödeme — gerçek kart çekimi yok, plan 30 gün işlenir{% endblock %}
+{% block main %}
+<div class="cards">
+  {% for k,v in tiers.items() %}
+  <div class="place-card">
+    <div class="body">
+      <h3>{{ v.label }}</h3>
+      <div class="meta"><span>{{ v.price_tl }} TL / ay</span><span>{{ v.photos }} foto</span></div>
+      <p class="blurb">
+        {% if k=='free' %}Ad · adres · telefon · harita · 5 fotoğraf{% endif %}
+        {% if k=='pro' %}30 foto · menü · kampanya · Instagram · WhatsApp · rezervasyon · öne çıkarma · istatistik{% endif %}
+        {% if k=='premium' %}Ana sayfa · kategori üst sıra · ilçe öne çıkma · bildirim · gelişmiş analitik · sponsorlu içerik{% endif %}
+      </p>
+      {% if k != 'free' and nav_user %}
+      <form method="post" action="/premium/checkout" style="margin-top:12px">
+        <input type="hidden" name="tier" value="{{ k }}">
+        <button class="btn" type="submit">Sandbox ile al</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<p class="empty" style="margin-top:14px">Canlı ödeme (iyzico/Stripe) bağlanınca aynı endpoint PSP’ye yönlenecek. Şimdilik sandbox.</p>
+<a class="btn" href="/isletme">İşletme paneline git</a>
+{% endblock %}

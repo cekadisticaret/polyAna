@@ -1,0 +1,235 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else (place.title ~ ' · BursaApp') }}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block main %}
+{% if not place %}
+<div class="empty-box"><p>Bu hastane yayınlı değil veya yok.</p><a href="/hastaneler">Hastanelere dön</a></div>
+{% else %}
+{% set ex = place.extra or {} %}
+{% set services = ex.services if ex.services else [] %}
+{% set fees = ex.fees if ex.fees else [] %}
+{% set fee_note = ex.fee_note if ex.fee_note else '' %}
+{% set gallery = ex.gallery if ex.gallery else [] %}
+{% set cover = place.img_url or (gallery[0] if gallery else '') %}
+{% set doc_count = staff|length if staff else 0 %}
+{% set staff_extra = ex.staff if ex.staff else [] %}
+
+{# —— HERO —— #}
+<section class="hd-hero">
+  <div class="hd-hero-copy">
+    <p class="hd-kicker">{{ place.subcategory_label or place.price_band or 'Hastane' }}{% if place.ilce %} · {{ place.ilce }}{% endif %}</p>
+    <h1>{{ place.title }}</h1>
+    <p class="hd-lead">{{ place.blurb or 'BursaApp hastane rehberi — branşlar, hekimler ve muayene bilgisi.' }}</p>
+    <div class="hd-cta">
+      {% if services %}<a class="wa-btn hd-btn" href="#hizmetler">Hizmetler</a>{% endif %}
+      {% if doc_count or staff_extra %}<a class="wa-btn hd-btn-outline" href="#doktorlar">Doktorlar</a>{% endif %}
+      {% if fees %}<a class="wa-btn hd-btn-outline" href="#ucretler">Muayene ücretleri</a>{% endif %}
+      {% if place.phone %}<a class="wa-btn hd-btn" href="tel:{{ place.phone }}">Randevu · {{ place.phone }}</a>{% endif %}
+    </div>
+  </div>
+  <div class="hd-hero-media">
+    {% if cover %}<img src="{{ cover }}" alt="{{ place.title }}" decoding="async">{% endif %}
+  </div>
+</section>
+
+{# —— STATS —— #}
+<div class="hd-stats">
+  <div><b>{{ doc_count or staff_extra|length or '—' }}</b><span>{% if doc_count %}Hekim{% else %}Kadro kaydı{% endif %}</span></div>
+  <div><b>{{ services|length or '—' }}</b><span>Hizmet alanı</span></div>
+  <div><b>{{ fees|length or '—' }}</b><span>Ücret kalemi</span></div>
+  <div><b>{% if place.rating %}{{ '%.1f'|format(place.rating) }}{% else %}—{% endif %}</b><span>{% if place.rating_count %}{{ place.rating_count }} puan{% else %}BursaApp{% endif %}</span></div>
+</div>
+
+{# —— HAKKINDA —— #}
+<section class="hd-sec hd-about">
+  <div class="hd-about-img">
+    {% if cover %}<img src="{{ cover }}" alt="" loading="lazy">{% endif %}
+  </div>
+  <div class="hd-about-text">
+    <p class="hd-label">Hakkımızda</p>
+    <h2>{{ place.title }} — sağlık rehberi</h2>
+    <p>{{ place.body or place.blurb or 'Bu hastane BursaApp rehberinde yer alıyor. Güncel randevu ve ücret için resmi hat / web sitesini kullanın.' }}</p>
+    <div class="hd-feat-grid">
+      {% if place.hours_text %}
+      <div class="hd-feat"><span>🕐</span><div><b>Mesai</b><i>{{ place.hours_text }}</i></div></div>
+      {% endif %}
+      {% if place.address %}
+      <div class="hd-feat"><span>📍</span><div><b>Adres</b><i>{{ place.address }}{% if place.ilce %} · {{ place.ilce }}{% endif %}</i></div></div>
+      {% endif %}
+      {% if place.phone %}
+      <div class="hd-feat"><span>📞</span><div><b>Telefon</b><i><a href="tel:{{ place.phone }}">{{ place.phone }}</a></i></div></div>
+      {% endif %}
+      {% if place.web %}
+      <div class="hd-feat"><span>🌐</span><div><b>Web</b><i><a href="{{ place.web }}" target="_blank" rel="noopener">Resmi site</a></i></div></div>
+      {% endif %}
+    </div>
+    <div class="hd-cta" style="margin-top:16px">
+      {% if place.maps %}<a class="wa-btn hd-btn" href="{{ place.maps }}" target="_blank" rel="noopener">Haritada aç</a>{% endif %}
+      {% if nav_user %}
+      <form method="post" action="/favori/{{ place.slug }}" style="display:inline">
+        <button class="wa-btn hd-btn-outline" type="submit">{{ '❤️ Favoride' if is_fav else '♡ Favorile' }}</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{# —— HİZMETLER —— #}
+{% if services %}
+<section class="hd-sec" id="hizmetler">
+  <div class="hd-sec-h">
+    <div>
+      <p class="hd-label">Hizmetler</p>
+      <h2>Hizmet alanları</h2>
+    </div>
+  </div>
+  <div class="hd-svc-grid">
+    {% for s in services %}
+    <article class="hd-svc">
+      <div class="hd-svc-ico">✚</div>
+      <h3>{{ s }}</h3>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# —— ÜCRETLER —— #}
+{% if fees or fee_note %}
+<section class="hd-sec" id="ucretler">
+  <div class="hd-sec-h">
+    <div>
+      <p class="hd-label">Ücretler</p>
+      <h2>Muayene ücretleri</h2>
+    </div>
+  </div>
+  <div class="hd-fee-panel">
+    {% if fees %}
+    <ul class="hd-fee-list">
+      {% for f in fees %}
+      <li>
+        <div>
+          <b>{{ f.name }}</b>
+          {% if f.note %}<span>{{ f.note }}</span>{% endif %}
+        </div>
+        <strong>{{ f.price }}</strong>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if fee_note %}<p class="hd-fee-note">{{ fee_note }}</p>{% endif %}
+    <p class="hd-fee-note">BursaApp fiyat satışı yapmaz; rakamlar bilgilendirme amaçlıdır. Güncel ücret için hastane veznesi / MHRS’yi doğrulayın.</p>
+  </div>
+</section>
+{% endif %}
+
+{# —— DOKTORLAR (Place kayıtları) —— #}
+<section class="hd-sec" id="doktorlar">
+  <div class="hd-sec-h">
+    <div>
+      <p class="hd-label">Hekimler</p>
+      <h2>Doktorlarımız</h2>
+      <p class="hd-sub">{% if doc_count %}{{ doc_count }} hekim · branşa göre{% elif staff_extra %}{{ staff_extra|length }} kadro kaydı{% else %}Açık hekim listesi yok{% endif %}</p>
+    </div>
+    <a class="wa-btn hd-btn-outline" href="/doktorlar?q={{ place.title|urlencode }}">Tüm doktorlar</a>
+  </div>
+
+  {% if staff_groups %}
+  {% for g in staff_groups %}
+  <div class="hd-spec-block">
+    <h3>{{ g.label }} <small>{{ g.places|length }}</small></h3>
+    <div class="hd-doc-grid">
+      {% for s in g.places %}
+      <a class="hd-doc" href="{{ s.path or ('/yer/' ~ s.slug) }}">
+        <div class="hd-doc-photo">
+          {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}" loading="lazy">{% else %}<span>👨‍⚕️</span>{% endif %}
+        </div>
+        <div class="hd-doc-body">
+          <h4>{{ s.title }}</h4>
+          <p>{{ s.price_band or g.label }}</p>
+          {% if s.rating %}<div class="hd-doc-rate">★ {{ '%.1f'|format(s.rating) }}</div>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% elif staff_extra %}
+  <div class="hd-doc-grid">
+    {% for s in staff_extra %}
+    <div class="hd-doc hd-doc-static">
+      <div class="hd-doc-photo"><span>👨‍⚕️</span></div>
+      <div class="hd-doc-body">
+        <h4>{{ s.name }}</h4>
+        <p>{{ s.role or 'Hekim' }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="hd-empty">Bu hastanenin açık hekim listesi yok. MHRS / 182 veya hastane telefonundan branş randevusu alın.</div>
+  {% endif %}
+</section>
+
+{% if units %}
+<section class="hd-sec">
+  <div class="hd-sec-h"><div><p class="hd-label">Kampüs</p><h2>Birimler</h2></div></div>
+  <div class="hd-doc-grid">
+    {% for u in units %}
+    <a class="hd-doc" href="{{ u.path or ('/yer/' ~ u.slug) }}">
+      <div class="hd-doc-photo">{% if u.img_url %}<img src="{{ u.img_url }}" alt="" loading="lazy">{% else %}<span>🏥</span>{% endif %}</div>
+      <div class="hd-doc-body"><h4>{{ u.title }}</h4><p>{{ u.price_band or u.ilce }}</p></div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# —— YORUM —— #}
+<section class="hd-sec panel" id="yorumlar">
+  <h2 style="margin-top:0">Değerlendirmeler</h2>
+  {% if my_review and my_review.status == 'pending' %}
+  <p class="flash ok">Yorumun onay bekliyor — yayınlanınca burada görünür.</p>
+  {% endif %}
+  {% if can_review %}
+  <form method="post" action="/yer/{{ place.slug }}/yorum" class="form review-form" enctype="multipart/form-data">
+    <p class="empty">Hizmet · Atmosfer · Fiyat (1–5) — admin onayına düşer</p>
+    <div class="score-row">
+      <label>Yemek<select name="score_food">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_food if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+      <label>Hizmet<select name="score_service">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_service if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+      <label>Atmosfer<select name="score_atmosphere">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_atmosphere if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+      <label>Fiyat<select name="score_price">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_price if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+    </div>
+    <label>Yorum<textarea name="body" rows="3">{{ my_review.body if my_review else '' }}</textarea></label>
+    <label>Foto (isteğe bağlı)<input type="file" name="photo" accept="image/*"></label>
+    <button type="submit" class="btn">{{ 'Güncelle (yeniden onaya)' if my_review else 'Gönder' }}</button>
+  </form>
+  {% else %}
+  {% include "_review_gate.html" %}
+  {% endif %}
+  {% for r in reviews %}
+  <div class="review-item">
+    <div class="meta"><b>{{ r.user_name }}</b> · ★ {{ r.overall }}</div>
+    {% if r.body %}<p>{{ r.body }}</p>{% endif %}
+    {% if r.img_url %}<img class="review-photo" src="{{ r.img_url }}" alt="" loading="lazy">{% endif %}
+  </div>
+  {% else %}
+  <p class="empty">Henüz onaylı üye değerlendirmesi yok.</p>
+  {% endfor %}
+</section>
+
+{% if similar %}
+<section class="hd-sec">
+  <div class="hd-sec-h"><div><h2>Diğer hastaneler</h2></div><a href="/hastaneler">Tümü →</a></div>
+  <div class="cards">
+    {% for s in similar %}
+    <a class="place-card" href="{{ s.path or ('/yer/' ~ s.slug) }}">
+      {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}" loading="lazy">{% endif %}
+      <div class="body"><h3>{{ s.title }}</h3><div class="meta"><span>{{ s.ilce }}</span></div></div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

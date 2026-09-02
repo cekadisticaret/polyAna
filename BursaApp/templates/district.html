@@ -1,0 +1,29 @@
+{% extends "_shell.html" %}
+{% block title %}{{ ilce }} · BursaApp{% endblock %}
+{% block hello %}{{ ilce }}{% endblock %}
+{% block sub %}İlçe rehberi — etkinlik, yeme-içme, gezilecek{% endblock %}
+{% block main %}
+<div class="chips">
+  <a class="chip" href="/{{ ilce_slug }}-restoranlari">Restoranlar SEO</a>
+  <a class="chip" href="/{{ ilce_slug }}-cafeler">Cafeler SEO</a>
+  <a class="chip" href="/yakinimda">Yakınımda</a>
+</div>
+{% for s in sections %}
+  {% if s.places %}
+  <section class="ilce-block" id="{{ s.key }}">
+    <div class="sec-h"><h2>{{ s.label }}</h2><span class="see">{{ s.places|length }}</span></div>
+    <div class="cards">
+      {% for p in s.places %}
+      <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+        <div class="body">
+          <h3>{{ p.title }}</h3>
+          <div class="meta"><span>{{ p.subcategory_label or p.category_label }}</span>{% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+{% endfor %}
+{% endblock %}

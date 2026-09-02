@@ -1,0 +1,72 @@
+[
+  {
+    "slug": "korupark-avm",
+    "title": "Korupark AVM",
+    "ilce": "Nilüfer",
+    "address": "Odunluk, Nilüfer",
+    "subcategory": "avm",
+    "lat": 40.2205,
+    "lng": 28.9860,
+    "rating": 4.5,
+    "hours_text": "10:00–22:00",
+    "tags": ["avm", "alisveris"],
+    "blurb": "Nilüfer’in büyük AVM’si — mağaza, sinema, yeme-içme.",
+    "photo": ""
+  },
+  {
+    "slug": "marka-outlet",
+    "title": "Marka AVM / Outlet",
+    "ilce": "Nilüfer",
+    "address": "Odunluk, Nilüfer",
+    "subcategory": "outlet",
+    "lat": 40.2150,
+    "lng": 28.9780,
+    "rating": 4.3,
+    "hours_text": "10:00–22:00",
+    "tags": ["outlet", "avm"],
+    "blurb": "Marka outlet alışverişi.",
+    "photo": ""
+  },
+  {
+    "slug": "kozahan-hediyelik",
+    "title": "Koza Han Hediyelik",
+    "ilce": "Osmangazi",
+    "address": "Koza Han, Heykel",
+    "subcategory": "hediyelik",
+    "lat": 40.1838,
+    "lng": 29.0625,
+    "rating": 4.6,
+    "hours_text": "gün içi",
+    "tags": ["hediyelik", "yerel", "tarihi"],
+    "blurb": "Han içi hediyelik ve ipek ürünler.",
+    "photo": ""
+  },
+  {
+    "slug": "cumalikizik-yerel",
+    "title": "Cumalıkızık Yerel Ürünler",
+    "ilce": "Yıldırım",
+    "address": "Cumalıkızık köyü",
+    "subcategory": "yerel",
+    "lat": 40.1689,
+    "lng": 29.1706,
+    "rating": 4.4,
+    "hours_text": "hafta sonu yoğun",
+    "tags": ["yerel", "koy"],
+    "blurb": "Köy ürünleri, reçel, el işi.",
+    "photo": ""
+  },
+  {
+    "slug": "antik-carsı-osmangazi",
+    "title": "Antik & Sahaf Osmangazi",
+    "ilce": "Osmangazi",
+    "address": "Tarihi çarşı civarı",
+    "subcategory": "antika",
+    "lat": 40.1850,
+    "lng": 29.0618,
+    "rating": 4.2,
+    "hours_text": "öğlen–akşam",
+    "tags": ["antika"],
+    "blurb": "Antika ve sahaf dükkânları.",
+    "photo": ""
+  }
+]

@@ -1,0 +1,31 @@
+{% extends "_shell.html" %}
+{% block title %}Kuponlar · BursaApp{% endblock %}
+{% block hello %}Kupon sistemi{% endblock %}
+{% block sub %}Kodu işletmede göster — indirim kazan{% endblock %}
+{% block main %}
+<div class="panel" style="margin-bottom:16px">
+  <h3>Sadakat → kupon</h3>
+  <p class="empty">{{ points }} puanın var. {{ cost }} puan = %{{ pct }} tek kullanımlık kupon.</p>
+  {% if nav_user %}
+  <form method="post" style="margin-top:10px">
+    <button class="btn" type="submit" {% if points < cost %}disabled{% endif %}>
+      {{ cost }} puanı kupon yap
+    </button>
+  </form>
+  {% else %}
+  <p><a class="btn" href="/giris?next=/kuponlar">Giriş yap</a></p>
+  {% endif %}
+</div>
+{% for it in items %}
+<div class="panel" style="margin-bottom:12px">
+  <h3>{{ it.coupon.code }} · %{{ it.coupon.discount_pct }}</h3>
+  <p>{{ it.coupon.title }}</p>
+  {% if it.place %}<p><a href="/yer/{{ it.place.slug }}">{{ it.place.title }}</a></p>{% endif %}
+  <p class="empty">Kullanım {{ it.coupon.used_count }}/{{ it.coupon.max_uses }}
+    {% if it.coupon.owner_user_id %}· sana özel{% endif %}
+  </p>
+</div>
+{% else %}
+<div class="empty-box"><p>Aktif kupon yok.</p></div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "_shell.html" %}
+{% block hello %}{{ place.title }}{% endblock %}
+{% block sub %}{{ place.price_band or 'Hekim' }}{% if place.ilce %} · {{ place.ilce }}{% endif %}{% endblock %}
+{% block main %}
+<article class="doc-detail">
+  <div class="doc-hero">
+    <div class="doc-photo">
+      {% if place.img_url %}
+      <img src="{{ place.img_url }}" alt="{{ place.title }}" width="320" height="320">
+      {% else %}
+      <div class="doc-ph">{{ place.title[:1] }}</div>
+      {% endif %}
+    </div>
+    <div class="doc-intro">
+      <p class="doc-kicker">{{ place.price_band or 'Branş' }}{% if place.extra and place.extra.specialty_detail %} · {{ place.extra.specialty_detail }}{% endif %}</p>
+      <h1>{{ place.title }}</h1>
+      {% if hospital %}
+      <p class="doc-hosp"><a href="{{ hospital.path or ('/yer/' ~ hospital.slug) }}">{{ hospital.title }}</a>{% if hospital.ilce %} · {{ hospital.ilce }}{% endif %}</p>
+      {% endif %}
+      {% if place.extra and place.extra.experience_years %}
+      <p class="doc-exp"><b>{{ place.extra.experience_years }}</b> yıl deneyim</p>
+      {% endif %}
+      <p class="blurb">{{ place.blurb }}</p>
+      <div class="doc-acts">
+        {% if place.extra and place.extra.profile_url %}
+        <a class="btn" href="{{ place.extra.profile_url }}" target="_blank" rel="noopener">Hastane profili</a>
+        {% elif place.web %}
+        <a class="btn" href="{{ place.web }}" target="_blank" rel="noopener">Kurum sayfası</a>
+        {% endif %}
+        {% if place.extra and place.extra.linkedin_url %}
+        <a class="btn sm" href="{{ place.extra.linkedin_url }}" target="_blank" rel="noopener">LinkedIn’de ara</a>
+        {% endif %}
+        {% if place.phone %}
+        <a class="btn sm" href="tel:{{ place.phone }}">Ara</a>
+        {% endif %}
+        {% if hospital and hospital.maps %}
+        <a class="btn sm" href="{{ hospital.maps }}" target="_blank" rel="noopener">Harita</a>
+        {% elif place.maps %}
+        <a class="btn sm" href="{{ place.maps }}" target="_blank" rel="noopener">Harita</a>
+        {% endif %}
+      </div>
+      <p class="empty" style="margin-top:10px">Randevu BursaApp’ten alınmaz — hastane / MHRS üzerinden.</p>
+    </div>
+  </div>
+
+  {% if place.body and place.body != place.blurb %}
+  <section class="panel doc-sec">
+    <h2>Özgeçmiş</h2>
+    <div class="body-text doc-about">{{ place.body }}</div>
+  </section>
+  {% endif %}
+
+  {% if place.extra and place.extra.services %}
+  <section class="panel doc-sec">
+    <h2>İlgi / hizmet alanları</h2>
+    <ul class="doc-chips">
+      {% for s in place.extra.services %}
+      <li>{{ s }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="panel doc-sec">
+    <h2>Bilgiler</h2>
+    <dl class="facts">
+      {% if place.price_band %}<div><dt>Branş</dt><dd>{{ place.price_band }}</dd></div>{% endif %}
+      {% if place.extra and place.extra.specialty_detail %}<div><dt>Birimler</dt><dd>{{ place.extra.specialty_detail }}</dd></div>{% endif %}
+      {% if place.extra and place.extra.experience_years %}<div><dt>Deneyim</dt><dd>{{ place.extra.experience_years }} yıl</dd></div>{% endif %}
+      {% if hospital %}<div><dt>Hastane</dt><dd><a href="{{ hospital.path or ('/yer/' ~ hospital.slug) }}">{{ hospital.title }}</a></dd></div>{% endif %}
+      {% if place.ilce %}<div><dt>İlçe</dt><dd>{{ place.ilce }}</dd></div>{% endif %}
+      {% if place.address %}<div><dt>Adres</dt><dd>{{ place.address }}</dd></div>{% endif %}
+      {% if place.hours_text %}<div><dt>Mesai</dt><dd>{{ place.hours_text }}</dd></div>{% endif %}
+      {% if place.phone %}<div><dt>Tel</dt><dd><a href="tel:{{ place.phone }}">{{ place.phone }}</a></dd></div>{% endif %}
+    </dl>
+    {% if place.extra and place.extra.fee_note %}<p class="empty">{{ place.extra.fee_note }}</p>{% endif %}
+  </section>
+</article>
+
+{% if similar %}
+<div class="sec-h"><h2>Benzer hekimler</h2></div>
+<div class="cards">
+  {% for s in similar %}
+  <a class="place-card" href="{{ s.path or ('/yer/' ~ s.slug) }}">
+    {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}" loading="lazy">{% else %}<div class="ph">⚕</div>{% endif %}
+    <div class="body">
+      <h3>{{ s.title }}</h3>
+      <div class="meta"><span>{{ s.price_band or s.ilce }}</span></div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

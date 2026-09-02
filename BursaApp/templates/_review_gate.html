@@ -1,0 +1,26 @@
+{# Yorum formu kapısı: misafir / onaysız / onaylı #}
+{% if can_review %}
+{% else %}
+  {% if not nav_user %}
+  <div class="rv-gate">
+    <p><b>Yorum yapmak için üye ol</b></p>
+    <p>Üye olmayanlar değerlendirme yazamaz. Kısa kayıt + e-posta onayı yeterli.</p>
+    <div class="rv-gate-actions">
+      <a class="wa-btn wa-btn-orange" href="/kayit?next={{ (place.path or ('/yer/' ~ place.slug))|urlencode }}%23yorumlar">Üye ol</a>
+      <a class="wa-btn wa-btn-ghost" href="/giris?next={{ (place.path or ('/yer/' ~ place.slug))|urlencode }}%23yorumlar">Giriş yap</a>
+    </div>
+  </div>
+  {% elif not nav_user.email_verified and nav_user.role != 'admin' %}
+  <div class="rv-gate rv-gate-warn">
+    <p><b>E-posta onayın eksik</b></p>
+    <p>Yorum yazmak için mailindeki onay linkine bas. Onaylamazsan {{ verify_days|default(7) }} gün içinde üyelik iptal edilir.</p>
+    <div class="rv-gate-actions">
+      <form method="post" action="/hesap/ayarlar" style="display:inline">
+        <input type="hidden" name="action" value="resend_verify">
+        <button type="submit" class="wa-btn wa-btn-orange">Onay mailini yeniden gönder</button>
+      </form>
+      <a class="wa-btn wa-btn-ghost" href="/hesap/ayarlar">Hesap ayarları</a>
+    </div>
+  </div>
+  {% endif %}
+{% endif %}

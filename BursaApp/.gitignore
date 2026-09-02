@@ -1,0 +1,5 @@
+.env
+data/notify_outbox.jsonl
+data/*.db
+data/*.db-journal
+static/cache/

@@ -1,0 +1,24 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Üyeler · Admin{% endblock %}
+{% block header_title %}Üyeler{% endblock %}
+{% block content %}
+<form class="mb-3 d-flex gap-2" method="get">
+  <input class="form-control" style="max-width:320px" name="q" value="{{ q }}" placeholder="Ad veya e-posta">
+  <button class="btn btn-primary">Ara</button>
+</form>
+<div class="card"><div class="card-body"><div class="table-responsive">
+<table class="table ba-table">
+  <thead><tr><th>ID</th><th>Ad</th><th>E-posta</th><th>Rol</th><th>Puan</th><th>Kayıt</th></tr></thead>
+  <tbody>
+  {% for u in rows %}
+  <tr>
+    <td>{{ u.id }}</td><td>{{ u.name }}</td><td>{{ u.email }}</td>
+    <td>{% if u.role=='admin' %}<span class="badge badge-danger">admin</span>{% else %}üye{% endif %}</td>
+    <td>{{ u.loyalty_points }}</td>
+    <td>{{ u.created_at.strftime('%d.%m.%Y %H:%M') if u.created_at else '-' }}</td>
+  </tr>
+  {% else %}<tr><td colspan="6">Üye yok</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div></div></div>
+{% endblock %}

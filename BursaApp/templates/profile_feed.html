@@ -1,0 +1,276 @@
+{% extends "_shell.html" %}
+{% block title %}Feeds · {{ u.name }} · BursaApp{% endblock %}
+{% block body_class %} is-feed-page{% endblock %}
+{% block page_head %}{% endblock %}
+{% block hello %}{% endblock %}
+{% block sub %}{% endblock %}
+{% block search %}{% endblock %}
+{% block main %}
+<div class="ff-wrap">
+  {# —— Mobil üst bar —— #}
+  <div class="ff-appbar">
+    <div class="ff-appbar-user">
+      <div class="ff-avatar">
+        {% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}
+      </div>
+      <div>
+        <b>{{ u.name.split()[0] if u.name else 'Üye' }}</b>
+        <small>{{ u.handle() }}</small>
+      </div>
+    </div>
+    <a class="ff-appbar-set" href="/hesap/ayarlar" aria-label="Ayarlar">⚙️</a>
+  </div>
+
+  {# —— Mobil chip menü —— #}
+  <nav class="ff-chips" aria-label="Profil sekmeleri">
+    <a class="{% if tab in ('recents','mine','popular') %}on{% endif %}" href="/hesap/profil?tab=recents">Feed</a>
+    <a class="{% if tab=='media' %}on{% endif %}" href="/hesap/profil?tab=media">Albüm</a>
+    <a class="{% if tab=='visits' %}on{% endif %}" href="/hesap/profil?tab=visits">Yerler</a>
+    <a class="{% if tab=='reviews' %}on{% endif %}" href="/hesap/profil?tab=reviews">Yorum</a>
+    <a class="{% if tab=='going' %}on{% endif %}" href="/hesap/profil?tab=going">Gideceğim{% if going_n %} {{ going_n }}{% endif %}</a>
+    <a href="/hesap/favoriler">Favori</a>
+    <a href="/hesap/ayarlar">Ayar</a>
+  </nav>
+
+  {# —— SOL (masaüstü) —— #}
+  <aside class="ff-side ff-left">
+    <div class="ff-card ff-profile">
+      <div class="ff-avatar lg">
+        {% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}
+      </div>
+      <div>
+        <b class="ff-name">{{ u.name }}</b>
+        <div class="ff-handle">{{ u.handle() }}</div>
+      </div>
+    </div>
+    <nav class="ff-nav">
+      <a class="{% if tab in ('recents','mine','popular') %}on{% endif %}" href="/hesap/profil?tab=recents"><span>📰</span> News Feed</a>
+      <a href="/hesap/favoriler"><span>💬</span> Favoriler</a>
+      <a href="/hesap/rotalar"><span>👥</span> Rotalarım</a>
+      <a class="{% if tab=='media' %}on{% endif %}" href="/hesap/profil?tab=media"><span>🖼</span> Media · Albüm</a>
+      <a class="{% if tab=='visits' %}on{% endif %}" href="/hesap/profil?tab=visits"><span>📍</span> Gittiğim yerler</a>
+      <a class="{% if tab=='reviews' %}on{% endif %}" href="/hesap/profil?tab=reviews"><span>⭐</span> Yorumlarım</a>
+      <a class="{% if tab=='going' %}on{% endif %}" href="/hesap/profil?tab=going"><span>🎫</span> Gideceğim{% if going_n %} <i class="ff-badge">{{ going_n }}</i>{% endif %}</a>
+      <a href="/hesap/ayarlar"><span>⚙️</span> Settings</a>
+    </nav>
+    <div class="ff-card ff-promo">
+      <b>BursaApp</b>
+      <p>Gittiğin yerleri paylaş, albümünü büyüt.</p>
+      <a class="ff-btn sm" href="/album">Şehir albümü</a>
+    </div>
+  </aside>
+
+  {# —— ORTA —— #}
+  <section class="ff-center">
+    {# Mobilde stories önce #}
+    <div class="ff-mobile-stories ff-card">
+      <h3 class="ff-h2">Yaklaşan</h3>
+      <div class="ff-stories">
+        {% for e in events %}
+        <a class="ff-story" href="{{ e.path }}">
+          {% if e.img_url %}<img src="{{ e.img_url }}" alt="">{% else %}<span class="ph"></span>{% endif %}
+          <b>{{ e.title[:16] }}{% if e.title|length>16 %}…{% endif %}</b>
+          <small>{{ e.going }} gidecek</small>
+        </a>
+        {% else %}
+        <p class="ff-muted">Yakın etkinlik yok.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <header class="ff-head">
+      <h1>Feeds</h1>
+      <div class="ff-tabs">
+        <a class="{% if tab=='recents' %}on{% endif %}" href="/hesap/profil?tab=recents">Recents</a>
+        <a class="{% if tab=='mine' %}on{% endif %}" href="/hesap/profil?tab=mine">Benim</a>
+        <a class="{% if tab=='popular' %}on{% endif %}" href="/hesap/profil?tab=popular">Popular</a>
+      </div>
+    </header>
+
+    {% if tab == 'media' %}
+    <div class="ff-card">
+      <h2 class="ff-h2">Albümüm</h2>
+      <p class="ff-muted">Kamp / yer fotoğrafların</p>
+      <div class="ff-album">
+        {% for ph in album %}
+        <figure>
+          <img src="{{ ph.img_url }}" alt="" loading="lazy">
+          {% if ph.status=='pending' %}<span class="ff-pill">onay</span>{% endif %}
+          {% if ph.place %}<figcaption><a href="{{ ph.place.path }}">{{ ph.place.title }}</a></figcaption>{% endif %}
+        </figure>
+        {% else %}
+        <p class="ff-muted">Henüz foto yok.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% elif tab == 'visits' %}
+    <div class="ff-card">
+      <h2 class="ff-h2">Gittiğim yerler</h2>
+      <form class="ff-compose ff-visit-form" method="post" action="/hesap/profil/ziyaret">
+        <label>Yer<input name="place_q" list="place-suggest" placeholder="slug veya isim" required inputmode="search"></label>
+        <datalist id="place-suggest">
+          {% for s in suggest %}{% if s %}<option value="{{ s.slug }}">{{ s.title }}</option>{% endif %}{% endfor %}
+        </datalist>
+        <label>Not<input name="note" maxlength="280" placeholder="İsteğe bağlı"></label>
+        <button class="ff-btn" type="submit">Ekle</button>
+      </form>
+      <div class="ff-visit-list">
+        {% for v in visits %}
+        <a class="ff-visit" href="{{ v.place.path if v.place else '#' }}">
+          {% if v.place and v.place.img_url %}<img src="{{ v.place.img_url }}" alt="">{% endif %}
+          <div><b>{{ v.place.title if v.place else 'Yer' }}</b><small>{{ v.note or v.ago }}</small></div>
+        </a>
+        {% else %}<p class="ff-muted">Henüz yer eklemedin.</p>{% endfor %}
+      </div>
+    </div>
+
+    {% elif tab == 'reviews' %}
+    <div class="ff-card">
+      <h2 class="ff-h2">Yorumlarım</h2>
+      {% for it in feed if it.kind=='review' %}
+      <article class="ff-post">
+        <div class="ff-post-h">
+          <div class="ff-avatar">{% if it.user.avatar_url %}<img src="{{ it.user.avatar_url }}" alt="">{% else %}<span>{{ it.user.name[0]|upper }}</span>{% endif %}</div>
+          <div><b>{{ it.user.name }}</b> · ★ {{ it.score }}<div class="ff-muted">{{ it.ago }}{% if it.place %} · <a href="{{ it.place.path }}">{{ it.place.title }}</a>{% endif %}</div></div>
+        </div>
+        {% if it.body %}<p>{{ it.body }}</p>{% endif %}
+        {% if it.images %}<div class="ff-gallery n1">{% for img in it.images %}<img src="{{ img }}" alt="" loading="lazy">{% endfor %}</div>{% endif %}
+      </article>
+      {% else %}<p class="ff-muted">Onaylı yorumun yok.</p>{% endfor %}
+    </div>
+
+    {% elif tab == 'going' %}
+    <div class="ff-card">
+      <h2 class="ff-h2">Gideceğim etkinlikler</h2>
+      <p class="ff-muted">İleride gidecekleri burada tanıştıracağız.</p>
+      <div class="ff-visit-list">
+        {% for g in goings %}
+        <a class="ff-visit" href="{{ g.place.path if g.place else '#' }}">
+          {% if g.place and g.place.img_url %}<img src="{{ g.place.img_url }}" alt="">{% endif %}
+          <div>
+            <b>{{ g.place.title if g.place else 'Etkinlik' }}</b>
+            <small>{{ g.going }} kişi gidecek · {{ g.starts_at or '' }}</small>
+          </div>
+        </a>
+        {% else %}<p class="ff-muted">Henüz etkinlik seçmedin.</p>{% endfor %}
+      </div>
+    </div>
+
+    {% else %}
+    <form class="ff-card ff-compose" method="post" action="/hesap/profil/post" enctype="multipart/form-data">
+      <div class="ff-compose-row">
+        <div class="ff-avatar">{% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}</div>
+        <textarea name="body" rows="2" placeholder="Bir şey paylaş… kamp, etkinlik, gezi" maxlength="2000"></textarea>
+      </div>
+      <div class="ff-compose-tools">
+        <label class="ff-tool" title="Foto">📷<input type="file" name="photos" accept="image/*" multiple hidden></label>
+        <label class="ff-tool ff-place-pick">📍
+          <select name="place_slug">
+            <option value="">Yer seç</option>
+            {% for s in suggest %}{% if s %}<option value="{{ s.slug }}">{{ s.title }}</option>{% endif %}{% endfor %}
+            {% for s in visit_places %}{% if s %}<option value="{{ s.slug }}">{{ s.title }}</option>{% endif %}{% endfor %}
+          </select>
+        </label>
+        <select name="privacy" class="ff-privacy">
+          <option value="public">Herkese</option>
+          <option value="private">Sadece ben</option>
+        </select>
+        <label class="ff-check"><input type="checkbox" name="also_visit" value="1"> Gittim</label>
+        <button class="ff-btn" type="submit">Gönder</button>
+      </div>
+    </form>
+
+    {% for it in feed %}
+    <article class="ff-card ff-post">
+      <div class="ff-post-h">
+        <div class="ff-avatar">{% if it.user.avatar_url %}<img src="{{ it.user.avatar_url }}" alt="">{% else %}<span>{{ it.user.name[0]|upper }}</span>{% endif %}</div>
+        <div class="ff-post-meta">
+          <b>{{ it.user.name }}</b> <span class="ff-handle">{{ it.user.handle }}</span>
+          <div class="ff-muted">{{ it.ago }}
+            {% if it.kind=='visit' %} · ziyaret{% elif it.kind=='review' %} · yorum{% elif it.kind=='photo' %} · albüm{% endif %}
+            {% if it.place %} · <a href="{{ it.place.path }}">{{ it.place.title }}</a>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% if it.body %}<p class="ff-body">{{ it.body }}</p>{% endif %}
+      {% if it.images %}
+      <div class="ff-gallery {% if it.images|length >= 3 %}n3{% elif it.images|length == 2 %}n2{% else %}n1{% endif %}">
+        {% for img in it.images[:3] %}<img src="{{ img }}" alt="" loading="lazy">{% endfor %}
+      </div>
+      {% endif %}
+      <div class="ff-actions">
+        {% if it.kind=='post' %}
+        <form method="post" action="/hesap/profil/like/{{ it.id }}" style="display:inline">
+          <button type="submit" class="ff-act {% if it.liked %}on{% endif %}">♥ {{ it.likes }}</button>
+        </form>
+        {% else %}
+        <span class="ff-act muted">{{ it.kind }}</span>
+        {% endif %}
+        {% if it.place %}<a class="ff-act" href="{{ it.place.path }}">Yeri aç</a>{% endif %}
+      </div>
+    </article>
+    {% else %}
+    <div class="ff-card"><p class="ff-muted">Feed boş — ilk postunu at.</p></div>
+    {% endfor %}
+    {% endif %}
+
+    {# Mobil keşfet etiketleri #}
+    <div class="ff-mobile-explore ff-card">
+      <h3 class="ff-h2">Keşfet</h3>
+      <div class="ff-tags">
+        <a href="/kamp">🏕 Kamp</a>
+        <a href="/sinema">🎬 Sinema</a>
+        <a href="/konserler">🎵 Konser</a>
+        <a href="/aile">🌿 Doğa</a>
+        <a href="/yeme-icme">🍽 Yeme</a>
+        <a href="/bursaspor">🟢 Spor</a>
+      </div>
+    </div>
+  </section>
+
+  {# —— SAĞ (masaüstü) —— #}
+  <aside class="ff-side ff-right">
+    <div class="ff-card">
+      <h3 class="ff-h2">Yaklaşan etkinlikler</h3>
+      <div class="ff-stories">
+        {% for e in events %}
+        <a class="ff-story" href="{{ e.path }}">
+          {% if e.img_url %}<img src="{{ e.img_url }}" alt="">{% else %}<span class="ph"></span>{% endif %}
+          <b>{{ e.title[:18] }}{% if e.title|length>18 %}…{% endif %}</b>
+          <small>{{ e.going }} gidecek</small>
+        </a>
+        {% else %}
+        <p class="ff-muted">Yakın etkinlik yok.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="ff-card">
+      <h3 class="ff-h2">Önerilen yerler</h3>
+      {% for s in suggest %}
+      {% if s %}
+      <div class="ff-suggest">
+        {% if s.img_url %}<img src="{{ s.img_url }}" alt="">{% else %}<div class="ff-avatar sm"><span>{{ s.title[0] }}</span></div>{% endif %}
+        <div><b>{{ s.title }}</b><small>{{ s.ilce }}</small></div>
+        <form method="post" action="/hesap/profil/ziyaret">
+          <input type="hidden" name="place_q" value="{{ s.slug }}">
+          <button class="ff-btn sm dark" type="submit">+ Git</button>
+        </form>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    <div class="ff-card">
+      <h3 class="ff-h2">Keşfet</h3>
+      <div class="ff-tags">
+        <a href="/kamp">🏕 Kamp</a>
+        <a href="/sinema">🎬 Sinema</a>
+        <a href="/konserler">🎵 Konser</a>
+        <a href="/aile">🌿 Doğa</a>
+        <a href="/yeme-icme">🍽 Yeme</a>
+        <a href="/bursaspor">🟢 Bursaspor</a>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

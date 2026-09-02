@@ -1,0 +1,39 @@
+{% extends "_shell.html" %}
+{% block title %}Etkinlik Ekle · BursaApp{% endblock %}
+{% block hello %}Etkinlik oluştur{% endblock %}
+{% block sub %}Üye olarak etkinlik gönder — admin onayından sonra yayınlanır{% endblock %}
+{% block main %}
+<div class="panel form-card wide">
+  {% if err %}<p class="flash err">{{ err }}</p>{% endif %}
+  <form method="post" class="form" enctype="multipart/form-data">
+    <label>Etkinlik adı<input name="title" required placeholder="Örn. Açıkhava Jazz Gecesi"></label>
+    <div class="score-row">
+      <label>Tarih<input type="date" name="event_date" required></label>
+      <label>Saat<input type="time" name="event_time" value="20:00" required></label>
+    </div>
+    <label>Mekan<input name="venue_name" placeholder="Kültürpark Açıkhava, Merinos…"></label>
+    <label>İlçe
+      <select name="ilce">{% for ad in ilceler %}<option>{{ ad }}</option>{% endfor %}</select>
+    </label>
+    <label>Adres<input name="address" placeholder="Opsiyonel açık adres"></label>
+    <label>Kategori
+      <select name="category">
+        <option value="event">Etkinlik</option>
+        <option value="concert">Konser</option>
+        <option value="theater">Tiyatro</option>
+        <option value="cinema">Sinema</option>
+        <option value="family">Aile</option>
+      </select>
+    </label>
+    <label>Açıklama<textarea name="description" rows="4" placeholder="Kısa açıklama"></textarea></label>
+    <label>Kapak fotoğrafı<input type="file" name="cover_file" accept="image/*"></label>
+    <label>veya kapak URL<input name="img_url" placeholder="https://…"></label>
+    <label>Bilet fiyatı<input name="ticket_price" placeholder="örn. 500–800 TL"></label>
+    <label>Bilet linki<input name="ticket_url" placeholder="https://biletix.com/…"></label>
+    <label>Instagram<input name="instagram" placeholder="@hesap veya profil URL"></label>
+    <label>Website<input name="web" placeholder="https://"></label>
+    <button class="btn" type="submit">Etkinlik oluştur</button>
+  </form>
+  <p class="muted" style="margin-top:12px">Bilet satışı BursaApp üzerinden yapılmaz. Gönderiler onay kuyruğuna düşer.</p>
+</div>
+{% endblock %}

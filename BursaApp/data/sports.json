@@ -1,0 +1,80 @@
+[
+  {
+    "slug": "macfit-nilufer",
+    "title": "MacFit Nilüfer",
+    "ilce": "Nilüfer",
+    "address": "Odunluk / AVM civarı",
+    "subcategory": "fitness",
+    "lat": 40.2180,
+    "lng": 28.9850,
+    "rating": 4.4,
+    "hours_text": "06:00–23:00",
+    "tags": ["fitness", "spor"],
+    "blurb": "Fitness salonu — üyelik siteden yok."
+  },
+  {
+    "slug": "yoga-studio-nilufer",
+    "title": "Yoga Stüdyosu Nilüfer",
+    "ilce": "Nilüfer",
+    "address": "Konak Mah.",
+    "subcategory": "yoga",
+    "lat": 40.2110,
+    "lng": 28.9920,
+    "rating": 4.6,
+    "hours_text": "ders saatleri",
+    "tags": ["yoga", "pilates"],
+    "blurb": "Yoga ve pilates dersleri."
+  },
+  {
+    "slug": "olusum-havuz",
+    "title": "Oluşum Yüzme",
+    "ilce": "Nilüfer",
+    "address": "Nilüfer",
+    "subcategory": "yuzme",
+    "lat": 40.2050,
+    "lng": 28.9800,
+    "rating": 4.3,
+    "hours_text": "seanslı",
+    "tags": ["yuzme", "havuz"],
+    "blurb": "Kapalı yüzme havuzu."
+  },
+  {
+    "slug": "tenis-kulubu-bursaspor",
+    "title": "Tenis Kortları",
+    "ilce": "Osmangazi",
+    "address": "Kültürpark civarı",
+    "subcategory": "tenis",
+    "lat": 40.1950,
+    "lng": 29.0550,
+    "rating": 4.1,
+    "hours_text": "rezervasyon",
+    "tags": ["tenis"],
+    "blurb": "Açık tenis kortları."
+  },
+  {
+    "slug": "hali-saha-yildirim",
+    "title": "Halı Saha Yıldırım",
+    "ilce": "Yıldırım",
+    "address": "Yıldırım",
+    "subcategory": "hali-saha",
+    "lat": 40.1900,
+    "lng": 29.0900,
+    "rating": 4.0,
+    "hours_text": "akşam yoğun",
+    "tags": ["hali-saha", "futbol"],
+    "blurb": "Halı saha kiralama."
+  },
+  {
+    "slug": "kickboks-osmangazi",
+    "title": "Kickboks / MMA Salonu",
+    "ilce": "Osmangazi",
+    "address": "Osmangazi",
+    "subcategory": "dovus",
+    "lat": 40.1920,
+    "lng": 29.0500,
+    "rating": 4.5,
+    "hours_text": "akşam ders",
+    "tags": ["dovus", "kickboks"],
+    "blurb": "Dövüş sporları salonu."
+  }
+]

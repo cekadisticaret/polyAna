@@ -1,0 +1,41 @@
+{% extends "_shell.html" %}
+{% block title %}{{ place.title }} · İşletme{% endblock %}
+{% block hello %}{{ place.title }}{% endblock %}
+{% block sub %}Plan: {{ place.plan_tier }} · görüntülenme {{ place.views }}{% endblock %}
+{% block main %}
+<div class="dim-grid" style="margin-bottom:16px">
+  <div><span>Görüntülenme</span><b>{{ place.views }}</b></div>
+  <div><span>Telefon</span><b>{{ place.phone_clicks }}</b></div>
+  <div><span>Yol tarifi</span><b>{{ place.maps_clicks }}</b></div>
+  <div><span>Favori</span><b>{{ place.fav_count }}</b></div>
+</div>
+<form method="post" class="panel form-card wide form">
+  <label>Özet<textarea name="blurb" rows="2">{{ place.blurb }}</textarea></label>
+  <label>Detay<textarea name="body" rows="4">{{ place.body }}</textarea></label>
+  <label>Telefon<input name="phone" value="{{ place.phone }}"></label>
+  <label>Web<input name="web" value="{{ place.web }}"></label>
+  <label>Saat<input name="hours_text" value="{{ place.hours_text }}"></label>
+  <label>Instagram<input name="instagram" value="{{ place.instagram }}"></label>
+  <label>WhatsApp<input name="whatsapp" value="{{ place.whatsapp }}"></label>
+  {% if place.plan_tier in ('pro','premium') %}
+  <label>Menü<textarea name="menu_text" rows="3">{{ place.menu_text }}</textarea></label>
+  <label>Kampanya başlığı<input name="campaign_title" placeholder="Yeni kampanya (onaya gider)"></label>
+  <label>Kampanya rozeti<input name="campaign_badge" placeholder="%20 indirim"></label>
+  <label>Kampanya metni<input name="campaign_body"></label>
+  {% endif %}
+  <label>Plan
+    <select name="plan_tier">
+      {% for k,v in tiers.items() %}
+      <option value="{{ k }}" {% if place.plan_tier==k %}selected{% endif %}>{{ v.label }} · {{ v.price_tl }} TL/ay</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button class="btn" type="submit">Kaydet</button>
+</form>
+{% if camps %}
+<div class="sec-h"><h2>Kampanyalarım</h2></div>
+{% for c in camps %}
+<p class="empty">{{ c.title }} · {{ c.status }} · {{ c.badge }}</p>
+{% endfor %}
+{% endif %}
+{% endblock %}

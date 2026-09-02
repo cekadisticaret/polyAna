@@ -1,7 +1,6 @@
 {% extends "_shell.html" %}
-{% block title %}{{ place.title if place else 'Bulunamadı' }} · BursaApp{% endblock %}
 {% block hello %}{{ place.title if place else 'Bulunamadı' }}{% endblock %}
-{% block sub %}{{ place.ilce if place else 'Yayınlı kayıt yok' }}{% endblock %}
+{% block sub %}{{ place.ilce if place else 'Yayınlı kayıt yok' }}{% if place and place.subcategory_label %} · {{ place.subcategory_label }}{% endif %}{% endblock %}
 {% block main %}
 {% if not place %}
 <div class="empty-box">
@@ -11,11 +10,200 @@
 {% else %}
 <article class="detail">
   {% if place.img_url %}<img class="hero" src="{{ place.img_url }}" alt="{{ place.title }}">{% endif %}
+  {% if place.rating %}
+  <div class="rating-hero">
+    <span class="star big">★ {{ '%.1f'|format(place.rating) }}</span>
+    <span>/ 5</span>
+    {% if place.rating_count %}
+    <span class="muted">{{ place.rating_count }} değerlendirme · BursaApp puanı</span>
+    {% else %}
+    <span class="muted">liste puanı</span>
+    {% endif %}
+  </div>
+  {% endif %}
+  <p class="acts" style="margin:10px 0">
+    {% if nav_user %}
+    <form method="post" action="/favori/{{ place.slug }}" style="display:inline">
+      <button class="btn sm" type="submit">{{ '❤️ Favoride' if is_fav else '♡ Favorile' }}</button>
+    </form>
+    <form method="post" action="/hesap/profil/ziyaret" style="display:inline">
+      <input type="hidden" name="place_q" value="{{ place.slug }}">
+      <button class="btn sm" type="submit">📍 Gittim</button>
+    </form>
+    {% endif %}
+    <a class="btn sm" href="/yer/{{ place.slug }}/sahiplen">İşletme sahibi misiniz? Sahiplenin</a>
+    {% if place.category in ('event','concert','theater','cinema') and nav_user %}
+    <form method="post" action="/yer/{{ place.slug }}/one-cikar" style="display:inline">
+      <button class="btn sm" type="submit">7 gün öne çıkar (99 TL stub)</button>
+    </form>
+    {% endif %}
+  </p>
+  {% if place.category in ('event','concert','theater','cinema','family','camp','fun') %}
+  <div class="ff-going-bar" id="gidecegim">
+    <div>
+      <b>{{ going_count or 0 }} kişi gidecek</b>
+      <div class="empty" style="margin:4px 0 0">Etkinliğe / yere gidecekleri ileride tanıştıracağız.</div>
+    </div>
+    {% if nav_user %}
+    <form method="post" action="/yer/{{ place.slug }}/gidecegim">
+      <button class="ff-btn" type="submit">{{ '✓ Gideceğim (vazgeç)' if is_going else 'Etkinliğe gidecek misin?' }}</button>
+    </form>
+    {% else %}
+    <a class="ff-btn" href="/giris?next={{ place.path or ('/yer/' ~ place.slug) }}">Giriş yap · gideceğim</a>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% if dims and dims.count %}
+  <div class="dim-grid">
+    {% if place.slug and place.slug.startswith('film-') %}
+    <div><span>Hikaye</span><b>★ {{ dims.food }}</b></div>
+    <div><span>Oyunculuk</span><b>★ {{ dims.service }}</b></div>
+    <div><span>Görsellik</span><b>★ {{ dims.atmosphere }}</b></div>
+    <div><span>Tempo</span><b>★ {{ dims.price }}</b></div>
+    {% else %}
+    <div><span>Yemek</span><b>★ {{ dims.food }}</b></div>
+    <div><span>Hizmet</span><b>★ {{ dims.service }}</b></div>
+    <div><span>Atmosfer</span><b>★ {{ dims.atmosphere }}</b></div>
+    <div><span>Fiyat</span><b>★ {{ dims.price }}</b></div>
+    {% endif %}
+  </div>
+  {% endif %}
   <p class="blurb">{{ place.blurb }}</p>
   {% if place.body and place.body != place.blurb %}<div class="body-text">{{ place.body }}</div>{% endif %}
+
+  {% set gal = (place.extra.gallery if place.extra else None) or [] %}
+  {% set uph = user_photos or [] %}
+  {% if gal or uph %}
+  <section class="panel ph-sec" id="fotolar">
+    <h3>Fotolar</h3>
+    <p class="empty" style="margin:0 0 12px">Kapak dışı kareler — dokunun, büyüsün.</p>
+    <div class="ph-grid">
+      {% for g in gal %}
+      <a class="ph-cell" href="{{ g }}" target="_blank" rel="noopener">
+        <img src="{{ g }}" alt="{{ place.title }} foto" loading="lazy">
+      </a>
+      {% endfor %}
+      {% for ph in uph %}
+      <a class="ph-cell" href="{{ ph.img_url }}" target="_blank" rel="noopener">
+        <img src="{{ ph.img_url }}" alt="{{ ph.caption or place.title }}" loading="lazy">
+        {% if ph.caption %}<span class="ph-cap">{{ ph.caption }}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if place.extra and place.extra.trailer_url %}
+  <section class="panel" id="fragman">
+    <h3>Fragman</h3>
+    <div class="trailer-wrap">
+      <iframe src="{{ place.extra.trailer_url }}" title="Fragman" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if place.extra and place.extra.rooms %}
+  <section class="panel">
+    <h3>Odalar</h3>
+    <div class="gallery-row" style="display:flex;gap:12px;overflow-x:auto">
+      {% for g in place.extra.rooms %}
+      {% if g is string %}
+      <img src="{{ g }}" alt="Oda" style="height:140px;border-radius:10px;object-fit:cover" loading="lazy">
+      {% else %}
+      <figure style="margin:0;min-width:160px">
+        {% if g.img %}<img src="{{ g.img }}" alt="{{ g.name or 'Oda' }}" style="height:140px;width:100%;border-radius:10px;object-fit:cover" loading="lazy">{% endif %}
+        <figcaption class="empty" style="font-size:12px;margin-top:4px">
+          {% if g.name %}<b>{{ g.name }}</b>{% endif %}{% if g.price %} · {{ g.price }}{% endif %}
+        </figcaption>
+      </figure>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if place.category in ('hotel','sport') and (place.phone or place.web or (place.extra and place.extra.reservation_note)) %}
+  <div class="panel" style="margin:14px 0;padding:14px">
+    <h3 style="margin-top:0">{% if place.category=='hotel' %}Rezervasyon{% else %}İletişim{% endif %}</h3>
+    {% if place.extra and place.extra.reservation_note %}<p class="empty">{{ place.extra.reservation_note }}</p>{% endif %}
+    <p>{% if place.phone %}<a class="btn" href="tel:{{ place.phone }}">{{ place.phone }}</a>{% endif %}
+    {% if place.web %} · <a href="{{ place.web }}" target="_blank" rel="noopener">Web / rezervasyon</a>{% endif %}</p>
+  </div>
+  {% endif %}
+
+  {% if place.category in ('event','concert','theater','cinema') and (place.ticket_price or place.ticket_url) %}
+  <div class="panel" style="margin:14px 0;padding:14px;border-radius:12px;background:var(--wa-card,#f6f4ef)">
+    <h3 style="margin:0 0 8px">Bilet</h3>
+    {% if place.ticket_price %}<p style="margin:0 0 8px"><b>{{ place.ticket_price }}</b></p>{% endif %}
+    {% if place.ticket_url %}
+    <a class="btn" href="{{ place.ticket_url }}" target="_blank" rel="noopener">Bilet al</a>
+    <p class="muted" style="margin:8px 0 0;font-size:13px">Satış resmi bilet platformunda — BursaApp üzerinden satış yok.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if place.category == 'food' and (place.extra.menu or place.menu_text) %}
+  <section class="panel" style="margin:14px 0">
+    <h3>Menü</h3>
+    {% if place.extra.menu %}
+    <ul class="menu-list" style="list-style:none;padding:0;margin:0">
+      {% for it in place.extra.menu %}
+      <li style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06)">
+        <span><b>{{ it.name }}</b>{% if it.note %} <span class="muted">· {{ it.note }}</span>{% endif %}</span>
+        {% if it.price %}<span>{{ it.price }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% elif place.menu_text %}
+    <pre style="white-space:pre-wrap;font-family:inherit">{{ place.menu_text }}</pre>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if place.extra and place.extra.specialty_detail %}
+  <p><b>Uzmanlık:</b> {{ place.extra.specialty_detail }}</p>
+  {% endif %}
+
+  {% if place.extra and place.extra.services %}
+  <section class="panel" style="margin:14px 0">
+    <h3>Hizmet alanları</h3>
+    <ul>{% for s in place.extra.services %}<li>{{ s }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  {% if place.extra and place.extra.fees %}
+  <section class="panel" style="margin:14px 0">
+    <h3>Ücretler</h3>
+    <ul class="menu-list" style="list-style:none;padding:0">
+      {% for f in place.extra.fees %}
+      <li style="display:flex;justify-content:space-between;padding:6px 0"><span>{{ f.name }}{% if f.note %} <span class="muted">· {{ f.note }}</span>{% endif %}</span><b>{{ f.price }}</b></li>
+      {% endfor %}
+    </ul>
+    {% if place.extra.fee_note %}<p class="muted">{{ place.extra.fee_note }}</p>{% endif %}
+  </section>
+  {% endif %}
+
+  {% if place.extra and place.extra.staff %}
+  <section class="panel" style="margin:14px 0">
+    <h3>{% if place.category=='vet' %}Veteriner hekimler{% else %}Kadro{% endif %}</h3>
+    <ul>{% for s in place.extra.staff %}<li><b>{{ s.name }}</b>{% if s.role %} · {{ s.role }}{% endif %}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  {% if place.category == 'camp' and place.extra and (place.extra.facilities or place.extra.tips) %}
+  <section class="panel" style="margin:14px 0">
+    <h3>Kamp bilgisi</h3>
+    {% if place.extra.facilities %}
+    <p>{% for f in place.extra.facilities %}<span class="chip" style="display:inline-block;margin:0 6px 6px 0">{{ f }}</span>{% endfor %}</p>
+    {% endif %}
+    {% if place.extra.tips %}<p class="empty">💡 {{ place.extra.tips }}</p>{% endif %}
+  </section>
+  {% endif %}
+
   <dl class="facts">
     {% if place.address %}<div><dt>Adres</dt><dd>{{ place.address }}</dd></div>{% endif %}
     {% if place.hours_text %}<div><dt>Saat</dt><dd>{{ place.hours_text }}</dd></div>{% endif %}
+    {% if place.subcategory_label %}<div><dt>Tür</dt><dd>{{ place.subcategory_label }}</dd></div>{% endif %}
     {% if place.price_band %}<div><dt>{% if place.category=='doctor' %}Branş{% elif place.category in ('concert','vet','hospital') %}Tür{% else %}Fiyat{% endif %}</dt><dd>{{ place.price_band }}</dd></div>{% endif %}
     {% if place.phone %}<div><dt>Tel</dt><dd>{{ place.phone }}</dd></div>{% endif %}
     {% if place.web %}<div><dt>Web</dt><dd><a href="{{ place.web }}" target="_blank" rel="noopener">{{ place.web }}</a></dd></div>{% endif %}
@@ -24,11 +212,150 @@
   </dl>
   <p><a class="btn" href="{{ place.maps }}" target="_blank" rel="noopener">Haritada aç</a></p>
 </article>
+
+{% if not (place.slug and place.slug.startswith('film-')) %}
+{% set is_eventish = place.category in ('event','concert','theater','cinema','family','fun') %}
+{% set gal_has = (place.extra and place.extra.gallery) or user_photos %}
+<section class="panel" id="galeri" style="margin-top:22px">
+  <h3>{% if is_eventish %}Senin karelerin{% elif place.category == 'visit' %}Sen de foto ekle{% elif place.category == 'food' %}Restoran fotoğrafları{% elif place.category == 'hotel' %}Otel / oda fotoğrafları{% else %}Yerden kareler{% endif %}</h3>
+  {% if user_photos and place.category != 'visit' %}
+  <div class="ph-grid" style="margin:0 0 12px">
+    {% for ph in user_photos %}
+    <a class="ph-cell" href="{{ ph.img_url }}" target="_blank" rel="noopener">
+      <img src="{{ ph.img_url }}" alt="" loading="lazy">
+      {% if ph.caption %}<span class="ph-cap">{{ ph.caption }}</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% elif not gal_has %}
+  <p class="empty">{% if is_eventish %}Henüz bu etkinliğe ait onaylı foto yok — ilk kareyi sen ekle.{% else %}Henüz onaylı foto yok — ilk kareyi sen ekle.{% endif %}</p>
+  {% endif %}
+  {% if nav_user %}
+  <form method="post" action="/yer/{{ place.slug }}/foto" enctype="multipart/form-data" class="form">
+    <label>{% if is_eventish %}Etkinlik fotoğrafı{% else %}Fotoğraf ekle{% endif %}<input type="file" name="photo" accept="image/*" required></label>
+    <label>Kısa not<input name="caption" maxlength="280" placeholder="İsteğe bağlı"></label>
+    <button class="btn" type="submit">Gönder (onaya düşer)</button>
+  </form>
+  {% else %}
+  <p class="empty"><a href="/giris?next={{ place.path or ('/yer/' ~ place.slug) }}">Giriş yap</a> ve {% if is_eventish %}bu etkinlik için foto ekle{% else %}foto ekle{% endif %}.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if place.category != 'doctor' %}
+{% set is_film = place.slug and place.slug.startswith('film-') %}
+<section class="panel rv-panel" id="yorumlar" style="margin-top:22px">
+  <h3>{% if is_film %}Film değerlendirmesi{% else %}Değerlendirmeler{% endif %}</h3>
+  {% if my_review and my_review.status == 'pending' %}
+  <p class="flash ok">Yorumun onay bekliyor — yayınlanınca burada görünür.</p>
+  {% endif %}
+  {% if can_review %}
+  <form method="post" action="/yer/{{ place.slug }}/yorum" class="form review-form rv-form" enctype="multipart/form-data" data-review-ui>
+    <p class="empty">{% if is_film %}Hikaye · Oyunculuk · Görsellik · Tempo (1–5) — admin onayına düşer{% else %}Yemek · Hizmet · Atmosfer · Fiyat (1–5) — gönderim admin onayına düşer{% endif %}</p>
+    {% if is_film %}
+    {% set dims_labels = [
+      ('score_food', 'Hikaye', my_review.score_food if my_review else 5),
+      ('score_service', 'Oyunculuk', my_review.score_service if my_review else 5),
+      ('score_atmosphere', 'Görsellik', my_review.score_atmosphere if my_review else 5),
+      ('score_price', 'Tempo', my_review.score_price if my_review else 5)
+    ] %}
+    {% else %}
+    {% set dims_labels = [
+      ('score_food', 'Yemek', my_review.score_food if my_review else 5),
+      ('score_service', 'Hizmet', my_review.score_service if my_review else 5),
+      ('score_atmosphere', 'Atmosfer', my_review.score_atmosphere if my_review else 5),
+      ('score_price', 'Fiyat', my_review.score_price if my_review else 5)
+    ] %}
+    {% endif %}
+    <div class="rv-stars">
+      {% for name, lab, val in dims_labels %}
+      <div class="rv-dim" data-name="{{ name }}" data-value="{{ val }}">
+        <div class="rv-dim-top"><span>{{ lab }}</span><b class="rv-val">{{ val }}</b></div>
+        <div class="rv-star-row" role="group" aria-label="{{ lab }} puanı">
+          {% for i in range(1,6) %}
+          <button type="button" class="rv-star{% if i <= val %} on{% endif %}" data-n="{{ i }}" aria-label="{{ i }} yıldız">★</button>
+          {% endfor %}
+        </div>
+        <input type="hidden" name="{{ name }}" value="{{ val }}">
+      </div>
+      {% endfor %}
+    </div>
+    <label class="rv-body">Yorum<textarea name="body" rows="3" placeholder="{% if is_film %}Filmi kısaca anlat — spoiler yazma{% else %}İsteğe bağlı{% endif %}">{{ my_review.body if my_review else '' }}</textarea></label>
+    {% if not is_film %}
+    <label>Foto (isteğe bağlı)<input type="file" name="photo" accept="image/*"></label>
+    {% endif %}
+    <button type="submit" class="btn rv-submit">{{ 'Güncelle (yeniden onaya)' if my_review else ('Filmi puanla' if is_film else 'Gönder') }}</button>
+  </form>
+  {% else %}
+  {% include "_review_gate.html" %}
+  {% endif %}
+  {% for r in reviews %}
+  <div class="review-item rv-item">
+    <div class="rv-item-head">
+      <div>
+        <b>{{ r.user_name }}</b>
+        <span class="rv-overall">★ {{ r.overall }}</span>
+      </div>
+      <div class="rv-mini">
+        {% if is_film %}
+        <span>Hikaye {{ r.score_food }}</span>
+        <span>Oyun {{ r.score_service }}</span>
+        <span>Görsel {{ r.score_atmosphere }}</span>
+        <span>Tempo {{ r.score_price }}</span>
+        {% else %}
+        <span>Y{{ r.score_food }}</span>
+        <span>H{{ r.score_service }}</span>
+        <span>A{{ r.score_atmosphere }}</span>
+        <span>F{{ r.score_price }}</span>
+        {% endif %}
+      </div>
+    </div>
+    {% if r.body %}<p>{{ r.body }}</p>{% endif %}
+    {% if r.img_url %}<img class="review-photo" src="{{ r.img_url }}" alt="" loading="lazy">{% endif %}
+  </div>
+  {% else %}
+  <p class="empty">{% if is_film %}Henüz onaylı film değerlendirmesi yok — ilk puanı sen ver.{% else %}Henüz onaylı üye değerlendirmesi yok.{% endif %}</p>
+  {% endfor %}
+</section>
+<script>
+(function(){
+  document.querySelectorAll('[data-review-ui] .rv-dim').forEach(function(dim){
+    var input = dim.querySelector('input[type=hidden]');
+    var valEl = dim.querySelector('.rv-val');
+    var stars = dim.querySelectorAll('.rv-star');
+    function paint(n){
+      stars.forEach(function(s){
+        var on = parseInt(s.getAttribute('data-n'),10) <= n;
+        s.classList.toggle('on', on);
+      });
+      if (valEl) valEl.textContent = String(n);
+      if (input) input.value = String(n);
+      dim.setAttribute('data-value', String(n));
+    }
+    stars.forEach(function(s){
+      s.addEventListener('click', function(){
+        paint(parseInt(s.getAttribute('data-n'),10));
+      });
+      s.addEventListener('mouseenter', function(){
+        var n = parseInt(s.getAttribute('data-n'),10);
+        stars.forEach(function(x){
+          x.classList.toggle('hover', parseInt(x.getAttribute('data-n'),10) <= n);
+        });
+      });
+    });
+    dim.querySelector('.rv-star-row').addEventListener('mouseleave', function(){
+      stars.forEach(function(x){ x.classList.remove('hover'); });
+    });
+  });
+})();
+</script>
+{% endif %}
+
 {% if units %}
 <div class="sec-h"><h2>Kampüs birimleri</h2></div>
 <div class="cards">
   {% for u in units %}
-  <a class="place-card" href="/yer/{{ u.slug }}">
+  <a class="place-card" href="{{ u.path or ('/yer/' ~ u.slug) }}">
     {% if u.img_url %}<img src="{{ u.img_url }}" alt="{{ u.title }}" loading="lazy">{% endif %}
     <div class="body"><h3>{{ u.title }}</h3><div class="meta"><span>{{ u.price_band or u.ilce }}</span></div></div>
   </a>
@@ -42,7 +369,7 @@
   <div class="sec-h"><h2>{{ g.label }}</h2><span class="see">{{ g.places|length }}</span></div>
   <div class="cards">
     {% for s in g.places %}
-    <a class="place-card" href="/yer/{{ s.slug }}">
+    <a class="place-card" href="{{ s.path or ('/yer/' ~ s.slug) }}">
       {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}" loading="lazy">{% endif %}
       <div class="body"><h3>{{ s.title }}</h3><div class="meta"><span>{{ s.price_band }}</span></div></div>
     </a>
@@ -57,9 +384,9 @@
 <div class="sec-h"><h2>Benzerler</h2></div>
 <div class="cards">
   {% for s in similar %}
-  <a class="place-card" href="/yer/{{ s.slug }}">
+  <a class="place-card" href="{{ s.path or ('/yer/' ~ s.slug) }}">
     {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}" loading="lazy">{% endif %}
-    <div class="body"><h3>{{ s.title }}</h3><div class="meta"><span>{{ s.ilce }}</span></div></div>
+    <div class="body"><h3>{{ s.title }}</h3><div class="meta"><span>{{ s.ilce }}</span>{% if s.rating %}<span class="star">★ {{ '%.1f'|format(s.rating) }}</span>{% endif %}</div></div>
   </a>
   {% endfor %}
 </div>

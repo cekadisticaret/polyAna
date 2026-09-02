@@ -1,0 +1,41 @@
+{% extends "_shell.html" %}
+{% block title %}Bugün Bursa'da · BursaApp{% endblock %}
+{% block hello %}Bugün Bursa'da{% endblock %}
+{% block sub %}{{ today.date_label }}{% endblock %}
+{% block main %}
+<div class="discover-cta compact">
+  <a class="cta-card" href="/bu-aksam">Bu akşam ›</a>
+  <a class="cta-card" href="/yakinimda">Yakınımda ›</a>
+  <a class="cta-card" href="/hafta-sonu">Hafta sonu ›</a>
+</div>
+{% if today.groups %}
+  {% for g in today.groups %}
+  <section class="ilce-block" id="{{ g.key }}">
+    <div class="sec-h">
+      <h2>{{ g.label }}</h2>
+      <span class="see">{{ g.count }}</span>
+    </div>
+    <div class="cards">
+      {% for p in g.places %}
+      <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+        <div class="body">
+          <h3>{{ p.title }}</h3>
+          <div class="meta">
+            <span>{% if p.when %}{{ p.when }}{% endif %}{% if p.venue_name %} · {{ p.venue_name }}{% else %} · {{ p.ilce }}{% endif %}</span>
+            {% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+          </div>
+          {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+{% else %}
+<div class="empty-box">
+  <p>Bugün için tarihli yayınlı etkinlik yok.</p>
+  <p><a href="/etkinlikler">Etkinlik takvimi</a> · <a href="/bu-aksam">Bu akşam ne yapabilirim?</a></p>
+</div>
+{% endif %}
+{% endblock %}

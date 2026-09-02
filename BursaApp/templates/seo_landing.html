@@ -1,0 +1,18 @@
+{% extends "_shell.html" %}
+{% block hello %}{{ meta.h1 }}{% endblock %}
+{% block sub %}{{ meta.desc }} · {{ total }} kayıt{% endblock %}
+{% block main %}
+<div class="cards">
+  {% for p in places %}
+  <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+    {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+    <div class="body">
+      <h3>{{ p.title }}</h3>
+      <div class="meta"><span>{{ p.ilce }}{% if p.subcategory_label %} · {{ p.subcategory_label }}{% endif %}</span>{% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}</div>
+    </div>
+  </a>
+  {% else %}
+  <div class="empty-box"><p>Kayıt yok.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

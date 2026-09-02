@@ -1,0 +1,48 @@
+{% extends "_shell.html" %}
+{% block title %}BursaApp AI{% endblock %}
+{% block hello %}BursaApp AI{% endblock %}
+{% block sub %}Gerçek Bursa mekanlarıyla rota — kişi, bütçe, otobüs/araç, sakin/aile…{% endblock %}
+{% block main %}
+<form method="post" class="panel form-card wide" id="ai-form">
+  <label>Ne istiyorsun?
+    <textarea name="prompt" id="ai-prompt" rows="3" placeholder="2 kişiyiz. Araba yok. 1.500 TL. Tarihî yerler ve İskender.">{{ prompt }}</textarea>
+  </label>
+  {% if chips %}
+  <div class="chips" style="margin:10px 0;flex-wrap:wrap">
+    {% for c in chips %}
+    <button type="button" class="chip" onclick="document.getElementById('ai-prompt').value=this.textContent; document.getElementById('ai-form').submit()">{{ c }}</button>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <button class="btn" type="submit">Öner</button>
+</form>
+{% if result %}
+<section class="panel" style="margin-top:16px">
+  <h3>{{ result.title }}{% if result.est_total_tl %} · ~{{ result.est_total_tl }} TL{% endif %}</h3>
+  {% if result.tips %}
+  <ul class="muted">{% for t in result.tips %}<li>{{ t }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if result.slots %}
+  <div class="timeline">
+    {% for s in result.slots %}
+    {% if s.transit_from_prev %}
+    <div class="tl-arrow" style="font-size:13px;opacity:.85">🚌 {{ s.transit_from_prev }}</div>
+    {% elif not loop.first %}
+    <div class="tl-arrow">↓</div>
+    {% endif %}
+    <div class="tl-item">
+      <div class="tl-time">{{ s.slot_time }}</div>
+      <div class="tl-body">
+        <b>{{ s.slot_label }}</b>
+        <a href="{{ s.path or ('/yer/' ~ s.slug) }}">{{ s.title }}</a>
+        <i>{{ s.ilce }}{% if s.slot_cost_tl %} · ~{{ s.slot_cost_tl }} TL{% endif %}</i>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">Sonuç yok — daha net yaz (kişi / bütçe / araç var mı).</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

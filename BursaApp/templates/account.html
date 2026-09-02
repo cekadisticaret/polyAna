@@ -1,10 +1,22 @@
 {% extends "_shell.html" %}
 {% block title %}Hesabım · BursaApp{% endblock %}
-{% block hello %}Hesabım{% endblock %}
-{% block sub %}Eklediklerin ve onay durumu{% endblock %}
+{% block hello %}{{ nav_user.name if nav_user else 'Hesabım' }}{% endblock %}
+{% block sub %}Favoriler · etkinlikler · rotalar · kuponlar · yorumlar{% endblock %}
 {% block search %}{% endblock %}
 {% block main %}
-<p><a class="btn" href="/hesap/ekle">Yeni ekle</a></p>
+<div class="hub-list" style="margin-bottom:18px">
+  <a class="hub-row" href="/hesap/profil"><span class="hub-ico">📰</span><div><b>Feeds · Profil</b><small class="muted"> · post · albüm · gittiğim yerler</small></div><span class="hub-go">›</span></a>
+  <a class="hub-row" href="/hesap/ayarlar"><span class="hub-ico">⚙️</span><div><b>Ayarlar</b><small class="muted"> · foto · şifre · isim</small></div><span class="hub-go">›</span></a>
+  <a class="hub-row" href="/hesap/favoriler"><span class="hub-ico">❤️</span><div><b>Favorilerim</b></div><span class="hub-go">›</span></a>
+  <a class="hub-row" href="/hesap/rotalar"><span class="hub-ico">📍</span><div><b>Rotalarım</b></div><span class="hub-go">›</span></a>
+  <a class="hub-row" href="/kuponlar"><span class="hub-ico">🎟️</span><div><b>Kuponlarım</b></div><span class="hub-go">›</span></a>
+  <a class="hub-row" href="/hesap/bildirimler"><span class="hub-ico">🔔</span><div><b>Bildirimler</b></div><span class="hub-go">›</span></a>
+  <a class="hub-row" href="/etkinlik/ekle"><span class="hub-ico">🎭</span><div><b>Etkinlik oluştur</b><small class="muted"> · form ile gönder, admin onaylar</small></div><span class="hub-go">›</span></a>
+  <a class="hub-row" href="/isletme"><span class="hub-ico">🏪</span><div><b>İşletme paneli</b></div><span class="hub-go">›</span></a>
+</div>
+<p><a class="btn" href="/hesap/ekle">Yer ekle</a>
+  {% if points is defined %}<span class="badge approved" style="margin-left:8px">{{ points }} BursaApp puan</span>{% endif %}
+</p>
 {% if places %}
 <table class="qtable">
   <thead><tr><th>Başlık</th><th>Kategori</th><th>Durum</th><th></th></tr></thead>

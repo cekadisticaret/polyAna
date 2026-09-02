@@ -1,0 +1,24 @@
+{% extends "_shell.html" %}
+{% block title %}Bursa'da Ne Yenir? · BursaApp{% endblock %}
+{% block hello %}Bursa'nın meşhur yemekleri{% endblock %}
+{% block sub %}İskender’den kestane şekerine — nerede yenir?{% endblock %}
+{% block main %}
+<div class="ny-grid">
+  {% for f in foods %}
+  <a class="ny-card" href="/{{ f.slug }}">
+    <div class="ny-media">
+      {% if f.img %}
+      <img src="{{ f.img }}" alt="{{ f.title }} — Bursa" loading="lazy" width="640" height="480">
+      {% else %}
+      <div class="ny-emoji">{{ f.emoji }}</div>
+      {% endif %}
+    </div>
+    <div class="ny-body">
+      <h3>{{ f.emoji }} {{ f.title }}</h3>
+      <div class="ny-meta">{{ f.price_level }} · ~{{ f.est_tl }} TL</div>
+      <p>{{ f.where }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

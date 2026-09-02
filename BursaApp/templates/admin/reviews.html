@@ -1,0 +1,37 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Yorumlar · Admin{% endblock %}
+{% block header_title %}Yorum moderasyonu{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a class="btn btn-sm {{ 'btn-primary' if status=='pending' else 'btn-outline-primary' }}" href="/admin/reviews?status=pending">Bekleyen ({{ counts.pending }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='approved' else 'btn-outline-primary' }}" href="/admin/reviews?status=approved">Onaylı ({{ counts.approved }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='rejected' else 'btn-outline-primary' }}" href="/admin/reviews?status=rejected">Red ({{ counts.rejected }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='all' else 'btn-outline-primary' }}" href="/admin/reviews?status=all">Tümü</a>
+</div>
+<div class="card"><div class="card-body"><div class="table-responsive">
+<table class="table ba-table">
+  <thead><tr><th>ID</th><th>Yer</th><th>Üye</th><th>Ort.</th><th>Yorum</th><th>Durum</th><th>Tarih</th><th></th></tr></thead>
+  <tbody>
+  {% for it in items %}
+  <tr>
+    <td>{{ it.review.id }}</td>
+    <td>{% if it.place %}<a href="/yer/{{ it.place.slug }}" target="_blank">{{ it.place.title }}</a>{% else %}-{% endif %}</td>
+    <td>{% if it.user %}{{ it.user.name }} · {{ it.user.email }}{% else %}-{% endif %}</td>
+    <td>{{ '%.1f'|format(it.review.overall()) }}</td>
+    <td>{{ it.review.body[:120] }}</td>
+    <td><span class="badge badge-{{ it.review.status }}">{{ it.review.status }}</span></td>
+    <td>{{ it.review.created_at.strftime('%d.%m.%Y') if it.review.created_at else '-' }}</td>
+    <td class="text-nowrap">
+      {% if it.review.status != 'approved' %}
+      <form method="post" action="/admin/reviews/{{ it.review.id }}/approve" style="display:inline"><button class="btn btn-xs btn-success">Onay</button></form>
+      {% endif %}
+      {% if it.review.status != 'rejected' %}
+      <form method="post" action="/admin/reviews/{{ it.review.id }}/reject" style="display:inline"><button class="btn btn-xs btn-danger">Red</button></form>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}<tr><td colspan="8">Yorum yok</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div></div></div>
+{% endblock %}

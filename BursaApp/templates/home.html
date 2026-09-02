@@ -1,78 +1,230 @@
 {% extends "_shell.html" %}
+{% block title %}{{ seo.title_full }}{% endblock %}
 {% block hello %}Keşfet{% endblock %}
-{% block sub %}Öne çıkan yerler ve bu ayın etkinlikleri{% endblock %}
+{% block sub %}Bursa’yı yaşa{% endblock %}
 {% block main %}
-<div class="sec-h">
-  <h2>Öne çıkan</h2>
-  <a class="see" href="/gezilecek">Tümü ›</a>
-</div>
-<div class="cards">
-  {% for p in featured %}
-  <a class="place-card" href="/yer/{{ p.slug }}">
-    <img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">
-    <div class="body">
-      <h3>{{ p.title }}</h3>
-      <div class="meta">
-        <span>{{ p.hours_text or p.category_label }} · {{ p.ilce }}</span>
-        {% if p.rating_admin %}<span class="star">★ {{ '%.1f'|format(p.rating_admin) }}</span>{% endif %}
+{% set cat_ico = {
+  'food':'🍽','visit':'🌿','hotel':'🏨','camp':'⛺','shop':'🛍','market':'🛒',
+  'sport':'💪','family':'👨‍👩‍👧','concert':'🎵','theater':'🎭','cinema':'🎬','fun':'🎳',
+  'event':'📅','org':'🏛','hospital':'🏨','doctor':'🩺','vet':'🐾'
+} %}
+<section class="wa-hero">
+  <div>
+    <p class="wa-kicker">Explore</p>
+    <h1>Keşfet <span style="color:var(--orange)">🌿</span> Bursa’yı. Yolculuğu yaşa.</h1>
+    <p class="lead">Restoran, market, hastane, doktor, konser, Uludağ — şehrin rehberi tek yerde.</p>
+    <form class="wa-search" id="home-search" action="/gezilecek" method="get">
+      <div class="field">
+        <label>Nereye?</label>
+        <input name="q" value="{{ q|default('') }}" placeholder="Yer, Yemek, Tatil, Kamp" autocomplete="off">
       </div>
+      <div class="field">
+        <label>Kategori</label>
+        <select id="home-cat" name="_cat">
+          <option value="/gezilecek">Gezilecek</option>
+          {% for c in categories %}
+          <option value="{{ c.path }}">{{ c.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>İlçe</label>
+        <select name="ilce">
+          <option value="">Tümü</option>
+          {% for ad in ilceler %}
+          <option value="{{ ad }}">{{ ad }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="wa-btn wa-btn-orange">Ara</button>
+    </form>
+    <div class="wa-features">
+      <a class="wa-feat" href="/hastaneler"><div class="ico ico-hospital" style="background:var(--sky)" aria-hidden="true"></div><b>Hastaneler</b><i>Sağlık</i></a>
+      <a class="wa-feat" href="/doktorlar"><div class="ico" style="background:var(--mint)">🩺</div><b>Doktorlar</b><i>Branş</i></a>
+      <a class="wa-feat" href="/veterinerler"><div class="ico" style="background:var(--sand)">🐾</div><b>Veteriner</b><i>Klinik</i></a>
+      <a class="wa-feat" href="/marketler"><div class="ico" style="background:var(--lilac)">🛒</div><b>Marketler</b><i>Yakın + kampanya</i></a>
+      <a class="wa-feat" href="/sinema"><div class="ico" style="background:var(--lilac)">🎬</div><b>Sinema</b><i>Vizyon</i></a>
+      <a class="wa-feat" href="/eglence"><div class="ico" style="background:var(--sand)">🎳</div><b>Eğlence</b><i>Gece & aktivite</i></a>
+      <a class="wa-feat" href="/etkinlikler"><div class="ico" style="background:var(--mint)">📅</div><b>Etkinlik</b><i>Takvim</i></a>
+      <a class="wa-feat" href="/alisveris"><div class="ico" style="background:var(--sky)">🛍</div><b>Alışveriş</b><i>AVM & mağaza</i></a>
     </div>
-  </a>
-  {% else %}
-  <p class="empty">Henüz öne çıkan yer yok. <a href="/hesap/ekle">Sen ekle</a>.</p>
-  {% endfor %}
-</div>
+  </div>
+  <div class="wa-hero-media" id="hero-slider" data-interval="5500" aria-roledescription="carousel" aria-label="Bursa görselleri">
+    {% set hero_slides = [
+      ('visit/golyazi.jpg', 'Gölyazı · Uluabat'),
+      ('visit/ulu-cami.jpg', 'Ulu Cami'),
+      ('visit/cumalikizik.jpg', 'Cumalıkızık'),
+      ('visit/tophane.jpg', 'Tophane · Hisar'),
+      ('visit/yesil-turbe.jpg', 'Yeşil Türbe'),
+      ('visit/inkaya-cinari.jpg', 'İnkaya Çınarı'),
+      ('visit/koza-han.jpg', 'Koza Han'),
+      ('visit/suuctu.jpg', 'Suuçtu Şelalesi'),
+      ('visit/tirilye.jpg', 'Tirilye / Zeytinbağı'),
+      ('visit/panorama-1326.jpg', 'Panorama 1326'),
+      ('visit/kale-sokak.jpg', 'Kale Sokak'),
+      ('visit/muradiye.jpg', 'Muradiye')
+    ] %}
+    <div class="wa-hero-slides">
+      {% for src, title in hero_slides %}
+      <figure class="wa-hero-slide{% if loop.first %} is-on{% endif %}" data-i="{{ loop.index0 }}">
+        <img src="{{ url_for('static', filename=src) }}" alt="{{ title }}" width="640" height="800" {% if loop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+        <figcaption class="wa-hero-cap">{{ title }}</figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    <div class="wa-hero-dots" role="tablist" aria-label="Slayt">
+      {% for src, title in hero_slides %}
+      <button type="button" class="wa-hero-dot{% if loop.first %} on{% endif %}" role="tab" aria-label="{{ title }}" aria-selected="{{ 'true' if loop.first else 'false' }}" data-i="{{ loop.index0 }}"></button>
+      {% endfor %}
+    </div>
+    <div class="wa-float">
+      <b>Yerel rehberlerle keşfet</b>
+      <div class="wa-avatars">
+        <span>A</span><span>B</span><span>C</span><span>D</span>
+      </div>
+      <small>4.8K+ mutlu gezgin</small>
+    </div>
+  </div>
+</section>
 
-<div class="split">
-  <section class="panel" id="etkinlik">
-    <h3>Etkinlik · {{ month_label }}</h3>
-    <div class="cal-grid">
-      {% for w in ['P','S','Ç','P','C','C','P'] %}
-      <span>{{ w }}</span>
-      {% endfor %}
-      {% for d in cal_cells %}
-        {% if d is none %}
-        <button type="button" disabled>&nbsp;</button>
-        {% elif d == today %}
-        <button type="button" class="today" title="bugün">{{ d }}</button>
-        {% elif d in ev_days %}
-        <a class="ev" href="/yer/{{ ev_slug.get(d, '') }}" title="{{ ev_map.get(d, '') }}">{{ d }}</a>
-        {% else %}
-        <button type="button">{{ d }}</button>
-        {% endif %}
-      {% endfor %}
-    </div>
-    <p class="cal-note">
-      {% for e in events[:8] %}
-        <a href="/yer/{{ e.slug }}">{{ e.starts_at.day if e.starts_at else '?' }} · {{ e.title }}</a>{% if not loop.last %} · {% endif %}
-      {% else %}
-        Bu ay yayınlı etkinlik yok. <a href="/etkinlikler">Takvim</a>
-      {% endfor %}
-      {% if events|length > 8 %}<a href="/etkinlikler"> · tümü ›</a>{% endif %}
-    </p>
-  </section>
-  <section class="panel">
-    <h3>Listeler</h3>
-    {% for p in listed %}
-    <a class="resort" href="/yer/{{ p.slug }}">
-      <img src="{{ p.img_url }}" alt="">
-      <div>
-        <b>{{ p.title }}</b>
-        <i>{{ p.ilce }}</i>
+<section class="wa-sec" id="kategoriler">
+  <div class="wa-sec-h">
+    <h2>📂 Tüm kategoriler</h2>
+    <a href="/harita">Haritada gör →</a>
+  </div>
+  <div class="wa-cat-groups">
+    <div class="wa-cat-group">
+      <h3>Sağlık</h3>
+      <div class="wa-cat-grid">
+        {% for c in categories if c.key in ('hospital','doctor','vet') %}
+        <a class="wa-cat" href="{{ c.path }}"><span>{{ cat_ico.get(c.key, '•') }}</span><b>{{ c.label }}</b><i>{{ c.hint }}</i></a>
+        {% endfor %}
       </div>
-      <span class="px">{{ p.price_band or p.category_label }}</span>
+    </div>
+    <div class="wa-cat-group">
+      <h3>Yeme · alışveriş · gezi</h3>
+      <div class="wa-cat-grid">
+        {% for c in categories if c.key in ('food','market','shop','visit','hotel','camp') %}
+        <a class="wa-cat" href="{{ c.path }}"><span>{{ cat_ico.get(c.key, '•') }}</span><b>{{ c.label }}</b><i>{{ c.hint }}</i></a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="wa-cat-group">
+      <h3>Kültür · spor · aile</h3>
+      <div class="wa-cat-grid">
+        {% for c in categories if c.key in ('concert','theater','cinema','event','fun','org','sport','family') %}
+        <a class="wa-cat" href="{{ c.path }}"><span>{{ cat_ico.get(c.key, '•') }}</span><b>{{ c.label }}</b><i>{{ c.hint }}</i></a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wa-sec">
+  <div class="wa-sec-h">
+    <h2>🌿 Popüler destinasyonlar</h2>
+    <a href="/gezilecek">Tüm destinasyonlar →</a>
+  </div>
+  <div class="wa-grid">
+    {% for p in featured[:8] %}
+    <a class="wa-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+      <div class="thumb">
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% endif %}
+        <span class="rating">★ {{ '%.1f'|format(p.rating or 4.8) }}</span>
+      </div>
+      <h3>{{ p.title }}{% if p.ilce %}, {{ p.ilce }}{% endif %}</h3>
+      <div class="meta">{{ p.category_label or p.category }}</div>
+      {% if p.price_band %}<div class="price">{{ p.price_band }}</div>{% endif %}
     </a>
     {% else %}
-    <p class="empty">Liste boş.</p>
+    <a class="wa-card" href="/gezilecek"><div class="thumb"></div><h3>Gezilecek yerler</h3><div class="meta">Keşfetmeye başla</div></a>
     {% endfor %}
-  </section>
-</div>
-{% endblock %}
-{% block aside %}
-{{ super() }}
-<div class="weather">
-  <div>{{ weather.label or 'Hava' }}</div>
-  <b>{{ weather.temp_c or '—' }}°</b>
-  <p>{{ weather.hint or '' }}</p>
-</div>
+  </div>
+</section>
+
+<section class="wa-inspire">
+  <div>
+    <a class="wa-btn wa-btn-forest" href="/ai">Hikâyeleri keşfet</a>
+    <h3 style="margin-top:14px">Nereye gideceğini bilmiyor musun?</h3>
+    <p>İlham al — lezzetler, hafta sonu planları ve gizli köşeler.</p>
+  </div>
+  <div class="wa-stories">
+    <a class="wa-story" href="/bursa-da-ne-yenir">
+      <img src="{{ url_for('static', filename='food/iskender-1.jpg') }}" alt="">
+      <div><b>Bursa’da ne yenir? 10 klasik lezzet</b><i>5 dk okuma</i></div>
+    </a>
+    <a class="wa-story" href="/hafta-sonu">
+      <img src="{{ url_for('static', filename='visit/uludag.jpg') }}" alt="">
+      <div><b>Hafta sonu Bursa kaçamağı</b><i>4 dk okuma</i></div>
+    </a>
+  </div>
+</section>
+
+<section class="wa-sec">
+  <div class="wa-sec-h">
+    <h2>Neden BursaApp?</h2>
+  </div>
+  <div class="wa-why">
+    <div class="box"><div class="ico" style="background:var(--mint)">🧭</div><h4>Yerel uzmanlık</h4><p>Şehir sakinlerinden gelen öneriler ve güncel mekan bilgisi.</p></div>
+    <div class="box"><div class="ico" style="background:var(--sand)">🗺</div><h4>Kişisel rota</h4><p>Zamanına ve ruh haline göre AI destekli gün planı.</p></div>
+    <div class="box"><div class="ico" style="background:var(--sky)">🌱</div><h4>Sürdürülebilir</h4><p>Yerel işletmeleri öne çıkaran keşif odaklı rehber.</p></div>
+    <div class="box"><div class="ico" style="background:var(--lilac)">😌</div><h4>Sorunsuz</h4><p>Harita, kampanya ve favoriler tek hesapta.</p></div>
+  </div>
+</section>
+
+<section class="wa-stats">
+  <div class="wa-stats-grid">
+    <div><div>📍</div><b>50+</b><span>Destinasyon</span></div>
+    <div><div>😊</div><b>{{ place_count }}+</b><span>Kayıtlı yer</span></div>
+    <div><div>★</div><b>4.8</b><span>Ortalama puan</span></div>
+    <div><div>💬</div><b>7/24</b><span>Destek</span></div>
+  </div>
+  <div class="wa-stats-cta">
+    <p>Bursa maceran burada başlıyor.</p>
+    <a class="wa-btn wa-btn-orange" href="/rota">Rotanı planla →</a>
+  </div>
+</section>
+<script>
+(function(){
+  var form = document.getElementById('home-search');
+  var sel = document.getElementById('home-cat');
+  if (form && sel) {
+    sel.addEventListener('change', function(){ if (sel.value) form.action = sel.value; });
+    form.addEventListener('submit', function(){ if (sel.value) form.action = sel.value; });
+  }
+
+  var root = document.getElementById('hero-slider');
+  if (!root) return;
+  var slides = Array.prototype.slice.call(root.querySelectorAll('.wa-hero-slide'));
+  var dots = Array.prototype.slice.call(root.querySelectorAll('.wa-hero-dot'));
+  if (slides.length < 2) return;
+  var i = 0;
+  var ms = parseInt(root.getAttribute('data-interval') || '5500', 10);
+  var timer = null;
+  function go(n) {
+    slides[i].classList.remove('is-on');
+    if (dots[i]) { dots[i].classList.remove('on'); dots[i].setAttribute('aria-selected', 'false'); }
+    i = (n + slides.length) % slides.length;
+    slides[i].classList.add('is-on');
+    if (dots[i]) { dots[i].classList.add('on'); dots[i].setAttribute('aria-selected', 'true'); }
+  }
+  function next() { go(i + 1); }
+  function arm() {
+    clearInterval(timer);
+    timer = setInterval(next, ms);
+  }
+  dots.forEach(function(d) {
+    d.addEventListener('click', function() {
+      var t = parseInt(d.getAttribute('data-i'), 10);
+      if (!isNaN(t)) { go(t); arm(); }
+    });
+  });
+  root.addEventListener('mouseenter', function(){ clearInterval(timer); });
+  root.addEventListener('mouseleave', arm);
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) clearInterval(timer); else arm();
+  });
+  arm();
+})();
+</script>
 {% endblock %}

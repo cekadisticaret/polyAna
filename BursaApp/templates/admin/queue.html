@@ -1,40 +1,51 @@
-{% extends "_shell.html" %}
-{% block title %}Admin kuyruk · BursaApp{% endblock %}
-{% block hello %}Onay kuyruğu{% endblock %}
-{% block sub %}Bekleyen / onaylı / red{% endblock %}
-{% block search %}{% endblock %}
-{% block main %}
-<div class="chips">
-  <a class="chip {{ 'on' if status=='pending' else '' }}" href="/admin?status=pending">Bekleyen ({{ counts.pending }})</a>
-  <a class="chip {{ 'on' if status=='approved' else '' }}" href="/admin?status=approved">Onaylı ({{ counts.approved }})</a>
-  <a class="chip {{ 'on' if status=='rejected' else '' }}" href="/admin?status=rejected">Red ({{ counts.rejected }})</a>
+{% extends "admin/_layout.html" %}
+{% block title %}Yer kuyruğu · Admin{% endblock %}
+{% block header_title %}Yer kuyruğu{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+  <a class="btn btn-sm {{ 'btn-primary' if status=='pending' else 'btn-outline-primary' }}" href="/admin?status=pending">Bekleyen ({{ counts.pending }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='approved' else 'btn-outline-primary' }}" href="/admin?status=approved">Onaylı ({{ counts.approved }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='rejected' else 'btn-outline-primary' }}" href="/admin?status=rejected">Red ({{ counts.rejected }})</a>
+  <a class="btn btn-sm btn-success" href="/admin/new">+ Yeni yer</a>
 </div>
-{% if rows %}
-<table class="qtable">
-  <thead><tr><th>Başlık</th><th>Kat</th><th>İlçe</th><th></th></tr></thead>
+<form class="row g-2 mb-3" method="get">
+  <input type="hidden" name="status" value="{{ status }}">
+  <div class="col-md-3">
+    <select class="form-control" name="cat" onchange="this.form.submit()">
+      <option value="">Tüm kategoriler</option>
+      {% for c in categories %}<option value="{{ c.key }}" {% if cat==c.key %}selected{% endif %}>{{ c.label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4"><input class="form-control" name="q" value="{{ q or '' }}" placeholder="Ara: başlık, slug, adres"></div>
+  <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Filtrele</button></div>
+</form>
+<div class="card"><div class="card-body"><div class="table-responsive">
+<table class="table ba-table">
+  <thead><tr><th>ID</th><th>Başlık</th><th>Kategori</th><th>İlçe</th><th>Gönderen</th><th>Durum</th><th></th></tr></thead>
   <tbody>
-  {% for p in rows %}
-    <tr>
-      <td>{{ p.title }}<br><small>{{ p.blurb[:80] }}</small></td>
-      <td>{{ p.category }}</td>
-      <td>{{ p.ilce }}</td>
-      <td class="acts">
-        <a href="/admin/places/{{ p.id }}">düzenle</a>
-        {% if p.status != 'approved' %}
-        <form method="post" action="/admin/places/{{ p.id }}/approve"><button class="btn sm">Onay</button></form>
-        {% endif %}
-        {% if p.status != 'rejected' %}
-        <form method="post" action="/admin/places/{{ p.id }}/reject">
-          <input name="reason" placeholder="red sebebi" size="12">
-          <button class="btn sm ghost" type="submit">Red</button>
-        </form>
-        {% endif %}
-      </td>
-    </tr>
+  {% for it in items %}
+  {% set p = it.place %}
+  <tr>
+    <td>{{ p.id }}</td>
+    <td><b>{{ p.title }}</b><br><small class="text-muted">{{ p.slug }}</small></td>
+    <td>{{ p.category }}{% if p.subcategory %} / {{ p.subcategory }}{% endif %}</td>
+    <td>{{ p.ilce }}</td>
+    <td>{% if it.submitter %}{{ it.submitter.email }}{% else %}-{% endif %}</td>
+    <td><span class="badge badge-{{ p.status }}">{{ p.status }}</span></td>
+    <td class="text-end text-nowrap">
+      <a class="btn btn-xs btn-outline-dark" href="/admin/{{ p.id }}/edit">Düzenle</a>
+      {% if p.status!='approved' %}
+      <form method="post" action="/admin/{{ p.id }}/approve" style="display:inline"><button class="btn btn-xs btn-success">Onay</button></form>
+      {% endif %}
+      {% if p.status!='rejected' %}
+      <form method="post" action="/admin/{{ p.id }}/reject" style="display:inline"><input type="hidden" name="reason" value="Uygun değil"><button class="btn btn-xs btn-danger">Red</button></form>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="7" class="text-muted">Kayıt yok.</td></tr>
   {% endfor %}
   </tbody>
 </table>
-{% else %}
-<p class="empty">Bu durumda kayıt yok.</p>
-{% endif %}
+</div></div></div>
 {% endblock %}

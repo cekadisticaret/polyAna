@@ -1,0 +1,24 @@
+{% extends "_shell.html" %}
+{% block title %}İşletme paneli · BursaApp{% endblock %}
+{% block hello %}İşletmem{% endblock %}
+{% block sub %}İstatistik · kampanya · premium{% endblock %}
+{% block main %}
+<p><a class="btn" href="/premium">Planları gör</a></p>
+{% if places %}
+{% for p in places %}
+<a class="resort" href="/isletme/{{ p.slug }}">
+  {% if p.img_url %}<img src="{{ p.img_url }}" alt="">{% endif %}
+  <div>
+    <b>{{ p.title }}</b>
+    <i>{{ p.plan_tier }} · {{ p.views }} görüntülenme · {{ p.fav_count }} favori</i>
+  </div>
+  <span class="px">düzenle</span>
+</a>
+{% endfor %}
+{% else %}
+<div class="empty-box">
+  <p>Sahiplenilmiş işletmen yok.</p>
+  <p>Bir mekan sayfasında <b>İşletme sahibi misiniz?</b> butonunu kullan.</p>
+</div>
+{% endif %}
+{% endblock %}

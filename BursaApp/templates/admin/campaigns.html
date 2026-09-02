@@ -1,0 +1,21 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Kampanyalar · Admin{% endblock %}
+{% block header_title %}Kampanyalar{% endblock %}
+{% block content %}
+<div class="card"><div class="card-body"><div class="table-responsive">
+<table class="table ba-table">
+  <thead><tr><th>ID</th><th>Başlık</th><th>Yer</th><th>Badge</th><th>Durum</th></tr></thead>
+  <tbody>
+  {% for it in items %}
+  <tr>
+    <td>{{ it.campaign.id }}</td>
+    <td>{{ it.campaign.title }}</td>
+    <td>{% if it.place %}{{ it.place.title }}{% else %}-{% endif %}</td>
+    <td>{{ it.campaign.badge }}</td>
+    <td>{{ it.campaign.status }}</td>
+  </tr>
+  {% else %}<tr><td colspan="5">Kampanya yok</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div></div></div>
+{% endblock %}

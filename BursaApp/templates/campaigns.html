@@ -1,0 +1,23 @@
+{% extends "_shell.html" %}
+{% block title %}Kampanyalar · BursaApp{% endblock %}
+{% block hello %}Bugünün kampanyaları{% endblock %}
+{% block sub %}İşletme indirimleri — başlangıç / bitiş tarihine göre{% endblock %}
+{% block main %}
+<p class="empty" style="margin-bottom:14px">Kampanyalar <b>starts_at</b> ile yayına girer, <b>ends_at</b> dolunca listeden otomatik kalkar (süre dolmuş kayıt sitede görünmez).</p>
+{% if items %}
+<div class="cards">
+  {% for it in items %}
+  <a class="place-card" href="/yer/{{ it.place.slug }}">
+    {% if it.place.img_url %}<img src="{{ it.place.img_url }}" alt="" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+    <div class="body">
+      <h3>{{ it.campaign.badge or it.campaign.title }}</h3>
+      <div class="meta"><span>{{ it.place.title }} · {{ it.place.ilce }}</span></div>
+      <p class="blurb">{{ it.campaign.body }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-box"><p>Aktif kampanya yok.</p></div>
+{% endif %}
+{% endblock %}

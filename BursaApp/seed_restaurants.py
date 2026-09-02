@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Yeme-içme restoranlarını upsert eder. Puan yalnızca listedir, sitede oy yok."""
+"""Yeme-içme restoranlarını upsert eder. Alt tür + Google puan seed."""
 from __future__ import annotations
 
 import json
@@ -9,7 +9,7 @@ import sys
 _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
 
-from catalog import tags_dump
+from catalog import infer_food_subcategory, tags_dump
 from models import Place, SessionLocal, init_db
 
 SRC = os.path.join(_DIR, "data", "restaurants.json")
@@ -26,10 +26,15 @@ def main() -> None:
             slug = raw["slug"]
             img = raw.get("photo") or ""
             img_url = f"/static/food/{img}" if img else ""
+            tags = list(raw.get("tags") or []) + ["restoran"]
+            sub = (raw.get("subcategory") or "").strip() or infer_food_subcategory(
+                raw.get("price_band") or "", tags
+            )
             p = db.query(Place).filter(Place.slug == slug).first()
             fields = dict(
                 title=raw["title"],
                 category="food",
+                subcategory=sub,
                 ilce=raw.get("ilce") or "",
                 address=raw.get("address") or "",
                 phone=raw.get("phone") or "",
@@ -39,7 +44,7 @@ def main() -> None:
                 blurb=raw.get("blurb") or "",
                 body=raw.get("blurb") or "",
                 img_url=img_url,
-                tags=tags_dump(list(raw.get("tags") or []) + ["restoran"]),
+                tags=tags_dump(tags),
                 rating_admin=float(raw.get("rating") or 0) or None,
                 featured=bool(raw.get("featured")),
                 status="approved",

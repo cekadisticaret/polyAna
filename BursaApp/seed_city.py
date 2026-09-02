@@ -1,202 +1,200 @@
 #!/usr/bin/env python3
-"""Konser + doktor + veteriner: Commons/Wikipedia foto, yoksa visit kopyası."""
+"""shop / sport / family seed upsert + food subcategory backfill."""
 from __future__ import annotations
 
 import json
 import os
-import shutil
 import sys
-import time
-import urllib.parse
-import urllib.request
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
 
-from catalog import tags_dump
-from models import Place, SessionLocal, init_db
+from catalog import infer_food_subcategory, tags_dump, tags_load
+from models import Campaign, Place, SessionLocal, init_db
 
-UA = {"User-Agent": "BursaApp/1.0 (https://bursaapp.com; city guide)"}
-IMG = {
-    "concert": os.path.join(_DIR, "static", "concert"),
-    "hospital": os.path.join(_DIR, "static", "hospital"),
-    "doctor": os.path.join(_DIR, "static", "doctor"),
-    "vet": os.path.join(_DIR, "static", "vet"),
-}
+_TZ = ZoneInfo("Europe/Istanbul")
 
 
-def _get(url: str) -> bytes:
-    req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=28) as r:
-        return r.read()
-
-
-def wiki_thumb(title: str) -> str | None:
-    for host in ("en.wikipedia.org", "tr.wikipedia.org"):
-        q = urllib.parse.urlencode({
-            "action": "query", "titles": title, "prop": "pageimages",
-            "pithumbsize": 1100, "format": "json", "redirects": 1,
-        })
-        data = json.loads(_get(f"https://{host}/w/api.php?" + q))
-        for p in data.get("query", {}).get("pages", {}).values():
-            t = (p.get("thumbnail") or {}).get("source")
-            if t:
-                return t
-    return None
-
-
-def commons_search(q: str) -> str | None:
-    url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({
-        "action": "query", "generator": "search", "gsrsearch": q,
-        "gsrnamespace": 6, "gsrlimit": 8, "prop": "imageinfo",
-        "iiprop": "url|mime", "iiurlwidth": 1100, "format": "json",
-    })
-    data = json.loads(_get(url))
-    ban = ("bursaray", "siemens", "metro station", ".pdf", "logo")
-    for p in (data.get("query") or {}).get("pages", {}).values():
-        title = (p.get("title") or "").lower()
-        if any(b in title for b in ban):
-            continue
-        ii = (p.get("imageinfo") or [{}])[0]
-        if not str(ii.get("mime") or "").startswith("image/"):
-            continue
-        return ii.get("thumburl") or ii.get("url")
-    return None
-
-
-def save_img(kind: str, slug: str, url: str) -> str:
-    dest = os.path.join(IMG[kind], f"{slug}.jpg")
-    raw = _get(url)
-    if len(raw) < 4000:
-        return ""
-    os.makedirs(IMG[kind], exist_ok=True)
-    open(dest, "wb").write(raw)
-    return f"/static/{kind}/{slug}.jpg"
-
-
-def photo_for(kind: str, raw: dict) -> str:
-    slug = raw["slug"]
-    dest = os.path.join(IMG[kind], f"{slug}.jpg")
-    if os.path.isfile(dest) and os.path.getsize(dest) > 8000:
-        return f"/static/{kind}/{slug}.jpg"
-    url = None
-    if raw.get("wiki"):
-        try:
-            url = wiki_thumb(raw["wiki"])
-        except Exception as e:
-            print("wiki", slug, e)
-    if not url and raw.get("search"):
-        time.sleep(0.55)
-        try:
-            url = commons_search(raw["search"])
-        except Exception as e:
-            print("search", slug, e)
-    if url:
-        try:
-            path = save_img(kind, slug, url)
-            if path:
-                print("dl", slug)
-                return path
-        except Exception as e:
-            print("dl fail", slug, e)
-    copy = raw.get("copy")
-    if copy:
-        src = os.path.join(_DIR, "static", "visit", f"{copy}.jpg")
-        if os.path.isfile(src):
-            os.makedirs(IMG[kind], exist_ok=True)
-            shutil.copy(src, dest)
-            print("copy", slug, "<-", copy)
-            return f"/static/{kind}/{slug}.jpg"
-    for alt in (
-        os.path.join(_DIR, "static", "doctor", f"{slug}.jpg"),
-        os.path.join(_DIR, "static", "hospital", f"{slug}.jpg"),
-        os.path.join(_DIR, "static", "hospital", f"{raw.get('hospital') or ''}.jpg"),
-        os.path.join(_DIR, "static", "doctor", f"{raw.get('hospital') or ''}.jpg"),
-    ):
-        if alt and os.path.isfile(alt) and os.path.getsize(alt) > 8000:
-            os.makedirs(IMG[kind], exist_ok=True)
-            shutil.copy(alt, dest)
-            print("reuse", slug, "<-", alt)
-            return f"/static/{kind}/{slug}.jpg"
-    print("NO PHOTO", slug)
-    return ""
-
-
-def upsert(db, kind: str, raw: dict, img: str) -> None:
+def _upsert(db, *, slug, category, raw, img_prefix=""):
+    photo = raw.get("photo") or ""
+    img_url = f"/static/{img_prefix}/{photo}" if photo and img_prefix else (raw.get("img_url") or "")
+    tags = list(raw.get("tags") or [])
+    sub = (raw.get("subcategory") or "").strip()
     fields = dict(
         title=raw["title"],
-        category=kind,
+        category=category,
+        subcategory=sub,
         ilce=raw.get("ilce") or "",
         address=raw.get("address") or "",
         phone=raw.get("phone") or "",
         web=raw.get("web") or "",
         hours_text=raw.get("hours_text") or "",
-        price_band=raw.get("price_band") or "",
+        price_band=raw.get("price_band") or sub,
         blurb=raw.get("blurb") or "",
         body=raw.get("blurb") or "",
-        img_url=img,
-        tags=tags_dump(raw.get("tags") or []),
+        img_url=img_url,
+        tags=tags_dump(tags),
+        rating_admin=float(raw.get("rating") or 0) or None,
         featured=bool(raw.get("featured")),
         status="approved",
-        venue_name=raw.get("venue_name") or raw.get("hospital") or "",
+        lat=float(raw["lat"]) if raw.get("lat") not in (None, "") else None,
+        lng=float(raw["lng"]) if raw.get("lng") not in (None, "") else None,
     )
-    p = db.query(Place).filter(Place.slug == raw["slug"]).first()
+    if "starts_offset_days" in raw:
+        now = datetime.now(_TZ).replace(tzinfo=None)
+        day = datetime(now.year, now.month, now.day) + timedelta(days=int(raw.get("starts_offset_days") or 0))
+        hour = int(raw.get("starts_hour") or 14)
+        fields["starts_at"] = day.replace(hour=hour, minute=0)
+        fields["ends_at"] = day.replace(hour=hour + 2, minute=0)
+    p = db.query(Place).filter(Place.slug == slug).first()
     if p is None:
-        db.add(Place(slug=raw["slug"], **fields))
-    else:
-        for k, v in fields.items():
-            setattr(p, k, v)
+        db.add(Place(slug=slug, **fields))
+        return "new"
+    for k, v in fields.items():
+        setattr(p, k, v)
+    return "upd"
+
+
+def seed_file(db, path: str, category: str) -> tuple[int, int]:
+    rows = json.loads(open(path, encoding="utf-8").read())
+    n_new = n_upd = 0
+    for raw in rows:
+        r = _upsert(db, slug=raw["slug"], category=category, raw=raw)
+        if r == "new":
+            n_new += 1
+        else:
+            n_upd += 1
+    return n_new, n_upd
+
+
+def seed_market_campaigns(db) -> int:
+    """markets.json içindeki campaign alanlarını Campaign tablosuna yazar."""
+    path = os.path.join(_DIR, "data", "markets.json")
+    if not os.path.isfile(path):
+        return 0
+    rows = json.loads(open(path, encoding="utf-8").read())
+    n = 0
+    now = datetime.utcnow()
+    for raw in rows:
+        camp = raw.get("campaign")
+        if not camp:
+            continue
+        p = db.query(Place).filter(Place.slug == raw["slug"], Place.category == "market").first()
+        if not p:
+            continue
+        title = (camp.get("title") or "").strip()
+        if not title:
+            continue
+        existing = (
+            db.query(Campaign)
+            .filter(Campaign.place_id == p.id, Campaign.title == title)
+            .first()
+        )
+        if existing:
+            existing.body = camp.get("body") or ""
+            existing.badge = camp.get("badge") or ""
+            existing.status = "approved"
+            if not existing.ends_at:
+                existing.ends_at = now + timedelta(days=60)
+            continue
+        db.add(
+            Campaign(
+                place_id=p.id,
+                title=title,
+                body=camp.get("body") or "",
+                badge=camp.get("badge") or "",
+                status="approved",
+                starts_at=now - timedelta(days=1),
+                ends_at=now + timedelta(days=60),
+            )
+        )
+        n += 1
+    return n
 
 
 def main() -> None:
     init_db()
     db = SessionLocal()
     try:
-        jobs = (
-            ("concert", "concerts.json"),
-            ("hospital", "hospitals.json"),
-            ("vet", "vets.json"),
-        )
-        for kind, fname in jobs:
-            rows = json.loads(open(os.path.join(_DIR, "data", fname), encoding="utf-8").read())
-            for raw in rows:
-                time.sleep(0.25)
-                img = photo_for(kind, raw)
-                upsert(db, kind, raw, img)
-            print(kind, "n", len(rows))
+        a = seed_file(db, os.path.join(_DIR, "data", "shops.json"), "shop")
+        b = seed_file(db, os.path.join(_DIR, "data", "sports.json"), "sport")
+        c = seed_file(db, os.path.join(_DIR, "data", "family.json"), "family")
+        m = seed_file(db, os.path.join(_DIR, "data", "markets.json"), "market")
         db.flush()
-        hospitals = {p.slug: p for p in db.query(Place).filter(Place.category == "hospital").all()}
-        docs = json.loads(open(os.path.join(_DIR, "data", "doctors.json"), encoding="utf-8").read())
-        keep = {r["slug"] for r in docs}
-        keep |= set(hospitals)
-        for old in db.query(Place).filter(Place.category == "doctor").all():
-            if old.category != "doctor":
-                continue
-            if old.slug not in keep:
-                old.status = "rejected"
-        for raw in docs:
-            h = hospitals.get(raw.get("hospital") or "")
-            if h:
-                raw.setdefault("ilce", h.ilce)
-                raw.setdefault("address", h.address)
-                raw.setdefault("phone", h.phone)
-                raw.setdefault("hours_text", h.hours_text or "Poliklinik mesai")
-                raw.setdefault("copy", None)
-            img = photo_for("doctor", raw)
-            if not img and h and h.img_url:
-                dest = os.path.join(IMG["doctor"], f"{raw['slug']}.jpg")
-                src = os.path.join(_DIR, h.img_url.lstrip("/"))
-                if src.startswith(_DIR) is False:
-                    src = os.path.join(_DIR, h.img_url.replace("/static/", "static/"))
-                if os.path.isfile(src):
-                    os.makedirs(IMG["doctor"], exist_ok=True)
-                    shutil.copy(src, dest)
-                    img = f"/static/doctor/{raw['slug']}.jpg"
-            upsert(db, "doctor", raw, img)
-        print("doctor", "n", len(docs))
+        camp_n = seed_market_campaigns(db)
+        food_n = backfill_food_sub(db)
+        coord_n = backfill_coords_sample(db)
+        today_n = ensure_today_shows(db)
         db.commit()
+        print(
+            f"shop {a} sport {b} family {c} market {m} market_camp={camp_n} "
+            f"food_sub={food_n} coords={coord_n} today_shows={today_n}"
+        )
     finally:
         db.close()
+
+
+def backfill_food_sub(db) -> int:
+    n = 0
+    for p in db.query(Place).filter(Place.category == "food").all():
+        if (p.subcategory or "").strip():
+            continue
+        sub = infer_food_subcategory(p.price_band, tags_load(p.tags))
+        p.subcategory = sub
+        n += 1
+    return n
+
+
+def backfill_coords_sample(db) -> int:
+    """Koordinatsız food kayıtlarına ilçe merkez yaklaşığı (yakınımda demosu)."""
+    centers = {
+        "Osmangazi": (40.1885, 29.0610),
+        "Nilüfer": (40.2110, 28.9850),
+        "Yıldırım": (40.1860, 29.1000),
+        "Mudanya": (40.3750, 28.8820),
+        "Gemlik": (40.4310, 29.1550),
+        "İnegöl": (40.0781, 29.5133),
+        "İznik": (40.4286, 29.7211),
+    }
+    n = 0
+    for p in db.query(Place).filter(Place.status == "approved", Place.lat.is_(None)).limit(80).all():
+        c = centers.get(p.ilce)
+        if not c:
+            continue
+        # hafif jitter: id ile
+        jitter = ((p.id % 17) - 8) * 0.0015
+        p.lat = c[0] + jitter
+        p.lng = c[1] - jitter * 0.7
+        n += 1
+    return n
+
+
+def ensure_today_shows(db) -> int:
+    """Bugün için tarihli kayıt yoksa sinema/konser/tiyatrodan örnekleri bugüne çeker."""
+    from discover import today_bursa
+
+    data = today_bursa(db)
+    if data["total"] > 0:
+        return 0
+    now = datetime.now(_TZ).replace(tzinfo=None)
+    day = datetime(now.year, now.month, now.day)
+    n = 0
+    hours = {"cinema": 19, "concert": 20, "theater": 20, "event": 18}
+    for cat, hour in hours.items():
+        rows = (
+            db.query(Place)
+            .filter(Place.status == "approved", Place.category == cat)
+            .order_by(Place.id.desc())
+            .limit(3)
+            .all()
+        )
+        for i, p in enumerate(rows):
+            p.starts_at = day.replace(hour=hour, minute=i * 15)
+            p.ends_at = day.replace(hour=hour + 2, minute=0)
+            n += 1
+    return n
 
 
 if __name__ == "__main__":

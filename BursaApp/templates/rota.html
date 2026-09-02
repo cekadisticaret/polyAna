@@ -1,0 +1,48 @@
+{% extends "_shell.html" %}
+{% block title %}1 Günlük Rota · BursaApp{% endblock %}
+{% block hello %}Bursa rota oluşturucu{% endblock %}
+{% block sub %}Araçlı veya otobüslü — bütçeye göre 1 gün{% endblock %}
+{% block main %}
+<form method="post" class="panel form-card wide" style="margin-bottom:18px">
+  <div class="score-row">
+    <label>Kişi<input type="number" name="people" value="{{ people }}" min="1" max="8"></label>
+    <label>Bütçe (TL)<input type="number" name="budget_tl" value="{{ budget or '' }}" placeholder="örn. 2000"></label>
+  </div>
+  <label>Ulaşım
+    <select name="transport">
+      <option value="bus" {% if transport=='bus' %}selected{% endif %}>Otobüs / toplu taşıma (arabasız)</option>
+      <option value="car" {% if transport=='car' %}selected{% endif %}>Araçlı</option>
+      <option value="walk" {% if transport=='walk' %}selected{% endif %}>Yürüyüş ağırlıklı</option>
+    </select>
+  </label>
+  <button class="btn" type="submit">Rota oluştur</button>
+  {% if nav_user %}<button class="btn ghost" type="submit" name="save" value="1" style="margin-left:8px;color:var(--accent);border-color:var(--accent)">Kaydet</button>{% endif %}
+</form>
+{% if route %}
+<section class="panel">
+  <h3>{{ route.title }} · ~{{ route.est_total_tl }} TL
+    {% if route.budget_tl %}· bütçe {{ route.budget_tl }} TL {% if route.within_budget %}✓{% else %}(aşıldı){% endif %}{% endif %}
+  </h3>
+  {% if route.tips %}
+  <ul class="muted">{% for t in route.tips %}<li>{{ t }}</li>{% endfor %}</ul>
+  {% endif %}
+  <div class="timeline">
+    {% for s in route.slots %}
+    {% if s.transit_from_prev %}
+    <div class="tl-arrow" style="font-size:13px;opacity:.85">🚌 {{ s.transit_from_prev }}</div>
+    {% elif not loop.first %}
+    <div class="tl-arrow">↓</div>
+    {% endif %}
+    <div class="tl-item">
+      <div class="tl-time">{{ s.slot_time }}</div>
+      <div class="tl-body">
+        <b>{{ s.slot_label }}</b>
+        <a href="{{ s.path or ('/yer/' ~ s.slug) }}">{{ s.title }}</a>
+        <i>{{ s.ilce }}{% if s.slot_cost_tl %} · ~{{ s.slot_cost_tl }} TL{% endif %}</i>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "_shell.html" %}
+{% block title %}Sahiplen · {{ place.title }}{% endblock %}
+{% block hello %}İşletme sahibi misiniz?{% endblock %}
+{% block sub %}Sayfanızı sahiplenin — admin onaylar{% endblock %}
+{% block main %}
+<div class="panel form-card wide">
+  <p><b>{{ place.title }}</b> · {{ place.ilce }}</p>
+  <form method="post" class="form">
+    <label>Doğrulama notu<textarea name="note" rows="3" placeholder="Telefon, vergi no veya Instagram hesabı…"></textarea></label>
+    <button class="btn" type="submit">Sahiplenme talebi gönder</button>
+  </form>
+</div>
+{% endblock %}

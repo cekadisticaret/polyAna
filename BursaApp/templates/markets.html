@@ -1,0 +1,123 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else 'Marketler · BursaApp' }}{% endblock %}
+{% block hello %}Marketler{% endblock %}
+{% block sub %}Bursa marketleri · yakınındakiler · kampanyalar{% endblock %}
+{% block main %}
+
+<div class="mk-tabs">
+  <a class="mk-tab {{ 'on' if tab=='hepsi' else '' }}" href="/marketler">Tümü</a>
+  <a class="mk-tab {{ 'on' if tab=='yakin' else '' }}" href="/marketler?tab=yakin{% if lat and lng %}&amp;lat={{ lat }}&amp;lng={{ lng }}{% endif %}&amp;r={{ radius }}">Yakınımdaki marketler</a>
+  <a class="mk-tab {{ 'on' if tab=='kampanya' else '' }}" href="/marketler?tab=kampanya">Kampanyalı marketler</a>
+</div>
+
+{% if tab == 'yakin' %}
+<p class="empty" id="geo-note">
+  {% if used_fallback %}Konum yok — Osmangazi merkez varsayıldı.{% else %}Konum: {{ '%.4f'|format(lat) }}, {{ '%.4f'|format(lng) }} · {{ radius }} m{% endif %}
+  <button type="button" class="btn sm" id="geo-btn">Konumumu kullan</button>
+  ·
+  <a href="/marketler?tab=yakin&amp;lat={{ lat }}&amp;lng={{ lng }}&amp;r=800">800 m</a> ·
+  <a href="/marketler?tab=yakin&amp;lat={{ lat }}&amp;lng={{ lng }}&amp;r=1500">1,5 km</a> ·
+  <a href="/marketler?tab=yakin&amp;lat={{ lat }}&amp;lng={{ lng }}&amp;r=3000">3 km</a>
+</p>
+{% endif %}
+
+{% if sub_chips and tab == 'hepsi' %}
+<div class="chips">
+  <a class="chip {{ 'on' if not sub else '' }}" href="/marketler{% if ilce %}?ilce={{ ilce }}{% endif %}">Tümü</a>
+  {% for key, lab in sub_chips %}
+  <a class="chip {{ 'on' if sub==key else '' }}" href="/marketler?sub={{ key }}{% if ilce %}&amp;ilce={{ ilce }}{% endif %}">{{ lab }}</a>
+  {% endfor %}
+</div>
+<div class="chips">
+  <a class="chip {{ 'on' if not ilce else '' }}" href="/marketler{% if sub %}?sub={{ sub }}{% endif %}">İlçe: tümü</a>
+  {% for ad in ilceler %}
+  <a class="chip {{ 'on' if ilce==ad else '' }}" href="/marketler?ilce={{ ad }}{% if sub %}&amp;sub={{ sub }}{% endif %}">{{ ad }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if tab == 'kampanya' %}
+<section class="mk-hero-camp">
+  <div>
+    <p class="hd-label" style="color:var(--orange)">Kampanyalar</p>
+    <h2 style="margin:0 0 8px">Şu an fırsat sunan marketler</h2>
+    <p class="empty" style="margin:0">Zincir katalogları ve yerel teklifler — fiyat/stok değişir, mağaza veya resmi siteyi doğrula.</p>
+  </div>
+</section>
+{% if campaigns %}
+<div class="mk-camp-grid">
+  {% for it in campaigns %}
+  <a class="mk-camp-card" href="{{ it.place.path or ('/yer/' ~ it.place.slug) }}">
+    <span class="mk-badge">{{ it.campaign.badge or 'Kampanya' }}</span>
+    <h3>{{ it.campaign.title }}</h3>
+    <p class="mk-place">{{ it.place.title }} · {{ it.place.ilce }}</p>
+    {% if it.campaign.body %}<p class="mk-body">{{ it.campaign.body }}</p>{% endif %}
+    <span class="mk-go">Markete git →</span>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-box"><p>Aktif market kampanyası yok. <a href="/marketler">Tüm marketlere</a> bak.</p></div>
+{% endif %}
+
+{% elif places %}
+{% if tab == 'yakin' and places %}
+<p class="empty"><b>{{ places|length }}</b> market bu yarıçapta</p>
+{% endif %}
+<div class="cards">
+  {% for p in places %}
+  <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+    {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph mk-ph">🛒</div>{% endif %}
+    <div class="body">
+      <h3>{{ p.title }}</h3>
+      <div class="meta">
+        <span>
+          {% if p.distance_m is defined and p.distance_m is not none %}{{ p.distance_m }} m · {% endif %}
+          {{ p.ilce }}{% if p.subcategory_label %} · {{ p.subcategory_label }}{% endif %}
+        </span>
+        {% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+      </div>
+      {% if p.campaign_badge %}<span class="mk-inline-badge">{{ p.campaign_badge }}</span>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-box">
+  <p>{% if tab=='yakin' %}Bu yarıçapta market yok — yarıçapı büyüt.{% else %}Kayıt yok.{% endif %}</p>
+</div>
+{% endif %}
+
+{% if tab == 'hepsi' and campaigns %}
+<section class="mk-sec">
+  <div class="sec-h"><h2>Öne çıkan kampanyalar</h2><a href="/marketler?tab=kampanya">Tümü →</a></div>
+  <div class="mk-camp-row">
+    {% for it in campaigns[:4] %}
+    <a class="mk-camp-mini" href="{{ it.place.path or ('/yer/' ~ it.place.slug) }}">
+      <b>{{ it.campaign.badge or 'Fırsat' }}</b>
+      <span>{{ it.place.title }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<script>
+(function(){
+  var btn = document.getElementById('geo-btn');
+  if (!btn || !navigator.geolocation) return;
+  btn.addEventListener('click', function(){
+    btn.disabled = true;
+    btn.textContent = 'Konum alınıyor…';
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var lat = pos.coords.latitude.toFixed(6);
+      var lng = pos.coords.longitude.toFixed(6);
+      location.href = '/marketler?tab=yakin&lat=' + lat + '&lng=' + lng + '&r={{ radius }}';
+    }, function(){
+      btn.disabled = false;
+      btn.textContent = 'İzin verilmedi';
+    }, {enableHighAccuracy:true, timeout:10000});
+  });
+})();
+</script>
+{% endblock %}

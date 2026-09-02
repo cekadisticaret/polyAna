@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>{% block title %}Admin · BursaApp{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link href="{{ url_for('static', filename='admin/vendor/bootstrap-select/css/bootstrap-select.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='admin/css/style.css') }}" rel="stylesheet">
+  <style>
+    .nav-header .brand-logo img{height:40px;width:40px;border-radius:12px;object-fit:cover}
+    .nav-header .brand-title-text{font-weight:700;font-size:18px;color:#194039;margin-left:10px}
+    .ba-kpi .chart-num{font-size:28px}
+    .ba-table td,.ba-table th{vertical-align:middle}
+    .badge-pending{background:#fff4de;color:#b47b00}
+    .badge-approved{background:#e6f7ef;color:#0e8a74}
+    .badge-rejected{background:#fde8e8;color:#c0392b}
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div id="main-wrapper">
+  <div class="nav-header">
+    <a href="/admin/dashboard" class="brand-logo">
+      <img src="{{ url_for('static', filename='logo-192.png') }}" alt="BursaApp">
+      <span class="brand-title-text">BursaApp Admin</span>
+    </a>
+    <div class="nav-control">
+      <div class="hamburger"><span class="line"></span><span class="line"></span><span class="line"></span></div>
+    </div>
+  </div>
+
+  <div class="header">
+    <div class="header-content">
+      <nav class="navbar navbar-expand">
+        <div class="collapse navbar-collapse justify-content-between">
+          <div class="header-left">
+            <div class="dashboard_bar">{% block header_title %}Yönetim{% endblock %}</div>
+          </div>
+          <ul class="navbar-nav header-right">
+            <li class="nav-item">
+              <a class="btn btn-primary btn-sm" href="/" target="_blank">Siteyi aç</a>
+            </li>
+            <li class="nav-item ms-2">
+              <a class="btn btn-outline-dark btn-sm" href="/cikis">Çıkış</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <div class="deznav">
+    <div class="deznav-scroll">
+      <ul class="metismenu" id="menu">
+        <li class="{{ 'mm-active' if admin_nav=='dashboard' else '' }}">
+          <a href="/admin/dashboard" class="ai-icon" aria-expanded="false">
+            <i class="flaticon-025-dashboard"></i>
+            <span class="nav-text">Dashboard</span>
+          </a>
+        </li>
+        <li class="{{ 'mm-active' if admin_nav=='queue' else '' }}">
+          <a href="/admin?status=pending" class="ai-icon">
+            <i class="flaticon-381-layer-1"></i>
+            <span class="nav-text">Yer kuyruğu{% if pending_places %}<span class="badge badge-xs badge-danger ms-1">{{ pending_places }}</span>{% endif %}</span>
+          </a>
+        </li>
+        <li class="{{ 'mm-active' if admin_nav=='users' else '' }}">
+          <a href="/admin/users" class="ai-icon">
+            <i class="flaticon-381-user-9"></i>
+            <span class="nav-text">Üyeler</span>
+          </a>
+        </li>
+        <li class="{{ 'mm-active' if admin_nav=='activity' else '' }}">
+          <a href="/admin/activity" class="ai-icon">
+            <i class="flaticon-381-notepad"></i>
+            <span class="nav-text">Aktivite / giriş</span>
+          </a>
+        </li>
+        <li class="{{ 'mm-active' if admin_nav=='reviews' else '' }}">
+          <a href="/admin/reviews" class="ai-icon">
+            <i class="flaticon-381-star"></i>
+            <span class="nav-text">Yorumlar</span>
+          </a>
+        </li>
+        <li class="{{ 'mm-active' if admin_nav=='photos' else '' }}">
+          <a href="/admin/photos" class="ai-icon">
+            <i class="flaticon-381-picture"></i>
+            <span class="nav-text">Üye foto{% if pending_photos %}<span class="badge badge-xs badge-danger ms-1">{{ pending_photos }}</span>{% endif %}</span>
+          </a>
+        </li>
+        <li class="{{ 'mm-active' if admin_nav=='seo' else '' }}">
+          <a href="/admin/seo" class="ai-icon">
+            <i class="flaticon-381-search-2"></i>
+            <span class="nav-text">SEO durum</span>
+          </a>
+        </li>
+        <li class="{{ 'mm-active' if admin_nav=='claims' else '' }}">
+          <a href="/admin/claims" class="ai-icon">
+            <i class="flaticon-381-network"></i>
+            <span class="nav-text">Sahiplenme{% if pending_claims %}<span class="badge badge-xs badge-danger ms-1">{{ pending_claims }}</span>{% endif %}</span>
+          </a>
+        </li>
+        <li class="{{ 'mm-active' if admin_nav=='campaigns' else '' }}">
+          <a href="/admin/campaigns" class="ai-icon">
+            <i class="flaticon-381-promotion"></i>
+            <span class="nav-text">Kampanyalar</span>
+          </a>
+        </li>
+        <li class="{{ 'mm-active' if admin_nav=='matches' else '' }}">
+          <a href="/admin/matches" class="ai-icon">
+            <i class="flaticon-381-calendar-1"></i>
+            <span class="nav-text">Bursaspor maçları</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/new" class="ai-icon">
+            <i class="flaticon-381-add"></i>
+            <span class="nav-text">Yeni yer ekle</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin?status=approved" class="ai-icon">
+            <i class="flaticon-381-success-2"></i>
+            <span class="nav-text">Onaylı yerler</span>
+          </a>
+        </li>
+      </ul>
+      <div class="copyright mt-4 px-3">
+        <p class="fs-12"><strong>BursaApp</strong> · Ventic UI</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-body default-height">
+    <div class="container-fluid">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for cat, msg in messages %}
+          <div class="alert alert-{{ 'success' if cat=='ok' else 'danger' }} alert-dismissible fade show">{{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="copyright">
+      <p>BursaApp Admin · Event Ticketing UI (Ventic)</p>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='admin/vendor/global/global.min.js') }}"></script>
+<script src="{{ url_for('static', filename='admin/vendor/bootstrap-select/js/bootstrap-select.min.js') }}"></script>
+<script src="{{ url_for('static', filename='admin/js/custom.min.js') }}"></script>
+<script src="{{ url_for('static', filename='admin/js/deznav-init.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

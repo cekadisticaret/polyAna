@@ -8,11 +8,16 @@
   {% if err %}<p class="flash err">{{ err }}</p>{% endif %}
   <form method="post" class="form">
     <label>Kategori
-      <select name="category" required>
+      <select name="category" id="cat-select" required>
         <option value="">Seç…</option>
         {% for c in categories %}
         <option value="{{ c.key }}" {% if preset==c.key %}selected{% endif %}>{{ c.label }}</option>
         {% endfor %}
+      </select>
+    </label>
+    <label>Alt tür
+      <select name="subcategory" id="sub-select">
+        <option value="">—</option>
       </select>
     </label>
     <label>Başlık<input name="title" required></label>
@@ -37,4 +42,23 @@
     <button type="submit" class="btn">Gönder · onay beklesin</button>
   </form>
 </div>
+<script>
+(function(){
+  var tax = {{ mekan_taxonomy|tojson }};
+  var cat = document.getElementById('cat-select');
+  var sub = document.getElementById('sub-select');
+  function refill(){
+    var key = cat.value;
+    var pairs = tax[key] || [];
+    sub.innerHTML = '<option value="">—</option>';
+    pairs.forEach(function(p){
+      var o = document.createElement('option');
+      o.value = p[0]; o.textContent = p[1];
+      sub.appendChild(o);
+    });
+  }
+  cat.addEventListener('change', refill);
+  refill();
+})();
+</script>
 {% endblock %}

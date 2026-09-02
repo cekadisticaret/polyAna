@@ -1,0 +1,16 @@
+{% extends "_shell.html" %}
+{% block title %}Rotalarım · BursaApp{% endblock %}
+{% block hello %}Rotalarım{% endblock %}
+{% block sub %}Kaydedilmiş 1 günlük programlar{% endblock %}
+{% block main %}
+{% for it in items %}
+<section class="panel" style="margin-bottom:14px">
+  <h3>{{ it.route.title }} · {{ it.route.budget_tl }} TL bütçe</h3>
+  {% for s in it.slots %}
+  <p class="empty">{{ s.slot_time }} · <a href="/yer/{{ s.slug }}">{{ s.title }}</a></p>
+  {% endfor %}
+</section>
+{% else %}
+<div class="empty-box"><p>Kayıtlı rota yok. <a href="/rota">Rota oluştur</a></p></div>
+{% endfor %}
+{% endblock %}

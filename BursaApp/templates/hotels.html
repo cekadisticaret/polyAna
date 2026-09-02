@@ -1,0 +1,345 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else 'Bursa Oteller · BursaApp' }}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<style>
+/* Oteller landing — mockup düzeni, BursaApp paleti */
+.ht-bleed{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+.ht-hero{
+  position:relative;min-height:min(58vh,520px);display:flex;align-items:flex-end;
+  background:#1B3B2B center/cover no-repeat;color:#fff;overflow:hidden;
+}
+.ht-hero::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(105deg,rgba(15,32,24,.88) 0%,rgba(15,32,24,.55) 48%,rgba(15,32,24,.25) 100%);
+}
+.ht-hero-inner{position:relative;z-index:1;width:min(1180px,100%);margin:0 auto;padding:48px 22px 92px}
+.ht-hero h1{margin:0;font-size:clamp(32px,5vw,52px);line-height:1.08;letter-spacing:-1.2px;font-weight:800;max-width:16ch}
+.ht-hero h1 em{font-style:normal;color:#E8782E}
+.ht-hero .lead{margin:14px 0 22px;color:rgba(255,255,255,.82);font-size:15px;line-height:1.55;max-width:42ch}
+.ht-hero-cta{display:flex;flex-wrap:wrap;gap:10px}
+.ht-btn{
+  display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:13px 20px;
+  font-weight:700;font-size:14px;border:0;cursor:pointer;text-decoration:none;
+}
+.ht-btn-primary{background:#E8782E;color:#fff}
+.ht-btn-primary:hover{background:#D4651C}
+.ht-btn-ghost{background:#fff;color:#1B3B2B}
+.ht-btn-ghost:hover{background:#F6F3EC}
+
+.ht-search-wrap{width:min(1180px,100%);margin:-56px auto 0;padding:0 22px;position:relative;z-index:3}
+.ht-search{
+  background:#fff;border-radius:22px;box-shadow:0 18px 50px rgba(27,59,43,.14);
+  padding:14px 16px 16px;border:1px solid rgba(27,59,43,.06);
+}
+.ht-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.ht-tabs a{
+  padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;color:#6B7A72;
+}
+.ht-tabs a.on,.ht-tabs a:hover{background:#E8F2EA;color:#1B3B2B}
+.ht-fields{
+  display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;
+}
+.ht-field label{display:block;font-size:11px;font-weight:700;color:#6B7A72;margin-bottom:4px}
+.ht-field input,.ht-field select{
+  width:100%;border:1px solid rgba(27,59,43,.1);border-radius:12px;padding:11px 12px;
+  background:#F6F3EC;font-weight:600;color:#1A2E24;outline:0;
+}
+.ht-field input:focus,.ht-field select:focus{border-color:#E8782E;background:#fff}
+.ht-search .ht-btn{padding:12px 18px;white-space:nowrap}
+
+.ht-section{width:min(1180px,100%);margin:0 auto;padding:36px 22px 0}
+.ht-feats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding-top:8px}
+.ht-feat{text-align:center;padding:8px 6px}
+.ht-feat-ic{
+  width:56px;height:56px;border-radius:50%;background:#1B3B2B;color:#fff;
+  display:grid;place-items:center;margin:0 auto 12px;font-size:22px;
+}
+.ht-feat b{display:block;font-size:14px;margin-bottom:4px}
+.ht-feat span{display:block;font-size:12px;color:#6B7A72;line-height:1.45}
+
+.ht-sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:8px 0 18px}
+.ht-sec-h .eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#E8782E;margin:0 0 4px}
+.ht-sec-h h2{margin:0;font-size:clamp(22px,3vw,30px);letter-spacing:-.4px}
+.ht-sec-h a{font-weight:700;font-size:13px;color:#1B3B2B;white-space:nowrap}
+
+.ht-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.ht-card{
+  background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 28px rgba(27,59,43,.07);
+  border:1px solid rgba(27,59,43,.05);display:flex;flex-direction:column;color:inherit;text-decoration:none;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.ht-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(27,59,43,.12)}
+.ht-card-media{position:relative;aspect-ratio:4/3;background:#E8F2EA}
+.ht-card-media img{width:100%;height:100%;object-fit:cover}
+.ht-card-media .ph{width:100%;height:100%;display:grid;place-items:center;font-size:40px;color:#6B7A72}
+.ht-badge{
+  position:absolute;left:10px;top:10px;background:#1B3B2B;color:#fff;
+  font-size:11px;font-weight:800;letter-spacing:.04em;padding:5px 9px;border-radius:999px;
+}
+.ht-badge.termal{background:#0F766E}
+.ht-badge.uludag{background:#1D4ED8}
+.ht-badge.butik{background:#7C3AED}
+.ht-fav{
+  position:absolute;right:10px;top:10px;width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.92);display:grid;place-items:center;color:#1B3B2B;font-size:15px;
+}
+.ht-card-body{padding:14px 14px 16px;display:flex;flex-direction:column;gap:4px;flex:1}
+.ht-price{font-size:20px;font-weight:800;letter-spacing:-.3px;margin:0}
+.ht-price small{font-size:12px;font-weight:600;color:#6B7A72}
+.ht-addr{font-size:13px;font-weight:700;margin:2px 0 0;line-height:1.3}
+.ht-addr2{font-size:12px;color:#6B7A72;margin:0}
+.ht-stats{
+  display:flex;flex-wrap:wrap;gap:8px 12px;margin-top:10px;padding-top:10px;
+  border-top:1px solid rgba(27,59,43,.07);font-size:12px;font-weight:600;color:#6B7A72;
+}
+
+.ht-cta{
+  margin:40px 22px 0;border-radius:22px;overflow:hidden;display:grid;grid-template-columns:1.1fr .9fr;
+  background:#1B3B2B;color:#fff;min-height:220px;
+}
+.ht-cta-copy{padding:36px 32px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.ht-cta-copy h3{margin:0;font-size:clamp(22px,3vw,30px);line-height:1.2;letter-spacing:-.4px;max-width:18ch}
+.ht-cta-copy p{margin:0;color:rgba(255,255,255,.75);font-size:14px;max-width:36ch}
+.ht-cta-visual{position:relative;min-height:200px;background:#244A38 center/cover no-repeat}
+.ht-cta-card{
+  position:absolute;left:18px;bottom:18px;background:#fff;color:#1A2E24;border-radius:14px;
+  padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.25);min-width:180px;
+}
+.ht-cta-card b{display:block;font-size:12px;color:#6B7A72;font-weight:700}
+.ht-cta-card strong{display:block;font-size:22px;margin-top:4px}
+.ht-cta-card span{display:inline-block;margin-top:6px;color:#15803D;font-weight:800;font-size:13px}
+
+.ht-why{padding-bottom:28px}
+.ht-why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.ht-why-item{padding:8px 4px}
+.ht-why-item .ic{font-size:22px;margin-bottom:8px}
+.ht-why-item b{display:block;margin-bottom:4px}
+.ht-why-item span{font-size:13px;color:#6B7A72;line-height:1.45}
+
+.ht-note{font-size:12px;color:#6B7A72;margin:10px 0 0;text-align:center}
+
+@media (max-width:980px){
+  .ht-fields{grid-template-columns:1fr 1fr; }
+  .ht-fields .ht-btn{grid-column:1 / -1}
+  .ht-grid{grid-template-columns:repeat(2,1fr)}
+  .ht-feats,.ht-why-grid{grid-template-columns:repeat(2,1fr)}
+  .ht-cta{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .ht-hero-inner{padding-bottom:78px}
+  .ht-grid{grid-template-columns:1fr}
+  .ht-fields{grid-template-columns:1fr}
+  .ht-feats,.ht-why-grid{grid-template-columns:1fr 1fr;gap:10px}
+}
+</style>
+{% endblock %}
+{% block main %}
+{% set hero_img = (featured[0].img_url if featured and featured[0].img_url else (places[0].img_url if places and places[0].img_url else '')) %}
+
+<section class="ht-bleed ht-hero" {% if hero_img %}style="background-image:url('{{ hero_img }}')"{% endif %}>
+  <div class="ht-hero-inner">
+    <h1>Hayalindeki <em>Oteli</em> Bul</h1>
+    <p class="lead">Termal Çekirge, şehir otelleri ve Uludağ — Bursa’daki seçenekleri tek yerde keşfet. Rezervasyon siteden yapılmaz.</p>
+    <div class="ht-hero-cta">
+      <a class="ht-btn ht-btn-primary" href="#liste">Otelleri keşfet →</a>
+      <a class="ht-btn ht-btn-ghost" href="/kamp">Kamp yerleri</a>
+    </div>
+  </div>
+</section>
+
+<div class="ht-search-wrap">
+  <form class="ht-search" method="get" action="/oteller" id="ht-search">
+    <div class="ht-tabs">
+      <a class="{{ 'on' if not band else '' }}" href="/oteller">Tümü</a>
+      <a class="{{ 'on' if band=='termal' else '' }}" href="/oteller?band=termal">Termal</a>
+      <a class="{{ 'on' if band=='uludag' else '' }}" href="/oteller?band=uludag">Uludağ</a>
+      <a class="{{ 'on' if band=='sehir' else '' }}" href="/oteller?band=sehir">Şehir</a>
+      <a class="{{ 'on' if sub=='butik' else '' }}" href="/oteller?sub=butik">Butik</a>
+    </div>
+    <div class="ht-fields">
+      <div class="ht-field">
+        <label for="ht-q">Nereye?</label>
+        <input id="ht-q" name="q" value="{{ q|default('') }}" placeholder="Otel, semt, ilçe…" autocomplete="off">
+      </div>
+      <div class="ht-field">
+        <label for="ht-sub">Tür</label>
+        <select id="ht-sub" name="sub">
+          <option value="">Tümü</option>
+          {% for k, lab in subs %}
+          <option value="{{ k }}" {% if sub==k %}selected{% endif %}>{{ lab }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="ht-field">
+        <label for="ht-ilce">İlçe</label>
+        <select id="ht-ilce" name="ilce">
+          <option value="">Tümü</option>
+          {% for d in districts %}
+          <option value="{{ d }}" {% if ilce==d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="ht-field">
+        <label for="ht-band">Bölge</label>
+        <select id="ht-band" name="band">
+          <option value="">Tümü</option>
+          <option value="termal" {% if band=='termal' %}selected{% endif %}>Termal</option>
+          <option value="uludag" {% if band=='uludag' %}selected{% endif %}>Uludağ</option>
+          <option value="sehir" {% if band=='sehir' %}selected{% endif %}>Şehir</option>
+        </select>
+      </div>
+      <button class="ht-btn ht-btn-primary" type="submit">🔍 Ara</button>
+    </div>
+  </form>
+  <p class="ht-note">{{ places|length }} otel · fiyatlar örnek gecelik tutardır, rezervasyon siteden yapılmaz</p>
+</div>
+
+<section class="ht-section">
+  <div class="ht-feats">
+    <div class="ht-feat">
+      <div class="ht-feat-ic">🏨</div>
+      <b>Doğru oteli bul</b>
+      <span>Termal, Uludağ ve şehir seçeneklerini yan yana gör.</span>
+    </div>
+    <div class="ht-feat">
+      <div class="ht-feat-ic">📍</div>
+      <b>İlçe ilçe</b>
+      <span>Osmangazi’den Mudanya’ya, gerçek konum bilgisi.</span>
+    </div>
+    <div class="ht-feat">
+      <div class="ht-feat-ic">★</div>
+      <b>Misafir puanı</b>
+      <span>Yorum skoruna göre sırala, öne çıkanları incele.</span>
+    </div>
+    <div class="ht-feat">
+      <div class="ht-feat-ic">💸</div>
+      <b>Örnek fiyat</b>
+      <span>Gecelik aralık fikri verir — kesin teklif otelden.</span>
+    </div>
+  </div>
+</section>
+
+<section class="ht-section" id="liste">
+  <div class="ht-sec-h">
+    <div>
+      <p class="eyebrow">Öne çıkanlar</p>
+      <h2>Beğeneceğin oteller</h2>
+    </div>
+    <a href="/oteller">Tümünü gör →</a>
+  </div>
+  <div class="ht-grid">
+    {% for p in (featured if featured else places[:8]) %}
+    {% set band_key = (p.price_band or 'sehir') %}
+    {% set badge = 'TERMAL' if band_key=='termal' else ('ULUDAĞ' if band_key=='uludag' else (p.subcategory_label or 'OTEL')|upper) %}
+    <a class="ht-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+      <div class="ht-card-media">
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🏨</div>{% endif %}
+        <span class="ht-badge {{ band_key }}">{{ badge }}</span>
+        <span class="ht-fav" aria-hidden="true">♡</span>
+      </div>
+      <div class="ht-card-body">
+        <p class="ht-price">
+          {% if p.extra and p.extra.price_min %}{{ p.extra.price_min }}{% else %}Fiyat sor{% endif %}
+          <small> / gece örnek</small>
+        </p>
+        <p class="ht-addr">{{ p.title }}</p>
+        <p class="ht-addr2">{{ p.ilce or 'Bursa' }}{% if p.address %} · {{ p.address.split(',')[0] }}{% endif %}</p>
+        <div class="ht-stats">
+          {% if p.rating %}<span>★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+          {% if p.subcategory_label %}<span>{{ p.subcategory_label }}</span>{% endif %}
+          {% if p.ilce %}<span>{{ p.ilce }}</span>{% endif %}
+        </div>
+      </div>
+    </a>
+    {% else %}
+    <p class="empty">Bu filtrede otel yok. <a href="/oteller">Tümüne dön</a></p>
+    {% endfor %}
+  </div>
+</section>
+
+{% if places|length > 8 %}
+<section class="ht-section">
+  <div class="ht-sec-h">
+    <div>
+      <p class="eyebrow">Tüm liste</p>
+      <h2>Bursa otelleri</h2>
+    </div>
+  </div>
+  <div class="ht-grid">
+    {% for p in places if p.slug not in featured_slugs %}
+    {% set band_key = (p.price_band or 'sehir') %}
+    {% set badge = 'TERMAL' if band_key=='termal' else ('ULUDAĞ' if band_key=='uludag' else (p.subcategory_label or 'OTEL')|upper) %}
+    <a class="ht-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+      <div class="ht-card-media">
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🏨</div>{% endif %}
+        <span class="ht-badge {{ band_key }}">{{ badge }}</span>
+        <span class="ht-fav" aria-hidden="true">♡</span>
+      </div>
+      <div class="ht-card-body">
+        <p class="ht-price">
+          {% if p.extra and p.extra.price_min %}{{ p.extra.price_min }}{% else %}Fiyat sor{% endif %}
+          <small> / gece örnek</small>
+        </p>
+        <p class="ht-addr">{{ p.title }}</p>
+        <p class="ht-addr2">{{ p.ilce or 'Bursa' }}</p>
+        <div class="ht-stats">
+          {% if p.rating %}<span>★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+          {% if p.subcategory_label %}<span>{{ p.subcategory_label }}</span>{% endif %}
+          {% if p.ilce %}<span>{{ p.ilce }}</span>{% endif %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="ht-section">
+  <div class="ht-cta" style="border-radius:22px">
+    <div class="ht-cta-copy">
+      <h3>Doğa mı, termal mi? Kamp da listede.</h3>
+      <p>Uludağ koyları, gölet kenarı ve ücretsiz alanlar — otel istemeyenler için kamp rehberi.</p>
+      <div><a class="ht-btn ht-btn-ghost" href="/kamp">Kamp yerlerine git →</a></div>
+    </div>
+    <div class="ht-cta-visual" {% if hero_img %}style="background-image:url('{{ hero_img }}')"{% endif %}>
+      <div class="ht-cta-card">
+        <b>Örnek otel skoru</b>
+        <strong>{% if featured and featured[0].rating %}{{ '%.1f'|format(featured[0].rating) }} / 5{% else %}4.5 / 5{% endif %}</strong>
+        <span>misafir puanı</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ht-section ht-why">
+  <div class="ht-sec-h">
+    <div>
+      <p class="eyebrow">Neden BursaApp</p>
+      <h2>Konaklamayı sade tutuyoruz</h2>
+    </div>
+  </div>
+  <div class="ht-why-grid">
+    <div class="ht-why-item">
+      <div class="ic">🗺</div>
+      <b>Yerel liste</b>
+      <span>Bursa odaklı — şehir, termal ve dağ bir arada.</span>
+    </div>
+    <div class="ht-why-item">
+      <div class="ic">📷</div>
+      <b>Gerçek fotoğraflar</b>
+      <span>Otel sayfalarında galeri; mekanı önce gör.</span>
+    </div>
+    <div class="ht-why-item">
+      <div class="ic">🔒</div>
+      <b>Rezervasyon yok</b>
+      <span>Kart bilgisi istemeyiz; oteli sen ararsın.</span>
+    </div>
+    <div class="ht-why-item">
+      <div class="ic">🌿</div>
+      <b>Gezi + yemek</b>
+      <span>Konaklamanın yanına rota ve restoran ekle.</span>
+    </div>
+  </div>
+</section>
+{% endblock %}

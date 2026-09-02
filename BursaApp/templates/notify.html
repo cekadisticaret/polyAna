@@ -1,0 +1,15 @@
+{% extends "_shell.html" %}
+{% block title %}Bildirimler · BursaApp{% endblock %}
+{% block hello %}Bildirim tercihleri{% endblock %}
+{% block sub %}Ne gelmesini istersin?{% endblock %}
+{% block main %}
+<form method="post" class="panel form-card form">
+  <label class="check"><input type="checkbox" name="notify_concert" value="1" {% if u.notify_concert %}checked{% endif %}> Konser</label>
+  <label class="check"><input type="checkbox" name="notify_theater" value="1" {% if u.notify_theater %}checked{% endif %}> Tiyatro</label>
+  <label class="check"><input type="checkbox" name="notify_festival" value="1" {% if u.notify_festival %}checked{% endif %}> Festival</label>
+  <label class="check"><input type="checkbox" name="notify_campaign" value="1" {% if u.notify_campaign %}checked{% endif %}> Kampanya</label>
+  <label class="check"><input type="checkbox" name="notify_new_place" value="1" {% if u.notify_new_place %}checked{% endif %}> Yeni mekan</label>
+  <button class="btn" type="submit">Kaydet</button>
+</form>
+<p class="empty">Seçtiğin konular için yeni etkinlikler e-posta ile gelir. Tercihlerini istediğin zaman değiştirebilirsin.</p>
+{% endblock %}

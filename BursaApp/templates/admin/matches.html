@@ -1,0 +1,61 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Bursaspor maçları{% endblock %}
+{% block header_title %}Bursaspor fikstür{% endblock %}
+{% block content %}
+<div class="card mb-4"><div class="card-body">
+  <h5 class="mb-3">Yeni maç</h5>
+  <form method="post" action="/admin/matches/new" class="row g-2">
+    <div class="col-md-1"><input class="form-control" name="week" placeholder="Hf"></div>
+    <div class="col-md-2"><input class="form-control" type="datetime-local" name="kickoff_at"></div>
+    <div class="col-md-2"><input class="form-control" name="home_team" placeholder="Ev sahibi" required></div>
+    <div class="col-md-2"><input class="form-control" name="away_team" placeholder="Deplasman" required></div>
+    <div class="col-md-2"><input class="form-control" name="venue" placeholder="Stadyum"></div>
+    <div class="col-md-1 form-check mt-2"><input class="form-check-input" type="checkbox" name="is_home" value="1" checked id="ih"><label class="form-check-label" for="ih">İç saha</label></div>
+    <div class="col-md-2"><input class="form-control" name="competition" value="1. Lig"></div>
+    <div class="col-md-2"><input class="form-control" name="ticket_price" placeholder="Bilet fiyatı"></div>
+    <div class="col-md-3"><input class="form-control" name="ticket_url" placeholder="Bilet URL"></div>
+    <div class="col-md-2"><input class="form-control" name="home_score" placeholder="Ev skor"></div>
+    <div class="col-md-2"><input class="form-control" name="away_score" placeholder="Dep skor"></div>
+    <div class="col-md-2"><input class="form-control" name="season" value="2026-27"></div>
+    <div class="col-md-3"><input class="form-control" name="note" placeholder="Not"></div>
+    <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Ekle</button></div>
+  </form>
+</div></div>
+
+<div class="card"><div class="card-body">
+  <div class="table-responsive">
+    <table class="table ba-table table-sm">
+      <thead><tr><th>Hf</th><th>Tarih</th><th>Maç</th><th>Skor</th><th>Mekan</th><th>Bilet</th><th></th></tr></thead>
+      <tbody>
+      {% for m in rows %}
+      <tr>
+        <td colspan="7" class="p-0 border-0">
+          <form method="post" action="/admin/matches/{{ m.id }}/edit" class="row g-1 align-items-center p-2 border-bottom">
+            <div class="col-md-1"><input class="form-control form-control-sm" name="week" value="{{ m.week or '' }}"></div>
+            <div class="col-md-2"><input class="form-control form-control-sm" type="datetime-local" name="kickoff_at" value="{{ m.kickoff_at.strftime('%Y-%m-%dT%H:%M') if m.kickoff_at else '' }}"></div>
+            <div class="col-md-2"><input class="form-control form-control-sm" name="home_team" value="{{ m.home_team }}"></div>
+            <div class="col-md-2"><input class="form-control form-control-sm" name="away_team" value="{{ m.away_team }}"></div>
+            <div class="col-md-1"><input class="form-control form-control-sm" name="home_score" value="{{ m.home_score if m.home_score is not none else '' }}" placeholder="E"></div>
+            <div class="col-md-1"><input class="form-control form-control-sm" name="away_score" value="{{ m.away_score if m.away_score is not none else '' }}" placeholder="D"></div>
+            <div class="col-md-2"><input class="form-control form-control-sm" name="venue" value="{{ m.venue }}"></div>
+            <div class="col-md-2"><input class="form-control form-control-sm" name="ticket_price" value="{{ m.ticket_price }}" placeholder="fiyat"></div>
+            <div class="col-md-3"><input class="form-control form-control-sm" name="ticket_url" value="{{ m.ticket_url }}" placeholder="url"></div>
+            <div class="col-md-2"><input class="form-control form-control-sm" name="competition" value="{{ m.competition }}"></div>
+            <div class="col-md-1 form-check"><input class="form-check-input" type="checkbox" name="is_home" value="1" {% if m.is_home %}checked{% endif %}></div>
+            <input type="hidden" name="season" value="{{ m.season }}">
+            <input type="hidden" name="status" value="{{ m.status }}">
+            <input type="hidden" name="note" value="{{ m.note }}">
+            <div class="col-md-1"><button class="btn btn-sm btn-primary" type="submit">OK</button></div>
+            <div class="col-md-1"><button class="btn btn-sm btn-outline-danger" type="submit" formaction="/admin/matches/{{ m.id }}/delete" onclick="return confirm('Sil?')">Sil</button></div>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted">Henüz maç yok — yukarıdan ekleyin veya seed çalıştırın.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="mb-0"><a href="/bursaspor" target="_blank">Public sayfa → /bursaspor</a></p>
+</div></div>
+{% endblock %}

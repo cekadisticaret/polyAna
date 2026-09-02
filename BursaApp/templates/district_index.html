@@ -1,0 +1,12 @@
+{% extends "_shell.html" %}
+{% block title %}İlçeler · BursaApp{% endblock %}
+{% block hello %}17 ilçe{% endblock %}
+{% block sub %}Her ilçe mini portal — restoran, cafe, etkinlik{% endblock %}
+{% block main %}
+<div class="links" style="gap:10px">
+  {% for slug, ad in pairs %}
+  <a class="chip" href="/ilce/{{ slug }}">{{ ad }}</a>
+  {% endfor %}
+</div>
+<p class="empty" style="margin-top:12px">SEO: <a href="/nilufer-restoranlari">/nilufer-restoranlari</a> · <a href="/nilufer-cafeler">/nilufer-cafeler</a></p>
+{% endblock %}

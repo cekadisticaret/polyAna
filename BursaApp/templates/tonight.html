@@ -1,0 +1,40 @@
+{% extends "_shell.html" %}
+{% block title %}{{ data.title }} · BursaApp{% endblock %}
+{% block hello %}{{ data.title }}{% endblock %}
+{% block sub %}Akşam önerileri · sinema, konser, yemek, cafe{% endblock %}
+{% block main %}
+<div class="chips">
+  <a class="chip {{ 'on' if not couple else '' }}" href="/bu-aksam">Herkes</a>
+  <a class="chip {{ 'on' if couple else '' }}" href="/bu-aksam?mode=couple">Çift olarak</a>
+</div>
+{% if data.sections %}
+  {% for s in data.sections %}
+  <section class="ilce-block" id="{{ s.key }}">
+    <div class="sec-h">
+      <h2>{{ s.label }}</h2>
+      <span class="see">{{ s.places|length }}</span>
+    </div>
+    <div class="cards">
+      {% for p in s.places %}
+      <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+        <div class="body">
+          <h3>{{ p.title }}</h3>
+          <div class="meta">
+            <span>{% if p.when %}{{ p.when }} · {% endif %}{{ p.ilce }}{% if p.subcategory_label %} · {{ p.subcategory_label }}{% endif %}</span>
+            {% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+          </div>
+          {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+{% else %}
+<div class="empty-box">
+  <p>Bu akşam için öneri bulunamadı.</p>
+  <a href="/yeme-icme">Yeme-içmeye bak</a>
+</div>
+{% endif %}
+{% endblock %}

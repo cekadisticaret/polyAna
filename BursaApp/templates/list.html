@@ -1,14 +1,46 @@
 {% extends "_shell.html" %}
-{% block title %}{{ cat.label }} · BursaApp{% endblock %}
 {% block hello %}{{ cat.label }}{% endblock %}
-{% block sub %}{% if cat.key=='food' %}İlçe ilçe, yüksek puandan düşüğe. Puan Google listesi — sitede oy yok.{% elif cat.key=='visit' %}Gerçek duraklar, mekanın kendi fotoğrafı. Bursaray yok — o metro.{% elif cat.key=='hotel' %}Termal Çekirge, şehir, Uludağ kayak. Rezervasyon siteden yapılmaz.{% elif cat.key=='camp' %}Milli park ve göl kampları. Çadır / karavan — emir yok.{% elif cat.key=='concert' %}Yaklaşan konserler üstte. Bilet siteden satılmaz.{% elif cat.key=='theater' %}Yakın tarihli oyunlar, sonra salonlar. Bilet siteden yok.{% elif cat.key=='cinema' %}Vizyondaki filmler + salonlar. Seans değişir, teyit et.{% elif cat.key=='event' %}Şehir takvimi: fuar, festival, sahne. Bilet siteden yok.{% elif cat.key=='hospital' %}Devlet, özel, üniversite. Karttaki hekimler o hastaneye bağlı.{% elif cat.key=='doctor' %}Branşa göre hekim. Hastane sayfasına bağlı. Randevu / tıbbi tavsiye yok.{% elif cat.key=='vet' %}Oda kayıtlı klinik ve hayvan hastanesi. Randevu siteden yok.{% else %}{{ cat.hint }}{% endif %}{% endblock %}
+{% block sub %}{% if cat.key=='food' %}Alt tür ve ilçe filtreleri. BursaApp puanı varsa onu, yoksa listedeki puanı gösterir.{% elif cat.key=='visit' %}Gerçek duraklar, mekanın kendi fotoğrafı. Bursaray yok — o metro.{% elif cat.key=='hotel' %}Termal Çekirge, şehir, Uludağ kayak. Rezervasyon siteden yapılmaz.{% elif cat.key=='camp' %}İnsanların gerçekten gittiği Uludağ, deniz, göl ve ücretsiz koylar. Çadır / karavan — emir yok.{% elif cat.key=='shop' %}AVM, mağaza, outlet, hediyelik, yerel ürün.{% elif cat.key=='sport' %}Fitness, pilates, yüzme, tenis, halı saha.{% elif cat.key=='family' %}Park, piknik, çocuk alanı, aile aktivitesi.{% elif cat.key=='concert' %}Yaklaşan konserler üstte. Bilet siteden satılmaz.{% elif cat.key=='theater' %}Yakın tarihli oyunlar, sonra salonlar. Bilet siteden yok.{% elif cat.key=='cinema' %}Vizyondaki filmler + salonlar. Seans değişir, teyit et.{% elif cat.key=='event' %}Şehir takvimi: fuar, festival, sahne. Bilet siteden yok.{% elif cat.key=='hospital' %}Devlet, özel, üniversite. Karttaki hekimler o hastaneye bağlı.{% elif cat.key=='doctor' %}Branşa göre hekim. Hastane sayfasına bağlı. Randevu / tıbbi tavsiye yok.{% elif cat.key=='vet' %}Oda kayıtlı klinik ve hayvan hastanesi. Randevu siteden yok.{% elif cat.key=='fun' %}Canlı müzik, bar, bowling, escape, AVM. Bilet / rezervasyon siteden yok.{% elif cat.key=='org' %}Etkinliği üreten kurum — takvim değil. Bilet siteden yok.{% else %}{{ cat.hint }}{% endif %}{% endblock %}
 {% block main %}
+{% if sub_chips %}
 <div class="chips">
-  <a class="chip {{ 'on' if not chip_on else '' }}" href="{{ cat.path }}{% if q %}?q={{ q }}{% endif %}">Tümü</a>
-  {% for ad in chip_items %}
-  <a class="chip {{ 'on' if chip_on==ad else '' }}" href="{{ cat.path }}?{{ chip_param }}={{ ad }}{% if q %}&amp;q={{ q }}{% endif %}">{{ ad }}</a>
+  <a class="chip {{ 'on' if not sub else '' }}" href="{{ cat.path }}{% if ilce %}?ilce={{ ilce }}{% endif %}{% if q %}{{ '&' if ilce else '?' }}q={{ q }}{% endif %}">Tümü</a>
+  {% for key, lab in sub_chips %}
+  <a class="chip {{ 'on' if sub==key else '' }}" href="{{ cat.path }}?sub={{ key }}{% if ilce %}&amp;ilce={{ ilce }}{% endif %}{% if q %}&amp;q={{ q }}{% endif %}">{{ lab }}</a>
   {% endfor %}
 </div>
+{% endif %}
+
+{% if chip_param == 'ilce' %}
+<div class="list-bar">
+  <div class="list-bar-meta">
+    {% if cat.key == 'hospital' %}
+    <span class="list-bar-hint">★ Puana göre · yüksekten</span>
+    {% elif total %}
+    <span class="list-bar-hint">{{ total }} yer</span>
+    {% endif %}
+  </div>
+  <label class="ilce-pick">
+    <span class="ilce-pick-lab">Bölge</span>
+    <select class="ilce-select" aria-label="İlçe seç"
+      onchange="if(this.value) location.href=this.value">
+      <option value="{{ cat.path }}{% if sub %}?sub={{ sub }}{% endif %}{% if q %}{{ '&' if sub else '?' }}q={{ q }}{% endif %}" {% if not ilce %}selected{% endif %}>Tüm ilçeler</option>
+      {% for ad in chip_items %}
+      <option value="{{ cat.path }}?ilce={{ ad }}{% if sub %}&amp;sub={{ sub }}{% endif %}{% if q %}&amp;q={{ q }}{% endif %}" {% if chip_on==ad %}selected{% endif %}>{{ ad }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</div>
+{% else %}
+<div class="chips">
+  {% if not sub_chips %}
+  <a class="chip {{ 'on' if not chip_on else '' }}" href="{{ cat.path }}{% if q %}?q={{ q }}{% endif %}">Tümü</a>
+  {% endif %}
+  {% for ad in chip_items %}
+  <a class="chip {{ 'on' if chip_on==ad else '' }}" href="{{ cat.path }}?{{ chip_param }}={{ ad }}{% if sub and chip_param!='sub' %}&amp;sub={{ sub }}{% endif %}{% if q %}&amp;q={{ q }}{% endif %}">{{ ad }}</a>
+  {% endfor %}
+</div>
+{% endif %}
 {% if cal %}
 <section class="panel" id="takvim">
   <h3>Takvim · {{ cal.month_label }}</h3>
@@ -17,7 +49,10 @@
     {% for d in cal.cal_cells %}
       {% if d is none %}<button type="button" disabled>&nbsp;</button>
       {% elif d == cal.today %}<button type="button" class="today" title="bugün">{{ d }}</button>
-      {% elif d in cal.ev_days %}<a class="ev" href="/yer/{{ cal.ev_slug.get(d, '') }}" title="{{ cal.ev_map.get(d, '') }}">{{ d }}</a>
+      {% elif d in cal.ev_days %}
+        {% set es = cal.ev_slug.get(d) %}
+        {% if es %}<a class="ev" href="/yer/{{ es }}" title="{{ cal.ev_map.get(d, '') }}">{{ d }}</a>
+        {% else %}<button type="button" class="ev" title="{{ cal.ev_map.get(d, '') }}">{{ d }}</button>{% endif %}
       {% else %}<button type="button">{{ d }}</button>{% endif %}
     {% endfor %}
   </div>
@@ -32,13 +67,13 @@
     </div>
     <div class="cards">
       {% for p in g.places %}
-      <a class="place-card" href="/yer/{{ p.slug }}">
+      <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
         {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
         <div class="body">
           <h3>{{ p.title }}</h3>
           <div class="meta">
-            <span>{% if cat.key=='doctor' %}{{ p.price_band }}{% if p.hospital_title %} · {{ p.hospital_title }}{% endif %}{% elif p.when %}{{ p.when }}{% if p.venue_name %} · {{ p.venue_name }}{% endif %}{% else %}{{ p.price_band or p.hours_text }}{% if p.address %} · {{ p.ilce }}{% endif %}{% endif %}</span>
-            {% if p.rating_admin %}<span class="star" title="Google listesi">★ {{ '%.1f'|format(p.rating_admin) }}</span>{% endif %}
+            <span>{% if cat.key=='doctor' %}{{ p.price_band }}{% if p.hospital_title %} · {{ p.hospital_title }}{% endif %}{% elif p.when %}{{ p.when }}{% if p.venue_name %} · {{ p.venue_name }}{% endif %}{% else %}{{ p.subcategory_label or p.price_band or p.hours_text }}{% if p.address %} · {{ p.ilce }}{% endif %}{% endif %}</span>
+            {% if p.rating %}<span class="star" title="{% if p.rating_count %}BursaApp{% else %}Liste{% endif %}">★ {{ '%.1f'|format(p.rating) }}{% if p.rating_count %} · {{ p.rating_count }}{% endif %}</span>{% endif %}
           </div>
           {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
         </div>
@@ -50,13 +85,13 @@
 {% elif places %}
 <div class="cards">
   {% for p in places %}
-  <a class="place-card" href="/yer/{{ p.slug }}">
+  <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
     {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
     <div class="body">
       <h3>{{ p.title }}</h3>
       <div class="meta">
-        <span>{% if p.when %}{{ p.when }}{% if p.venue_name %} · {{ p.venue_name }}{% else %} · {{ p.ilce }}{% endif %}{% else %}{{ p.ilce }}{% if p.venue_name %} · {{ p.venue_name }}{% endif %}{% endif %}</span>
-        {% if p.rating_admin %}<span class="star">★ {{ '%.1f'|format(p.rating_admin) }}</span>{% endif %}
+        <span>{% if p.when %}{{ p.when }}{% if p.venue_name %} · {{ p.venue_name }}{% else %} · {{ p.ilce }}{% endif %}{% else %}{{ p.ilce }}{% if p.subcategory_label %} · {{ p.subcategory_label }}{% elif p.venue_name %} · {{ p.venue_name }}{% endif %}{% endif %}</span>
+        {% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}{% if p.rating_count %} · {{ p.rating_count }}{% endif %}</span>{% endif %}
       </div>
       {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
     </div>
