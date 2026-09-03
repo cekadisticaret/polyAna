@@ -1,0 +1,44 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Ekip · Admin{% endblock %}
+{% block header_title %}Panel ekibi{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+  <a class="btn btn-sm btn-success" href="/admin/staff/new">+ Editör / admin ekle</a>
+</div>
+<p class="text-muted">Tam yetkili <strong>admin</strong> her şeye erişir. <strong>Editör</strong> yalnız seçtiğiniz bölümleri görür.</p>
+<div class="card"><div class="card-body"><div class="table-responsive">
+<table class="table ba-table">
+  <thead><tr><th>Ad</th><th>E-posta</th><th>Rol</th><th>Yetkiler</th><th></th></tr></thead>
+  <tbody>
+  {% for it in items %}
+  {% set u = it.user %}
+  <tr>
+    <td><b>{{ u.name }}</b></td>
+    <td>{{ u.email }}</td>
+    <td>
+      {% if u.role=='admin' %}<span class="badge badge-danger">Tam yetki</span>
+      {% else %}<span class="badge badge-approved">Editör</span>{% endif %}
+    </td>
+    <td>
+      {% if u.role=='admin' %}
+      <small class="text-muted">Tüm panel</small>
+      {% elif it.perms %}
+      <small>{{ it.perms|join(', ') }}</small>
+      {% else %}
+      <small class="text-danger">Yetki yok</small>
+      {% endif %}
+    </td>
+    <td class="text-end text-nowrap">
+      <a class="btn btn-xs btn-primary" href="/admin/staff/{{ u.id }}/edit">Düzenle</a>
+      <form method="post" action="/admin/staff/{{ u.id }}/demote" style="display:inline" onsubmit="return confirm('Panel erişimi kaldırılsın mı?')">
+        <button class="btn btn-xs btn-outline-danger" type="submit">Kaldır</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5" class="text-muted">Henüz ekip üyesi yok.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div></div></div>
+{% endblock %}

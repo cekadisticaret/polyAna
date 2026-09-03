@@ -52,6 +52,8 @@ class User(Base):
     email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     email_token: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     show_full_name: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    permissions_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     places: Mapped[list["Place"]] = relationship("Place", back_populates="submitter", foreign_keys="Place.submitted_by_id")
@@ -69,6 +71,8 @@ class User(Base):
 
     def handle(self) -> str:
         base = (self.email or "").split("@")[0].strip().lower()
+        if base.endswith(".sanal"):
+            base = base[: -len(".sanal")]
         base = "".join(c for c in base if c.isalnum() or c in "._")[:24] or f"uye{self.id}"
         return f"@{base}"
 
@@ -227,6 +231,7 @@ class UserPost(Base):
     body: Mapped[str] = mapped_column(Text, nullable=False, default="")
     images_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     privacy: Mapped[str] = mapped_column(String(16), nullable=False, default="public")
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending", index=True)  # pending|approved|rejected
     likes_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     comments_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
@@ -242,6 +247,7 @@ class UserVisit(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     place_id: Mapped[int] = mapped_column(Integer, ForeignKey("places.id"), nullable=False, index=True)
     note: Mapped[str] = mapped_column(String(280), nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="approved", index=True)  # pending|approved|rejected
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
@@ -338,6 +344,8 @@ class ClaimRequest(Base):
     place_id: Mapped[int] = mapped_column(Integer, ForeignKey("places.id"), nullable=False, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     note: Mapped[str] = mapped_column(String(400), nullable=False, default="")
+    tax_doc_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    id_doc_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -450,6 +458,8 @@ def _migrate_sqlite() -> None:
         ("email_verified", "BOOLEAN DEFAULT 0"),
         ("email_token", "VARCHAR(64) DEFAULT ''"),
         ("show_full_name", "BOOLEAN DEFAULT 0"),
+        ("is_active", "BOOLEAN DEFAULT 1"),
+        ("permissions_json", "TEXT DEFAULT '[]'"),
     )
     with engine.begin() as conn:
         existing = _table_cols(conn, "places")
@@ -469,8 +479,23 @@ def _migrate_sqlite() -> None:
             conn.execute(text("UPDATE reviews SET status='approved' WHERE status IS NULL OR status=''"))
         if rex and "img_url" not in rex:
             conn.execute(text("ALTER TABLE reviews ADD COLUMN img_url VARCHAR(500) DEFAULT ''"))
+        pex = _table_cols(conn, "user_posts")
+        if pex and "status" not in pex:
+            conn.execute(text("ALTER TABLE user_posts ADD COLUMN status VARCHAR(16) DEFAULT 'approved'"))
+            conn.execute(text("UPDATE user_posts SET status='approved' WHERE status IS NULL OR status=''"))
+        vex = _table_cols(conn, "user_visits")
+        if vex and "status" not in vex:
+            conn.execute(text("ALTER TABLE user_visits ADD COLUMN status VARCHAR(16) DEFAULT 'approved'"))
+            conn.execute(text("UPDATE user_visits SET status='approved' WHERE status IS NULL OR status=''"))
+        clx = _table_cols(conn, "claim_requests")
+        if clx and "tax_doc_url" not in clx:
+            conn.execute(text("ALTER TABLE claim_requests ADD COLUMN tax_doc_url VARCHAR(500) DEFAULT ''"))
+        if clx and "id_doc_url" not in clx:
+            conn.execute(text("ALTER TABLE claim_requests ADD COLUMN id_doc_url VARCHAR(500) DEFAULT ''"))
         # admin hesabı e-posta doğrulanmış sayılsın
         conn.execute(text("UPDATE users SET email_verified=1 WHERE role='admin' AND (email_verified IS NULL OR email_verified=0)"))
+        conn.execute(text("UPDATE users SET email_verified=1 WHERE role='editor' AND (email_verified IS NULL OR email_verified=0)"))
+        conn.execute(text("UPDATE users SET is_active=1 WHERE is_active IS NULL"))
 
 
 def place_extra(p: Place | None) -> dict:

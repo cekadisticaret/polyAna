@@ -1,0 +1,9 @@
+{% for fu in follow_suggestions %}
+<div class="ff-follow">
+  <div class="ff-avatar sm">{% if fu.avatar_url %}<img src="{{ fu.avatar_url }}" alt="">{% else %}<span>{{ (fu.name or 'U')[0]|upper }}</span>{% endif %}</div>
+  <div class="ff-follow-meta"><b>{{ fu.name }}</b><small>{{ fu.handle }} · {{ fu.posts }} gönderi</small></div>
+  <a class="ff-btn sm dark" href="/hesap/profil?tab=friends">Takip</a>
+</div>
+{% else %}
+<p class="ff-muted sm">Öneri yüklenemedi — sayfayı yenile.</p>
+{% endfor %}

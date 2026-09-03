@@ -49,6 +49,10 @@ def main() -> None:
                 featured=bool(raw.get("featured")),
                 status="approved",
             )
+            if raw.get("lat") is not None:
+                fields["lat"] = float(raw["lat"])
+            if raw.get("lng") is not None:
+                fields["lng"] = float(raw["lng"])
             if p is None:
                 db.add(Place(slug=slug, **fields))
                 n_new += 1

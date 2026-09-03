@@ -52,7 +52,7 @@ def verify_banner(user) -> dict | None:
     """Onaysız üye için kırmızı şerit verisi; onaylı/admin/guest → None."""
     if user is None:
         return None
-    if getattr(user, "role", "") == "admin":
+    if getattr(user, "role", "") in ("admin", "editor"):
         return None
     if bool(getattr(user, "email_verified", False)):
         return None
@@ -73,7 +73,7 @@ def verify_banner(user) -> dict | None:
 def can_review(user) -> bool:
     if user is None:
         return False
-    if getattr(user, "role", "") == "admin":
+    if getattr(user, "role", "") in ("admin", "editor"):
         return True
     return bool(getattr(user, "email_verified", False))
 

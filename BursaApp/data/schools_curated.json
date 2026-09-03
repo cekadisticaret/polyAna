@@ -1,0 +1,220 @@
+[
+  {
+    "slug": "bursa-amerikan-koleji",
+    "title": "Özel Bursa Amerikan Koleji",
+    "subcategory": "kolej",
+    "price_band": "Özel",
+    "ilce": "Nilüfer",
+    "address": "Üçevler Mah. Akpınar Cad. No:1, Nilüfer / Bursa",
+    "phone": "0224 452 45 45",
+    "web": "https://www.bac.k12.tr/",
+    "hours_text": "08:00 – 17:00",
+    "lat": 40.214,
+    "lng": 28.985,
+    "featured": true,
+    "blurb": "Anaokulu–lise · yabancı dil ağırlıklı · Nilüfer kampüsü.",
+    "tags": ["kolej", "yabanci-dil", "anaokulu", "lise"],
+    "body": "Bursa Amerikan Koleji, anaokulundan liseye uzanan özel eğitim kurumu. Yabancı dil programları, kulüp ve spor etkinlikleri ile bilinir.",
+    "extra": {
+      "programs": ["IB hazırlık", "Yabancı dil", "Robotik", "Sanat"],
+      "languages": ["İngilizce", "Almanca"],
+      "facilities": ["Yemekhane", "Servis", "Spor salonu", "Laboratuvar", "Kütüphane"],
+      "admission": "Kayıt ve tanıtım günleri için web sitesinden randevu.",
+      "founding_year": "1999",
+      "student_count": "1200+",
+      "events": [
+        {
+          "slug": "okul-bursa-amerikan-koleji-kayit-2026",
+          "title": "Bursa Amerikan Koleji Kayıt Günü",
+          "school_slug": "bursa-amerikan-koleji",
+          "starts": "2026-04-12T10:00:00",
+          "ends": "2026-04-12T16:00:00",
+          "price_band": "Tanitim",
+          "blurb": "Veli bilgilendirme · kampüs turu · kayıt danışmanlığı."
+        }
+      ]
+    }
+  },
+  {
+    "slug": "ted-bursa-koleji",
+    "title": "TED Bursa Koleji",
+    "subcategory": "kolej",
+    "price_band": "Özel",
+    "ilce": "Nilüfer",
+    "address": "Odunluk Mah. Akademi Cad., Nilüfer / Bursa",
+    "phone": "0224 413 55 55",
+    "web": "https://www.tedbursa.k12.tr/",
+    "hours_text": "08:00 – 16:30",
+    "lat": 40.228,
+    "lng": 28.998,
+    "featured": true,
+    "blurb": "TED Bursa · anaokulu, ilkokul, ortaokul, lise.",
+    "tags": ["kolej", "ted"],
+    "extra": {
+      "programs": ["STEM", "Yabancı dil", "Spor"],
+      "languages": ["İngilizce"],
+      "facilities": ["Yemekhane", "Servis", "Yüzme", "Kütüphane"],
+      "admission": "Sınav ve mülakat ile kayıt."
+    }
+  },
+  {
+    "slug": "final-okullari-bursa",
+    "title": "Final Okulları Bursa",
+    "subcategory": "kolej",
+    "price_band": "Özel",
+    "ilce": "Nilüfer",
+    "address": "Görükle Mah., Nilüfer / Bursa",
+    "phone": "0224 452 20 20",
+    "web": "https://bursa.finalokullari.com.tr/",
+    "hours_text": "08:00 – 17:00",
+    "featured": true,
+    "blurb": "Final Koleji Bursa kampüsü · ilkokul–lise.",
+    "tags": ["kolej", "final"],
+    "extra": {
+      "programs": ["LGS hazırlık", "YKS hazırlık", "Yabancı dil"],
+      "languages": ["İngilizce"],
+      "facilities": ["Servis", "Yemekhane", "Etüt"]
+    }
+  },
+  {
+    "slug": "doga-koleji-bursa",
+    "title": "Doğa Koleji Bursa",
+    "subcategory": "kolej",
+    "price_band": "Özel",
+    "ilce": "Nilüfer",
+    "address": "Alaaddinbey Mah., Nilüfer / Bursa",
+    "web": "https://bursa.dogakoleji.com/",
+    "featured": true,
+    "blurb": "Doğa Koleji Bursa · anaokulu–lise.",
+    "tags": ["kolej", "doga"],
+    "extra": {
+      "programs": ["Proje tabanlı eğitim", "Yabancı dil"],
+      "languages": ["İngilizce"]
+    }
+  },
+  {
+    "slug": "bahcesehir-bursa-koleji",
+    "title": "Bahçeşehir Koleji Bursa",
+    "subcategory": "kolej",
+    "price_band": "Özel",
+    "ilce": "Nilüfer",
+    "address": "Konak Mah., Nilüfer / Bursa",
+    "web": "https://bursa.bahcesehir.k12.tr/",
+    "featured": true,
+    "blurb": "Bahçeşehir Bursa · anaokulu–lise.",
+    "tags": ["kolej", "bahcesehir"],
+    "extra": {
+      "programs": ["Kodlama", "Yabancı dil", "Sanat"],
+      "languages": ["İngilizce"]
+    }
+  },
+  {
+    "slug": "bursa-fen-lisesi",
+    "title": "Bursa Fen Lisesi",
+    "subcategory": "lise",
+    "price_band": "Devlet",
+    "ilce": "Osmangazi",
+    "address": "Soğanlı Mah., Osmangazi / Bursa",
+    "featured": true,
+    "blurb": "Bursa Fen Lisesi · merkez devlet fen lisesi.",
+    "tags": ["fen-lisesi", "devlet", "lise"],
+    "extra": {
+      "programs": ["Fen bilimleri", "Olimpiyat hazırlık"],
+      "admission": "LGS puanı ile merkezi yerleştirme."
+    }
+  },
+  {
+    "slug": "bursa-anadolu-lisesi",
+    "title": "Bursa Anadolu Lisesi",
+    "subcategory": "lise",
+    "price_band": "Devlet",
+    "ilce": "Osmangazi",
+    "address": "Muradiye Mah., Osmangazi / Bursa",
+    "featured": true,
+    "blurb": "Köklü devlet anadolu lisesi.",
+    "tags": ["anadolu-lisesi", "devlet"],
+    "extra": {
+      "programs": ["Yabancı dil", "Sosyal bilimler"],
+      "admission": "LGS ile yerleştirme."
+    }
+  },
+  {
+    "slug": "uludag-universitesi",
+    "title": "Bursa Uludağ Üniversitesi",
+    "subcategory": "universite",
+    "price_band": "Üniversite",
+    "ilce": "Nilüfer",
+    "address": "Görükle Kampüsü, Nilüfer / Bursa",
+    "phone": "0224 294 00 00",
+    "web": "https://uludag.edu.tr/",
+    "featured": true,
+    "blurb": "Bursa Uludağ Üniversitesi · Görükle ana kampüs.",
+    "tags": ["universite", "devlet"],
+    "extra": {
+      "programs": ["Lisans", "Yüksek lisans", "Doktora"],
+      "facilities": ["Kütüphane", "Yurt", "Spor tesisleri"],
+      "events": [
+        {
+          "slug": "okul-uludag-universitesi-bahar-senligi-2026",
+          "title": "Uludağ Üniversitesi Bahar Şenliği",
+          "school_slug": "uludag-universitesi",
+          "starts": "2026-05-08T12:00:00",
+          "ends": "2026-05-10T23:00:00",
+          "price_band": "Festival",
+          "blurb": "Konser, stant ve öğrenci kulüp etkinlikleri."
+        }
+      ]
+    }
+  },
+  {
+    "slug": "bursa-teknik-universitesi",
+    "title": "Bursa Teknik Üniversitesi",
+    "subcategory": "universite",
+    "price_band": "Üniversite",
+    "ilce": "Yıldırım",
+    "address": "Yıldırım / Bursa",
+    "web": "https://btu.edu.tr/",
+    "featured": true,
+    "blurb": "BTU · mühendislik ve teknoloji odaklı devlet üniversitesi.",
+    "tags": ["universite", "teknik"]
+  },
+  {
+    "slug": "nilufer-anadolu-lisesi",
+    "title": "Nilüfer Anadolu Lisesi",
+    "subcategory": "lise",
+    "price_band": "Devlet",
+    "ilce": "Nilüfer",
+    "address": "Nilüfer / Bursa",
+    "blurb": "Nilüfer ilçe anadolu lisesi.",
+    "tags": ["devlet", "lise"]
+  },
+  {
+    "slug": "osmangazi-anadolu-lisesi",
+    "title": "Osmangazi Anadolu Lisesi",
+    "subcategory": "lise",
+    "price_band": "Devlet",
+    "ilce": "Osmangazi",
+    "blurb": "Osmangazi devlet anadolu lisesi.",
+    "tags": ["devlet", "lise"]
+  },
+  {
+    "slug": "mev-koleji-bursa",
+    "title": "MEV Koleji Bursa",
+    "subcategory": "kolej",
+    "price_band": "Özel",
+    "ilce": "Nilüfer",
+    "web": "https://bursa.mev.k12.tr/",
+    "featured": true,
+    "blurb": "MEV Bursa · anaokulu–lise.",
+    "tags": ["kolej", "mev"]
+  },
+  {
+    "slug": "tomurcuk-anaokulu-bursa",
+    "title": "Özel Tomurcuk Anaokulu",
+    "subcategory": "anaokul",
+    "price_band": "Özel",
+    "ilce": "Nilüfer",
+    "blurb": "Erken çocukluk eğitimi · Nilüfer.",
+    "tags": ["anaokul", "ozel"]
+  }
+]

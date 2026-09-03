@@ -71,6 +71,31 @@
   <p class="blurb">{{ place.blurb }}</p>
   {% if place.body and place.body != place.blurb %}<div class="body-text">{{ place.body }}</div>{% endif %}
 
+  {% if place.category == 'market' %}
+  <section class="panel mk-detail-aktuel" id="aktuel">
+    <div class="mk-detail-aktuel-h">
+      <p class="hd-label" style="color:var(--orange);margin:0 0 6px">Haftalık aktüel</p>
+      <h3 style="margin:0">{% if market_campaign %}{{ market_campaign.title }}{% else %}{{ place.title }} aktüel{% endif %}</h3>
+    </div>
+    {% if market_campaign %}
+    {% if market_campaign.badge %}<span class="mk-badge">{{ market_campaign.badge }}</span>{% endif %}
+    {% if market_campaign.body %}<p class="mk-detail-aktuel-body">{{ market_campaign.body }}</p>{% endif %}
+    {% elif place.extra and place.extra.branch_note %}
+    <p class="mk-detail-aktuel-body">{{ place.extra.branch_note }}</p>
+    {% else %}
+    <p class="empty">Bu marka için aktüel özeti henüz eklenmedi.</p>
+    {% endif %}
+    {% if place.extra and place.extra.catalog_url %}
+    <div class="mk-detail-aktuel-frame">
+      <iframe src="{{ place.extra.catalog_url }}" title="{{ place.title }} haftalık katalog" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+    <p class="muted mk-detail-aktuel-note">Katalog penceresi bazı sitelerde görünmeyebilir.</p>
+    <a class="btn ghost sm" href="{{ place.extra.catalog_url }}" target="_blank" rel="noopener">Tam katalog · resmi site</a>
+    {% endif %}
+    <p class="muted mk-detail-aktuel-note">Fiyat ve stok şubeye göre değişir. BursaApp sipariş almaz.</p>
+  </section>
+  {% endif %}
+
   {% set gal = (place.extra.gallery if place.extra else None) or [] %}
   {% set uph = user_photos or [] %}
   {% if gal or uph %}
@@ -203,14 +228,25 @@
   <dl class="facts">
     {% if place.address %}<div><dt>Adres</dt><dd>{{ place.address }}</dd></div>{% endif %}
     {% if place.hours_text %}<div><dt>Saat</dt><dd>{{ place.hours_text }}</dd></div>{% endif %}
+    {% if place.category == 'market' and place.extra and place.extra.branch_note %}
+    <div><dt>Şubeler</dt><dd>{{ place.extra.branch_note }}</dd></div>
+    {% endif %}
     {% if place.subcategory_label %}<div><dt>Tür</dt><dd>{{ place.subcategory_label }}</dd></div>{% endif %}
     {% if place.price_band %}<div><dt>{% if place.category=='doctor' %}Branş{% elif place.category in ('concert','vet','hospital') %}Tür{% else %}Fiyat{% endif %}</dt><dd>{{ place.price_band }}</dd></div>{% endif %}
     {% if place.phone %}<div><dt>Tel</dt><dd>{{ place.phone }}</dd></div>{% endif %}
     {% if place.web %}<div><dt>Web</dt><dd><a href="{{ place.web }}" target="_blank" rel="noopener">{{ place.web }}</a></dd></div>{% endif %}
+    {% if place.category == 'market' and (market_campaign or (place.extra and place.extra.catalog_url)) %}
+    <div><dt>Aktüel</dt><dd><a href="#aktuel">Haftalık katalog bu sayfada</a></dd></div>
+    {% endif %}
     {% if hospital %}<div><dt>Hastane</dt><dd><a href="/yer/{{ hospital.slug }}">{{ hospital.title }}</a>{% if hospital.ilce %} · {{ hospital.ilce }}{% endif %}</dd></div>{% elif place.venue_name and place.category!='doctor' %}<div><dt>Mekan</dt><dd>{{ place.venue_name }}</dd></div>{% endif %}
     {% if place.starts_at %}<div><dt>Tarih</dt><dd>{{ place.starts_at }}{% if place.ends_at %} – {{ place.ends_at }}{% endif %}</dd></div>{% endif %}
   </dl>
-  <p><a class="btn" href="{{ place.maps }}" target="_blank" rel="noopener">Haritada aç</a></p>
+  <p class="acts">
+    <a class="btn" href="{{ place.maps }}" target="_blank" rel="noopener">Haritada aç</a>
+    {% if place.category == 'market' %}
+    <a class="btn ghost" href="#aktuel">Haftalık aktüel</a>
+    {% endif %}
+  </p>
 </article>
 
 {% if not (place.slug and place.slug.startswith('film-')) %}

@@ -13,7 +13,7 @@ from admin_forms import (
     format_staff_text,
     save_upload,
 )
-from auth import admin_required, load_user
+from auth import admin_required, hash_password, load_user
 from catalog import CATEGORIES, ILCELER, parse_dt, tags_dump, tags_load, unique_slug
 from models import (
     ActivityLog,
@@ -27,6 +27,8 @@ from models import (
     SessionLocal,
     SportMatch,
     User,
+    UserPost,
+    UserVisit,
     place_extra,
     set_place_extra,
 )
@@ -34,16 +36,96 @@ from models import (
 bp = Blueprint("admin_pages", __name__)
 
 
+@bp.context_processor
+def _inject_admin_sidebar():
+    """Tüm admin şablonlarında yetki değişkenleri (view unutsa bile)."""
+    from admin_permissions import is_super_admin, panel_perms
+
+    user = load_user()
+    return {
+        "admin_perms": panel_perms(user) if user else set(),
+        "is_super_admin": is_super_admin(user) if user else False,
+    }
+
+
+# Admin → Kategoriler menüsünde yönetilen içerik türleri
+ADMIN_CATEGORY_GROUPS = (
+    {
+        "label": "Sağlık",
+        "keys": ("hospital", "doctor", "dentist", "vet"),
+    },
+    {
+        "label": "Eğitim",
+        "keys": ("school",),
+    },
+    {
+        "label": "Rehber",
+        "keys": ("food", "visit", "hotel", "camp", "shop", "market", "sport", "family"),
+    },
+    {
+        "label": "Etkinlik",
+        "keys": ("concert", "theater", "cinema", "fun", "event", "org"),
+    },
+)
+ADMIN_CATEGORY_KEYS = tuple(k for g in ADMIN_CATEGORY_GROUPS for k in g["keys"])
+
+
+def _category_meta(key: str) -> dict:
+    from catalog import CAT_BY_KEY
+
+    c = CAT_BY_KEY.get(key) or {}
+    return {
+        "key": key,
+        "label": c.get("label") or key,
+        "path": c.get("path") or "/",
+        "hint": c.get("hint") or "",
+    }
+
+
+def _category_counts(db) -> dict[str, int]:
+    from sqlalchemy import func
+
+    rows = (
+        db.query(Place.category, func.count(Place.id))
+        .filter(Place.status == "approved", Place.category.in_(ADMIN_CATEGORY_KEYS))
+        .group_by(Place.category)
+        .all()
+    )
+    return {k: n for k, n in rows}
+
+
 def _badge_counts(db) -> dict:
+    pending_reviews = db.query(Review).filter(Review.status == "pending").count()
+    pending_posts = db.query(UserPost).filter(UserPost.status == "pending", UserPost.privacy == "public").count()
+    pending_visit_notes = (
+        db.query(UserVisit)
+        .filter(UserVisit.status == "pending", UserVisit.note != "")
+        .count()
+    )
+    pending_photos = db.query(PlacePhoto).filter(PlacePhoto.status == "pending").count()
     return {
         "pending_places": db.query(Place).filter(Place.status == "pending").count(),
         "pending_claims": db.query(ClaimRequest).filter(ClaimRequest.status == "pending").count(),
-        "pending_photos": db.query(PlacePhoto).filter(PlacePhoto.status == "pending").count(),
+        "pending_photos": pending_photos,
+        "pending_reviews": pending_reviews,
+        "pending_posts": pending_posts,
+        "pending_visit_notes": pending_visit_notes,
+        "pending_moderation": pending_reviews + pending_posts + pending_visit_notes,
     }
 
 
 def _admin_ctx(db, admin_nav: str) -> dict:
-    return {"admin_nav": admin_nav, "nav": "admin", **_badge_counts(db)}
+    from admin_permissions import is_super_admin, panel_perms
+
+    user = load_user()
+    perms = panel_perms(user) if user else set()
+    return {
+        "admin_nav": admin_nav,
+        "nav": "admin",
+        "admin_perms": perms,
+        "is_super_admin": is_super_admin(user) if user else False,
+        **_badge_counts(db),
+    }
 
 
 def _apply_place_form(p: Place, form, files=None) -> None:
@@ -93,10 +175,10 @@ def _apply_place_form(p: Place, form, files=None) -> None:
     uploaded = None
     cur_ex = place_extra(p)
     if files:
-        uploaded = save_upload(files.get("img_file"), category=p.category or "misc")
+        uploaded, _err = save_upload(files.get("img_file"), category=p.category or "misc")
         gal_file = files.get("gallery_file")
-        if gal_file and getattr(gal_file, "filename", None):
-            gurl = save_upload(gal_file, category=p.category or "misc")
+        if gal_file:
+            gurl, _gerr = save_upload(gal_file, category=p.category or "misc")
             if gurl:
                 gal = list(cur_ex.get("gallery") or [])
                 gal.append(gurl)
@@ -399,19 +481,60 @@ def _load_connected_at() -> str:
 @admin_required
 def users():
     q = (request.args.get("q") or "").strip()
+    status = (request.args.get("status") or "all").strip()
+    if status not in ("all", "active", "inactive"):
+        status = "all"
     db = SessionLocal()
     try:
         query = db.query(User).order_by(User.id.desc())
+        if status == "active":
+            query = query.filter(User.is_active.is_(True))
+        elif status == "inactive":
+            query = query.filter(User.is_active.is_(False))
         if q:
             like = f"%{q}%"
             query = query.filter((User.email.ilike(like)) | (User.name.ilike(like)))
         rows = query.limit(300).all()
+        counts = {
+            "all": db.query(User).count(),
+            "active": db.query(User).filter(User.is_active.is_(True)).count(),
+            "inactive": db.query(User).filter(User.is_active.is_(False)).count(),
+        }
         return render_template(
             "admin/users.html",
             rows=rows,
             q=q,
+            status=status,
+            counts=counts,
             **_admin_ctx(db, "users"),
         )
+    finally:
+        db.close()
+
+
+@bp.route("/admin/users/<int:uid>/toggle", methods=["POST"])
+@admin_required
+def user_toggle_active(uid: int):
+    cur = load_user()
+    db = SessionLocal()
+    try:
+        u = db.get(User, uid)
+        if not u:
+            flash("Üye bulunamadı.", "err")
+            return redirect(request.referrer or "/admin/users")
+        if cur and u.id == cur.id:
+            flash("Kendi hesabınızı pasif yapamazsınız.", "err")
+            return redirect(request.referrer or "/admin/users")
+        new_active = not bool(u.is_active)
+        if not new_active and u.role == "admin":
+            admins = db.query(User).filter(User.role == "admin", User.is_active.is_(True)).count()
+            if admins <= 1:
+                flash("Son aktif admin pasif yapılamaz.", "err")
+                return redirect(request.referrer or "/admin/users")
+        u.is_active = new_active
+        db.commit()
+        flash(f"{u.name or u.email} {'aktif edildi' if new_active else 'pasif yapıldı'}.", "ok")
+        return redirect(request.referrer or "/admin/users")
     finally:
         db.close()
 
@@ -519,6 +642,140 @@ def review_reject(rid: int):
             db.commit()
             flash("Yorum reddedildi.", "ok")
         return redirect(request.referrer or "/admin/reviews?status=pending")
+    finally:
+        db.close()
+
+
+@bp.route("/admin/posts")
+@admin_required
+def posts():
+    status = (request.args.get("status") or "pending").strip()
+    if status not in ("pending", "approved", "rejected", "all"):
+        status = "pending"
+    db = SessionLocal()
+    try:
+        query = db.query(UserPost).order_by(UserPost.id.desc())
+        if status != "all":
+            query = query.filter(UserPost.status == status)
+        rows = query.limit(200).all()
+        items = []
+        for post in rows:
+            items.append(
+                {
+                    "post": post,
+                    "user": db.get(User, post.user_id),
+                    "place": db.get(Place, post.place_id) if post.place_id else None,
+                }
+            )
+        counts = {
+            "pending": db.query(UserPost).filter(UserPost.status == "pending").count(),
+            "approved": db.query(UserPost).filter(UserPost.status == "approved").count(),
+            "rejected": db.query(UserPost).filter(UserPost.status == "rejected").count(),
+        }
+        return render_template(
+            "admin/posts.html",
+            items=items,
+            status=status,
+            counts=counts,
+            **_admin_ctx(db, "posts"),
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/admin/posts/<int:pid>/approve", methods=["POST"])
+@admin_required
+def post_approve(pid: int):
+    db = SessionLocal()
+    try:
+        post = db.get(UserPost, pid)
+        if post:
+            post.status = "approved"
+            db.commit()
+            flash("Gönderi onaylandı.", "ok")
+        return redirect(request.referrer or "/admin/posts?status=pending")
+    finally:
+        db.close()
+
+
+@bp.route("/admin/posts/<int:pid>/reject", methods=["POST"])
+@admin_required
+def post_reject(pid: int):
+    db = SessionLocal()
+    try:
+        post = db.get(UserPost, pid)
+        if post:
+            post.status = "rejected"
+            db.commit()
+            flash("Gönderi reddedildi.", "ok")
+        return redirect(request.referrer or "/admin/posts?status=pending")
+    finally:
+        db.close()
+
+
+@bp.route("/admin/visit-notes")
+@admin_required
+def visit_notes():
+    status = (request.args.get("status") or "pending").strip()
+    if status not in ("pending", "approved", "rejected", "all"):
+        status = "pending"
+    db = SessionLocal()
+    try:
+        query = db.query(UserVisit).filter(UserVisit.note != "").order_by(UserVisit.id.desc())
+        if status != "all":
+            query = query.filter(UserVisit.status == status)
+        rows = query.limit(200).all()
+        items = []
+        for v in rows:
+            items.append(
+                {
+                    "visit": v,
+                    "user": db.get(User, v.user_id),
+                    "place": db.get(Place, v.place_id),
+                }
+            )
+        counts = {
+            "pending": db.query(UserVisit).filter(UserVisit.status == "pending", UserVisit.note != "").count(),
+            "approved": db.query(UserVisit).filter(UserVisit.status == "approved", UserVisit.note != "").count(),
+            "rejected": db.query(UserVisit).filter(UserVisit.status == "rejected", UserVisit.note != "").count(),
+        }
+        return render_template(
+            "admin/visit_notes.html",
+            items=items,
+            status=status,
+            counts=counts,
+            **_admin_ctx(db, "visit_notes"),
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/admin/visit-notes/<int:vid>/approve", methods=["POST"])
+@admin_required
+def visit_note_approve(vid: int):
+    db = SessionLocal()
+    try:
+        v = db.get(UserVisit, vid)
+        if v:
+            v.status = "approved"
+            db.commit()
+            flash("Ziyaret notu onaylandı.", "ok")
+        return redirect(request.referrer or "/admin/visit-notes?status=pending")
+    finally:
+        db.close()
+
+
+@bp.route("/admin/visit-notes/<int:vid>/reject", methods=["POST"])
+@admin_required
+def visit_note_reject(vid: int):
+    db = SessionLocal()
+    try:
+        v = db.get(UserVisit, vid)
+        if v:
+            v.status = "rejected"
+            db.commit()
+            flash("Ziyaret notu reddedildi.", "ok")
+        return redirect(request.referrer or "/admin/visit-notes?status=pending")
     finally:
         db.close()
 
@@ -794,5 +1051,342 @@ def match_delete(mid: int):
             db.commit()
             flash("Maç silindi.", "ok")
         return redirect("/admin/matches")
+    finally:
+        db.close()
+
+
+@bp.route("/admin/categories")
+@admin_required
+def categories_index():
+    db = SessionLocal()
+    try:
+        counts = _category_counts(db)
+        groups = []
+        for g in ADMIN_CATEGORY_GROUPS:
+            items = []
+            for key in g["keys"]:
+                meta = _category_meta(key)
+                items.append({**meta, "count": counts.get(key, 0)})
+            groups.append({"label": g["label"], "items": items})
+        return render_template(
+            "admin/categories_index.html",
+            groups=groups,
+            **_admin_ctx(db, "categories"),
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/admin/categories/<cat_key>")
+@admin_required
+def category_list(cat_key: str):
+    if cat_key not in ADMIN_CATEGORY_KEYS:
+        flash("Geçersiz kategori.", "err")
+        return redirect("/admin/categories")
+    q = (request.args.get("q") or "").strip()
+    ilce = (request.args.get("ilce") or "").strip()
+    db = SessionLocal()
+    try:
+        query = db.query(Place).filter(Place.category == cat_key, Place.status == "approved")
+        if ilce:
+            query = query.filter(Place.ilce == ilce)
+        if q:
+            like = f"%{q}%"
+            query = query.filter(
+                (Place.title.ilike(like)) | (Place.slug.ilike(like)) | (Place.address.ilike(like))
+            )
+        rows = query.order_by(Place.title.asc()).limit(500).all()
+        meta = _category_meta(cat_key)
+        return render_template(
+            "admin/category_list.html",
+            cat=meta,
+            rows=rows,
+            q=q,
+            ilce=ilce,
+            ilceler=ILCELER,
+            **_admin_ctx(db, "categories"),
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/admin/categories/<cat_key>/new", methods=["GET", "POST"])
+@admin_required
+def category_new(cat_key: str):
+    if cat_key not in ADMIN_CATEGORY_KEYS:
+        flash("Geçersiz kategori.", "err")
+        return redirect("/admin/categories")
+    db = SessionLocal()
+    try:
+        meta = _category_meta(cat_key)
+        if request.method == "POST":
+            title = (request.form.get("title") or "").strip()
+            if not title:
+                flash("Başlık zorunlu.", "err")
+                return redirect(f"/admin/categories/{cat_key}/new")
+            slug_in = (request.form.get("slug") or title).strip()
+            p = Place(
+                title=title,
+                slug=unique_slug(db, slug_in),
+                category=cat_key,
+                status="approved",
+                extra_json="{}",
+            )
+            _apply_place_form(p, request.form, request.files)
+            p.category = cat_key
+            p.slug = unique_slug(db, p.slug or slug_in)
+            db.add(p)
+            db.commit()
+            flash("Kayıt eklendi.", "ok")
+            return redirect(f"/admin/categories/{cat_key}/{p.id}/edit")
+        blank = Place(title="", slug="", category=cat_key, status="approved", extra_json="{}")
+        return render_template(
+            "admin/category_edit.html",
+            place=blank,
+            cat=meta,
+            is_new=True,
+            ilceler=ILCELER,
+            tags=[],
+            extra={},
+            menu_lines="",
+            fee_lines="",
+            services_text="",
+            staff_lines="",
+            gallery_urls="",
+            **_admin_ctx(db, "categories"),
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/admin/categories/<cat_key>/<int:pid>/edit", methods=["GET", "POST"])
+@admin_required
+def category_edit(cat_key: str, pid: int):
+    if cat_key not in ADMIN_CATEGORY_KEYS:
+        flash("Geçersiz kategori.", "err")
+        return redirect("/admin/categories")
+    db = SessionLocal()
+    try:
+        p = db.get(Place, pid)
+        meta = _category_meta(cat_key)
+        if not p or p.category != cat_key:
+            flash("Kayıt bulunamadı.", "err")
+            return redirect(f"/admin/categories/{cat_key}")
+        if request.method == "POST":
+            old_slug = p.slug
+            _apply_place_form(p, request.form, request.files)
+            p.category = cat_key
+            if p.slug != old_slug:
+                p.slug = unique_slug(db, p.slug, exclude_id=p.id)
+            db.commit()
+            flash("Kaydedildi.", "ok")
+            return redirect(f"/admin/categories/{cat_key}/{pid}/edit")
+        ex = place_extra(p)
+        return render_template(
+            "admin/category_edit.html",
+            place=p,
+            cat=meta,
+            is_new=False,
+            ilceler=ILCELER,
+            tags=tags_load(p.tags),
+            extra=ex,
+            menu_lines=format_menu_text(ex.get("menu") or []),
+            fee_lines=format_list_text(ex.get("fees") or []),
+            services_text="\n".join(ex.get("services") or []),
+            staff_lines=format_staff_text(ex.get("staff") or []),
+            gallery_urls="\n".join(ex.get("gallery") or []),
+            **_admin_ctx(db, "categories"),
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/admin/categories/<cat_key>/<int:pid>/delete", methods=["POST"])
+@admin_required
+def category_delete(cat_key: str, pid: int):
+    if cat_key not in ADMIN_CATEGORY_KEYS:
+        return redirect("/admin/categories")
+    db = SessionLocal()
+    try:
+        p = db.get(Place, pid)
+        if p and p.category == cat_key:
+            db.delete(p)
+            db.commit()
+            flash("Silindi.", "ok")
+        return redirect(f"/admin/categories/{cat_key}")
+    finally:
+        db.close()
+
+
+@bp.route("/admin/staff")
+@admin_required
+def staff_list():
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(User)
+            .filter(User.role.in_(("admin", "editor")))
+            .order_by(User.role.asc(), User.id.asc())
+            .all()
+        )
+        from admin_permissions import parse_permissions, role_label
+
+        items = []
+        for u in rows:
+            items.append(
+                {
+                    "user": u,
+                    "role_label": role_label(u.role),
+                    "perms": sorted(parse_permissions(u.permissions_json)) if u.role == "editor" else [],
+                }
+            )
+        return render_template(
+            "admin/staff_list.html",
+            items=items,
+            perm_groups=__import__("admin_permissions").permission_groups(),
+            **_admin_ctx(db, "staff"),
+        )
+    finally:
+        db.close()
+
+
+def _staff_from_form(form, *, existing: User | None = None) -> tuple[dict, str | None]:
+    from admin_permissions import ALL_PERM_KEYS, dump_permissions, is_super_admin
+
+    email = (form.get("email") or "").strip().lower()
+    name = (form.get("name") or "").strip()
+    role = (form.get("role") or "editor").strip()
+    password = form.get("password") or ""
+    if role not in ("admin", "editor"):
+        role = "editor"
+    perms = [p for p in form.getlist("perms") if p in ALL_PERM_KEYS]
+    if not email:
+        return {}, "E-posta zorunlu."
+    if not name:
+        return {}, "Ad zorunlu."
+    if existing is None and len(password) < 8:
+        return {}, "Yeni hesap için en az 8 karakter şifre gir."
+    if role == "editor" and not perms:
+        return {}, "Editör için en az bir yetki seç."
+    cur = load_user()
+    if existing and cur and existing.id == cur.id and role != "admin" and is_super_admin(existing):
+        return {}, "Kendi tam yetkili admin hesabınızı düşüremezsiniz."
+    data = {
+        "email": email,
+        "name": name,
+        "role": role,
+        "permissions_json": dump_permissions(perms) if role == "editor" else "[]",
+    }
+    if password:
+        if len(password) < 8:
+            return {}, "Şifre en az 8 karakter olmalı."
+        data["password_hash"] = hash_password(password)
+    return data, None
+
+
+@bp.route("/admin/staff/new", methods=["GET", "POST"])
+@admin_required
+def staff_new():
+    db = SessionLocal()
+    try:
+        from admin_permissions import permission_groups
+
+        if request.method == "POST":
+            data, err = _staff_from_form(request.form)
+            if err:
+                flash(err, "err")
+                return redirect("/admin/staff/new")
+            if db.query(User).filter(User.email == data["email"]).first():
+                flash("Bu e-posta zaten kayıtlı.", "err")
+                return redirect("/admin/staff/new")
+            u = User(
+                email=data["email"],
+                name=data["name"],
+                role=data["role"],
+                permissions_json=data["permissions_json"],
+                password_hash=data["password_hash"],
+                email_verified=True,
+            )
+            db.add(u)
+            db.commit()
+            flash("Ekip üyesi eklendi.", "ok")
+            return redirect("/admin/staff")
+        blank = User(email="", name="", role="editor", permissions_json="[]")
+        return render_template(
+            "admin/staff_edit.html",
+            staff=blank,
+            is_new=True,
+            perm_groups=permission_groups(),
+            selected_perms=set(),
+            **_admin_ctx(db, "staff"),
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/admin/staff/<int:uid>/edit", methods=["GET", "POST"])
+@admin_required
+def staff_edit(uid: int):
+    db = SessionLocal()
+    try:
+        from admin_permissions import parse_permissions, permission_groups
+
+        u = db.get(User, uid)
+        if not u or u.role not in ("admin", "editor"):
+            flash("Kayıt bulunamadı.", "err")
+            return redirect("/admin/staff")
+        if request.method == "POST":
+            data, err = _staff_from_form(request.form, existing=u)
+            if err:
+                flash(err, "err")
+                return redirect(f"/admin/staff/{uid}/edit")
+            other = db.query(User).filter(User.email == data["email"], User.id != uid).first()
+            if other:
+                flash("Bu e-posta başka hesapta kullanılıyor.", "err")
+                return redirect(f"/admin/staff/{uid}/edit")
+            u.email = data["email"]
+            u.name = data["name"]
+            u.role = data["role"]
+            u.permissions_json = data["permissions_json"]
+            u.email_verified = True
+            if data.get("password_hash"):
+                u.password_hash = data["password_hash"]
+            db.commit()
+            flash("Güncellendi.", "ok")
+            return redirect("/admin/staff")
+        return render_template(
+            "admin/staff_edit.html",
+            staff=u,
+            is_new=False,
+            perm_groups=permission_groups(),
+            selected_perms=parse_permissions(u.permissions_json),
+            **_admin_ctx(db, "staff"),
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/admin/staff/<int:uid>/demote", methods=["POST"])
+@admin_required
+def staff_demote(uid: int):
+    cur = load_user()
+    db = SessionLocal()
+    try:
+        u = db.get(User, uid)
+        if not u or u.role not in ("admin", "editor"):
+            return redirect("/admin/staff")
+        if cur and u.id == cur.id:
+            flash("Kendi hesabınızı kaldıramazsınız.", "err")
+            return redirect("/admin/staff")
+        if u.role == "admin":
+            admins = db.query(User).filter(User.role == "admin").count()
+            if admins <= 1:
+                flash("Son tam yetkili admin kaldırılamaz.", "err")
+                return redirect("/admin/staff")
+        u.role = "user"
+        u.permissions_json = "[]"
+        db.commit()
+        flash("Panel erişimi kaldırıldı — normal üye oldu.", "ok")
+        return redirect("/admin/staff")
     finally:
         db.close()

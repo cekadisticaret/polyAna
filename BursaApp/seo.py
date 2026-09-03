@@ -17,7 +17,7 @@ DEFAULT_DESC = (
     "Bursa'da bugün ne var? Restoran, konser, tiyatro, gezilecek yerler, "
     "oteller ve etkinlikler — BursaApp şehir rehberi."
 )
-DEFAULT_IMAGE = "/static/logo-512.png"
+DEFAULT_IMAGE = "/static/og-bursa.jpg"
 LOCALE = "tr_TR"
 
 # private / noindex path prefixes
@@ -26,10 +26,12 @@ NOINDEX_PREFIXES = (
     "/hesap",
     "/giris",
     "/kayit",
+    "/cikis",
     "/isletme",
     "/premium/checkout",
     "/favori/",
     "/api/",
+    "/uploads/",
 )
 
 # query keys that create duplicate URLs → strip from canonical
@@ -43,10 +45,15 @@ class PageSEO:
     path: str = "/"
     image: str | None = None
     og_type: str = "website"
-    robots: str = "index,follow"
+    robots: str = "index, follow, max-snippet:-1, max-image-preview:large"
     breadcrumbs: list[tuple[str, str]] = field(default_factory=list)
     json_ld: list[dict[str, Any]] = field(default_factory=list)
     keywords: str = ""
+    graph: list[dict[str, Any]] | None = None
+    schema_breadcrumbs: bool = False
+    image_w: int = 1200
+    image_h: int = 630
+    hreflang: str | None = None
 
     @property
     def canonical(self) -> str:
@@ -68,8 +75,11 @@ class PageSEO:
         return clip(self.description or DEFAULT_DESC, 160)
 
     def to_json_ld_scripts(self) -> list[str]:
+        if self.graph:
+            payload = {"@context": "https://schema.org", "@graph": self.graph}
+            return [json.dumps(payload, ensure_ascii=False, separators=(",", ":"))]
         blocks = [organization_ld(), website_ld()]
-        if self.breadcrumbs:
+        if self.schema_breadcrumbs and self.breadcrumbs:
             blocks.append(breadcrumb_ld(self.breadcrumbs))
         blocks.extend(self.json_ld or [])
         out = []
@@ -115,34 +125,50 @@ def page(
     json_ld: list[dict[str, Any]] | None = None,
     keywords: str = "",
     noindex: bool = False,
+    graph: list[dict[str, Any]] | None = None,
+    schema_breadcrumbs: bool = False,
+    hreflang: str | None = None,
 ) -> PageSEO:
     from flask import request
+    from seo_arch import INDEX_ROBOTS, OG_IMAGE
 
     p = path if path is not None else (request.path if request else "/")
-    rob = robots or ("noindex,nofollow" if noindex else "index,follow")
+    rob = robots or ("noindex, nofollow" if noindex else INDEX_ROBOTS)
     return PageSEO(
         title=title,
         description=description or DEFAULT_DESC,
         path=p,
-        image=image,
+        image=image or OG_IMAGE,
         og_type=og_type,
         robots=rob,
         breadcrumbs=breadcrumbs or [("Keşfet", "/")],
         json_ld=json_ld or [],
         keywords=keywords,
+        graph=graph,
+        schema_breadcrumbs=schema_breadcrumbs,
+        hreflang=hreflang,
     )
 
 
 def organization_ld() -> dict[str, Any]:
+    from seo_arch import PHONE_E164, WHATSAPP_URL
+
     return {
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": SITE_NAME,
         "url": site_base() + "/",
         "logo": abs_url("/static/logo-512.png"),
-        "sameAs": [],
+        "telephone": PHONE_E164,
+        "sameAs": [WHATSAPP_URL],
         "description": DEFAULT_DESC,
         "areaServed": {"@type": "City", "name": "Bursa", "addressCountry": "TR"},
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "telephone": PHONE_E164,
+            "availableLanguage": "Turkish",
+        },
     }
 
 
@@ -269,7 +295,9 @@ def place_json_ld(place: dict[str, Any]) -> dict[str, Any]:
         "visit": "TouristAttraction",
         "hospital": "Hospital",
         "doctor": "Physician",
+        "dentist": "Dentist",
         "vet": "VeterinaryCare",
+        "school": "School",
         "shop": "Store",
         "sport": "SportsActivityLocation",
         "fun": "EntertainmentBusiness",
@@ -308,45 +336,70 @@ def item_list_ld(name: str, path: str, places: list[dict[str, Any]], limit: int 
     }
 
 
-def article_ld(*, title: str, description: str, path: str, image: str | None = None) -> dict[str, Any]:
+def article_ld(*, title: str, description: str, path: str, image: str | None = None, date: str = "") -> dict[str, Any]:
+    from seo_arch import article_full, OG_IMAGE
+
     return {
         "@context": "https://schema.org",
-        "@type": "Article",
-        "headline": title,
-        "description": clip(description, 200),
-        "url": abs_url(path),
-        "image": abs_url(image or DEFAULT_IMAGE),
-        "inLanguage": "tr-TR",
-        "author": {"@type": "Organization", "name": SITE_NAME},
-        "publisher": {
-            "@type": "Organization",
-            "name": SITE_NAME,
-            "logo": {"@type": "ImageObject", "url": abs_url("/static/logo-512.png")},
-        },
+        **article_full(
+            title=title,
+            description=description,
+            path=path,
+            image=image or OG_IMAGE,
+            date=date or datetime.utcnow().strftime("%Y-%m-%d"),
+        ),
     }
 
 
 def for_home() -> PageSEO:
+    from seo_arch import home_graph, OG_IMAGE
+
     return page(
-        title="Bursa'da Ne Yapalım?",
+        title="Bursa Şehir Rehberi — restoran, gezi, otel",
         description=DEFAULT_DESC,
         path="/",
-        breadcrumbs=[("Keşfet", "/")],
-        keywords="bursa, bursa rehber, bursa konser, bursa restoran, bursa etkinlik",
-        json_ld=[
-            {
-                "@context": "https://schema.org",
-                "@type": "WebPage",
-                "name": "Bursa'da Ne Yapalım?",
-                "description": DEFAULT_DESC,
-                "url": abs_url("/"),
-                "isPartOf": {"@type": "WebSite", "name": SITE_NAME, "url": site_base() + "/"},
-            }
-        ],
+        image=OG_IMAGE,
+        breadcrumbs=[("Ana Sayfa", "/")],
+        keywords="bursa rehber, bursa restoran, bursa gezilecek yerler, bursa otel, bursa etkinlik",
+        graph=home_graph(),
+        hreflang="tr",
+    )
+
+
+def for_vertical(path: str, *, total: int = 0, places: list | None = None) -> PageSEO:
+    from seo_arch import OG_IMAGE, VERTICALS, service_ld
+
+    spec = VERTICALS[path]
+    crumbs = [("Ana Sayfa", "/"), (spec["nav"], path)]
+    ld = [
+        {
+            "@context": "https://schema.org",
+            **service_ld(name=spec["service_name"], path=path, desc=spec["desc"]),
+        }
+    ]
+    if places:
+        ld.append(item_list_ld(spec["title"], path, places))
+    desc = spec["desc"]
+    if total:
+        desc = clip(f"{desc} {total} kayıt.", 160)
+    return page(
+        title=spec["title"],
+        description=desc,
+        path=path,
+        image=OG_IMAGE,
+        breadcrumbs=crumbs,
+        keywords=spec["keywords"],
+        json_ld=ld,
+        schema_breadcrumbs=False,
     )
 
 
 def for_category(cat: dict[str, Any], *, ilce: str = "", sub: str = "", total: int = 0, places: list | None = None) -> PageSEO:
+    from seo_arch import VERTICALS
+
+    path = cat.get("path") or "/"
+    if path in VERTICALS and not ilce and not sub:
+        return for_vertical(path, total=total, places=places)
     label = cat.get("label") or cat.get("key") or "Liste"
     hint = cat.get("hint") or ""
     path = cat.get("path") or "/"
@@ -408,6 +461,7 @@ def for_place(place: dict[str, Any]) -> PageSEO:
         image=place.get("img_url") or place.get("img"),
         og_type="article" if place.get("starts_at") else "website",
         breadcrumbs=crumbs,
+        schema_breadcrumbs=True,
         keywords=", ".join(
             x
             for x in (
@@ -559,6 +613,60 @@ DISCOVER_META = {
 }
 
 
+def for_blog_hub() -> PageSEO:
+    from seo_arch import OG_IMAGE
+
+    return page(
+        title="BursaApp Blog",
+        description="Bursa’da kahvaltı, 1 günlük gezi planı ve nasıl kullanılır — how-to yazılar, ticari sayfalara köprü.",
+        path="/blog",
+        image=OG_IMAGE,
+        breadcrumbs=[("Ana Sayfa", "/"), ("Blog", "/blog")],
+        keywords="bursa blog, bursa kahvaltı, bursa gezi planı",
+        og_type="website",
+    )
+
+
+def for_blog_post(slug: str) -> PageSEO | None:
+    from seo_arch import BLOG_POSTS, OG_IMAGE
+
+    post = BLOG_POSTS.get(slug)
+    if not post:
+        return None
+    path = f"/blog/{slug}"
+    return page(
+        title=post["title"],
+        description=post["desc"],
+        path=path,
+        image=post.get("image") or OG_IMAGE,
+        og_type="article",
+        breadcrumbs=[("Ana Sayfa", "/"), ("Blog", "/blog"), (post["h1"], path)],
+        keywords=post["title"],
+        json_ld=[
+            article_ld(
+                title=post["title"],
+                description=post["desc"],
+                path=path,
+                image=post.get("image"),
+                date=post.get("date") or "",
+            )
+        ],
+    )
+
+
+def for_kvkk() -> PageSEO:
+    from seo_arch import OG_IMAGE
+
+    return page(
+        title="KVKK ve gizlilik",
+        description="BursaApp gizlilik ve KVKK metni — hangi veri, neden, ne kadar.",
+        path="/kvkk",
+        image=OG_IMAGE,
+        breadcrumbs=[("Ana Sayfa", "/"), ("KVKK", "/kvkk")],
+        keywords="kvkk, gizlilik, bursaapp",
+    )
+
+
 def resolve_seo(req=None) -> PageSEO:
     """Context processor varsayılanı — rota özel seo geçmezse kullanılır."""
     from flask import request as flask_request
@@ -572,11 +680,23 @@ def resolve_seo(req=None) -> PageSEO:
                 description=DEFAULT_DESC,
                 path=path,
                 noindex=True,
-                breadcrumbs=[("Keşfet", "/")],
+                breadcrumbs=[("Ana Sayfa", "/")],
             )
 
     if path in ("/", "/kesfet"):
         return for_home()
+
+    if path == "/blog":
+        return for_blog_hub()
+    mblog = re.match(r"^/blog/([^/]+)$", path)
+    if mblog:
+        post_seo = for_blog_post(mblog.group(1))
+        if post_seo:
+            return post_seo
+    if path == "/kvkk":
+        return for_kvkk()
+    if path == "/oteller":
+        return for_vertical("/oteller")
 
     cat = CAT_BY_PATH.get(path)
     if cat:
@@ -605,7 +725,7 @@ def resolve_seo(req=None) -> PageSEO:
         title=SITE_NAME,
         description=DEFAULT_DESC,
         path=path,
-        breadcrumbs=[("Keşfet", "/")],
+        breadcrumbs=[("Ana Sayfa", "/")],
     )
 
 
@@ -628,6 +748,13 @@ def sitemap_static_urls() -> list[dict[str, Any]]:
         )
 
     add("/", "daily", "1.0")
+    add("/yeme-icme", "daily", "0.9")
+    add("/gezilecek", "daily", "0.8")
+    add("/oteller", "daily", "0.8")
+    add("/blog", "weekly", "0.7")
+    add("/blog/bursa-da-kahvalti-nerede", "weekly", "0.6")
+    add("/blog/bursa-1-gunluk-gezi-plani", "weekly", "0.6")
+    add("/kvkk", "yearly", "0.3")
     for p, freq, pri in (
         ("/bugun", "hourly", "0.9"),
         ("/bu-aksam", "hourly", "0.9"),
@@ -643,8 +770,10 @@ def sitemap_static_urls() -> list[dict[str, Any]]:
     ):
         add(p, freq, pri)
 
+    skip_cat = {"/yeme-icme", "/gezilecek", "/oteller"}
     for c in CATEGORIES:
-        add(c["path"], "daily", "0.85")
+        if c["path"] not in skip_cat:
+            add(c["path"], "daily", "0.85")
 
     # kategori dışı kamuya açık sayfalar
     add("/bursaspor", "daily", "0.85")

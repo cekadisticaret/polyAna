@@ -1,0 +1,102 @@
+[
+  {
+    "slug": "zeynep",
+    "name": "Zeynep Arslan",
+    "gender": "f",
+    "email": "zeynep.arslan@bursaapp.com",
+    "bio": "Hafta sonu gezgin · fotoğraf · doğa",
+    "cats": ["visit", "camp"],
+    "tone": "cozy",
+    "avatar_color": "#7c9a92"
+  },
+  {
+    "slug": "elif",
+    "name": "Elif Yılmaz",
+    "gender": "f",
+    "email": "elif.yilmaz@bursaapp.com",
+    "bio": "Müze ve tarih rotaları",
+    "cats": ["visit"],
+    "tone": "culture",
+    "avatar_color": "#8b7355"
+  },
+  {
+    "slug": "deniz",
+    "name": "Deniz Kaya",
+    "gender": "f",
+    "email": "deniz.kaya@bursaapp.com",
+    "bio": "Kamp · göl kenarı · karavan",
+    "cats": ["camp", "visit"],
+    "tone": "adventure",
+    "avatar_color": "#4a7c59"
+  },
+  {
+    "slug": "selin",
+    "name": "Selin Demir",
+    "gender": "f",
+    "email": "selin.demir@bursaapp.com",
+    "bio": "Kafe turu · manzara · brunch",
+    "cats": ["food", "visit"],
+    "tone": "foodie",
+    "avatar_color": "#c45c5c"
+  },
+  {
+    "slug": "ayse",
+    "name": "Ayşe Çelik",
+    "gender": "f",
+    "email": "ayse.celik@bursaapp.com",
+    "bio": "Aile gezileri · park · etkinlik",
+    "cats": ["family", "visit", "event"],
+    "tone": "family",
+    "avatar_color": "#6b8cae"
+  },
+  {
+    "slug": "meltem",
+    "name": "Meltem Öztürk",
+    "gender": "f",
+    "email": "meltem.ozturk@bursaapp.com",
+    "bio": "Uludağ · yürüyüş · şelale",
+    "cats": ["visit", "camp"],
+    "tone": "hike",
+    "avatar_color": "#5a8a7a"
+  },
+  {
+    "slug": "emre",
+    "name": "Emre Aydın",
+    "gender": "m",
+    "email": "emre.aydin@bursaapp.com",
+    "bio": "Motosiklet rotası · manzara noktaları",
+    "cats": ["visit"],
+    "tone": "casual",
+    "avatar_color": "#4a5568"
+  },
+  {
+    "slug": "can",
+    "name": "Can Polat",
+    "gender": "m",
+    "email": "can.polat@bursaapp.com",
+    "bio": "İskender avcısı · yerel lezzet",
+    "cats": ["food"],
+    "tone": "foodie",
+    "avatar_color": "#8b4513"
+  },
+  {
+    "slug": "burak",
+    "name": "Burak Şahin",
+    "gender": "m",
+    "email": "burak.sahin@bursaapp.com",
+    "bio": "Fotoğraf · gün batımı · Gölyazı",
+    "cats": ["visit", "camp"],
+    "tone": "photo",
+    "avatar_color": "#2d3748"
+  },
+  {
+    "slug": "kerem",
+    "name": "Kerem Koç",
+    "gender": "m",
+    "email": "kerem.koc@bursaapp.com",
+    "bio": "Konser · tiyatro · etkinlik",
+    "cats": ["event", "concert", "theater"],
+    "tone": "events",
+    "avatar_color": "#553c9a"
+  }
+]

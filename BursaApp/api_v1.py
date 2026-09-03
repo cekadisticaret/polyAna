@@ -260,6 +260,8 @@ def login():
         u = db.query(User).filter(User.email == email).first()
         if u is None or not verify_password(password, u.password_hash):
             return _err("e-posta veya şifre yanlış", 401)
+        if not bool(getattr(u, "is_active", True)):
+            return _err("hesap pasif", 403)
         login_user(u)
         return jsonify({"ok": True, "user": u.public(), "token": make_token(u)})
     finally:

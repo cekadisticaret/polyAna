@@ -75,14 +75,16 @@
 </section>
 
 {# —— HİZMETLER —— #}
-{% if services %}
+{% if services or ex.services_lead %}
 <section class="hd-sec" id="hizmetler">
   <div class="hd-sec-h">
     <div>
       <p class="hd-label">Hizmetler</p>
       <h2>Hizmet alanları</h2>
+      {% if ex.services_lead %}<p class="hd-sub">{{ ex.services_lead }}</p>{% endif %}
     </div>
   </div>
+  {% if services %}
   <div class="hd-svc-grid">
     {% for s in services %}
     <article class="hd-svc">
@@ -91,6 +93,7 @@
     </article>
     {% endfor %}
   </div>
+  {% endif %}
 </section>
 {% endif %}
 
@@ -124,20 +127,47 @@
 {% endif %}
 
 {# —— DOKTORLAR (Place kayıtları) —— #}
+{% set brans_on = (request.args.get('brans') or '')|trim %}
+{% set ns = namespace(brans_group=none) %}
+{% if brans_on %}
+  {% for g in staff_groups %}
+    {% if g.label == brans_on %}{% set ns.brans_group = g %}{% endif %}
+  {% endfor %}
+{% endif %}
 <section class="hd-sec" id="doktorlar">
   <div class="hd-sec-h">
     <div>
       <p class="hd-label">Hekimler</p>
       <h2>Doktorlarımız</h2>
-      <p class="hd-sub">{% if doc_count %}{{ doc_count }} hekim · branşa göre{% elif staff_extra %}{{ staff_extra|length }} kadro kaydı{% else %}Açık hekim listesi yok{% endif %}</p>
+      <p class="hd-sub">{% if doc_count %}{% if brans_on %}{{ ns.brans_group.places|length if ns.brans_group else 0 }} hekim · {{ brans_on }}{% else %}{{ doc_count }} hekim · branşa göre{% endif %}{% elif staff_extra %}{{ staff_extra|length }} kadro kaydı{% else %}Açık hekim listesi yok{% endif %}</p>
     </div>
-    <a class="wa-btn hd-btn-outline" href="/doktorlar?q={{ place.title|urlencode }}">Tüm doktorlar</a>
+    <div class="hd-doc-tools">
+      {% if staff_groups %}
+      <label class="ilce-pick hd-brans-pick">
+        <span class="ilce-pick-lab">Branş</span>
+        <select class="ilce-select" aria-label="Branş seç"
+          onchange="if(this.value) location.href=this.value">
+          <option value="{{ place.path }}#doktorlar" {% if not brans_on %}selected{% endif %}>Tüm branşlar</option>
+          {% for g in staff_groups %}
+          <option value="{{ place.path }}?brans={{ g.label|urlencode }}#doktorlar" {% if brans_on==g.label %}selected{% endif %}>{{ g.label }} ({{ g.places|length }})</option>
+          {% endfor %}
+        </select>
+      </label>
+      {% endif %}
+      <a class="wa-btn hd-btn-outline" href="/doktorlar?q={{ place.title|urlencode }}">Tüm doktorlar</a>
+    </div>
   </div>
 
   {% if staff_groups %}
+  {% if brans_on and not ns.brans_group %}
+  <div class="hd-empty">Bu branşta hekim kaydı yok. Listeden başka branş seçin.</div>
+  {% endif %}
   {% for g in staff_groups %}
+  {% if not brans_on or g.label == brans_on %}
   <div class="hd-spec-block">
+    {% if not brans_on %}
     <h3>{{ g.label }} <small>{{ g.places|length }}</small></h3>
+    {% endif %}
     <div class="hd-doc-grid">
       {% for s in g.places %}
       <a class="hd-doc" href="{{ s.path or ('/yer/' ~ s.slug) }}">
@@ -153,6 +183,7 @@
       {% endfor %}
     </div>
   </div>
+  {% endif %}
   {% endfor %}
   {% elif staff_extra %}
   <div class="hd-doc-grid">
@@ -185,38 +216,102 @@
 </section>
 {% endif %}
 
-{# —— YORUM —— #}
-<section class="hd-sec panel" id="yorumlar">
-  <h2 style="margin-top:0">Değerlendirmeler</h2>
+{# —— YORUM (hastane boyutları) —— #}
+<section class="hd-sec panel rv-panel" id="yorumlar">
+  <h2 style="margin-top:0">Hasta deneyimi</h2>
+  <p class="hd-review-lead">Doktor ilgisi · Personel · Temizlik · Bekleme — 1–5 · admin onayına düşer</p>
+  {% if dims and dims.count %}
+  <div class="dim-grid hd-dims">
+    <div><span>Doktor ilgisi</span><b>★ {{ dims.food }}</b></div>
+    <div><span>Personel</span><b>★ {{ dims.service }}</b></div>
+    <div><span>Temizlik</span><b>★ {{ dims.atmosphere }}</b></div>
+    <div><span>Bekleme</span><b>★ {{ dims.price }}</b></div>
+  </div>
+  {% endif %}
   {% if my_review and my_review.status == 'pending' %}
   <p class="flash ok">Yorumun onay bekliyor — yayınlanınca burada görünür.</p>
   {% endif %}
   {% if can_review %}
-  <form method="post" action="/yer/{{ place.slug }}/yorum" class="form review-form" enctype="multipart/form-data">
-    <p class="empty">Hizmet · Atmosfer · Fiyat (1–5) — admin onayına düşer</p>
-    <div class="score-row">
-      <label>Yemek<select name="score_food">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_food if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
-      <label>Hizmet<select name="score_service">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_service if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
-      <label>Atmosfer<select name="score_atmosphere">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_atmosphere if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
-      <label>Fiyat<select name="score_price">{% for i in range(1,6) %}<option value="{{ i }}" {% if (my_review.score_price if my_review else 5)==i %}selected{% endif %}>{{ i }}</option>{% endfor %}</select></label>
+  <form method="post" action="/yer/{{ place.slug }}/yorum" class="form review-form rv-form" enctype="multipart/form-data" data-review-ui>
+    {% set dims_labels = [
+      ('score_food', 'Doktor ilgisi', my_review.score_food if my_review else 5),
+      ('score_service', 'Personel', my_review.score_service if my_review else 5),
+      ('score_atmosphere', 'Temizlik', my_review.score_atmosphere if my_review else 5),
+      ('score_price', 'Bekleme', my_review.score_price if my_review else 5)
+    ] %}
+    <div class="rv-stars">
+      {% for name, lab, val in dims_labels %}
+      <div class="rv-dim" data-name="{{ name }}" data-value="{{ val }}">
+        <div class="rv-dim-top"><span>{{ lab }}</span><b class="rv-val">{{ val }}</b></div>
+        <div class="rv-star-row" role="group" aria-label="{{ lab }} puanı">
+          {% for i in range(1,6) %}
+          <button type="button" class="rv-star{% if i <= val %} on{% endif %}" data-n="{{ i }}" aria-label="{{ i }} yıldız">★</button>
+          {% endfor %}
+        </div>
+        <input type="hidden" name="{{ name }}" value="{{ val }}">
+      </div>
+      {% endfor %}
     </div>
-    <label>Yorum<textarea name="body" rows="3">{{ my_review.body if my_review else '' }}</textarea></label>
+    <label class="rv-body">Deneyiminiz<textarea name="body" rows="3" placeholder="Randevu, muayene, klinik ortam… kişisel sağlık / teşhis yazmayın">{{ my_review.body if my_review else '' }}</textarea></label>
     <label>Foto (isteğe bağlı)<input type="file" name="photo" accept="image/*"></label>
-    <button type="submit" class="btn">{{ 'Güncelle (yeniden onaya)' if my_review else 'Gönder' }}</button>
+    <button type="submit" class="btn rv-submit">{{ 'Güncelle (yeniden onaya)' if my_review else 'Deneyimi gönder' }}</button>
   </form>
   {% else %}
   {% include "_review_gate.html" %}
   {% endif %}
   {% for r in reviews %}
-  <div class="review-item">
-    <div class="meta"><b>{{ r.user_name }}</b> · ★ {{ r.overall }}</div>
+  <div class="review-item rv-item">
+    <div class="rv-item-head">
+      <div>
+        <b>{{ r.user_name }}</b>
+        <span class="rv-overall">★ {{ r.overall }}</span>
+      </div>
+      <div class="rv-mini">
+        <span>Doktor {{ r.score_food }}</span>
+        <span>Personel {{ r.score_service }}</span>
+        <span>Temizlik {{ r.score_atmosphere }}</span>
+        <span>Bekleme {{ r.score_price }}</span>
+      </div>
+    </div>
     {% if r.body %}<p>{{ r.body }}</p>{% endif %}
     {% if r.img_url %}<img class="review-photo" src="{{ r.img_url }}" alt="" loading="lazy">{% endif %}
   </div>
   {% else %}
-  <p class="empty">Henüz onaylı üye değerlendirmesi yok.</p>
+  <p class="empty">Henüz onaylı hasta deneyimi yok — ilk puanı sen ver.</p>
   {% endfor %}
 </section>
+<script>
+(function(){
+  document.querySelectorAll('[data-review-ui] .rv-dim').forEach(function(dim){
+    var input = dim.querySelector('input[type=hidden]');
+    var valEl = dim.querySelector('.rv-val');
+    var stars = dim.querySelectorAll('.rv-star');
+    function paint(n){
+      stars.forEach(function(s){
+        var on = parseInt(s.getAttribute('data-n'),10) <= n;
+        s.classList.toggle('on', on);
+      });
+      if (valEl) valEl.textContent = String(n);
+      if (input) input.value = String(n);
+      dim.setAttribute('data-value', String(n));
+    }
+    stars.forEach(function(s){
+      s.addEventListener('click', function(){
+        paint(parseInt(s.getAttribute('data-n'),10));
+      });
+      s.addEventListener('mouseenter', function(){
+        var n = parseInt(s.getAttribute('data-n'),10);
+        stars.forEach(function(x){
+          x.classList.toggle('hover', parseInt(x.getAttribute('data-n'),10) <= n);
+        });
+      });
+    });
+    dim.querySelector('.rv-star-row').addEventListener('mouseleave', function(){
+      stars.forEach(function(x){ x.classList.remove('hover'); });
+    });
+  });
+})();
+</script>
 
 {% if similar %}
 <section class="hd-sec">

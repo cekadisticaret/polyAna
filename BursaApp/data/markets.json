@@ -1,902 +1,515 @@
 [
   {
-    "slug": "migros-nilufer-fsm",
-    "title": "Migros · Fatih Sultan Mehmet",
-    "ilce": "Nilüfer",
-    "address": "Fatih Sultan Mehmet Blv. civarı, Nilüfer",
-    "subcategory": "hipermarket",
-    "lat": 40.2138,
-    "lng": 28.9872,
-    "rating": 4.4,
-    "hours_text": "08:00–23:00",
-    "phone": "",
-    "web": "https://www.migros.com.tr",
-    "tags": [
-      "migros",
-      "zincir",
-      "kampanya"
-    ],
-    "blurb": "Nilüfer ana arter — geniş reyon, online sipariş.",
-    "campaign": {
-      "title": "Haftanın indirimleri",
-      "badge": "%20–40",
-      "body": "Seçili gıda ve kişisel bakım ürünlerinde dönemsel indirim. Güncel broşür: migros.com.tr"
-    }
-  },
-  {
-    "slug": "migros-osmangazi-heykel",
-    "title": "Migros · Heykel / Çarşı",
-    "ilce": "Osmangazi",
-    "address": "Heykel civarı, Osmangazi",
+    "slug": "ozhan",
+    "title": "Özhan Market",
+    "ilce": "",
+    "address": "Bursa genelinde 47+ şube",
     "subcategory": "supermarket",
-    "lat": 40.1872,
-    "lng": 29.0605,
-    "rating": 4.3,
-    "hours_text": "08:00–22:30",
-    "web": "https://www.migros.com.tr",
-    "tags": [
-      "migros",
-      "zincir"
-    ],
-    "blurb": "Merkezde günlük alışveriş."
-  },
-  {
-    "slug": "migros-yildirim-arabayataagi",
-    "title": "Migros · Arabayatacağı",
-    "ilce": "Yıldırım",
-    "address": "Arabayatacağı, Yıldırım",
-    "subcategory": "supermarket",
-    "lat": 40.1845,
-    "lng": 29.112,
-    "rating": 4.2,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.migros.com.tr",
-    "tags": [
-      "migros",
-      "zincir",
-      "kampanya"
-    ],
-    "blurb": "Yıldırım şubesi — Migros Sanal Market.",
+    "lat": 40.1958,
+    "lng": 29.0602,
+    "rating": 4.6,
+    "hours_text": "Şube saatleri değişir · genelde 08:00–22:00",
+    "phone": "0224 411 13 00",
+    "web": "https://www.ozhan.com.tr",
+    "img_url": "/static/market/logo-ozhan.png",
+    "featured": true,
+    "tags": ["ozhan", "yerel", "zincir", "kampanya"],
+    "blurb": "Bursa’nın yerel zinciri — 1963’ten beri, 47+ şube. Tek kayıt: şube şube değil, markanın kendisi.",
+    "extra": {
+      "catalog_url": "https://www.ozhan.com.tr",
+      "logo_bg": "#ffffff",
+      "branch_note": "Bursa genelinde şubeler · e-broşür resmi sitede"
+    },
     "campaign": {
-      "title": "Sanal Market kuponu",
-      "badge": "Kargo fırsatı",
-      "body": "Belirli sepet tutarında ücretsiz / indirimli teslimat dönemleri."
+      "title": "Özhan e-broşür",
+      "badge": "Aktüel",
+      "body": "Haftalık insert ve Özhan Kart fırsatları şubelerde ve ozhan.com.tr e-broşürde. Fiyat/stok mağazaya göre değişir."
     }
   },
   {
-    "slug": "carrefoursa-nilufer",
-    "title": "CarrefourSA · Nilüfer",
-    "ilce": "Nilüfer",
-    "address": "Odunluk / FSM bölgesi, Nilüfer",
-    "subcategory": "hipermarket",
-    "lat": 40.2185,
-    "lng": 28.9788,
-    "rating": 4.3,
-    "hours_text": "08:30–22:30",
-    "web": "https://www.carrefoursa.com",
-    "tags": [
-      "carrefour",
-      "zincir",
-      "kampanya"
-    ],
-    "blurb": "Hipermarket formatı — elektronik ve gıda.",
-    "campaign": {
-      "title": "CarrefourSA güncel kataloğu",
-      "badge": "Katalog",
-      "body": "Haftalık kataloğu carrefoursa.com üzerinden kontrol edin."
-    }
-  },
-  {
-    "slug": "macrocenter-nilufer",
-    "title": "Macrocenter · Nilüfer",
-    "ilce": "Nilüfer",
-    "address": "Nilüfer (premium zincir)",
-    "subcategory": "gourmet",
-    "lat": 40.221,
-    "lng": 28.992,
-    "rating": 4.5,
-    "hours_text": "09:00–22:00",
-    "web": "https://www.macrocenter.com.tr",
-    "tags": [
-      "macrocenter",
-      "gourmet",
-      "kampanya"
-    ],
-    "blurb": "Premium gıda ve şarküteri.",
-    "campaign": {
-      "title": "Şef seçkisi",
-      "badge": "Özel",
-      "body": "İthal ve gourmet ürünlerde dönemsel fırsatlar."
-    }
-  },
-  {
-    "slug": "metro-bursa",
-    "title": "Metro Cash & Carry Bursa",
-    "ilce": "Nilüfer",
-    "address": "Üçevler / Nilüfer metro civarı",
-    "subcategory": "toptan",
-    "lat": 40.2055,
-    "lng": 28.968,
-    "rating": 4.4,
-    "hours_text": "üyelik · gün içi",
-    "web": "https://www.metro-tr.com",
-    "tags": [
-      "metro",
-      "toptan",
-      "kampanya"
-    ],
-    "blurb": "Toptan / işletme alışverişi — kart gerekebilir.",
-    "campaign": {
-      "title": "Profesyonel üye indirimleri",
-      "badge": "Toptan",
-      "body": "Metro kartlı üyelere özel kategori kampanyaları."
-    }
-  },
-  {
-    "slug": "bim-osmangazi-setbasi",
-    "title": "BİM · Setbaşı",
-    "ilce": "Osmangazi",
-    "address": "Setbaşı civarı, Osmangazi",
+    "slug": "bim",
+    "title": "BİM",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler",
     "subcategory": "indirim",
-    "lat": 40.1858,
-    "lng": 29.0688,
-    "rating": 4.1,
-    "hours_text": "09:00–21:30",
+    "lat": 40.1925,
+    "lng": 29.061,
+    "rating": 4.5,
+    "hours_text": "Şube saatleri değişir · genelde 09:00–21:30",
     "web": "https://www.bim.com.tr",
-    "tags": [
-      "bim",
-      "indirim",
-      "kampanya"
-    ],
-    "blurb": "Salı / Cuma aktüel ürün günleri.",
+    "img_url": "/static/market/logo-bim.svg",
+    "featured": true,
+    "tags": ["bim", "zincir", "kampanya", "aktuel"],
+    "blurb": "İndirim marketi. Aktüel ürünler her hafta Salı ve Cuma raflara çıkar.",
+    "extra": {
+      "catalog_url": "https://www.bim.com.tr/Categories/254/aktuel-urunler.aspx",
+      "logo_bg": "#ffffff",
+      "branch_note": "Bursa genelinde şubeler"
+    },
     "campaign": {
       "title": "BİM aktüel",
       "badge": "Salı·Cuma",
-      "body": "Haftanın aktüel ürünleri bim.com.tr’de yayınlanır."
+      "body": "Haftalık aktüel katalog resmi sitede. Stok sınırlıdır; şube stokunu doğrula."
     }
   },
   {
-    "slug": "bim-nilufer-beşevler",
-    "title": "BİM · Beşevler",
-    "ilce": "Nilüfer",
-    "address": "Beşevler, Nilüfer",
+    "slug": "a101",
+    "title": "A101",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler",
     "subcategory": "indirim",
-    "lat": 40.2088,
-    "lng": 28.9955,
-    "rating": 4.1,
-    "hours_text": "09:00–21:30",
-    "web": "https://www.bim.com.tr",
-    "tags": [
-      "bim",
-      "indirim",
-      "kampanya"
-    ],
-    "blurb": "Nilüfer Beşevler şubesi.",
-    "campaign": {
-      "title": "Aktüel ürünler",
-      "badge": "Salı·Cuma",
-      "body": "BİM aktüel kataloğu — stok sınırlı."
-    }
-  },
-  {
-    "slug": "bim-yildirim-esenevler",
-    "title": "BİM · Esenevler",
-    "ilce": "Yıldırım",
-    "address": "Esenevler, Yıldırım",
-    "subcategory": "indirim",
-    "lat": 40.1912,
-    "lng": 29.0955,
-    "rating": 4.0,
-    "hours_text": "09:00–21:00",
-    "web": "https://www.bim.com.tr",
-    "tags": [
-      "bim",
-      "indirim"
-    ],
-    "blurb": "Mahalle formatı BİM."
-  },
-  {
-    "slug": "a101-osmangazi-cekirge",
-    "title": "A101 · Çekirge",
-    "ilce": "Osmangazi",
-    "address": "Çekirge, Osmangazi",
-    "subcategory": "indirim",
-    "lat": 40.1985,
-    "lng": 29.0402,
-    "rating": 4.0,
-    "hours_text": "09:00–21:30",
+    "lat": 40.191,
+    "lng": 29.055,
+    "rating": 4.3,
+    "hours_text": "Şube saatleri değişir · genelde 08:30–22:00",
     "web": "https://www.a101.com.tr",
-    "tags": [
-      "a101",
-      "indirim",
-      "kampanya"
-    ],
-    "blurb": "Perşembe aktüel + günlük temel ihtiyaç.",
+    "img_url": "/static/market/logo-a101.svg",
+    "tags": ["a101", "zincir", "kampanya", "aktuel"],
+    "blurb": "İndirim marketi. Aldın Aldın aktüel ürünleri her hafta Perşembe güncellenir.",
+    "extra": {
+      "catalog_url": "https://www.a101.com.tr/aldin-aldin",
+      "logo_bg": "#F5C518",
+      "branch_note": "Bursa genelinde şubeler"
+    },
     "campaign": {
-      "title": "A101 aktüel",
+      "title": "A101 Aldın Aldın",
       "badge": "Perşembe",
-      "body": "Haftalık aktüel ürünler a101.com.tr"
+      "body": "Haftalık Aldın Aldın kataloğu a101.com.tr üzerinde. Elektronik ve ev ürünleri stokla sınırlıdır."
     }
   },
   {
-    "slug": "a101-nilufer-gorukle",
-    "title": "A101 · Görükle",
-    "ilce": "Nilüfer",
-    "address": "Görükle, Nilüfer",
+    "slug": "sok",
+    "title": "ŞOK",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler",
     "subcategory": "indirim",
-    "lat": 40.2265,
-    "lng": 28.875,
-    "rating": 4.0,
-    "hours_text": "09:00–21:30",
-    "web": "https://www.a101.com.tr",
-    "tags": [
-      "a101",
-      "indirim",
-      "kampanya"
-    ],
-    "blurb": "Üniversite bölgesi A101.",
-    "campaign": {
-      "title": "Aktüel + elektronik",
-      "badge": "Katalog",
-      "body": "Dönemsel elektronik ve ev ürünü kampanyaları."
-    }
-  },
-  {
-    "slug": "a101-yildirim-mimarsinan",
-    "title": "A101 · Mimar Sinan",
-    "ilce": "Yıldırım",
-    "address": "Mimar Sinan, Yıldırım",
-    "subcategory": "indirim",
-    "lat": 40.1788,
-    "lng": 29.1088,
-    "rating": 3.9,
-    "hours_text": "09:00–21:00",
-    "web": "https://www.a101.com.tr",
-    "tags": [
-      "a101",
-      "indirim"
-    ],
-    "blurb": "Yıldırım mahalle marketi."
-  },
-  {
-    "slug": "sok-osmangazi-haciivat",
-    "title": "ŞOK · Hacıivat",
-    "ilce": "Osmangazi",
-    "address": "Hacıivat / Altıparmak yakını",
-    "subcategory": "indirim",
-    "lat": 40.1925,
-    "lng": 29.0555,
-    "rating": 4.0,
-    "hours_text": "08:30–22:00",
-    "web": "https://www.sokmarket.com.tr",
-    "tags": [
-      "sok",
-      "indirim",
-      "kampanya"
-    ],
-    "blurb": "Çarşamba–Cumartesi fırsat günleri.",
-    "campaign": {
-      "title": "ŞOK fırsat ürünleri",
-      "badge": "Haftalık",
-      "body": "sokmarket.com.tr kataloğu"
-    }
-  },
-  {
-    "slug": "sok-nilufer-konak",
-    "title": "ŞOK · Konak",
-    "ilce": "Nilüfer",
-    "address": "Konak Mah., Nilüfer",
-    "subcategory": "indirim",
-    "lat": 40.2155,
-    "lng": 29.005,
-    "rating": 4.0,
-    "hours_text": "08:30–22:00",
-    "web": "https://www.sokmarket.com.tr",
-    "tags": [
-      "sok",
-      "indirim"
-    ],
-    "blurb": "Nilüfer Konak şubesi."
-  },
-  {
-    "slug": "file-nilufer",
-    "title": "File Market · Nilüfer",
-    "ilce": "Nilüfer",
-    "address": "Nilüfer",
-    "subcategory": "supermarket",
-    "lat": 40.2102,
-    "lng": 28.9815,
+    "lat": 40.1895,
+    "lng": 29.058,
     "rating": 4.2,
-    "hours_text": "08:00–22:00",
+    "hours_text": "Şube saatleri değişir · genelde 08:30–22:00",
+    "web": "https://www.sokmarket.com.tr",
+    "img_url": "/static/market/logo-sok.svg",
+    "tags": ["sok", "zincir", "kampanya", "aktuel"],
+    "blurb": "İndirim marketi. Haftanın fırsatları ve hafta sonu insertleri resmi sitede.",
+    "extra": {
+      "catalog_url": "https://www.sokmarket.com.tr",
+      "logo_bg": "#ffffff",
+      "branch_note": "Bursa genelinde şubeler"
+    },
+    "campaign": {
+      "title": "ŞOK haftanın fırsatları",
+      "badge": "Haftalık",
+      "body": "Güncel fırsat ve aktüel ürünler sokmarket.com.tr’de. Kampanyasız şube listesi resmi sitede yayımlanır."
+    }
+  },
+  {
+    "slug": "file",
+    "title": "File Market",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler",
+    "subcategory": "supermarket",
+    "lat": 40.213,
+    "lng": 28.986,
+    "rating": 4.3,
+    "hours_text": "Şube saatleri değişir · genelde 08:00–22:00",
     "web": "https://www.file.com.tr",
-    "tags": [
-      "file",
-      "zincir",
-      "kampanya"
-    ],
-    "blurb": "Yerel zincir — taze reyon vurgusu.",
+    "img_url": "/static/market/logo-file.svg",
+    "tags": ["file", "zincir", "kampanya"],
+    "blurb": "BİM grubunun süpermarket formatı. Bursa’da tek kayıt — her şube ayrı listelenmez.",
+    "extra": {
+      "catalog_url": "https://www.file.com.tr",
+      "logo_bg": "#00A651",
+      "branch_note": "Bursa genelinde şubeler"
+    },
     "campaign": {
       "title": "File haftalık fırsat",
       "badge": "%15+",
-      "body": "Seçili kategorilerde dönemsel indirim."
+      "body": "Dönemsel gıda ve temizlik indirimleri. Güncel katalog file.com.tr."
     }
   },
   {
-    "slug": "happy-center-nilufer",
-    "title": "Happy Center · Nilüfer",
-    "ilce": "Nilüfer",
-    "address": "Nilüfer",
-    "subcategory": "supermarket",
-    "lat": 40.2178,
-    "lng": 28.9945,
-    "rating": 4.1,
-    "hours_text": "08:00–22:00",
-    "tags": [
-      "happy",
-      "zincir"
-    ],
-    "blurb": "Orta-büyük format market."
-  },
-  {
-    "slug": "gratis-korupark",
-    "title": "Gratis · Korupark",
-    "ilce": "Nilüfer",
-    "address": "Korupark AVM, Nilüfer",
-    "subcategory": "kozmetik",
-    "lat": 40.2205,
-    "lng": 28.986,
-    "rating": 4.3,
-    "hours_text": "AVM saatleri",
-    "web": "https://www.gratis.com",
-    "tags": [
-      "gratis",
-      "kozmetik",
-      "kampanya"
-    ],
-    "blurb": "Kozmetik / kişisel bakım — AVM içi.",
-    "campaign": {
-      "title": "Gratis kart puan",
-      "badge": "Puan",
-      "body": "Üyelik puanı ve marka kampanyaları."
-    }
-  },
-  {
-    "slug": "watsons-marka",
-    "title": "Watsons · Marka AVM",
-    "ilce": "Nilüfer",
-    "address": "Marka AVM, Nilüfer",
-    "subcategory": "kozmetik",
-    "lat": 40.215,
-    "lng": 28.978,
-    "rating": 4.2,
-    "hours_text": "AVM saatleri",
-    "web": "https://www.watsons.com.tr",
-    "tags": [
-      "watsons",
-      "kozmetik",
-      "kampanya"
-    ],
-    "blurb": "Kişisel bakım ve makyaj.",
-    "campaign": {
-      "title": "2 al 1 öde dönemleri",
-      "badge": "Fırsat",
-      "body": "Seçili markalarda dönemsel kampanya — mağaza / uygulama."
-    }
-  },
-  {
-    "slug": "semt-pazari-heykel",
-    "title": "Heykel Semt Pazarı",
-    "ilce": "Osmangazi",
-    "address": "Heykel / Kapalıçarşı çevresi (pazar günleri değişken)",
-    "subcategory": "semt-pazari",
-    "lat": 40.1842,
-    "lng": 29.0635,
-    "rating": 4.4,
-    "hours_text": "sabah–öğlen (pazar günü)",
-    "tags": [
-      "pazar",
-      "taze",
-      "yerel"
-    ],
-    "blurb": "Sebze-meyve, zeytin, peynir — nakit ağırlıklı."
-  },
-  {
-    "slug": "semt-pazari-nilufer",
-    "title": "Nilüfer Semt Pazarı",
-    "ilce": "Nilüfer",
-    "address": "Nilüfer semt pazarı alanı",
-    "subcategory": "semt-pazari",
-    "lat": 40.2095,
-    "lng": 28.99,
-    "rating": 4.3,
-    "hours_text": "sabah (haftanın belirli günü)",
-    "tags": [
-      "pazar",
-      "taze",
-      "kampanya"
-    ],
-    "blurb": "Taze ürün — öğlene doğru fiyat esner.",
-    "campaign": {
-      "title": "Öğlen fiyatı",
-      "badge": "Pazar",
-      "body": "Günün sonunda tezgâhlarda pazarlık payı artar."
-    }
-  },
-  {
-    "slug": "semt-pazari-yildirim",
-    "title": "Yıldırım Semt Pazarı",
-    "ilce": "Yıldırım",
-    "address": "Yıldırım semt pazarı",
-    "subcategory": "semt-pazari",
-    "lat": 40.183,
-    "lng": 29.102,
-    "rating": 4.2,
-    "hours_text": "sabah",
-    "tags": [
-      "pazar",
-      "taze"
-    ],
-    "blurb": "Mahalle pazarı — sebze, giyim tezgâhı."
-  },
-  {
-    "slug": "migros-mudanya",
-    "title": "Migros · Mudanya",
-    "ilce": "Mudanya",
-    "address": "Mudanya merkez",
-    "subcategory": "supermarket",
-    "lat": 40.3755,
-    "lng": 28.8835,
-    "rating": 4.2,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.migros.com.tr",
-    "tags": [
-      "migros",
-      "zincir"
-    ],
-    "blurb": "Sahil ilçesi Migros."
-  },
-  {
-    "slug": "bim-gemlik",
-    "title": "BİM · Gemlik",
-    "ilce": "Gemlik",
-    "address": "Gemlik merkez",
-    "subcategory": "indirim",
-    "lat": 40.4305,
-    "lng": 29.156,
-    "rating": 4.0,
-    "hours_text": "09:00–21:00",
-    "web": "https://www.bim.com.tr",
-    "tags": [
-      "bim",
-      "indirim",
-      "kampanya"
-    ],
-    "blurb": "Gemlik BİM şubesi.",
-    "campaign": {
-      "title": "Aktüel",
-      "badge": "Salı·Cuma",
-      "body": "bim.com.tr aktüel listesi"
-    }
-  },
-  {
-    "slug": "a101-inegol",
-    "title": "A101 · İnegöl",
-    "ilce": "İnegöl",
-    "address": "İnegöl merkez",
-    "subcategory": "indirim",
-    "lat": 40.0785,
-    "lng": 29.514,
-    "rating": 4.0,
-    "hours_text": "09:00–21:30",
-    "web": "https://www.a101.com.tr",
-    "tags": [
-      "a101",
-      "indirim"
-    ],
-    "blurb": "İnegöl A101."
-  },
-  {
-    "slug": "sok-kestel",
-    "title": "ŞOK · Kestel",
-    "ilce": "Kestel",
-    "address": "Kestel merkez",
-    "subcategory": "indirim",
-    "lat": 40.198,
-    "lng": 29.212,
-    "rating": 3.9,
-    "hours_text": "08:30–21:30",
-    "web": "https://www.sokmarket.com.tr",
-    "tags": [
-      "sok",
-      "indirim"
-    ],
-    "blurb": "Kestel mahalle marketi."
-  },
-  {
-    "slug": "organik-koop-nilufer",
-    "title": "Organik / yerel ürün noktası · Nilüfer",
-    "ilce": "Nilüfer",
-    "address": "Nilüfer (yerel üretici satış)",
-    "subcategory": "organik",
+    "slug": "migros",
+    "title": "Migros",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler · Sanal Market",
+    "subcategory": "hipermarket",
     "lat": 40.214,
-    "lng": 28.999,
-    "rating": 4.5,
-    "hours_text": "gün içi · değişken",
-    "tags": [
-      "organik",
-      "yerel",
-      "kampanya"
-    ],
-    "blurb": "Yerel ve organik ürün tezgâhı / kooperatif tarzı satış.",
+    "lng": 28.987,
+    "rating": 4.4,
+    "hours_text": "Şube saatleri değişir · hipermarketler genelde 08:00–23:00",
+    "web": "https://www.migros.com.tr",
+    "img_url": "/static/market/logo-migros.svg",
+    "featured": true,
+    "tags": ["migros", "zincir", "kampanya"],
+    "blurb": "Hipermarket ve süpermarket. Haftanın indirimleri ve Sanal Market resmi sitede.",
+    "extra": {
+      "catalog_url": "https://www.migros.com.tr",
+      "logo_bg": "#F47321",
+      "branch_note": "Bursa genelinde şubeler · online teslimat"
+    },
     "campaign": {
-      "title": "Üreticiden indirim günü",
-      "badge": "Yerel",
-      "body": "Haftanın belirli gününde üretici tezgâhında paket fırsatları."
+      "title": "Migros haftanın indirimleri",
+      "badge": "Katalog",
+      "body": "Seçili gıda ve kişisel bakım dönemleri. Broşür ve Sanal Market: migros.com.tr"
     }
   },
   {
-    "slug": "carrefoursa-yildirim",
-    "title": "CarrefourSA · Yıldırım",
-    "ilce": "Yıldırım",
-    "address": "Yıldırım",
-    "subcategory": "supermarket",
-    "lat": 40.1888,
-    "lng": 29.0885,
-    "rating": 4.1,
-    "hours_text": "08:30–22:00",
-    "web": "https://www.carrefoursa.com",
-    "tags": [
-      "carrefour",
-      "zincir"
-    ],
-    "blurb": "Yıldırım CarrefourSA şubesi."
-  },
-  {
-    "slug": "gross16-inegol",
-    "title": "Gross16 · İnegöl",
-    "ilce": "İnegöl",
-    "address": "İnegöl",
+    "slug": "carrefoursa",
+    "title": "CarrefourSA",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler",
     "subcategory": "hipermarket",
-    "lat": 40.109,
-    "lng": 29.5185,
+    "lat": 40.218,
+    "lng": 28.979,
     "rating": 4.2,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.gross.com.tr",
-    "tags": [
-      "gross",
-      "gross16",
-      "zincir",
-      "kampanya"
-    ],
-    "blurb": "Gross16 hipermarket — geniş reyon."
+    "hours_text": "Şube saatleri değişir · genelde 08:30–22:30",
+    "web": "https://www.carrefoursa.com",
+    "img_url": "/static/market/logo-carrefoursa.svg",
+    "tags": ["carrefour", "zincir", "kampanya"],
+    "blurb": "Hipermarket / süpermarket. Güncel katalog carrefoursa.com’da.",
+    "extra": {
+      "catalog_url": "https://www.carrefoursa.com",
+      "logo_bg": "#003087",
+      "branch_note": "Bursa genelinde şubeler"
+    },
+    "campaign": {
+      "title": "CarrefourSA kataloğu",
+      "badge": "Katalog",
+      "body": "Haftalık insert ve dijital katalog resmi sitede. Fiyat mağazaya göre değişir."
+    }
   },
   {
-    "slug": "gross16-nilufer",
-    "title": "Gross16 · Nilüfer",
+    "slug": "macrocenter",
+    "title": "Macrocenter",
     "ilce": "Nilüfer",
-    "address": "Nilüfer",
+    "address": "Nilüfer · gourmet format (Migros grubu)",
+    "subcategory": "gourmet",
+    "lat": 40.2168,
+    "lng": 28.9855,
+    "rating": 4.5,
+    "hours_text": "Genelde 08:30–22:00",
+    "web": "https://www.macrocenter.com.tr",
+    "img_url": "/static/market/logo-macrocenter.jpg",
+    "tags": ["macrocenter", "gourmet", "migros"],
+    "blurb": "Gurme reyon, şef ürünleri. Bursa’da sınırlı nokta — marka olarak tek kayıt.",
+    "extra": {
+      "catalog_url": "https://www.macrocenter.com.tr",
+      "logo_bg": "#1a1a1a",
+      "branch_note": "Nilüfer ve seçili noktalar"
+    },
+    "campaign": {
+      "title": "Macrocenter seçkisi",
+      "badge": "Gurme",
+      "body": "Dönemsel şef ve ithal ürün kampanyaları macrocenter.com.tr’de."
+    }
+  },
+  {
+    "slug": "metro",
+    "title": "Metro Cash & Carry",
+    "ilce": "Nilüfer",
+    "address": "Nilüfer · üyelikli toptan",
+    "subcategory": "toptan",
+    "lat": 40.2112,
+    "lng": 28.9725,
+    "rating": 4.4,
+    "hours_text": "Üye alışverişi · şube saatini metro-tr.com’dan doğrula",
+    "web": "https://www.metro-tr.com",
+    "img_url": "/static/market/logo-metro.svg",
+    "tags": ["metro", "toptan", "kampanya"],
+    "blurb": "Toptan / HORECA. Bursa’da tek depo kaydı.",
+    "extra": {
+      "catalog_url": "https://www.metro-tr.com",
+      "logo_bg": "#014171",
+      "branch_note": "Nilüfer · üyelik gerekir"
+    },
+    "campaign": {
+      "title": "Metro üye fırsatları",
+      "badge": "Toptan",
+      "body": "Profesyonel üye katalog ve dönemsel toptan indirimler metro-tr.com’da."
+    }
+  },
+  {
+    "slug": "happy-center",
+    "title": "Happy Center",
+    "ilce": "",
+    "address": "Bursa ve çevre ilçelerde şubeler",
+    "subcategory": "supermarket",
+    "lat": 40.21,
+    "lng": 28.99,
+    "rating": 4.1,
+    "hours_text": "Şube saatleri değişir · genelde 08:00–22:00",
+    "web": "https://www.happycenter.com.tr",
+    "img_url": "/static/market/logo-happy.png",
+    "tags": ["happy", "yerel", "zincir"],
+    "blurb": "Bursa merkezli süpermarket zinciri. Tek marka kaydı.",
+    "extra": {
+      "catalog_url": "https://www.happycenter.com.tr",
+      "logo_bg": "#ffffff",
+      "branch_note": "Osmangazi, Yıldırım, Nilüfer ve çevre ilçeler"
+    }
+  },
+  {
+    "slug": "gross16",
+    "title": "Gross16",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler · Seyhanlar grubu",
     "subcategory": "hipermarket",
-    "lat": 40.2155,
+    "lat": 40.208,
     "lng": 28.975,
     "rating": 4.2,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.gross.com.tr",
-    "tags": [
-      "gross",
-      "gross16",
-      "zincir"
-    ],
-    "blurb": "Nilüfer Gross16 şubesi."
+    "hours_text": "Şube saatleri değişir",
+    "web": "https://www.seyhanlar.com",
+    "img_url": "/static/market/logo-gross16.png",
+    "tags": ["gross16", "seyhanlar", "yerel", "zincir"],
+    "blurb": "Seyhanlar’ın toptan/hipermarket formatı. Bursa’da tek Gross16 kaydı.",
+    "extra": {
+      "catalog_url": "https://www.seyhanlar.com",
+      "logo_bg": "#ffffff",
+      "branch_note": "Bursa genelinde şubeler"
+    }
   },
   {
-    "slug": "gross16-osmangazi",
-    "title": "Gross16 · Osmangazi",
-    "ilce": "Osmangazi",
-    "address": "Osmangazi",
-    "subcategory": "hipermarket",
-    "lat": 40.192,
-    "lng": 29.055,
+    "slug": "seyhanlar",
+    "title": "Seyhanlar",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler",
+    "subcategory": "supermarket",
+    "lat": 40.193,
+    "lng": 29.062,
     "rating": 4.1,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.gross.com.tr",
-    "tags": [
-      "gross",
-      "gross16",
-      "zincir"
-    ],
-    "blurb": "Osmangazi Gross16."
+    "hours_text": "Şube saatleri değişir",
+    "web": "https://www.seyhanlar.com",
+    "img_url": "/static/market/logo-seyhanlar.png",
+    "tags": ["seyhanlar", "yerel", "zincir"],
+    "blurb": "1978’den beri Bursa’nın yerel zinciri. Gross16 ve Seyhan Ekspres ayrı markalar.",
+    "extra": {
+      "catalog_url": "https://www.seyhanlar.com",
+      "logo_bg": "#ffffff",
+      "branch_note": "Bursa genelinde şubeler"
+    }
   },
   {
-    "slug": "gross16-yildirim",
-    "title": "Gross16 · Yıldırım",
-    "ilce": "Yıldırım",
-    "address": "Yıldırım",
-    "subcategory": "hipermarket",
-    "lat": 40.1865,
+    "slug": "seyhan-ekspres",
+    "title": "Seyhan Ekspres",
+    "ilce": "",
+    "address": "Bursa genelinde mahalle noktaları",
+    "subcategory": "indirim",
+    "lat": 40.188,
+    "lng": 29.07,
+    "rating": 4.0,
+    "hours_text": "Şube saatleri değişir",
+    "web": "https://www.seyhanlar.com",
+    "img_url": "/static/market/logo-seyhan-ekspres.png",
+    "tags": ["seyhan", "ekspres", "yerel"],
+    "blurb": "Seyhanlar grubunun mahalle / ekspres formatı. Tek marka kaydı.",
+    "extra": {
+      "logo_bg": "#ffffff",
+      "branch_note": "Yüzlerce mahalle noktası · şube şube listelenmez"
+    }
+  },
+  {
+    "slug": "onur-market",
+    "title": "Onur Market",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler",
+    "subcategory": "supermarket",
+    "lat": 40.186,
     "lng": 29.095,
-    "rating": 4.1,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.gross.com.tr",
-    "tags": [
-      "gross",
-      "gross16",
-      "zincir"
-    ],
-    "blurb": "Yıldırım Gross16."
-  },
-  {
-    "slug": "gross16-mudanya",
-    "title": "Gross16 · Mudanya yolu",
-    "ilce": "Nilüfer",
-    "address": "Mudanya yolu / Görükle civarı",
-    "subcategory": "hipermarket",
-    "lat": 40.1798,
-    "lng": 28.7449,
-    "rating": 4.1,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.gross.com.tr",
-    "tags": [
-      "gross",
-      "gross16",
-      "zincir"
-    ],
-    "blurb": "Mudanya yolu Gross16 market."
-  },
-  {
-    "slug": "gross16-gemlik",
-    "title": "Gross16 · Gemlik",
-    "ilce": "Gemlik",
-    "address": "Gemlik",
-    "subcategory": "supermarket",
-    "lat": 40.4285,
-    "lng": 29.152,
     "rating": 4.0,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.gross.com.tr",
-    "tags": [
-      "gross",
-      "gross16",
-      "zincir"
-    ],
-    "blurb": "Gemlik Gross şubesi."
+    "hours_text": "Şube saatleri değişir",
+    "img_url": "/static/market/logo-onur.svg",
+    "tags": ["onur", "yerel", "zincir"],
+    "blurb": "Yıldırım, Osmangazi ve çevre ilçelerde yerel süpermarket. Tek kayıt.",
+    "extra": {
+      "logo_bg": "#E85D04",
+      "branch_note": "Bursa genelinde şubeler"
+    }
   },
   {
-    "slug": "gross16-kestel",
-    "title": "Gross16 · Kestel",
-    "ilce": "Kestel",
-    "address": "Kestel",
+    "slug": "akugur",
+    "title": "Akuğur",
+    "ilce": "",
+    "address": "Bursa genelinde ~25 mağaza",
     "subcategory": "supermarket",
-    "lat": 40.1995,
-    "lng": 29.21,
-    "rating": 4.0,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.gross.com.tr",
-    "tags": [
-      "gross",
-      "gross16",
-      "zincir"
-    ],
-    "blurb": "Kestel Gross16."
-  },
-  {
-    "slug": "file-gorukle",
-    "title": "File Market · Görükle",
-    "ilce": "Nilüfer",
-    "address": "Görükle, Nilüfer",
-    "subcategory": "supermarket",
-    "lat": 40.2235,
-    "lng": 28.837,
-    "rating": 4.2,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.file.com.tr",
-    "tags": [
-      "file",
-      "zincir",
-      "kampanya"
-    ],
-    "blurb": "Görükle File Market."
-  },
-  {
-    "slug": "file-beşevler",
-    "title": "File Market · Beşevler",
-    "ilce": "Nilüfer",
-    "address": "Beşevler, Nilüfer",
-    "subcategory": "supermarket",
-    "lat": 40.2198,
-    "lng": 28.9044,
-    "rating": 4.2,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.file.com.tr",
-    "tags": [
-      "file",
-      "zincir"
-    ],
-    "blurb": "Beşevler File."
-  },
-  {
-    "slug": "file-osmangazi",
-    "title": "File Market · Osmangazi",
-    "ilce": "Osmangazi",
-    "address": "Osmangazi",
-    "subcategory": "supermarket",
-    "lat": 40.1905,
-    "lng": 29.048,
+    "lat": 40.204,
+    "lng": 28.992,
     "rating": 4.1,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.file.com.tr",
-    "tags": [
-      "file",
-      "zincir"
-    ],
-    "blurb": "Osmangazi File Market."
+    "hours_text": "Genelde 09:00–23:00",
+    "web": "https://akugur.com.tr",
+    "img_url": "/static/market/logo-akugur.jpg",
+    "tags": ["akugur", "yerel", "zincir"],
+    "blurb": "Gıda + giyim + züccaciye — Bursa’nın yerel alışveriş zinciri. Tek kayıt.",
+    "extra": {
+      "catalog_url": "https://akugur.com.tr",
+      "logo_bg": "#0b3d4a",
+      "branch_note": "İhsaniye, Fomara, Gazcılar, Beşevler ve diğer noktalar"
+    }
   },
   {
-    "slug": "file-yildirim",
-    "title": "File Market · Yıldırım",
-    "ilce": "Yıldırım",
-    "address": "Yıldırım",
+    "slug": "furpa",
+    "title": "Furpa",
+    "ilce": "",
+    "address": "Bursa genelinde şubeler",
     "subcategory": "supermarket",
     "lat": 40.185,
-    "lng": 29.098,
-    "rating": 4.1,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.file.com.tr",
-    "tags": [
-      "file",
-      "zincir"
-    ],
-    "blurb": "Yıldırım File."
+    "lng": 29.08,
+    "rating": 3.9,
+    "hours_text": "Şube saatleri değişir",
+    "img_url": "/static/market/logo-furpa.svg",
+    "tags": ["furpa", "yerel", "zincir"],
+    "blurb": "Bursa yerel market zinciri. Tek marka kaydı — her şube ayrı eklenmez.",
+    "extra": {
+      "logo_bg": "#C41E3A",
+      "branch_note": "Bursa genelinde şubeler"
+    }
   },
   {
-    "slug": "file-mudanya",
-    "title": "File Market · Mudanya",
-    "ilce": "Mudanya",
-    "address": "Mudanya merkez",
-    "subcategory": "supermarket",
-    "lat": 40.3748,
-    "lng": 28.881,
-    "rating": 4.0,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.file.com.tr",
-    "tags": [
-      "file",
-      "zincir"
-    ],
-    "blurb": "Mudanya File."
-  },
-  {
-    "slug": "file-inegol",
-    "title": "File Market · İnegöl",
-    "ilce": "İnegöl",
-    "address": "İnegöl",
-    "subcategory": "supermarket",
-    "lat": 40.0805,
-    "lng": 29.512,
-    "rating": 4.0,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.file.com.tr",
-    "tags": [
-      "file",
-      "zincir"
-    ],
-    "blurb": "İnegöl File Market."
-  },
-  {
-    "slug": "file-gemlik",
-    "title": "File Market · Gemlik",
-    "ilce": "Gemlik",
-    "address": "Gemlik",
-    "subcategory": "supermarket",
-    "lat": 40.4295,
-    "lng": 29.154,
-    "rating": 4.0,
-    "hours_text": "08:00–22:00",
-    "web": "https://www.file.com.tr",
-    "tags": [
-      "file",
-      "zincir"
-    ],
-    "blurb": "Gemlik File."
-  },
-  {
-    "slug": "migros-korupark",
-    "title": "Migros · Korupark",
-    "ilce": "Nilüfer",
-    "address": "Korupark AVM civarı, Nilüfer",
-    "subcategory": "hipermarket",
-    "lat": 40.2212,
-    "lng": 28.9875,
-    "rating": 4.4,
-    "hours_text": "08:00–23:00",
-    "web": "https://www.migros.com.tr",
-    "tags": [
-      "migros",
-      "zincir",
-      "kampanya"
-    ],
-    "blurb": "Korupark hipermarket formatı."
-  },
-  {
-    "slug": "carrefoursa-osmangazi",
-    "title": "CarrefourSA · Osmangazi",
-    "ilce": "Osmangazi",
-    "address": "Osmangazi",
-    "subcategory": "hipermarket",
-    "lat": 40.1945,
-    "lng": 29.052,
-    "rating": 4.2,
-    "hours_text": "08:30–22:30",
-    "web": "https://www.carrefoursa.com",
-    "tags": [
-      "carrefour",
-      "zincir"
-    ],
-    "blurb": "Osmangazi CarrefourSA."
-  },
-  {
-    "slug": "happy-center-yildirim",
-    "title": "Happy Center · Yıldırım",
-    "ilce": "Yıldırım",
-    "address": "Yıldırım",
-    "subcategory": "supermarket",
-    "lat": 40.1875,
-    "lng": 29.105,
-    "rating": 4.0,
-    "hours_text": "08:00–22:00",
-    "tags": [
-      "happy",
-      "zincir"
-    ],
-    "blurb": "Yıldırım Happy Center."
-  },
-  {
-    "slug": "happy-center-osmangazi",
-    "title": "Happy Center · Osmangazi",
-    "ilce": "Osmangazi",
-    "address": "Osmangazi",
-    "subcategory": "supermarket",
-    "lat": 40.191,
-    "lng": 29.06,
-    "rating": 4.0,
-    "hours_text": "08:00–22:00",
-    "tags": [
-      "happy",
-      "zincir"
-    ],
-    "blurb": "Osmangazi Happy Center."
-  },
-  {
-    "slug": "bizim-toptan-nilufer",
-    "title": "Bizim Toptan · Nilüfer",
-    "ilce": "Nilüfer",
-    "address": "Nilüfer",
-    "subcategory": "toptan",
-    "lat": 40.2085,
-    "lng": 28.968,
-    "rating": 4.1,
-    "hours_text": "08:00–21:00",
-    "web": "https://www.bizimtoptan.com.tr",
-    "tags": [
-      "bizim",
-      "toptan",
-      "zincir"
-    ],
-    "blurb": "Toptan / büyük paket alışveriş."
-  },
-  {
-    "slug": "adese-nilufer",
-    "title": "Adese · Nilüfer",
-    "ilce": "Nilüfer",
-    "address": "Nilüfer",
+    "slug": "adese",
+    "title": "Adese",
+    "ilce": "",
+    "address": "Bursa’da seçili şubeler",
     "subcategory": "supermarket",
     "lat": 40.2125,
     "lng": 28.9925,
     "rating": 4.0,
-    "hours_text": "08:00–22:00",
-    "tags": [
-      "adese",
-      "zincir"
-    ],
-    "blurb": "Adese süpermarket."
+    "hours_text": "Şube saatleri değişir",
+    "img_url": "/static/market/logo-adese.svg",
+    "tags": ["adese", "zincir"],
+    "blurb": "Süpermarket zinciri. Bursa’da tek kayıt.",
+    "extra": {
+      "logo_bg": "#1B7A3D",
+      "branch_note": "Seçili Bursa şubeleri"
+    }
+  },
+  {
+    "slug": "bizim-toptan",
+    "title": "Bizim Toptan",
+    "ilce": "",
+    "address": "Bursa genelinde toptan mağazalar",
+    "subcategory": "toptan",
+    "lat": 40.2085,
+    "lng": 28.968,
+    "rating": 4.1,
+    "hours_text": "Genelde 08:00–21:00",
+    "web": "https://www.bizimtoptan.com.tr",
+    "img_url": "/static/market/logo-bizim.png",
+    "tags": ["bizim", "toptan", "zincir"],
+    "blurb": "Büyük paket / toptan alışveriş. Tek marka kaydı.",
+    "extra": {
+      "catalog_url": "https://www.bizimtoptan.com.tr",
+      "logo_bg": "#ffffff",
+      "branch_note": "Bursa toptan mağazaları"
+    }
+  },
+  {
+    "slug": "gratis",
+    "title": "Gratis",
+    "ilce": "",
+    "address": "Bursa AVM ve cadde mağazaları",
+    "subcategory": "kozmetik",
+    "lat": 40.221,
+    "lng": 28.988,
+    "rating": 4.3,
+    "hours_text": "AVM saatlerine bağlı",
+    "web": "https://www.gratis.com",
+    "img_url": "/static/market/logo-gratis.svg",
+    "tags": ["gratis", "kozmetik", "kampanya"],
+    "blurb": "Kozmetik ve kişisel bakım. Bursa’da tek marka kaydı.",
+    "extra": {
+      "catalog_url": "https://www.gratis.com",
+      "logo_bg": "#F9E300",
+      "branch_note": "AVM ve cadde mağazaları"
+    },
+    "campaign": {
+      "title": "Gratis kampanyalar",
+      "badge": "Puan",
+      "body": "Kart puanı, 2 al 1 öde ve dönemsel kozmetik fırsatları gratis.com’da."
+    }
+  },
+  {
+    "slug": "watsons",
+    "title": "Watsons",
+    "ilce": "",
+    "address": "Bursa AVM mağazaları",
+    "subcategory": "kozmetik",
+    "lat": 40.2195,
+    "lng": 28.981,
+    "rating": 4.2,
+    "hours_text": "AVM saatlerine bağlı",
+    "web": "https://www.watsons.com.tr",
+    "img_url": "/static/market/logo-watsons.svg",
+    "tags": ["watsons", "kozmetik", "kampanya"],
+    "blurb": "Kozmetik / kişisel bakım. Tek marka kaydı.",
+    "extra": {
+      "catalog_url": "https://www.watsons.com.tr",
+      "logo_bg": "#00A3A1",
+      "branch_note": "AVM mağazaları"
+    },
+    "campaign": {
+      "title": "Watsons fırsatları",
+      "badge": "Fırsat",
+      "body": "2 al 1 öde ve üye kampanyaları watsons.com.tr’de."
+    }
+  },
+  {
+    "slug": "tarim-kredi-market",
+    "title": "Tarım Kredi Market",
+    "ilce": "",
+    "address": "Bursa genelinde kooperatif marketleri",
+    "subcategory": "supermarket",
+    "lat": 40.197,
+    "lng": 29.05,
+    "rating": 4.0,
+    "hours_text": "Şube saatleri değişir",
+    "web": "https://www.tarimkredimarket.com.tr",
+    "img_url": "/static/market/logo-tarim-kredi.svg",
+    "tags": ["tarim-kredi", "kooperatif", "zincir"],
+    "blurb": "Kooperatif market. Bursa’da tek kayıt.",
+    "extra": {
+      "catalog_url": "https://www.tarimkredimarket.com.tr",
+      "logo_bg": "#2E7D32",
+      "branch_note": "Bursa genelinde şubeler"
+    }
+  },
+  {
+    "slug": "semt-pazarlari",
+    "title": "Bursa semt pazarları",
+    "ilce": "",
+    "address": "Heykel, Nilüfer, Yıldırım ve mahalle pazarları",
+    "subcategory": "semt-pazari",
+    "lat": 40.1872,
+    "lng": 29.0605,
+    "rating": 4.4,
+    "hours_text": "Pazar yerine göre gün değişir (Salı–Pazar)",
+    "img_url": "/static/market/semt-pazari-heykel.jpg",
+    "tags": ["pazar", "yerel", "meyve-sebze"],
+    "blurb": "Şehirdeki semt pazarları tek başlıkta. Gün ve yer belediyeye göre değişir — gitmeden doğrula.",
+    "extra": {
+      "logo_bg": "#e8dcc8",
+      "branch_note": "Heykel, Nilüfer, Yıldırım ve mahalle pazarları"
+    },
+    "campaign": {
+      "title": "Pazar günü taze ürün",
+      "badge": "Pazar",
+      "body": "Meyve-sebze ve yöresel tezgâhlar. Saat ve yer ilçe belediyesinin pazar takvimine bak."
+    }
+  },
+  {
+    "slug": "organik-yerel",
+    "title": "Organik / yerel ürün",
+    "ilce": "Nilüfer",
+    "address": "Nilüfer ve seçili üretici noktaları",
+    "subcategory": "organik",
+    "lat": 40.207,
+    "lng": 28.995,
+    "rating": 4.5,
+    "hours_text": "Noktaya göre değişir",
+    "img_url": "/static/market/logo-organik.svg",
+    "tags": ["organik", "yerel", "uretici"],
+    "blurb": "Kooperatif ve üretici tezgâhları — zincir değil, yerel ürün başlığı.",
+    "extra": {
+      "logo_bg": "#4A7C2C",
+      "branch_note": "Nilüfer ve seçili üretici noktaları"
+    }
   }
 ]

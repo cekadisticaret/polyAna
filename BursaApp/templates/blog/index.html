@@ -1,0 +1,28 @@
+{% extends "_shell.html" %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block main %}
+<div class="seo-page">
+  <h1>BursaApp Blog</h1>
+  <p class="lead">How-to ve örnek yazılar — restoran ve gezilecek sayfalarına köprü. Rehber ücretsizdir.</p>
+  <div class="seo-posts">
+    {% for slug, p in posts %}
+    <a href="/blog/{{ slug }}">
+      <img src="{{ p.image }}" alt="{{ p.h1 }}" width="240" height="180" loading="lazy">
+      <div>
+        <b>{{ p.h1 }}</b>
+        <i>{{ p.desc }}</i>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <nav class="seo-cross" style="margin-top:24px">
+    <a href="/yeme-icme">Yeme-içme</a>
+    <a href="/gezilecek">Gezilecek</a>
+    <a href="/oteller">Oteller</a>
+    <a href="/kvkk">KVKK</a>
+  </nav>
+</div>
+{% endblock %}

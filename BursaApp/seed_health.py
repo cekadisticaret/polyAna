@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hastane + doktor seed (venue_name = hastane slug).
+"""Hastane + doktor + diş + veteriner seed.
 
   python3 BursaApp/seed_health.py
 """
@@ -13,10 +13,11 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
 
 from catalog import tags_dump
+from hospital_covers import resolve_img_url
 from models import Place, SessionLocal, init_db
 
 
-def _upsert_hospital(db, raw: dict) -> str:
+def _upsert_place(db, raw: dict, *, category: str) -> str:
     slug = raw["slug"]
     tags = list(raw.get("tags") or [])
     rating = None
@@ -25,10 +26,18 @@ def _upsert_hospital(db, raw: dict) -> str:
             rating = float(raw["rating"])
         except (TypeError, ValueError):
             rating = None
+    p = db.query(Place).filter(Place.slug == slug).first()
+    img_url = raw.get("img_url") or ""
+    if category == "hospital":
+        resolved = resolve_img_url(raw, p)
+        if resolved is not None:
+            img_url = resolved
+        elif p is not None:
+            img_url = p.img_url or ""
     fields = dict(
         title=raw["title"],
-        category="hospital",
-        subcategory="",
+        category=category,
+        subcategory=raw.get("subcategory") or "",
         ilce=raw.get("ilce") or "",
         address=raw.get("address") or "",
         phone=raw.get("phone") or "",
@@ -37,16 +46,15 @@ def _upsert_hospital(db, raw: dict) -> str:
         price_band=raw.get("price_band") or "",
         blurb=raw.get("blurb") or "",
         body=raw.get("blurb") or "",
-        img_url=raw.get("img_url") or "",
+        img_url=img_url,
         tags=tags_dump(tags),
         rating_admin=rating,
         featured=bool(raw.get("featured")),
         status="approved",
-        venue_name=(raw.get("venue_name") or "").strip(),
+        venue_name=(raw.get("venue_name") or raw.get("hospital") or "").strip(),
         lat=float(raw["lat"]) if raw.get("lat") not in (None, "") else None,
         lng=float(raw["lng"]) if raw.get("lng") not in (None, "") else None,
     )
-    p = db.query(Place).filter(Place.slug == slug).first()
     if p is None:
         if fields["rating_admin"] is None:
             fields.pop("rating_admin")
@@ -55,40 +63,8 @@ def _upsert_hospital(db, raw: dict) -> str:
     for k, v in fields.items():
         if k == "rating_admin" and v is None:
             continue
-        setattr(p, k, v)
-    return "upd"
-
-
-def _upsert_doctor(db, raw: dict) -> str:
-    slug = raw["slug"]
-    hosp = (raw.get("hospital") or raw.get("venue_name") or "").strip()
-    tags = list(raw.get("tags") or [])
-    fields = dict(
-        title=raw["title"],
-        category="doctor",
-        subcategory="",
-        ilce=raw.get("ilce") or "",
-        address=raw.get("address") or "",
-        phone=raw.get("phone") or "",
-        web=raw.get("web") or "https://www.mhrs.gov.tr/",
-        hours_text=raw.get("hours_text") or "MHRS / 182",
-        price_band=raw.get("price_band") or "",
-        blurb=raw.get("blurb") or "",
-        body=raw.get("blurb") or "",
-        img_url=raw.get("img_url") or "",
-        tags=tags_dump(tags),
-        rating_admin=float(raw.get("rating") or 0) or None,
-        featured=False,
-        status="approved",
-        venue_name=hosp,
-        lat=None,
-        lng=None,
-    )
-    p = db.query(Place).filter(Place.slug == slug).first()
-    if p is None:
-        db.add(Place(slug=slug, **fields))
-        return "new"
-    for k, v in fields.items():
+        if k == "img_url" and category == "hospital" and resolve_img_url(raw, p) is None:
+            continue
         setattr(p, k, v)
     return "upd"
 
@@ -97,19 +73,24 @@ def main() -> None:
     init_db()
     db = SessionLocal()
     try:
-        hosp_path = os.path.join(_DIR, "data", "hospitals.json")
-        doc_path = os.path.join(_DIR, "data", "doctors.json")
-        hn = hu = dn = du = 0
-        for raw in json.loads(open(hosp_path, encoding="utf-8").read()):
-            r = _upsert_hospital(db, raw)
-            hn += r == "new"
-            hu += r == "upd"
-        for raw in json.loads(open(doc_path, encoding="utf-8").read()):
-            r = _upsert_doctor(db, raw)
-            dn += r == "new"
-            du += r == "upd"
+        counts = {}
+        for fname, cat in (
+            ("hospitals.json", "hospital"),
+            ("doctors.json", "doctor"),
+            ("dentists.json", "dentist"),
+            ("vets.json", "vet"),
+        ):
+            path = os.path.join(_DIR, "data", fname)
+            if not os.path.isfile(path):
+                continue
+            n = u = 0
+            for raw in json.loads(open(path, encoding="utf-8").read()):
+                r = _upsert_place(db, raw, category=cat)
+                n += r == "new"
+                u += r == "upd"
+            counts[cat] = (n, u)
         db.commit()
-        print(f"hospital new={hn} upd={hu} doctor new={dn} upd={du}")
+        print(" ".join(f"{k} new={v[0]} upd={v[1]}" for k, v in counts.items()))
     finally:
         db.close()
 

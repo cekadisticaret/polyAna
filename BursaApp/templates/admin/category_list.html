@@ -1,0 +1,52 @@
+{% extends "admin/_layout.html" %}
+{% block title %}{{ cat.label }} · Kategoriler{% endblock %}
+{% block header_title %}{{ cat.label }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="/admin/categories">Kategoriler</a></li>
+    <li class="breadcrumb-item active">{{ cat.label }}</li>
+  </ol>
+</nav>
+<div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+  <a class="btn btn-sm btn-success" href="/admin/categories/{{ cat.key }}/new">+ Yeni {{ cat.label|lower }}</a>
+  <a class="btn btn-sm btn-outline-dark" href="{{ cat.path }}" target="_blank">Sitede aç</a>
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4"><input class="form-control" name="q" value="{{ q or '' }}" placeholder="Ara: ad, slug, adres"></div>
+  <div class="col-md-3">
+    <select class="form-control" name="ilce" onchange="this.form.submit()">
+      <option value="">Tüm ilçeler</option>
+      {% for ad in ilceler %}<option value="{{ ad }}" {% if ilce==ad %}selected{% endif %}>{{ ad }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Filtrele</button></div>
+</form>
+<div class="card"><div class="card-body"><div class="table-responsive">
+<table class="table ba-table">
+  <thead><tr><th></th><th>Ad</th><th>İlçe</th><th>Branş / tür</th><th></th></tr></thead>
+  <tbody>
+  {% for p in rows %}
+  <tr>
+    <td style="width:56px">
+      {% if p.img_url %}
+      <img src="{{ p.img_url }}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:10px">
+      {% else %}
+      <span class="text-muted">—</span>
+      {% endif %}
+    </td>
+    <td><b>{{ p.title }}</b><br><small class="text-muted">{{ p.slug }}</small></td>
+    <td>{{ p.ilce or '—' }}</td>
+    <td>{{ p.price_band or p.subcategory or '—' }}</td>
+    <td class="text-end text-nowrap">
+      <a class="btn btn-xs btn-primary" href="/admin/categories/{{ cat.key }}/{{ p.id }}/edit">Düzenle</a>
+      <a class="btn btn-xs btn-outline-dark" href="{{ cat.path }}/{{ p.slug }}" target="_blank">Gör</a>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5" class="text-muted">Kayıt yok.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div></div></div>
+{% endblock %}

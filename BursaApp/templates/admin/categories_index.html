@@ -1,0 +1,24 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Kategoriler · Admin{% endblock %}
+{% block header_title %}Kategoriler{% endblock %}
+{% block content %}
+<p class="text-muted mb-4">Onaylı kayıtları kategoriye göre düzenleyin — kapak fotoğrafı, özet ve detay metni.</p>
+{% for group in groups %}
+<div class="mb-4">
+  <h5 class="text-primary mb-3">{{ group.label }}</h5>
+  <div class="row">
+    {% for c in group['items'] %}
+    <div class="col-md-4 col-sm-6 mb-3">
+      <a class="card text-decoration-none h-100" href="/admin/categories/{{ c.key }}">
+        <div class="card-body">
+          <h6 class="mb-1 text-dark">{{ c.label }}</h6>
+          <p class="text-muted small mb-2">{{ c.hint }}</p>
+          <span class="badge badge-approved">{{ c.count }} kayıt</span>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -54,78 +54,126 @@
   <div class="deznav">
     <div class="deznav-scroll">
       <ul class="metismenu" id="menu">
+        {% if 'dashboard' in admin_perms %}
         <li class="{{ 'mm-active' if admin_nav=='dashboard' else '' }}">
           <a href="/admin/dashboard" class="ai-icon" aria-expanded="false">
             <i class="flaticon-025-dashboard"></i>
             <span class="nav-text">Dashboard</span>
           </a>
         </li>
+        {% endif %}
+        {% if is_super_admin %}
+        <li class="{{ 'mm-active' if admin_nav=='staff' else '' }}">
+          <a href="/admin/staff" class="ai-icon">
+            <i class="flaticon-381-user-7"></i>
+            <span class="nav-text">Ekip / yetkiler</span>
+          </a>
+        </li>
+        {% endif %}
+        {% if 'queue' in admin_perms %}
         <li class="{{ 'mm-active' if admin_nav=='queue' else '' }}">
           <a href="/admin?status=pending" class="ai-icon">
             <i class="flaticon-381-layer-1"></i>
             <span class="nav-text">Yer kuyruğu{% if pending_places %}<span class="badge badge-xs badge-danger ms-1">{{ pending_places }}</span>{% endif %}</span>
           </a>
         </li>
+        {% endif %}
+        {% if 'categories' in admin_perms %}
+        <li class="{{ 'mm-active' if admin_nav=='categories' else '' }}">
+          <a class="has-arrow ai-icon" href="javascript:void(0);" aria-expanded="{{ 'true' if admin_nav=='categories' else 'false' }}">
+            <i class="flaticon-381-folder"></i>
+            <span class="nav-text">Kategoriler</span>
+          </a>
+          <ul aria-expanded="{{ 'true' if admin_nav=='categories' else 'false' }}">
+            <li class="{{ 'mm-active' if request.path == '/admin/categories' else '' }}"><a href="/admin/categories">Tümü</a></li>
+            <li class="{{ 'mm-active' if request.path.startswith('/admin/categories/hospital') else '' }}"><a href="/admin/categories/hospital">Hastaneler</a></li>
+            <li class="{{ 'mm-active' if request.path.startswith('/admin/categories/doctor') else '' }}"><a href="/admin/categories/doctor">Doktorlar</a></li>
+            <li class="{{ 'mm-active' if request.path.startswith('/admin/categories/dentist') else '' }}"><a href="/admin/categories/dentist">Diş hekimleri</a></li>
+            <li class="{{ 'mm-active' if request.path.startswith('/admin/categories/vet') else '' }}"><a href="/admin/categories/vet">Veterinerler</a></li>
+            <li class="{{ 'mm-active' if request.path.startswith('/admin/categories/school') else '' }}"><a href="/admin/categories/school">Okullar</a></li>
+          </ul>
+        </li>
+        {% endif %}
+        {% if 'members' in admin_perms %}
         <li class="{{ 'mm-active' if admin_nav=='users' else '' }}">
           <a href="/admin/users" class="ai-icon">
             <i class="flaticon-381-user-9"></i>
             <span class="nav-text">Üyeler</span>
           </a>
         </li>
+        {% endif %}
+        {% if 'activity' in admin_perms %}
         <li class="{{ 'mm-active' if admin_nav=='activity' else '' }}">
           <a href="/admin/activity" class="ai-icon">
             <i class="flaticon-381-notepad"></i>
             <span class="nav-text">Aktivite / giriş</span>
           </a>
         </li>
-        <li class="{{ 'mm-active' if admin_nav=='reviews' else '' }}">
+        {% endif %}
+        {% if 'reviews' in admin_perms %}
+        <li class="{{ 'mm-active' if admin_nav in ('reviews','posts','visit_notes') else '' }}">
           <a href="/admin/reviews" class="ai-icon">
             <i class="flaticon-381-star"></i>
-            <span class="nav-text">Yorumlar</span>
+            <span class="nav-text">Moderasyon{% if pending_moderation %}<span class="badge badge-xs badge-danger ms-1">{{ pending_moderation }}</span>{% endif %}</span>
           </a>
         </li>
+        {% endif %}
+        {% if 'photos' in admin_perms %}
         <li class="{{ 'mm-active' if admin_nav=='photos' else '' }}">
           <a href="/admin/photos" class="ai-icon">
             <i class="flaticon-381-picture"></i>
             <span class="nav-text">Üye foto{% if pending_photos %}<span class="badge badge-xs badge-danger ms-1">{{ pending_photos }}</span>{% endif %}</span>
           </a>
         </li>
+        {% endif %}
+        {% if 'seo' in admin_perms %}
         <li class="{{ 'mm-active' if admin_nav=='seo' else '' }}">
           <a href="/admin/seo" class="ai-icon">
             <i class="flaticon-381-search-2"></i>
             <span class="nav-text">SEO durum</span>
           </a>
         </li>
+        {% endif %}
+        {% if 'claims' in admin_perms %}
         <li class="{{ 'mm-active' if admin_nav=='claims' else '' }}">
           <a href="/admin/claims" class="ai-icon">
             <i class="flaticon-381-network"></i>
             <span class="nav-text">Sahiplenme{% if pending_claims %}<span class="badge badge-xs badge-danger ms-1">{{ pending_claims }}</span>{% endif %}</span>
           </a>
         </li>
+        {% endif %}
+        {% if 'campaigns' in admin_perms %}
         <li class="{{ 'mm-active' if admin_nav=='campaigns' else '' }}">
           <a href="/admin/campaigns" class="ai-icon">
             <i class="flaticon-381-promotion"></i>
             <span class="nav-text">Kampanyalar</span>
           </a>
         </li>
+        {% endif %}
+        {% if 'matches' in admin_perms %}
         <li class="{{ 'mm-active' if admin_nav=='matches' else '' }}">
           <a href="/admin/matches" class="ai-icon">
             <i class="flaticon-381-calendar-1"></i>
             <span class="nav-text">Bursaspor maçları</span>
           </a>
         </li>
+        {% endif %}
+        {% if 'places' in admin_perms %}
         <li>
           <a href="/admin/new" class="ai-icon">
             <i class="flaticon-381-add"></i>
             <span class="nav-text">Yeni yer ekle</span>
           </a>
         </li>
+        {% endif %}
+        {% if 'queue' in admin_perms %}
         <li>
           <a href="/admin?status=approved" class="ai-icon">
             <i class="flaticon-381-success-2"></i>
             <span class="nav-text">Onaylı yerler</span>
           </a>
         </li>
+        {% endif %}
       </ul>
       <div class="copyright mt-4 px-3">
         <p class="fs-12"><strong>BursaApp</strong> · Ventic UI</p>

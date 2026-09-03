@@ -1,7 +1,8 @@
 {% extends "admin/_layout.html" %}
 {% block title %}Yorumlar · Admin{% endblock %}
-{% block header_title %}Yorum moderasyonu{% endblock %}
+{% block header_title %}İçerik moderasyonu{% endblock %}
 {% block content %}
+{% include "admin/_moderation_nav.html" %}
 <div class="d-flex flex-wrap gap-2 mb-3">
   <a class="btn btn-sm {{ 'btn-primary' if status=='pending' else 'btn-outline-primary' }}" href="/admin/reviews?status=pending">Bekleyen ({{ counts.pending }})</a>
   <a class="btn btn-sm {{ 'btn-primary' if status=='approved' else 'btn-outline-primary' }}" href="/admin/reviews?status=approved">Onaylı ({{ counts.approved }})</a>

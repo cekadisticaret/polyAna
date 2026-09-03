@@ -1,8 +1,10 @@
-{# Sağlık alt sekmeleri — hastane / doktor / eczane / veteriner #}
+{# Sağlık alt sekmeleri #}
 {% set hn = nav or (cat.key if cat is defined else '') %}
 <nav class="health-tabs" aria-label="Sağlık menüsü">
   <a class="health-tab {{ 'on' if hn == 'hospital' else '' }}" href="/hastaneler">Hastaneler</a>
   <a class="health-tab {{ 'on' if hn == 'doctor' else '' }}" href="/doktorlar">Doktorlar</a>
+  <a class="health-tab {{ 'on' if hn == 'dentist' else '' }}" href="/dis-hekimleri">Diş hekimleri</a>
   <a class="health-tab {{ 'on' if hn == 'pharmacy' else '' }}" href="/nobetci-eczaneler">Nöbetçi eczane</a>
   <a class="health-tab {{ 'on' if hn == 'vet' else '' }}" href="/veterinerler">Veteriner</a>
+  <a class="health-tab {{ 'on' if hn == 'school' else '' }}" href="/okullar">Okullar</a>
 </nav>

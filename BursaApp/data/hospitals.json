@@ -113,7 +113,8 @@
       "tup-bebek"
     ],
     "blurb": "2006. Nakil, tüp bebek, KVC. Hekim listesi hastane sayfasında bağlı.",
-    "rating": 4.4
+    "rating": 4.4,
+    "img_url": "/static/hospital/acibadem-bursa.jpg"
   },
   {
     "slug": "medical-park-bursa",
@@ -127,13 +128,13 @@
     "featured": true,
     "wiki": "Medical Park",
     "search": "Medical Park Bursa Hastanesi Fevzi Çakmak",
-    "copy": "tophane",
     "tags": [
       "ozel",
       "kvc"
     ],
     "blurb": "Fevzi Çakmak 3. basamak. Açık hekim kadrosu bağlı.",
-    "rating": 4.2
+    "rating": 4.2,
+    "img_url": "/static/hospital/medical-park-bursa.jpg"
   },
   {
     "slug": "buu-tip-hastanesi",
@@ -203,14 +204,14 @@
     "hours_text": "Poliklinik mesai",
     "price_band": "Özel",
     "search": "Doruk Bursa Hastanesi Çekirge",
-    "copy": "eski-kaplica",
     "tags": [
       "ozel",
       "doruk",
       "cekirge"
     ],
-    "blurb": "Doruk Çekirge. Hekim doruktip.com.",
-    "rating": 4.1
+    "blurb": "Doruk Çekirge. 39 hekim · doruktip.com.",
+    "rating": 4.1,
+    "img_url": "/static/hospital/doruk-cekirge.jpg"
   },
   {
     "slug": "doruk-yildirim",
@@ -562,5 +563,25 @@
       "mhrs"
     ],
     "blurb": "Gürsu devlet. Hekim MHRS."
+  },
+  {
+    "slug": "cekirge-kalp-aritmi",
+    "title": "Özel Çekirge Kalp ve Aritmi Hastanesi",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Mah. Konca Sok. No: 4/1, Osmangazi / Bursa",
+    "phone": "0224 275 75 00",
+    "web": "https://kalparitmi.com.tr/",
+    "hours_text": "7/24 acil · poliklinik",
+    "price_band": "Özel",
+    "search": "Çekirge Kalp Aritmi Hastanesi kalparitmi",
+    "tags": [
+      "ozel",
+      "kalp",
+      "cekirge",
+      "aritmi"
+    ],
+    "blurb": "Bursa'nın kalp hastanesi · kardiyoloji, KVC, aritmi · SGK anlaşmalı.",
+    "rating": 4.2,
+    "img_url": "/static/hospital/cekirge-kalp-aritmi.jpg"
   }
 ]

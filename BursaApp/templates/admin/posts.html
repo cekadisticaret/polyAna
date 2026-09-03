@@ -1,0 +1,38 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Feed gönderileri · Admin{% endblock %}
+{% block header_title %}İçerik moderasyonu{% endblock %}
+{% block content %}
+{% include "admin/_moderation_nav.html" %}
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a class="btn btn-sm {{ 'btn-primary' if status=='pending' else 'btn-outline-primary' }}" href="/admin/posts?status=pending">Bekleyen ({{ counts.pending }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='approved' else 'btn-outline-primary' }}" href="/admin/posts?status=approved">Onaylı ({{ counts.approved }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='rejected' else 'btn-outline-primary' }}" href="/admin/posts?status=rejected">Red ({{ counts.rejected }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='all' else 'btn-outline-primary' }}" href="/admin/posts?status=all">Tümü</a>
+</div>
+<div class="card"><div class="card-body"><div class="table-responsive">
+<table class="table ba-table">
+  <thead><tr><th>ID</th><th>Üye</th><th>Yer</th><th>Metin</th><th>Gizlilik</th><th>Durum</th><th>Tarih</th><th></th></tr></thead>
+  <tbody>
+  {% for it in items %}
+  <tr>
+    <td>{{ it.post.id }}</td>
+    <td>{% if it.user %}{{ it.user.name }} · {{ it.user.email }}{% else %}-{% endif %}</td>
+    <td>{% if it.place %}<a href="/yer/{{ it.place.slug }}" target="_blank">{{ it.place.title }}</a>{% else %}-{% endif %}</td>
+    <td>{{ it.post.body[:140] }}</td>
+    <td>{{ it.post.privacy }}</td>
+    <td><span class="badge badge-{{ it.post.status }}">{{ it.post.status }}</span></td>
+    <td>{{ it.post.created_at.strftime('%d.%m.%Y') if it.post.created_at else '-' }}</td>
+    <td class="text-nowrap">
+      {% if it.post.status != 'approved' %}
+      <form method="post" action="/admin/posts/{{ it.post.id }}/approve" style="display:inline"><button class="btn btn-xs btn-success">Onay</button></form>
+      {% endif %}
+      {% if it.post.status != 'rejected' %}
+      <form method="post" action="/admin/posts/{{ it.post.id }}/reject" style="display:inline"><button class="btn btn-xs btn-danger">Red</button></form>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}<tr><td colspan="8">Gönderi yok</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div></div></div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "_shell.html" %}
+{% block hello %}{{ page_title }}{% endblock %}
+{% block sub %}{{ page_sub }}{% endblock %}
+{% block main %}
+{% include "_health_tabs.html" %}
+
+<section class="rx-hero {{ hero_theme }}">
+  <div class="rx-hero-copy">
+    <p class="rx-kicker">{{ hero_kicker }}</p>
+    <h2>{{ hero_headline }}</h2>
+    <p>{{ hero_desc }}</p>
+    <div class="rx-hero-stats">
+      <div><b>{{ total }}</b><span>{{ stat1_label }}</span></div>
+      <div><b>{{ stat2_value }}</b><span>{{ stat2_label }}</span></div>
+      <div><b>{{ stat3_value }}</b><span>{{ stat3_label }}</span></div>
+    </div>
+    {% if hero_note %}<p class="rx-src">{{ hero_note }}</p>{% endif %}
+  </div>
+  <div class="rx-hero-art" aria-hidden="true">
+    <img src="{{ url_for('static', filename=hero_art) }}" alt="">
+  </div>
+</section>
+
+{% if band_chips %}
+<div class="chips">
+  <a class="chip {{ 'on' if not band_on else '' }}" href="{{ base_path }}{% if ilce %}?ilce={{ ilce }}{% endif %}">Tümü</a>
+  {% for b in band_chips %}
+  <a class="chip {{ 'on' if band_on==b else '' }}" href="{{ base_path }}?band={{ b|urlencode }}{% if ilce %}&amp;ilce={{ ilce }}{% endif %}{% if spec %}&amp;spec={{ spec|urlencode }}{% endif %}">{{ b }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if spec_chips %}
+<div class="chips">
+  <a class="chip {{ 'on' if not spec else '' }}" href="{{ base_path }}{% if ilce %}?ilce={{ ilce }}{% endif %}{% if band_on %}&amp;band={{ band_on|urlencode }}{% endif %}">Tüm branşlar</a>
+  {% for s in spec_chips %}
+  <a class="chip {{ 'on' if spec==s else '' }}" href="{{ base_path }}?spec={{ s|urlencode }}{% if ilce %}&amp;ilce={{ ilce }}{% endif %}{% if band_on %}&amp;band={{ band_on|urlencode }}{% endif %}">{{ s }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if sub_chips %}
+<div class="chips">
+  <a class="chip {{ 'on' if not sub else '' }}" href="{{ base_path }}{% if ilce %}?ilce={{ ilce }}{% endif %}{% if band_on %}&amp;band={{ band_on|urlencode }}{% endif %}">Tüm kademeler</a>
+  {% for slug, lab in sub_chips %}
+  <a class="chip {{ 'on' if sub==slug else '' }}" href="{{ base_path }}?sub={{ slug|urlencode }}{% if ilce %}&amp;ilce={{ ilce }}{% endif %}{% if band_on %}&amp;band={{ band_on|urlencode }}{% endif %}">{{ lab }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if show_geo_bar %}
+<div class="vet-near-bar">
+  <div>
+    <b>Yakınındaki klinikleri bul</b>
+    <p class="empty" style="margin:4px 0 0">Konumuna göre en yakından uzağa sıralar.</p>
+  </div>
+  <button type="button" class="ff-btn" id="health-geo-btn">Yakınımdakileri bul</button>
+</div>
+{% endif %}
+
+<div class="list-bar">
+  <div class="list-bar-meta">
+    {% if list_style == 'cards' and card_kind == 'hospital' %}
+    <span class="list-bar-hint">★ Puana göre · yüksekten</span>
+    {% elif list_style == 'cards' and card_kind == 'doctor' %}
+    <span class="list-bar-hint">{% if spec %}{{ spec }}{% else %}Tüm branşlar{% endif %} · {{ total }} hekim</span>
+    {% else %}
+    <span class="list-bar-hint">{{ total }} {{ row_unit }}{% if ilce %} · {{ ilce }}{% endif %}{% if spec %} · {{ spec }}{% endif %}{% if band_on %} · {{ band_on }}{% endif %}</span>
+    {% endif %}
+  </div>
+  {% if filter_items %}
+  <label class="ilce-pick">
+    <span class="ilce-pick-lab">{{ filter_label or 'Bölge' }}</span>
+    <select class="ilce-select" aria-label="{{ filter_label or 'Filtre' }}"
+      onchange="if(this.value) location.href=this.value">
+      <option value="{{ filter_all_url }}" {% if not filter_on %}selected{% endif %}>{{ filter_all_text or 'Tümü' }}</option>
+      {% for ad in filter_items %}
+      <option value="{{ filter_base }}?{{ filter_param }}={{ ad|urlencode }}{{ filter_extra }}" {% if filter_on==ad %}selected{% endif %}>{{ ad }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+</div>
+
+{% if list_style == 'cards' %}
+{% include "_health_cards.html" %}
+{% else %}
+{% include "_health_rows.html" %}
+{% endif %}
+
+{% if geo_script %}
+<script>
+(function(){
+  function goNear(btn){
+    if (!navigator.geolocation) {
+      location.href = '{{ geo_near_url|safe }}';
+      return;
+    }
+    btn.disabled = true;
+    var old = btn.textContent;
+    btn.textContent = 'Konum alınıyor…';
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var lat = pos.coords.latitude.toFixed(6);
+      var lng = pos.coords.longitude.toFixed(6);
+      location.href = '{{ geo_near_url|safe }}&lat=' + lat + '&lng=' + lng;
+    }, function(){
+      btn.disabled = false;
+      btn.textContent = old;
+      alert('Konum izni verilmedi.');
+    }, {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+  }
+  var b = document.getElementById('health-geo-btn');
+  if (b) b.addEventListener('click', function(){ goNear(b); });
+})();
+</script>
+{% endif %}
+{% endblock %}

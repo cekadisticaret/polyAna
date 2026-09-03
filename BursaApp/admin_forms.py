@@ -10,6 +10,14 @@ from werkzeug.utils import secure_filename
 _DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_ROOT = os.path.join(_DIR, "static", "uploads")
 ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+MIME_EXT = {
+    "image/jpeg": ".jpg",
+    "image/jpg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
+MAX_UPLOAD_BYTES = 12 * 1024 * 1024
 
 
 def parse_lines_kv(text: str, *, sep: str = "|") -> list[dict]:
@@ -98,23 +106,52 @@ def format_list_text(items: list) -> str:
     return "\n".join(out)
 
 
-def save_upload(file_storage, *, category: str = "misc") -> str | None:
-    """Multipart dosyayı static/uploads/<cat>/ altına yazar; /static/... yolu döner."""
-    if not file_storage or not getattr(file_storage, "filename", None):
-        return None
-    name = secure_filename(file_storage.filename or "")
-    if not name:
-        return None
+def save_upload(file_storage, *, category: str = "misc") -> tuple[str | None, str | None]:
+    """Multipart dosyayı static/uploads/<cat>/ altına yazar. (yol, hata_mesajı) döner."""
+    if not file_storage:
+        return None, "Dosya seçilmedi."
+    raw_name = (getattr(file_storage, "filename", None) or "").strip()
+    if not raw_name and not getattr(file_storage, "content_type", None):
+        return None, "Dosya seçilmedi."
+    name = secure_filename(raw_name) or "upload"
     ext = os.path.splitext(name)[1].lower()
     if ext not in ALLOWED_EXT:
-        return None
+        ct = (getattr(file_storage, "content_type", None) or "").split(";", 1)[0].strip().lower()
+        ext = MIME_EXT.get(ct, "")
+    if ext == ".heic" or ext == ".heif":
+        return None, "HEIC formatı desteklenmiyor. Ayarlar → Kamera → En Uyumlu (JPEG) seç veya fotoğrafı JPEG olarak yükle."
+    if ext not in ALLOWED_EXT:
+        return None, "Yalnız JPG, PNG, WEBP veya GIF yükleyebilirsin."
+    try:
+        file_storage.stream.seek(0, os.SEEK_END)
+        size = file_storage.stream.tell()
+        file_storage.stream.seek(0)
+    except Exception:
+        size = 0
+    if size and size > MAX_UPLOAD_BYTES:
+        return None, f"Dosya çok büyük ({size // (1024 * 1024)} MB). En fazla {MAX_UPLOAD_BYTES // (1024 * 1024)} MB."
     cat = re.sub(r"[^a-z0-9_-]+", "", (category or "misc").lower()) or "misc"
     dest_dir = os.path.join(UPLOAD_ROOT, cat)
-    os.makedirs(dest_dir, exist_ok=True)
+    try:
+        os.makedirs(dest_dir, exist_ok=True)
+    except OSError as e:
+        return None, f"Dosya klasörü oluşturulamadı: {e}"
     fname = f"{uuid.uuid4().hex[:12]}{ext}"
     path = os.path.join(dest_dir, fname)
-    file_storage.save(path)
-    return f"/static/uploads/{cat}/{fname}"
+    try:
+        stream = file_storage.stream
+        stream.seek(0)
+        with open(path, "wb") as out:
+            while True:
+                chunk = stream.read(1024 * 256)
+                if not chunk:
+                    break
+                out.write(chunk)
+    except OSError as e:
+        return None, f"Dosya kaydedilemedi: {e}"
+    if not os.path.isfile(path) or os.path.getsize(path) < 1:
+        return None, "Dosya kaydedilemedi. Tekrar dene."
+    return f"/static/uploads/{cat}/{fname}", None
 
 
 def build_extra_from_form(form, existing: dict | None = None) -> dict:

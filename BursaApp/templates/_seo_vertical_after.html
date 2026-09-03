@@ -1,0 +1,34 @@
+{% set v = seo_vertical %}
+<section class="seo-block" id="neden">
+  <h2>{{ v.why_title }}</h2>
+  <ul>
+    {% for line in v.why %}
+    <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+</section>
+<section class="seo-block" id="nasil">
+  <h2>{{ v.how_title }}</h2>
+  <ul>
+    <li>Üstteki listeden filtrele veya haritaya geç.</li>
+    <li>Karta tıkla — saat, adres, puan.</li>
+    <li>Beğendiğini rotaya ekle. Rezervasyon veya emir yok.</li>
+  </ul>
+</section>
+<section class="seo-block" id="sss" aria-labelledby="seo-sss-h">
+  <h2 id="seo-sss-h">Sık sorulanlar</h2>
+  <div class="seo-faq">
+    {% for q, a in home_faq %}
+    <details>
+      <summary>{{ q }}</summary>
+      <p>{{ a }}</p>
+    </details>
+    {% endfor %}
+  </div>
+</section>
+<nav class="seo-cross" aria-label="Diğer niyetler">
+  {% for href, lab in v.cross %}
+  <a href="{{ href }}">{{ lab }}</a>
+  {% endfor %}
+  <a href="/kvkk">KVKK</a>
+</nav>

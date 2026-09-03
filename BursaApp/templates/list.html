@@ -62,20 +62,42 @@
 </div>
 {% endif %}
 {% if cal %}
-<section class="panel" id="takvim">
-  <h3>Takvim · {{ cal.month_label }}</h3>
-  <div class="cal-grid">
-    {% for w in ['P','S','Ç','P','C','C','P'] %}<span>{{ w }}</span>{% endfor %}
+<section class="panel cal-panel" id="takvim">
+  <header class="cal-head">
+    <div>
+      <p class="cal-kicker">Etkinlik takvimi</p>
+      <h3 class="cal-title">{{ cal.month_label }}</h3>
+    </div>
+    {% if cal.ev_days %}
+    <span class="cal-badge">{{ cal.ev_days|length }} etkin gün</span>
+    {% endif %}
+  </header>
+  <div class="cal-grid" role="grid" aria-label="{{ cal.month_label }} takvimi">
+    {% for w in ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'] %}
+    <span class="cal-dow" role="columnheader">{{ w }}</span>
+    {% endfor %}
     {% for d in cal.cal_cells %}
-      {% if d is none %}<button type="button" disabled>&nbsp;</button>
-      {% elif d == cal.today %}<button type="button" class="today" title="bugün">{{ d }}</button>
-      {% elif d in cal.ev_days %}
-        {% set es = cal.ev_slug.get(d) %}
-        {% if es %}<a class="ev" href="/yer/{{ es }}" title="{{ cal.ev_map.get(d, '') }}">{{ d }}</a>
-        {% else %}<button type="button" class="ev" title="{{ cal.ev_map.get(d, '') }}">{{ d }}</button>{% endif %}
-      {% else %}<button type="button">{{ d }}</button>{% endif %}
+      {% if d is none %}
+      <span class="cal-pad" aria-hidden="true"></span>
+      {% else %}
+        {% set day_cls = 'cal-day' ~ (' is-today' if d == cal.today else '') ~ (' has-ev' if d in cal.ev_days else '') %}
+        {% if d in cal.ev_days and cal.ev_slug.get(d) %}
+        <a class="{{ day_cls }}" href="/yer/{{ cal.ev_slug.get(d) }}" role="gridcell" title="{{ cal.ev_map.get(d, '') }}">
+          <span class="cal-num">{{ d }}</span>
+          <span class="cal-dot" aria-hidden="true"></span>
+        </a>
+        {% else %}
+        <span class="{{ day_cls }}" role="gridcell"{% if d in cal.ev_days %} title="{{ cal.ev_map.get(d, '') }}"{% endif %}>
+          <span class="cal-num">{{ d }}</span>
+          {% if d in cal.ev_days %}<span class="cal-dot" aria-hidden="true"></span>{% endif %}
+        </span>
+        {% endif %}
+      {% endif %}
     {% endfor %}
   </div>
+  {% if cal.ev_days %}
+  <p class="cal-legend"><span class="cal-legend-dot" aria-hidden="true"></span> Turuncu nokta = o günde etkinlik var</p>
+  {% endif %}
 </section>
 {% endif %}
 {% if groups %}

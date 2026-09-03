@@ -1,0 +1,30 @@
+{% extends "_shell.html" %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block main %}
+<article class="seo-page">
+  <h1>KVKK ve gizlilik</h1>
+  <p class="lead">BursaApp bir Bursa şehir rehberidir. Bu metin hangi veriyi neden tuttuğumuzu özetler.</p>
+  <h2>Veri sorumlusu</h2>
+  <p>BursaApp · bursaapp.com · destek: WhatsApp <a href="https://wa.me/905535469948">+90 553 546 99 48</a>.</p>
+  <h2>Toplanan veri</h2>
+  <ul>
+    <li>Üyelik: ad, e-posta, şifre özeti. E-posta onayı zorunludur.</li>
+    <li>İçerik: taslak yer, yorum, yüklenen fotoğraf — yayın admin onayından sonra.</li>
+    <li>Ölçüm: anonim ziyaretçi çerezi (<code>ba_vid</code>), GA4.</li>
+    <li>Konum: yalnız /yakınımda sayfasında tarayıcının verdiği koordinat; sunucuya zorunlu kayıt yok.</li>
+  </ul>
+  <h2>Amaç ve süre</h2>
+  <p>Hesabı işletmek, yorum/fotoğrafı yayımlamak, kötüye kullanımı engellemek. Onaysız e-posta hesapları 7 gün sonra silinir. Yasal saklama dışında pazarlama listesi tutulmaz.</p>
+  <h2>Haklar</h2>
+  <p>KVKK md. 11: erişim, düzeltme, silme, itiraz. WhatsApp veya hesap ayarlarından talep edin. Rehber ücretsizdir; kart ile ödeme alınmaz.</p>
+  <nav class="seo-cross">
+    <a href="/">Keşfet</a>
+    <a href="/yeme-icme">Yeme-içme</a>
+    <a href="/gezilecek">Gezilecek</a>
+    <a href="/blog">Blog</a>
+  </nav>
+</article>
+{% endblock %}

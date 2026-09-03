@@ -7,22 +7,29 @@
 <a class="btn" href="/nobetci-eczaneler">Listeye dön</a></div>
 {% else %}
 {% include "_health_tabs.html" %}
-<section class="panel">
-  <p class="hd-kicker" style="margin:0 0 8px">Nöbetçi · {{ place.district or 'Bursa' }}</p>
-  <h1 style="margin:0 0 12px">{{ place.name }}</h1>
-  {% if place.address %}<p><b>Adres</b><br>{{ place.address }}{% if place.district %} · {{ place.district }}{% endif %}</p>{% endif %}
-  {% if place.phone %}<p><b>Telefon</b><br><a href="tel:{{ place.phone }}">{{ place.phone }}</a></p>{% endif %}
-  {% if feed.duty_date %}<p class="empty">Nöbet: {{ feed.duty_date }}</p>{% endif %}
-  <div class="hd-cta" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px">
-    {% if place.maps %}
-    <a class="btn" href="{{ place.maps }}" target="_blank" rel="noopener">Google Maps’te aç</a>
-    {% endif %}
-    {% if place.lat is not none and place.lng is not none %}
-    <a class="btn ghost" href="geo:{{ place.lat }},{{ place.lng }}?q={{ place.lat }},{{ place.lng }}({{ place.name|urlencode }})">Mobil harita</a>
-    {% endif %}
-    {% if place.phone %}<a class="btn ghost" href="tel:{{ place.phone }}">Ara</a>{% endif %}
-    <a class="btn ghost" href="/nobetci-eczaneler{% if place.district %}?ilce={{ place.district }}{% endif %}">← Liste</a>
+
+<section class="rx-detail-hero">
+  <div class="rx-detail-art">
+    <img src="{{ url_for('static', filename='pharmacy/rx-night.svg') }}" alt="">
+    <span class="rx-badge">Nöbetçi{% if duty_label %} · {{ duty_label }}{% endif %}</span>
+  </div>
+  <div class="rx-detail-copy">
+    <p class="rx-kicker">{{ place.district or 'Bursa' }}</p>
+    <h1>{{ place.name }}</h1>
+    {% if place.hours_short %}<p class="rx-hours lg">{{ place.hours_short }}</p>{% endif %}
+    {% if place.address %}<p class="rx-addr">{{ place.address }}</p>{% endif %}
+    <div class="rx-acts">
+      {% if place.phone %}<a class="rx-btn" href="tel:{{ place.phone }}">Ara{% if place.phone %} · {{ place.phone }}{% endif %}</a>{% endif %}
+      {% if place.maps %}<a class="rx-btn ghost" href="{{ place.maps }}" target="_blank" rel="noopener">Google Maps</a>{% endif %}
+      <a class="rx-btn ghost" href="/nobetci-eczaneler{% if place.district %}?ilce={{ place.district }}{% endif %}">← Liste</a>
+    </div>
   </div>
 </section>
+
+{% if osm_embed %}
+<section class="rx-map-wrap">
+  <iframe class="rx-map" src="{{ osm_embed }}" title="{{ place.name }} harita" loading="lazy"></iframe>
+</section>
+{% endif %}
 {% endif %}
 {% endblock %}

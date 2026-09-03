@@ -1,0 +1,51 @@
+{# İnce çizgili sağlık listesi — eczane ile aynı mantık #}
+{% if groups %}
+  {% for g in groups %}
+  <section class="rx-ilce" id="grp-{{ g.label }}">
+    <div class="rx-ilce-h">
+      <h2>{{ g.label }}</h2>
+      <span>{{ g.places|length }} {{ row_unit }}</span>
+    </div>
+    <div class="rx-list">
+      {% for p in g.places %}
+      <article class="rx-row">
+        <a class="rx-thumb rx-tone-{{ loop.index0 % 4 }}" href="{{ p.path or ('/yer/' ~ p.slug) }}" aria-hidden="true">
+          {% if p.img_url %}<img src="{{ p.img_url }}" alt="" loading="lazy">{% else %}<img src="{{ url_for('static', filename=hero_art) }}" alt="">{% endif %}
+          <span>{{ p.initial }}</span>
+        </a>
+        <div class="rx-row-main">
+          <a href="{{ p.path or ('/yer/' ~ p.slug) }}"><h3>{{ p.title }}</h3></a>
+          <p class="rx-addr">
+            {% if row_kind == 'doctor' %}
+              {{ p.price_band or 'Branş' }}{% if p.hospital_title %} · {{ p.hospital_title }}{% endif %}
+            {% elif row_kind == 'school' %}
+              {{ p.subcategory_label or 'Okul' }} · {{ p.price_band or '' }}{% if p.address %} · {{ p.address[:60] }}{% elif p.ilce %} · {{ p.ilce }}{% endif %}
+            {% elif row_kind == 'dentist' and p.price_band in ('Devlet','Özel','Klinik') and not p.hospital_title %}
+              {{ p.price_band }}{% if p.address %} · {{ p.address }}{% elif p.ilce %} · {{ p.ilce }}{% endif %}
+            {% elif p.address %}
+              {{ p.address }}{% if p.ilce and p.ilce not in p.address %} · {{ p.ilce }}{% endif %}
+            {% else %}
+              {{ p.ilce or 'Bursa' }}{% if p.price_band %} · {{ p.price_band }}{% endif %}
+            {% endif %}
+          </p>
+          <div class="rx-acts">
+            {% if p.phone %}<a class="rx-btn" href="tel:{{ p.phone }}">Ara</a>{% endif %}
+            {% if p.maps %}<a class="rx-btn ghost" href="{{ p.maps }}" target="_blank" rel="noopener">Yol tarifi</a>{% endif %}
+            <a class="rx-btn ghost" href="{{ p.path or ('/yer/' ~ p.slug) }}">Detay</a>
+          </div>
+        </div>
+        {% if p.hours_short %}
+        <p class="rx-hours">{{ p.hours_short }}</p>
+        {% elif p.rating %}
+        <p class="rx-hours">★ {{ '%.1f'|format(p.rating) }}</p>
+        {% elif p.price_band and row_kind == 'hospital' %}
+        <p class="rx-hours">{{ p.price_band }}</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+{% else %}
+<div class="empty-box"><p>{{ empty_text or 'Bu filtrede kayıt yok.' }}</p></div>
+{% endif %}

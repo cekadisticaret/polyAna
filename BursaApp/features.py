@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 
 from auth import admin_required, load_user, login_required, rate_ok
-from catalog import CAT_BY_KEY, ILCELER, maps_url, parse_dt, place_public, query_places, slugify, tags_dump, unique_slug
+from catalog import CAT_BY_KEY, ILCELER, hospital_staff_groups, maps_url, parse_dt, place_public, query_places, slugify, tags_dump, unique_slug
 from discover import FALLBACK_LAT, FALLBACK_LNG, haversine_m, nearby, today_bursa, tonight, weekend
 from foods import FAMOUS_FOODS, FOOD_BY_SLUG
 from itinerary import ai_suggest, build_day_route
@@ -54,6 +54,25 @@ def _active_campaigns(db, limit=12, category: str | None = None):
         if len(out) >= limit:
             break
     return out
+
+
+def active_campaign_for_place(db, place_id: int):
+    """Tek market/yer için güncel onaylı kampanya (aktüel)."""
+    now = datetime.utcnow()
+    rows = (
+        db.query(Campaign)
+        .filter(Campaign.place_id == place_id, Campaign.status == "approved")
+        .order_by(Campaign.id.desc())
+        .limit(5)
+        .all()
+    )
+    for c in rows:
+        if c.ends_at and c.ends_at < now:
+            continue
+        if c.starts_at and c.starts_at > now:
+            continue
+        return c
+    return None
 
 
 # ---------- home extras helpers used by app ----------
@@ -498,11 +517,38 @@ def sahiplen(slug: str):
                 if existing:
                     flash("Talebin zaten bekliyor.", "ok")
                 else:
+                    from admin_forms import save_upload
+
                     note = (request.form.get("note") or "").strip()[:400]
-                    db.add(ClaimRequest(place_id=p.id, user_id=user.id, note=note, status="pending"))
+                    tax_f = request.files.get("tax_doc")
+                    id_f = request.files.get("id_doc")
+                    if not tax_f or not getattr(tax_f, "filename", ""):
+                        flash("Vergi levhası fotoğrafı gerekli.", "err")
+                        return redirect(f"/yer/{slug}/sahiplen")
+                    if not id_f or not getattr(id_f, "filename", ""):
+                        flash("Yetkili kimlik fotoğrafı gerekli.", "err")
+                        return redirect(f"/yer/{slug}/sahiplen")
+                    tax_url, tax_err = save_upload(tax_f, category="claim")
+                    if tax_err:
+                        flash(f"Vergi levhası: {tax_err}", "err")
+                        return redirect(f"/yer/{slug}/sahiplen")
+                    id_url, id_err = save_upload(id_f, category="claim")
+                    if id_err:
+                        flash(f"Kimlik: {id_err}", "err")
+                        return redirect(f"/yer/{slug}/sahiplen")
+                    db.add(
+                        ClaimRequest(
+                            place_id=p.id,
+                            user_id=user.id,
+                            note=note,
+                            tax_doc_url=tax_url or "",
+                            id_doc_url=id_url or "",
+                            status="pending",
+                        )
+                    )
                     p.claim_status = "pending"
                     db.commit()
-                    flash("Sahiplenme talebi gönderildi. Admin onaylayacak.", "ok")
+                    flash("Sahiplenme talebi gönderildi. Belgeler admin tarafından incelenecek.", "ok")
                 return redirect(f"/yer/{slug}")
         return render_template("claim.html", place=place_public(p), nav="hesap")
     finally:
@@ -603,7 +649,7 @@ def etkinlik_ekle():
                 try:
                     from admin_forms import save_upload
 
-                    up = save_upload(request.files.get("cover_file"), category="event")
+                    up, _err = save_upload(request.files.get("cover_file"), category="event")
                     if up:
                         img_url = up
                 except Exception:
@@ -679,7 +725,7 @@ def bildirimler():
             u.notify_new_place = request.form.get("notify_new_place") == "1"
             db.commit()
             flash("Bildirim tercihleri kaydedildi.", "ok")
-            return redirect("/hesap/bildirimler")
+            return redirect("/hesap/bildirimler?saved=1")
         return render_template("notify.html", u=u, nav="hesap")
     finally:
         db.close()
@@ -811,6 +857,8 @@ def _render_place_detail(db, p: Place):
     similar, _ = query_places(db, category=p.category, limit=6)
     similar = [place_public(s) for s in similar if s.id != p.id][:3]
     d = place_public(p)
+    if d.get("img_full"):
+        d["img_url"] = d["img_full"]
     d["maps"] = maps_url(p)
     venue_events = []
     if p.category in ("event", "concert", "theater") and (p.venue_name or p.address):
@@ -826,18 +874,21 @@ def _render_place_detail(db, p: Place):
         elif addr:
             q = q.filter(Place.address == addr)
         venue_events = [place_public(x) for x in q.order_by(Place.starts_at.asc().nulls_last()).limit(8).all()]
+    school_events = []
+    if p.category == "school":
+        school_events = [
+            place_public(x)
+            for x in db.query(Place)
+            .filter(Place.status == "approved", Place.category == "event", Place.venue_name == p.slug)
+            .order_by(Place.starts_at.desc().nulls_last())
+            .limit(24)
+            .all()
+        ]
     staff, staff_groups, hospital, units = [], [], None, []
     if p.category == "hospital":
         docs, _ = query_places(db, category="doctor", venue_name=p.slug, limit=500)
         staff = [place_public(x) for x in docs]
-        by = {}
-        for s in staff:
-            by.setdefault(s.get("price_band") or "Diğer", []).append(s)
-        for ad in DOCTOR_SPECS:
-            if ad in by:
-                staff_groups.append({"label": ad, "places": by.pop(ad)})
-        for ad, plist in by.items():
-            staff_groups.append({"label": ad, "places": plist})
+        staff_groups = hospital_staff_groups(staff)
         unit_rows, _ = query_places(db, category="hospital", venue_name=p.slug, limit=20)
         units = [place_public(u) for u in unit_rows if u.id != p.id]
     elif p.category == "doctor" and p.venue_name:
@@ -885,6 +936,8 @@ def _render_place_detail(db, p: Place):
         tmpl = "hospital_detail.html"
     elif p.category == "doctor":
         tmpl = "doctor_detail.html"
+    elif p.category == "school":
+        tmpl = "school_detail.html"
     elif p.category in ("event", "concert", "theater") and not (p.slug or "").startswith("film-"):
         tmpl = "event_detail.html"
     else:
@@ -894,6 +947,7 @@ def _render_place_detail(db, p: Place):
         place=d,
         similar=similar,
         venue_events=venue_events,
+        school_events=school_events,
         staff=staff,
         staff_groups=staff_groups,
         hospital=hospital,
@@ -907,6 +961,7 @@ def _render_place_detail(db, p: Place):
         user_photos=user_photos,
         nav=p.category,
         seo=for_place(d),
+        market_campaign=active_campaign_for_place(db, p.id) if p.category == "market" else None,
     )
 
 

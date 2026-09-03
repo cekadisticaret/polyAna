@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.parse
 import urllib.request
 
@@ -28,7 +29,65 @@ IMG = {
     "meyhane": "https://commons.wikimedia.org/wiki/Special:FilePath/Turkish_raki.jpg?width=1200",
     "bar": "https://commons.wikimedia.org/wiki/Special:FilePath/Bar_(establishment).jpg?width=1200",
     "cantik": "https://commons.wikimedia.org/wiki/Special:FilePath/Pide.jpg?width=1200",
+    "restoran": "https://commons.wikimedia.org/wiki/Special:FilePath/Turkish_cuisine.jpg?width=1200",
+    "fast-food": "https://commons.wikimedia.org/wiki/Special:FilePath/Cheeseburger.jpg?width=1200",
 }
+
+# Gece cron Commons'a gitmez — yerel stok kapak
+LOCAL_IMG = {
+    "cafe": "/static/food/kahvalti-1.jpg",
+    "kahvalti": "/static/food/kahvalti-1.jpg",
+    "meyhane": "/static/food/meyhane-cekirge.jpg",
+    "bar": "/static/food/fine-1.jpg",
+    "cantik": "/static/food/cantikci-yildirim.jpg",
+    "pide": "/static/food/cantikci-yildirim.jpg",
+    "restoran": "/static/food/fine-1.jpg",
+    "fast-food": "/static/food/doner-1.jpg",
+    "tatli": "/static/food/doner-2.jpg",
+    "pastane": "/static/food/kahvalti-1.jpg",
+    "kebap": "/static/food/kebapci-iskenderoglu.jpg",
+    "iskender": "/static/food/iskender-4.jpg",
+    "doner": "/static/food/doner-1.jpg",
+    "balik": "/static/food/balik-1.jpg",
+    "burger": "/static/food/doner-2.jpg",
+    "inegol-kofte": "/static/food/kofte-1.jpg",
+    "pizza": "/static/food/doner-2.jpg",
+}
+
+_OSM_CUISINE_SUB = (
+    ("kebab", "kebap"),
+    ("doner", "doner"),
+    ("döner", "doner"),
+    ("pizza", "pizza"),
+    ("burger", "burger"),
+    ("seafood", "balik"),
+    ("fish", "balik"),
+    ("italian", "pizza"),
+    ("cafe", "cafe"),
+    ("coffee", "cafe"),
+    ("ice_cream", "tatli"),
+    ("dessert", "tatli"),
+    ("pastry", "pastane"),
+    ("bakery", "pastane"),
+)
+
+
+def cuisine_sub(cuisine: str, amenity: str) -> str:
+    blob = (cuisine or "").lower().replace(";", " ").replace(",", " ")
+    for needle, sub in _OSM_CUISINE_SUB:
+        if needle in blob:
+            return sub
+    if amenity == "fast_food":
+        return "fast-food"
+    if amenity == "cafe":
+        return "cafe"
+    if amenity in ("bar", "pub"):
+        return "bar"
+    if amenity in ("ice_cream", "ice-cream"):
+        return "tatli"
+    if amenity == "bakery":
+        return "pastane"
+    return "restoran"
 
 
 def cache_img(kind: str) -> str:
@@ -68,18 +127,29 @@ def overpass(ql: str) -> list:
         return (json.load(r).get("elements") or [])
 
 
-def osm_points(amenity: str) -> list[dict]:
-    path = f"/tmp/osm_{amenity}.json"
-    if os.path.isfile(path):
+def osm_points(amenity: str, *, tag: str = "amenity", max_age_h: float | None = None) -> list[dict]:
+    path = f"/tmp/osm_{tag}_{amenity}.json"
+    use_cache = os.path.isfile(path) and os.path.getsize(path) > 80
+    if use_cache and max_age_h is not None:
+        age_h = (time.time() - os.path.getmtime(path)) / 3600.0
+        if age_h > max_age_h:
+            use_cache = False
+    if use_cache:
         els = json.load(open(path))
     else:
         ql = (
             f'[out:json][timeout:75];'
-            f'(node["amenity"="{amenity}"]({BBOX});way["amenity"="{amenity}"]({BBOX}););'
+            f'(node["{tag}"="{amenity}"]({BBOX});way["{tag}"="{amenity}"]({BBOX}););'
             f"out center tags;"
         )
-        els = overpass(ql)
-        json.dump(els, open(path, "w"))
+        try:
+            els = overpass(ql)
+            json.dump(els, open(path, "w"))
+        except Exception:
+            if os.path.isfile(path) and os.path.getsize(path) > 80:
+                els = json.load(open(path))
+            else:
+                raise
     out = []
     for e in els:
         t = e.get("tags") or {}
@@ -105,6 +175,8 @@ def osm_points(amenity: str) -> list[dict]:
                 "web": web[:280],
                 "ilce": guess_ilce(float(lat), float(lng)),
                 "osm_id": e.get("id"),
+                "cuisine": (t.get("cuisine") or "")[:80],
+                "hours": (t.get("opening_hours") or "")[:160],
             }
         )
     return out
@@ -314,6 +386,66 @@ def upsert(db, *, slug: str, sub: str, title: str, ilce: str, address: str,
     return "skip"
 
 
+def import_osm_delta(db, *, max_age_h: float | None = 16.0, imgs: dict | None = None) -> dict:
+    """Yalnız OSM yeme-içme — yeni kayıt, mevcut başlık atlanır. Curated upsert yok."""
+    imgs = imgs or LOCAL_IMG
+    stats = {"new": 0, "upd": 0, "skip": 0}
+    existing_names = {
+        slugify(p.title) for p in db.query(Place).filter(Place.category == "food").all()
+    }
+    for amenity, sub, tags, base_rating, tag in (
+        ("cafe", "cafe", ["cafe", "kahve", "osm"], 4.1, "amenity"),
+        ("bar", "bar", ["bar", "alkol", "osm"], 4.0, "amenity"),
+        ("pub", "bar", ["bar", "pub", "alkol", "osm"], 4.0, "amenity"),
+        ("restaurant", "restoran", ["restoran", "osm"], 4.1, "amenity"),
+        ("fast_food", "fast-food", ["fast-food", "osm"], 4.0, "amenity"),
+        ("ice_cream", "tatli", ["tatli", "osm"], 4.0, "amenity"),
+        ("bakery", "pastane", ["pastane", "osm"], 4.0, "shop"),
+    ):
+        try:
+            pts = osm_points(amenity, tag=tag, max_age_h=max_age_h)
+        except Exception as e:
+            print("osm fail", amenity, e)
+            pts = []
+        print(f"osm {amenity}: {len(pts)}")
+        for i, raw in enumerate(pts):
+            nm = slugify(raw["title"])
+            if not nm or nm in existing_names:
+                stats["skip"] = stats.get("skip", 0) + 1
+                continue
+            existing_names.add(nm)
+            sub_use = cuisine_sub(raw.get("cuisine") or "", amenity) if amenity in ("restaurant", "fast_food") else sub
+            slug = make_slug(raw["title"], prefix=f"osm-{amenity}")
+            rating = round(base_rating + max(0, 0.4 - (i * 0.002)), 1)
+            hours = raw.get("hours") or ""
+            blurb = f"Bursa {sub_use} · {raw['ilce']}."
+            if raw.get("cuisine"):
+                blurb = f"{raw['cuisine'].replace(';', ', ')} · {raw['ilce']}."
+            st = upsert(
+                db,
+                slug=slug,
+                sub=sub_use,
+                title=raw["title"],
+                ilce=raw["ilce"],
+                address=raw.get("address") or "",
+                lat=raw.get("lat"),
+                lng=raw.get("lng"),
+                blurb=blurb[:400],
+                rating=min(4.6, rating),
+                img=imgs.get(sub_use) or imgs.get("restoran") or imgs.get("cafe") or "",
+                tags=list(tags) + ([sub_use] if sub_use not in tags else []),
+                phone=raw.get("phone") or "",
+                web=raw.get("web") or "",
+            )
+            if hours and st == "new":
+                p = db.query(Place).filter(Place.slug == slug).first()
+                if p and not p.hours_text:
+                    p.hours_text = hours[:160]
+            stats[st] = stats.get(st, 0) + 1
+        db.commit()
+    return stats
+
+
 def main() -> None:
     init_db()
     imgs = {k: cache_img(k) for k in IMG}
@@ -354,42 +486,9 @@ def main() -> None:
                 )
                 stats[st] = stats.get(st, 0) + 1
 
-        # 3) OSM cafe + bar + pub
-        for amenity, sub, tags, base_rating in (
-            ("cafe", "cafe", ["cafe", "kahve", "osm"], 4.1),
-            ("bar", "bar", ["bar", "alkol", "osm"], 4.0),
-            ("pub", "bar", ["bar", "pub", "alkol", "osm"], 4.0),
-        ):
-            try:
-                pts = osm_points(amenity)
-            except Exception as e:
-                print("osm fail", amenity, e)
-                pts = []
-            print(f"osm {amenity}: {len(pts)}")
-            for i, raw in enumerate(pts):
-                slug = make_slug(raw["title"], prefix=f"osm-{amenity}")
-                # curated ile aynı isim varsa atlama — slug farklı osm- prefix
-                rating = round(base_rating + max(0, 0.4 - (i * 0.002)), 1)
-                blurb = f"Bursa {sub} · {raw['ilce']}."
-                if "osm" in tags:
-                    blurb += " Harita kaydı."
-                st = upsert(
-                    db,
-                    slug=slug,
-                    sub=sub,
-                    title=raw["title"],
-                    ilce=raw["ilce"],
-                    address=raw.get("address") or "",
-                    lat=raw.get("lat"),
-                    lng=raw.get("lng"),
-                    blurb=blurb,
-                    rating=min(4.6, rating),
-                    img=imgs.get(sub) or imgs["cafe"],
-                    tags=tags,
-                    phone=raw.get("phone") or "",
-                    web=raw.get("web") or "",
-                )
-                stats[st] = stats.get(st, 0) + 1
+        osm = import_osm_delta(db, max_age_h=None, imgs=imgs)
+        for k, v in osm.items():
+            stats[k] = stats.get(k, 0) + v
 
         db.commit()
 

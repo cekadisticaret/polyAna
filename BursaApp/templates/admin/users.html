@@ -2,23 +2,38 @@
 {% block title %}Üyeler · Admin{% endblock %}
 {% block header_title %}Üyeler{% endblock %}
 {% block content %}
+<div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+  <a class="btn btn-sm {{ 'btn-primary' if status=='all' else 'btn-outline-primary' }}" href="/admin/users?status=all{% if q %}&amp;q={{ q|urlencode }}{% endif %}">Tümü ({{ counts.all }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='active' else 'btn-outline-primary' }}" href="/admin/users?status=active{% if q %}&amp;q={{ q|urlencode }}{% endif %}">Aktif ({{ counts.active }})</a>
+  <a class="btn btn-sm {{ 'btn-primary' if status=='inactive' else 'btn-outline-primary' }}" href="/admin/users?status=inactive{% if q %}&amp;q={{ q|urlencode }}{% endif %}">Pasif ({{ counts.inactive }})</a>
+</div>
 <form class="mb-3 d-flex gap-2" method="get">
+  <input type="hidden" name="status" value="{{ status }}">
   <input class="form-control" style="max-width:320px" name="q" value="{{ q }}" placeholder="Ad veya e-posta">
   <button class="btn btn-primary">Ara</button>
 </form>
 <div class="card"><div class="card-body"><div class="table-responsive">
 <table class="table ba-table">
-  <thead><tr><th>ID</th><th>Ad</th><th>E-posta</th><th>Rol</th><th>Puan</th><th>Kayıt</th></tr></thead>
+  <thead><tr><th>ID</th><th>Ad</th><th>E-posta</th><th>Rol</th><th>Durum</th><th>Puan</th><th>Kayıt</th><th></th></tr></thead>
   <tbody>
   {% for u in rows %}
-  <tr>
+  <tr class="{{ '' if u.is_active else 'table-secondary' }}">
     <td>{{ u.id }}</td><td>{{ u.name }}</td><td>{{ u.email }}</td>
-    <td>{% if u.role=='admin' %}<span class="badge badge-danger">admin</span>{% else %}üye{% endif %}</td>
+    <td>{% if u.role=='admin' %}<span class="badge badge-danger">admin</span>{% elif u.role=='editor' %}<span class="badge badge-approved">editör</span>{% else %}üye{% endif %}</td>
+    <td>{% if u.is_active %}<span class="badge badge-approved">Aktif</span>{% else %}<span class="badge badge-rejected">Pasif</span>{% endif %}</td>
     <td>{{ u.loyalty_points }}</td>
     <td>{{ u.created_at.strftime('%d.%m.%Y %H:%M') if u.created_at else '-' }}</td>
+    <td class="text-end text-nowrap">
+      <form method="post" action="/admin/users/{{ u.id }}/toggle" style="display:inline" onsubmit="return confirm('{{ u.name or u.email }} — {{ 'pasif yapılsın mı?' if u.is_active else 'aktif edilsin mi?' }}')">
+        <button class="btn btn-xs {{ 'btn-outline-danger' if u.is_active else 'btn-success' }}" type="submit" {% if nav_user and u.id==nav_user.id %}disabled title="Kendi hesabınız"{% endif %}>
+          {{ 'Pasif yap' if u.is_active else 'Aktif et' }}
+        </button>
+      </form>
+    </td>
   </tr>
-  {% else %}<tr><td colspan="6">Üye yok</td></tr>{% endfor %}
+  {% else %}<tr><td colspan="8">Üye yok</td></tr>{% endfor %}
   </tbody>
 </table>
 </div></div></div>
+<p class="text-muted small mt-2">Pasif üyeler giriş yapamaz; açık oturumları bir sonraki istekte kapanır.</p>
 {% endblock %}

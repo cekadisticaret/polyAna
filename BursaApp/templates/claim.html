@@ -1,13 +1,63 @@
 {% extends "_shell.html" %}
 {% block title %}Sahiplen · {{ place.title }}{% endblock %}
 {% block hello %}İşletme sahibi misiniz?{% endblock %}
-{% block sub %}Sayfanızı sahiplenin — admin onaylar{% endblock %}
+{% block sub %}Sayfanızı sahiplenin — belgeler admin onayına düşer{% endblock %}
 {% block main %}
-<div class="panel form-card wide">
-  <p><b>{{ place.title }}</b> · {{ place.ilce }}</p>
-  <form method="post" class="form">
-    <label>Doğrulama notu<textarea name="note" rows="3" placeholder="Telefon, vergi no veya Instagram hesabı…"></textarea></label>
-    <button class="btn" type="submit">Sahiplenme talebi gönder</button>
+<div class="panel form-card wide clm-card">
+  <div class="clm-head">
+    <p class="clm-place"><b>{{ place.title }}</b> · {{ place.ilce }}</p>
+    <p class="clm-hint">Vergi levhası ve yetkili kimlik fotoğrafı zorunlu. Belgeler yalnızca doğrulama için kullanılır, sitede yayınlanmaz.</p>
+  </div>
+  <form method="post" class="form clm-form" enctype="multipart/form-data">
+    <div class="clm-docs">
+      <label class="clm-drop" data-drop="tax_doc">
+        <input type="file" name="tax_doc" accept="image/jpeg,image/png,image/webp,image/gif" required>
+        <span class="clm-drop-ic" aria-hidden="true">📄</span>
+        <span class="clm-drop-title">Vergi levhası</span>
+        <span class="clm-drop-sub">Fotoğraf veya taranmış görüntü · JPG, PNG</span>
+        <span class="clm-drop-btn">Dosya seç</span>
+        <span class="clm-drop-name" data-name></span>
+        <img class="clm-drop-preview" alt="" hidden>
+      </label>
+      <label class="clm-drop" data-drop="id_doc">
+        <input type="file" name="id_doc" accept="image/jpeg,image/png,image/webp,image/gif" required>
+        <span class="clm-drop-ic" aria-hidden="true">🪪</span>
+        <span class="clm-drop-title">Yetkili kimlik</span>
+        <span class="clm-drop-sub">T.C. kimlik veya pasaport · ön yüz</span>
+        <span class="clm-drop-btn">Dosya seç</span>
+        <span class="clm-drop-name" data-name></span>
+        <img class="clm-drop-preview" alt="" hidden>
+      </label>
+    </div>
+    <label>Doğrulama notu <small class="clm-opt">(isteğe bağlı)</small>
+      <textarea name="note" rows="3" placeholder="İşletme telefonu, vergi no, Instagram hesabı…"></textarea>
+    </label>
+    <button class="btn clm-submit" type="submit">Sahiplenme talebi gönder</button>
   </form>
 </div>
+<script>
+(function () {
+  document.querySelectorAll('.clm-drop').forEach(function (box) {
+    var input = box.querySelector('input[type=file]');
+    var nameEl = box.querySelector('[data-name]');
+    var preview = box.querySelector('.clm-drop-preview');
+    if (!input) return;
+    input.addEventListener('change', function () {
+      var f = input.files && input.files[0];
+      if (!f) {
+        box.classList.remove('has-file');
+        if (nameEl) nameEl.textContent = '';
+        if (preview) { preview.hidden = true; preview.removeAttribute('src'); }
+        return;
+      }
+      box.classList.add('has-file');
+      if (nameEl) nameEl.textContent = f.name;
+      if (preview && f.type.indexOf('image/') === 0) {
+        preview.src = URL.createObjectURL(f);
+        preview.hidden = false;
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}

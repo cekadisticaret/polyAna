@@ -3,52 +3,113 @@
 {% block sub %}Bugün Bursa · günlük otomatik liste{% endblock %}
 {% block main %}
 {% include "_health_tabs.html" %}
-<section class="panel" style="margin-bottom:16px">
-  <p>Bugünkü nöbetçi eczaneler ilçe sırasıyla. Detaya girince konumu Google Maps’te açabilirsiniz (mobilde uygulama açılır).</p>
-  {% if feed.duty_date %}<p class="empty">Nöbet tarihi: <b>{{ feed.duty_date }}</b>{% if feed.fetched_at %} · güncellendi {{ feed.fetched_at }}{% endif %}</p>{% endif %}
+
+<section class="rx-hero">
+  <div class="rx-hero-copy">
+    <p class="rx-kicker">Bugün nöbetçi</p>
+    <h2>{{ duty_label or feed.duty_date or 'Bursa' }}</h2>
+    <p>{% if has_geo %}Konumuna göre sıralı — mesafe ve yürüme süresi tahmini.{% else %}{{ feed.total or places|length }} eczane açık · konumunu kullanarak yakın olanları gör.{% endif %}</p>
+    <div class="rx-hero-stats">
+      <div><b>{{ feed.total or places|length }}</b><span>nöbetçi</span></div>
+      <div><b>{{ groups|length }}</b><span>{% if has_geo %}liste{% else %}ilçe{% endif %}</span></div>
+      <div><b>18:30</b><span>tipik başlangıç</span></div>
+    </div>
+    {% if feed.attribution %}<p class="rx-src">Kaynak {{ feed.attribution }}{% if feed.fetched_at %} · {{ feed.fetched_at[:16].replace('T',' ') }}{% endif %}</p>{% endif %}
+  </div>
+  <div class="rx-hero-art" aria-hidden="true">
+    <img src="{{ url_for('static', filename='pharmacy/rx-night.svg') }}" alt="">
+  </div>
 </section>
 
-{% if districts %}
 <div class="list-bar">
   <div class="list-bar-meta">
-    <span class="list-bar-hint">{{ feed.total or places|length }} eczane</span>
+    <span class="list-bar-hint">
+      {{ places|length }} eczane{% if ilce %} · {{ ilce }}{% endif %}
+      {% if has_geo %} · yakından uzağa{% endif %}
+    </span>
   </div>
+  <div class="list-bar-actions">
+    {% if has_geo %}
+    <a class="rx-geo-btn ghost" href="/nobetci-eczaneler{% if ilce %}?ilce={{ ilce|urlencode }}{% endif %}">İlçe sırası</a>
+    <button type="button" class="rx-geo-btn" id="rx-geo-btn">Konumu yenile</button>
+    {% else %}
+    <button type="button" class="rx-geo-btn" id="rx-geo-btn">📍 Konumuma göre sırala</button>
+    {% endif %}
+  </div>
+  {% if districts %}
   <label class="ilce-pick">
     <span class="ilce-pick-lab">Bölge</span>
-    <select class="ilce-select" aria-label="İlçe seç"
-      onchange="if(this.value) location.href=this.value">
-      <option value="/nobetci-eczaneler" {% if not ilce %}selected{% endif %}>Tüm ilçeler</option>
+    <select class="ilce-select" aria-label="İlçe seç" id="rx-ilce-select">
+      <option value="/nobetci-eczaneler{% if has_geo %}?lat={{ lat }}&amp;lng={{ lng }}{% endif %}" {% if not ilce %}selected{% endif %}>Tümü</option>
       {% for ad in districts %}
-      <option value="/nobetci-eczaneler?ilce={{ ad }}" {% if ilce==ad %}selected{% endif %}>{{ ad }}</option>
+      <option value="/nobetci-eczaneler?ilce={{ ad|urlencode }}{% if has_geo %}&amp;lat={{ lat }}&amp;lng={{ lng }}{% endif %}" {% if ilce==ad %}selected{% endif %}>{{ ad }}</option>
       {% endfor %}
     </select>
   </label>
+  {% endif %}
 </div>
-{% endif %}
 
 {% if groups %}
   {% for g in groups %}
-  <section class="ilce-block" id="grp-{{ g.label }}">
-    <div class="sec-h">
+  <section class="rx-ilce" id="grp-{{ g.label }}">
+    <div class="rx-ilce-h">
       <h2>{{ g.label }}</h2>
-      <span class="see">{{ g.places|length }} eczane</span>
+      <span>{{ g.places|length }} eczane</span>
     </div>
-    <div class="cards" style="display:block">
+    <div class="rx-list">
       {% for p in g.places %}
-      <a class="place-card" href="/nobetci-eczaneler/{{ p.slug }}" style="display:grid;grid-template-columns:1fr;padding:14px;margin-bottom:10px">
-        <div class="body" style="padding:0">
-          <h3 style="margin:0 0 6px">{{ p.name }}</h3>
-          <div class="meta">
-            <span>{{ p.district }}{% if p.address %} · {{ p.address }}{% endif %}</span>
+      <article class="rx-row">
+        <a class="rx-thumb rx-tone-{{ loop.index0 % 4 }}" href="/nobetci-eczaneler/{{ p.slug }}" aria-hidden="true">
+          <img src="{{ url_for('static', filename='pharmacy/rx-night.svg') }}" alt="">
+          <span>{{ p.initial }}</span>
+        </a>
+        <div class="rx-row-main">
+          <a href="/nobetci-eczaneler/{{ p.slug }}"><h3>{{ p.name }}</h3></a>
+          {% if p.distance_m is not none %}
+          <p class="rx-dist"><b>{{ p.distance_label }}</b> · ~{{ p.walk_min }} dk yürüme</p>
+          {% endif %}
+          <p class="rx-addr">{% if p.address %}{{ p.address }}{% else %}{{ p.district }}{% endif %}</p>
+          <div class="rx-acts">
+            {% if p.phone %}<a class="rx-btn" href="tel:{{ p.phone }}">Ara</a>{% endif %}
+            {% if p.maps %}<a class="rx-btn ghost" href="{{ p.maps }}" target="_blank" rel="noopener">Yol tarifi</a>{% endif %}
+            <a class="rx-btn ghost" href="/nobetci-eczaneler/{{ p.slug }}">Detay</a>
           </div>
-          {% if p.phone %}<p class="blurb" style="margin:8px 0 0">☎ {{ p.phone }}</p>{% endif %}
         </div>
-      </a>
+        {% if p.hours_short %}<p class="rx-hours">{{ p.hours_short }}</p>{% endif %}
+      </article>
       {% endfor %}
     </div>
   </section>
   {% endfor %}
 {% else %}
-<div class="empty-box"><p>Liste henüz yok veya bu ilçede nöbetçi bulunamadı. Cron her sabah/akşam çeker.</p></div>
+<div class="empty-box"><p>Liste henüz yok veya bu ilçede nöbetçi bulunamadı. Sabah ve akşam otomatik yenilenir.</p></div>
 {% endif %}
+
+<script>
+(function(){
+  var btn = document.getElementById('rx-geo-btn');
+  var sel = document.getElementById('rx-ilce-select');
+  if (sel) {
+    sel.addEventListener('change', function(){ if (this.value) location.href = this.value; });
+  }
+  if (!btn || !navigator.geolocation) return;
+  function goGeo(){
+    btn.disabled = true;
+    var old = btn.textContent;
+    btn.textContent = 'Konum alınıyor…';
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var lat = pos.coords.latitude.toFixed(6);
+      var lng = pos.coords.longitude.toFixed(6);
+      var base = '/nobetci-eczaneler?lat=' + lat + '&lng=' + lng;
+      {% if ilce %}base += '&ilce={{ ilce|urlencode }}';{% endif %}
+      location.href = base;
+    }, function(){
+      btn.disabled = false;
+      btn.textContent = old;
+      alert('Konum izni verilmedi. Tarayıcı ayarlarından konuma izin verebilirsin.');
+    }, {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+  }
+  btn.addEventListener('click', goGeo);
+})();
+</script>
 {% endblock %}

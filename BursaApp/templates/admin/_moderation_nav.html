@@ -1,0 +1,6 @@
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a class="btn btn-sm {{ 'btn-primary' if admin_nav=='reviews' else 'btn-outline-primary' }}" href="/admin/reviews?status=pending">Yer yorumları{% if pending_reviews %} ({{ pending_reviews }}){% endif %}</a>
+  <a class="btn btn-sm {{ 'btn-primary' if admin_nav=='posts' else 'btn-outline-primary' }}" href="/admin/posts?status=pending">Feed gönderileri{% if pending_posts %} ({{ pending_posts }}){% endif %}</a>
+  <a class="btn btn-sm {{ 'btn-primary' if admin_nav=='visit_notes' else 'btn-outline-primary' }}" href="/admin/visit-notes?status=pending">Ziyaret notları{% if pending_visit_notes %} ({{ pending_visit_notes }}){% endif %}</a>
+  <a class="btn btn-sm {{ 'btn-primary' if admin_nav=='photos' else 'btn-outline-primary' }}" href="/admin/photos?status=pending">Üye fotoğrafları{% if pending_photos %} ({{ pending_photos }}){% endif %}</a>
+</div>

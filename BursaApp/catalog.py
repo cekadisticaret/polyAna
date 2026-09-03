@@ -13,7 +13,7 @@ CATEGORIES = (
     {"key": "hotel", "path": "/oteller", "label": "Oteller", "hint": "termal, şehir, Uludağ kayak"},
     {"key": "camp", "path": "/kamp", "label": "Kamp", "hint": "milli park, göl, karavan"},
     {"key": "shop", "path": "/alisveris", "label": "Alışveriş", "hint": "AVM, mağaza, outlet, hediyelik"},
-    {"key": "market", "path": "/marketler", "label": "Marketler", "hint": "Migros, Gross, File, BİM, A101, Şok"},
+    {"key": "market", "path": "/marketler", "label": "Marketler", "hint": "BİM, Özhan, File, Migros — zincir başına bir kayıt"},
     {"key": "sport", "path": "/spor", "label": "Spor", "hint": "fitness, pilates, yüzme, halı saha"},
     {"key": "family", "path": "/aile", "label": "Aile", "hint": "park, piknik, çocuk aktivitesi"},
     {"key": "concert", "path": "/konserler", "label": "Konserler", "hint": "salon, açıkhava, stadyum"},
@@ -24,7 +24,9 @@ CATEGORIES = (
     {"key": "org", "path": "/organizasyonlar", "label": "Organizasyonlar", "hint": "festival, dernek, ajans"},
     {"key": "hospital", "path": "/hastaneler", "label": "Hastaneler", "hint": "devlet, özel, üniversite"},
     {"key": "doctor", "path": "/doktorlar", "label": "Doktorlar", "hint": "branş + bağlı olduğu hastane"},
+    {"key": "dentist", "path": "/dis-hekimleri", "label": "Diş hekimleri", "hint": "ADSM, özel klinik, Dt."},
     {"key": "vet", "path": "/veterinerler", "label": "Veterinerler", "hint": "klinik, hayvan hastanesi"},
+    {"key": "school", "path": "/okullar", "label": "Okullar", "hint": "devlet, özel, anaokulu, lise, üniversite"},
 )
 CAT_BY_KEY = {c["key"]: c for c in CATEGORIES}
 CAT_BY_PATH = {c["path"]: c for c in CATEGORIES}
@@ -119,6 +121,35 @@ MEKAN_TAXONOMY = {
         ("karavan", "Karavan"),
         ("orman", "Orman"),
     ),
+    "visit": (
+        ("cami", "Cami"),
+        ("kilise", "Kilise"),
+        ("kulliye", "Külliye"),
+        ("turbe", "Türbe"),
+        ("han", "Han / çarşı"),
+        ("hisar", "Hisar / kale"),
+        ("antik", "Antik / sur"),
+        ("anit", "Anıt"),
+        ("muze", "Müze"),
+        ("park", "Park"),
+        ("doga", "Doğa"),
+        ("selale", "Şelale"),
+        ("dag", "Dağ"),
+        ("gol", "Göl"),
+        ("koy", "Köy / kasaba"),
+        ("kaplica", "Kaplıca"),
+        ("magara", "Mağara"),
+        ("manzara", "Manzara"),
+        ("hat", "Teleferik"),
+    ),
+    "school": (
+        ("anaokul", "Anaokulu"),
+        ("ilkokul", "İlkokul"),
+        ("ortaokul", "Ortaokul"),
+        ("lise", "Lise"),
+        ("kolej", "Kolej"),
+        ("universite", "Üniversite"),
+    ),
 }
 
 CAFE_FEATURE_TAGS = (
@@ -152,7 +183,7 @@ CINEMA_KINDS = ("Vizyonda", "Salon")
 EVENT_KINDS = ("Festival", "Fuar", "Sahne", "Kent")
 FUN_KINDS = ("Canlı müzik", "Bar", "Bowling", "Escape", "AVM")
 ORG_KINDS = ("Belediye", "Dernek", "Ajans", "Fuar")
-GROUP_ILCE = frozenset(("food", "visit", "hotel", "camp", "vet", "hospital", "shop", "market", "sport", "family"))
+GROUP_ILCE = frozenset(("food", "visit", "hotel", "camp", "vet", "hospital", "dentist", "shop", "market", "sport", "family", "school"))
 GROUP_BAND = frozenset(("doctor", "concert", "theater", "cinema", "event", "fun", "org"))
 KIND_BY_CAT = {
     "concert": CONCERT_KINDS,
@@ -241,6 +272,173 @@ def subcategory_label(key: str) -> str:
     return SUBCAT_LABEL.get(k) or k
 
 
+# Yeme-içme kenar filtresi (TripAdvisor benzeri gruplar)
+FOOD_KIND = (
+    ("restoran", "Restoranlar", frozenset({
+        "restoran", "iskender", "kebap", "doner", "inegol-kofte", "pide",
+        "cantik", "balik", "burger", "pizza", "fast-food", "vegan", "vejetaryen",
+    })),
+    ("cafe", "Kahve ve çay", frozenset({"cafe"})),
+    ("kahvalti", "Kahvaltı", frozenset({"kahvalti"})),
+    ("tatli", "Tatlı", frozenset({"tatli"})),
+    ("pastane", "Unlu mamuller", frozenset({"pastane"})),
+    ("meyhane", "Meyhane", frozenset({"meyhane"})),
+    ("bar", "Bar", frozenset({"bar"})),
+)
+FOOD_KIND_SUBS = {k: subs for k, _lab, subs in FOOD_KIND}
+FOOD_MEAL = (("kahvalti", "Kahvaltı"), ("ogle", "Öğle yemeği"), ("aksam", "Akşam yemeği"))
+FOOD_CUISINE = (("turk", "Türk"), ("pizza", "Pizza"), ("fast-food", "Fast food"), ("italyan", "İtalyan"))
+FOOD_DISH = (
+    ("burger", "Burger"),
+    ("kebap", "Karışık kebap"),
+    ("balik", "Balık"),
+    ("iskender", "İskender"),
+    ("inegol-kofte", "Köfte"),
+    ("cantik", "Cantık"),
+    ("pizza", "Pizza"),
+    ("doner", "Döner"),
+)
+FOOD_PRICE = (("ucuz", "Ucuz"), ("orta", "Ortalama"), ("kaliteli", "Kaliteli yemek"))
+
+# Gezilecek kenar filtresi (TripAdvisor tür grupları)
+VISIT_KIND = (
+    ("anit", "Anıtlar ve turistik yerler", frozenset({
+        "anit", "hisar", "antik", "hat",
+    })),
+    ("dini", "Dini yerler", frozenset({"cami", "kilise", "kulliye", "turbe"})),
+    ("muze", "Müzeler", frozenset({"muze"})),
+    ("doga", "Doğa ve parklar", frozenset({
+        "doga", "park", "selale", "dag", "gol", "magara",
+    })),
+    ("koy", "Köyler ve kasabalar", frozenset({"koy"})),
+    ("carsi", "Çarşı ve hanlar", frozenset({"han"})),
+    ("kaplica", "Kaplıca ve spa", frozenset({"kaplica"})),
+    ("manzara", "Manzara noktaları", frozenset({"manzara"})),
+)
+VISIT_KIND_SUBS = {k: subs for k, _lab, subs in VISIT_KIND}
+VISIT_FEE = (("ucretsiz", "Ücretsiz"), ("ucretli", "Ücretli"))
+VISIT_TAG = (("unesco", "UNESCO"), ("instagram", "Fotoğraf noktası"))
+_VISIT_PAID_SUBS = frozenset({"muze", "hat", "kaplica", "magara"})
+_VISIT_PAID_BANDS = frozenset({"müze", "muze", "hat", "kaplıca", "kaplica", "magara", "park"})
+
+
+def visit_fee_tier(p: dict) -> str:
+    sub = (p.get("subcategory") or "").strip()
+    band = (p.get("price_band") or "").lower()
+    if sub in _VISIT_PAID_SUBS or band in _VISIT_PAID_BANDS:
+        return "ucretli"
+    return "ucretsiz"
+
+
+def visit_matches(
+    p: dict,
+    *,
+    kinds: list[str] | None = None,
+    fees: list[str] | None = None,
+    tags: list[str] | None = None,
+) -> bool:
+    sub = (p.get("subcategory") or "").strip()
+    blob = " ".join(
+        [str(t).lower() for t in (p.get("tags") or [])]
+        + [sub, p.get("price_band") or "", p.get("title") or ""]
+    ).lower()
+    if kinds:
+        ok = False
+        for k in kinds:
+            if sub in (VISIT_KIND_SUBS.get(k) or frozenset()):
+                ok = True
+                break
+        if not ok:
+            return False
+    if fees and visit_fee_tier(p) not in fees:
+        return False
+    if tags:
+        if not any(t in blob for t in tags):
+            return False
+    return True
+
+
+_TURK_SUBS = frozenset({
+    "restoran", "iskender", "kebap", "doner", "inegol-kofte", "pide",
+    "cantik", "kahvalti", "meyhane", "balik",
+})
+
+
+def food_price_tier(p: dict) -> str:
+    band = (p.get("price_band") or "").lower()
+    if "fine" in band:
+        return "kaliteli"
+    n = int(p.get("est_meal_tl") or 0)
+    if n <= 0:
+        return "orta"
+    if n < 280:
+        return "ucuz"
+    if n >= 700:
+        return "kaliteli"
+    return "orta"
+
+
+def food_price_marks(p: dict) -> str:
+    t = food_price_tier(p)
+    return {"ucuz": "$", "orta": "$$", "kaliteli": "$$$"}.get(t, "$$")
+
+
+def food_matches(
+    p: dict,
+    *,
+    kinds: list[str] | None = None,
+    meals: list[str] | None = None,
+    cuisines: list[str] | None = None,
+    dishes: list[str] | None = None,
+    prices: list[str] | None = None,
+) -> bool:
+    sub = (p.get("subcategory") or "").strip()
+    tags = [str(t).lower() for t in (p.get("tags") or [])]
+    hours = (p.get("hours_text") or "").lower()
+    blob = " ".join(tags + [sub, p.get("price_band") or "", p.get("title") or ""]).lower()
+    if kinds:
+        ok = False
+        for k in kinds:
+            if sub in (FOOD_KIND_SUBS.get(k) or frozenset()):
+                ok = True
+                break
+        if not ok:
+            return False
+    if dishes:
+        if sub not in dishes and not any(d.replace("-", " ") in blob or d in blob for d in dishes):
+            return False
+    if cuisines:
+        ok = False
+        for c in cuisines:
+            if c == "turk" and (sub in _TURK_SUBS or "turk" in blob or "anadolu" in blob):
+                ok = True
+            elif c == "pizza" and (sub == "pizza" or "pizza" in blob):
+                ok = True
+            elif c == "fast-food" and (sub in ("fast-food", "burger") or "fast" in blob):
+                ok = True
+            elif c == "italyan" and ("italyan" in blob or sub == "pizza"):
+                ok = True
+        if not ok:
+            return False
+    if meals:
+        ok = False
+        for m in meals:
+            if m == "kahvalti" and (sub == "kahvalti" or "kahvalti" in blob):
+                ok = True
+            elif m == "ogle" and sub not in ("bar",):
+                ok = True
+            elif m == "aksam" and (
+                sub in ("meyhane", "bar", "restoran", "kebap", "balik")
+                or "akşam" in hours or "aksam" in hours
+            ):
+                ok = True
+        if not ok:
+            return False
+    if prices and food_price_tier(p) not in prices:
+        return False
+    return True
+
+
 def slugify(text: str) -> str:
     s = (text or "").translate(_TR).lower()
     s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
@@ -291,6 +489,36 @@ def display_rating(p) -> float | None:
     return None
 
 
+def _listing_img(url: str | None) -> str:
+    """Liste kartları için thumb varsa onu kullan (hız); yoksa orijinal."""
+    u = (url or "").strip()
+    if not u:
+        return ""
+    if u.startswith("/static/cache/thumbs/"):
+        return u
+    if u.startswith("/static/"):
+        try:
+            from optimize_images import public_thumb_url
+
+            thumb = public_thumb_url(u)
+            if thumb:
+                return thumb
+        except Exception:
+            pass
+    return u
+
+
+def hospital_staff_groups(staff: list[dict]) -> list[dict]:
+    """Hastane detay — branş grupları; en çok hekimli branş önce."""
+    by: dict[str, list] = {}
+    for s in staff:
+        by.setdefault(s.get("price_band") or "Diğer", []).append(s)
+    return sorted(
+        [{"label": ad, "places": plist} for ad, plist in by.items()],
+        key=lambda g: (-len(g["places"]), g["label"].casefold()),
+    )
+
+
 def place_public(p) -> dict:
     from seo_urls import place_seo_path
 
@@ -318,8 +546,9 @@ def place_public(p) -> dict:
         "price_band": p.price_band,
         "blurb": p.blurb,
         "body": p.body,
-        "img_url": p.img_url,
-        "img": p.img_url,
+        "img_url": _listing_img(p.img_url),
+        "img": _listing_img(p.img_url),
+        "img_full": p.img_url or "",
         "tags": tags_load(p.tags),
         "rating_admin": p.rating_admin,
         "rating_avg": float(avg) if avg is not None else None,
@@ -385,6 +614,7 @@ def _place_extra_public(p) -> dict:
         "menu": menu if isinstance(menu, list) else [],
         "gallery": gallery if isinstance(gallery, list) else [],
         "services": services if isinstance(services, list) else [],
+        "services_lead": (ex.get("services_lead") or "") if isinstance(ex.get("services_lead") or "", str) else "",
         "fees": fees if isinstance(fees, list) else [],
         "staff": staff if isinstance(staff, list) else [],
         "rooms": rooms if isinstance(rooms, list) else [],
@@ -408,6 +638,9 @@ def _place_extra_public(p) -> dict:
         "experience_years": str(ex.get("experience_years") or ""),
         "profile_url": (ex.get("profile_url") or "") if isinstance(ex.get("profile_url") or "", str) else "",
         "linkedin_url": (ex.get("linkedin_url") or "") if isinstance(ex.get("linkedin_url") or "", str) else "",
+        "catalog_url": (ex.get("catalog_url") or "") if isinstance(ex.get("catalog_url") or "", str) else "",
+        "logo_bg": (ex.get("logo_bg") or "") if isinstance(ex.get("logo_bg") or "", str) else "",
+        "branch_note": (ex.get("branch_note") or "") if isinstance(ex.get("branch_note") or "", str) else "",
     }
 
 
@@ -510,8 +743,10 @@ def query_places(
         )
     elif order == "date":
         qry = qry.order_by(Place.starts_at.asc().nulls_last(), Place.featured.desc(), Place.id.desc())
+    elif order == "title":
+        qry = qry.order_by(Place.title.asc(), Place.id.asc())
     else:
         qry = qry.order_by(Place.featured.desc(), Place.starts_at.asc().nulls_last(), Place.id.desc())
     total = qry.count()
-    rows = qry.offset(max(0, offset)).limit(max(1, min(int(limit or 24), 800))).all()
+    rows = qry.offset(max(0, offset)).limit(max(1, min(int(limit or 24), 2500))).all()
     return rows, total

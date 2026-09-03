@@ -3,14 +3,14 @@
 {% else %}
   {% if not nav_user %}
   <div class="rv-gate">
-    <p><b>Yorum yapmak için üye ol</b></p>
-    <p>Üye olmayanlar değerlendirme yazamaz. Kısa kayıt + e-posta onayı yeterli.</p>
+    <p><b>{% if place and place.category == 'hospital' %}Hasta deneyimi için üye ol{% else %}Yorum yapmak için üye ol{% endif %}</b></p>
+    <p>{% if place and place.category == 'hospital' %}Üye olmayanlar hastane puanı yazamaz. Kısa kayıt + e-posta onayı yeterli.{% else %}Üye olmayanlar değerlendirme yazamaz. Kısa kayıt + e-posta onayı yeterli.{% endif %}</p>
     <div class="rv-gate-actions">
       <a class="wa-btn wa-btn-orange" href="/kayit?next={{ (place.path or ('/yer/' ~ place.slug))|urlencode }}%23yorumlar">Üye ol</a>
       <a class="wa-btn wa-btn-ghost" href="/giris?next={{ (place.path or ('/yer/' ~ place.slug))|urlencode }}%23yorumlar">Giriş yap</a>
     </div>
   </div>
-  {% elif not nav_user.email_verified and nav_user.role != 'admin' %}
+  {% elif not nav_user.email_verified and nav_user.role not in ('admin', 'editor') %}
   <div class="rv-gate rv-gate-warn">
     <p><b>E-posta onayın eksik</b></p>
     <p>Yorum yazmak için mailindeki onay linkine bas. Onaylamazsan {{ verify_days|default(7) }} gün içinde üyelik iptal edilir.</p>

@@ -78,6 +78,9 @@ def load_user():
     db = SessionLocal()
     try:
         g.user = db.get(User, int(uid))
+        if g.user and not bool(getattr(g.user, "is_active", True)):
+            session.clear()
+            g.user = None
     except Exception:
         g.user = None
     finally:
@@ -112,15 +115,36 @@ def login_required(view):
 def admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
+        from admin_permissions import can_access_panel, check_path_access
+
         user = load_user()
+        nxt = request.path or "/admin"
+        if not nxt.startswith("/"):
+            nxt = "/admin"
         if user is None:
             if request.path.startswith("/api/"):
                 return jsonify({"ok": False, "error": "giriş gerekli"}), 401
-            return redirect(url_for("giris", next=request.path))
-        if user.role != "admin":
+            return redirect(url_for("giris", next=nxt))
+        if not can_access_panel(user):
             if request.path.startswith("/api/"):
                 return jsonify({"ok": False, "error": "yetki yok"}), 403
-            return redirect("/")
+            from flask import flash as _flash
+
+            _flash("Admin paneli için yetkili hesapla giriş yap.", "err")
+            return redirect(url_for("giris", next=nxt))
+        ok, need = check_path_access(user, request.path)
+        if not ok:
+            if request.path.startswith("/api/"):
+                return jsonify({"ok": False, "error": "yetki yok"}), 403
+            from flask import flash as _flash
+
+            if need == "__staff_only__":
+                _flash("Ekip yönetimi yalnız tam yetkili admin içindir.", "err")
+            else:
+                _flash("Bu bölüm için yetkin yok.", "err")
+            from admin_permissions import first_panel_url
+
+            return redirect(first_panel_url(user))
         return view(*args, **kwargs)
 
     return wrapped

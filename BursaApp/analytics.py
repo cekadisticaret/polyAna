@@ -1,4 +1,4 @@
-"""Site ziyaretçi / sayfa görüntüleme sayacı."""
+"""Site ziyaretçi / sayfa görüntüleme sayacı — yalnız gerçek tarayıcı trafiği."""
 from __future__ import annotations
 
 import re
@@ -13,14 +13,24 @@ except Exception:  # pragma: no cover
     _IST = timezone(timedelta(hours=3))
 
 COOKIE = "ba_vid"
-# ensure_up urllib UA = Python-urllib/… — eski regex yalnız python-requests yakalıyordu
 _BOT_RE = re.compile(
     r"("
-    r"bot|crawl|spider|slurp|bingpreview|facebookexternalhit|preview|"
-    r"wget|curl|httpclient|httpx|aiohttp|scrapy|selenium|headless|phantom|"
+    r"bot|crawl|spider|slurp|bingpreview|facebookexternalhit|facebookcatalog|"
+    r"meta-externalagent|preview|wget|curl|httpclient|httpx|aiohttp|scrapy|"
+    r"selenium|headless|headlesschrome|phantom|puppeteer|playwright|lighthouse|"
     r"python-urllib|python-requests|urllib|go-http-client|java/|okhttp|"
-    r"uptime|monitor|healthcheck|ensure_up|bytespider|semrush|ahrefs|petalbot"
+    r"uptime|monitor|healthcheck|ensure_up|bytespider|semrush|ahrefs|petalbot|"
+    r"mj12bot|dotbot|barkrowler|dataforseo|gptbot|claudebot|perplexitybot|"
+    r"amazonbot|applebot|bingbot|yandex|duckduck|googleother|googlebot|"
+    r"google-inspectiontool|storebot-google|adsbot-google|mediapartners-google|"
+    r"feedfetcher-google|censysinspect|cyberconvoyscout|bursaapp|coptc|"
+    r"compatible;\s*google|got/|wordpress/"
     r")",
+    re.I,
+)
+# GoogleOther / Google-InspectionTool — Chrome taklidi; UA'da "bot" yoktu
+_GOOGLE_FETCHER_UA = re.compile(
+    r"Nexus 5X Build/MMB29P.*Chrome/.*\(compatible;\s*Google",
     re.I,
 )
 _SKIP_PREFIX = (
@@ -59,6 +69,25 @@ def _is_loopback(ip: str) -> bool:
     )
 
 
+def _looks_like_browser(request) -> bool:
+    """Bot UA'si olmasa bile tarayıcı sinyali olmayan istekleri ele."""
+    ua = (request.headers.get("User-Agent") or "").strip()
+    if len(ua) < 40:
+        return False
+    if _GOOGLE_FETCHER_UA.search(ua):
+        return False
+    al = (request.headers.get("Accept-Language") or "").strip()
+    if len(al) < 2:
+        return False
+    accept = (request.headers.get("Accept") or "").strip()
+    if not accept:
+        return False
+    sfd = (request.headers.get("Sec-Fetch-Dest") or "").strip().lower()
+    if sfd and sfd not in ("document", "empty"):
+        return False
+    return True
+
+
 def _should_track(request, status: int) -> bool:
     if (request.method or "") != "GET" or status >= 400:
         return False
@@ -68,10 +97,9 @@ def _should_track(request, status: int) -> bool:
     ua = request.headers.get("User-Agent") or ""
     if not ua.strip() or _BOT_RE.search(ua):
         return False
-    # ensure_up / test_client / yerel smoke — dışarıdan gelen trafikte nginx X-Real-IP koyar
     if _is_loopback(client_ip(request)):
         return False
-    return True
+    return _looks_like_browser(request)
 
 
 def ensure_vid(request, response) -> str:
@@ -133,7 +161,7 @@ def track_response(request, response) -> None:
 
 
 def reset_all_stats(db) -> None:
-    """Kirlenmiş sayaçları sıfırla (ensure_up / smoke şişirmesi sonrası)."""
+    """Kirlenmiş sayaçları sıfırla (bot / smoke şişirmesi sonrası)."""
     from models import SiteDayStat, SiteVisitorDay
 
     db.query(SiteVisitorDay).delete()

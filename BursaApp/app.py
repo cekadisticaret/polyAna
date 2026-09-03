@@ -12,7 +12,7 @@ from flask import Flask, flash, jsonify, redirect, render_template, request, sen
 from admin import bp as admin_bp
 from api_v1 import bp as api_v1_bp
 from features import bp as features_bp
-from features import hub_context, _active_campaigns
+from features import hub_context, _active_campaigns, active_campaign_for_place
 from auth import (
     hash_password,
     load_user,
@@ -28,11 +28,24 @@ from catalog import (
     CATEGORIES,
     CONCERT_KINDS,
     DOCTOR_SPECS,
+    FOOD_CUISINE,
+    FOOD_DISH,
+    FOOD_KIND,
+    FOOD_MEAL,
+    FOOD_PRICE,
     GROUP_BAND,
     GROUP_ILCE,
     ILCELER,
     KIND_BY_CAT,
     MEKAN_TAXONOMY,
+    VISIT_FEE,
+    VISIT_KIND,
+    VISIT_TAG,
+    food_matches,
+    food_price_marks,
+    visit_fee_tier,
+    visit_matches,
+    hospital_staff_groups,
     maps_url,
     parse_dt,
     place_public,
@@ -64,6 +77,17 @@ from models import (
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _TZ = ZoneInfo("Europe/Istanbul")
+
+
+def _static_asset_v() -> str:
+    """CSS/JS cache-bust — dosya mtime değişince tarayıcı yeni sürümü çeker."""
+    mt = 0
+    for name in ("app.css", "seo-pages.css"):
+        try:
+            mt = max(mt, int(os.path.getmtime(os.path.join(_DIR, "static", name))))
+        except OSError:
+            pass
+    return str(mt or 1)
 _ROOT_ENV = os.path.join(os.path.dirname(_DIR), ".env")
 
 
@@ -92,6 +116,7 @@ app.config["SESSION_COOKIE_NAME"] = "bursaapp_session"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["PERMANENT_SESSION_LIFETIME"] = 60 * 60 * 24 * 30
+app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 app.register_blueprint(api_v1_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(features_bp)
@@ -99,15 +124,25 @@ app.register_blueprint(features_bp)
 init_db()
 
 
+@app.errorhandler(413)
+def _upload_too_large(_e):
+    flash("Dosya çok büyük (en fazla 12 MB). Daha küçük bir fotoğraf dene.", "err")
+    return redirect(request.referrer or "/hesap/ayarlar")
+
+
 @app.context_processor
 def _inject():
     from seo import resolve_seo, site_base
+    from seo_arch import HOME_FAQ, HOME_HOWTO, PHONE_DISPLAY, VERTICALS, WHATSAPP_URL
     from seo_status import ga_measurement_id, google_verification_token
     from mail_verify import VERIFY_DAYS, can_review, verify_banner
+    from admin_permissions import can_access_panel
 
     user = load_user()
+    path = request.path or "/"
     return {
         "nav_user": user,
+        "can_admin_panel": can_access_panel(user),
         "can_review": can_review(user),
         "email_verify_banner": verify_banner(user),
         "verify_days": VERIFY_DAYS,
@@ -118,6 +153,12 @@ def _inject():
         "ga_measurement_id": ga_measurement_id(),
         "site_url": site_base(),
         "seo": resolve_seo(),
+        "home_faq": HOME_FAQ,
+        "home_howto": HOME_HOWTO,
+        "seo_vertical": VERTICALS.get(path),
+        "wa_phone": PHONE_DISPLAY,
+        "wa_url": WHATSAPP_URL,
+        "static_v": _static_asset_v(),
     }
 
 
@@ -136,7 +177,7 @@ def _cache_headers(resp):
         else:
             resp.headers["Cache-Control"] = "public, max-age=86400"
         return resp
-    if path.startswith("/sitemap") or path in ("/favicon.ico", "/robots.txt"):
+    if path.startswith("/sitemap") or path in ("/favicon.ico", "/robots.txt", "/llms.txt"):
         resp.headers["Cache-Control"] = "public, max-age=3600"
         return resp
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
@@ -176,13 +217,22 @@ def robots_txt():
         "Disallow: /hesap\n"
         "Disallow: /giris\n"
         "Disallow: /kayit\n"
+        "Disallow: /cikis\n"
         "Disallow: /isletme\n"
         "Disallow: /api/\n"
+        "Disallow: /uploads/\n"
         "Disallow: /*?*lat=\n"
         "Disallow: /*?*lng=\n"
         f"Sitemap: {base}/sitemap.xml\n"
     )
     return Response(body, mimetype="text/plain; charset=utf-8")
+
+
+@app.route("/llms.txt")
+def llms_txt():
+    from seo_arch import llms_txt as _llms
+
+    return Response(_llms(), mimetype="text/plain; charset=utf-8")
 
 
 @app.route("/sitemap.xml")
@@ -347,7 +397,6 @@ def _cal(events: list):
 
 
 @app.route("/")
-@app.route("/kesfet")
 def home():
     q = (request.args.get("q") or "").strip()
     db = SessionLocal()
@@ -380,6 +429,49 @@ def home():
         )
     finally:
         db.close()
+
+
+@app.route("/kesfet")
+def kesfet_redirect():
+    return redirect("/", 301)
+
+
+@app.route("/blog")
+def blog_hub():
+    from seo import for_blog_hub
+    from seo_arch import BLOG_POSTS
+
+    return render_template(
+        "blog/index.html",
+        posts=BLOG_POSTS.items(),
+        nav="blog",
+        seo=for_blog_hub(),
+    )
+
+
+@app.route("/blog/<slug>")
+def blog_post(slug: str):
+    from seo import for_blog_post
+    from seo_arch import BLOG_POSTS
+
+    post = BLOG_POSTS.get(slug)
+    seo = for_blog_post(slug)
+    if not post or not seo:
+        return redirect("/blog")
+    return render_template(
+        "blog/post.html",
+        slug=slug,
+        post=post,
+        nav="blog",
+        seo=seo,
+    )
+
+
+@app.route("/kvkk")
+def kvkk_page():
+    from seo import for_kvkk
+
+    return render_template("kvkk.html", nav="kvkk", seo=for_kvkk())
 
 
 @app.route("/bugun")
@@ -465,7 +557,7 @@ def marketler():
         tab = "hepsi"
     cat = CAT_BY_KEY["market"]
     sub = (request.args.get("sub") or "").strip()
-    ilce = (request.args.get("ilce") or "").strip()
+    ilce = ""
     used_fallback = False
     try:
         lat = float(request.args.get("lat"))
@@ -531,7 +623,7 @@ def marketler():
 
 @app.route("/veterinerler")
 def veterinerler():
-    """Veteriner listesi — yakındakileri mesafeye göre sırala."""
+    """Veteriner listesi — eczane tarzı hero + ince liste."""
     from seo import for_category
 
     cat = CAT_BY_KEY["vet"]
@@ -552,9 +644,14 @@ def veterinerler():
     try:
         if tab == "yakin":
             data = nearby(db, lat, lng, category="vet", unlimited=True)
-            places = data["places"]
+            places = [_decorate_health_row(p) for p in data["places"]]
             total = len(places)
-            groups = []
+            groups = [{"label": "Yakınında", "places": places}] if places else []
+            page_sub = (
+                f"Konumuna göre · {lat:.4f}, {lng:.4f}"
+                if not used_fallback
+                else "Konum alınamadı — Osmangazi merkez"
+            )
         else:
             rows, total = query_places(
                 db,
@@ -565,35 +662,329 @@ def veterinerler():
                 limit=120,
             )
             places = [place_public(p) for p in rows]
-            groups = []
-            by = {}
-            for p in places:
-                by.setdefault(p.get("ilce") or "Diğer", []).append(p)
-            for ad in ILCELER:
-                if ad in by:
-                    groups.append({"label": ad, "places": by.pop(ad)})
-            for ad, plist in by.items():
-                groups.append({"label": ad, "places": plist})
+            groups = _health_ilce_groups(places)
+            page_sub = "Oda kayıtlı klinik ve hayvan hastanesi — randevu siteden yok"
 
-        return render_template(
-            "vets.html",
-            cat=cat,
-            tab=tab,
-            places=places,
-            groups=groups,
+        ozel_n = sum(1 for g in groups for p in g["places"] if (p.get("price_band") or "") == "Hastane")
+        return _render_health_page(
+            nav="vet",
+            page_title="Veterinerler",
+            page_sub=page_sub,
+            hero_theme="vet",
+            hero_art="health/vet.svg",
+            hero_kicker="Evcil hayvan sağlığı",
+            hero_headline="Bursa veteriner klinikleri",
+            hero_desc=f"{total} kayıtlı klinik · ilçene göre filtrele, ara veya yol tarifi al.",
+            stat1_label="klinik",
+            stat2_value=len(groups),
+            stat2_label="bölüm",
+            stat3_value=ozel_n or "7/24",
+            stat3_label="hastane" if ozel_n else "acil (ilan)",
+            row_kind="vet",
+            row_unit="klinik",
             total=total,
+            groups=groups,
+            base_path="/veterinerler",
             ilce=ilce,
             sub=sub,
-            sub_chips=subcategories_for("vet"),
-            ilceler=list(ILCELER),
-            lat=lat,
-            lng=lng,
-            used_fallback=used_fallback,
-            nav="vet",
-            seo=for_category(cat, ilce=ilce, sub=sub, total=total, places=places),
+            filter_items=list(ILCELER) if tab == "hepsi" else None,
+            filter_param="ilce",
+            filter_label="Bölge",
+            filter_on=ilce,
+            show_geo_bar=tab == "hepsi",
+            geo_script=True,
+            geo_near_url="/veterinerler?tab=yakin",
+            hero_note="Kaynak Bursa Veteriner Hekimler Odası kayıtlı işletmeler",
+            empty_text="Bu filtrede veteriner yok.",
+            seo=for_category(cat, ilce=ilce, sub=sub, total=total, places=[p for g in groups for p in g["places"]]),
         )
     finally:
         db.close()
+
+
+@app.route("/dis-hekimleri")
+def dis_hekimleri():
+    """Diş hekimleri — ADSM, klinik ve Dt. kadrosu."""
+    from seo import for_category
+
+    cat = CAT_BY_KEY["dentist"]
+    ilce = (request.args.get("ilce") or "").strip()
+    band = (request.args.get("band") or "").strip()
+    db = SessionLocal()
+    try:
+        clinics, _ = query_places(db, category="dentist", ilce=ilce or None, order="rating", limit=200)
+        docs, _ = query_places(db, category="doctor", price_band="Diş", ilce=ilce or None, limit=200)
+        places = [place_public(p) for p in clinics] + [place_public(p) for p in docs]
+        if band:
+            places = [p for p in places if (p.get("price_band") or "") == band]
+        places.sort(
+            key=lambda p: (
+                0 if p.get("featured") else 1,
+                0 if (p.get("price_band") or "") == "Devlet" else 1,
+                -(float(p["rating"]) if p.get("rating") is not None else -1.0),
+                p.get("title") or "",
+            )
+        )
+        total = len(places)
+        _attach_hospital_titles(db, places)
+        groups = _health_ilce_groups(places)
+        devlet_n = sum(1 for p in places if (p.get("price_band") or "") == "Devlet")
+        return _render_health_page(
+            nav="dentist",
+            page_title="Diş hekimleri",
+            page_sub="ADSM, özel klinik ve hastane diş hekimleri · MHRS / randevu",
+            hero_theme="dentist",
+            hero_art="health/dentist.svg",
+            hero_kicker="Ağız ve diş sağlığı",
+            hero_headline="Bursa diş hekimleri",
+            hero_desc=f"{total} hekim ve klinik · devlet ADSM veya özel poliklinik.",
+            stat1_label="kayıt",
+            stat2_value=len(groups),
+            stat2_label="ilçe",
+            stat3_value=devlet_n or "MHRS",
+            stat3_label="ADSM" if devlet_n else "randevu",
+            row_kind="dentist",
+            row_unit="kayıt",
+            total=total,
+            groups=groups,
+            base_path="/dis-hekimleri",
+            ilce=ilce,
+            band_on=band,
+            band_chips=_DENTIST_BANDS,
+            filter_items=list(ILCELER),
+            filter_param="ilce",
+            filter_label="Bölge",
+            filter_on=ilce,
+            hero_note="Devlet ADSM · MHRS / 182 · Özel klinikler randevu ile",
+            empty_text="Bu filtrede diş hekimi / klinik yok.",
+            seo=for_category(cat, ilce=ilce, sub=band, total=total, places=places),
+        )
+    finally:
+        db.close()
+
+
+@app.route("/okullar")
+def okullar():
+    """Okullar — devlet / özel / üniversite + kademe filtresi."""
+    from catalog import subcategories_for
+    from seo import for_category
+
+    cat = CAT_BY_KEY["school"]
+    ilce = (request.args.get("ilce") or "").strip()
+    band = (request.args.get("band") or "").strip()
+    sub = (request.args.get("sub") or "").strip()
+    db = SessionLocal()
+    try:
+        rows, _ = query_places(
+            db,
+            category="school",
+            ilce=ilce or None,
+            price_band=band or None,
+            subcategory=sub or None,
+            order="title",
+            limit=600,
+        )
+        places = [_decorate_health_row(place_public(p)) for p in rows]
+        total = len(places)
+        groups = _health_ilce_groups(places)
+        devlet_n = sum(1 for p in places if (p.get("price_band") or "") == "Devlet")
+        ozel_n = sum(1 for p in places if (p.get("price_band") or "") == "Özel")
+        sub_chips = subcategories_for("school")
+        return _render_health_page(
+            nav="school",
+            page_title="Okullar",
+            page_sub="Devlet, özel ve üniversiteler · kayıt, etkinlik ve iletişim",
+            hero_theme="school",
+            hero_art="health/school.svg",
+            hero_kicker="Eğitim rehberi",
+            hero_headline="Bursa okulları",
+            hero_desc=f"{total} okul · devlet, özel kolej, anaokulu, lise ve üniversite.",
+            stat1_label="okul",
+            stat2_value=len(groups),
+            stat2_label="ilçe",
+            stat3_value=ozel_n,
+            stat3_label="özel",
+            row_kind="school",
+            row_unit="okul",
+            total=total,
+            groups=groups,
+            base_path="/okullar",
+            ilce=ilce,
+            band_on=band,
+            band_chips=_SCHOOL_BANDS,
+            sub=sub,
+            sub_chips=sub_chips,
+            filter_items=list(ILCELER),
+            filter_param="ilce",
+            filter_label="İlçe",
+            filter_on=ilce,
+            hero_note=f"Devlet {devlet_n} · Özel {ozel_n} · OSM + resmi kaynak birleşimi",
+            empty_text="Bu filtrede okul yok.",
+            seo=for_category(cat, ilce=ilce, sub=sub or band, total=total, places=places),
+        )
+    finally:
+        db.close()
+
+
+_RX_MONTHS = (
+    "Ocak Şubat Mart Nisan Mayıs Haziran Temmuz Ağustos Eylül Ekim Kasım Aralık".split()
+)
+
+
+def _rx_hours_short(text: str) -> str:
+    import re as _re
+
+    times = _re.findall(r"(\d{1,2}:\d{2})", text or "")
+    if len(times) >= 2:
+        return f"{times[0]} – {times[-1]}"
+    return (text or "").strip()
+
+
+def _rx_duty_label(feed: dict) -> str:
+    raw = (feed.get("duty_date") or "").strip()[:10]
+    if not raw:
+        return ""
+    try:
+        from datetime import datetime as _dt
+
+        d = _dt.strptime(raw, "%Y-%m-%d")
+        return f"{d.day} {_RX_MONTHS[d.month - 1]} {d.year}"
+    except Exception:
+        return raw
+
+
+def _decorate_rx(p: dict) -> dict:
+    out = dict(p)
+    name = (out.get("name") or "Eczane").strip()
+    out["hours_short"] = _rx_hours_short(out.get("hours_text") or "")
+    out["initial"] = name[0].upper()
+    return out
+
+
+def _rx_with_distance(items: list[dict], lat: float, lng: float) -> list[dict]:
+    from discover import haversine_m
+
+    out: list[dict] = []
+    for p in items:
+        d = dict(p)
+        plat, plng = d.get("lat"), d.get("lng")
+        if plat is None or plng is None:
+            d["distance_m"] = None
+        else:
+            dm = int(round(haversine_m(lat, lng, float(plat), float(plng))))
+            d["distance_m"] = dm
+            d["walk_min"] = max(1, int(round(dm / 80)))
+        out.append(d)
+    out.sort(key=lambda x: (x.get("distance_m") is None, x.get("distance_m") or 10**9))
+    return out
+
+
+def _rx_distance_label(distance_m: int | None) -> str:
+    if distance_m is None:
+        return ""
+    if distance_m < 1000:
+        return f"{distance_m} m"
+    return f"{distance_m / 1000:.1f} km"
+
+
+def _health_initial(title: str) -> str:
+    for ch in (title or "").strip():
+        if ch.isalpha():
+            return ch.upper()
+    return "?"
+
+
+def _decorate_health_row(p: dict) -> dict:
+    out = dict(p)
+    out["initial"] = _health_initial(out.get("title") or out.get("name"))
+    out["hours_short"] = _rx_hours_short(out.get("hours_text") or "")
+    return out
+
+
+def _health_card_groups(places: list[dict], *, by: str = "ilce") -> list[dict]:
+    """Kart listesi grupları — hastane: ilçe · doktor: branş."""
+    by_map: dict[str, list] = {}
+    if by == "spec":
+        for p in places:
+            by_map.setdefault(p.get("price_band") or "Diğer", []).append(p)
+        order = list(DOCTOR_SPECS)
+    else:
+        for p in places:
+            by_map.setdefault(p.get("ilce") or "Diğer", []).append(p)
+        order = list(ILCELER)
+    groups = []
+    for ad in order:
+        if ad in by_map:
+            groups.append({"label": ad, "places": by_map.pop(ad)})
+    for ad, plist in by_map.items():
+        groups.append({"label": ad, "places": plist})
+    return groups
+
+
+def _health_ilce_groups(places: list[dict]) -> list[dict]:
+    by: dict[str, list] = {}
+    for p in places:
+        by.setdefault(p.get("ilce") or "Diğer", []).append(_decorate_health_row(p))
+    groups = []
+    for ad in ILCELER:
+        if ad in by:
+            groups.append({"label": ad, "places": by.pop(ad)})
+    for ad, plist in by.items():
+        groups.append({"label": ad, "places": plist})
+    return groups
+
+
+def _attach_hospital_titles(db, places: list[dict]) -> None:
+    slugs = {p.get("hospital_slug") or p.get("venue_name") for p in places}
+    slugs.discard("")
+    slugs.discard(None)
+    if not slugs:
+        return
+    hs = {h.slug: h for h in db.query(Place).filter(Place.slug.in_(slugs)).all()}
+    for p in places:
+        h = hs.get(p.get("hospital_slug") or p.get("venue_name") or "")
+        if h:
+            p["hospital_title"] = h.title
+            p["hospital_slug"] = h.slug
+
+
+def _health_qs(*, ilce: str = "", spec: str = "", band: str = "", sub: str = "") -> str:
+    from urllib.parse import quote
+
+    parts = []
+    if ilce:
+        parts.append(f"ilce={quote(ilce)}")
+    if spec:
+        parts.append(f"spec={quote(spec)}")
+    if band:
+        parts.append(f"band={quote(band)}")
+    if sub:
+        parts.append(f"sub={quote(sub)}")
+    return ("?" + "&".join(parts)) if parts else ""
+
+
+def _render_health_page(**ctx):
+    base = ctx.get("base_path") or "/"
+    ilce = ctx.get("ilce") or ""
+    spec = ctx.get("spec") or ""
+    band = ctx.get("band_on") or ""
+    sub = ctx.get("sub") or ""
+    tail = _health_qs(spec=spec, band=band, sub=sub)
+    ctx.setdefault("filter_all_url", base + tail)
+    ctx.setdefault("filter_base", base)
+    ctx.setdefault(
+        "filter_extra",
+        ("&" + tail[1:]) if tail else "",
+    )
+    if ctx.get("filter_items") is not None and "filter_on" not in ctx:
+        ctx["filter_on"] = ilce or spec or ""
+    return render_template("health_list.html", **ctx)
+
+
+_HOSPITAL_BANDS = ("Özel", "Devlet", "Üniversite", "Kampüs", "Göz", "Diş")
+_DENTIST_BANDS = ("Devlet", "Özel", "Klinik")
+_SCHOOL_BANDS = ("Devlet", "Özel", "Üniversite")
+_SCHOOL_SUBS = ("anaokul", "ilkokul", "ortaokul", "lise", "kolej", "universite")
 
 
 def _load_nobetci_feed() -> dict:
@@ -613,20 +1004,34 @@ def nobetci_eczaneler():
     from seo import page as seo_page
 
     ilce = (request.args.get("ilce") or "").strip()
+    has_geo = False
+    try:
+        lat = float(request.args.get("lat"))
+        lng = float(request.args.get("lng"))
+        has_geo = True
+    except (TypeError, ValueError):
+        lat = lng = None
     feed = _load_nobetci_feed()
-    items = list(feed.get("pharmacies") or [])
+    items = [_decorate_rx(p) for p in (feed.get("pharmacies") or [])]
     if ilce:
         items = [p for p in items if (p.get("district") or "") == ilce]
+    if has_geo:
+        items = _rx_with_distance(items, lat, lng)
+        for p in items:
+            p["distance_label"] = _rx_distance_label(p.get("distance_m"))
     districts = sorted({p.get("district") for p in (feed.get("pharmacies") or []) if p.get("district")})
-    by = {}
-    for p in items:
-        by.setdefault(p.get("district") or "Diğer", []).append(p)
-    groups = []
-    for ad in list(ILCELER) + [k for k in by if k not in ILCELER]:
-        if ad in by:
-            groups.append({"label": ad, "places": by.pop(ad)})
-    for ad, plist in by.items():
-        groups.append({"label": ad, "places": plist})
+    if has_geo:
+        groups = [{"label": "Sana en yakın", "places": items}] if items else []
+    else:
+        by = {}
+        for p in items:
+            by.setdefault(p.get("district") or "Diğer", []).append(p)
+        groups = []
+        for ad in list(ILCELER) + [k for k in by if k not in ILCELER]:
+            if ad in by:
+                groups.append({"label": ad, "places": by.pop(ad)})
+        for ad, plist in by.items():
+            groups.append({"label": ad, "places": plist})
     return render_template(
         "nobetci_eczaneler.html",
         feed=feed,
@@ -634,7 +1039,11 @@ def nobetci_eczaneler():
         places=items,
         ilce=ilce,
         districts=districts,
+        duty_label=_rx_duty_label(feed),
         nav="pharmacy",
+        has_geo=has_geo,
+        lat=lat,
+        lng=lng,
         seo=seo_page(
             title="Bursa nöbetçi eczaneler",
             description="Bugün Bursa nöbetçi eczaneleri — ilçe, telefon, Google Maps konum.",
@@ -649,10 +1058,23 @@ def nobetci_eczane_detail(slug: str):
 
     feed = _load_nobetci_feed()
     place = next((p for p in (feed.get("pharmacies") or []) if p.get("slug") == slug), None)
+    if place:
+        place = _decorate_rx(place)
+    osm = ""
+    if place and place.get("lat") is not None and place.get("lng") is not None:
+        lat = float(place["lat"])
+        lng = float(place["lng"])
+        osm = (
+            "https://www.openstreetmap.org/export/embed.html"
+            f"?bbox={lng - 0.012:.6f},{lat - 0.008:.6f},{lng + 0.012:.6f},{lat + 0.008:.6f}"
+            f"&layer=mapnik&marker={lat},{lng}"
+        )
     return render_template(
         "nobetci_eczane_detail.html",
         place=place,
         feed=feed,
+        duty_label=_rx_duty_label(feed),
+        osm_embed=osm,
         nav="pharmacy",
         seo=seo_page(
             title=(place["name"] if place else "Nöbetçi eczane") + " · Bursa",
@@ -727,15 +1149,51 @@ def kamp_list():
         db.close()
 
 
+def _hotel_price_tl(place: dict) -> int | None:
+    """Örnek gecelik fiyat — extra.price_min metninden TL tamsayı."""
+    import re
+
+    raw = ""
+    extra = place.get("extra") or {}
+    if isinstance(extra, dict):
+        raw = (extra.get("price_min") or extra.get("price_max") or "").strip()
+    if not raw:
+        est = int(place.get("est_meal_tl") or 0)
+        return est if est > 0 else None
+    digits = re.sub(r"[^\d]", "", raw.split(",")[0])
+    if not digits:
+        return None
+    try:
+        return int(digits)
+    except ValueError:
+        return None
+
+
+def _hotel_link(**overrides) -> str:
+    from urllib.parse import urlencode
+
+    params: dict[str, str] = {}
+    for key in ("q", "ilce", "sub", "band", "sort", "price"):
+        val = overrides[key] if key in overrides else (request.args.get(key) or "").strip()
+        if val:
+            params[key] = val
+    qs = urlencode(params)
+    return "/oteller" + (f"?{qs}" if qs else "")
+
+
 @app.route("/oteller")
 def hotels_list():
-    from seo import page as seo_page
+    from seo import for_vertical
     from catalog import subcategories_for, ILCELER
 
     q = (request.args.get("q") or "").strip()
     ilce = (request.args.get("ilce") or "").strip()
     sub = (request.args.get("sub") or "").strip()
     band = (request.args.get("band") or "").strip().lower()
+    sort = (request.args.get("sort") or "rating").strip().lower()
+    if sort not in ("rating", "price_asc", "price_desc"):
+        sort = "rating"
+    price_filter = (request.args.get("price") or "").strip().lower()
     db = SessionLocal()
     try:
         rows, _ = query_places(
@@ -748,19 +1206,47 @@ def hotels_list():
             limit=300,
         )
         places = [place_public(p) for p in rows]
-        if band:
+        for p in places:
+            p["price_tl"] = _hotel_price_tl(p)
+        if band and not ilce:
             places = [p for p in places if (p.get("price_band") or "").lower() == band]
-        places.sort(
-            key=lambda p: (
-                -(float(p["rating"]) if p.get("rating") is not None else -1.0),
-                (p.get("title") or ""),
+        if price_filter == "lt10":
+            places = [p for p in places if (p.get("price_tl") or 10**9) < 10000]
+        elif price_filter == "10-18":
+            places = [p for p in places if p.get("price_tl") is not None and 10000 <= p["price_tl"] < 18000]
+        elif price_filter == "18plus":
+            places = [p for p in places if (p.get("price_tl") or 0) >= 18000]
+        if sort == "price_asc":
+            places.sort(
+                key=lambda p: (
+                    p.get("price_tl") is None,
+                    p.get("price_tl") or 10**9,
+                    (p.get("title") or ""),
+                )
             )
-        )
-        featured = [p for p in places if p.get("featured")][:8]
-        if len(featured) < 4:
+        elif sort == "price_desc":
+            places.sort(
+                key=lambda p: (
+                    p.get("price_tl") is None,
+                    -(p.get("price_tl") or 0),
+                    (p.get("title") or ""),
+                )
+            )
+        else:
+            places.sort(
+                key=lambda p: (
+                    -(float(p["rating"]) if p.get("rating") is not None else -1.0),
+                    (p.get("title") or ""),
+                )
+            )
+        if sort.startswith("price"):
             featured = places[:8]
+        else:
+            featured = [p for p in places if p.get("featured")][:8]
+            if len(featured) < 4:
+                featured = places[:8]
         featured_slugs = {p.get("slug") for p in featured}
-        districts = sorted({p.get("ilce") for p in places if p.get("ilce")}) or list(ILCELER)
+        districts = list(ILCELER)
         return render_template(
             "hotels.html",
             places=places,
@@ -770,19 +1256,98 @@ def hotels_list():
             ilce=ilce,
             sub=sub,
             band=band,
+            sort=sort,
+            price_filter=price_filter,
+            hotel_link=_hotel_link,
             subs=subcategories_for("hotel"),
             districts=districts,
             nav="hotel",
-            seo=seo_page(
-                title="Bursa Oteller",
-                description="Termal Çekirge, şehir otelleri ve Uludağ konaklama — BursaApp otel rehberi. Rezervasyon siteden yapılmaz.",
-                path="/oteller",
-                breadcrumbs=[("Keşfet", "/"), ("Oteller", "/oteller")],
-                keywords="bursa otel, çekirge termal, uludağ otel, bursa konaklama",
-            ),
+            seo=for_vertical("/oteller", total=len(places), places=places),
         )
     finally:
         db.close()
+
+
+def _food_href(**upd) -> str:
+    """Yeme-içme filtre URL. toggle=('kind','cafe') ekler/çıkarır."""
+    from urllib.parse import urlencode
+
+    multi = ("kind", "meal", "cuisine", "dish", "price")
+    single = ("q", "ilce", "sort", "page")
+    args = {k: list(request.args.getlist(k)) for k in multi}
+    out: list[tuple[str, str]] = []
+    did_toggle = False
+    tog = upd.pop("toggle", None)
+    if tog:
+        did_toggle = True
+        key, val = tog
+        cur = list(args.get(key) or [])
+        if val in cur:
+            cur = [x for x in cur if x != val]
+        else:
+            cur.append(val)
+        args[key] = cur
+    for k in multi:
+        vals = upd[k] if k in upd else args.get(k) or []
+        if isinstance(vals, str):
+            vals = [vals] if vals else []
+        for v in vals:
+            if v:
+                out.append((k, v))
+    for k in single:
+        if k in upd:
+            v = upd[k]
+        elif k == "page" and did_toggle:
+            v = ""
+        else:
+            v = (request.args.get(k) or "").strip()
+        if k == "page" and str(v) in ("", "1"):
+            continue
+        if v:
+            out.append((k, str(v)))
+    qs = urlencode(out, doseq=True)
+    return "/yeme-icme" + (("?" + qs) if qs else "")
+
+
+def _visit_href(**upd) -> str:
+    """Gezilecek filtre URL. toggle=('kind','muze') ekler/çıkarır."""
+    from urllib.parse import urlencode
+
+    multi = ("kind", "fee", "tag")
+    single = ("q", "ilce", "sort", "page", "sub")
+    args = {k: list(request.args.getlist(k)) for k in multi}
+    out: list[tuple[str, str]] = []
+    did_toggle = False
+    tog = upd.pop("toggle", None)
+    if tog:
+        did_toggle = True
+        key, val = tog
+        cur = list(args.get(key) or [])
+        if val in cur:
+            cur = [x for x in cur if x != val]
+        else:
+            cur.append(val)
+        args[key] = cur
+    for k in multi:
+        vals = upd[k] if k in upd else args.get(k) or []
+        if isinstance(vals, str):
+            vals = [vals] if vals else []
+        for v in vals:
+            if v:
+                out.append((k, v))
+    for k in single:
+        if k in upd:
+            v = upd[k]
+        elif k == "page" and did_toggle:
+            v = ""
+        else:
+            v = (request.args.get(k) or "").strip()
+        if k == "page" and str(v) in ("", "1"):
+            continue
+        if v:
+            out.append((k, str(v)))
+    qs = urlencode(out, doseq=True)
+    return "/gezilecek" + (("?" + qs) if qs else "")
 
 
 @app.route("/yeme-icme")
@@ -826,12 +1391,148 @@ def category_list():
             q=q or None,
             from_=request.args.get("from"),
             to=request.args.get("to"),
-            order="rating" if (food or hospital) else ("date" if kinds else None),
+            order="rating" if (food or visit or hospital) else ("date" if kinds else None),
             price_band=band or None,
             subcategory=sub or None,
-            limit=500 if food else (200 if grouped or hospital else 60),
+            limit=2500 if (food or visit) else (200 if grouped or hospital else 60),
         )
         places = [place_public(p) for p in rows]
+        if food:
+            kinds = [x for x in request.args.getlist("kind") if x]
+            meals = [x for x in request.args.getlist("meal") if x]
+            cuisines = [x for x in request.args.getlist("cuisine") if x]
+            dishes = [x for x in request.args.getlist("dish") if x]
+            prices = [x for x in request.args.getlist("price") if x]
+            if sub and sub not in dishes:
+                dishes = dishes + [sub]
+            filtered = [
+                p for p in places
+                if food_matches(p, kinds=kinds or None, meals=meals or None, cuisines=cuisines or None, dishes=dishes or None, prices=prices or None)
+            ]
+            sort = (request.args.get("sort") or "featured").strip()
+            if sort == "name":
+                filtered.sort(key=lambda p: (p.get("title") or "").lower())
+            elif sort == "rating":
+                filtered.sort(key=lambda p: (-(float(p["rating"]) if p.get("rating") is not None else -1), p.get("title") or ""))
+            else:
+                filtered.sort(
+                    key=lambda p: (
+                        0 if p.get("featured") else 1,
+                        -(float(p["rating"]) if p.get("rating") is not None else -1),
+                        p.get("title") or "",
+                    )
+                )
+            total_f = len(filtered)
+            per = 40
+            try:
+                page_n = max(1, int(request.args.get("page") or 1))
+            except ValueError:
+                page_n = 1
+            pages = max(1, (total_f + per - 1) // per)
+            if page_n > pages:
+                page_n = pages
+            start = (page_n - 1) * per
+            page_rows = filtered[start:start + per]
+            for i, p in enumerate(page_rows, start=start + 1):
+                p["rank"] = i
+                p["price_marks"] = food_price_marks(p)
+                ex = p.get("extra") or {}
+                p["has_menu"] = bool(ex.get("menu") or p.get("menu_text") or p.get("web"))
+                gals = ex.get("gallery") if isinstance(ex.get("gallery"), list) else []
+                p["gallery"] = [p["img_url"]] + [g for g in gals if g and g != p.get("img_url")]
+                p["gallery"] = [g for g in p["gallery"] if g][:6]
+            from seo import for_category
+
+            return render_template(
+                "foods_list.html",
+                cat=cat,
+                places=page_rows,
+                total=total_f,
+                q=q,
+                ilce=ilce,
+                sub=sub,
+                sort=sort,
+                page=page_n,
+                pages=pages,
+                kinds_on=kinds,
+                meals_on=meals,
+                cuisines_on=cuisines,
+                dishes_on=dishes,
+                prices_on=prices,
+                food_kind=FOOD_KIND,
+                food_meal=FOOD_MEAL,
+                food_cuisine=FOOD_CUISINE,
+                food_dish=FOOD_DISH,
+                food_price=FOOD_PRICE,
+                food_href=_food_href,
+                nav="food",
+                seo=for_category(cat, ilce=ilce, sub=sub, total=total_f, places=page_rows),
+            )
+        if visit:
+            kinds = [x for x in request.args.getlist("kind") if x]
+            fees = [x for x in request.args.getlist("fee") if x]
+            vtags = [x for x in request.args.getlist("tag") if x]
+            if sub:
+                places = [p for p in places if (p.get("subcategory") or "") == sub]
+            filtered = [
+                p for p in places
+                if visit_matches(p, kinds=kinds or None, fees=fees or None, tags=vtags or None)
+            ]
+            sort = (request.args.get("sort") or "featured").strip()
+            if sort == "name":
+                filtered.sort(key=lambda p: (p.get("title") or "").lower())
+            elif sort == "rating":
+                filtered.sort(key=lambda p: (-(float(p["rating"]) if p.get("rating") is not None else -1), p.get("title") or ""))
+            else:
+                filtered.sort(
+                    key=lambda p: (
+                        0 if p.get("featured") else 1,
+                        0 if not str(p.get("slug") or "").startswith("osm-visit-") else 1,
+                        -(float(p["rating"]) if p.get("rating") is not None else -1),
+                        p.get("title") or "",
+                    )
+                )
+            total_f = len(filtered)
+            per = 40
+            try:
+                page_n = max(1, int(request.args.get("page") or 1))
+            except ValueError:
+                page_n = 1
+            pages = max(1, (total_f + per - 1) // per)
+            if page_n > pages:
+                page_n = pages
+            start = (page_n - 1) * per
+            page_rows = filtered[start:start + per]
+            for i, p in enumerate(page_rows, start=start + 1):
+                p["rank"] = i
+                p["fee_label"] = "Ücretli" if visit_fee_tier(p) == "ucretli" else "Ücretsiz"
+                ex = p.get("extra") or {}
+                gals = ex.get("gallery") if isinstance(ex.get("gallery"), list) else []
+                p["gallery"] = [p.get("img_url")] + [g for g in gals if g and g != p.get("img_url")]
+                p["gallery"] = [g for g in p["gallery"] if g][:6]
+            from seo import for_category
+
+            return render_template(
+                "visits_list.html",
+                cat=cat,
+                places=page_rows,
+                total=total_f,
+                q=q,
+                ilce=ilce,
+                sub=sub,
+                sort=sort,
+                page=page_n,
+                pages=pages,
+                kinds_on=kinds,
+                fees_on=fees,
+                tags_on=vtags,
+                visit_kind=VISIT_KIND,
+                visit_fee=VISIT_FEE,
+                visit_tag=VISIT_TAG,
+                visit_href=_visit_href,
+                nav="visit",
+                seo=for_category(cat, ilce=ilce, sub=sub, total=total_f, places=page_rows),
+            )
         if hospital:
             band_f = (request.args.get("band") or "").strip()
             if band_f:
@@ -845,15 +1546,6 @@ def category_list():
                     (p.get("title") or ""),
                 )
             )
-        if visit:
-            _order = {s: i for i, s in enumerate((
-                "ulu-cami", "koza-han", "hanlar-kapalicarsi", "tophane", "kale-sokak",
-                "muradiye", "eski-kaplica", "inkaya-cinari", "panorama-1326", "uludag",
-                "teleferik", "yesil-turbe", "yesil-cami", "emir-sultan", "irgandi",
-                "cumalikizik", "golyazi", "misi", "soganli-botanik", "tirilye",
-                "oylat", "suuctu", "iznik-surlar",
-            ))}
-            places.sort(key=lambda p: _order.get(p.get("slug") or "", 99))
         groups = []
         sub_chips = tax_subs if tax_subs and not doctor and not kinds else []
         chip_items = list(ILCELER)
@@ -901,7 +1593,79 @@ def category_list():
         from seo import for_category
 
         hosp_band = (request.args.get("band") or "").strip() if hospital else ""
-        hospital_bands = ("Özel", "Devlet", "Üniversite", "Kampüs", "Göz", "Diş") if hospital else ()
+
+        if hospital:
+            groups = _health_card_groups(places, by="ilce")
+            ozel_n = sum(1 for p in places if (p.get("price_band") or "") == "Özel")
+            return _render_health_page(
+                nav="hospital",
+                page_title="Hastaneler",
+                page_sub="Devlet, özel, üniversite — karttaki hekimler o hastaneye bağlı",
+                hero_theme="hospital",
+                hero_art="health/hospital.svg",
+                hero_kicker="Bursa sağlık",
+                hero_headline="Hastaneler ve merkezler",
+                hero_desc=f"{total} hastane · ilçene göre filtrele, puan ve tür.",
+                stat1_label="hastane",
+                stat2_value=len(groups),
+                stat2_label="ilçe",
+                stat3_value=ozel_n or "MHRS",
+                stat3_label="özel" if ozel_n else "randevu",
+                row_kind="hospital",
+                row_unit="hastane",
+                total=total,
+                groups=groups,
+                list_style="cards",
+                card_kind="hospital",
+                base_path="/hastaneler",
+                ilce=ilce,
+                band_on=hosp_band,
+                band_chips=_HOSPITAL_BANDS,
+                filter_items=list(ILCELER),
+                filter_param="ilce",
+                filter_label="Bölge",
+                filter_on=ilce,
+                hero_note="Randevu MHRS / 182 · Acil 112",
+                empty_text="Bu filtrede hastane yok.",
+                seo=for_category(cat, ilce=ilce, sub=hosp_band, total=total, places=places),
+            )
+
+        if doctor:
+            groups = _health_card_groups(places, by="spec")
+            brans_n = len({p.get("price_band") for p in places if p.get("price_band")})
+            return _render_health_page(
+                nav="doctor",
+                page_title="Doktorlar",
+                page_sub="Branşa göre hekim — hastane sayfasına bağlı · randevu / tıbbi tavsiye yok",
+                hero_theme="doctor",
+                hero_art="health/doctor.svg",
+                hero_kicker="Branş ve hekim",
+                hero_headline="Bursa doktorları",
+                hero_desc=f"{total} hekim · branş ve ilçeye göre filtrele.",
+                stat1_label="hekim",
+                stat2_value=brans_n or len(groups),
+                stat2_label="branş" if brans_n else "ilçe",
+                stat3_value="MHRS",
+                stat3_label="randevu",
+                row_kind="doctor",
+                row_unit="hekim",
+                total=total,
+                groups=groups,
+                list_style="cards",
+                card_kind="doctor",
+                base_path="/doktorlar",
+                ilce=ilce,
+                spec=spec,
+                filter_items=list(DOCTOR_SPECS),
+                filter_param="spec",
+                filter_label="Branş",
+                filter_on=spec,
+                hero_note="Resmi kadro bağlantıları · MHRS / 182",
+                empty_text="Bu filtrede hekim yok.",
+                seo=for_category(cat, ilce=ilce, sub=spec, total=total, places=places),
+            )
+
+        hospital_bands = _HOSPITAL_BANDS if hospital else ()
 
         return render_template(
             "list.html",
@@ -1057,6 +1821,9 @@ def detail(slug: str):
         similar, _ = query_places(db, category=p.category, limit=6)
         similar = [place_public(s) for s in similar if s.id != p.id][:3]
         d = place_public(p)
+        # detayda tam çözünürlük; listelerde thumb (place_public)
+        if d.get("img_full"):
+            d["img_url"] = d["img_full"]
         d["maps"] = maps_url(p)
         venue_events = []
         if p.category in ("event", "concert", "theater") and (p.venue_name or p.address):
@@ -1076,18 +1843,25 @@ def detail(slug: str):
                 q = q.filter(Place.address == addr)
             rows = q.order_by(Place.starts_at.asc().nulls_last()).limit(8).all()
             venue_events = [place_public(x) for x in rows]
+        school_events = []
+        if p.category == "school":
+            ev_rows = (
+                db.query(Place)
+                .filter(
+                    Place.status == "approved",
+                    Place.category == "event",
+                    Place.venue_name == p.slug,
+                )
+                .order_by(Place.starts_at.desc().nulls_last())
+                .limit(24)
+                .all()
+            )
+            school_events = [place_public(x) for x in ev_rows]
         staff, staff_groups, hospital, units = [], [], None, []
         if p.category == "hospital":
             docs, _ = query_places(db, category="doctor", venue_name=p.slug, limit=500)
             staff = [place_public(x) for x in docs]
-            by = {}
-            for s in staff:
-                by.setdefault(s.get("price_band") or "Diğer", []).append(s)
-            for ad in DOCTOR_SPECS:
-                if ad in by:
-                    staff_groups.append({"label": ad, "places": by.pop(ad)})
-            for ad, plist in by.items():
-                staff_groups.append({"label": ad, "places": plist})
+            staff_groups = hospital_staff_groups(staff)
             unit_rows, _ = query_places(db, category="hospital", venue_name=p.slug, limit=20)
             units = [place_public(u) for u in unit_rows if u.id != p.id]
         elif p.category == "doctor" and p.venue_name:
@@ -1136,8 +1910,10 @@ def detail(slug: str):
             tmpl = "restaurant_detail.html"
         elif p.category == "hospital":
             tmpl = "hospital_detail.html"
-        elif p.category == "doctor":
+        elif p.category in ("doctor", "dentist"):
             tmpl = "doctor_detail.html"
+        elif p.category == "school":
+            tmpl = "school_detail.html"
         elif p.category in ("event", "concert", "theater") and not (p.slug or "").startswith("film-"):
             tmpl = "event_detail.html"
         else:
@@ -1147,6 +1923,7 @@ def detail(slug: str):
             place=d,
             similar=similar,
             venue_events=venue_events,
+            school_events=school_events,
             staff=staff,
             staff_groups=staff_groups,
             hospital=hospital,
@@ -1160,6 +1937,7 @@ def detail(slug: str):
             user_photos=user_photos,
             nav=p.category,
             seo=for_place(d),
+            market_campaign=active_campaign_for_place(db, p.id) if p.category == "market" else None,
         )
     finally:
         db.close()
@@ -1210,7 +1988,7 @@ def yer_yorum(slug: str):
         if f and f.filename:
             from admin_forms import save_upload
 
-            url = save_upload(f, category="review")
+            url, _err = save_upload(f, category="review")
             if url:
                 rev.img_url = url
         db.flush()
@@ -1247,9 +2025,9 @@ def yer_foto(slug: str):
             return redirect(place_seo_path(p))
         f = request.files.get("photo")
         caption = (request.form.get("caption") or "").strip()[:280]
-        url = save_upload(f, category="place_photo") if f and f.filename else ""
+        url, err = save_upload(f, category="place_photo")
         if not url:
-            flash("Geçerli bir foto seç.", "err")
+            flash(err or "Geçerli bir foto seç.", "err")
             return redirect(f"/yer/{slug}")
         db.add(PlacePhoto(place_id=p.id, user_id=user.id, img_url=url, caption=caption, status="pending"))
         db.commit()
@@ -1261,11 +2039,30 @@ def yer_foto(slug: str):
         db.close()
 
 
+def _safe_next(val: str | None, default: str = "/") -> str:
+    s = (val or "").strip()
+    if s.startswith("/") and not s.startswith("//") and "://" not in s:
+        return s
+    return default
+
+
 @app.route("/giris", methods=["GET", "POST"])
 def giris():
-    if load_user():
-        return redirect(request.args.get("next") or "/")
+    from admin_permissions import can_access_panel, first_panel_url, has_perm
+
+    nxt = _safe_next(request.args.get("next") or request.form.get("next"), "/")
+    user = load_user()
+    wants_admin = nxt.startswith("/admin")
     err = ""
+    if user and wants_admin and not can_access_panel(user):
+        err = f"Şu an {user.email} ile girişlisin — bu hesabın panel yetkisi yok."
+    elif user and request.method == "GET":
+        if wants_admin and can_access_panel(user):
+            dest = nxt
+            if nxt.startswith("/admin/dashboard") and not has_perm(user, "dashboard"):
+                dest = first_panel_url(user)
+            return redirect(dest)
+        return redirect(nxt if nxt not in ("/", "") else "/")
     if request.method == "POST":
         if not rate_ok("login", limit=10):
             err = "Çok sık deneme. Bir dakika bekle."
@@ -1277,6 +2074,8 @@ def giris():
                 u = db.query(User).filter(User.email == email).first()
                 if u is None or not verify_password(password, u.password_hash):
                     err = "E-posta veya şifre yanlış."
+                elif not bool(getattr(u, "is_active", True)):
+                    err = "Hesabın pasif durumda. Yönetici ile iletişime geç."
                 else:
                     login_user(u)
                     from models import log_activity
@@ -1290,10 +2089,17 @@ def giris():
                         email=u.email,
                     )
                     db.commit()
-                    return redirect(request.args.get("next") or request.form.get("next") or "/")
+                    dest = nxt
+                    if wants_admin:
+                        if nxt.startswith("/admin/dashboard") and not has_perm(u, "dashboard"):
+                            dest = first_panel_url(u)
+                        elif nxt == "/admin" or nxt.startswith("/admin?"):
+                            if not has_perm(u, "queue"):
+                                dest = first_panel_url(u)
+                    return redirect(_safe_next(dest, "/"))
             finally:
                 db.close()
-    return render_template("auth.html", mode="giris", err=err, next=request.args.get("next") or "", nav="auth")
+    return render_template("auth.html", mode="giris", err=err, next=nxt if nxt != "/" else "", nav="auth")
 
 
 @app.route("/kayit", methods=["GET", "POST"])
@@ -1393,14 +2199,59 @@ def hesap():
         db.close()
 
 
+def _profile_follow_suggestions(db, user_id: int, *, limit: int = 3) -> list[dict]:
+    """Profil sidebar — sanal üye önerileri (JSON + DB, import cache'e takılmaz)."""
+    import json as _json
+
+    from models import UserPost
+
+    path = os.path.join(_DIR, "data", "virtual_users.json")
+    try:
+        personas = _json.loads(open(path, encoding="utf-8").read())
+    except Exception:
+        personas = []
+    emails = [p["email"].lower() for p in personas if p.get("email")]
+    legacy = [f"{p['slug']}.sanal@bursaapp.com" for p in personas if p.get("slug")]
+    all_emails = list(dict.fromkeys(emails + legacy))
+    if not all_emails:
+        return []
+    rows = (
+        db.query(User)
+        .filter(User.email.in_(all_emails), User.id != user_id)
+        .order_by(User.id.asc())
+        .all()
+    )
+    scored: list[tuple[int, User]] = []
+    for u in rows:
+        posts_n = db.query(UserPost).filter(UserPost.user_id == u.id).count()
+        scored.append((posts_n, u))
+    scored.sort(key=lambda x: (-x[0], x[1].id))
+    out: list[dict] = []
+    for posts_n, u in scored[:limit]:
+        out.append(
+            {
+                "id": u.id,
+                "name": u.name,
+                "handle": u.handle(),
+                "avatar_url": u.avatar_url or "",
+                "posts": posts_n,
+            }
+        )
+    return out
+
+
 @app.route("/hesap/profil")
 @login_required
 def hesap_profil():
     from feed_social import (
         album_photos,
         build_feed,
+        profile_feed,
+        FEED_PAGE_SIZE,
         going_count,
         suggest_places,
+        suggest_top_restaurants,
+        feed_picker_places,
         upcoming_events,
         _place_card,
         _ago,
@@ -1409,7 +2260,7 @@ def hesap_profil():
 
     user = load_user()
     tab = (request.args.get("tab") or "recents").strip().lower()
-    if tab not in ("recents", "mine", "popular", "media", "visits", "reviews", "going"):
+    if tab not in ("recents", "mine", "popular", "friends", "media", "visits", "reviews", "going"):
         tab = "recents"
     db = SessionLocal()
     try:
@@ -1417,18 +2268,27 @@ def hesap_profil():
         if not u:
             flash("Oturum geçersiz", "err")
             return redirect("/giris")
-        owner = u.id if tab in ("mine", "media", "visits", "reviews", "going") else None
-        feed_tab = "mine" if tab == "mine" else ("popular" if tab == "popular" else "recents")
-        feed = build_feed(db, viewer=u, owner_id=owner if tab == "mine" else (u.id if tab == "reviews" else None), tab=feed_tab)
-        if tab == "recents":
-            # kendi + public karışık: kendi id filtre yok
-            feed = build_feed(db, viewer=u, owner_id=None, tab="recents")
+        feed_has_more = False
+        if tab in ("recents", "friends", "popular", "mine"):
+            feed, feed_has_more = profile_feed(db, u, tab, limit=FEED_PAGE_SIZE, offset=0)
+        elif tab == "reviews":
+            feed_all, _ = build_feed(db, viewer=u, owner_id=u.id, tab="recents", limit=80, offset=0)
+            feed = [x for x in feed_all if x.get("kind") == "review"]
+        else:
+            feed = []
         album = album_photos(db, u.id) if tab == "media" else []
         visits = []
         if tab == "visits":
             for v in db.query(UserVisit).filter(UserVisit.user_id == u.id).order_by(UserVisit.id.desc()).limit(80).all():
                 p = db.get(Place, v.place_id)
-                visits.append({"note": v.note, "ago": _ago(v.created_at), "place": _place_card(p)})
+                visits.append(
+                    {
+                        "note": v.note,
+                        "ago": _ago(v.created_at),
+                        "place": _place_card(p),
+                        "status": v.status,
+                    }
+                )
         goings = []
         going_n = db.query(EventGoing).filter(EventGoing.user_id == u.id).count()
         if tab == "going":
@@ -1445,22 +2305,58 @@ def hesap_profil():
         visit_places = []
         for v in db.query(UserVisit).filter(UserVisit.user_id == u.id).order_by(UserVisit.id.desc()).limit(30).all():
             p = db.get(Place, v.place_id)
-            if p:
+            if p and p.category in ("visit", "camp"):
                 visit_places.append(_place_card(p))
-        return render_template(
+        picker_places = feed_picker_places(db, u.id, limit=20)
+        follow_suggestions = _profile_follow_suggestions(db, u.id, limit=3)
+        resp = app.make_response(
+            render_template(
             "profile_feed.html",
             u=u,
             tab=tab,
             feed=feed,
+            feed_has_more=feed_has_more,
             album=album,
             visits=visits,
             goings=goings,
             going_n=going_n,
-            suggest=suggest_places(db, 6),
+            suggest=suggest_places(db, 8),
+            restaurant_suggest=suggest_top_restaurants(db, 6),
+            follow_suggestions=follow_suggestions,
+            picker_places=picker_places,
             events=upcoming_events(db, 8),
             visit_places=visit_places,
             nav="hesap",
+            )
         )
+        resp.headers["Cache-Control"] = "private, no-store"
+        return resp
+    finally:
+        db.close()
+
+
+@app.route("/hesap/profil/feed")
+@login_required
+def hesap_profil_feed():
+    from feed_social import FEED_PAGE_SIZE, profile_feed, PROFILE_FEED_TABS
+
+    tab = (request.args.get("tab") or "recents").strip().lower()
+    if tab not in PROFILE_FEED_TABS:
+        return {"html": "", "has_more": False, "next_offset": 0}, 400
+    offset = max(0, int(request.args.get("offset") or 0))
+    limit = min(20, max(1, int(request.args.get("limit") or FEED_PAGE_SIZE)))
+    db = SessionLocal()
+    try:
+        u = db.get(User, load_user().id)
+        if not u:
+            return {"html": "", "has_more": False, "next_offset": 0}, 401
+        feed, has_more = profile_feed(db, u, tab, limit=limit, offset=offset)
+        html = render_template("_feed_items.html", feed=feed, tone_offset=offset, show_empty=offset == 0)
+        return {
+            "html": html,
+            "has_more": has_more,
+            "next_offset": offset + len(feed),
+        }
     finally:
         db.close()
 
@@ -1481,13 +2377,16 @@ def hesap_ayarlar():
             action = (request.form.get("action") or "").strip()
             if action == "avatar":
                 f = request.files.get("avatar")
-                path = save_upload(f, category="avatar") if f and f.filename else ""
-                if not path:
-                    flash("Geçerli bir görsel seç.", "err")
-                else:
+                path, err = save_upload(f, category="avatar")
+                if err:
+                    flash(err, "err")
+                elif path:
                     u.avatar_url = path
                     db.commit()
                     flash("Profil fotoğrafı güncellendi.", "ok")
+                    return redirect("/hesap/ayarlar?foto=1")
+                else:
+                    flash("Geçerli bir görsel seç.", "err")
             elif action == "display_name":
                 u.show_full_name = request.form.get("show_full_name") == "1"
                 db.commit()
@@ -1553,8 +2452,8 @@ def hesap_profil_post():
         urls = []
         files = request.files.getlist("photos") or []
         for f in files[:6]:
-            if f and f.filename:
-                url = save_upload(f, category="feed")
+            if f:
+                url, _err = save_upload(f, category="feed")
                 if url:
                     urls.append(url)
                     if place:
@@ -1570,18 +2469,42 @@ def hesap_profil_post():
         if not body and not urls:
             flash("Metin veya foto ekle.", "err")
             return redirect("/hesap/profil")
-        post = UserPost(user_id=user.id, place_id=place.id if place else None, body=body, privacy=privacy)
+        post_status = "approved" if privacy == "private" else "pending"
+        post = UserPost(
+            user_id=user.id,
+            place_id=place.id if place else None,
+            body=body,
+            privacy=privacy,
+            status=post_status,
+        )
         set_post_images(post, urls)
         db.add(post)
         if also_visit and place:
             vis = db.query(UserVisit).filter(UserVisit.user_id == user.id, UserVisit.place_id == place.id).first()
+            visit_note = body[:280] if body else ""
+            visit_status = "pending" if visit_note.strip() else "approved"
             if not vis:
-                db.add(UserVisit(user_id=user.id, place_id=place.id, note=body[:280]))
+                db.add(
+                    UserVisit(
+                        user_id=user.id,
+                        place_id=place.id,
+                        note=visit_note,
+                        status=visit_status,
+                    )
+                )
             else:
                 if body:
-                    vis.note = body[:280]
+                    vis.note = visit_note
+                    vis.status = visit_status
         db.commit()
-        flash("Gönderi paylaşıldı." + (" Fotoğraflar yer galerisi için onaya düştü." if urls and place else ""), "ok")
+        if post_status == "pending":
+            flash(
+                "Gönderin alındı — admin onayından sonra herkese görünür."
+                + (" Fotoğraflar yer galerisi için de onaya düştü." if urls and place else ""),
+                "ok",
+            )
+        else:
+            flash("Gönderi kaydedildi (sadece sen görürsün)." + (" Fotoğraflar onaya düştü." if urls and place else ""), "ok")
         return redirect("/hesap/profil?tab=mine")
     finally:
         db.close()
@@ -1610,13 +2533,18 @@ def hesap_profil_ziyaret():
             flash("Yer bulunamadı — slug veya başlık yaz.", "err")
             return redirect("/hesap/profil?tab=visits")
         vis = db.query(UserVisit).filter(UserVisit.user_id == user.id, UserVisit.place_id == place.id).first()
+        visit_status = "pending" if note.strip() else "approved"
         if vis:
             if note:
                 vis.note = note
-            flash("Zaten listende — not güncellendi." if note else "Zaten gittiğin yerlerde.", "ok")
+                vis.status = visit_status
+            flash("Zaten listende — not güncellendi." + (" Onaydan sonra yayınlanır." if visit_status == "pending" else ""), "ok")
         else:
-            db.add(UserVisit(user_id=user.id, place_id=place.id, note=note))
-            flash(f"{place.title} eklendi.", "ok")
+            db.add(UserVisit(user_id=user.id, place_id=place.id, note=note, status=visit_status))
+            flash(
+                f"{place.title} eklendi." + (" Notun onay bekliyor." if visit_status == "pending" else ""),
+                "ok",
+            )
         db.commit()
         return redirect("/hesap/profil?tab=visits")
     finally:
@@ -1632,8 +2560,8 @@ def hesap_profil_like(post_id: int):
     db = SessionLocal()
     try:
         post = db.get(UserPost, post_id)
-        if not post:
-            flash("Gönderi yok", "err")
+        if not post or post.status != "approved":
+            flash("Gönderi bulunamadı veya henüz onaylanmadı.", "err")
             return redirect("/hesap/profil")
         like = db.query(PostLike).filter(PostLike.user_id == user.id, PostLike.post_id == post_id).first()
         if like:

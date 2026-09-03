@@ -1,0 +1,812 @@
+[
+  {
+    "title": "Misi Yaşam",
+    "address": "Gümüştepe, Çaylar Caddesi No:6, 16110 Ni̇lüfer/Bursa",
+    "est_meal_tl": 650
+  },
+  {
+    "title": "Tophane Kebapçısı",
+    "address": "Osmangazi Mh. Osmangazi Cd. 6, 6. Küçük Sk. No:8, 16040 Osmangazi, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Çatrak Cafe",
+    "address": "İnkaya, Uludağ Yolu Cd. No:275, 16370 Osmangazi̇/Bursa",
+    "est_meal_tl": 600
+  },
+  {
+    "title": "Mavera Cafe & Lounge",
+    "address": "Uludağ Yolu 4. Km, Osmangazi / Bursa",
+    "est_meal_tl": 600
+  },
+  {
+    "title": "1923 Cumhuriyet Meyhane",
+    "address": "Ertuğrul, Ahmet Taner Kışlalı Bulvarı No:10/1, 16120 Ni̇lüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Köşebaşı Podyumpark",
+    "address": "Podyum Park, Cumhuriyet, Nilüfer Hatun Cd. No:114, 16140 Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kent Kafe Davet",
+    "address": "Hüdavendigar, 16090 Osmangazi̇/Bursa",
+    "est_meal_tl": 550
+  },
+  {
+    "title": "Beyler Kebap",
+    "address": "Orhanbey Mah., Gümüşçeken Cd. No:3, 16010 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "RKC Gece Döneri",
+    "address": "Doburca, 3. Nilüfer Cd. No:94/1, 16090 Osmangazi̇/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Misi Karşıyaka",
+    "address": "Gümüştepe Mh. Misi, Karşıyaka Cd. No:6, 16110 Ni̇lüfer/Bursa",
+    "est_meal_tl": 490
+  },
+  {
+    "title": "Zengin Lezzet",
+    "address": "Üçevler Mahallesi 29.Sokak No:8 (Küçük Sanayi) Nilüfer/Bursa",
+    "est_meal_tl": 240
+  },
+  {
+    "title": "Saltanat Kebap",
+    "address": "Emirsultan, Doyuran Cd. No:4, 16360 Yıldırım/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kebapçı Hüseyin Usta",
+    "address": "Alacamescit Mahallesi, Tuz Pazarı Caddesi No:16/B, 16020 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Fikret Balıkçılık",
+    "address": "Beşevler Mahallesi, Alim Sokak No:2A/B, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Tavacı Refik",
+    "address": "Canbolu Mahallesi Şifa Sokak No:9, Karacabey Devlet Hastanesi Karşısı, 16700 Karacabey/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Alaaddinbey Konağı",
+    "address": "Alaaddinbey Mahallesi, İzmir Yolu Caddesi No:428, 16120 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Uludağ Mola Garden",
+    "address": "Doburca Mahallesi, 3. Kadife Sokak No:3/1, Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Anadolu Evi Fasıl Restaurant",
+    "address": "Kavaklı Mah. Üftade Sk. No:13/A, 16040 Osmangazi, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Hacıosmanoğlu Kebap",
+    "address": "İhsaniye Mah. FSM Bulvarı, İdil Sk., Ümit 2 Apt. D:2, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Ulu Hünkar Bursa Kebap",
+    "address": "Küçükbalıklı Mahallesi, İnönü Caddesi No:453 D:449, 16250 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Balkan Evi",
+    "address": "Magazin AVM Kat:1, Nilüfer Sahnesi Karşısı, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Şah İnegöl Köftecisi",
+    "address": "Turanköy Mahallesi, İnegöl Caddesi B 26. Km, 16450 Kestel / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bıçaksız Restoran",
+    "address": "Doburca Mah. 3. Nilüfer Cad. A Blok No:102 İç Kapı No:1, 16090 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bursa Kebapçısı",
+    "address": "Orhan Camii, Belediye Cd. Altı, 16010 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Boğa Burger",
+    "address": "Özlüce Mahallesi, Uğur Mumcu Bulvarı No:21 D/H Biaport, Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Midpoint Korupark",
+    "address": "Emek Mahallesi, Adnan Menderes Bulvarı, Turgut Özal Caddesi No:2, Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Dababa Restaurant",
+    "address": "Esentepe, Gürler Cd. Sıla Apt No:87 D:12, 16130 Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Üstad Ocakbaşı Restoran",
+    "address": "Tahtalı Mh., Değirmenyolu 460. Sok. No:56/7 D:1, Kayapa, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Arzum Cağ Kebap",
+    "address": "Esentepe Mahallesi, İstiklal Caddesi No:8, 16130 Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Mustafa Ciğer Kebap",
+    "address": "Esentepe, Yiğitler Sk. No:5, 16130 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Academy Döner",
+    "address": "152 Evler, Profesör Tezok Cd. No:96/A, 16320 Yıldırım/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bahçemis Et Mangal Kahvaltı",
+    "address": "Gökçeören Mahallesi, Bursa Keles Yolu 6. Km, 16190 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kayseriya Mantı Sarayı",
+    "address": "Eski Mudanya Cd. No:9 Bademli / Mudanya / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Cemilusta Bursa",
+    "address": "Işıktepe OSB Mahallesi, Ormanlar Cd. No:5, 16140 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kaburga Et Lokantası",
+    "address": "Balat Mahallesi, Bey Sokak No:21, 16225 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Derebahçe Restaurant",
+    "address": "Doburca Mahallesi, 325. Sokak No:7, 16090 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Zennup 1844",
+    "address": "Eker Meydanı AVM A Blok 76, 1/15, 16040 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Metis Et Mangal",
+    "address": "Nilüferköy Mahallesi, Mudanya Bulvarı No:34, 16190 Osmangazi, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Luna Bar Restoran",
+    "address": "Santral Garaj, Ulubatlı Hasan Blv. No:7 Kat:8, 16200 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Leylek Köy Göl Evi",
+    "address": "Eskikaraağaç Mahallesi, Leylek Köyü Yolu, 16700 Karacabey/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Tola Restaurant",
+    "address": "Bademli Mah., Aydoğdu Sok. No:1 D:No:3, 16960 Mudanya / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Meze Özlüce",
+    "address": "29 Ekim Mah. Uğur Mumcu Cad. No:25, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Tepe Cafe & Restaurant",
+    "address": "Yiğitali Mahallesi, Uludağ Caddesi 9. Km No:444, 16370 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Marigold Thermal &SPA Hotel",
+    "address": "1. Murat Cd. No:57, 16070 Çekirge, Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Serkan Et Mangal",
+    "address": "Serkan Et Mangal, Beşevler Küçük Sanayi Sitesi, Nilüfer Caddesi No:47, 16120 Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Yeşil Pideli Köfte",
+    "address": "Kayıhan, Kayhan Çarşısı No:43, 16230 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bağ Evi",
+    "address": "Tirilye Mahallesi, Gazi Sokak No:8, 16190 Mudanya / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Abidin Usta",
+    "address": "Alacamescit Mahallesi, Bayathane Caddesi, Tuzpazarı No:8, Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Uludağ Kebapçısı",
+    "address": "Uluyol Caddesi, Ulu, 16. Şirin Sk. No:12, 16220 Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "OT Cafe Parkora",
+    "address": "Odunluk Mahallesi, Liman Caddesi No:11, Parkora Yaşam ve Eğlence Merkezi, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bursa Han Kebap",
+    "address": "Çeltikçi, Çeltikçi Sokak Marzim Sitesi No:225/0506 İç Kapı No:2, 16825 Orhangazi, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Aytepe Natural Park",
+    "address": "Umurbey Orhaniye Mahallesi, Reşidiye Bayar Cd., 16600 Gemlik / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Fasulyeli",
+    "address": "Üçevler Mh. Küçük Sanayi Sitesi 220. Cd. No: 56/1, 16120 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Has Kebap Döner",
+    "address": "Bağlarbaşı, 1. Hürriyet Cd. No:140/A, 16160 Osmangazi, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Hacı Dayı Kebap",
+    "address": "Tophane Bahçe İçi No:25, Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bade Mantı Evi",
+    "address": "Kükürtlü Mahallesi Kükürtlü Caddesi, 6. Başaran Sokak, Haşemoğlu Sitesi No:6 D:10/B, 16080 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Emirgan Sütiş Bursa Podyum Park",
+    "address": "Cumhuriyet Mahallesi, Nilüfer Hatun Caddesi, Podyum Park AVM G Blok No:114 D:G/1, 16140 Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Rezene Restaurant & Cafe",
+    "address": "Konak Mahallesi, Beşevler Caddesi No:97, 16110 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Nacaroğlu Bursa",
+    "address": "29 Ekim Mahallesi, Ahmet Taner Kışlalı Bulvarı, Bulvar Özlüce AVM No:17/F, Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Misi Köyevi",
+    "address": "Gümüştepe Mahallesi, Solmaz Sokak Misi Cd. No:7/1, 16110 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Yahyazade Restoran",
+    "address": "Konak Mah. Lefkoşe Cd. No:30/1/1, 16110 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Uluçatı Kahvaltı Evi",
+    "address": "1. Boğaz Sokak No:2, 16375 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Üç Köfte",
+    "address": "İvazpaşa Mahallesi, Ulucami Caddesi, Kapalı Çarşı No:3, 16050 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bademli Et Mangal",
+    "address": "Nilüferköy Mahallesi, Mudanya Bulvarı No:28, 16265 Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Somunarası Podyumpark",
+    "address": "PodyumPark, Cumhuriyet, Nilüfer Hatun Caddesi No:114, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Meşe Kahvaltı & Et Mangal",
+    "address": "Dağyenice Mahallesi, 16. Sokak No:25, 16110 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Ciğergah Özlüce",
+    "address": "29 Ekim, Özlüce Blv, 16120 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Dürümle",
+    "address": "Esentepe Mah., Fatih Sultan Mehmet Blv. No:88BB, 16200 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bendensin Pideli Köfte",
+    "address": "Koza Birlik İş Sarayı, Reyhan Mahallesi, Cumhuriyet Caddesi No:350, 16030 Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Haliç Hatay Sofrası",
+    "address": "Muradiye Mahallesi, Çekirge Caddesi No:45, Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bursa Beyoğlu Kebap",
+    "address": "Ertuğrul, Ertuğrul Sk. No:30/BA, 16120 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Villa Et Mangal",
+    "address": "Uludağ Yolu 7. Km, Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Sıdıka Lokanta",
+    "address": "Hocaalizade Mahallesi, Atatürk Caddesi Ali Haydar Apt No: 23 Kat: 1, 16190 Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Tarihi Çınar Kebap",
+    "address": "Şehreküstü Mahallesi, Cumhuriyet Caddesi No:151, 16050 Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Çamlık Et Mangal",
+    "address": "Gümüştepe Mahallesi, Misi Köyü Piknik Alanı, Bursa Keles Yolu, 16000 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Sümbüllü Bahçe Konağı",
+    "address": "Osmangazi Mahallesi, Orhangazi Çıkmazı No:16, 16020 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Dobruca Sosyal Tesisleri",
+    "address": "Doburca, 3. Zümrüt Sokak No:11/10, 16090 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Değirmen Restaurant",
+    "address": "İnkaya Mahallesi, Uludağ Caddesi, Yiğitali Mevkii, Bursa Uludağ Yolu 8. Km, 16190 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Adım Lokantası",
+    "address": "Çırpan Mahallesi, Altıparmak Sokak No:77, 16050 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kaçık 46",
+    "address": "Altınşehir Mah. Abdi İpekçi Cad. No: 46 D-1 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kınalı Restaurant",
+    "address": "Ataevler Mahallesi Ata 230. Cadde Park Evleri Sitesi C Blok No:10C, D:C, 16110 Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "21 Masa",
+    "address": "Bademli Mahallesi Aydoğdu Sokak Belen 2 Sitesi No:2 Kapı No:1, 16960 Mudanya/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Minty Social",
+    "address": "29 Ekim, Muammer Aksoy Cd. No:83/A, 16235 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bursa Haflinger Çiftliği",
+    "address": "Çeltik Köyü Mahallesi, Yeniyol Caddesi No:29, 16120 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Denizatı Restaurant",
+    "address": "Halitpaşa Mahallesi, Kumyaka Caddesi D:55, 16950 Mudanya/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Gümüşvadi Restaurant",
+    "address": "Gümüştepe Mahallesi, Orhaneli Yolu Cd. No:86/1, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Muhtarın Yeri",
+    "address": "Kazancı Mh, 16450 Kestel/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Seyr-ü Sefa",
+    "address": "Yiğitali Mahallesi, Uludağ Caddesi No:250, 16370 Osmangazi/Bursa Yol Tarifi Linki:",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Sumak Kebap",
+    "address": "23 Nisan Mah., Hipodrom Kavşağı, Halit Bey Alpiş Tower No:1/A, Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Çamlıca Kafe Restaurant",
+    "address": "Çamlıca Mahallesi, Eğitimciler Caddesi No:161, 16110 Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Seki Yaprak Döner",
+    "address": "Odunluk Mahallesi, Akpınar Caddesi No:13/B, 16000 Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Nilüfer Doğa Restaurant",
+    "address": "Gümüştepe Mah. Orhaneli Yolu Cd., Misi Cd. No:26, 16110 Nilüfer, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kasap Bülent Et Mangal",
+    "address": "Demirci, Demirci Yolu Cd. No:65, 16270 Ni̇lüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Doburca Park Şelale - Kahvaltı",
+    "address": "Doburca, 413. Sokak No:12, 16300 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Şehri Safa",
+    "address": "Gölyazı Cumhuriyet Caddesi No:35, Kilise Karşısı, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Villa Güney Et Mangal",
+    "address": "Uludağ Yolu 7. km, Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Deluxe",
+    "address": "Alaaddin Bey Mahallesi, Ayfatma Caddesi No:1968, Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Mutluet Bursa",
+    "address": "Ataevler, Ata Bulvarı Ata 230 Cad. No:6 E Blok, 16210 Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Öz Urfalı Hacı Dayı Kebap",
+    "address": "Cumhuriyet Mahallesi Ataevler Gazi Cd Işıl Apt 10, 16140 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Beşyol Kebapçısı",
+    "address": "İhsaniye Mah., Ahmet Vefik Paşa Cd. No:1, 16110 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Mümin Usta Esnaf Lokantası",
+    "address": "Tuzpazarı Mahallesi Yeni Bağlar Sokak, 16020 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Balet Restaurant",
+    "address": "Ritim AVM, Balat Mah. Piknik Cd. No:83 C D:1, 16140 Nilüfer, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Enteras Cafe Restaurant",
+    "address": "Mimarsinan Mahallesi, Mimar Sinan Caddesi, Barış Manço Kültür Merkezi No:79/B, 16000 Yıldırım / Bursa Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Titiz Izgara",
+    "address": "Okçular Çarşısı, Nalıncılar Sokak No:2, Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Sevgi Bahçesi Restaurant",
+    "address": "Alaaddinbey Mahallesi, Aycan Sk. No:43, 16120 Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Ehli Keyif Pide Kebap Izgara",
+    "address": "Hamitler, 3. Dumlupınar Cd. No:42, 16160 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Merinospark Sosyal Tesisi",
+    "address": "Merinos Parkı İçi, Santral Garaj Mahallesi, Osmangazi / Bursa 16200 Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "İsmail Alsat",
+    "address": "Üçevler, Nilüfer Cd. No:26, 16120 Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kaya Restaurant",
+    "address": "Hüdavendigar, Dobruca Cd. No:217, 16090 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Yunus Et",
+    "address": "İhsaniye, Şht. Jandarma Ast. Zeki Burak Okay Cd. No:14/A, 16130 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "ON6 Et Mangal",
+    "address": "Gümüştepe, Lefkoşe Cd. No: 78, 16110 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Baob Soykan Restoran",
+    "address": "Odunluk Mahallesi, Akpınar Caddesi No:8, 16110 Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bombay Masala Indian Restaurant",
+    "address": "Kırcaali, Kiremitçi Cd, 16010 Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Tavolino Cafe & Restaurant",
+    "address": "23 Nisan, Mithatpaşa Cd. No:17-A, 16130 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Assos Balıkçısı",
+    "address": "Cumhuriyet, Nilüfer Hatun Cd. No:114, 16140 Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Paşa Et Mangal",
+    "address": "Tahtalı Mahallesi, Bursayolu Caddesi, Bursa Sokak (460) No:5/1, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Muradiye Osmanlı Mutfağı",
+    "address": "Muradiye Mahallesi, 2. Murat Caddesi No:36, Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Çiçek Izgara",
+    "address": "Nalbantoğlu, Belediye Cd. No:15, 16010 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Şahinbey Sofrası",
+    "address": "Çağrışan Mahallesi, Eski Mudanya Caddesi No:9, Bademli / Mudanya / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Nuar Bademli",
+    "address": "Çağrışan Mahallesi, Eski Mudanya Caddesi No:40, 16940 Mudanya / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Segesta Cafe Restaurant",
+    "address": "Üçevler, Işıkpınar Sk. 4-1 D:1, 16120 Ni̇lüfer/Bursa",
+    "est_meal_tl": 500
+  },
+  {
+    "title": "Çam3 Et Mangal",
+    "address": "Yiğitali Mahallesi, Uludağ Yolu Caddesi No:304, 16120 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Meze Bursa",
+    "address": "Şehreküstü, Durak Cd. No:8, 16050 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Siesta Meşelipark",
+    "address": "Işıktepe OSB Mahallesi, Arıtma Caddesi No:2, 16140 Işıktepe Organize Sanayi Bölgesi / Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Dağ yeli",
+    "address": "Hamamlıkızık Mahallesi, 16370 Yıldırım/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Selçuk Restaurant",
+    "address": "Gaziakdemir Mah. Stadyum Cad. Reşat Oyal Kültürparkı, 16050 Osmangazi, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kayhan Köftecisi",
+    "address": "Çamlıca Mahallesi, Lefkoşe Caddesi, Eker Meydan, 16265 Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kahve Lata",
+    "address": "Ataevler, Eğitim Sk. No:52, 16140 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Çiçek Izgara - Korupark",
+    "address": "Korupark AVM, Mudanya Yolu No:93, 16200 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Uzan Et Mangal",
+    "address": "Kayapa Mahallesi, Mehmet Akif Ersoy Caddesi No:22/1, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Harran Kebap",
+    "address": "Barış Mahallesi, İzmir Yolu Caddesi No:138/B/A-1, Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Küçük Saray Pideli Köfte",
+    "address": "Cumhuriyet Caddesi, Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "David People Parkora",
+    "address": "Odunluk Mahallesi, Akpınar Caddesi No:12, ParkOra AVM, 16040 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Nev-i Çeşni",
+    "address": "Odunluk Mahallesi, Erdoğan Binyücel Cd. No:5/1, 16200 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Arapşükrü Vira Restaurant",
+    "address": "Kuruçeşme, Sakarya Cd. No:16, 16050 Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Pasto",
+    "address": "Akpınar Mahallesi, Hancı Caddesi No:6, 16160 Osmangazi/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Çırağan Bademli",
+    "address": "Çağrışan Mahallesi, Sanayi Caddesi No:49/A, 16960 Mudanya/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Mümin Usta Türk Mutfağı",
+    "address": "Demirtaş Dumlupınar Mahallesi, Yıldız Sokak No:14/4, 16245 Osmangazi / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Çınaraltı Şelale Et Mangal Çay Bahçesi",
+    "address": "İnkaya Mahallesi, Uludağ Yolu Caddesi No:165, 16375 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bursa Kebap Evi",
+    "address": "Demirtaş Cumhuriyet Mah., 3. Cd No:48 2/1 Kat:3, Parkur AVM, 16160 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Hayat Lokantası",
+    "address": "Santral Garaj, Etibank Cd. No:42 D:4, 16200 Osmangazi̇/Bursa",
+    "est_meal_tl": 500
+  },
+  {
+    "title": "Numnum Cafe Resraurant",
+    "address": "Cumhuriyet Mahallesi, Nilüfer Hatun Caddesi No:114/1-12, Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "İskele Balık",
+    "address": "Ahmet Taner Kışlalı Cad.No:16D Ertuğrul, Nilüfer, Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Ayanoğlu Mandıra & Kahvaltı FSM",
+    "address": "İhsaniye Mahallesi, Barbaros Cd. No:8F, 16130 Nilüfer/Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Tarihi Bursa Çarşı Kebapçısı",
+    "address": "Alacamescit Mah., Tuz Pazarı Cd. No:1, AVP Tiyatrosu Arası, 16020 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Saki Rum Meyhanesi",
+    "address": "Bademli Mahallesi, Eski Mudanya Cd. No:25, 16960 Mudanya / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Çekirge Manzara Kafe",
+    "address": "Çekirge Mahallesi, 1. Murat Caddesi No:6, 16265 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Gözede Et Mangal",
+    "address": "Gözede Mahallesi, Gözede Köyü İç Yolu, Kestel / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Tophane Yamaç Cafe",
+    "address": "Osmangazi Mahallesi, Cemal Nadir Caddesi No:5, 16040 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Alaçam Et Mangal",
+    "address": "Alaçam Mahallesi, Alaçam Sokak No:12, 16450 Kestel / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Günbatımı Restaurant - Kahvaltı & Et Mangal",
+    "address": "Gökçeören Mahallesi, 16375 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Hünkar Köşkü Sosyal Tesisleri",
+    "address": "Mollaarap Mahallesi, 4. Vakıf Sk. No:1/2, 16360 Yıldırım / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Assos Köy Evi",
+    "address": "Nilüferköy Mahallesi, Nilüfer Hatun Caddesi No:7, 16265 Osmangazi / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Leyla Fasıl Özlüce",
+    "address": "Ertuğrul Mahallesi, Özlüce, Ahmet Taner Kışlalı Blv. No:18/A, 16120 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Selim Et",
+    "address": "Demirci Mahallesi, Ahıska Caddesi No:181, 16159 Nilüfer / Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Bey Konağı",
+    "address": "Odunluk Mah. Akpınar Cd. No:7, Nilüfer, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Papatya Ev Yemekleri",
+    "address": "İhsaniye Mahallesi, Barbaros Caddesi No:20 B Blok B/C, 16130 Nilüfer/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Balkon Kafe",
+    "address": "Doburca Mahallesi, 3. Nilüfer Caddesi No:29, Osmangazi/Bursa",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Pamuk Et",
+    "address": "Alaaddinbey, 637. Sk. No:7 / E, 16120 Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Beykapı Kebap",
+    "address": "Çamlıca Mah. Lefkoşa Cad. No:76A/E, 16110 Nilüfer, Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Hanedan Restaurant",
+    "address": "30 Ağustos Zafer Mahallesi, Karşı Bağlar Caddesi No:12 E/F Blok, Nilüfer / Bursa, Türkiye",
+    "est_meal_tl": 0
+  },
+  {
+    "title": "Kayabaşı Restoran",
+    "address": "İnkaya Mahallesi, Uludağ Caddesi & 2, 3. İnan Sokak No:163, 16370 Osmangazi/Bursa",
+    "est_meal_tl": 0
+  }
+]

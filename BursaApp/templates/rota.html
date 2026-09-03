@@ -1,48 +1,98 @@
 {% extends "_shell.html" %}
 {% block title %}1 Günlük Rota · BursaApp{% endblock %}
+{% block body_class %} is-rota-page{% endblock %}
 {% block hello %}Bursa rota oluşturucu{% endblock %}
-{% block sub %}Araçlı veya otobüslü — bütçeye göre 1 gün{% endblock %}
+{% block sub %}Araçlı veya otobüslü — bütçeye göre 1 günlük plan{% endblock %}
 {% block main %}
-<form method="post" class="panel form-card wide" style="margin-bottom:18px">
-  <div class="score-row">
-    <label>Kişi<input type="number" name="people" value="{{ people }}" min="1" max="8"></label>
-    <label>Bütçe (TL)<input type="number" name="budget_tl" value="{{ budget or '' }}" placeholder="örn. 2000"></label>
-  </div>
-  <label>Ulaşım
-    <select name="transport">
-      <option value="bus" {% if transport=='bus' %}selected{% endif %}>Otobüs / toplu taşıma (arabasız)</option>
-      <option value="car" {% if transport=='car' %}selected{% endif %}>Araçlı</option>
-      <option value="walk" {% if transport=='walk' %}selected{% endif %}>Yürüyüş ağırlıklı</option>
-    </select>
-  </label>
-  <button class="btn" type="submit">Rota oluştur</button>
-  {% if nav_user %}<button class="btn ghost" type="submit" name="save" value="1" style="margin-left:8px;color:var(--accent);border-color:var(--accent)">Kaydet</button>{% endif %}
-</form>
-{% if route %}
-<section class="panel">
-  <h3>{{ route.title }} · ~{{ route.est_total_tl }} TL
-    {% if route.budget_tl %}· bütçe {{ route.budget_tl }} TL {% if route.within_budget %}✓{% else %}(aşıldı){% endif %}{% endif %}
-  </h3>
-  {% if route.tips %}
-  <ul class="muted">{% for t in route.tips %}<li>{{ t }}</li>{% endfor %}</ul>
-  {% endif %}
-  <div class="timeline">
-    {% for s in route.slots %}
-    {% if s.transit_from_prev %}
-    <div class="tl-arrow" style="font-size:13px;opacity:.85">🚌 {{ s.transit_from_prev }}</div>
-    {% elif not loop.first %}
-    <div class="tl-arrow">↓</div>
-    {% endif %}
-    <div class="tl-item">
-      <div class="tl-time">{{ s.slot_time }}</div>
-      <div class="tl-body">
-        <b>{{ s.slot_label }}</b>
-        <a href="{{ s.path or ('/yer/' ~ s.slug) }}">{{ s.title }}</a>
-        <i>{{ s.ilce }}{% if s.slot_cost_tl %} · ~{{ s.slot_cost_tl }} TL{% endif %}</i>
-      </div>
+<div class="rt-page">
+  <form method="post" class="rt-builder panel">
+    <div class="rt-fields">
+      <label class="rt-field">
+        <span class="rt-label">Kişi sayısı</span>
+        <input type="number" name="people" value="{{ people }}" min="1" max="8" inputmode="numeric" required>
+      </label>
+      <label class="rt-field">
+        <span class="rt-label">Bütçe (TL)</span>
+        <input type="number" name="budget_tl" value="{{ budget or '' }}" min="0" step="50" placeholder="örn. 2000" inputmode="numeric">
+      </label>
     </div>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
+
+    <fieldset class="rt-transport">
+      <legend class="rt-label">Ulaşım</legend>
+      <div class="rt-transport-opts">
+        <label class="rt-pick">
+          <input type="radio" name="transport" value="bus" {% if transport=='bus' %}checked{% endif %}>
+          <span class="rt-pick-inner"><em>🚌</em><b>Toplu taşıma</b><i>Arabasız</i></span>
+        </label>
+        <label class="rt-pick">
+          <input type="radio" name="transport" value="car" {% if transport=='car' %}checked{% endif %}>
+          <span class="rt-pick-inner"><em>🚗</em><b>Araçlı</b><i>Kendi aracın</i></span>
+        </label>
+        <label class="rt-pick">
+          <input type="radio" name="transport" value="walk" {% if transport=='walk' %}checked{% endif %}>
+          <span class="rt-pick-inner"><em>🚶</em><b>Yürüyüş</b><i>Merkez ağırlıklı</i></span>
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="rt-actions">
+      <button class="btn rt-btn-main" type="submit">Rota oluştur</button>
+      {% if nav_user %}
+      <button class="btn ghost rt-btn-save" type="submit" name="save" value="1">Kaydet</button>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if route %}
+  <section class="rt-result panel">
+    <header class="rt-result-head">
+      <p class="rt-kicker">Günün planı</p>
+      <h2 class="rt-result-title">{{ route.title }}</h2>
+      <div class="rt-badges">
+        <span class="rt-badge">~{{ route.est_total_tl }} TL</span>
+        {% if route.budget_tl %}
+        <span class="rt-badge {% if route.within_budget %}ok{% else %}warn{% endif %}">
+          Bütçe {{ route.budget_tl }} TL {% if route.within_budget %}✓{% else %}aşıldı{% endif %}
+        </span>
+        {% endif %}
+        <span class="rt-badge soft">{{ route.slots|length }} durak</span>
+      </div>
+      {% if route.tips %}
+      <ul class="rt-tips">{% for t in route.tips %}<li>{{ t }}</li>{% endfor %}</ul>
+      {% endif %}
+    </header>
+
+    <ol class="rt-day">
+      {% for s in route.slots %}
+      {% set lab = s.slot_label or '' %}
+      {% set tone = 'food' if 'yemeği' in lab else ('cafe' if lab == 'Cafe' else ('visit' if lab == 'Gezilecek' else ('nature' if 'Köy' in lab or 'tarihî' in lab else 'event'))) %}
+      {% set icon = '🍽' if 'yemeği' in lab else ('☕' if lab == 'Cafe' else ('🗺' if lab == 'Gezilecek' else ('🌿' if tone == 'nature' else ('🎭' if lab == 'Etkinlik' else '📍')))) %}
+      {% if s.transit_from_prev %}
+      <li class="rt-leg" aria-label="Ulaşım">
+        <span class="rt-leg-line" aria-hidden="true"></span>
+        <div class="rt-leg-card">
+          <span class="rt-leg-ico" aria-hidden="true">🚌</span>
+          <p>{{ s.transit_from_prev }}</p>
+        </div>
+      </li>
+      {% endif %}
+      <li class="rt-stop rt-tone-{{ tone }}">
+        <div class="rt-stop-rail" aria-hidden="true"><span class="rt-stop-dot">{{ icon }}</span></div>
+        <article class="rt-stop-card">
+          <header class="rt-stop-top">
+            <time class="rt-stop-time">{{ s.slot_time }}</time>
+            <span class="rt-stop-tag">{{ lab }}</span>
+          </header>
+          <h3 class="rt-stop-title"><a href="{{ s.path or ('/yer/' ~ s.slug) }}">{{ s.title }}</a></h3>
+          <footer class="rt-stop-meta">
+            {% if s.ilce %}<span class="rt-chip">{{ s.ilce }}</span>{% endif %}
+            {% if s.slot_cost_tl %}<span class="rt-chip cost">~{{ s.slot_cost_tl }} TL</span>{% else %}<span class="rt-chip free">Ücretsiz</span>{% endif %}
+          </footer>
+        </article>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endif %}
+</div>
 {% endblock %}

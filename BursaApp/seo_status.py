@@ -214,14 +214,20 @@ def collect(app=None, db=None) -> dict[str, Any]:
         import subprocess
 
         out = subprocess.check_output(["crontab", "-l"], text=True, stderr=subprocess.DEVNULL)
-        cron_ok = "seo_nightly" in out
+        cron_ok = "bursaapp_nightly" in out or "seo_nightly" in out
+        cron_hint = (
+            "30 23 * * * (02:30 İST, bursaapp_nightly)"
+            if "bursaapp_nightly" in out
+            else ("seo_nightly crontab’ta" if cron_ok else "crontab’ta nightly/seo yok")
+        )
     except Exception:
         cron_ok = False
+        cron_hint = "crontab okunamadı"
     checks.append(
         _check(
             cron_ok,
             "seo_nightly cron",
-            "30 21 * * * (00:30 İST)" if cron_ok else "crontab’ta seo_nightly yok",
+            cron_hint,
         )
     )
 

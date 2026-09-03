@@ -1,0 +1,131 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else (place.title ~ ' · BursaApp') }}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block main %}
+{% if not place %}
+<div class="empty-box"><p>Bu okul yayınlı değil veya yok.</p><a href="/okullar">Okullara dön</a></div>
+{% else %}
+{% set ex = place.extra or {} %}
+{% set programs = ex.programs if ex.programs else [] %}
+{% set languages = ex.languages if ex.languages else [] %}
+{% set facilities = ex.facilities if ex.facilities else [] %}
+{% set events = school_events if school_events else (ex.events if ex.events else []) %}
+
+<section class="hd-hero sc-hero">
+  <div class="hd-hero-copy">
+    <p class="hd-kicker">{{ place.subcategory_label or place.price_band or 'Okul' }}{% if place.ilce %} · {{ place.ilce }}{% endif %}</p>
+    <h1>{{ place.title }}</h1>
+    <p class="hd-lead">{{ place.body or place.blurb or 'BursaApp eğitim rehberi — iletişim, programlar ve okul etkinlikleri.' }}</p>
+    <div class="hd-cta">
+      {% if events %}<a class="wa-btn hd-btn" href="#etkinlikler">Etkinlikler</a>{% endif %}
+      {% if programs %}<a class="wa-btn hd-btn-outline" href="#programlar">Programlar</a>{% endif %}
+      {% if place.phone %}<a class="wa-btn hd-btn" href="tel:{{ place.phone }}">Ara · {{ place.phone }}</a>{% endif %}
+      {% if place.web %}<a class="wa-btn hd-btn-outline" href="{{ place.web }}" target="_blank" rel="noopener">Resmi site</a>{% endif %}
+    </div>
+  </div>
+  <div class="hd-hero-media sc-hero-art" aria-hidden="true">
+    <img src="{{ url_for('static', filename='health/school.svg') }}" alt="">
+  </div>
+</section>
+
+<div class="hd-stats">
+  <div><b>{{ place.price_band or '—' }}</b><span>Tür</span></div>
+  <div><b>{{ place.subcategory_label or '—' }}</b><span>Kademe</span></div>
+  <div><b>{{ ex.student_count or '—' }}</b><span>Öğrenci</span></div>
+  <div><b>{{ events|length }}</b><span>Etkinlik</span></div>
+</div>
+
+<section class="hd-sec hd-about">
+  <div class="hd-about-text" style="grid-column:1/-1">
+    <p class="hd-label">Hakkında</p>
+    <h2>{{ place.title }}</h2>
+    <p>{{ place.body or place.blurb }}</p>
+    <div class="hd-feat-grid">
+      {% if place.address %}
+      <div class="hd-feat"><span>📍</span><div><b>Adres</b><i>{{ place.address }}{% if place.ilce %} · {{ place.ilce }}{% endif %}</i></div></div>
+      {% endif %}
+      {% if place.hours_text %}
+      <div class="hd-feat"><span>🕐</span><div><b>Eğitim saati</b><i>{{ place.hours_text }}</i></div></div>
+      {% endif %}
+      {% if ex.founding_year %}
+      <div class="hd-feat"><span>📅</span><div><b>Kuruluş</b><i>{{ ex.founding_year }}</i></div></div>
+      {% endif %}
+      {% if ex.admission %}
+      <div class="hd-feat"><span>📝</span><div><b>Kayıt</b><i>{{ ex.admission }}</i></div></div>
+      {% endif %}
+    </div>
+    <div class="hd-cta" style="margin-top:16px">
+      {% if place.maps %}<a class="wa-btn hd-btn" href="{{ place.maps }}" target="_blank" rel="noopener">Haritada aç</a>{% endif %}
+      {% if nav_user %}
+      <form method="post" action="/favori/{{ place.slug }}" style="display:inline">
+        <button class="wa-btn hd-btn-outline" type="submit">{{ '❤️ Favoride' if is_fav else '♡ Favorile' }}</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% if programs or languages %}
+<section class="hd-sec" id="programlar">
+  <div class="hd-sec-h"><h2>Programlar &amp; diller</h2></div>
+  {% if programs %}
+  <div class="sc-tag-grid">
+    {% for p in programs %}<span class="sc-tag">{{ p }}</span>{% endfor %}
+  </div>
+  {% endif %}
+  {% if languages %}
+  <p class="hd-label" style="margin-top:16px">Yabancı dil</p>
+  <div class="sc-tag-grid">
+    {% for lang in languages %}<span class="sc-tag lang">{{ lang }}</span>{% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if facilities %}
+<section class="hd-sec">
+  <div class="hd-sec-h"><h2>Olanaklar</h2></div>
+  <ul class="hd-fee-list">
+    {% for f in facilities %}
+    <li><span>{{ f }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if events %}
+<section class="hd-sec" id="etkinlikler">
+  <div class="hd-sec-h"><h2>Okul etkinlikleri</h2><span class="see">{{ events|length }} kayıt</span></div>
+  <div class="sc-events">
+    {% for ev in events %}
+    <a class="sc-event" href="{{ ev.path or ('/yer/' ~ ev.slug) }}">
+      <div>
+        <b>{{ ev.title }}</b>
+        <small>{{ ev.when or ev.hours_text or ev.blurb }}</small>
+      </div>
+      <span class="sc-ev-band">{{ ev.price_band or 'Etkinlik' }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if similar %}
+<section class="hd-sec">
+  <div class="hd-sec-h"><h2>Benzer okullar</h2></div>
+  <div class="cards">
+    {% for s in similar %}
+    <a class="place-card" href="{{ s.path or ('/yer/' ~ s.slug) }}">
+      <div class="ph sc-ph"></div>
+      <div class="body">
+        <h3>{{ s.title }}</h3>
+        <div class="meta"><span>{{ s.subcategory_label or s.price_band }} · {{ s.ilce }}</span></div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endif %}
+{% endblock %}

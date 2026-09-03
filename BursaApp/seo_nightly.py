@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Her gece SEO / içerik denetimi — sonuçlar admin /admin/seo panelinde.
 
-Cron örneği (00:30 İST ≈ 21:30 UTC):
-  30 21 * * * cd /root/aiProject && python3 BursaApp/seo_nightly.py >> /tmp/bursaapp_seo_nightly.log 2>&1
+Cron: `bursaapp_nightly.py` içinde (02:30 İST). Tek başına:
+  30 23 * * * cd /root/aiProject && python3 BursaApp/seo_nightly.py >> /tmp/bursaapp_seo_nightly.log 2>&1
 """
 from __future__ import annotations
 

@@ -1,15 +1,60 @@
 {% extends "_shell.html" %}
 {% block title %}Bildirimler · BursaApp{% endblock %}
+{% block body_class %} is-notify-page{% endblock %}
 {% block hello %}Bildirim tercihleri{% endblock %}
-{% block sub %}Ne gelmesini istersin?{% endblock %}
+{% block sub %}E-posta ile hangi konularda haber almak istersin?{% endblock %}
 {% block main %}
-<form method="post" class="panel form-card form">
-  <label class="check"><input type="checkbox" name="notify_concert" value="1" {% if u.notify_concert %}checked{% endif %}> Konser</label>
-  <label class="check"><input type="checkbox" name="notify_theater" value="1" {% if u.notify_theater %}checked{% endif %}> Tiyatro</label>
-  <label class="check"><input type="checkbox" name="notify_festival" value="1" {% if u.notify_festival %}checked{% endif %}> Festival</label>
-  <label class="check"><input type="checkbox" name="notify_campaign" value="1" {% if u.notify_campaign %}checked{% endif %}> Kampanya</label>
-  <label class="check"><input type="checkbox" name="notify_new_place" value="1" {% if u.notify_new_place %}checked{% endif %}> Yeni mekan</label>
-  <button class="btn" type="submit">Kaydet</button>
-</form>
-<p class="empty">Seçtiğin konular için yeni etkinlikler e-posta ile gelir. Tercihlerini istediğin zaman değiştirebilirsin.</p>
+<div class="nf-page">
+  <a class="nf-back" href="/hesap">← Hesabım</a>
+
+  {% if request.args.get('saved') == '1' %}
+  <p class="flash ok nf-flash">Tercihlerin kaydedildi.</p>
+  {% endif %}
+
+  <section class="panel nf-intro">
+    <span class="nf-intro-ico" aria-hidden="true">🔔</span>
+    <div>
+      <p class="nf-intro-title">E-posta bildirimleri</p>
+      <p class="nf-intro-text">Seçtiğin konularda yeni etkinlik veya mekan eklendiğinde sana mail gider. İstediğin zaman kapatabilirsin.</p>
+    </div>
+  </section>
+
+  <form method="post" class="nf-form">
+    <div class="nf-list">
+      <label class="nf-item">
+        <input type="checkbox" name="notify_concert" value="1" {% if u.notify_concert %}checked{% endif %}>
+        <span class="nf-ico" aria-hidden="true">🎵</span>
+        <span class="nf-copy"><b>Konser</b><i>Canlı müzik ve sahne etkinlikleri</i></span>
+        <span class="nf-switch" aria-hidden="true"></span>
+      </label>
+      <label class="nf-item">
+        <input type="checkbox" name="notify_theater" value="1" {% if u.notify_theater %}checked{% endif %}>
+        <span class="nf-ico" aria-hidden="true">🎭</span>
+        <span class="nf-copy"><b>Tiyatro</b><i>Oyun ve sahne gösterileri</i></span>
+        <span class="nf-switch" aria-hidden="true"></span>
+      </label>
+      <label class="nf-item">
+        <input type="checkbox" name="notify_festival" value="1" {% if u.notify_festival %}checked{% endif %}>
+        <span class="nf-ico" aria-hidden="true">🎪</span>
+        <span class="nf-copy"><b>Festival</b><i>Festival ve özel etkinlikler</i></span>
+        <span class="nf-switch" aria-hidden="true"></span>
+      </label>
+      <label class="nf-item">
+        <input type="checkbox" name="notify_campaign" value="1" {% if u.notify_campaign %}checked{% endif %}>
+        <span class="nf-ico" aria-hidden="true">🏷</span>
+        <span class="nf-copy"><b>Kampanya</b><i>İndirim ve fırsat duyuruları</i></span>
+        <span class="nf-switch" aria-hidden="true"></span>
+      </label>
+      <label class="nf-item">
+        <input type="checkbox" name="notify_new_place" value="1" {% if u.notify_new_place %}checked{% endif %}>
+        <span class="nf-ico" aria-hidden="true">📍</span>
+        <span class="nf-copy"><b>Yeni mekan</b><i>Onaylanan yeni restoran ve mekanlar</i></span>
+        <span class="nf-switch" aria-hidden="true"></span>
+      </label>
+    </div>
+
+    <button class="btn nf-save" type="submit">Kaydet</button>
+    <p class="nf-foot">Bildirimler <b>{{ u.email }}</b> adresine gider.</p>
+  </form>
+</div>
 {% endblock %}

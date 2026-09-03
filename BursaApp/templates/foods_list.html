@@ -1,0 +1,133 @@
+{% extends "_shell.html" %}
+{% block body_class %} food-browse{% endblock %}
+{% block page_head %}{% endblock %}
+{% block main %}
+<div class="food-top" id="liste">
+  <div>
+    <h1>{{ seo_vertical.h1 if seo_vertical else 'Bursa Restoranları' }}</h1>
+    {% include "_seo_vertical_intro.html" %}
+  </div>
+  <a class="food-map-btn" href="/harita?cat=food">Harita</a>
+</div>
+
+<div class="food-browse-grid">
+  <aside class="food-side">
+    <details class="food-filter-panel" open>
+      <summary>Filtreler</summary>
+      <div class="food-filters">
+        <section>
+          <h3>Kuruluş türü</h3>
+          {% for k, lab, _s in food_kind %}
+          <a class="food-ff {{ 'on' if k in kinds_on else '' }}" href="{{ food_href(toggle=('kind', k)) }}">{{ lab }}</a>
+          {% endfor %}
+        </section>
+        <section>
+          <h3>Yemek türü</h3>
+          {% for k, lab in food_meal %}
+          <a class="food-ff {{ 'on' if k in meals_on else '' }}" href="{{ food_href(toggle=('meal', k)) }}">{{ lab }}</a>
+          {% endfor %}
+        </section>
+        <section>
+          <h3>Mutfaklar</h3>
+          {% for k, lab in food_cuisine %}
+          <a class="food-ff {{ 'on' if k in cuisines_on else '' }}" href="{{ food_href(toggle=('cuisine', k)) }}">{{ lab }}</a>
+          {% endfor %}
+        </section>
+        <section>
+          <h3>Yemekler</h3>
+          {% for k, lab in food_dish %}
+          <a class="food-ff {{ 'on' if k in dishes_on else '' }}" href="{{ food_href(toggle=('dish', k)) }}">{{ lab }}</a>
+          {% endfor %}
+        </section>
+        <section>
+          <h3>Fiyat</h3>
+          {% for k, lab in food_price %}
+          <a class="food-ff {{ 'on' if k in prices_on else '' }}" href="{{ food_href(toggle=('price', k)) }}">{{ lab }}</a>
+          {% endfor %}
+        </section>
+        <section>
+          <h3>Bölge</h3>
+          <a class="food-ff {{ 'on' if not ilce else '' }}" href="{{ food_href(ilce='') }}">Tüm ilçeler</a>
+          {% for ad in ilceler %}
+          <a class="food-ff {{ 'on' if ilce==ad else '' }}" href="{{ food_href(ilce=ad) }}">{{ ad }}</a>
+          {% endfor %}
+        </section>
+        {% if kinds_on or meals_on or cuisines_on or dishes_on or prices_on or ilce %}
+        <a class="ff-clear" href="/yeme-icme">Filtreleri temizle</a>
+        {% endif %}
+      </div>
+    </details>
+  </aside>
+
+  <div class="food-main">
+    <div class="food-toolbar">
+      <span>{{ total }} sonuç</span>
+      <label>Sırala
+        <select onchange="if(this.value) location.href=this.value">
+          <option value="{{ food_href(sort='featured', page='') }}" {% if sort=='featured' %}selected{% endif %}>Öne çıkanlar</option>
+          <option value="{{ food_href(sort='rating', page='') }}" {% if sort=='rating' %}selected{% endif %}>Puana göre</option>
+          <option value="{{ food_href(sort='name', page='') }}" {% if sort=='name' %}selected{% endif %}>Ada göre</option>
+        </select>
+      </label>
+    </div>
+
+    {% if places %}
+    <div class="food-hits">
+      {% for p in places %}
+      <article class="food-hit">
+        <a class="food-hit-photo" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+          {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🍽</div>{% endif %}
+          {% if p.gallery and p.gallery|length > 1 %}
+          <span class="food-hit-dots" aria-hidden="true">{% for g in p.gallery %}<i{% if loop.first %} class="on"{% endif %}></i>{% endfor %}</span>
+          {% endif %}
+        </a>
+        <div class="food-hit-body">
+          <h2><a href="{{ p.path or ('/yer/' ~ p.slug) }}">{{ p.rank }}. {{ p.title }}</a></h2>
+          {% if p.rating %}
+          <div class="food-hit-rate">
+            <b>{{ '%.1f'|format(p.rating) }}</b>
+            <span class="food-bubbles" title="{{ p.rating }}">
+              {% for i in range(5) %}
+              <i class="{% if p.rating >= i+0.8 %}full{% elif p.rating >= i+0.3 %}half{% endif %}"></i>
+              {% endfor %}
+            </span>
+            {% if p.rating_count %}<small>({{ p.rating_count }} yorum)</small>{% else %}<small>liste puanı</small>{% endif %}
+          </div>
+          {% endif %}
+          <p class="food-hit-meta">
+            {{ p.subcategory_label or p.price_band or 'Restoran' }}
+            · {{ p.price_marks }}
+            {% if p.ilce %} · {{ p.ilce }}{% endif %}
+            {% if p.hours_text %} · {{ p.hours_text }}{% endif %}
+          </p>
+          {% if p.has_menu %}
+          <a class="food-hit-menu" href="{{ p.path or ('/yer/' ~ p.slug) }}#menu">Menü</a>
+          {% endif %}
+          {% if p.blurb %}<p class="food-hit-snip">“{{ p.blurb[:140] }}{% if p.blurb|length > 140 %}…{% endif %}”</p>{% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% if pages > 1 %}
+    <nav class="food-pages" aria-label="Sayfalar">
+      {% if page > 1 %}<a href="{{ food_href(page=page-1) }}">←</a>{% endif %}
+      {% for n in range(1, pages+1) %}
+        {% if n == page %}<span class="on">{{ n }}</span>
+        {% elif n <= 3 or n > pages-2 or (n >= page-1 and n <= page+1) %}
+        <a href="{{ food_href(page=n) }}">{{ n }}</a>
+        {% elif n == 4 or n == pages-2 %}<span class="gap">…</span>
+        {% endif %}
+      {% endfor %}
+      {% if page < pages %}<a href="{{ food_href(page=page+1) }}">→</a>{% endif %}
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="empty-box">
+      <p>Bu filtrelere uyan restoran yok.</p>
+      <p><a href="/yeme-icme">Filtreleri temizle</a></p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% include "_seo_vertical_after.html" %}
+{% endblock %}

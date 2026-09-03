@@ -11,6 +11,7 @@ import urllib.request
 _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
 
+from hospital_covers import is_locked_path
 from models import Place, SessionLocal, init_db
 
 UA = "Mozilla/5.0 (compatible; BursaApp/1.0)"
@@ -67,7 +68,6 @@ def fix_wrong_images() -> None:
         "static/hospital/bursa-goz-merkezi.jpg": eye,
         "static/doctor/bursa-goz-merkezi.jpg": eye,
         "static/hospital/nilufer-goz-merkezi.jpg": eye,
-        "static/hospital/doruk-yildirim.jpg": "static/hospital/doruk-hastanesi.jpg",
         "static/hospital/ali-osman-sonmez-onkoloji.jpg": "static/hospital/sehir-onkoloji.jpg",
         "static/doctor/ali-osman-sonmez-onkoloji.jpg": "static/hospital/sehir-onkoloji.jpg",
         "static/hospital/yildirim-adsm.jpg": "static/hospital/osmangazi-adsm.jpg",
@@ -77,6 +77,9 @@ def fix_wrong_images() -> None:
         "static/family/suuctu-selalesi.jpg": "static/visit/suuctu.jpg",
     }
     for dest_rel, src in replacements.items():
+        if is_locked_path(dest_rel):
+            print("skip locked hospital cover", dest_rel)
+            continue
         dest = os.path.join(_DIR, dest_rel)
         src_path = src if os.path.isabs(src) else os.path.join(_DIR, src)
         if not os.path.isfile(src_path):

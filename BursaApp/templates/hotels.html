@@ -38,8 +38,14 @@
 }
 .ht-tabs a.on,.ht-tabs a:hover{background:#E8F2EA;color:#1B3B2B}
 .ht-fields{
-  display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;
+  display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr auto;gap:10px;align-items:end;
 }
+.ht-price-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(27,59,43,.08)}
+.ht-price-chips span{font-size:11px;font-weight:800;color:var(--muted);align-self:center;margin-right:4px}
+.ht-price-chips a{
+  padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;color:#6B7A72;background:#F6F3EC;
+}
+.ht-price-chips a.on,.ht-price-chips a:hover{background:#E8F2EA;color:#1B3B2B}
 .ht-field label{display:block;font-size:11px;font-weight:700;color:#6B7A72;margin-bottom:4px}
 .ht-field input,.ht-field select{
   width:100%;border:1px solid rgba(27,59,43,.1);border-radius:12px;padding:11px 12px;
@@ -70,9 +76,17 @@
   transition:transform .15s ease, box-shadow .15s ease;
 }
 .ht-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(27,59,43,.12)}
-.ht-card-media{position:relative;aspect-ratio:4/3;background:#E8F2EA}
-.ht-card-media img{width:100%;height:100%;object-fit:cover}
-.ht-card-media .ph{width:100%;height:100%;display:grid;place-items:center;font-size:40px;color:#6B7A72}
+.ht-card-media{
+  position:relative;width:100%;height:180px;aspect-ratio:4/3;
+  max-height:180px;background:#E8F2EA;overflow:hidden;flex:0 0 180px;
+}
+.ht-card-media img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center;display:block;
+}
+.ht-card-media .ph{
+  position:absolute;inset:0;display:grid;place-items:center;font-size:40px;color:#6B7A72;
+}
 .ht-badge{
   position:absolute;left:10px;top:10px;background:#1B3B2B;color:#fff;
   font-size:11px;font-weight:800;letter-spacing:.04em;padding:5px 9px;border-radius:999px;
@@ -139,7 +153,7 @@
 
 <section class="ht-bleed ht-hero" {% if hero_img %}style="background-image:url('{{ hero_img }}')"{% endif %}>
   <div class="ht-hero-inner">
-    <h1>Hayalindeki <em>Oteli</em> Bul</h1>
+    <h1>Bursa otelleri: termal, şehir ve Uludağ konaklama</h1>
     <p class="lead">Termal Çekirge, şehir otelleri ve Uludağ — Bursa’daki seçenekleri tek yerde keşfet. Rezervasyon siteden yapılmaz.</p>
     <div class="ht-hero-cta">
       <a class="ht-btn ht-btn-primary" href="#liste">Otelleri keşfet →</a>
@@ -151,11 +165,11 @@
 <div class="ht-search-wrap">
   <form class="ht-search" method="get" action="/oteller" id="ht-search">
     <div class="ht-tabs">
-      <a class="{{ 'on' if not band else '' }}" href="/oteller">Tümü</a>
-      <a class="{{ 'on' if band=='termal' else '' }}" href="/oteller?band=termal">Termal</a>
-      <a class="{{ 'on' if band=='uludag' else '' }}" href="/oteller?band=uludag">Uludağ</a>
-      <a class="{{ 'on' if band=='sehir' else '' }}" href="/oteller?band=sehir">Şehir</a>
-      <a class="{{ 'on' if sub=='butik' else '' }}" href="/oteller?sub=butik">Butik</a>
+      <a class="{{ 'on' if not band else '' }}" href="{{ hotel_link(band='') }}">Tümü</a>
+      <a class="{{ 'on' if band=='termal' else '' }}" href="{{ hotel_link(band='termal') }}">Termal</a>
+      <a class="{{ 'on' if band=='uludag' else '' }}" href="{{ hotel_link(band='uludag') }}">Uludağ</a>
+      <a class="{{ 'on' if band=='sehir' else '' }}" href="{{ hotel_link(band='sehir') }}">Şehir</a>
+      <a class="{{ 'on' if sub=='butik' else '' }}" href="{{ hotel_link(sub='butik', band='') }}">Butik</a>
     </div>
     <div class="ht-fields">
       <div class="ht-field">
@@ -181,18 +195,26 @@
         </select>
       </div>
       <div class="ht-field">
-        <label for="ht-band">Bölge</label>
-        <select id="ht-band" name="band">
-          <option value="">Tümü</option>
-          <option value="termal" {% if band=='termal' %}selected{% endif %}>Termal</option>
-          <option value="uludag" {% if band=='uludag' %}selected{% endif %}>Uludağ</option>
-          <option value="sehir" {% if band=='sehir' %}selected{% endif %}>Şehir</option>
+        <label for="ht-sort">Sırala</label>
+        <select id="ht-sort" name="sort">
+          <option value="rating" {% if sort=='rating' %}selected{% endif %}>Puana göre</option>
+          <option value="price_asc" {% if sort=='price_asc' %}selected{% endif %}>Fiyat · düşük → yüksek</option>
+          <option value="price_desc" {% if sort=='price_desc' %}selected{% endif %}>Fiyat · yüksek → düşük</option>
         </select>
       </div>
+      {% if band %}<input type="hidden" name="band" value="{{ band }}">{% endif %}
+      {% if price_filter %}<input type="hidden" name="price" value="{{ price_filter }}">{% endif %}
       <button class="ht-btn ht-btn-primary" type="submit">🔍 Ara</button>
     </div>
+    <div class="ht-price-chips">
+      <span>Fiyat</span>
+      <a class="{{ 'on' if not price_filter else '' }}" href="{{ hotel_link(price='') }}">Tümü</a>
+      <a class="{{ 'on' if price_filter=='lt10' else '' }}" href="{{ hotel_link(price='lt10') }}">10.000 TL altı</a>
+      <a class="{{ 'on' if price_filter=='10-18' else '' }}" href="{{ hotel_link(price='10-18') }}">10–18 bin TL</a>
+      <a class="{{ 'on' if price_filter=='18plus' else '' }}" href="{{ hotel_link(price='18plus') }}">18.000 TL üstü</a>
+    </div>
   </form>
-  <p class="ht-note">{{ places|length }} otel · fiyatlar örnek gecelik tutardır, rezervasyon siteden yapılmaz</p>
+  <p class="ht-note">{{ places|length }} otel · örnek gecelik fiyat{% if sort=='price_asc' %} · en ucuz üstte{% elif sort=='price_desc' %} · en pahalı üstte{% endif %}{% if price_filter %} · fiyat filtresi aktif{% endif %}</p>
 </div>
 
 <section class="ht-section">
@@ -223,8 +245,8 @@
 <section class="ht-section" id="liste">
   <div class="ht-sec-h">
     <div>
-      <p class="eyebrow">Öne çıkanlar</p>
-      <h2>Beğeneceğin oteller</h2>
+      <p class="eyebrow">{% if sort.startswith('price') %}Fiyata göre{% else %}Öne çıkanlar{% endif %}</p>
+      <h2>{% if sort=='price_asc' %}En uygun oteller{% elif sort=='price_desc' %}En yüksek fiyatlı oteller{% else %}Beğeneceğin oteller{% endif %}</h2>
     </div>
     <a href="/oteller">Tümünü gör →</a>
   </div>
@@ -234,7 +256,7 @@
     {% set badge = 'TERMAL' if band_key=='termal' else ('ULUDAĞ' if band_key=='uludag' else (p.subcategory_label or 'OTEL')|upper) %}
     <a class="ht-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
       <div class="ht-card-media">
-        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🏨</div>{% endif %}
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" width="640" height="480" loading="lazy" decoding="async">{% else %}<div class="ph">🏨</div>{% endif %}
         <span class="ht-badge {{ band_key }}">{{ badge }}</span>
         <span class="ht-fav" aria-hidden="true">♡</span>
       </div>
@@ -272,7 +294,7 @@
     {% set badge = 'TERMAL' if band_key=='termal' else ('ULUDAĞ' if band_key=='uludag' else (p.subcategory_label or 'OTEL')|upper) %}
     <a class="ht-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
       <div class="ht-card-media">
-        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🏨</div>{% endif %}
+        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" width="640" height="480" loading="lazy" decoding="async">{% else %}<div class="ph">🏨</div>{% endif %}
         <span class="ht-badge {{ band_key }}">{{ badge }}</span>
         <span class="ht-fav" aria-hidden="true">♡</span>
       </div>
@@ -342,4 +364,5 @@
     </div>
   </div>
 </section>
+{% include "_seo_vertical_after.html" %}
 {% endblock %}

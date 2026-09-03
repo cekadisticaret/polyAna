@@ -1,0 +1,29 @@
+{% extends "_shell.html" %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block main %}
+<article class="seo-page">
+  <h1>{{ post.h1 }}</h1>
+  <p class="lead">{{ post.desc }}</p>
+  <img class="hero-pic" src="{{ post.image }}" alt="{{ post.h1 }}" width="1200" height="675" fetchpriority="high">
+  {% if slug == 'bursa-da-kahvalti-nerede' %}
+  <h2>Nasıl seçilir?</h2>
+  <p>Bursa kahvaltısı üç kümeye ayrılır: Cumalıkızık / Misi köy sofrası, Nilüfer serpme, merkez hızlı kahvaltı. Kalabalık hafta sonu için köy hattına erken git; rezervasyon siteden yapılmaz, işletmeyi ara.</p>
+  <h2>Listede nereden bakılır?</h2>
+  <p>Yeme-içme sayfasında yemek türü = kahvaltı, ilçe = Yıldırım veya Nilüfer. Puan ve öne çıkanlar üstte durur. Aynı ürün; bu yazı yalnızca “nerede yenir?” niyetine metin verir.</p>
+  <p>Kardeş yazı: <a href="/blog/bursa-1-gunluk-gezi-plani">1 günde Bursa gezisi</a>.</p>
+  {% else %}
+  <h2>Örnek sıra</h2>
+  <p>Sabah Ulu Cami ve Koza Han, öğle İskender mola, öğleden sonra Cumalıkızık. Tophane manzarası kısa durak. Araba yoksa teleferik / dolmuş ile dağ ayrı güne kalır.</p>
+  <h2>Listede nereden bakılır?</h2>
+  <p>Gezilecek sayfasında UNESCO / ücretsiz çipleri ve Osmangazi–Yıldırım filtresi. Harita butonu aynı kayıtları gösterir. Bu yazı görsel rota; ticari sayfa <a href="/gezilecek">/gezilecek</a>.</p>
+  <p>Kardeş yazı: <a href="/blog/bursa-da-kahvalti-nerede">Bursa’da kahvaltı</a>.</p>
+  {% endif %}
+  <div class="seo-cta">
+    <a class="pri" href="{{ post.cta_path }}">{{ post.cta_label }}</a>
+    <a class="ghost" href="https://wa.me/905535469948" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+  </div>
+</article>
+{% endblock %}

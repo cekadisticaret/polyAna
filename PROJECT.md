@@ -59,19 +59,33 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `web/poly_dashboard.py` `/forex` | **Yok** — `/forex` ve `/xau` → `/poly`; motor CoptC |
 | `BursaApp/` |
 | `BursaApp/enrich_camps.py` | Gerçek Bursa kamp yerleri (Çobankaya, Kapanca, Gölyazı…) + foto |
-| `BursaApp/seed_food_expand.py` | Yeme-içme genişletme · OSM cafe/bar + kahvaltı/meyhane/cantık · kafe→cafe |
+| `BursaApp/templates/visits_list.html` | Gezilecek — kenar filtre (tür/giriş/UNESCO/ilçe) + dikey kart listesi |
+| `BursaApp/seed_visit_expand.py` | Gezilecek · `import_osm_delta` (yeni OSM, mahalle camisi/zirve atlanır) + meşhur müzeler |
+| `BursaApp/templates/foods_list.html` | Yeme-içme — kenar filtre (tür/mutfak/yemek/fiyat/ilçe) + dikey restoran kartları |
+| `BursaApp/seed_panorama_food.py` | Bursapanorama restoran delta · `--refresh` HTML yeniler · `data/panorama_restoranlar.json` |
+| `BursaApp/seed_food_expand.py` | Yeme-içme · `import_osm_delta` (yeni kayıt, kopya atlanır) · kahvaltı/meyhane/cantık · kafe→cafe |
 | `BursaApp/enrich_visit_gallery.py` | Gezilecek kapak+galeri (Wikimedia) · `extra.gallery` · Instagram scrape yok |
 | `BursaApp/templates/camps.html` | Kamp keşif — Airbnb tarzı grid · kategori şeridi · harita FAB |
 | `BursaApp/enrich_food_venues.py` | Yeme-içme kapak+menü enrich (Commons · top ~80 · `static/cache/food-venue/`) |
 | `BursaApp/templates/_shell.html` | Site kabuğu · GA4 `G-HTBTD54V3D` · WhatsApp destek · e-posta onay şeridi |
  Bursa dijital şehir — `bursaapp.com/` · Flask **5051** · Bugün/Akşam/Yakınımda/Hafta sonu · üye puan/yorum · `/poly` ayrı |
-| `BursaApp/feed_social.py` | Profil Feeds: post · ziyaret · albüm · etkinlik gideceğim sayacı |
+| `BursaApp/feed_social.py` | Profil Feeds: post · ziyaret · albüm · Friends · sayfalı `profile_feed()` (12/sayfa) |
+| `BursaApp/templates/profile_feed.html` | 3 sütun feed UI — sonsuz kaydırma · stories · sticky compose |
+| `BursaApp/virtual_users.py` | 10 sanal üye (6K/4E) · feed/ziyaret/beğeni · `*.sanal@bursaapp.com` |
+| `BursaApp/virtual_users_seed.py` | Sanal üye oluştur · `seed` / `stats` / `tick` |
+| `BursaApp/virtual_users_activity.py` | Cron aktivite · `25 */3 * * *` · log `/tmp/bursaapp_virtual_users.log` |
+| `BursaApp/schools_fetch.py` | Bursa okulları OSM + curated → `data/schools.json` · etkinlikler |
+| `BursaApp/seed_schools.py` | Okul + okul etkinliği seed · `python3 BursaApp/seed_schools.py` |
+| `BursaApp/data/schools_curated.json` | Özel kolej / üniversite zengin kayıt (program, kayıt, etkinlik) |
+| `BursaApp/templates/school_detail.html` | Okul detay — program · olanak · etkinlik takvimi |
 | `BursaApp/app.py` | Keşfet hub + `/album` + `/hesap/profil` Feeds + `/hesap/ayarlar` + e-posta onay + yer foto + `/yer/<slug>/gidecegim` |
-| `BursaApp/analytics.py` | Tekil ziyaretçi (`ba_vid`) · localhost/urllib sayılmaz · 7g/toplam DISTINCT |
+| `BursaApp/analytics.py` | Tekil ziyaretçi (`ba_vid`) · bot/GoogleOther/crawler elenir · Accept-Language zorunlu · localhost/urllib sayılmaz · `--reset` |
 | `BursaApp/mail_verify.py` | E-posta onay (Brevo SMTP) · kırmızı şerit · 7g purge · siteden bypass yok |
 | `BursaApp/notify.py` | Outbox + SMTP (`SMTP_HOST/USER/PASS`) · Telegram kayıt |
 | `BursaApp/enrich_media_content.py` | Kafe/bar/meyhane/aile doğa + spor ücret + otel oda + film fragman zenginleştirme |
-| `BursaApp/seo_nightly.py` | Gece SEO denetimi → `SeoAudit` · cron `30 21 * * *` · `/admin/seo` |
+| `BursaApp/bursaapp_nightly.py` | Gece turu · OSM+Panorama delta · ≤80 onarım · seo + görsel · **02:30 İST** (`30 23 * * *`) · log `/tmp/bursaapp_nightly.log` |
+| `BursaApp/seo_arch.py` | Hub/dikey/blog/KVKK SEO mimarisi · JSON-LD graph · `llms.txt` |
+| `BursaApp/seo.py` | Meta, canonical, OG, sitemap · ürün OG `og-bursa.jpg` |
 | `BursaApp/seo_status.py` | Google/GSC + teknik SEO checklist · dashboard kartı · `/admin/seo` token kaydı |
 | `BursaApp/fetch_film_posters.py` | Film afişleri (Wikimedia) · `static/cinema/film-*.jpg` |
 | `BursaApp/enrich_doctors.py` | Acıbadem kadro özgeçmiş + foto URL · `templates/doctor_detail.html` |
@@ -84,17 +98,17 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BursaApp/seo_pages.py` | SEO landing + ilçe slug haritası |
 | `BursaApp/seed_platform.py` | Kampanya/kupon/editoryal/est_meal seed |
 | `BursaApp/catalog.py` | Kategoriler + `MEKAN_TAXONOMY` alt türler + `place_public` puan |
-| `BursaApp/data/restaurants.json` | Yeme-içme: ilçe + liste puanı · alt tür · foto `static/food/` |
+| `BursaApp/data/restaurants.json` | Yeme-içme: ilçe + liste puanı · alt tür · foto `static/food/` · Google Places meşhur noktalar (Selçuk, Double F, Vertice, Han 1426…) |
 | `BursaApp/data/shops.json` | Alışveriş: AVM, outlet, hediyelik, yerel · `/alisveris` |
-| `BursaApp/data/markets.json` | Marketler: Migros/BİM/A101/Şok/pazar · kampanya seed · `/marketler` |
+| `BursaApp/data/markets.json` | Marketler: zincir başına 1 kayıt (BİM, Özhan, File…) · logo + aktüel URL · `/marketler` |
 | `BursaApp/data/sports.json` | Spor: fitness, yoga, yüzme, tenis, halı saha · `/spor` |
 | `BursaApp/data/family.json` | Aile: park, piknik, zoo, çocuk · `/aile` |
 | `BursaApp/data/album.json` | Bursa albüm görselleri · `/album` |
 | `BursaApp/data/bursaspor_standings.json` | 1. Lig puan durumu tablosu · `/bursaspor` |
 | `BursaApp/bursaspor_feed.py` | Bursaspor haber RSS + özgün özet + maç masası · `data/bursaspor_feed.json` · cron **06:00/18:00 İST** (`0 3,15 * * *` UTC) · log `/tmp/bursaspor_feed.log` |
 | `BursaApp/data/bursaspor_feed.json` | `/bursaspor` gündem + maç masası çıktısı |
-| `BursaApp/nobetci_eczane_fetch.py` | Bursa nöbetçi eczane (eczaneadresi.com public API) · `data/nobetci_eczaneler.json` · cron **07:00/19:00 İST** (`0 4,16 * * *` UTC) · log `/tmp/nobetci_eczane.log` |
-| `BursaApp/seed_health.py` | Hastane + doktor upsert (`venue_name` = hastane slug) · devlet MHRS poliklinik kartları |
+| `BursaApp/nobetci_eczane_fetch.py` | Bursa nöbetçi eczane · asıl kaynak **beo.org.tr** (API yedek) · `data/nobetci_eczaneler.json` · cron **07:00 / 12:00 / 15:00 / 18:45 / 19:00 İST** · log `/tmp/nobetci_eczane.log` |
+| `BursaApp/optimize_images.py` | Statik görsel sıkıştırma + 640×480 kart thumb (`static/cache/thumbs`) · `place_public` thumb tercih eder |
 | `BursaApp/seed_city.py` | shop/sport/family/**market** seed + market kampanya + food subcategory + koordinat backfill |
 | `BursaApp/data/places_visit.json` | Gezilecek: UNESCO + köy + dağ + İznik · Wikimedia gerçek foto · Bursaray yok |
 | `BursaApp/data/hotels.json` | Oteller (eski çekirdek liste) · `/oteller` |
@@ -109,7 +123,8 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BursaApp/data/events.json` | Junioshow, Kahve Festivali, Altın Biber · `/etkinlikler` takvim |
 | `BursaApp/data/hospitals.json` | Hastaneler: Şehir, Acıbadem, Medical Park, BUÜ, Jimer, Doruk · `/hastaneler` |
 | `BursaApp/data/doctors.json` | Hekim: resmi kadro · `venue_name` = hastane slug · `/doktorlar` |
-| `BursaApp/data/vets.json` | Veteriner: BUÜ + VHO kayıtlı klinik · `/veterinerler` · `templates/vets.html` “Yakın veterinerleri bul” (geo → `tab=yakin` mesafe sırası) |
+| `BursaApp/data/dentists.json` | Diş: ADSM + özel klinik · `/dis-hekimleri` · eczane tarzı hero/liste |
+| `BursaApp/data/vets.json` | Veteriner: BUÜ + VHO kayıtlı klinik · `/veterinerler` · hero/liste + yakın bul |
 | `BursaApp/data/fun.json` | Eğlence: bowling, escape, canlı müzik, bar, AVM · `/eglence` |
 | `BursaApp/data/orgs.json` | Organizasyon: belediye kültür, BAOB, TÜYAP, KFA · `/organizasyonlar` |
 | `BursaApp/models.py` | User (avatar/email_verified/show_full_name) · PlacePhoto · SeoAudit · Review.img_url · SQLite |
@@ -125,11 +140,11 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BursaApp/templates/event_detail.html` | Tiyatro/konser/etkinlik detay — hero · geri sayım · platform bilet · hakkında · kurallar · mekan etkinlikleri |
 | `BursaApp/templates/detail.html` | Genel yer detay · **film** için Hikaye/Oyunculuk/Görsellik/Tempo yıldız değerlendirme |
 | `BursaApp/templates/restaurant_detail.html` | Yeme-içme detay — hero · menü kartları · bilgi grid · galeri · yorum |
-| `BursaApp/templates/hospital_detail.html` | Hastane detay — hero · istatistik · hizmet · muayene ücreti · tüm hekimler |
+| `BursaApp/templates/hospital_detail.html` | Hastane detay — hero · hizmet · ücret · hekimler (branş açılır seçici) · hasta deneyimi (Doktor/Personel/Temizlik/Bekleme) |
 | `BursaApp/events_fetch.py` | Etkinlinkler Bursa çekimi · detay enrich (about/platform/kurallar) · `backfill-details` | Etkinlinkler Bursa liste + gerçek kapak foto · upsert Place · wiki yedek · gece **00:00 İST** (`0 21 * * *` UTC) · log `/tmp/bursaapp_events_fetch.log` |
 | `BursaApp/notify.py` | Bildirim outbox + **Telegram kayıt bildirimi** (`BURSAAPP_TG_*`) |
 | `BursaApp/static/favicon.ico` | Marka “b” favicon + `logo-*.png` · `_shell` tüm sayfalar · `/robots.txt` `/sitemap.xml` (Search Console) |
-| `BursaApp/seo.py` | SEO çekirdeği: meta/OG/Twitter/canonical · JSON-LD (Org/WebSite/Breadcrumb/Place/Event) · sitemap helpers |
+| `BursaApp/seo.py` | Meta/OG/canonical · JSON-LD graph (hub) · dikey Service+Offer · sitemap |
 | `BursaApp/uploads/` | Şablon ZIP / yüklemeler — içerik git’e alınmaz (`*` ignore) |
 | `AgustosKripto/binance_um_wallet.py` | Tek USDT-M cüzdan önbelleği (CEBU / user-ws); REST yok |
 | `temmuzPoly/repair_a2_sanal_settlement.py` | A2 sanal geçmişi PM slot open/close ile yeniden hesaplar (Binance 1h). |
@@ -242,8 +257,10 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/c101_calibration.jsonl` | C1#01 kalibrasyon günlüğü — açılan **ve açılmayan** her değerlendirme (saatte 3 satır); `calib` modu model vs piyasa **Brier skoru** verir. Defterin asıl ölçüm çıktısı. **14.08.2026 15:10–21:20 arası satırlar CLOB ask'e karşı ölçüldü**, öncesi ve sonrası Gamma mid — piyasa Brier'ini karşılaştırırken bu pencereyi ayır |
 | `temmuzPoly/c101_v2_calibration.jsonl` | C1#01 V2 kalibrasyon günlüğü — aynı biçim, kotasyon hep ask. `pm_up`/`pm_down` ask, `up_mid`/`down_mid` Gamma mid; iki defterin aynı slotta neye baktığı buradan karşılaştırılır |
 | `temmuzPoly/c101_depth_baseline.json` | Sembol başına likidite oranı EWMA referansı; ilk 20 tur derinlik çarpanı 1,0 (etkisiz) |
-| `temmuzPoly/algo_islemler_fresh_start.py` | Algoritma-islemler close + **78 defterin** bakiyesini $1000'e sıfırla + **TOP1–4 oy defteri** damgası (cron open bekler, manuel open yok). **t05/t07 kopyaları** da $1000 (yoksa oluşturur). Liste dashboard `_ALGO_ISLEMLER_KEYS` ile birebir; `melez` dosya adı farklı olduğu için `_STATE_FILE_KEY` ile eşlenir. Bayraklar: `--check` (yazmadan eksik dosya raporu) · `--reset-only` · `--wipe-history` (geçmişi `_archive_<tarih>/` klasörüne taşır, silmez) |
+| `temmuzPoly/algo_islemler_fresh_start.py` | Algoritma-islemler close + **79 defterin** bakiyesini $1000'e sıfırla + **TOP1–4 oy defteri** damgası (cron open bekler, manuel open yok). **t05/t07 kopyaları** da $1000 (yoksa oluşturur). Liste dashboard `_ALGO_ISLEMLER_KEYS` ile birebir; `melez` dosya adı farklı olduğu için `_STATE_FILE_KEY` ile eşlenir. Bayraklar: `--check` (yazmadan eksik dosya raporu) · `--reset-only` · `--wipe-history` (geçmişi `_archive_<tarih>/` klasörüne taşır, silmez) |
 | `temmuzPoly/poly_trader_jarvis2026.py` | **JARVIS2026** sanal $1000 · $16/24/32 · evrilen fikir · her dk open · kâr kapısı **%35** (diğer defterler %50) · `:01` close · gerçek PM yok |
+| `temmuzPoly/poly_trader_ref01.py` | **REF01** sanal $1000 · $24/36/48 · kâr kapısı **%40** · her dk open · `:01` close · sayfada giriş saati (HH:MM İST) · gerçek PM yok |
+| `temmuzPoly/ref01_signal.py` | REF01 — ilk 6 bps · TREND ≥20 kesişsiz · FADE kesiş <:15 + ters ≥12 · ask_max 0,55 |
 | `temmuzPoly/jarvis2026_signal.py` | Fikir kuralları · `ask_max` taban **0.50** · yol eşiği tavan **6 bps** (evrim daha sıkamaz) |
 | `temmuzPoly/jarvis2026_evolve.py` | 2 saatte fikir üretir (`30 */2`); ask_max <0.50 / path_abs >6 yazsa bile sinyal katmanı düzeltir |
 | `temmuzPoly/backtest_watch_1y.py` | İzleme 5’li 1Y · F16 = BTC+SOL `predict()` · 00:00 İST · `backtest_watch_1y.json` |
@@ -270,7 +287,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/backtest_selected_algos_1y.py` | Seçili 8 defter — 1Y walk-forward; $1000 · $24/36/48; model ask + PM ücreti; aylık P&L Telegram |
 | `temmuzPoly/backtest_algo_islemler_1y.py` | `/algoritma-islemler` 1Y Poly walk-forward — ask+fee · $24/36/48; çıktı `backtest_algo_islemler_1y.json` |
 | `temmuzPoly/algoritma-islemler-1y-poly.pdf` | 1Y sıralama PDF — indir `https://bursaapp.com/download/algoritma-islemler-1y-poly.pdf` |
-| `/algoritma-islemler` izleme | Üst sıra F16 · A2#03 · A2#05 · F16V2 · JARVIS2026; yan kart = geçen yılın aynı ayı (`backtest_watch_1y.json`, 00:00 İST) |
+| `/algoritma-islemler` izleme | Üst sıra F16 · A2#03 · A2#05 · F16V2 · JARVIS2026 · REF01; her kartın altında yıllık backtest (`backtest_watch_1y.json`) |
 | `temmuzPoly/pdf_a203_a205_f16_aylik.py` | A2#03 · A2#05 · F16 1Y aylık PDF — `a203-a205-f16-aylik.pdf` |
 | `temmuzPoly/backtest_e01_family_1y.py` | A1 · C101 · A2#05 · COMBO — 1Y walk-forward, $1000 · $24/36/48, aylık P&L |
 | `temmuzPoly/poly_trader_analiz6_v2_live.py` | A6V2 Live gerçek PM (BTC+ETH); dashboard toggle |
@@ -348,7 +365,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
  - `atr_profit_lock.py` modül varsayılanları **değiştirilmedi** — gerçek para yolu (`crypto_futures_cr6`) onu doğrudan import ediyor; yeni eşik pozisyon başına `loss_stop_atr` alanıyla veriliyor.
 - **Sahipsiz defter temizlendi (2026-08-15):** `Analizler/data/a4` kataloğdan (`ANALIZ_META`) kaldırılmış ama dosyası kalmıştı; hiçbir `close`/`trail` turu görmediği için **6 pozisyon 55 saattir açıktı** ve ne kapanıyor ne de zarar olarak sayılıyordu. `orphan_scan.py --archive` ile `_archive_orphan_20260815/`'e taşındı (353 kapanmış işlem, bakiye $106,06 / $300). Tarama tüm sistemde başka sahipsiz defter bulmadı.
 - **`LEADER_MIN_SKILL` düzeltildi (2026-08-15):** %0,04 → **%0,10**. Eski değerin yorumu "maker gidiş-dönüş" diyordu ama defterler taker ödüyor; 50.554 gerçek işlemden ölçülen fiili maliyet %0,10. Kapı gerçeğin 2,5 katı altında olduğu için masrafını çıkaramayan (defter, coin) çiftlerini "nitelikli" gösteriyordu
-- `temmuzPoly/backtest_watch_1y.py` — `0 21 * * *` (00:00 İST); izleme 5’li 1Y walk-forward → `backtest_watch_1y.json`; kartta **geçen yılın aynı ayı**; emir yok
+- `temmuzPoly/backtest_watch_1y.py` — `0 21 * * *` (00:00 İST); izleme 6’lı 1Y walk-forward → `backtest_watch_1y.json`; sayı her izleme kartının altında; emir yok
 - `AgustosKripto/Test/jarvis_report.py` — `0 21 * * *` (00:00 İST); `/kripto/jarvis` sayfasını besler (1. sekme Test + 2. sekme sistem denetimi), veri `/kripto/api/jarvis`. **İlk ölçüm (7 gün · 22.092 işlem):** brüt −$166 · komisyon $13.046 · net −$13.211 — kayıp tamamen komisyon; ortalama SKILL %−0,0044, 24/54 defter pozitif (yazı-tura), Bonferroni |t|≈3,8'i geçen yok. İşlemlerin %79'u süre dolduğu için kapanıyor ve zarar orada; ATR katmanı tek pozitif bileşen (+$1.392). **Sistem denetimi (118 defter · 50.801 işlem):** net −$21.709. 2. sekmede ayrıca **çıkış rejimi paneli** var: eski/yeni rejim karşılaştırması + geçiş sonrası biriken canlı veri (`jarvis_audit._rejim`). **Bulgu kapandı:** `LEADER_MIN_SKILL` %0,04 → %0,10 düzeltildi
 - `AgustosKripto/Test/analog.py build/query/eval` — cron yok, elle çalışır; indeks `data/analog_index.npz` (52 MB, 270k pencere). **180g eval** (k=5000, step=4): isabet %49, ort. imzalı getiri **−%0,0023**; üst güven kovasında en fazla +%0,03 — komisyon sonrası işe yaramaz
 - `AgustosKripto/Test/backtest_fast.py` — elle; profil sürenin %92'sinin format dönüşümünde geçtiğini gösterdi (`_resample_4h` %59, `_bars_ohlc` %33) → coin başına bir kez ön hesap. A2 Top-17 1Y: 6541s → dakikalar. Sonuçlar `backtest_1y` ile birebir (`--verify`)

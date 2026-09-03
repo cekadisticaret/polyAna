@@ -12,7 +12,7 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
 
 from catalog import infer_food_subcategory, tags_dump, tags_load
-from models import Campaign, Place, SessionLocal, init_db
+from models import Campaign, Place, SessionLocal, init_db, merge_place_extra
 
 _TZ = ZoneInfo("Europe/Istanbul")
 
@@ -50,23 +50,44 @@ def _upsert(db, *, slug, category, raw, img_prefix=""):
         fields["ends_at"] = day.replace(hour=hour + 2, minute=0)
     p = db.query(Place).filter(Place.slug == slug).first()
     if p is None:
-        db.add(Place(slug=slug, **fields))
-        return "new"
+        p = Place(slug=slug, **fields)
+        db.add(p)
+        db.flush()
+        return "new", p
     for k, v in fields.items():
         setattr(p, k, v)
-    return "upd"
+    return "upd", p
 
 
 def seed_file(db, path: str, category: str) -> tuple[int, int]:
     rows = json.loads(open(path, encoding="utf-8").read())
     n_new = n_upd = 0
     for raw in rows:
-        r = _upsert(db, slug=raw["slug"], category=category, raw=raw)
+        r, p = _upsert(db, slug=raw["slug"], category=category, raw=raw)
+        extra = raw.get("extra")
+        if extra and isinstance(extra, dict) and p is not None:
+            merge_place_extra(p, extra)
         if r == "new":
             n_new += 1
         else:
             n_upd += 1
     return n_new, n_upd
+
+
+def hide_old_market_branches(db) -> int:
+    """Şube kayıtlarını gizle — /marketler zincir başına tek kart."""
+    path = os.path.join(_DIR, "data", "markets.json")
+    if not os.path.isfile(path):
+        return 0
+    keep = {raw["slug"] for raw in json.loads(open(path, encoding="utf-8").read())}
+    n = 0
+    for p in db.query(Place).filter(Place.category == "market").all():
+        if p.slug in keep:
+            continue
+        if p.status == "approved":
+            p.status = "rejected"
+            n += 1
+    return n
 
 
 def seed_market_campaigns(db) -> int:
@@ -96,8 +117,7 @@ def seed_market_campaigns(db) -> int:
             existing.body = camp.get("body") or ""
             existing.badge = camp.get("badge") or ""
             existing.status = "approved"
-            if not existing.ends_at:
-                existing.ends_at = now + timedelta(days=60)
+            existing.ends_at = now + timedelta(days=90)
             continue
         db.add(
             Campaign(
@@ -122,9 +142,7 @@ def main() -> None:
         b = seed_file(db, os.path.join(_DIR, "data", "sports.json"), "sport")
         c = seed_file(db, os.path.join(_DIR, "data", "family.json"), "family")
         m = seed_file(db, os.path.join(_DIR, "data", "markets.json"), "market")
-        # köy bakkal / küçük bakkal — yayından çıkar
-        for p in db.query(Place).filter(Place.category == "market", Place.subcategory == "bakkal").all():
-            p.status = "rejected"
+        hidden = hide_old_market_branches(db)
         db.flush()
         camp_n = seed_market_campaigns(db)
         food_n = backfill_food_sub(db)
@@ -132,8 +150,8 @@ def main() -> None:
         today_n = ensure_today_shows(db)
         db.commit()
         print(
-            f"shop {a} sport {b} family {c} market {m} market_camp={camp_n} "
-            f"food_sub={food_n} coords={coord_n} today_shows={today_n}"
+            f"shop {a} sport {b} family {c} market {m} hidden_branches={hidden} "
+            f"market_camp={camp_n} food_sub={food_n} coords={coord_n} today_shows={today_n}"
         )
     finally:
         db.close()

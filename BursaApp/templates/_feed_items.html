@@ -1,0 +1,41 @@
+{% for it in feed %}
+<article class="ff-card ff-post tone-{{ (loop.index0 + (tone_offset or 0)) % 3 }}">
+  <div class="ff-post-h">
+    <div class="ff-avatar">{% if it.user.avatar_url %}<img src="{{ it.user.avatar_url }}" alt="">{% else %}<span>{{ it.user.name[0]|upper }}</span>{% endif %}</div>
+    <div class="ff-post-meta">
+      <b>{{ it.user.name }}</b>
+      <span class="ff-handle">{{ it.user.handle }}</span>
+      <div class="ff-muted">{{ it.ago }}{% if it.kind != 'post' %} · {{ it.kind }}{% endif %}{% if it.status and it.status != 'approved' %} · <span class="ff-pill">{{ it.status }}</span>{% endif %}</div>
+    </div>
+  </div>
+  {% if it.body %}
+  <p class="ff-body">{{ it.body }}</p>
+  {% endif %}
+  {% if it.place and (not it.body or it.place.title not in it.body) %}
+  <a class="ff-mention" href="{{ it.place.path }}">{{ it.place.title }}</a>
+  {% endif %}
+  {% if it.images %}
+  <div class="ff-gallery {% if it.images|length >= 3 %}n3{% elif it.images|length == 2 %}n2{% else %}n1{% endif %}">
+    {% for img in it.images[:3] %}<img src="{{ img }}" alt="" loading="lazy">{% endfor %}
+  </div>
+  {% endif %}
+  <div class="ff-actions">
+    {% if it.views %}<span class="ff-views">{{ it.views }} görüntülenme</span>{% endif %}
+    <div class="ff-act-row">
+      {% if it.kind=='post' and it.status == 'approved' %}
+      <form method="post" action="/hesap/profil/like/{{ it.id }}">
+        <button type="submit" class="ff-act {% if it.liked %}on{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if it.liked %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          Beğen · {{ it.likes }}
+        </button>
+      </form>
+      {% endif %}
+      {% if it.place %}<a class="ff-act" href="{{ it.place.path }}">Yorum · Git</a>{% endif %}
+    </div>
+  </div>
+</article>
+{% else %}
+{% if show_empty %}
+<div class="ff-card ff-empty"><p class="ff-muted">Feed boş — ilk postunu aşağıdan paylaş.</p></div>
+{% endif %}
+{% endfor %}
