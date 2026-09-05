@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timedelta
+from urllib.parse import urlencode
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 
@@ -28,6 +29,72 @@ from seo_pages import DISTRICT_SECTIONS, ILCE_SLUGS, SEO_LANDINGS
 from seo import article_ld, for_district, for_food, for_seo_landing, page as seo_page
 
 bp = Blueprint("features", __name__)
+
+MAP_CATEGORIES = (
+    ("", "Tümü"),
+    ("food", "Restoran"),
+    ("cafe", "Cafe"),
+    ("visit", "Gezilecek"),
+    ("hotel", "Otel"),
+    ("camp", "Kamp"),
+    ("event", "Etkinlik"),
+    ("concert", "Konser"),
+    ("market", "Market"),
+    ("shop", "Alışveriş"),
+    ("vet", "Veteriner"),
+    ("hospital", "Hastane"),
+    ("school", "Okul"),
+)
+
+MAP_RADIUS_OPTIONS = (
+    (500, "500 m"),
+    (1000, "1 km"),
+    (2000, "2 km"),
+    (5000, "5 km"),
+    (0, "Sınırsız"),
+)
+
+
+def _map_query(
+    *,
+    cat: str = "",
+    lat: float | None = None,
+    lng: float | None = None,
+    near: bool = False,
+    radius_m: int = 2000,
+    q: str = "",
+) -> str:
+    params: dict[str, str] = {}
+    if near:
+        params["near"] = "1"
+    if cat:
+        params["cat"] = cat
+    if radius_m:
+        params["r"] = str(radius_m)
+    if lat is not None and lng is not None:
+        params["lat"] = f"{lat:.5f}"
+        params["lng"] = f"{lng:.5f}"
+    q = (q or "").strip()
+    if q:
+        params["q"] = q
+    return "/harita?" + urlencode(params) if params else "/harita"
+
+
+def _near_search_match(p: Place, query: str) -> bool:
+    query = (query or "").strip().lower()
+    if not query:
+        return True
+    blob = " ".join(
+        [
+            p.title or "",
+            p.ilce or "",
+            p.address or "",
+            p.category or "",
+            p.subcategory or "",
+            p.blurb or "",
+        ]
+    ).lower()
+    return all(tok in blob for tok in query.split() if tok)
 
 
 def _active_campaigns(db, limit=12, category: str | None = None):
@@ -283,16 +350,83 @@ def ilce_page(slug: str):
         db.close()
 
 
+@bp.route("/etrafimda")
+def etrafimda():
+    args = request.args.to_dict()
+    args["near"] = "1"
+    if "r" not in args:
+        args["r"] = "2000"
+    return redirect("/harita?" + urlencode(args))
+
+
+def _map_pin_gallery(d: dict, user_photo_urls: list | None = None) -> list[str]:
+    """Kapak + extra galeri + onaylı kullanıcı fotoğrafları."""
+    gallery: list[str] = []
+    img = (d.get("img_url") or "").strip()
+    if img:
+        gallery.append(img)
+    ex = d.get("extra") or {}
+    gals = ex.get("gallery") if isinstance(ex.get("gallery"), list) else []
+    for g in gals:
+        u = (g or "").strip()
+        if u and u not in gallery:
+            gallery.append(u)
+    for u in user_photo_urls or []:
+        s = (u or "").strip()
+        if s and s not in gallery:
+            gallery.append(s)
+    return gallery[:8]
+
+
+def _map_pin_detail(d: dict, user_photo_urls: list | None = None) -> dict:
+    blurb = (d.get("blurb") or "").strip()
+    if len(blurb) > 320:
+        blurb = blurb[:317].rstrip() + "…"
+    return {
+        "slug": d.get("slug"),
+        "path": d.get("path"),
+        "title": d.get("title"),
+        "lat": d.get("lat"),
+        "lng": d.get("lng"),
+        "category": d.get("category"),
+        "subcategory": d.get("subcategory"),
+        "category_label": d.get("category_label"),
+        "subcategory_label": d.get("subcategory_label") or "",
+        "distance_m": d.get("distance_m"),
+        "rating": d.get("rating"),
+        "img_url": d.get("img_url"),
+        "gallery": _map_pin_gallery(d, user_photo_urls),
+        "blurb": blurb,
+        "address": (d.get("address") or "").strip(),
+        "ilce": (d.get("ilce") or "").strip(),
+        "phone": (d.get("phone") or "").strip(),
+        "web": (d.get("web") or "").strip(),
+        "hours_text": (d.get("hours_text") or "").strip(),
+        "price_band": (d.get("price_band") or "").strip(),
+    }
+
+
 @bp.route("/harita")
 def harita():
     db = SessionLocal()
     try:
+        near_mode = (request.args.get("near") or "").strip().lower() in ("1", "true", "yes")
+        has_user_coords = request.args.get("lat") and request.args.get("lng")
         try:
             lat = float(request.args.get("lat") or FALLBACK_LAT)
             lng = float(request.args.get("lng") or FALLBACK_LNG)
         except ValueError:
             lat, lng = FALLBACK_LAT, FALLBACK_LNG
+            has_user_coords = False
+        used_fallback = not has_user_coords
         cat = (request.args.get("cat") or "").strip()
+        q = (request.args.get("q") or "").strip()
+        try:
+            radius_m = int(request.args.get("r") or (2000 if near_mode else 0))
+        except ValueError:
+            radius_m = 2000 if near_mode else 0
+        if radius_m not in (0, 500, 1000, 2000, 5000):
+            radius_m = 2000 if near_mode else 0
         rows = (
             db.query(Place)
             .filter(Place.status == "approved", Place.lat.isnot(None), Place.lng.isnot(None))
@@ -305,8 +439,13 @@ def harita():
                     continue
             elif cat and p.category != cat:
                 continue
+            if not _near_search_match(p, q):
+                continue
             d = place_public(p)
-            d["distance_m"] = int(haversine_m(lat, lng, float(p.lat), float(p.lng)))
+            dist = int(haversine_m(lat, lng, float(p.lat), float(p.lng)))
+            if radius_m and dist > radius_m:
+                continue
+            d["distance_m"] = dist
             pins.append(d)
         pins.sort(key=lambda x: x.get("distance_m") or 0)
         slim = []
@@ -326,16 +465,58 @@ def harita():
                     "img_url": d.get("img_url"),
                 }
             )
-        return render_template(
-            "map.html",
-            pins=pins[:200],
-            pins_json=json.dumps(slim, ensure_ascii=False),
+        seo = seo_page(
+            title="Etrafımda ne var" if near_mode else "Harita",
+            description=(
+                "Konumuna göre en yakın restoran, gezilecek yer, market ve daha fazlası — Bursa haritası."
+                if near_mode
+                else "Bursa mekanları harita üzerinde; kategori filtreli keşif."
+            ),
+            path="/etrafimda" if near_mode else "/harita",
+            breadcrumbs=[
+                ("Ana Sayfa", "/"),
+                ("Etrafımda ne var" if near_mode else "Harita", "/etrafimda" if near_mode else "/harita"),
+            ],
+        )
+        near_pins = pins[:24]
+        from models import PlacePhoto
+
+        photo_map: dict[int, list[str]] = {}
+        near_ids = [d.get("id") for d in near_pins if d.get("id")]
+        if near_ids:
+            for ph in (
+                db.query(PlacePhoto)
+                .filter(PlacePhoto.place_id.in_(near_ids), PlacePhoto.status == "approved")
+                .order_by(PlacePhoto.id.desc())
+                .all()
+            ):
+                photo_map.setdefault(ph.place_id, []).append(ph.img_url)
+        near_slim = [
+            _map_pin_detail(d, photo_map.get(d.get("id") or 0))
+            for d in near_pins
+        ]
+        from map_tiles import leaflet_tile_layers
+
+        tpl = "nearby_explore.html" if near_mode else "map.html"
+        payload = dict(
+            pins=near_pins if near_mode else pins[:200],
+            pins_json=json.dumps(near_slim if near_mode else slim, ensure_ascii=False),
             total=len(pins),
             lat=lat,
             lng=lng,
             cat=cat,
+            q=q,
+            near_mode=near_mode,
+            used_fallback=used_fallback,
+            radius_m=radius_m,
+            map_categories=MAP_CATEGORIES,
+            map_radius_options=MAP_RADIUS_OPTIONS,
+            map_query=_map_query,
+            map_tiles=leaflet_tile_layers(),
             nav="harita",
+            seo=seo,
         )
+        return render_template(tpl, **payload)
     finally:
         db.close()
 
@@ -548,7 +729,12 @@ def sahiplen(slug: str):
                     )
                     p.claim_status = "pending"
                     db.commit()
-                    flash("Sahiplenme talebi gönderildi. Belgeler admin tarafından incelenecek.", "ok")
+                    return redirect(
+                        "/tesekkur?from=sahiplen&next="
+                        + quote(f"/yer/{slug}", safe="")
+                        + "&label="
+                        + quote("Yer sayfasına dön", safe="")
+                    )
                 return redirect(f"/yer/{slug}")
         return render_template("claim.html", place=place_public(p), nav="hesap")
     finally:

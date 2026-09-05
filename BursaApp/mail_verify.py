@@ -90,10 +90,14 @@ def _delete_user_data(db, user_id: int) -> None:
         PostLike,
         Review,
         SavedRoute,
+        UserFollow,
         UserPost,
         UserVisit,
     )
 
+    db.query(UserFollow).filter(
+        (UserFollow.follower_id == user_id) | (UserFollow.following_id == user_id)
+    ).delete(synchronize_session=False)
     # Post likes on this user's posts
     post_ids = [pid for (pid,) in db.query(UserPost.id).filter(UserPost.user_id == user_id).all()]
     if post_ids:

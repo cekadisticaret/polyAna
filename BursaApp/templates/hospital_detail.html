@@ -43,7 +43,7 @@
 {# —— HAKKINDA —— #}
 <section class="hd-sec hd-about">
   <div class="hd-about-img">
-    {% if cover %}<img src="{{ cover }}" alt="" loading="lazy">{% endif %}
+    {% if cover %}<img src="{{ cover }}" alt="{{ place.title }} kapak fotoğrafı" loading="lazy">{% endif %}
   </div>
   <div class="hd-about-text">
     <p class="hd-label">Hakkımızda</p>
@@ -208,7 +208,7 @@
   <div class="hd-doc-grid">
     {% for u in units %}
     <a class="hd-doc" href="{{ u.path or ('/yer/' ~ u.slug) }}">
-      <div class="hd-doc-photo">{% if u.img_url %}<img src="{{ u.img_url }}" alt="" loading="lazy">{% else %}<span>🏥</span>{% endif %}</div>
+      <div class="hd-doc-photo">{% if u.img_url %}<img src="{{ u.img_url }}" alt="{{ u.title }}" loading="lazy">{% else %}<span>🏥</span>{% endif %}</div>
       <div class="hd-doc-body"><h4>{{ u.title }}</h4><p>{{ u.price_band or u.ilce }}</p></div>
     </a>
     {% endfor %}
@@ -274,7 +274,7 @@
       </div>
     </div>
     {% if r.body %}<p>{{ r.body }}</p>{% endif %}
-    {% if r.img_url %}<img class="review-photo" src="{{ r.img_url }}" alt="" loading="lazy">{% endif %}
+    {% if r.img_url %}<img class="review-photo" src="{{ r.img_url }}" alt="{{ r.user_name }} yorum fotoğrafı" loading="lazy">{% endif %}
   </div>
   {% else %}
   <p class="empty">Henüz onaylı hasta deneyimi yok — ilk puanı sen ver.</p>

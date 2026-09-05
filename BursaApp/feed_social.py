@@ -14,9 +14,11 @@ from models import (
     EventGoing,
     Place,
     PlacePhoto,
+    PostComment,
     PostLike,
     Review,
     User,
+    UserFollow,
     UserPost,
     UserVisit,
 )
@@ -108,13 +110,214 @@ def sanal_user_ids(db) -> list[int]:
     return [u.id for u in _query_virtual_users(db)]
 
 
+def following_ids(db, user_id: int) -> list[int]:
+    rows = (
+        db.query(UserFollow.following_id)
+        .filter(UserFollow.follower_id == user_id)
+        .order_by(UserFollow.id.desc())
+        .limit(500)
+        .all()
+    )
+    return [int(r[0]) for r in rows]
+
+
+def is_following(db, follower_id: int, following_id: int) -> bool:
+    if follower_id == following_id:
+        return False
+    return (
+        db.query(UserFollow.id)
+        .filter(UserFollow.follower_id == follower_id, UserFollow.following_id == following_id)
+        .first()
+        is not None
+    )
+
+
+def follow_toggle(db, follower_id: int, following_id: int) -> bool:
+    """Takip durumunu çevir; yeni durum döner (True = takipte)."""
+    if follower_id == following_id:
+        raise ValueError("self_follow")
+    target = db.get(User, following_id)
+    if not target or not target.is_active:
+        raise LookupError("user")
+    row = (
+        db.query(UserFollow)
+        .filter(UserFollow.follower_id == follower_id, UserFollow.following_id == following_id)
+        .first()
+    )
+    if row:
+        db.delete(row)
+        return False
+    db.add(UserFollow(follower_id=follower_id, following_id=following_id))
+    return True
+
+
+def follower_ids(db, user_id: int) -> list[int]:
+    rows = (
+        db.query(UserFollow.follower_id)
+        .filter(UserFollow.following_id == user_id)
+        .order_by(UserFollow.id.desc())
+        .limit(500)
+        .all()
+    )
+    return [int(r[0]) for r in rows]
+
+
+def follow_counts(db, user_id: int) -> dict[str, int]:
+    following = db.query(UserFollow).filter(UserFollow.follower_id == user_id).count()
+    followers = db.query(UserFollow).filter(UserFollow.following_id == user_id).count()
+    return {"following": int(following), "followers": int(followers)}
+
+
+def _follow_user_row(db, u: User, *, viewer_id: int | None, posts_n: int | None = None) -> dict:
+    if posts_n is None:
+        posts_n = (
+            db.query(UserPost)
+            .filter(UserPost.user_id == u.id, UserPost.status == "approved", UserPost.privacy == "public")
+            .count()
+        )
+    following = bool(viewer_id and is_following(db, viewer_id, u.id))
+    return {
+        "id": u.id,
+        "name": u.name or "Üye",
+        "handle": u.handle(),
+        "avatar_url": u.avatar_url or "",
+        "posts": int(posts_n),
+        "following": following,
+        "is_self": viewer_id == u.id if viewer_id else False,
+    }
+
+
+def follow_network(
+    db,
+    user_id: int,
+    *,
+    list_kind: str = "following",
+    viewer_id: int | None = None,
+    limit: int = 30,
+    offset: int = 0,
+) -> tuple[list[dict], bool]:
+    """Takip ettiklerim veya takipçiler listesi."""
+    kind = (list_kind or "following").strip().lower()
+    if kind not in ("following", "followers"):
+        kind = "following"
+    offset = max(0, offset)
+    limit = max(1, min(limit, 50))
+    if kind == "followers":
+        q = db.query(UserFollow).filter(UserFollow.following_id == user_id).order_by(UserFollow.id.desc())
+    else:
+        q = db.query(UserFollow).filter(UserFollow.follower_id == user_id).order_by(UserFollow.id.desc())
+    rows = q.offset(offset).limit(limit + 1).all()
+    has_more = len(rows) > limit
+    rows = rows[:limit]
+    out: list[dict] = []
+    for row in rows:
+        uid = row.follower_id if kind == "followers" else row.following_id
+        u = db.get(User, uid)
+        if not u or not u.is_active:
+            continue
+        out.append(_follow_user_row(db, u, viewer_id=viewer_id))
+    return out, has_more
+
+
+def ensure_visit_feed_post(db, visit: UserVisit) -> UserPost | None:
+    """Ziyaret kartında beğeni/yorum — eşleşen onaylı gönderi yoksa oluştur."""
+    if visit.status != "approved":
+        return None
+    place = db.get(Place, visit.place_id)
+    if not place or place.status != "approved":
+        return None
+    body = (visit.note or "").strip() or f"{place.title} yerini ziyaret etti"
+    existing = (
+        db.query(UserPost)
+        .filter(
+            UserPost.user_id == visit.user_id,
+            UserPost.place_id == visit.place_id,
+            UserPost.status == "approved",
+            UserPost.privacy == "public",
+            UserPost.body == body,
+        )
+        .order_by(UserPost.id.desc())
+        .first()
+    )
+    if existing:
+        return existing
+    post = UserPost(
+        user_id=visit.user_id,
+        place_id=visit.place_id,
+        body=body,
+        privacy="public",
+        status="approved",
+        created_at=visit.created_at or datetime.utcnow(),
+    )
+    if place.img_url:
+        set_post_images(post, [place.img_url])
+    db.add(post)
+    db.flush()
+    return post
+
+
+def _attach_feed_engagement(db, page: list[dict], *, liked_ids: set[int]) -> bool:
+    """Visit/post satırlarına post_id + beğeni/yorum sayıları bağla."""
+    dirty = False
+    for item in page:
+        kind = item.get("kind")
+        if kind == "post":
+            item["post_id"] = item.get("id")
+            continue
+        if kind != "visit" or item.get("status") != "approved":
+            continue
+        visit = db.get(UserVisit, item.get("id"))
+        if not visit:
+            continue
+        post = ensure_visit_feed_post(db, visit)
+        if not post:
+            continue
+        dirty = True
+        item["post_id"] = post.id
+        item["likes"] = int(post.likes_count or 0)
+        item["comments"] = int(post.comments_count or 0)
+        item["liked"] = post.id in liked_ids
+    return dirty
+
+
 def suggest_follow_users(db, viewer_id: int, *, limit: int = 3) -> list[dict]:
-    """Feed sağ sütun — sanal topluluk üyeleri."""
-    rows = _query_virtual_users(db, exclude_id=viewer_id)
+    """Feed — henüz takip edilmeyen aktif üyeler."""
+    following = set(following_ids(db, viewer_id))
+    seen = {viewer_id} | following
     scored: list[tuple[int, User]] = []
-    for u in rows:
-        posts_n = db.query(UserPost).filter(UserPost.user_id == u.id).count()
+
+    for u in _query_virtual_users(db, exclude_id=viewer_id):
+        if u.id in seen:
+            continue
+        seen.add(u.id)
+        posts_n = (
+            db.query(UserPost)
+            .filter(UserPost.user_id == u.id, UserPost.status == "approved", UserPost.privacy == "public")
+            .count()
+        )
+        scored.append((posts_n + 50, u))
+
+    others = (
+        db.query(User)
+        .join(UserPost, UserPost.user_id == User.id)
+        .filter(
+            User.id != viewer_id,
+            User.is_active.is_(True),
+            UserPost.status == "approved",
+            UserPost.privacy == "public",
+        )
+        .distinct()
+        .order_by(User.id.desc())
+        .limit(40)
+        .all()
+    )
+    for u in others:
+        if u.id in seen:
+            continue
+        seen.add(u.id)
+        posts_n = db.query(UserPost).filter(UserPost.user_id == u.id, UserPost.status == "approved").count()
         scored.append((posts_n, u))
+
     scored.sort(key=lambda x: (-x[0], x[1].id))
     out: list[dict] = []
     for posts_n, u in scored[:limit]:
@@ -125,8 +328,58 @@ def suggest_follow_users(db, viewer_id: int, *, limit: int = 3) -> list[dict]:
                 "handle": u.handle(),
                 "avatar_url": u.avatar_url or "",
                 "posts": posts_n,
+                "following": u.id in following,
             }
         )
+    return out
+
+
+def _dedupe_feed_visits(items: list[dict]) -> list[dict]:
+    """Aynı paylaşımdan hem post hem visit düşmesin — post öncelikli."""
+    post_by_key: dict[tuple[int, int], dict] = {}
+    for it in items:
+        if it.get("kind") != "post":
+            continue
+        place = it.get("place")
+        user = it.get("user") or {}
+        if not place or not user.get("id"):
+            continue
+        key = (user["id"], place["id"])
+        prev = post_by_key.get(key)
+        if not prev or it.get("sort", datetime.min) > prev.get("sort", datetime.min):
+            post_by_key[key] = it
+
+    if not post_by_key:
+        return items
+
+    out: list[dict] = []
+    for it in items:
+        if it.get("kind") != "visit":
+            out.append(it)
+            continue
+        place = it.get("place")
+        user = it.get("user") or {}
+        if not place or not user.get("id"):
+            out.append(it)
+            continue
+        post = post_by_key.get((user["id"], place["id"]))
+        if not post:
+            out.append(it)
+            continue
+        post_body = (post.get("body") or "").strip()
+        visit_body = (it.get("body") or "").strip()
+        title = place.get("title") or ""
+        if post_body and visit_body and post_body == visit_body:
+            continue
+        if visit_body == f"{title} yerini ziyaret etti":
+            continue
+        dt_p = post.get("sort")
+        dt_v = it.get("sort")
+        if dt_p and dt_v:
+            delta = abs((dt_p - dt_v).total_seconds())
+            if delta <= 86400 and (post_body or post.get("images")):
+                continue
+        out.append(it)
     return out
 
 
@@ -149,9 +402,14 @@ def build_feed(
             for x in db.query(PostLike).filter(PostLike.user_id == viewer.id).limit(500).all()
         }
 
-    friend_ids: list[int] | None = sanal_user_ids(db) if friends_only else None
-    if friends_only and not friend_ids:
-        return [], False
+    friend_ids: list[int] | None = None
+    if friends_only:
+        if viewer:
+            friend_ids = following_ids(db, viewer.id)
+        else:
+            friend_ids = sanal_user_ids(db)
+        if not friend_ids:
+            return [], False
 
     offset = max(0, offset)
     fetch = min(max((offset + limit) * 2, limit * 4), FEED_FETCH_CAP)
@@ -270,13 +528,58 @@ def build_feed(
             }
         )
 
+    items = _dedupe_feed_visits(items)
+
     if tab == "popular":
         items.sort(key=lambda x: (x.get("likes") or 0, x["sort"]), reverse=True)
     else:
         items.sort(key=lambda x: x["sort"], reverse=True)
     page = items[offset : offset + limit]
+    if _attach_feed_engagement(db, page, liked_ids=liked_ids):
+        db.commit()
+    engage_ids: list[int] = []
+    for x in page:
+        pid = x.get("post_id") or (x.get("id") if x.get("kind") == "post" else None)
+        if pid:
+            engage_ids.append(int(pid))
+            if x.get("kind") == "post":
+                x["post_id"] = int(pid)
+    comments_map = _post_comments_map(db, engage_ids)
+    for x in page:
+        pid = x.get("post_id") or (x.get("id") if x.get("kind") == "post" else None)
+        if pid:
+            x["comment_list"] = comments_map.get(int(pid), [])
     has_more = len(items) > offset + limit
     return page, has_more
+
+
+def _post_comments_map(db, post_ids: list[int], limit_each: int = 8) -> dict[int, list[dict]]:
+    if not post_ids:
+        return {}
+    rows = (
+        db.query(PostComment)
+        .filter(PostComment.post_id.in_(post_ids), PostComment.status == "approved")
+        .order_by(PostComment.id.desc())
+        .limit(max(limit_each * len(post_ids), limit_each))
+        .all()
+    )
+    out: dict[int, list[dict]] = {pid: [] for pid in post_ids}
+    for row in rows:
+        bucket = out.get(row.post_id)
+        if bucket is None or len(bucket) >= limit_each:
+            continue
+        u = db.get(User, row.user_id)
+        bucket.append(
+            {
+                "id": row.id,
+                "user_name": u.display_name() if u else "Üye",
+                "body": row.body,
+                "ago": _ago(row.created_at),
+            }
+        )
+    for pid in out:
+        out[pid].reverse()
+    return out
 
 
 def profile_feed(

@@ -1,0 +1,17 @@
+<script>
+(function () {
+  var mq = window.matchMedia('(min-width:901px)');
+  function sync() {
+    document.querySelectorAll('.food-filters .ff-fold').forEach(function (el) {
+      if (mq.matches) {
+        el.setAttribute('open', '');
+      } else if (!el.querySelector('.food-ff.on')) {
+        el.removeAttribute('open');
+      }
+    });
+  }
+  if (mq.addEventListener) mq.addEventListener('change', sync);
+  else if (mq.addListener) mq.addListener(sync);
+  sync();
+})();
+</script>

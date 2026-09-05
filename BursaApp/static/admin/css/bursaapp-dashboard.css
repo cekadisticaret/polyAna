@@ -1,0 +1,425 @@
+/* BursaApp admin — Odin-style dashboard */
+body.odin-admin .content-body {
+  background: #f3f4f6;
+}
+body.odin-admin .content-body .container-fluid {
+  max-width: 1320px;
+}
+body.odin-admin .footer {
+  background: transparent;
+  border: 0;
+}
+
+.odin-dash {
+  --odin-bg: #f3f4f6;
+  --odin-card: #fff;
+  --odin-ink: #111827;
+  --odin-muted: #6b7280;
+  --odin-line: #e5e7eb;
+  --odin-teal: #0f3d32;
+  --odin-teal-soft: #e8f3ef;
+  --odin-sand: #e8dfd3;
+  --odin-sand-dark: #c9b89a;
+  --odin-black: #111827;
+  --odin-radius: 20px;
+  --odin-shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 24px rgba(17, 24, 39, 0.06);
+  color: var(--odin-ink);
+}
+
+.odin-dash-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.odin-dash-head h1 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.odin-dash-head p {
+  margin: 4px 0 0;
+  color: var(--odin-muted);
+  font-size: 14px;
+}
+
+.odin-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px;
+  background: #fff;
+  border-radius: 999px;
+  box-shadow: var(--odin-shadow);
+}
+.odin-tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--odin-muted);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.odin-tabs a:hover {
+  color: var(--odin-ink);
+  background: #f9fafb;
+}
+.odin-tabs a.on {
+  background: var(--odin-black);
+  color: #fff;
+}
+
+.odin-panel {
+  background: var(--odin-card);
+  border-radius: var(--odin-radius);
+  box-shadow: var(--odin-shadow);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.odin-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px 0;
+}
+.odin-panel-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.odin-panel-head small {
+  color: var(--odin-muted);
+  font-size: 12px;
+}
+.odin-panel-body {
+  padding: 18px 24px 24px;
+}
+.odin-panel-split {
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+@media (max-width: 991px) {
+  .odin-panel-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.odin-stat-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.odin-stat {
+  background: #fff;
+  border: 1px solid var(--odin-line);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+.odin-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--odin-muted);
+  margin-bottom: 8px;
+}
+.odin-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.odin-stat-sub {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--odin-muted);
+  line-height: 1.45;
+}
+.odin-stat--hero {
+  background: var(--odin-teal);
+  border-color: var(--odin-teal);
+  color: #fff;
+}
+.odin-stat--hero .odin-stat-label,
+.odin-stat--hero .odin-stat-sub {
+  color: rgba(255, 255, 255, 0.78);
+}
+.odin-stat--hero .odin-stat-value {
+  font-size: 34px;
+}
+.odin-stat--accent {
+  background: var(--odin-sand);
+  border-color: #ddd2c4;
+}
+
+.odin-chart-wrap {
+  min-height: 280px;
+}
+.odin-chart-wrap .apexcharts-canvas {
+  margin: 0 auto;
+}
+.odin-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--odin-muted);
+}
+.odin-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.odin-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.odin-sidebar .odin-panel {
+  margin-bottom: 16px;
+}
+.odin-alert {
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.odin-alert-dark {
+  background: var(--odin-black);
+  color: #fff;
+}
+.odin-alert-warn {
+  background: var(--odin-sand);
+  color: var(--odin-ink);
+}
+.odin-alert-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.12);
+}
+.odin-alert-warn .odin-alert-ico {
+  background: rgba(17, 24, 39, 0.08);
+}
+.odin-alert b {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.odin-alert p {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.85;
+  line-height: 1.45;
+}
+.odin-alert a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.odin-feed-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.odin-feed-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.odin-feed-head a {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--odin-muted);
+  text-decoration: none;
+}
+.odin-feed-group {
+  margin-bottom: 14px;
+}
+.odin-feed-group > small {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--odin-muted);
+  margin-bottom: 8px;
+}
+.odin-feed-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--odin-line);
+}
+.odin-feed-item:last-child {
+  border-bottom: 0;
+}
+.odin-feed-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--odin-teal-soft);
+  color: var(--odin-teal);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+.odin-feed-copy b {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.odin-feed-copy small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--odin-muted);
+}
+
+.odin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--odin-line);
+}
+.odin-toolbar h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.odin-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.odin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid var(--odin-line);
+  background: #fff;
+  color: var(--odin-ink);
+}
+.odin-btn:hover {
+  background: #f9fafb;
+  color: var(--odin-ink);
+}
+.odin-btn-dark {
+  background: var(--odin-black);
+  border-color: var(--odin-black);
+  color: #fff;
+}
+.odin-btn-dark:hover {
+  background: #000;
+  color: #fff;
+}
+
+.odin-table-wrap {
+  overflow: auto;
+}
+.odin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.odin-table thead th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--odin-muted);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--odin-line);
+  white-space: nowrap;
+}
+.odin-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--odin-line);
+  vertical-align: middle;
+}
+.odin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.odin-table tbody tr:hover {
+  background: #fafafa;
+}
+.odin-table .text-end {
+  text-align: right;
+}
+.odin-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--odin-teal-soft);
+  color: var(--odin-teal);
+}
+.odin-pill-warn {
+  background: #fff4de;
+  color: #9a6700;
+}
+.odin-pill-live {
+  background: #dcfce7;
+  color: #166534;
+}
+.odin-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.odin-mini {
+  border: 1px solid var(--odin-line);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.odin-mini b {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+}
+.odin-mini span {
+  font-size: 11px;
+  color: var(--odin-muted);
+  font-weight: 600;
+}
+
+.odin-section {
+  scroll-margin-top: 88px;
+}

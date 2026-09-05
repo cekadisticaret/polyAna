@@ -1,7 +1,9 @@
 {% for it in feed %}
-<article class="ff-card ff-post tone-{{ (loop.index0 + (tone_offset or 0)) % 3 }}">
+{% set engage_id = it.post_id or (it.id if it.kind == 'post' else none) %}
+{% set can_engage = engage_id and it.status == 'approved' and it.kind in ('post', 'visit') %}
+<article class="ff-card ff-post tone-{{ (loop.index0 + (tone_offset or 0)) % 3 }}" data-post-id="{{ engage_id or '' }}">
   <div class="ff-post-h">
-    <div class="ff-avatar">{% if it.user.avatar_url %}<img src="{{ it.user.avatar_url }}" alt="">{% else %}<span>{{ it.user.name[0]|upper }}</span>{% endif %}</div>
+    <div class="ff-avatar">{% if it.user.avatar_url %}<img src="{{ it.user.avatar_url }}" alt="{{ it.user.name }} profil fotoğrafı">{% else %}<span>{{ it.user.name[0]|upper }}</span>{% endif %}</div>
     <div class="ff-post-meta">
       <b>{{ it.user.name }}</b>
       <span class="ff-handle">{{ it.user.handle }}</span>
@@ -16,22 +18,47 @@
   {% endif %}
   {% if it.images %}
   <div class="ff-gallery {% if it.images|length >= 3 %}n3{% elif it.images|length == 2 %}n2{% else %}n1{% endif %}">
-    {% for img in it.images[:3] %}<img src="{{ img }}" alt="" loading="lazy">{% endfor %}
+    {% for img in it.images[:3] %}<img src="{{ img }}" alt="{{ it.user.name }} paylaşım görseli" loading="lazy">{% endfor %}
   </div>
   {% endif %}
   <div class="ff-actions">
     {% if it.views %}<span class="ff-views">{{ it.views }} görüntülenme</span>{% endif %}
     <div class="ff-act-row">
-      {% if it.kind=='post' and it.status == 'approved' %}
-      <form method="post" action="/hesap/profil/like/{{ it.id }}">
-        <button type="submit" class="ff-act {% if it.liked %}on{% endif %}">
+      {% if can_engage %}
+      {% if nav_user %}
+      <form method="post" action="/hesap/profil/like/{{ engage_id }}" class="ff-like-form">
+        <button type="submit" class="ff-act {% if it.liked %}on{% endif %}" aria-pressed="{{ 'true' if it.liked else 'false' }}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if it.liked %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-          Beğen · {{ it.likes }}
+          <span class="ff-like-label">Beğen · <span class="ff-like-n">{{ it.likes }}</span></span>
         </button>
       </form>
+      <button type="button" class="ff-act ff-comment-toggle" aria-expanded="false">Yorum yap{% if it.comments %} · {{ it.comments }}{% endif %}</button>
+      {% else %}
+      <a class="ff-act" href="/giris?next=/feed">Beğen · {{ it.likes }}</a>
+      <a class="ff-act" href="/giris?next=/feed">Yorum yap{% if it.comments %} · {{ it.comments }}{% endif %}</a>
       {% endif %}
-      {% if it.place %}<a class="ff-act" href="{{ it.place.path }}">Yorum · Git</a>{% endif %}
+      {% elif it.kind == 'post' and it.status != 'approved' %}
+      <span class="ff-muted sm">Onay bekliyor — beğeni ve yorum yayında açılır</span>
+      {% endif %}
+      {% if it.place %}<a class="ff-act" href="{{ it.place.path }}">Git</a>{% endif %}
     </div>
+    {% if can_engage %}
+    {% if it.comment_list %}
+    <div class="ff-comment-list">
+      {% for c in it.comment_list %}
+      <div class="ff-comment"><b>{{ c.user_name }}</b> <span>{{ c.body }}</span>{% if c.ago %}<small>{{ c.ago }}</small>{% endif %}</div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="ff-comment-list" hidden></div>
+    {% endif %}
+    {% if nav_user %}
+    <form class="ff-comment-form" method="post" action="/hesap/profil/comment/{{ engage_id }}" hidden>
+      <textarea name="body" rows="2" maxlength="500" placeholder="Yorum yaz…" required></textarea>
+      <button type="submit" class="ff-btn sm dark">Gönder</button>
+    </form>
+    {% endif %}
+    {% endif %}
   </div>
 </article>
 {% else %}

@@ -1,0 +1,24 @@
+{% extends "_shell.html" %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block hello %}{{ tks_title }}{% endblock %}
+{% block sub %}{{ tks_subtitle }}{% endblock %}
+{% block main %}
+<article class="seo-page tesekkur">
+  <div class="tks-icon" aria-hidden="true">✓</div>
+  <p class="lead">{{ tks_body }}</p>
+  <div class="seo-cta">
+    {% if tks_next %}
+    <a class="pri" href="{{ tks_next }}">{{ tks_next_label }}</a>
+    {% endif %}
+    <a class="ghost" href="/">Keşfet</a>
+    <a class="ghost" href="/yeme-icme">Yeme-içme</a>
+    <a class="ghost" href="{{ wa_url }}">WhatsApp destek</a>
+  </div>
+  {% if tks_hint %}
+  <p class="tks-hint">{{ tks_hint }}</p>
+  {% endif %}
+</article>
+{% endblock %}

@@ -47,7 +47,26 @@
     {% endfor %}
     </tbody>
   </table></div>
-  <p class="mb-0 small text-muted">Search Console’a gönder: <code>{{ seo_status.sitemap_submit_url }}</code> · <a href="{{ seo_status.robots_url }}" target="_blank">robots.txt</a></p>
+  <p class="mb-0 small text-muted">Search Console’a gönder: <code>{{ seo_status.sitemap_submit_url }}</code> · <a href="{{ seo_status.robots_url }}" target="_blank">robots.txt</a> · <a href="{{ seo_status.llms_url }}" target="_blank">llms.txt</a> · <a href="{{ seo_status.llms_full_url }}" target="_blank">llms-full.txt</a></p>
+  </div>
+</div>
+
+<div class="card mb-3 border-info">
+  <div class="card-header border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <h4 class="card-title mb-0">Yapay zeka SEO (LLM / GEO)</h4>
+    {% if seo_status.ai_seo_grade %}
+    <span class="badge badge-{% if seo_status.ai_seo_grade=='iyi' %}success{% elif seo_status.ai_seo_grade=='uyarı' %}warning{% else %}danger{% endif %}">{{ seo_status.ai_seo_grade|upper }} · {{ seo_status.ai_seo_ok }}/{{ seo_status.ai_seo_total }}</span>
+    {% endif %}
+  </div>
+  <div class="card-body pt-0">
+    <p class="text-muted mb-2">ChatGPT, Perplexity, Claude ve benzeri arama motorları için site rehberi. <code>llms.txt</code> dinamik üretilir; kategori sayıları ve öne çıkan mekanlar <code>llms-full.txt</code> içinde.</p>
+    <ul class="mb-2">
+      <li><a href="{{ seo_status.llms_url }}" target="_blank">llms.txt</a> — kısa rehber + API uçları</li>
+      <li><a href="{{ seo_status.llms_full_url }}" target="_blank">llms-full.txt</a> — kategori dağılımı + öne çıkanlar</li>
+      <li><a href="{{ site_url }}/.well-known/llms.txt" target="_blank">.well-known/llms.txt</a> — alternatif yol</li>
+      <li><code>robots.txt</code> — GPTBot, Claude-Web, PerplexityBot vb. için Allow</li>
+    </ul>
+    <p class="mb-0 small text-muted">AI botları ziyaretçi sayacına dahil edilmez; tarama engeli yoktur (yalnızca /admin, /hesap, /api/ kapalı).</p>
   </div>
 </div>
 {% endif %}

@@ -1,5 +1,136 @@
 [
   {
+    "slug": "karacabey-at-hastanesi",
+    "title": "Karacabey At Hastanesi̇",
+    "subcategory": "hastane",
+    "price_band": "Hastane",
+    "ilce": "Karacabey",
+    "address": "Bursa İzmir Yolu Üzeri TİGEM karşısı",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Bursa İzmir Yolu Üzeri TİGEM karşısı",
+    "tags": [
+      "hastane",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": true,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Güneş SÖNMEZ ÇEŞME",
+        "Levent KOÇİ",
+        "Serdar BABAESKİ",
+        "Timuçin ÇEŞME",
+        "Uğur ÖZAYDIN"
+      ]
+    }
+  },
+  {
+    "slug": "akademi-hayvan-hastanesi",
+    "title": "Akademi Hayvan Hastanesi",
+    "subcategory": "hastane",
+    "price_band": "Hastane",
+    "ilce": "Nilüfer",
+    "address": "Odunluk Mah. Mihraplı Cad. No:12/C, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "Odunluk’ta çok hekimli hayvan hastanesi. Bursa VHO kayıtlı.",
+    "tags": [
+      "hastane",
+      "odunluk",
+      "bvho"
+    ],
+    "featured": true,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Erdem YILMAZ",
+        "Metin KOSTİK",
+        "Şadi Güngör",
+        "Nureddin ÇELİMLİ",
+        "Kemal YANIK"
+      ]
+    },
+    "search": "Akademi Hayvan Hastanesi Odunluk Mihraplı Bursa",
+    "copy": "soganli-botanik"
+  },
+  {
+    "slug": "armilla-hayvan-hastanesi",
+    "title": "Armi̇lla Hayvan Hastanesi̇",
+    "subcategory": "hastane",
+    "price_band": "Hastane",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. Abdi İpekçi Cad. No:18/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah. Abdi İpekçi Cad. No:18/A",
+    "tags": [
+      "hastane",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": true,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Çetin BOZKURT",
+        "Lale ÇINAR BULUCU"
+      ]
+    }
+  },
+  {
+    "slug": "armilla-hayvan-hastanesi-2",
+    "title": "Armi̇lla Hayvan Hastanesi̇",
+    "subcategory": "hastane",
+    "price_band": "Hastane",
+    "ilce": "Nilüfer",
+    "address": "Ertuğrul mahallesi Uğur Mumcu Bulv. Biaport Özlüce No:21/D",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ertuğrul mahallesi Uğur Mumcu Bulv. Biaport Özlüce No:21/D",
+    "tags": [
+      "hastane",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": true,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Melike ÇETİN"
+      ]
+    }
+  },
+  {
+    "slug": "avisa-hayvan-hastanesi",
+    "title": "Avi̇sa Hayvan Hastanesi̇",
+    "subcategory": "hastane",
+    "price_band": "Hastane",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. FSM Bulvarı No:36C/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. FSM Bulvarı No:36C/C",
+    "tags": [
+      "hastane",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": true,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "EMEL BACAKSIZ ÖLMEZTÜRK"
+      ]
+    }
+  },
+  {
     "slug": "buu-hayvan-hastanesi",
     "title": "BUÜ Veteriner Fakültesi Hayvan Hastanesi",
     "ilce": "Nilüfer",
@@ -12,148 +143,1356 @@
     "wiki": "Bursa Uludağ University",
     "search": "Uludağ Üniversitesi Veteriner Fakültesi Hayvan Hastanesi",
     "copy": "uludag",
-    "tags": ["universite", "hastane", "gorukle"],
+    "tags": [
+      "universite",
+      "hastane",
+      "gorukle"
+    ],
     "blurb": "Fakülte hayvan hastanesi. Cerrahi, dahiliye, görüntüleme. 93 / 43H otobüs."
   },
   {
-    "slug": "akademi-hayvan-hastanesi",
-    "title": "Akademi Hayvan Hastanesi",
-    "ilce": "Nilüfer",
-    "address": "Odunluk Mah. Mihraplı Cad. No:12/C, Nilüfer",
-    "phone": "",
-    "web": "",
-    "hours_text": "Klinik mesai",
-    "price_band": "Hastane",
-    "search": "Akademi Hayvan Hastanesi Odunluk Mihraplı Bursa",
-    "copy": "soganli-botanik",
-    "tags": ["hastane", "odunluk", "bvho"],
-    "blurb": "Odunluk’ta çok hekimli hayvan hastanesi. Bursa VHO kayıtlı."
-  },
-  {
-    "slug": "kids-akademi-hayvan",
+    "slug": "kids-akademi-hayvan-hastanesi",
     "title": "Kids Akademi Hayvan Hastanesi",
+    "subcategory": "hastane",
+    "price_band": "Hastane",
     "ilce": "Nilüfer",
     "address": "İhsaniye Mah. Fatih Sultan Mehmet Bulvarı B Blok No:34/B-C, Nilüfer",
     "phone": "",
     "web": "",
     "hours_text": "Klinik mesai",
-    "price_band": "Hastane",
+    "blurb": "FSM / İhsaniye hayvan hastanesi. VHO kayıtlı kadro.",
+    "tags": [
+      "hastane",
+      "ihsaniye",
+      "bvho"
+    ],
+    "featured": true,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "ERDEM YILMAZ"
+      ]
+    },
     "search": "Kids Akademi Hayvan Hastanesi İhsaniye Bursa",
-    "copy": "misi",
-    "tags": ["hastane", "ihsaniye", "bvho"],
-    "blurb": "FSM / İhsaniye hayvan hastanesi. VHO kayıtlı kadro."
+    "copy": "misi"
   },
   {
-    "slug": "pakvet",
-    "title": "Pakvet Veteriner",
+    "slug": "tjk-hayvan-hastanesi",
+    "title": "Tjk Hayvan Hastanesi̇",
+    "subcategory": "hastane",
+    "price_band": "Hastane",
     "ilce": "Nilüfer",
-    "address": "Altınşehir Mah. Ahmet Taner Kışlalı Bulv. Utku Sitesi No:66A/A, Nilüfer",
-    "phone": "",
-    "web": "",
-    "hours_text": "7/24 acil (ilan)",
-    "price_band": "Klinik",
-    "search": "Pakvet Veteriner Altınşehir Bursa",
-    "copy": "inkaya-cinari",
-    "tags": ["klinik", "acil", "bvho"],
-    "blurb": "Altınşehir. Kedi-köpek, egzotik, diş. VHO: Hüseyin Alper Pakyürek."
-  },
-  {
-    "slug": "petclass",
-    "title": "PetClass Veteriner",
-    "ilce": "Nilüfer",
-    "address": "23 Nisan Mah. Mithat Paşa Cad. No:17B, Nilüfer",
+    "address": "Beşevler Mevkii Küçük Sanayi Karşısı",
     "phone": "",
     "web": "",
     "hours_text": "Klinik mesai",
-    "price_band": "Klinik",
-    "search": "PetClass Veteriner 23 Nisan Mithat Paşa Bursa",
-    "copy": "golyazi",
-    "tags": ["klinik", "23-nisan"],
-    "blurb": "23 Nisan / Mithat Paşa. Muayene ve aşı."
+    "blurb": "BVHO kayıtlı · Beşevler Mevkii Küçük Sanayi Karşısı",
+    "tags": [
+      "hastane",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": true,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Abdurahman Deniz ÖZKARA",
+        "İbrahim Necdet IŞILAK",
+        "Ömer Ümit KARAKAŞ",
+        "Rabia KESKİN KIZGIN",
+        "Rahmi CAN"
+      ]
+    }
   },
   {
-    "slug": "nilufer-veteriner-poliklinik",
+    "slug": "uludag-universitesi-veteriner-fakultesi-hayvan-hastanesi",
+    "title": "Uludağ Üni̇versi̇tesi̇ Veteri̇ner Fakültesi̇ Hayvan Hastanesi̇",
+    "subcategory": "hastane",
+    "price_band": "Hastane",
+    "ilce": "Nilüfer",
+    "address": "Uludağ Üniversitesi Veteriner Fakültesi Görükle Kampüsü",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Uludağ Üniversitesi Veteriner Fakültesi Görükle Kampüsü",
+    "tags": [
+      "hastane",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": true,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "U.Ü.Öğretim Görevlileri/ Göksen ÇEÇEN"
+      ]
+    }
+  },
+  {
+    "slug": "guven-vet-veteriner-poliklinigi",
+    "title": "Güven-Vet Veteri̇ner Poli̇kli̇ni̇ği̇",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Sabribey Mah. Kemalpaşa Cad. No:30/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sabribey Mah. Kemalpaşa Cad. No:30/1",
+    "tags": [
+      "poliklinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Burak ÇELİK",
+        "Burak GÖKMEN",
+        "İbrahim AYDIN",
+        "Ramazan TURAN",
+        "Rıdvan ÇABUK",
+        "Sami TOPALOĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "guven-vet-veteriner-poliklinigi-2",
+    "title": "Güven-Vet Veteri̇ner Poli̇kli̇ni̇ği̇",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Sabribey Mah. Kemalpaşa Cad. No:30/2",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sabribey Mah. Kemalpaşa Cad. No:30/2",
+    "tags": [
+      "poliklinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ali Ulvi ALTUNTAŞ"
+      ]
+    }
+  },
+  {
+    "slug": "onurvet-veteriner-poliklinigi",
+    "title": "Onurvet Veteri̇ner Poli̇kli̇ni̇ği̇",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Fevzidede Mah. Azatlı Cad. No:111/5",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Fevzidede Mah. Azatlı Cad. No:111/5",
+    "tags": [
+      "poliklinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Beytullah KURAM",
+        "Çağlayan SİNCAN",
+        "Ender ÇAKMAKÇI",
+        "Volkan TOKATLI",
+        "Engin GÜMÜŞ",
+        "Onurhan GÜLSÜN",
+        "Ramazan GÜZELYURT",
+        "Sabri Çağlayan ÖZGER"
+      ]
+    }
+  },
+  {
+    "slug": "pasavet-veteriner-poliklinigi",
+    "title": "Paşavet Veteri̇ner Poli̇kli̇ni̇ği̇",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Yüzbaşı Sabribey Mah. Demirciler Cad. No:21/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Yüzbaşı Sabribey Mah. Demirciler Cad. No:21/A",
+    "tags": [
+      "poliklinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mehmet Ali SEYMEN",
+        "Metin DEMİROĞLU",
+        "Mustafa BAYHAN",
+        "Mustafa Şemi YÜNÜK",
+        "Tuncay KARADENİZ",
+        "Samet Aydın",
+        "Zeki SEZER"
+      ]
+    }
+  },
+  {
+    "slug": "ozdorukvet-veteriner-poliklinigi",
+    "title": "Özdorukvet Veteri̇ner Poli̇kli̇ni̇ği̇",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Sabribey Mah. Kemalpaşa Cad. No:36",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sabribey Mah. Kemalpaşa Cad. No:36",
+    "tags": [
+      "poliklinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Arif ÖKSÜZ",
+        "Mustafa NİZAM",
+        "Ömer SATI",
+        "Serdar ZENGİN",
+        "Burak Özlemiş"
+      ]
+    }
+  },
+  {
+    "slug": "dobby-veteriner-poliklinigi",
+    "title": "Dobby Veteri̇ner Poli̇kli̇ni̇ği̇",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
+    "ilce": "Nilüfer",
+    "address": "Ataevler Mah. Ata Bulvarı Ata Cad. Umutkent Sitesi Altı No:25",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ataevler Mah. Ata Bulvarı Ata Cad. Umutkent Sitesi Altı No:25",
+    "tags": [
+      "poliklinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "M.Hakkı TAHTASIZ"
+      ]
+    }
+  },
+  {
+    "slug": "dodo-veteriner-poliklinigi",
+    "title": "Dodo Veteri̇ner Poli̇kli̇ni̇ği̇",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
+    "ilce": "Nilüfer",
+    "address": "Cumhuriyet Mah. Gazi Cad.Temuroğlu Apt. No:37/D",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Cumhuriyet Mah. Gazi Cad.Temuroğlu Apt. No:37/D",
+    "tags": [
+      "poliklinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Erol KAPLAN",
+        "Onur GÜNDOĞDU",
+        "Hakçahan CAN",
+        "Ali Murat KAYA"
+      ]
+    }
+  },
+  {
+    "slug": "evcilim-veteriner-poliklinigi",
+    "title": "Evci̇li̇m Veteri̇ner Poli̇kli̇ni̇ği̇",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
+    "ilce": "Nilüfer",
+    "address": "A.T.K.Bulvarı Bostancı Mert Sitesi 27/A-B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · A.T.K.Bulvarı Bostancı Mert Sitesi 27/A-B",
+    "tags": [
+      "poliklinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Cemal KURUOĞLU",
+        "Fikriye Ecem KURUOĞLU",
+        "Hilal KURUL",
+        "Cemal Burak ÖZKAN",
+        "Muhammed Arif ARIK",
+        "Gül YILDIRIM"
+      ]
+    }
+  },
+  {
+    "slug": "fiona-veteriner-poliklinigi",
+    "title": "Fi̇ona Veteri̇ner Poli̇kli̇ni̇ği̇",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
+    "ilce": "Nilüfer",
+    "address": "Esentepe Mah. İrfan Sok. Esenkent Sitesi A1 Blok No:141/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Esentepe Mah. İrfan Sok. Esenkent Sitesi A1 Blok No:141/A",
+    "tags": [
+      "poliklinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Nuray AYDIN",
+        "Yeşim KORLU",
+        "Derya TAŞKIN",
+        "Samet AYDIN",
+        "Özlem ÖZGÜR"
+      ]
+    }
+  },
+  {
+    "slug": "nilufer-veteriner-poliklinigi",
     "title": "Nilüfer Veteriner Polikliniği",
+    "subcategory": "poliklinik",
+    "price_band": "Poliklinik",
     "ilce": "Nilüfer",
     "address": "Üçevler Mah. İzmir Yolu Cad. A Blok No:241 A/B Westpoint, Nilüfer",
     "phone": "",
     "web": "",
     "hours_text": "Klinik mesai",
-    "price_band": "Poliklinik",
+    "blurb": "Üçevler İzmir Yolu. Çok hekimli poliklinik, VHO kayıtlı.",
+    "tags": [
+      "poliklinik",
+      "ucevler",
+      "bvho"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Emay Hergüler ŞAHİN",
+        "Kemal CUCUMAK",
+        "Turgay YILMAZ",
+        "Ziver ŞAHİN",
+        "Damla KURTAL"
+      ]
+    },
     "search": "Nilüfer Veteriner Polikliniği Üçevler İzmir Yolu",
-    "copy": "tirilye",
-    "tags": ["poliklinik", "ucevler", "bvho"],
-    "blurb": "Üçevler İzmir Yolu. Çok hekimli poliklinik, VHO kayıtlı."
+    "copy": "tirilye"
   },
   {
-    "slug": "pet224",
-    "title": "Pet224 Veteriner",
-    "ilce": "Nilüfer",
-    "address": "Beşevler Mah. Beşevler Cad. No:177/A, Nilüfer",
+    "slug": "altin-veteriner-muayenehanesi",
+    "title": "Altin Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Büyükorhan",
+    "address": "Hocahasan Mah. Okul Sok. No:2",
     "phone": "",
     "web": "",
     "hours_text": "Klinik mesai",
-    "price_band": "Klinik",
-    "search": "Pet224 Veteriner Beşevler Bursa Ervin Atasoy",
-    "copy": "koza-han",
-    "tags": ["klinik", "besevler", "bvho"],
-    "blurb": "Beşevler. VHO: Ervin Atasoy / İbrahim Ethem Keklik."
+    "blurb": "BVHO kayıtlı · Hocahasan Mah. Okul Sok. No:2",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Emin ALTIN"
+      ]
+    }
   },
   {
-    "slug": "armilla-vet",
-    "title": "Armilla Veteriner",
-    "ilce": "Osmangazi",
-    "address": "Kükürtlü Mah. 9. Manolya Sok. No:5/11, Osmangazi",
+    "slug": "atis-vet-veteriner-muayenehanesi",
+    "title": "Atiş-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Büyükorhan",
+    "address": "Cumhuriyet Mah. Atatürk Cad. No:12/C",
     "phone": "",
     "web": "",
     "hours_text": "Klinik mesai",
-    "price_band": "Klinik",
-    "search": "Armilla Veteriner Kükürtlü Bursa",
-    "copy": "eski-kaplica",
-    "tags": ["klinik", "kukurtlu", "bvho"],
-    "blurb": "Kükürtlü. VHO kayıtlı muayenehane."
+    "blurb": "BVHO kayıtlı · Cumhuriyet Mah. Atatürk Cad. No:12/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Kamil ATIŞ"
+      ]
+    }
   },
   {
-    "slug": "pet-klinik-cekirge",
-    "title": "Pet Klinik Çekirge",
-    "ilce": "Osmangazi",
-    "address": "Çekirge Mah. Çekirge Cad. Manolya Apt. No:46/1, Osmangazi",
+    "slug": "gunes-veteriner-muayenehanesi",
+    "title": "Güneş Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Büyükorhan",
+    "address": "Cumhuriyet Mah. Atatürk Cad. No:36/A",
     "phone": "",
     "web": "",
     "hours_text": "Klinik mesai",
-    "price_band": "Klinik",
-    "search": "Pet Klinik Veteriner Çekirge Caddesi Bursa",
-    "copy": "eski-kaplica",
-    "tags": ["klinik", "cekirge", "bvho"],
-    "blurb": "Çekirge Caddesi. VHO kayıtlı."
+    "blurb": "BVHO kayıtlı · Cumhuriyet Mah. Atatürk Cad. No:36/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mustafa AYHAN"
+      ]
+    }
   },
   {
-    "slug": "millet-veteriner",
-    "title": "Millet Veteriner",
-    "ilce": "Yıldırım",
-    "address": "Millet Mah. Derya Cad. No:14/A, Yıldırım",
+    "slug": "gunhan-veteriner-muayenehanesi",
+    "title": "Günhan Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Büyükorhan",
+    "address": "Cumhuriyet Mah. Atatürk Cad. No: 36/A",
     "phone": "",
     "web": "",
     "hours_text": "Klinik mesai",
-    "price_band": "Klinik",
-    "search": "Millet Veteriner Muayenehanesi Yıldırım Bursa",
-    "copy": "yesil-turbe",
-    "tags": ["klinik", "yildirim", "bvho"],
-    "blurb": "Millet Mahallesi. VHO kayıtlı muayenehane."
+    "blurb": "BVHO kayıtlı · Cumhuriyet Mah. Atatürk Cad. No: 36/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yücel GÜNHAN"
+      ]
+    }
   },
   {
-    "slug": "setbasi-veteriner",
-    "title": "Setbaşı Veteriner",
-    "ilce": "Yıldırım",
-    "address": "Karaağaç Mah. İpekçilik Cad. No:3/A, Yıldırım",
+    "slug": "vatansever-veteriner-muayenehanesi",
+    "title": "Vatansever Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Büyükorhan",
+    "address": "Orhan Mah. Cumhuriyet Cad. No:11",
     "phone": "",
     "web": "",
     "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Orhan Mah. Cumhuriyet Cad. No:11",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mehmet VATANSEVER"
+      ]
+    }
+  },
+  {
+    "slug": "atamay-veteriner-muayenehanesi",
+    "title": "Atamay Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
     "price_band": "Klinik",
-    "search": "Setbaşı Veteriner İpekçilik Bursa",
-    "copy": "irgandi",
-    "tags": ["klinik", "setbasi", "bvho"],
-    "blurb": "Setbaşı / İpekçilik. VHO kayıtlı."
+    "ilce": "Gemlik",
+    "address": "Hamidiye Mah. Kumsal Sok. Akcanlar Apt. No:5/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hamidiye Mah. Kumsal Sok. Akcanlar Apt. No:5/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Kerem ATAMAY"
+      ]
+    }
+  },
+  {
+    "slug": "gemvet-veteriner-muayenehanesi",
+    "title": "Gemvet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Gemlik",
+    "address": "Eşref Dinçer Mah. Ata Sok. No:17/6",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Eşref Dinçer Mah. Ata Sok. No:17/6",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "OSMAN YAŞAMIŞ"
+      ]
+    }
+  },
+  {
+    "slug": "hanvet-veteriner-muayenehanesi",
+    "title": "Hanvet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Gemlik",
+    "address": "Eşref Dinçer Mah. Eski Pazar Cad. Kuvvet Sok. No:5/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Eşref Dinçer Mah. Eski Pazar Cad. Kuvvet Sok. No:5/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Sami BEKİ"
+      ]
+    }
+  },
+  {
+    "slug": "korfez-veteriner-muayenehanesi",
+    "title": "Körfez Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Gemlik",
+    "address": "Kayhan Mah. Salkım Söğüt Sok. No:5/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kayhan Mah. Salkım Söğüt Sok. No:5/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mehmet ÇELİK"
+      ]
+    }
+  },
+  {
+    "slug": "oguzhan-beki-veteriner-muayenehanesi",
+    "title": "Oğuzhan Beki̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Gemlik",
+    "address": "Cumhuriyet Mah. Gül Cad. Günaydın Sitesi No:186 AC 13",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Cumhuriyet Mah. Gül Cad. Günaydın Sitesi No:186 AC 13",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Oğuzhan BEKİ"
+      ]
+    }
+  },
+  {
+    "slug": "petlife-veteriner-muayenehanesi",
+    "title": "Petli̇fe Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Gemlik",
+    "address": "Hamidiye Mah. Balıklı Sok. No:3/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hamidiye Mah. Balıklı Sok. No:3/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hakan ÖZTÜRK"
+      ]
+    }
+  },
+  {
+    "slug": "gursu-veteriner-muayenehanesi",
+    "title": "Gürsu Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Gürsu",
+    "address": "Kurtuluş Mah. İsabey Cad. No:69/1B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kurtuluş Mah. İsabey Cad. No:69/1B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Kadir ŞAHİN"
+      ]
+    }
+  },
+  {
+    "slug": "tekin-veteriner-muayenehanesi",
+    "title": "Teki̇n Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Gürsu",
+    "address": "Kurtuluş Mah. Atatürk Cad. No:198/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kurtuluş Mah. Atatürk Cad. No:198/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "AHMET TEKİN"
+      ]
+    }
+  },
+  {
+    "slug": "yegenler-veteriner-muayenehanesi",
+    "title": "Yeğenler Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Gürsu",
+    "address": "Zafer Mah. Zafer Cad.No:76",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Zafer Mah. Zafer Cad.No:76",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Halit TUTU"
+      ]
+    }
+  },
+  {
+    "slug": "bulut-veteriner-muayenehanesi",
+    "title": "Bulut Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Harmancık",
+    "address": "Keles Cad.Girne Sok.No:2",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Keles Cad.Girne Sok.No:2",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ali BULUT"
+      ]
+    }
+  },
+  {
+    "slug": "furkan-veteriner-muayenehanesi",
+    "title": "Furkan Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Harmancık",
+    "address": "Cumhuriyet Meydanı No:3",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Cumhuriyet Meydanı No:3",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yılmaz ATAŞ"
+      ]
+    }
+  },
+  {
+    "slug": "sarikaya-veteriner-muayenehanesi",
+    "title": "Sarikaya Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Harmancık",
+    "address": "Merkez Mah. Bağlar sok. No:2/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Merkez Mah. Bağlar sok. No:2/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mehmet SARIKAYA"
+      ]
+    }
+  },
+  {
+    "slug": "avimedica-kanatli-veteriner-muayenehanesi",
+    "title": "Avi̇medi̇ca Kanatli Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Drama Mah. Ortaokul Cad. No:44/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Drama Mah. Ortaokul Cad. No:44/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "ALİ AYDOĞAN"
+      ]
+    }
+  },
+  {
+    "slug": "aydin-veteriner-muayenehanesi",
+    "title": "Aydin Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Drama Mah. Ortaokul Cad. No:40/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Drama Mah. Ortaokul Cad. No:40/1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Fikret AYDIN"
+      ]
+    }
+  },
+  {
+    "slug": "copper-veteriner-muayenehanesi",
+    "title": "Copper Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Runguçpaşa Mah. Panayır Cad. No:17",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Runguçpaşa Mah. Panayır Cad. No:17",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "CEMİLE BAKIR"
+      ]
+    }
+  },
+  {
+    "slug": "kafkas-veteriner-muayenehanesi",
+    "title": "Kafkas Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Tavşanlı Mah. Runguçpaşa Cad.No:78/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Tavşanlı Mah. Runguçpaşa Cad.No:78/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mikail ULUGANYAN"
+      ]
+    }
+  },
+  {
+    "slug": "karaca-vet-veteriner-muayenehanesi",
+    "title": "Karaca-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Tabaklar Mah. Sadık Yılmaz Sok. No:28",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Tabaklar Mah. Sadık Yılmaz Sok. No:28",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Muharrem SEVİL"
+      ]
+    }
+  },
+  {
+    "slug": "karacabey-224-veteriner-muayenehanesi",
+    "title": "Karacabey 224 Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Bursa Cad: No:87/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Bursa Cad: No:87/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Berkay ALTIPARMAK"
+      ]
+    }
+  },
+  {
+    "slug": "karacabey-veteriner-muayenehanesi",
+    "title": "Karacabey Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Tavşanlı Mah. Bandırma Cad. No:62",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Tavşanlı Mah. Bandırma Cad. No:62",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Can BAKLACI",
+        "Oktay GÜZEL",
+        "Yusuf EFECİK"
+      ]
+    }
+  },
+  {
+    "slug": "klinikla-veteriner-muayenehanesi",
+    "title": "Kli̇ni̇kla Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Tabaklar Mah. Sadık Yılmaz Cad. No:28/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Tabaklar Mah. Sadık Yılmaz Cad. No:28/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Pınar DEMİREL"
+      ]
+    }
+  },
+  {
+    "slug": "tugra-vet-veteriner-muayenehanesi",
+    "title": "Tuğra.Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Tabaklar Mah. Sadık Yılmaz Cad. No:38/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Tabaklar Mah. Sadık Yılmaz Cad. No:38/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Rasim TEKEV"
+      ]
+    }
+  },
+  {
+    "slug": "turker-veteriner-muayenehanesi",
+    "title": "Türker Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "İsmetpaşa Mah. İsmetpaşa Sok. 287",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İsmetpaşa Mah. İsmetpaşa Sok. 287",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "TÜRKER AYDIN"
+      ]
+    }
+  },
+  {
+    "slug": "umut-tosun-veteriner-muayenehanesi",
+    "title": "Umut Tosun Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Nasrettin Mah. Bağlar Cad. No:9/11/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Nasrettin Mah. Bağlar Cad. No:9/11/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Umut Tosun"
+      ]
+    }
+  },
+  {
+    "slug": "vetos-veteriner-muayenehanesi",
+    "title": "Vetos Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Sıra Bademler Mah. 14 Eylül Cad. No:96/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sıra Bademler Mah. 14 Eylül Cad. No:96/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Osman ADLIĞ"
+      ]
+    }
+  },
+  {
+    "slug": "vg-veteriner-muayenehanesi",
+    "title": "Vg Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Tabaklar Mah. 83. Sok. No:6/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Tabaklar Mah. 83. Sok. No:6/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "GÜRKAN ÜLKER"
+      ]
+    }
+  },
+  {
+    "slug": "vural-veteriner-muayenehanesi",
+    "title": "Vural Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Tavşanlı Mah. Halil Kurt Sok. Huzur Mumcu Apt. No:6",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Tavşanlı Mah. Halil Kurt Sok. Huzur Mumcu Apt. No:6",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mesud VURAL"
+      ]
+    }
+  },
+  {
+    "slug": "cabuk-veteriner-muayenehanesi",
+    "title": "Çabuk Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Karacabey",
+    "address": "Tavşanlı Mah.Halilkurt Sok.No:8 Karacabey/BURSA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Tavşanlı Mah.Halilkurt Sok.No:8 Karacabey/BURSA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Özgür ÇABUK"
+      ]
+    }
+  },
+  {
+    "slug": "kocabay-veteriner-muayenehanesi",
+    "title": "Kocabay Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Keles",
+    "address": "Cuma Mah. Tahir Hoca Cad. No:13/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Cuma Mah. Tahir Hoca Cad. No:13/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Salih KOCABAY"
+      ]
+    }
+  },
+  {
+    "slug": "korkmaz-veteriner-muayenehanes-i",
+    "title": "Korkmaz Veteri̇ner Muayenehanes İ",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Keles",
+    "address": "Cuma Mah. Aydın Sok. No:11",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Cuma Mah. Aydın Sok. No:11",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Coşkun KORKMAZ"
+      ]
+    }
+  },
+  {
+    "slug": "bursa-hayat-veteriner-muayenehanesi",
+    "title": "Bursa Hayat Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Kestel",
+    "address": "Vani Mehmet Mah.Şehit Komiser Nizamettin Yavlak Cad.No:36/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Vani Mehmet Mah.Şehit Komiser Nizamettin Yavlak Cad.No:36/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Adem KABADAYI"
+      ]
+    }
+  },
+  {
+    "slug": "canvet-veteriner-muayenehanesi",
+    "title": "Canvet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Kestel",
+    "address": "Kale Mah. Kurtuluş Cad.No:30/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kale Mah. Kurtuluş Cad.No:30/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ahmet Metin ALKAN"
+      ]
+    }
+  },
+  {
+    "slug": "gulvet-pet-veteriner-muayenehanesi",
+    "title": "Gülvet-Pet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Kestel",
+    "address": "Ahmet Vefik Paşa Mah. Turgut Özal Cad. No:14 B Blok",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ahmet Vefik Paşa Mah. Turgut Özal Cad. No:14 B Blok",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "EMRULLAH YURDAGÜL"
+      ]
+    }
+  },
+  {
+    "slug": "mavi-veteriner-muayenehanesi",
+    "title": "Mavi̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Kestel",
+    "address": "Kale Mah. Kurtuluş Cad. No:92",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kale Mah. Kurtuluş Cad. No:92",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "EVREN CİRCİR"
+      ]
+    }
+  },
+  {
+    "slug": "zirve-veteriner-muayenehanesi-balkantepe-hayv-san-tic-ltd-sti",
+    "title": "Zi̇rve Veteri̇ner Muayenehanesi̇ Balkantepe Hayv.San.Ti̇c.Ltd.Şti̇.",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Kestel",
+    "address": "Ahmet Vefikpaşa Mah. Fevzi Çakmak Cad.No:19/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ahmet Vefikpaşa Mah. Fevzi Çakmak Cad.No:19/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hakan ARSLAN"
+      ]
+    }
+  },
+  {
+    "slug": "asli-veteriner-muayenehanesi",
+    "title": "Asli Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mudanya",
+    "address": "Ömerbey Mah. Üstün sokak Dükkan No:22A Bekir Bayrak Apt. Mudanya/BURSA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ömerbey Mah. Üstün sokak Dükkan No:22A Bekir Bayrak Apt. Mudanya/BURSA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Aslıhan BULDUK"
+      ]
+    }
+  },
+  {
+    "slug": "guzelyali-veteriner-muayenehanesi",
+    "title": "Güzelyali Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mudanya",
+    "address": "Güzelyalı Mah. Atatürk Cad. İşsun Sit. B Blok 62/B Mudanya",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Güzelyalı Mah. Atatürk Cad. İşsun Sit. B Blok 62/B Mudanya",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hilal KAYAPINAR"
+      ]
+    }
   },
   {
     "slug": "guzelyali-veteriner",
@@ -166,8 +1505,84 @@
     "price_band": "Klinik",
     "search": "Güzelyalı Veteriner Mudanya Atatürk Caddesi",
     "copy": "tirilye",
-    "tags": ["klinik", "mudanya", "bvho"],
+    "tags": [
+      "klinik",
+      "mudanya",
+      "bvho"
+    ],
     "blurb": "Güzelyalı sahil. VHO: Hilal Kayapınar."
+  },
+  {
+    "slug": "karaca-veteriner-muayenehanesi",
+    "title": "Karaca Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mudanya",
+    "address": "Ömerbey Mah. Üstün Sokak No:18 Mudanya",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ömerbey Mah. Üstün Sokak No:18 Mudanya",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Abdullah KARACA"
+      ]
+    }
+  },
+  {
+    "slug": "minta-veteriner-muayenehanesi",
+    "title": "Mi̇nta Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mudanya",
+    "address": "Halitpaşa mah. 2. Zeytinlik sok. No9/A 1. Dükkan Mudanya/BURSA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Halitpaşa mah. 2. Zeytinlik sok. No9/A 1. Dükkan Mudanya/BURSA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Aysel SAMANTIR"
+      ]
+    }
+  },
+  {
+    "slug": "cakmak-veteriner-muayenehanesi",
+    "title": "Çakmak Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mudanya",
+    "address": "Ömerbey Mah. İpar Cad. No:77",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ömerbey Mah. İpar Cad. No:77",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Serdar ÇAKMAK"
+      ]
+    }
   },
   {
     "slug": "ilke-vet-mudanya",
@@ -180,7 +1595,4936 @@
     "price_band": "Klinik",
     "search": "İlke-Vet Veteriner Mudanya Ömerbey",
     "copy": "golyazi",
-    "tags": ["klinik", "mudanya", "bvho"],
+    "tags": [
+      "klinik",
+      "mudanya",
+      "bvho"
+    ],
     "blurb": "Ömerbey. VHO kayıtlı muayenehane."
+  },
+  {
+    "slug": "ilke-vet-veteriner-muayenehanesi",
+    "title": "İlke-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mudanya",
+    "address": "Ömerbey Mah. İpar Cad.Can İş Merkezi No:73/21",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ömerbey Mah. İpar Cad.Can İş Merkezi No:73/21",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İlke AKAY(ÖZŞEN)",
+        "Seher ÇAKIROĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "aydin-veteriner-muayenehanesi-2",
+    "title": "Aydin Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Cumhuriyet Mah. Hürriyet Meydanı No:3/C Çeltikçi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Cumhuriyet Mah. Hürriyet Meydanı No:3/C Çeltikçi",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ersin AYDIN"
+      ]
+    }
+  },
+  {
+    "slug": "bereket-veteriner-muayenehanesi",
+    "title": "Bereket Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Sabribey Mah. Nalburlar Çarşısı No:13",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sabribey Mah. Nalburlar Çarşısı No:13",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ahmet Furkan DEMİRKESEN"
+      ]
+    }
+  },
+  {
+    "slug": "d-b-veteriner-muayenehanesi",
+    "title": "D.B. Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Barış Mah.116 no lu sok ikbal sitesi D blok No:6-14/4",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Barış Mah.116 no lu sok ikbal sitesi D blok No:6-14/4",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Kübra TALANCI"
+      ]
+    }
+  },
+  {
+    "slug": "ergunvet-veteriner-muayenehanesi",
+    "title": "Ergünvet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Tatkavaklı Mah. Atatürk Cad. No:32/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Tatkavaklı Mah. Atatürk Cad. No:32/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ergün DEMİR"
+      ]
+    }
+  },
+  {
+    "slug": "klinika-veteriner-muayenehanesi",
+    "title": "Kli̇ni̇ka Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Hamzabey Mah. Şehit Adnan Yıldız Sok. No:2/4-A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hamzabey Mah. Şehit Adnan Yıldız Sok. No:2/4-A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Eray ORTALIK"
+      ]
+    }
+  },
+  {
+    "slug": "mutlu-veteriner-muayenehanesi",
+    "title": "Mutlu Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Çeltikçi Mah.Şehit Fedai Çakır Meydanı No:8/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çeltikçi Mah.Şehit Fedai Çakır Meydanı No:8/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Fatih MUTLU"
+      ]
+    }
+  },
+  {
+    "slug": "pinar-veteriner-muayenehanesi",
+    "title": "Pinar Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Şeyhmüftü Mah. Şehit Mustafa Yılmaz Sok. No:8/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Şeyhmüftü Mah. Şehit Mustafa Yılmaz Sok. No:8/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Cüneyt EMRE",
+        "Ramazan SEVİM",
+        "Eyüp ÇAĞLAYAN",
+        "HAŞİM YOLDAŞ",
+        "CEM RUHİ ULUTAŞ"
+      ]
+    }
+  },
+  {
+    "slug": "celik-veteriner-muayenehanesi",
+    "title": "Çeli̇k Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Mustafakemalpaşa",
+    "address": "Şeyhmüftü Mah. Hakkı Bey Sok. No:8/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Şeyhmüftü Mah. Hakkı Bey Sok. No:8/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İsmail ÇELİK"
+      ]
+    }
+  },
+  {
+    "slug": "akbulut-veteriner-muayenehanesi",
+    "title": "Akbulut Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Nilüfer",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Barış ÇUBUKÇU"
+      ]
+    }
+  },
+  {
+    "slug": "alya-veteriner-muayenehanesi",
+    "title": "Alya Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Esentepe Mah.Tuna Cad.No:58/C1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Esentepe Mah.Tuna Cad.No:58/C1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "HÜSEYİN ALPER PAKYÜREK"
+      ]
+    }
+  },
+  {
+    "slug": "anatomi-veteriner-muayenehanesi",
+    "title": "Anatomi̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ataevler mh. Sedir Sk. Bakgör rezidans",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ataevler mh. Sedir Sk. Bakgör rezidans",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Can Bahattin BOZDAĞ"
+      ]
+    }
+  },
+  {
+    "slug": "animalium-veteriner-muayenehanesi",
+    "title": "Ani̇mali̇um Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Konak Mah. Bilginler Cad. Murathan Apt. No:29/F",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Konak Mah. Bilginler Cad. Murathan Apt. No:29/F",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Bülent KILIÇ",
+        "Gülnur KILIÇ"
+      ]
+    }
+  },
+  {
+    "slug": "anka-veteriner-muayenehanesi",
+    "title": "Anka Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. 306. Sok. o:9 Zambak Sitesi DK:C/12/13",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah. 306. Sok. o:9 Zambak Sitesi DK:C/12/13",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Özgür ASLAN"
+      ]
+    }
+  },
+  {
+    "slug": "armoni-veteriner-muayenehanesi",
+    "title": "Armoni̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ahmet Yesevi Mah. Piknik Cd. No:36/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ahmet Yesevi Mah. Piknik Cd. No:36/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "EMİR HALUK GEDİK"
+      ]
+    }
+  },
+  {
+    "slug": "artemis-veteriner-muayenehanesi",
+    "title": "Artemi̇s Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mah.Yunusemre Cad.254.Sok. No:2 A/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 23 Nisan Mah.Yunusemre Cad.254.Sok. No:2 A/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mehmet Turgut TOPALOĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "asya-veteriner-muayenehanesi",
+    "title": "Asya Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mah. Köroğlu Cad. No:5 B/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 23 Nisan Mah. Köroğlu Cad. No:5 B/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hilal KURUL"
+      ]
+    }
+  },
+  {
+    "slug": "atavet-veteriner-muayenehanesi",
+    "title": "Atavet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ataevler Mah. Yılmaz Akkılıç Cad. Premium Park Sitesi B Blok No:21",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ataevler Mah. Yılmaz Akkılıç Cad. Premium Park Sitesi B Blok No:21",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "BUSE ŞEREMET"
+      ]
+    }
+  },
+  {
+    "slug": "atlas-veteriner-muayenehanesi",
+    "title": "Atlas Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Çamlıca Mah. Kavakdere Cad.No:140",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çamlıca Mah. Kavakdere Cad.No:140",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hüseyin TÜMEN"
+      ]
+    }
+  },
+  {
+    "slug": "avelia-veteriner-muayenehanesi",
+    "title": "Aveli̇a Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Gülcan Sok. No:3A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beşevler Mah. Gülcan Sok. No:3A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "ÇAĞLA PINAR AKAY"
+      ]
+    }
+  },
+  {
+    "slug": "aydemir-veteriner-muayenehanesi",
+    "title": "Aydemi̇r Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Demirci Mah. Sağlık ocağı Sok. No:8/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Demirci Mah. Sağlık ocağı Sok. No:8/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Murat AYDEMİR"
+      ]
+    }
+  },
+  {
+    "slug": "balat-anka-veteriner-muayenehanesi",
+    "title": "Balat Anka Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ahmet Yesevi MH. Bey sk. Bakgör City A1 blok no:4/1AANilüfer/BURSA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ahmet Yesevi MH. Bey sk. Bakgör City A1 blok no:4/1AANilüfer/BURSA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Büşra ÖZTURAN"
+      ]
+    }
+  },
+  {
+    "slug": "bendis-veteriner-muayenehanesi",
+    "title": "Bendi̇s Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Dumlupınar Mah Cevizlik Cad. No:9/A Nilüfer BURSA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Dumlupınar Mah Cevizlik Cad. No:9/A Nilüfer BURSA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hüseyin YÖRÜK",
+        "İzel Sibel PAKEL"
+      ]
+    }
+  },
+  {
+    "slug": "bulvar-veteriner-muayenehanesi",
+    "title": "Bulvar Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. FSM Bulvarı Esra Sitesi No:64/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. FSM Bulvarı Esra Sitesi No:64/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Meltem SARAÇ",
+        "Ömerul Faruk Erdoğan"
+      ]
+    }
+  },
+  {
+    "slug": "bursa-medicavet-veteriner-muayenehanesi",
+    "title": "Bursa Medi̇cavet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Konak Mah. Konak Cad.A Blok No:41A/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Konak Mah. Konak Cad.A Blok No:41A/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yudum Başak KESGİN"
+      ]
+    }
+  },
+  {
+    "slug": "burvet-veteriner-muayenehanesi",
+    "title": "Burvet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Odunluk Mah. Lefkoşe Cad. Operatör Sok. Tezeller İş Merkezi No:15/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Odunluk Mah. Lefkoşe Cad. Operatör Sok. Tezeller İş Merkezi No:15/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İbrahim Tugay ATEŞ",
+        "Dila DAYİ"
+      ]
+    }
+  },
+  {
+    "slug": "boru-veteriner-muayenehanesi",
+    "title": "Börü Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Konak Mah. Kumlu Sok. No:11 Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Konak Mah. Kumlu Sok. No:11 Nilüfer",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Orhan Veli AKYÜZ"
+      ]
+    }
+  },
+  {
+    "slug": "deniz-veteriner-muayenehanesi-nbsp-deniz-veteriner-muayenehanesi",
+    "title": "DENİZ VETERİNER MUAYENEHANESİ &nbsp; DENİZ VETERİNER MUAYENEHANESİ",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. Kemer Cad. Ekin Sitesi C Blok No:9/A &nbsp; İhsaniye Mah. Kemer Cad. Ekin Sitesi C Blok No:9/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. Kemer Cad. Ekin Sitesi C Blok No:9/A &nbsp; İhsaniye Mah. Kemer Cad. Ekin Sitesi C Blok No:9/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Suat KARATAŞ &nbsp; SEVGİ ÇOTA KARATAŞ"
+      ]
+    }
+  },
+  {
+    "slug": "dante-veteriner-muayenehanesi",
+    "title": "Dante Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Yıldırım Cad. Cengizkent Sitesi No:283/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beşevler Mah. Yıldırım Cad. Cengizkent Sitesi No:283/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Özlem ÖZGÜR ÖZFIRAT"
+      ]
+    }
+  },
+  {
+    "slug": "demir-veteriner-muayenehanesi",
+    "title": "Demi̇r Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Sakarya Mah.Bahriye Üçok Cad.Menekşe Sok.Deniz Ap. No:19/A Görükle",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sakarya Mah.Bahriye Üçok Cad.Menekşe Sok.Deniz Ap. No:19/A Görükle",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yılmaz DEMİRDÖĞEN"
+      ]
+    }
+  },
+  {
+    "slug": "deniz-veteriner-muayenehanesi",
+    "title": "Deni̇z Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. Kemer Cad. Ekin Sitesi C Blok No:9/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. Kemer Cad. Ekin Sitesi C Blok No:9/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Sevgi ÇOTA KARATAŞ"
+      ]
+    }
+  },
+  {
+    "slug": "doktorpati-veteriner-muayenehanesi",
+    "title": "Doktorpati̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Kültür Mah. Bilginler Cd. Kutay Sit. C Blok No:117 Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kültür Mah. Bilginler Cd. Kutay Sit. C Blok No:117 Nilüfer",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Sinem Savran",
+        "Murat ÜNAL"
+      ]
+    }
+  },
+  {
+    "slug": "doruk-vet-veteriner-muayenehanesi",
+    "title": "Doruk Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Akçalar Mah.Şehir Cad.No:68/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Akçalar Mah.Şehir Cad.No:68/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Bahri YILDIRIM"
+      ]
+    }
+  },
+  {
+    "slug": "dost-veteriner-muayenehanesi",
+    "title": "Dost Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Beşevler Cad. Zambak Kent Sitesi C Blok No:104",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beşevler Mah. Beşevler Cad. Zambak Kent Sitesi C Blok No:104",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Aygül ERAL"
+      ]
+    }
+  },
+  {
+    "slug": "dunyavet-veteriner-muayenehanesi",
+    "title": "Dünyavet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah.İsmetiye Cad. Sama Konutları B1 Blok No:30/ I",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah.İsmetiye Cad. Sama Konutları B1 Blok No:30/ I",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Gökhan Önder KESER"
+      ]
+    }
+  },
+  {
+    "slug": "elif-veteriner-muayenehanesi",
+    "title": "Eli̇f Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Esentepe Mah. İstiklal Cad. Yahyagil Apt. No:42 A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Esentepe Mah. İstiklal Cad. Yahyagil Apt. No:42 A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Elif ATALIK"
+      ]
+    }
+  },
+  {
+    "slug": "foks-besevler-veteriner-muayenehanesi",
+    "title": "Foks Beşevler Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Yıldırım Cad. Cengizkent Sitesi No:283 B/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beşevler Mah. Yıldırım Cad. Cengizkent Sitesi No:283 B/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "MERVE ALVER"
+      ]
+    }
+  },
+  {
+    "slug": "freya-veteriner-muayenehanesi",
+    "title": "Freya Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Beşevler Cad. Özdenizkent Sitesi No:201 B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beşevler Mah. Beşevler Cad. Özdenizkent Sitesi No:201 B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "AYÇA ATALI",
+        "NECEF ÇİĞDEM GÖZ"
+      ]
+    }
+  },
+  {
+    "slug": "fsm-vetklinik-veteriner-muayenehanesi",
+    "title": "Fsm Vetkli̇ni̇k Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. Barbaros Cad. No:26/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. Barbaros Cad. No:26/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ömerul Faruk ERDOĞAN"
+      ]
+    }
+  },
+  {
+    "slug": "gisa-veteriner-muayenehanesi",
+    "title": "Gi̇sa Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mah. 75. Yıl Bulvarı Rızvanoğlu Paçacı B Blok No:3B/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 23 Nisan Mah. 75. Yıl Bulvarı Rızvanoğlu Paçacı B Blok No:3B/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Resime Gizem SAYIN"
+      ]
+    }
+  },
+  {
+    "slug": "gorukle-veteriner-muayenehanesi",
+    "title": "Görükle Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Görükle Beldesi Sakarya Mah. Yerleşim Sitesi Lale Apt. No:13/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Görükle Beldesi Sakarya Mah. Yerleşim Sitesi Lale Apt. No:13/1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Selin GÖLBUCAKLI"
+      ]
+    }
+  },
+  {
+    "slug": "gurcan-veteriner-muayenehanesi",
+    "title": "Gürcan Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan mah. Araslı Sok. Durmaz Apt. No:7-A-E",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 23 Nisan mah. Araslı Sok. Durmaz Apt. No:7-A-E",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Esra BAKAR GÜRCAN"
+      ]
+    }
+  },
+  {
+    "slug": "hamlet-veteriner-muayenehanesi",
+    "title": "Hamlet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mah. 251. Sok. Köroğlu Cad. Görkem Sit.No:43",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 23 Nisan Mah. 251. Sok. Köroğlu Cad. Görkem Sit.No:43",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Burak KAYAK"
+      ]
+    }
+  },
+  {
+    "slug": "han-veteriner-muayenehanesi",
+    "title": "Han Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah.Melisköy Sitesi E.Blok No:4",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah.Melisköy Sitesi E.Blok No:4",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mehmet Ali ÖNDER"
+      ]
+    }
+  },
+  {
+    "slug": "koca-patiler-veteriner-muayenehanesi",
+    "title": "Koca Pati̇ler Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah.267.Sok.No:2",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah.267.Sok.No:2",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ece ATABEYOĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "la-fontaine-veteriner-muayenehanesi",
+    "title": "La Fontai̇ne Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Üçevler Mah. Dikmen Sok. No:20",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Üçevler Mah. Dikmen Sok. No:20",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Görkem ERÇAKIR"
+      ]
+    }
+  },
+  {
+    "slug": "linda-veteriner-muayenehanesi",
+    "title": "Li̇nda Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Savcı Doğan Öz Cd. No65/B Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Savcı Doğan Öz Cd. No65/B Nilüfer",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ertan YILMAZ"
+      ]
+    }
+  },
+  {
+    "slug": "lotus-veteriner-muayenehanesi",
+    "title": "Lotus Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Gazi Caddesi Güven Sokak No:6/B Nilüfer BURSA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Gazi Caddesi Güven Sokak No:6/B Nilüfer BURSA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Funda DENİZ"
+      ]
+    }
+  },
+  {
+    "slug": "lover-veteriner-muayenehanesi",
+    "title": "Lover Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Kurtuluş Mah. 1. Sokak No: 5 A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kurtuluş Mah. 1. Sokak No: 5 A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "GÖKHAN OCAK"
+      ]
+    }
+  },
+  {
+    "slug": "macrovet-veteriner-muayenehanesi",
+    "title": "Macrovet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ataevler Mah. Gazi Osman Paşa Cad. 76C/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ataevler Mah. Gazi Osman Paşa Cad. 76C/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mustafa ÇIBIK",
+        "Saffet AY"
+      ]
+    }
+  },
+  {
+    "slug": "medikon-veteriner-muayenehanesi",
+    "title": "Medi̇kon Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Yirmidokuz Ekim Mah. Necip Hablemitoğlu Cad. Atalay İş Merkezi A Blok 1 Nolu Bina No:3AA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Yirmidokuz Ekim Mah. Necip Hablemitoğlu Cad. Atalay İş Merkezi A Blok 1 Nolu Bina No:3AA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ahmet YAVUZ"
+      ]
+    }
+  },
+  {
+    "slug": "neptun-veteriner-muayenehanesi",
+    "title": "Neptün Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Kurtuluş, Birinci sokak, 16285 Nilüfer/Bursa",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kurtuluş, Birinci sokak, 16285 Nilüfer/Bursa",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Meryem İrem İNALLAR"
+      ]
+    }
+  },
+  {
+    "slug": "nox-veteriner-muayenehanesi",
+    "title": "Nox Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Yüzüncüyıl Mah. 415.Sok. No:53/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Yüzüncüyıl Mah. 415.Sok. No:53/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "YAĞIZALP SABUNCU",
+        "HALİL SEZER YILDIRIM",
+        "MURAT VATANSEVER"
+      ]
+    }
+  },
+  {
+    "slug": "omega-veteriner-muayenehanesi",
+    "title": "Omega Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "30 Ağustos Zafer Mah. Bozkaya Cad. No:17 A/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 30 Ağustos Zafer Mah. Bozkaya Cad. No:17 A/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Remziye AKBAŞ"
+      ]
+    }
+  },
+  {
+    "slug": "omega-veteriner-muayenehanesi-2",
+    "title": "Omega Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "30 Ağustos Zafer Mah.Bozyaka Cad.No: 17A/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 30 Ağustos Zafer Mah.Bozyaka Cad.No: 17A/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İSMET FIRAT ÇELİK"
+      ]
+    }
+  },
+  {
+    "slug": "omnivet-veteriner-muayenehanesi",
+    "title": "Omni̇vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "19 Mayıs Mah. Tutku Cad. No:1/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 19 Mayıs Mah. Tutku Cad. No:1/1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "EMİR SALİH KUMBASAR"
+      ]
+    }
+  },
+  {
+    "slug": "orenda-veteriner-muayenehanesi",
+    "title": "Orenda Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "29 Ekim Mah. Turan Dursun Cad. No:4B/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 29 Ekim Mah. Turan Dursun Cad. No:4B/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Oğuz YİĞİT",
+        "Hilal YİĞİT"
+      ]
+    }
+  },
+  {
+    "slug": "pablo-veteriner-muayenehanesi",
+    "title": "Pablo Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Balkan Mah. Naim Süleymanoğlu Cad. No:27",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Balkan Mah. Naim Süleymanoğlu Cad. No:27",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "SEMİH DAL"
+      ]
+    }
+  },
+  {
+    "slug": "pakvet",
+    "title": "Pakvet Veteriner",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. Ahmet Taner Kışlalı Bulv. Utku Sitesi No:66A/A, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "7/24 acil (ilan)",
+    "price_band": "Klinik",
+    "search": "Pakvet Veteriner Altınşehir Bursa",
+    "copy": "inkaya-cinari",
+    "tags": [
+      "klinik",
+      "acil",
+      "bvho"
+    ],
+    "blurb": "Altınşehir. Kedi-köpek, egzotik, diş. VHO: Hüseyin Alper Pakyürek."
+  },
+  {
+    "slug": "pakvet-veteriner-muayenehanesi",
+    "title": "Pakvet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. Ahmet Taner Kışlalı Bulv. A Blok -Utku No:66A/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah. Ahmet Taner Kışlalı Bulv. A Blok -Utku No:66A/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "HÜSEYİN ALPER PAKYÜREK"
+      ]
+    }
+  },
+  {
+    "slug": "pamuk-veteriner-muayenehanesi",
+    "title": "Pamuk Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah.Kanuni Cad.No:47/C/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah.Kanuni Cad.No:47/C/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Recep PAMUK"
+      ]
+    }
+  },
+  {
+    "slug": "pati-veteriner-muayenehanesi",
+    "title": "Pati̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. İşlemeci Sok. Tuğcular Apt. No:3",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. İşlemeci Sok. Tuğcular Apt. No:3",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Derya ÇETİNKAYA"
+      ]
+    }
+  },
+  {
+    "slug": "pet-vet-veteriner-muayenehanesi",
+    "title": "Pet-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Bilginler Cad. No:122",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beşevler Mah. Bilginler Cad. No:122",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Gürkan KAYAN"
+      ]
+    }
+  },
+  {
+    "slug": "pet-vet-veteriner-muayenehanesi-2",
+    "title": "Pet-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Bilginler Cad. No:123",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beşevler Mah. Bilginler Cad. No:123",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Oğuz ÖZLÜK"
+      ]
+    }
+  },
+  {
+    "slug": "pet224",
+    "title": "Pet224 Veteriner",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Beşevler Cad. No:177/A, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Pet224 Veteriner Beşevler Bursa Ervin Atasoy",
+    "copy": "koza-han",
+    "tags": [
+      "klinik",
+      "besevler",
+      "bvho"
+    ],
+    "blurb": "Beşevler. VHO: Ervin Atasoy / İbrahim Ethem Keklik."
+  },
+  {
+    "slug": "pet224-veteriner-muayenehanesi",
+    "title": "Pet224 Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Beşevler Cad.No:177/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beşevler Mah. Beşevler Cad.No:177/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ervin ATASOY",
+        "İbrahim Ethem KEKLİK"
+      ]
+    }
+  },
+  {
+    "slug": "petclass",
+    "title": "PetClass Veteriner",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mah. Mithat Paşa Cad. No:17B, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "PetClass Veteriner 23 Nisan Mithat Paşa Bursa",
+    "copy": "golyazi",
+    "tags": [
+      "klinik",
+      "23-nisan"
+    ],
+    "blurb": "23 Nisan / Mithat Paşa. Muayene ve aşı."
+  },
+  {
+    "slug": "pethouse-veteriner-muayenehanesi",
+    "title": "Pethouse Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. Dörtyıldız Sok. Dörtyıldız Sitesi 6A/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. Dörtyıldız Sok. Dörtyıldız Sitesi 6A/1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ömer ERTÜRK"
+      ]
+    }
+  },
+  {
+    "slug": "pethoven-veteriner-muayenehanesi",
+    "title": "Pethoven Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ataevler Mah.Y.Akkılıç Cad.Bakgör Residance İşyerleri 60/A No:73",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ataevler Mah.Y.Akkılıç Cad.Bakgör Residance İşyerleri 60/A No:73",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Elçin BATMAZ",
+        "Bilgehan BİLGİNER"
+      ]
+    }
+  },
+  {
+    "slug": "pethoven-veteriner-muayenehanesi-2",
+    "title": "Pethoven Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ataevler Mah.Y.Akkılıç Cad.Bakgör Residance İşyerleri 60/A No:71",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ataevler Mah.Y.Akkılıç Cad.Bakgör Residance İşyerleri 60/A No:71",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Güneş İskender ÖNDER"
+      ]
+    }
+  },
+  {
+    "slug": "pethoven-veteriner-muayenehanesi-3",
+    "title": "Pethoven Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ataevler Mah.Y.Akkılıç Cad.Bakgör Residance İşyerleri 60/A No:72",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ataevler Mah.Y.Akkılıç Cad.Bakgör Residance İşyerleri 60/A No:72",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Nil KURTARAN"
+      ]
+    }
+  },
+  {
+    "slug": "peti-veteriner-muayenehanesi",
+    "title": "Peti̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Balkan Mah. Kocatepe Sokak Rumeli Sitesi C Blok No:10 Nilüfer/BURSA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Balkan Mah. Kocatepe Sokak Rumeli Sitesi C Blok No:10 Nilüfer/BURSA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ömür YILDIZ"
+      ]
+    }
+  },
+  {
+    "slug": "petika-veteriner-muayenehanesi",
+    "title": "Peti̇ka Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. 219.Sok. No:9",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah. 219.Sok. No:9",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Merve PARILDAR"
+      ]
+    }
+  },
+  {
+    "slug": "petolog-veteriner-muayenehanesi",
+    "title": "Petolog Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Görükle Mah.Eğitim Cad.Arabacıoğlu Sitesi C Blok No:36",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Görükle Mah.Eğitim Cad.Arabacıoğlu Sitesi C Blok No:36",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Sena BİLGİN"
+      ]
+    }
+  },
+  {
+    "slug": "petpark-veteriner-muayenehanesi",
+    "title": "Petpark Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Konak Mah.Beşevler Cad.No:75",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Konak Mah.Beşevler Cad.No:75",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Naz ALICI Pelin ASLAN BÜKRÜ"
+      ]
+    }
+  },
+  {
+    "slug": "petpark-veteriner-muayenehanesi-2",
+    "title": "Petpark Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Cad. Konak Mah.Bağlar Sok. Alıcı Sitesi No:8/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beşevler Cad. Konak Mah.Bağlar Sok. Alıcı Sitesi No:8/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "PELİN ASLAN BÜKRÜ",
+        "AHMET UYMAZ"
+      ]
+    }
+  },
+  {
+    "slug": "pets-global-veteriner-muayenehanesi",
+    "title": "Pets Global Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Konak Mah.Yıldırım Cad.Yakut Sok. No:7",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Konak Mah.Yıldırım Cad.Yakut Sok. No:7",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "EMİNE SAĞLAM"
+      ]
+    }
+  },
+  {
+    "slug": "petzilla-veteriner-muayenehanesi",
+    "title": "Petzi̇lla Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. Muammer Aksoy Cad. No:20/B-A Zirvekent Sit.",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah. Muammer Aksoy Cad. No:20/B-A Zirvekent Sit.",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Evren BULGAÇ"
+      ]
+    }
+  },
+  {
+    "slug": "pharmofex-veteriner-muayenehanesi",
+    "title": "Pharmofex Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mahallesi Mithatpaşa Cad. Detay Premium 21 A/D",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 23 Nisan Mahallesi Mithatpaşa Cad. Detay Premium 21 A/D",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Gülçe CENGİZ"
+      ]
+    }
+  },
+  {
+    "slug": "puppy-veteriner-muayenehanesi",
+    "title": "Puppy Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Barış Mah. Üstün Sok.No:1/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Barış Mah. Üstün Sok.No:1/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Tuna PINAR"
+      ]
+    }
+  },
+  {
+    "slug": "redoa-veteriner-muayenehanesi",
+    "title": "Redoa Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "30 Ağustos Zafer Mah. İpek Cad. No:9 A/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 30 Ağustos Zafer Mah. İpek Cad. No:9 A/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "ATİLLA ACAR"
+      ]
+    }
+  },
+  {
+    "slug": "redocat-veteriner-muayenehanesi",
+    "title": "Redocat Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ertuğrul Mah. 138.(270) Sok. Panoramik Bahçe Evleri B Blok No:12 B/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ertuğrul Mah. 138.(270) Sok. Panoramik Bahçe Evleri B Blok No:12 B/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hüseyin YOLAÇAN"
+      ]
+    }
+  },
+  {
+    "slug": "royal-veteriner-muayenehanesi",
+    "title": "Royal Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mahallesi Mithat Paşa Cad. Salus Klasik Sitesi A Blok No7A/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 23 Nisan Mahallesi Mithat Paşa Cad. Salus Klasik Sitesi A Blok No7A/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mehtap ALTIN",
+        "Baturalp KETENE"
+      ]
+    }
+  },
+  {
+    "slug": "serkan-albay-veteriner-muayenehanesi",
+    "title": "Serkan Albay Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. Kanuni Cad.Atalay Sitesi C Blok No:5/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. Kanuni Cad.Atalay Sitesi C Blok No:5/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Serkan ALBAY"
+      ]
+    }
+  },
+  {
+    "slug": "sevimli-mutlu-patilerim-veteriner-muayenehanesi",
+    "title": "Sevi̇mli̇ Mutlu Pati̇leri̇m Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. Yılvar 2 Sit. Temel Sok. B Blok No:1A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. Yılvar 2 Sit. Temel Sok. B Blok No:1A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Burçin Gülçer YILDIZHAN"
+      ]
+    }
+  },
+  {
+    "slug": "sezer-vet-veteriner-muayenehanesi",
+    "title": "Sezer-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Görükle Mah. Kozan Sok. No:14/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Görükle Mah. Kozan Sok. No:14/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Sezer MEŞE",
+        "Şaziye Nebahat MEŞE"
+      ]
+    }
+  },
+  {
+    "slug": "sinerjivet-veteriner-muayenehanesi",
+    "title": "Si̇nerji̇vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İzmir Yolu Üzeri Akarsu İş Merkezi No:407/22",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İzmir Yolu Üzeri Akarsu İş Merkezi No:407/22",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Erol ASLAN",
+        "İhsan DOĞRUTEKİN",
+        "Tuncer ŞEN"
+      ]
+    }
+  },
+  {
+    "slug": "tio-veteriner-muayenehanesi",
+    "title": "Ti̇o Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Cumhuriyet Mah. Nilüfer Hatun Cad. No:140/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Cumhuriyet Mah. Nilüfer Hatun Cad. No:140/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Dila DAYİ"
+      ]
+    }
+  },
+  {
+    "slug": "toprak-veteriner-muayenehanesi",
+    "title": "Toprak Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Akçalar Mah. Cumhuriyet Meydanı Hoca Sok. No:14/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Akçalar Mah. Cumhuriyet Meydanı Hoca Sok. No:14/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Taştan MERAL"
+      ]
+    }
+  },
+  {
+    "slug": "turan-veteriner-muayenehanesi",
+    "title": "Turan Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. Muammer Aksoy Cad. No:8/C/4",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah. Muammer Aksoy Cad. No:8/C/4",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Akın TURAN"
+      ]
+    }
+  },
+  {
+    "slug": "valerian-veteriner-muayenehanesi",
+    "title": "Valeri̇an Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Balat Mah. Farukbaykal Cad. 17 C/C NO:15",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Balat Mah. Farukbaykal Cad. 17 C/C NO:15",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "SEMİH YAVAŞ",
+        "HASAN MÜMÜŞOĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "vena-veteriner-muayenehanesi",
+    "title": "Vena Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Çamlıca Mha. Lefkoşa Cad. Corner 24 Sitesi 128/A No:14",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çamlıca Mha. Lefkoşa Cad. Corner 24 Sitesi 128/A No:14",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İhsan YİĞİT",
+        "Gamze ÇEKER"
+      ]
+    }
+  },
+  {
+    "slug": "venus-veteriner-muayenehanesi",
+    "title": "Venüs Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir mahallesi Abdi İpekçi Cad. No:48F, 16120",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir mahallesi Abdi İpekçi Cad. No:48F, 16120",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "SILA MELİS KOÇAK ÖZTÜRK"
+      ]
+    }
+  },
+  {
+    "slug": "vet224-veteriner-muayenehanesi",
+    "title": "Vet224 Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mahallesi Yunus Emre Cad. No:11/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 23 Nisan Mahallesi Yunus Emre Cad. No:11/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ufuk YILMAZ",
+        "Gürcan ATALAY",
+        "Fatih Mehmet KAYABAŞI"
+      ]
+    }
+  },
+  {
+    "slug": "vetabil-isik-biltekin-veteriner-muayenehanesi",
+    "title": "Vetabi̇l- Işik Bi̇lteki̇n Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Dumlupınar Mah. Çağdaş Sok. No:32/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Dumlupınar Mah. Çağdaş Sok. No:32/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Işık BİLTEKİN"
+      ]
+    }
+  },
+  {
+    "slug": "vetallica-veteriner-muayenehanesi",
+    "title": "Vetalli̇ca Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Dumlupınar Mah.Dikmen (500) Sok. No:10/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Dumlupınar Mah.Dikmen (500) Sok. No:10/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "BURHAN KARAHAN"
+      ]
+    }
+  },
+  {
+    "slug": "vetclub-veteriner-muayenehanesi",
+    "title": "Vetclub Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Üçevler Mah. Dinç Cad. No:76/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Üçevler Mah. Dinç Cad. No:76/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İlker Yasin BAYOĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "vetorka-veteriner-muayenehanesi",
+    "title": "Vetorka Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Konak Mah., Bilginler Cad. Deniz Yıldızı Sk. Çamlıkevleri Sit. A Blok No:2/A, 16110",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Konak Mah., Bilginler Cad. Deniz Yıldızı Sk. Çamlıkevleri Sit. A Blok No:2/A, 16110",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "MUSTAFA EREN ŞAHİN",
+        "EROL TURAN"
+      ]
+    }
+  },
+  {
+    "slug": "vetplanet-veteriner-muayenehanesi",
+    "title": "Vetplanet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Balat mah. Faruk Baykal Cd. E Blok No:17E/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Balat mah. Faruk Baykal Cd. E Blok No:17E/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Pınar LEVENT",
+        "Hasan Arda KARABARUT"
+      ]
+    }
+  },
+  {
+    "slug": "vetra-veteriner-muayenehanesi",
+    "title": "Vetra Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah.Muammer Aksoy Cad.No:22/D/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah.Muammer Aksoy Cad.No:22/D/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ramazan ALBAY",
+        "Merve ÇALGIN"
+      ]
+    }
+  },
+  {
+    "slug": "vetropol-veteriner-muayenehanesi",
+    "title": "Vetropol Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. Fatih Cad. A Blok No:6 C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. Fatih Cad. A Blok No:6 C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "RAMAZAN DÖNMEZ"
+      ]
+    }
+  },
+  {
+    "slug": "vetservis-veteriner-muayenehanesi",
+    "title": "Vetservi̇s Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ertuğrul Mah.No:336",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ertuğrul Mah.No:336",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Aydın ÇAKAR"
+      ]
+    },
+    "lat": 40.2151884,
+    "lng": 28.9218611
+  },
+  {
+    "slug": "vetstation-veteriner-muayenehanesi",
+    "title": "Vetstati̇on Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Dumlupınar Mah. Pamukkale Cad. Akın Apt. 22/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Dumlupınar Mah. Pamukkale Cad. Akın Apt. 22/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "EMRAH YİĞİT"
+      ]
+    }
+  },
+  {
+    "slug": "yasam-veteriner-muayenehanesi",
+    "title": "Yaşam Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Konak Mah. Konak Cad. Vataner Apt. No:37/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Konak Mah. Konak Cad. Vataner Apt. No:37/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Burcu İNCE"
+      ]
+    }
+  },
+  {
+    "slug": "yildizhan-veteriner-muayenehanesi",
+    "title": "Yildizhan Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. 204.Sok. No:18",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah. 204.Sok. No:18",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Canan DUYMAZ"
+      ]
+    }
+  },
+  {
+    "slug": "cali-veteriner-muayenehanesi",
+    "title": "Çali Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Çalı Mah. 97. Sok. No:2/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çalı Mah. 97. Sok. No:2/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "ALAATTİN ERÇAKIR"
+      ]
+    }
+  },
+  {
+    "slug": "cinar-veteriner-muayenehanesi",
+    "title": "Çinar Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mah. Karacaoğlan CadA Blok No:8",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · 23 Nisan Mah. Karacaoğlan CadA Blok No:8",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ersin ASLAN"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-nilufer-veteriner-muayenehanesi",
+    "title": "Özel Ni̇lüfer Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. Tuna Cad. Mercan Sok. No:2/3",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İhsaniye Mah. Tuna Cad. Mercan Sok. No:2/3",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yeşim TARAKCI"
+      ]
+    }
+  },
+  {
+    "slug": "ozluce-veteriner-muayenehanesi",
+    "title": "Özlüce Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. Ahmet Taner Kışlalı Cad. No:50 A/D",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altınşehir Mah. Ahmet Taner Kışlalı Cad. No:50 A/D",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İSMAİL EYYÜPOĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "inka-veteriner-muayenehanesi",
+    "title": "İnka Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Nilüfer",
+    "address": "Ahmet Yesevi Mah.Bey Sok. No:4 A/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ahmet Yesevi Mah.Bey Sok. No:4 A/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Melahat Tuğçe YAMAÇ"
+      ]
+    }
+  },
+  {
+    "slug": "ari-veteriner-muayenehanesi",
+    "title": "Ari Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Orhaneli",
+    "address": "İsmetpaşa Mah.Pınarlar Sok.No:9",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İsmetpaşa Mah.Pınarlar Sok.No:9",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ahmet ARI"
+      ]
+    }
+  },
+  {
+    "slug": "ariaslan-veteriner-muayenehanesi",
+    "title": "Ariaslan Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Orhaneli",
+    "address": "İsmetpaşa Mh. Zafer Cd. No:77/A Orhaneli",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İsmetpaşa Mh. Zafer Cd. No:77/A Orhaneli",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Muhammet ARIASLAN"
+      ]
+    }
+  },
+  {
+    "slug": "ceylan-veteriner-muayenehanesi",
+    "title": "Ceylan Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Orhaneli",
+    "address": "İsmetpaşa Mah. Aliağa Sok. No:3/D",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İsmetpaşa Mah. Aliağa Sok. No:3/D",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Halil İbrahim CEYLAN"
+      ]
+    }
+  },
+  {
+    "slug": "kahriman-veteriner-muayenehanesi",
+    "title": "Kahriman Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Orhaneli",
+    "address": "İsmetpaşa Mah. Cami Karşısı Sk. No:1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İsmetpaşa Mah. Cami Karşısı Sk. No:1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ahmet KAHRIMAN"
+      ]
+    }
+  },
+  {
+    "slug": "dost-patiii-veteriner-muayenehanesi",
+    "title": "Dost Pati̇i̇i̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Orhangazi",
+    "address": "Camii kebir Mah.İstiklal Cad. No:32/11",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Camii kebir Mah.İstiklal Cad. No:32/11",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "ERAY GÜVEN KILIÇ"
+      ]
+    }
+  },
+  {
+    "slug": "dost-patiii-veteriner-muayenehanesi-2",
+    "title": "Dost Pati̇i̇i̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Orhangazi",
+    "address": "Arapzade Mah.Arkaaltı Cad. No:43-A Zeminkat",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Arapzade Mah.Arkaaltı Cad. No:43-A Zeminkat",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "GÜRKAN KOÇAK"
+      ]
+    }
+  },
+  {
+    "slug": "duru-veteriner-muayenehanesi",
+    "title": "Duru Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Orhangazi",
+    "address": "Hürriyet Mh. Tozkoparan Cd. No:72/A/4",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hürriyet Mh. Tozkoparan Cd. No:72/A/4",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Elif Ebru DALYAN"
+      ]
+    }
+  },
+  {
+    "slug": "orhangazi-veteriner-muayenehanesi",
+    "title": "Orhangazi̇ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Orhangazi",
+    "address": "Camikebir Mah. Garaj Sok. No:7",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Camikebir Mah. Garaj Sok. No:7",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Erdoğan SEÇGİN"
+      ]
+    }
+  },
+  {
+    "slug": "amazon-veteriner-muayenehanesi",
+    "title": "Amazon Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Demirtaş Cumhuriyet Mah. 7. Cad. No:43/31",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Demirtaş Cumhuriyet Mah. 7. Cad. No:43/31",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Arslan Onur KORUCU"
+      ]
+    }
+  },
+  {
+    "slug": "armilla-vet",
+    "title": "Armilla Veteriner",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Mah. 9. Manolya Sok. No:5/11, Osmangazi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Armilla Veteriner Kükürtlü Bursa",
+    "copy": "eski-kaplica",
+    "tags": [
+      "klinik",
+      "kukurtlu",
+      "bvho"
+    ],
+    "blurb": "Kükürtlü. VHO kayıtlı muayenehane."
+  },
+  {
+    "slug": "armilla-veteriner-muayenehanesi",
+    "title": "Armi̇lla Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Mah. 9. Manolya Sok. No:5/11",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kükürtlü Mah. 9. Manolya Sok. No:5/11",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ersin CANPOLAT",
+        "Sercan MERİÇ"
+      ]
+    }
+  },
+  {
+    "slug": "armilla-veteriner-muayenehanesi-2",
+    "title": "Armi̇lla Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Mah. 9. Manolya Sok. No:5/12",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kükürtlü Mah. 9. Manolya Sok. No:5/12",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Onur ALTUN"
+      ]
+    }
+  },
+  {
+    "slug": "arter-veteriner-muayenehanesi",
+    "title": "Arter Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Soğanlı Mh. Çelebi Mehmet Blv. Blok:4 No:200H Osmangazi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Soğanlı Mh. Çelebi Mehmet Blv. Blok:4 No:200H Osmangazi",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mücteba TARTAROĞLU",
+        "Kemal FARIMAZ"
+      ]
+    }
+  },
+  {
+    "slug": "bayulgen-veteriner-muayenehanesi",
+    "title": "Bayülgen Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Çirpan Mah. Darmstad Cad. No:5/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çirpan Mah. Darmstad Cad. No:5/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hıdır BAYÜLGEN"
+      ]
+    }
+  },
+  {
+    "slug": "best-vet-veteriner-muayenehanesi",
+    "title": "Best Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Altıparmak Mah. Bursalı Tahir Cad. No:107",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Altıparmak Mah. Bursalı Tahir Cad. No:107",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hanife BALKAN"
+      ]
+    }
+  },
+  {
+    "slug": "beta-veteriner-muayenehanesi",
+    "title": "Beta Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Hamitler Mah. Karıncalı Sokak Tet İlvan Apt. No:20/L Osmangazi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hamitler Mah. Karıncalı Sokak Tet İlvan Apt. No:20/L Osmangazi",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Büşra AVCILAR"
+      ]
+    }
+  },
+  {
+    "slug": "bilge-vet-veteriner-muayenehanesi",
+    "title": "Bilge Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Stadyum Cad. Doğuş Apt. No:20/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Stadyum Cad. Doğuş Apt. No:20/1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Berk ÖZTÜRK",
+        "Bilge ÖZTÜRK"
+      ]
+    }
+  },
+  {
+    "slug": "bursa-veteriner-muayenehanesi",
+    "title": "Bursa Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "FSM Mah. Sanayi Cad. Büyükkent Sitesi Zemin Kat No:644/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · FSM Mah. Sanayi Cad. Büyükkent Sitesi Zemin Kat No:644/1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Cengiz TARHAN",
+        "Sevil TARHAN"
+      ]
+    }
+  },
+  {
+    "slug": "catish-amp-dogish-veteriner-muayenehanesi",
+    "title": "CATISH &amp;DOGISH VETERİNER MUAYENEHANESİ",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Mah. Zübeyde Hanım Cad. Kent Apt. No:24/1-A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kükürtlü Mah. Zübeyde Hanım Cad. Kent Apt. No:24/1-A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Elif ERİŞ",
+        "Ezgi HAKSEVER"
+      ]
+    }
+  },
+  {
+    "slug": "eta-veteriner-muayenehanesi",
+    "title": "Eta Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Dikkaldırım mah. Yeni Stadyum Cad.35/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Dikkaldırım mah. Yeni Stadyum Cad.35/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Emine AYDIN"
+      ]
+    }
+  },
+  {
+    "slug": "hurriyet-veteriner-muayenehanesi",
+    "title": "Hürri̇yet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Namık Kemal Sok.No:9",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Namık Kemal Sok.No:9",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Nilgün ELİŞ"
+      ]
+    },
+    "lat": 40.2191541,
+    "lng": 29.0048498
+  },
+  {
+    "slug": "kartallar-veteriner-muayenehanesi",
+    "title": "Kartallar Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Sırameşeler Mah. Mudanya Cad. Okul Sok. No:5",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sırameşeler Mah. Mudanya Cad. Okul Sok. No:5",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Metin Hadi KELLECİ"
+      ]
+    }
+  },
+  {
+    "slug": "karya-doga-veteriner-muayenehanesi",
+    "title": "Karya Doğa Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Dikkaldırım Mah. Değirmen Cad. Hanedan Sok. Örgen Apt. No:3/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Dikkaldırım Mah. Değirmen Cad. Hanedan Sok. Örgen Apt. No:3/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Arzu ÇELİKBİLEK",
+        "Melike SOYDAN"
+      ]
+    }
+  },
+  {
+    "slug": "kas-vet-veteriner-muayenehanesi",
+    "title": "Kaş-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Soğukkuyu Mah. 5.Site Sok No:13/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Soğukkuyu Mah. 5.Site Sok No:13/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Eyüp KAŞMER"
+      ]
+    }
+  },
+  {
+    "slug": "koru-veteriner-muayenehanesi",
+    "title": "Koru Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Emek Zekai Gümüşdiş Mh. M.Fevzi Çakmak Cd. No:44/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Emek Zekai Gümüşdiş Mh. M.Fevzi Çakmak Cd. No:44/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Samed BAHADIR"
+      ]
+    }
+  },
+  {
+    "slug": "medipaw-veteriner-muayenehanesi",
+    "title": "Medi̇paw Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Demirtaş Cumhuriyet Mh. Çevreyolu Cd. No:184/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Demirtaş Cumhuriyet Mh. Çevreyolu Cd. No:184/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ertuğrul KUM",
+        "Ceyda Nur KIRMIZIAY"
+      ]
+    }
+  },
+  {
+    "slug": "merkez-veteriner-muayenehanesi",
+    "title": "Merkez Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "İntizam Mah. Bilim Sok. No:6/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · İntizam Mah. Bilim Sok. No:6/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Çetin Kadir YILMAZ"
+      ]
+    }
+  },
+  {
+    "slug": "natura-veteriner-muayenehanesi",
+    "title": "Natura Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Mah. Çeyiz Sok. Çeyiz Apt. No:2/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kükürtlü Mah. Çeyiz Sok. Çeyiz Apt. No:2/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Arzu BURCU"
+      ]
+    }
+  },
+  {
+    "slug": "pasteur-veteriner-muayenehanesi",
+    "title": "Pasteur Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Hüdavendigar Mah. Balıklıpınar Sok. Merta 2 Apt. No:25/11",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hüdavendigar Mah. Balıklıpınar Sok. Merta 2 Apt. No:25/11",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ayşe Meltem KIZILDAĞLI"
+      ]
+    }
+  },
+  {
+    "slug": "pet-bursa-veteriner-muayenehanesi",
+    "title": "Pet Bursa Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Mah. Güneş Sok. Bahar Apt. No:3/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kükürtlü Mah. Güneş Sok. Bahar Apt. No:3/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hüseyin NAS"
+      ]
+    }
+  },
+  {
+    "slug": "pet-klinik-veteriner-muayenehanesi",
+    "title": "Pet Klinik Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Çekirge Mah. Çekirge Cad. Manolya Apt. No:46/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çekirge Mah. Çekirge Cad. Manolya Apt. No:46/1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Gül ARSLAN",
+        "Özge İLKOVA"
+      ]
+    }
+  },
+  {
+    "slug": "pet-klinik-cekirge",
+    "title": "Pet Klinik Çekirge",
+    "ilce": "Osmangazi",
+    "address": "Çekirge Mah. Çekirge Cad. Manolya Apt. No:46/1, Osmangazi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Pet Klinik Veteriner Çekirge Caddesi Bursa",
+    "copy": "eski-kaplica",
+    "tags": [
+      "klinik",
+      "cekirge",
+      "bvho"
+    ],
+    "blurb": "Çekirge Caddesi. VHO kayıtlı."
+  },
+  {
+    "slug": "sinan-saglam-veteriner-muayenehanesi",
+    "title": "Si̇nan Sağlam Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Hocahasan Mah. İçli Sok. No:6/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hocahasan Mah. İçli Sok. No:6/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Sinan SAĞLAM",
+        "Aylin VATANSEVER"
+      ]
+    }
+  },
+  {
+    "slug": "tumvet-veteriner-muayenehanesi",
+    "title": "Tümvet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Cad. Onur Sok. No:7/11",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kükürtlü Cad. Onur Sok. No:7/11",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Tamer Sabri TUNAER"
+      ]
+    }
+  },
+  {
+    "slug": "uludag-veteriner-muayenehanesi",
+    "title": "Uludağ Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Soğanlı Mah. 3. Meltem Sok. B Blok No:12/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Soğanlı Mah. 3. Meltem Sok. B Blok No:12/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Zafer Can DEVELİ",
+        "Osman AYDIN"
+      ]
+    }
+  },
+  {
+    "slug": "vet16-veteriner-muayenehanesi",
+    "title": "Vet16 Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Hamitler Mah. Abdulhamithan Cad. A Blok No: 38/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hamitler Mah. Abdulhamithan Cad. A Blok No: 38/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ercan KAYMAK",
+        "Murat ÖZTÜRK"
+      ]
+    }
+  },
+  {
+    "slug": "yildiz-veteriner-muayenehanesi",
+    "title": "Yildiz Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Geçit Mah.Geçit Sok.No:13",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Geçit Mah.Geçit Sok.No:13",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hayri YILDIZ"
+      ]
+    }
+  },
+  {
+    "slug": "caba-veteriner-muayenehanesi",
+    "title": "Çaba Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Hamitler Mah. Abdulhamithan Cad. No:20/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hamitler Mah. Abdulhamithan Cad. No:20/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Muhterem ÇAKIR"
+      ]
+    }
+  },
+  {
+    "slug": "cakra-veteriner-muayenehanesi",
+    "title": "Çakra Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Yunuseli Mah. Recep Tayyip ERDOĞAN BLV. No: 19/D",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Yunuseli Mah. Recep Tayyip ERDOĞAN BLV. No: 19/D",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yunus Emre DEMİR"
+      ]
+    }
+  },
+  {
+    "slug": "cetin-veteriner-muayenehanesi",
+    "title": "Çeti̇n Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Demirtaşpaşa Mah.1.Gündoğdu Petek Bozkaya İş Mrk.C BlokNo:6/N-T",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Demirtaşpaşa Mah.1.Gündoğdu Petek Bozkaya İş Mrk.C BlokNo:6/N-T",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ali Hasan Yıldırım ORAN"
+      ]
+    }
+  },
+  {
+    "slug": "cilek-veteriner-muayenehanesi",
+    "title": "Çi̇lek Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Osmangazi",
+    "address": "Hüdavendigar Mah. Hat Cad. Begonya Apt. Bağımsız Bölüm No:25/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hüdavendigar Mah. Hat Cad. Begonya Apt. Bağımsız Bölüm No:25/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Çiğdem HALİLOĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "arslan-veteriner-muayenehanesi",
+    "title": "Arslan Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah. Garaj Cad. No:25",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Garaj Cad. No:25",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Alper ARSLAN"
+      ]
+    }
+  },
+  {
+    "slug": "aslan-veteriner-muayenehanesi",
+    "title": "Aslan Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah. Eski Tahıl Cad. No:8 Yenişehir",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Eski Tahıl Cad. No:8 Yenişehir",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Şeref ASLAN",
+        "Ömer Faruk ÖZKAN"
+      ]
+    }
+  },
+  {
+    "slug": "ay-vet-veteriner-muayenehanesi",
+    "title": "Ay-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah. Kütüphane-Levent Sok. No:13-14",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Kütüphane-Levent Sok. No:13-14",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yusuf EMER"
+      ]
+    }
+  },
+  {
+    "slug": "canbaz-veteriner-muayenehanesi",
+    "title": "Canbaz Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah. Beysel Çarşısı No:20/12",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Beysel Çarşısı No:20/12",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Fatih CANBAZ"
+      ]
+    }
+  },
+  {
+    "slug": "dunya-veteriner-muayenehanesi",
+    "title": "Dünya Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah. Garaj Cad. No:22",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Garaj Cad. No:22",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hayrettin Emre YÜRÜK",
+        "Murat ERCAN"
+      ]
+    }
+  },
+  {
+    "slug": "erdinc-torlak-veteriner-muayenehanesi",
+    "title": "Erdi̇nç Torlak Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Gündoğan Mah. Bilecik Cad. No:8",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Gündoğan Mah. Bilecik Cad. No:8",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Erdinç TORLAK"
+      ]
+    }
+  },
+  {
+    "slug": "erdogan-vet-veteriner-muayenehanesi",
+    "title": "Erdoğan-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Yenigün Mah.Sağır Osman Sk. No:18",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Yenigün Mah.Sağır Osman Sk. No:18",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Osman ERDOĞAN"
+      ]
+    }
+  },
+  {
+    "slug": "gunduz-veteriner-muayenehanesi",
+    "title": "Gündüz Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah. Eski Garaj Cad. No:16/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Eski Garaj Cad. No:16/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Murat GÜNDÜZ"
+      ]
+    }
+  },
+  {
+    "slug": "mertvet-veteriner-muayenehanesi",
+    "title": "Mertvet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah.Alibey Sok.No:8/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah.Alibey Sok.No:8/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İlhan MERT"
+      ]
+    }
+  },
+  {
+    "slug": "patron-veteriner-muayenehanesi",
+    "title": "Patron Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah. Şalvarlı Sok.No:9/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Şalvarlı Sok.No:9/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Metin Salih AYDIN"
+      ]
+    }
+  },
+  {
+    "slug": "ruzgar-veteriner-muayenehanesi",
+    "title": "Rüzgar Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Ulucami Mah.Karabacak Sok. No:3/D",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ulucami Mah.Karabacak Sok. No:3/D",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ersin ÖZEL"
+      ]
+    }
+  },
+  {
+    "slug": "vetuzman-veteriner-muayenehanesi",
+    "title": "Vetuzman Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah. Cumhuriyet Cad.No:60 Yenişehir",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Cumhuriyet Cad.No:60 Yenişehir",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "RAMAZAN YILDIRIM"
+      ]
+    }
+  },
+  {
+    "slug": "yavuz-veteriner-muayenehanesi",
+    "title": "Yavuz Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah.Şalvarlı Sok. No:6/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah.Şalvarlı Sok. No:6/1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Semih YAVUZ"
+      ]
+    }
+  },
+  {
+    "slug": "yenisehir-veteriner-muayenehanesi",
+    "title": "Yenişehir Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Hıdırbali Mah.Alican Cad. Ekinci Apt. No:23/D",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hıdırbali Mah.Alican Cad. Ekinci Apt. No:23/D",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Nejdet ERİŞ"
+      ]
+    }
+  },
+  {
+    "slug": "yeni-vet-veteriner-muayenehanesi",
+    "title": "Yeni̇-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Hıdırbali Mah. Alican Cad. No:33/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hıdırbali Mah. Alican Cad. No:33/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İbrahim ALYÜZ"
+      ]
+    }
+  },
+  {
+    "slug": "yenigun-veteriner-muayenehanesi",
+    "title": "Yeni̇gün Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Yenigün Mahallesi Çınar Caddesi No:23",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Yenigün Mahallesi Çınar Caddesi No:23",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "BARAN ERKAN"
+      ]
+    }
+  },
+  {
+    "slug": "oz-karaca-veteriner-muayenehanesi",
+    "title": "Öz Karaca Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Çayır Mah. Tekel Sok. No:5",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Tekel Sok. No:5",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Karyağdı BERKELİ"
+      ]
+    }
+  },
+  {
+    "slug": "ozoglu-veteriner-muayenehanesi",
+    "title": "Özoğlu Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yenişehir",
+    "address": "Hıdırbali Mah. Alican Cad. No:39/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Hıdırbali Mah. Alican Cad. No:39/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mustafa ÖZOĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "barlas-veteriner-muayenehanesi",
+    "title": "Barlas Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yıldırım",
+    "address": "Yavuzselim Mah.Ankarayolu Cad. No:263 İç Kapı No:1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Yavuzselim Mah.Ankarayolu Cad. No:263 İç Kapı No:1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ethem Taner TÜRKMEN"
+      ]
+    }
+  },
+  {
+    "slug": "canbu-veteriner-muayenehanesi",
+    "title": "Canbu Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yıldırım",
+    "address": "Millet Mah. Cengizhan Cd. Zümrüt Apt. No:28/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Millet Mah. Cengizhan Cd. Zümrüt Apt. No:28/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hande Cansu KÖZMEZ",
+        "Burak BAŞARAN"
+      ]
+    }
+  },
+  {
+    "slug": "millet-veteriner",
+    "title": "Millet Veteriner",
+    "ilce": "Yıldırım",
+    "address": "Millet Mah. Derya Cad. No:14/A, Yıldırım",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Millet Veteriner Muayenehanesi Yıldırım Bursa",
+    "copy": "yesil-turbe",
+    "tags": [
+      "klinik",
+      "yildirim",
+      "bvho"
+    ],
+    "blurb": "Millet Mahallesi. VHO kayıtlı muayenehane."
+  },
+  {
+    "slug": "millet-veteriner-muayenehanesi",
+    "title": "Mi̇llet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yıldırım",
+    "address": "Millet Mah. Derya Cad. No: 14/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Millet Mah. Derya Cad. No: 14/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yılmaz KOCABIYIKOĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "setbasi-veteriner-muayenehanesi",
+    "title": "Setbaşi Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yıldırım",
+    "address": "Karaağaç Mah. İpekçilik Cad. 3/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Karaağaç Mah. İpekçilik Cad. 3/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Celal YILDIZ"
+      ]
+    }
+  },
+  {
+    "slug": "setbasi-veteriner",
+    "title": "Setbaşı Veteriner",
+    "ilce": "Yıldırım",
+    "address": "Karaağaç Mah. İpekçilik Cad. No:3/A, Yıldırım",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Setbaşı Veteriner İpekçilik Bursa",
+    "copy": "irgandi",
+    "tags": [
+      "klinik",
+      "setbasi",
+      "bvho"
+    ],
+    "blurb": "Setbaşı / İpekçilik. VHO kayıtlı."
+  },
+  {
+    "slug": "truva-veteriner-muayenehanesi",
+    "title": "Truva Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yıldırım",
+    "address": "Bağlaraltı Mah. 2. Cad. no:24/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Bağlaraltı Mah. 2. Cad. no:24/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mehmet ÇİÇEK",
+        "Elif ZAFERLER ÇİÇEK"
+      ]
+    }
+  },
+  {
+    "slug": "vetuzman-veteriner-muayenehanesi-2",
+    "title": "Vetuzman Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yıldırım",
+    "address": "Çayır Mah. Cumhuriyet Cad.No:60",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Çayır Mah. Cumhuriyet Cad.No:60",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ramazan YILDIRIM"
+      ]
+    }
+  },
+  {
+    "slug": "yildirim-veteriner-muayenehanesi",
+    "title": "Yildirim Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yıldırım",
+    "address": "Yiğitler Mah. Otosansit İş Merkezi E-2 Sok.No:11-18",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Yiğitler Mah. Otosansit İş Merkezi E-2 Sok.No:11-18",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mevlüt Ali DÜLGER"
+      ]
+    }
+  },
+  {
+    "slug": "yildirim-veteriner-muayenehanesi-2",
+    "title": "Yildirim Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yıldırım",
+    "address": "Yiğitler Mah. Otosansit İş Merkezi E-2 Sok.No:11-19",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Yiğitler Mah. Otosansit İş Merkezi E-2 Sok.No:11-19",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Fatma AVCI"
+      ]
+    }
+  },
+  {
+    "slug": "irem-veteriner-muayenehanesi",
+    "title": "İrem Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "Yıldırım",
+    "address": "Karapınar Mah. 103.Sok. No:4",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Karapınar Mah. 103.Sok. No:4",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yusuf KIRMIZ"
+      ]
+    }
+  },
+  {
+    "slug": "aren-veteriner-muayenehanesi",
+    "title": "Aren Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Zafer Cad. No:48/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Zafer Cad. No:48/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "ENES CEVİZLİ"
+      ]
+    }
+  },
+  {
+    "slug": "bay-vet-veteriner-muayenehanesi",
+    "title": "Bay-Vet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Yenişehir Cad. No :49",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Yenişehir Cad. No :49",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Yusuf VURGUN"
+      ]
+    }
+  },
+  {
+    "slug": "biovet-veteriner-muayenehanesi",
+    "title": "Bi̇ovet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Yenişehir Cad. No :64",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Yenişehir Cad. No :64",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "ŞABAN ÇAKIROĞLU"
+      ]
+    }
+  },
+  {
+    "slug": "ceren-veteriner-muayenehanesi",
+    "title": "Ceren Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Süleymaniye Mah. Gazhane Sok. No:22/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Süleymaniye Mah. Gazhane Sok. No:22/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ceren DEMİREL"
+      ]
+    }
+  },
+  {
+    "slug": "der-veteriner-muayenehanesi",
+    "title": "Der Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Yenişehir Cad. No:63/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Yenişehir Cad. No:63/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Kadir DER"
+      ]
+    }
+  },
+  {
+    "slug": "efe-veteriner-muayenehanesi",
+    "title": "Efe Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Murat Cd. NoÇ40/A İnegöl /BURSA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Murat Cd. NoÇ40/A İnegöl /BURSA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Nuri EFE"
+      ]
+    }
+  },
+  {
+    "slug": "kaya-giray-veteriner-muayenehanesi",
+    "title": "Kaya Gi̇ray Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Ertuğrulgazi Mah. Akpınar Cad. No:29",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Ertuğrulgazi Mah. Akpınar Cad. No:29",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Kaya GİRAY"
+      ]
+    }
+  },
+  {
+    "slug": "orca-veteriner-muayenehanesi",
+    "title": "Orca Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Orhaniye Mah. Yenişehir Cad. No:92/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Orhaniye Mah. Yenişehir Cad. No:92/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Osman Çağlar ORTANCA"
+      ]
+    }
+  },
+  {
+    "slug": "paksoy-veteriner-muayenehanesi",
+    "title": "Paksoy Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Gonca Sok. No:5/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Gonca Sok. No:5/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Rahmi PAKSOY"
+      ]
+    }
+  },
+  {
+    "slug": "pati-bur-veteriner-muayenehanesi",
+    "title": "Pati̇-Bur Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Turgutalp mah. Mimar Sinan Cd. No:36/38A İnegöl",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Turgutalp mah. Mimar Sinan Cd. No:36/38A İnegöl",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Hayriye Burcu ASLAN"
+      ]
+    }
+  },
+  {
+    "slug": "tek-birvet-veteriner-muayenehanesi",
+    "title": "Tek-Birvet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Karakol Sok. No :10",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Karakol Sok. No :10",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Burak KILINÇ"
+      ]
+    }
+  },
+  {
+    "slug": "uluyol-veteriner-muayenehanesi",
+    "title": "Uluyol Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Çayır Sok. No:52/1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Çayır Sok. No:52/1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Oğuzhan ULUYOL"
+      ]
+    }
+  },
+  {
+    "slug": "vms-veteriner-muayenehanesi",
+    "title": "Vms Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Kemalpaşa Cad. Şehit Ömer Halis Demir Cad. No:27 Kat:1",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kemalpaşa Cad. Şehit Ömer Halis Demir Cad. No:27 Kat:1",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "GÜLAY POLAT"
+      ]
+    }
+  },
+  {
+    "slug": "yanar-veteriner-muayenehanesi",
+    "title": "Yanar Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Murat Cad. No:2",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Murat Cad. No:2",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "ERCAN YANAR"
+      ]
+    }
+  },
+  {
+    "slug": "cecen-veteriner-muayenehanesi",
+    "title": "Çeçen Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Kemalpaşa Mah. Mahmut Esatbey Cad. No:285 A İnegöl/BURSA",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Kemalpaşa Mah. Mahmut Esatbey Cad. No:285 A İnegöl/BURSA",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Muhammet Hakan ÇEÇEN"
+      ]
+    }
+  },
+  {
+    "slug": "oz-korkmaz-veteriner-muayenehanesi",
+    "title": "Öz Korkmaz Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah. Murat Cad: No:18/C",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Murat Cad: No:18/C",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Zülküf KORKMAZ"
+      ]
+    }
+  },
+  {
+    "slug": "ozgur-pet-care-veteriner-muayenehanesi",
+    "title": "Özgür Pet Care Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "SÜLEYMANİYE Mah. Mimar sinan cd. No98/100A İnegöl",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · SÜLEYMANİYE Mah. Mimar sinan cd. No98/100A İnegöl",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Samet ÖZGÜR"
+      ]
+    }
+  },
+  {
+    "slug": "ozupek-veteriner-muayenehanesi",
+    "title": "Özüpek Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Orhaniye Mah. Mesudiye Cad. No:31",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Orhaniye Mah. Mesudiye Cad. No:31",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Abdullah Burak ÖZÜPEK"
+      ]
+    }
+  },
+  {
+    "slug": "inegol-veteriner-muayenehanesi",
+    "title": "İnegöl Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Sinanbey Mah., 21-44, Salkım Söğüt Sk., 16400",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah., 21-44, Salkım Söğüt Sk., 16400",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "HÜSEYİN ALEMDAR"
+      ]
+    }
+  },
+  {
+    "slug": "inegol-yonca-veteriner-muayenehanesi",
+    "title": "İnegöl Yonca Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İnegöl",
+    "address": "Burhaniye Mah. Kemalettin Sami Paşa Cad. Emre Apt. No:112 A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Burhaniye Mah. Kemalettin Sami Paşa Cad. Emre Apt. No:112 A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "İSMET TASAN"
+      ]
+    }
+  },
+  {
+    "slug": "biovet-veteriner-muayenehanesi-2",
+    "title": "Bi̇ovet Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İznik",
+    "address": "Sinanbey Mah. Yenişehir Cad. No :65",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Sinanbey Mah. Yenişehir Cad. No :65",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Şaban Çakıroğlu"
+      ]
+    }
+  },
+  {
+    "slug": "hayat-veteriner-muayenehanesi",
+    "title": "Hayat Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İznik",
+    "address": "Beyler Mah. Orhan Sok. No:20/B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beyler Mah. Orhan Sok. No:20/B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Engin KAHRAMAN"
+      ]
+    }
+  },
+  {
+    "slug": "lacivert-veteriner-muayenehanesi",
+    "title": "Laci̇vert Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İznik",
+    "address": "Beyler Mah. Hüseyin Oktay Sokak No9/3",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Beyler Mah. Hüseyin Oktay Sokak No9/3",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Ali Yalçın GÜVENÇER"
+      ]
+    }
+  },
+  {
+    "slug": "yagmur-veteriner-muayenehanesi",
+    "title": "Yağmur Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İznik",
+    "address": "Mahmut çelebi Mah. Hüseyin Darcan Sok No:41/A",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Mahmut çelebi Mah. Hüseyin Darcan Sok No:41/A",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "Mehmet SAYILIR"
+      ]
+    }
+  },
+  {
+    "slug": "sefkat-veteriner-muayenehanesi",
+    "title": "Şefkat Veteri̇ner Muayenehanesi̇",
+    "subcategory": "klinik",
+    "price_band": "Klinik",
+    "ilce": "İznik",
+    "address": "Eşrefzade Mah. Topkapı Cad. No:29B",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "blurb": "BVHO kayıtlı · Eşrefzade Mah. Topkapı Cad. No:29B",
+    "tags": [
+      "klinik",
+      "bvho",
+      "veteriner"
+    ],
+    "featured": false,
+    "source": "bvho",
+    "extra": {
+      "vets": [
+        "MUHAMMET FURKAN YİĞİT"
+      ]
+    }
   }
 ]

@@ -263,6 +263,17 @@ def login():
         if not bool(getattr(u, "is_active", True)):
             return _err("hesap pasif", 403)
         login_user(u)
+        from models import log_activity
+
+        log_activity(
+            db,
+            kind="login",
+            title="Giriş yaptı (API)",
+            detail=u.name or "",
+            user_id=u.id,
+            email=u.email,
+        )
+        db.commit()
         return jsonify({"ok": True, "user": u.public(), "token": make_token(u)})
     finally:
         db.close()

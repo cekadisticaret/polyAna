@@ -1,9 +1,11 @@
 {% for fu in follow_suggestions %}
-<div class="ff-follow">
-  <div class="ff-avatar sm">{% if fu.avatar_url %}<img src="{{ fu.avatar_url }}" alt="">{% else %}<span>{{ (fu.name or 'U')[0]|upper }}</span>{% endif %}</div>
+<div class="ff-follow" data-user-id="{{ fu.id }}">
+  <div class="ff-avatar sm">{% if fu.avatar_url %}<img src="{{ fu.avatar_url }}" alt="{{ fu.name }} profil fotoğrafı">{% else %}<span>{{ (fu.name or 'U')[0]|upper }}</span>{% endif %}</div>
   <div class="ff-follow-meta"><b>{{ fu.name }}</b><small>{{ fu.handle }} · {{ fu.posts }} gönderi</small></div>
-  <a class="ff-btn sm dark" href="/hesap/profil?tab=friends">Takip</a>
+  <button type="button" class="ff-btn sm dark ff-follow-btn{% if fu.following %} is-on{% endif %}" data-user-id="{{ fu.id }}" data-following="{{ '1' if fu.following else '0' }}" aria-pressed="{{ 'true' if fu.following else 'false' }}">
+    {% if fu.following %}Takipte{% else %}Takip{% endif %}
+  </button>
 </div>
 {% else %}
-<p class="ff-muted sm">Öneri yüklenemedi — sayfayı yenile.</p>
+<p class="ff-muted sm">Şu an öneri yok — toplulukta yeni gönderiler geldikçe burada görünür.</p>
 {% endfor %}

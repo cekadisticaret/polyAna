@@ -1,43 +1,167 @@
 {% extends "_shell.html" %}
-{% block title %}Hesabım · BursaApp{% endblock %}
-{% block hello %}{{ nav_user.name if nav_user else 'Hesabım' }}{% endblock %}
-{% block sub %}Favoriler · etkinlikler · rotalar · kuponlar · yorumlar{% endblock %}
-{% block search %}{% endblock %}
+{% block title %}Profilim · BursaApp{% endblock %}
+{% block body_class %} m-profile-page{% endblock %}
+{% block page_head %}{% endblock %}
+
 {% block main %}
-<div class="hub-list" style="margin-bottom:18px">
-  <a class="hub-row" href="/hesap/profil"><span class="hub-ico">📰</span><div><b>Feeds · Profil</b><small class="muted"> · post · albüm · gittiğim yerler</small></div><span class="hub-go">›</span></a>
-  <a class="hub-row" href="/hesap/ayarlar"><span class="hub-ico">⚙️</span><div><b>Ayarlar</b><small class="muted"> · foto · şifre · isim</small></div><span class="hub-go">›</span></a>
-  <a class="hub-row" href="/hesap/favoriler"><span class="hub-ico">❤️</span><div><b>Favorilerim</b></div><span class="hub-go">›</span></a>
-  <a class="hub-row" href="/hesap/rotalar"><span class="hub-ico">📍</span><div><b>Rotalarım</b></div><span class="hub-go">›</span></a>
-  <a class="hub-row" href="/kuponlar"><span class="hub-ico">🎟️</span><div><b>Kuponlarım</b></div><span class="hub-go">›</span></a>
-  <a class="hub-row" href="/hesap/bildirimler"><span class="hub-ico">🔔</span><div><b>Bildirimler</b></div><span class="hub-go">›</span></a>
-  <a class="hub-row" href="/etkinlik/ekle"><span class="hub-ico">🎭</span><div><b>Etkinlik oluştur</b><small class="muted"> · form ile gönder, admin onaylar</small></div><span class="hub-go">›</span></a>
-  <a class="hub-row" href="/isletme"><span class="hub-ico">🏪</span><div><b>İşletme paneli</b></div><span class="hub-go">›</span></a>
-  <a class="hub-row" href="/cikis" style="border-color:rgba(185,28,28,.25)"><span class="hub-ico">🚪</span><div><b style="color:#B91C1C">Çıkış yap</b><small class="muted"> · oturumu kapat</small></div><span class="hub-go">›</span></a>
+<div class="mp">
+  <header class="mp-bar">
+    <button class="mp-icon" type="button" aria-label="Menü" onclick="document.getElementById('mp-menu').classList.toggle('open')">☰</button>
+    <h1>Profilim</h1>
+    <a class="mp-create" href="/feed">+ Gönderi</a>
+    <a class="mp-icon" href="/hesap/ayarlar" aria-label="Ayarlar">⚙️</a>
+  </header>
+
+  <div class="mp-menu" id="mp-menu" aria-hidden="true">
+    <div class="mp-menu-backdrop" onclick="document.getElementById('mp-menu').classList.remove('open')"></div>
+    <nav class="mp-menu-panel">
+      <a href="/hesap/favoriler">❤️ Favorilerim</a>
+      <a href="/hesap/rotalar">📍 Rotalarım</a>
+      <a href="/kuponlar">🎟️ Kuponlarım</a>
+      <a href="/hesap/bildirimler">🔔 Bildirimler</a>
+      <a href="/etkinlik/ekle">🎭 Etkinlik oluştur</a>
+      <a href="/isletme">🏪 İşletme paneli</a>
+      <a href="/hesap/ekle">➕ Yer ekle</a>
+      <a href="/cikis" class="danger">Çıkış yap</a>
+    </nav>
+  </div>
+
+  <article class="mp-card">
+    <div class="mp-card-head">
+      <div class="mp-avatar-wrap">
+        <div class="mp-avatar">
+          {% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="{{ u.name }} profil fotoğrafı">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}
+        </div>
+        <span class="mp-star" aria-hidden="true">✦</span>
+        <span class="mp-star mp-star-r" aria-hidden="true">✦</span>
+      </div>
+      <div class="mp-who">
+        <h2>{{ u.name }} {% if u.email_verified %}<span class="mp-verified" title="Onaylı">✓</span>{% endif %}</h2>
+        <p class="mp-handle">{{ u.handle() }}</p>
+        <p class="mp-bio">Bursa gezgini · keşfet, paylaş, hatırla</p>
+        <div class="mp-badges">
+          <span class="mp-badge gold">🏅 {{ points }} puan</span>
+          {% if not u.email_verified %}<span class="mp-badge muted">E-posta onayı bekliyor</span>{% endif %}
+        </div>
+      </div>
+      <button class="mp-more" type="button" aria-label="Daha fazla" onclick="document.getElementById('mp-menu').classList.add('open')">⋮</button>
+    </div>
+    <div class="mp-stats">
+      <div><b>{{ visits_n }}</b><span>Yer</span></div>
+      <div><b>{{ favs_n }}</b><span>Favori</span></div>
+      <div><b>{{ posts_n }}</b><span>Gönderi</span></div>
+    </div>
+  </article>
+
+  <div class="mp-kpis">
+    <div class="mp-kpi">
+      <span class="mp-kpi-ico">🪙</span>
+      <small>BursaApp puan</small>
+      <b>{{ points }}</b>
+    </div>
+    <div class="mp-kpi">
+      <span class="mp-kpi-ico">🔥</span>
+      <small>Beğeni</small>
+      <b>{% if likes_total >= 1000 %}{{ '%.1f'|format(likes_total / 1000) }}k{% else %}{{ likes_total }}{% endif %}</b>
+    </div>
+    <div class="mp-kpi">
+      <span class="mp-kpi-ico">📅</span>
+      <small>Gideceğim</small>
+      <b>{{ going_n }}</b>
+    </div>
+  </div>
+
+  <nav class="mp-tabs" aria-label="Profil sekmeleri">
+    <a class="{% if tab=='about' %}on{% endif %}" href="/hesap?tab=about"><span>👤</span> Hakkında</a>
+    <a class="{% if tab=='posts' %}on{% endif %}" href="/hesap?tab=posts"><span>📝</span> Gönderiler</a>
+    <a class="{% if tab=='media' %}on{% endif %}" href="/hesap?tab=media"><span>▶</span> Albüm</a>
+  </nav>
+
+  {% if tab == 'about' %}
+  <div class="mp-about">
+    <a class="mp-link" href="/hesap/profil"><span>📰</span><div><b>Feed &amp; sosyal</b><small>Gönderiler · takip · hikâyeler</small></div><span>›</span></a>
+    <a class="mp-link" href="/hesap/profil?tab=visits"><span>📍</span><div><b>Gittiğim yerler</b><small>{{ visits_n }} kayıt</small></div><span>›</span></a>
+    <a class="mp-link" href="/hesap/profil?tab=going"><span>🎭</span><div><b>Gideceğim etkinlikler</b><small>{{ going_n }} etkinlik</small></div><span>›</span></a>
+    <a class="mp-link" href="/hesap/favoriler"><span>❤️</span><div><b>Favorilerim</b><small>{{ favs_n }} yer</small></div><span>›</span></a>
+    <a class="mp-link" href="/hesap/rotalar"><span>🧳</span><div><b>Rotalarım</b></div><span>›</span></a>
+    <a class="mp-link" href="/hesap/ayarlar"><span>⚙️</span><div><b>Ayarlar</b><small>Profil · şifre · gizlilik</small></div><span>›</span></a>
+    {% if places %}
+    <div class="mp-submits">
+      <h3>Eklediğim yerler</h3>
+      {% for p in places[:6] %}
+      <a class="mp-submit-row" href="{% if p.status=='approved' %}/yer/{{ p.slug }}{% else %}#{% endif %}">
+        <b>{{ p.title }}</b>
+        <span class="badge {{ p.status }}">{{ p.status }}</span>
+      </a>
+      {% endfor %}
+      {% if places|length > 6 %}<a class="mp-more-link" href="/hesap/ekle">Tümünü gör →</a>{% endif %}
+    </div>
+    {% else %}
+    <div class="mp-empty">
+      <p>Henüz yer eklemedin.</p>
+      <a class="mp-create sm" href="/hesap/ekle">İlk kaydı gönder</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% elif tab == 'posts' %}
+  <div class="mp-posts">
+    {% for post in user_posts %}
+    <article class="mp-post-card">
+      {% if post.thumb %}
+      <a class="mp-post-thumb" href="/hesap/profil?tab=mine"><img src="{{ post.thumb }}" alt="Gönderi önizlemesi" loading="lazy"></a>
+      {% endif %}
+      <div class="mp-post-body">
+        {% if post.body %}<p>{{ post.body }}</p>{% endif %}
+        <small>{% if post.status != 'approved' %}Onay bekliyor · {% endif %}♥ {{ post.likes }}</small>
+      </div>
+    </article>
+    {% else %}
+    <div class="mp-empty">
+      <p>Henüz gönderi yok.</p>
+      <a class="mp-create sm" href="/feed">İlk gönderiyi paylaş</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="mp-grid">
+    {% for ph in album %}
+    <a class="mp-tile" href="{{ ph.place.path if ph.place else '#' }}">
+      <img src="{{ ph.img_url }}" alt="{{ ph.caption or 'Fotoğraf' }}" loading="lazy">
+      <span class="mp-tile-cap">{% if ph.place %}{{ ph.place.title[:18] }}{% else %}Foto{% endif %}</span>
+    </a>
+    {% else %}
+    <div class="mp-empty wide">
+      <p>Albümde henüz foto yok.</p>
+      <a class="mp-create sm" href="/feed">Foto paylaş</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
-<p><a class="btn" href="/hesap/ekle">Yer ekle</a>
-  {% if points is defined %}<span class="badge approved" style="margin-left:8px">{{ points }} BursaApp puan</span>{% endif %}
-</p>
-{% if places %}
-<table class="qtable">
-  <thead><tr><th>Başlık</th><th>Kategori</th><th>Durum</th><th></th></tr></thead>
-  <tbody>
-  {% for p in places %}
-    <tr>
-      <td>{{ p.title }}</td>
-      <td>{{ p.category }}</td>
-      <td><span class="badge {{ p.status }}">{{ p.status }}</span>
-        {% if p.status=='rejected' and p.reject_reason %}<small>{{ p.reject_reason }}</small>{% endif %}
-      </td>
-      <td>{% if p.status=='approved' %}<a href="/yer/{{ p.slug }}">gör</a>{% else %}onay bekliyor{% endif %}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<div class="empty-box">
-  <p>Henüz bir şey eklemedin.</p>
-  <a href="/hesap/ekle">İlk kaydı gönder</a>
+
+<div class="m-desktop-only mp-desktop">
+  <div class="hub-list" style="margin-bottom:18px">
+    <a class="hub-row" href="/hesap/profil"><span class="hub-ico">📰</span><div><b>Feeds · Profil</b><small class="muted"> · post · albüm · gittiğim yerler</small></div><span class="hub-go">›</span></a>
+    <a class="hub-row" href="/hesap/ayarlar"><span class="hub-ico">⚙️</span><div><b>Ayarlar</b></div><span class="hub-go">›</span></a>
+    <a class="hub-row" href="/hesap/favoriler"><span class="hub-ico">❤️</span><div><b>Favorilerim</b></div><span class="hub-go">›</span></a>
+    <a class="hub-row" href="/cikis"><span class="hub-ico">🚪</span><div><b>Çıkış</b></div><span class="hub-go">›</span></a>
+  </div>
+  {% if places %}
+  <table class="qtable">
+    <thead><tr><th>Başlık</th><th>Kategori</th><th>Durum</th><th></th></tr></thead>
+    <tbody>
+    {% for p in places %}
+      <tr>
+        <td>{{ p.title }}</td>
+        <td>{{ p.category }}</td>
+        <td><span class="badge {{ p.status }}">{{ p.status }}</span></td>
+        <td>{% if p.status=='approved' %}<a href="/yer/{{ p.slug }}">gör</a>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
 </div>
-{% endif %}
 {% endblock %}

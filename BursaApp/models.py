@@ -273,6 +273,42 @@ class PostLike(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
+class PostComment(Base):
+    """Feed gönderisi yorumu — küfür filtresinden sonra doğrudan yayın."""
+
+    __tablename__ = "post_comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("user_posts.id"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    body: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="approved", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    user: Mapped["User"] = relationship("User")
+
+    def public(self) -> dict:
+        uname = self.user.display_name() if self.user else "Üye"
+        return {
+            "id": self.id,
+            "user_name": uname,
+            "body": self.body,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class UserFollow(Base):
+    """Kullanıcı takip — feed Friends sekmesi."""
+
+    __tablename__ = "user_follows"
+    __table_args__ = (UniqueConstraint("follower_id", "following_id", name="uq_follow_pair"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    follower_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    following_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+
 class SeoAudit(Base):
     __tablename__ = "seo_audits"
 
@@ -387,6 +423,31 @@ class SiteVisitorDay(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     day: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    vid: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+
+
+class SitePageStat(Base):
+    """Sayfa bazlı günlük görüntüleme."""
+
+    __tablename__ = "site_page_stats"
+    __table_args__ = (UniqueConstraint("day", "path", name="uq_site_page_day_path"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    path: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    pageviews: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    visitors: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class SitePageVisitorDay(Base):
+    """Sayfa + gün + ziyaretçi tekilliği."""
+
+    __tablename__ = "site_page_visitor_days"
+    __table_args__ = (UniqueConstraint("day", "path", "vid", name="uq_site_page_visitor_day"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    path: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
     vid: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
 
 

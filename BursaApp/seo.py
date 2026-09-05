@@ -28,6 +28,7 @@ NOINDEX_PREFIXES = (
     "/kayit",
     "/cikis",
     "/isletme",
+    "/tesekkur",
     "/premium/checkout",
     "/favori/",
     "/api/",
@@ -614,16 +615,47 @@ DISCOVER_META = {
 
 
 def for_blog_hub() -> PageSEO:
-    from seo_arch import OG_IMAGE
+    from seo_arch import BLOG_POSTS, OG_IMAGE
+    from blog_posts import blog_posts_sorted
 
+    n = len(BLOG_POSTS)
+    desc = (
+        f"Bursa gezi, kahvaltı, İskender, Uludağ, İznik, termal otel ve hafta sonu planları — "
+        f"{n} how-to yazı; restoran ve gezilecek listelerine köprü."
+    )
+    elements = []
+    for i, (slug, p) in enumerate(blog_posts_sorted(), 1):
+        elements.append(
+            {
+                "@type": "ListItem",
+                "position": i,
+                "url": abs_url(f"/blog/{slug}"),
+                "name": p["h1"],
+            }
+        )
+    json_ld = [
+        {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "BursaApp Blog",
+            "url": abs_url("/blog"),
+            "description": clip(desc, 200),
+            "mainEntity": {
+                "@type": "ItemList",
+                "numberOfItems": len(elements),
+                "itemListElement": elements,
+            },
+        }
+    ]
     return page(
-        title="BursaApp Blog",
-        description="Bursa’da kahvaltı, 1 günlük gezi planı ve nasıl kullanılır — how-to yazılar, ticari sayfalara köprü.",
+        title="BursaApp Blog — gezi, yemek ve rota rehberi",
+        description=desc,
         path="/blog",
         image=OG_IMAGE,
         breadcrumbs=[("Ana Sayfa", "/"), ("Blog", "/blog")],
-        keywords="bursa blog, bursa kahvaltı, bursa gezi planı",
+        keywords="bursa blog, bursa gezi planı, bursa kahvaltı, bursa iskender, cumalıkızık, uludağ, iznik",
         og_type="website",
+        json_ld=json_ld,
     )
 
 
@@ -667,6 +699,19 @@ def for_kvkk() -> PageSEO:
     )
 
 
+def for_tesekkur() -> PageSEO:
+    from seo_arch import OG_IMAGE
+
+    return page(
+        title="Teşekkürler",
+        description="İşleminiz tamamlandı — BursaApp.",
+        path="/tesekkur",
+        image=OG_IMAGE,
+        noindex=True,
+        breadcrumbs=[("Ana Sayfa", "/"), ("Teşekkürler", "/tesekkur")],
+    )
+
+
 def resolve_seo(req=None) -> PageSEO:
     """Context processor varsayılanı — rota özel seo geçmezse kullanılır."""
     from flask import request as flask_request
@@ -695,6 +740,8 @@ def resolve_seo(req=None) -> PageSEO:
             return post_seo
     if path == "/kvkk":
         return for_kvkk()
+    if path == "/tesekkur":
+        return for_tesekkur()
     if path == "/oteller":
         return for_vertical("/oteller")
 
@@ -752,8 +799,10 @@ def sitemap_static_urls() -> list[dict[str, Any]]:
     add("/gezilecek", "daily", "0.8")
     add("/oteller", "daily", "0.8")
     add("/blog", "weekly", "0.7")
-    add("/blog/bursa-da-kahvalti-nerede", "weekly", "0.6")
-    add("/blog/bursa-1-gunluk-gezi-plani", "weekly", "0.6")
+    from seo_arch import BLOG_POSTS
+
+    for slug in BLOG_POSTS:
+        add(f"/blog/{slug}", "weekly", "0.65")
     add("/kvkk", "yearly", "0.3")
     for p, freq, pri in (
         ("/bugun", "hourly", "0.9"),

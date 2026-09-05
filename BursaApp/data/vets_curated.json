@@ -1,0 +1,237 @@
+[
+  {
+    "slug": "buu-hayvan-hastanesi",
+    "title": "BUÜ Veteriner Fakültesi Hayvan Hastanesi",
+    "ilce": "Nilüfer",
+    "address": "Uludağ Üniversitesi Veteriner Fakültesi, Görükle Kampüsü, Nilüfer",
+    "phone": "0224 294 08 01",
+    "web": "https://uludag.edu.tr/hayvanhastanesi",
+    "hours_text": "Mesai · kampüs",
+    "price_band": "Hastane",
+    "featured": true,
+    "wiki": "Bursa Uludağ University",
+    "search": "Uludağ Üniversitesi Veteriner Fakültesi Hayvan Hastanesi",
+    "copy": "uludag",
+    "tags": [
+      "universite",
+      "hastane",
+      "gorukle"
+    ],
+    "blurb": "Fakülte hayvan hastanesi. Cerrahi, dahiliye, görüntüleme. 93 / 43H otobüs."
+  },
+  {
+    "slug": "akademi-hayvan-hastanesi",
+    "title": "Akademi Hayvan Hastanesi",
+    "ilce": "Nilüfer",
+    "address": "Odunluk Mah. Mihraplı Cad. No:12/C, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Hastane",
+    "search": "Akademi Hayvan Hastanesi Odunluk Mihraplı Bursa",
+    "copy": "soganli-botanik",
+    "tags": [
+      "hastane",
+      "odunluk",
+      "bvho"
+    ],
+    "blurb": "Odunluk’ta çok hekimli hayvan hastanesi. Bursa VHO kayıtlı."
+  },
+  {
+    "slug": "kids-akademi-hayvan",
+    "title": "Kids Akademi Hayvan Hastanesi",
+    "ilce": "Nilüfer",
+    "address": "İhsaniye Mah. Fatih Sultan Mehmet Bulvarı B Blok No:34/B-C, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Hastane",
+    "search": "Kids Akademi Hayvan Hastanesi İhsaniye Bursa",
+    "copy": "misi",
+    "tags": [
+      "hastane",
+      "ihsaniye",
+      "bvho"
+    ],
+    "blurb": "FSM / İhsaniye hayvan hastanesi. VHO kayıtlı kadro."
+  },
+  {
+    "slug": "pakvet",
+    "title": "Pakvet Veteriner",
+    "ilce": "Nilüfer",
+    "address": "Altınşehir Mah. Ahmet Taner Kışlalı Bulv. Utku Sitesi No:66A/A, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "7/24 acil (ilan)",
+    "price_band": "Klinik",
+    "search": "Pakvet Veteriner Altınşehir Bursa",
+    "copy": "inkaya-cinari",
+    "tags": [
+      "klinik",
+      "acil",
+      "bvho"
+    ],
+    "blurb": "Altınşehir. Kedi-köpek, egzotik, diş. VHO: Hüseyin Alper Pakyürek."
+  },
+  {
+    "slug": "petclass",
+    "title": "PetClass Veteriner",
+    "ilce": "Nilüfer",
+    "address": "23 Nisan Mah. Mithat Paşa Cad. No:17B, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "PetClass Veteriner 23 Nisan Mithat Paşa Bursa",
+    "copy": "golyazi",
+    "tags": [
+      "klinik",
+      "23-nisan"
+    ],
+    "blurb": "23 Nisan / Mithat Paşa. Muayene ve aşı."
+  },
+  {
+    "slug": "nilufer-veteriner-poliklinik",
+    "title": "Nilüfer Veteriner Polikliniği",
+    "ilce": "Nilüfer",
+    "address": "Üçevler Mah. İzmir Yolu Cad. A Blok No:241 A/B Westpoint, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Poliklinik",
+    "search": "Nilüfer Veteriner Polikliniği Üçevler İzmir Yolu",
+    "copy": "tirilye",
+    "tags": [
+      "poliklinik",
+      "ucevler",
+      "bvho"
+    ],
+    "blurb": "Üçevler İzmir Yolu. Çok hekimli poliklinik, VHO kayıtlı."
+  },
+  {
+    "slug": "pet224",
+    "title": "Pet224 Veteriner",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Beşevler Cad. No:177/A, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Pet224 Veteriner Beşevler Bursa Ervin Atasoy",
+    "copy": "koza-han",
+    "tags": [
+      "klinik",
+      "besevler",
+      "bvho"
+    ],
+    "blurb": "Beşevler. VHO: Ervin Atasoy / İbrahim Ethem Keklik."
+  },
+  {
+    "slug": "armilla-vet",
+    "title": "Armilla Veteriner",
+    "ilce": "Osmangazi",
+    "address": "Kükürtlü Mah. 9. Manolya Sok. No:5/11, Osmangazi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Armilla Veteriner Kükürtlü Bursa",
+    "copy": "eski-kaplica",
+    "tags": [
+      "klinik",
+      "kukurtlu",
+      "bvho"
+    ],
+    "blurb": "Kükürtlü. VHO kayıtlı muayenehane."
+  },
+  {
+    "slug": "pet-klinik-cekirge",
+    "title": "Pet Klinik Çekirge",
+    "ilce": "Osmangazi",
+    "address": "Çekirge Mah. Çekirge Cad. Manolya Apt. No:46/1, Osmangazi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Pet Klinik Veteriner Çekirge Caddesi Bursa",
+    "copy": "eski-kaplica",
+    "tags": [
+      "klinik",
+      "cekirge",
+      "bvho"
+    ],
+    "blurb": "Çekirge Caddesi. VHO kayıtlı."
+  },
+  {
+    "slug": "millet-veteriner",
+    "title": "Millet Veteriner",
+    "ilce": "Yıldırım",
+    "address": "Millet Mah. Derya Cad. No:14/A, Yıldırım",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Millet Veteriner Muayenehanesi Yıldırım Bursa",
+    "copy": "yesil-turbe",
+    "tags": [
+      "klinik",
+      "yildirim",
+      "bvho"
+    ],
+    "blurb": "Millet Mahallesi. VHO kayıtlı muayenehane."
+  },
+  {
+    "slug": "setbasi-veteriner",
+    "title": "Setbaşı Veteriner",
+    "ilce": "Yıldırım",
+    "address": "Karaağaç Mah. İpekçilik Cad. No:3/A, Yıldırım",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Setbaşı Veteriner İpekçilik Bursa",
+    "copy": "irgandi",
+    "tags": [
+      "klinik",
+      "setbasi",
+      "bvho"
+    ],
+    "blurb": "Setbaşı / İpekçilik. VHO kayıtlı."
+  },
+  {
+    "slug": "guzelyali-veteriner",
+    "title": "Güzelyalı Veteriner",
+    "ilce": "Mudanya",
+    "address": "Güzelyalı Mah. Atatürk Cad. İşsun Sit. B Blok 62/B, Mudanya",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "Güzelyalı Veteriner Mudanya Atatürk Caddesi",
+    "copy": "tirilye",
+    "tags": [
+      "klinik",
+      "mudanya",
+      "bvho"
+    ],
+    "blurb": "Güzelyalı sahil. VHO: Hilal Kayapınar."
+  },
+  {
+    "slug": "ilke-vet-mudanya",
+    "title": "İlke-Vet Mudanya",
+    "ilce": "Mudanya",
+    "address": "Ömerbey Mah. İpar Cad. Can İş Merkezi No:73/21, Mudanya",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Klinik",
+    "search": "İlke-Vet Veteriner Mudanya Ömerbey",
+    "copy": "golyazi",
+    "tags": [
+      "klinik",
+      "mudanya",
+      "bvho"
+    ],
+    "blurb": "Ömerbey. VHO kayıtlı muayenehane."
+  }
+]

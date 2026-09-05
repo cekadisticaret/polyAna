@@ -1,94 +1,154 @@
 {% extends "_shell.html" %}
-{% block title %}Harita · BursaApp{% endblock %}
-{% block hello %}Harita{% endblock %}
-{% block sub %}Bu bölgede {{ total }} mekan{% endblock %}
+{% block title %}{{ seo.title_full if seo else ('Etrafımda ne var · BursaApp' if near_mode else 'Harita · BursaApp') }}{% endblock %}
+{% block hello %}{{ 'Etrafımda ne var' if near_mode else 'Harita' }}{% endblock %}
+{% block sub %}
+  {% if near_mode %}
+    {% if used_fallback %}Konumun alınıyor…{% elif radius_m %}{% if radius_m >= 1000 %}{{ radius_m // 1000 }} km{% else %}{{ radius_m }} m{% endif %} yarıçap · {{ total }} mekan{% else %}{{ total }} mekan · en yakından{% endif %}
+  {% else %}
+    Bu bölgede {{ total }} mekan
+  {% endif %}
+{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 {% endblock %}
 {% block main %}
-<div class="chips">
-  <a class="chip {{ 'on' if not cat else '' }}" href="/harita?lat={{ lat }}&lng={{ lng }}">Tümü</a>
-  <a class="chip {{ 'on' if cat=='food' else '' }}" href="/harita?cat=food&lat={{ lat }}&lng={{ lng }}">Restoran</a>
-  <a class="chip {{ 'on' if cat=='cafe' else '' }}" href="/harita?cat=cafe&lat={{ lat }}&lng={{ lng }}">Cafe</a>
-  <a class="chip {{ 'on' if cat=='event' else '' }}" href="/harita?cat=event&lat={{ lat }}&lng={{ lng }}">Etkinlik</a>
-  <a class="chip {{ 'on' if cat=='visit' else '' }}" href="/harita?cat=visit&lat={{ lat }}&lng={{ lng }}">Gezilecek</a>
-  <a class="chip {{ 'on' if cat=='hotel' else '' }}" href="/harita?cat=hotel&lat={{ lat }}&lng={{ lng }}">Otel</a>
-  <a class="chip {{ 'on' if cat=='concert' else '' }}" href="/harita?cat=concert&lat={{ lat }}&lng={{ lng }}">Konser</a>
-  <button type="button" class="chip" id="geo-map">Konumum</button>
+{% if near_mode and used_fallback %}
+<p class="map-loc-banner" id="map-loc-banner">📍 Konumun alınıyor… İzin vermezsen Bursa merkezi gösterilir.</p>
+{% elif near_mode and not used_fallback %}
+<p class="map-loc-banner map-loc-ok">📍 Konumuna göre sıralandı · en yakın {{ [total, 40]|min }} aşağıda</p>
+{% endif %}
+
+<div class="map-filter-block">
+  <div class="map-filter-label">Kategori</div>
+  <div class="map-filter-scroll chips">
+    {% for key, label in map_categories %}
+    <a class="chip {{ 'on' if cat == key else '' }}" href="{{ map_query(cat=key, lat=lat, lng=lng, near=near_mode, radius_m=radius_m) }}">{{ label }}</a>
+    {% endfor %}
+    <button type="button" class="chip chip-geo" id="geo-map">📍 Konumum</button>
+  </div>
+  {% if near_mode %}
+  <div class="map-filter-label">Mesafe</div>
+  <div class="map-filter-scroll chips map-radius-row">
+    {% for r_val, r_label in map_radius_options %}
+    <a class="chip {{ 'on' if radius_m == r_val else '' }}" href="{{ map_query(cat=cat, lat=lat, lng=lng, near=True, radius_m=r_val) }}">{{ r_label }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
+
 <div class="map-board panel" id="map-board">
   <div id="leaflet-map" class="leaflet-host" role="img" aria-label="Bursa haritası"></div>
   <div class="map-legend">
-    <span>🔴 Restoran</span><span>🟢 Cafe</span><span>🔵 Etkinlik</span><span>🟡 Gezilecek</span><span>🟣 Otel</span><span>🟠 Konser</span>
+    <span>🔴 Restoran</span><span>🟢 Cafe</span><span>🔵 Etkinlik</span><span>🟡 Gezilecek</span>
+    <span>🟣 Otel</span><span>🟠 Konser</span><span>🐾 Veteriner</span><span>🏥 Hastane</span>
   </div>
 </div>
-<div class="cards" style="margin-top:16px">
+
+<div class="map-list-head">
+  <h2>En yakın mekanlar</h2>
+  <span>{{ total }} sonuç{% if total > 40 %} · ilk 40{% endif %}</span>
+</div>
+<div class="cards map-near-list">
   {% for p in pins[:40] %}
   <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
-    {% if p.img_url %}<img src="{{ p.img_url }}" alt="" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
+    {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
     <div class="body">
       <h3>{{ p.title }}</h3>
       <div class="meta">
-        <span>{{ p.distance_m }} m · {{ p.category_label }}</span>
+        <span>
+          {% if p.distance_m >= 1000 %}{{ '%.1f'|format(p.distance_m / 1000) }} km{% else %}{{ p.distance_m }} m{% endif %}
+          · {{ p.category_label }}
+        </span>
         {% if p.rating %}<span class="star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
       </div>
     </div>
   </a>
   {% else %}
-  <p class="empty">Pin yok.</p>
+  <p class="empty">Bu filtrede yakın mekan yok. Mesafeyi genişlet veya kategoriyi değiştir.</p>
   {% endfor %}
 </div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 (function(){
   const pins = {{ pins_json|safe }};
   const center = [{{ lat }}, {{ lng }}];
+  const radiusM = {{ radius_m|int }};
+  const nearMode = {{ near_mode|tojson }};
+  const usedFallback = {{ used_fallback|tojson }};
+  const catFilter = {{ cat|tojson }};
   const catColor = {
     food: '#e11d48', cafe: '#16a34a', event: '#2563eb', visit: '#ca8a04',
-    hotel: '#7c3aed', concert: '#ea580c', theater: '#db2777', cinema: '#0891b2'
+    hotel: '#7c3aed', concert: '#ea580c', theater: '#db2777', cinema: '#0891b2',
+    vet: '#0d9488', hospital: '#dc2626', market: '#4f46e5', shop: '#9333ea',
+    camp: '#65a30d', school: '#7c2d12', sport: '#0369a1', family: '#c026d3'
   };
   function colorFor(p){
     if ((p.subcategory || '') === 'cafe') return catColor.cafe;
     return catColor[p.category] || '#5B5FEF';
   }
-  const map = L.map('leaflet-map', { scrollWheelZoom: true }).setView(center, 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap'
-  }).addTo(map);
+  function fmtDist(m){
+    if (m == null) return '';
+    return m >= 1000 ? (m / 1000).toFixed(1) + ' km · ' : (m + ' m · ');
+  }
+  function mapUrl(lat, lng){
+    const q = new URLSearchParams();
+    if (nearMode) q.set('near', '1');
+    if (catFilter) q.set('cat', catFilter);
+    if (radiusM) q.set('r', String(radiusM));
+    q.set('lat', lat.toFixed(5));
+    q.set('lng', lng.toFixed(5));
+    return '/harita?' + q.toString();
+  }
+  const map = L.map('leaflet-map', { scrollWheelZoom: true }).setView(center, nearMode ? 14 : 13);
+  ({{ map_tiles|tojson }}).forEach(function(layer){
+    var opts = { maxZoom: layer.maxZoom || 19, attribution: layer.attribution || '' };
+    if (layer.subdomains) opts.subdomains = layer.subdomains;
+    if (layer.opacity != null) opts.opacity = layer.opacity;
+    L.tileLayer(layer.url, opts).addTo(map);
+  });
   L.circleMarker(center, {
-    radius: 8, color: '#fff', weight: 2, fillColor: '#5B5FEF', fillOpacity: 1
-  }).addTo(map).bindPopup('Konumunuz / merkez');
+    radius: 9, color: '#fff', weight: 3, fillColor: '#5B5FEF', fillOpacity: 1
+  }).addTo(map).bindPopup(usedFallback ? 'Bursa merkezi (konum bekleniyor)' : 'Konumunuz');
+  if (nearMode && radiusM > 0) {
+    L.circle(center, {
+      radius: radiusM,
+      color: '#5B5FEF',
+      weight: 1.5,
+      fillColor: '#5B5FEF',
+      fillOpacity: 0.06
+    }).addTo(map);
+  }
 
-  const bounds = [];
+  const bounds = [center];
   pins.forEach(function(p){
     if (p.lat == null || p.lng == null) return;
     const c = colorFor(p);
     const m = L.circleMarker([p.lat, p.lng], {
       radius: 7, color: '#fff', weight: 1.5, fillColor: c, fillOpacity: 0.95
     }).addTo(map);
-    const dist = (p.distance_m != null) ? (p.distance_m + ' m · ') : '';
     const href = p.path || (p.slug ? ('/yer/' + p.slug) : '');
     const link = href ? ('<br><a href="'+ href +'">Detay →</a>') : '';
     m.bindPopup(
-      '<b>'+ (p.title || '') +'</b><br>'+ dist + (p.category_label || p.category || '') + link
+      '<b>'+ (p.title || '') +'</b><br>'+ fmtDist(p.distance_m) + (p.category_label || p.category || '') + link
     );
     bounds.push([p.lat, p.lng]);
   });
   if (bounds.length > 1) {
-    try { map.fitBounds(bounds, { padding: [28, 28], maxZoom: 14 }); } catch(e) {}
+    try { map.fitBounds(bounds, { padding: [32, 32], maxZoom: nearMode ? 15 : 14 }); } catch(e) {}
   }
-  document.getElementById('geo-map')?.addEventListener('click', function(){
+
+  function goGeo(){
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(function(pos){
-      const q = new URLSearchParams({
-        lat: pos.coords.latitude.toFixed(5),
-        lng: pos.coords.longitude.toFixed(5),
-        cat: {{ cat|tojson }}
-      });
-      location.href = '/harita?' + q.toString();
-    });
-  });
+      location.href = mapUrl(pos.coords.latitude, pos.coords.longitude);
+    }, function(){
+      const el = document.getElementById('map-loc-banner');
+      if (el) el.textContent = '📍 Konum alınamadı — Bursa merkezi gösteriliyor. Konumum ile tekrar dene.';
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  }
+  document.getElementById('geo-map')?.addEventListener('click', goGeo);
+  if (nearMode && usedFallback) goGeo();
 })();
 </script>
 {% endblock %}

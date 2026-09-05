@@ -17,7 +17,7 @@
     {% if feed.attribution %}<p class="rx-src">Kaynak {{ feed.attribution }}{% if feed.fetched_at %} · {{ feed.fetched_at[:16].replace('T',' ') }}{% endif %}</p>{% endif %}
   </div>
   <div class="rx-hero-art" aria-hidden="true">
-    <img src="{{ url_for('static', filename='pharmacy/rx-night.svg') }}" alt="">
+    <img src="{{ url_for('static', filename='pharmacy/rx-night.svg') }}" alt="Nöbetçi eczane simgesi">
   </div>
 </section>
 
@@ -60,7 +60,7 @@
       {% for p in g.places %}
       <article class="rx-row">
         <a class="rx-thumb rx-tone-{{ loop.index0 % 4 }}" href="/nobetci-eczaneler/{{ p.slug }}" aria-hidden="true">
-          <img src="{{ url_for('static', filename='pharmacy/rx-night.svg') }}" alt="">
+          <img src="{{ url_for('static', filename='pharmacy/rx-night.svg') }}" alt="Nöbetçi eczane simgesi">
           <span>{{ p.initial }}</span>
         </a>
         <div class="rx-row-main">

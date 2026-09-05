@@ -1,0 +1,125 @@
+<script>
+(function () {
+  function wantsJson(headers) {
+    headers = headers || {};
+    headers['X-Requested-With'] = 'XMLHttpRequest';
+    headers['Accept'] = 'application/json';
+    return headers;
+  }
+
+  function updateLikeBtn(btn, liked, likes) {
+    btn.classList.toggle('on', !!liked);
+    btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+    var svg = btn.querySelector('svg');
+    if (svg) svg.setAttribute('fill', liked ? 'currentColor' : 'none');
+    var n = btn.querySelector('.ff-like-n');
+    if (n) n.textContent = String(likes);
+  }
+
+  function appendComment(post, data) {
+    var list = post.querySelector('.ff-comment-list');
+    if (!list) return;
+    list.hidden = false;
+    var row = document.createElement('div');
+    row.className = 'ff-comment';
+    row.innerHTML = '<b></b> <span></span><small></small>';
+    row.querySelector('b').textContent = data.user_name || 'Üye';
+    row.querySelector('span').textContent = data.body || '';
+    row.querySelector('small').textContent = data.ago || '';
+    list.appendChild(row);
+  }
+
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form || !form.classList) return;
+
+    if (form.classList.contains('ff-like-form')) {
+      e.preventDefault();
+      var btn = form.querySelector('button');
+      if (btn) btn.disabled = true;
+      fetch(form.action, { method: 'POST', credentials: 'same-origin', headers: wantsJson() })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (res) {
+          if (res.ok && res.data && res.data.ok && btn) {
+            updateLikeBtn(btn, res.data.liked, res.data.likes);
+          }
+        })
+        .catch(function () {})
+        .finally(function () { if (btn) btn.disabled = false; });
+      return;
+    }
+
+    if (form.classList.contains('ff-comment-form')) {
+      e.preventDefault();
+      var post = form.closest('.ff-post');
+      var submit = form.querySelector('button[type="submit"]');
+      var ta = form.querySelector('textarea');
+      if (submit) submit.disabled = true;
+      var body = new FormData(form);
+      fetch(form.action, { method: 'POST', credentials: 'same-origin', headers: wantsJson(), body: body })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (res) {
+          if (!res.ok || !res.data || !res.data.ok) {
+            var msg = (res.data && res.data.error) || 'Yorum gönderilemedi.';
+            alert(msg);
+            return;
+          }
+          if (post && res.data.comment) appendComment(post, res.data.comment);
+          if (ta) ta.value = '';
+          form.hidden = true;
+          var toggle = post && post.querySelector('.ff-comment-toggle');
+          if (toggle) {
+            toggle.setAttribute('aria-expanded', 'false');
+            var n = res.data.comments;
+            toggle.textContent = n ? ('Yorum yap · ' + n) : 'Yorum yap';
+          }
+        })
+        .catch(function () { alert('Bağlantı hatası.'); })
+        .finally(function () { if (submit) submit.disabled = false; });
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    var followBtn = e.target.closest('.ff-follow-btn');
+    if (followBtn) {
+      var uid = followBtn.getAttribute('data-user-id');
+      if (!uid) return;
+      followBtn.disabled = true;
+      fetch('/hesap/profil/takip/' + encodeURIComponent(uid), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: wantsJson()
+      })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (res) {
+          if (!res.ok || !res.data || !res.data.ok) {
+            alert((res.data && res.data.error) || 'Takip işlemi başarısız.');
+            return;
+          }
+          var on = !!res.data.following;
+          followBtn.classList.toggle('is-on', on);
+          followBtn.setAttribute('data-following', on ? '1' : '0');
+          followBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          followBtn.textContent = on ? 'Takipte' : 'Takip';
+        })
+        .catch(function () { alert('Bağlantı hatası.'); })
+        .finally(function () { followBtn.disabled = false; });
+      return;
+    }
+
+    var btn = e.target.closest('.ff-comment-toggle');
+    if (!btn) return;
+    var post = btn.closest('.ff-post');
+    if (!post) return;
+    var form = post.querySelector('.ff-comment-form');
+    if (!form) return;
+    var open = form.hidden;
+    form.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      var ta = form.querySelector('textarea');
+      if (ta) ta.focus();
+    }
+  });
+})();
+</script>

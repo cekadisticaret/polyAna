@@ -14,7 +14,7 @@
   <section class="panel st-hero">
     <div class="st-hero-row">
       <div class="prof-avatar" id="hero-avatar">
-        {% if u.avatar_url %}<img id="hero-avatar-img" src="{{ u.avatar_url }}" alt="">{% else %}<span id="hero-avatar-letter">{{ (u.name or 'U')[0]|upper }}</span>{% endif %}
+        {% if u.avatar_url %}<img id="hero-avatar-img" src="{{ u.avatar_url }}" alt="{{ u.name }} profil fotoğrafı">{% else %}<span id="hero-avatar-letter">{{ (u.name or 'U')[0]|upper }}</span>{% endif %}
       </div>
       <div class="st-hero-copy">
         <h2 class="st-name">{{ u.name }}</h2>
@@ -35,7 +35,7 @@
     <form method="post" action="/hesap/ayarlar" enctype="multipart/form-data" class="form st-form" id="avatar-form">
       <input type="hidden" name="action" value="avatar">
       <div class="st-avatar-pick">
-        <img id="avatar-preview" class="st-avatar-preview" {% if u.avatar_url %}src="{{ u.avatar_url }}"{% endif %} alt="" {% if not u.avatar_url %}hidden{% endif %}>
+        <img id="avatar-preview" class="st-avatar-preview" {% if u.avatar_url %}src="{{ u.avatar_url }}"{% endif %} alt="{{ u.name }} profil önizlemesi" {% if not u.avatar_url %}hidden{% endif %}>
         <label class="st-file-btn">
           <input id="avatar-file" type="file" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif">
           <span id="avatar-file-label">{% if u.avatar_url %}Fotoğrafı değiştir{% else %}Fotoğraf seç{% endif %}</span>

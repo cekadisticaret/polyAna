@@ -27,6 +27,14 @@ HOME_FAQ = (
         "Nasıl 1 günlük rota çıkarırım?",
         "Keşfet’te planını yap (yeme-içme, gezilecek, otel), ilçe veya filtreyle daralt, yer detayından rotaya ekle — veya /rota sayfasından bütçeli plan iste.",
     ),
+    (
+        "Rezervasyon veya sipariş verebilir miyim?",
+        "Hayır. BursaApp yalnızca rehberdir; masa rezervasyonu, yemek siparişi veya bilet satışı yapmaz. İşletme telefonu ve harita linki yer detayında.",
+    ),
+    (
+        "İşletmemi nasıl ekler veya güncellerim?",
+        "Üye olup taslak yer ekleyebilir veya mevcut kaydı sahiplenme talebiyle güncelleyebilirsin. Yayın admin onayından sonra; sahte veya eksik kayıtlar reddedilir.",
+    ),
 )
 
 HOME_HOWTO = (
@@ -99,28 +107,7 @@ VERTICALS = {
     },
 }
 
-BLOG_POSTS = {
-    "bursa-da-kahvalti-nerede": {
-        "title": "Bursa’da kahvaltı nerede yapılır?",
-        "h1": "Bursa’da kahvaltı nerede yapılır?",
-        "desc": "Serpme, köy kahvaltısı ve merkez adresleri — nasıl seçilir, nereye bakılır. BursaApp yeme-içme listesine köprü.",
-        "date": "2026-09-03",
-        "image": "/static/food/kahvalti-1.jpg",
-        "cta_path": "/yeme-icme",
-        "cta_label": "Kahvaltı ve restoran listesi",
-        "kind": "howto",
-    },
-    "bursa-1-gunluk-gezi-plani": {
-        "title": "1 günde Bursa: Ulu Cami, hanlar, Cumalıkızık",
-        "h1": "1 günde Bursa gezisi: örnek rota",
-        "desc": "Ulu Cami–Hanlar–Cumalıkızık sırası, mola ve foto durakları. BursaApp gezilecek listesine köprü.",
-        "date": "2026-09-03",
-        "image": "/static/visit/ulu-cami.jpg",
-        "cta_path": "/gezilecek",
-        "cta_label": "Gezilecek yerler",
-        "kind": "ornek",
-    },
-}
+from blog_posts import BLOG_KINDS, BLOG_POSTS, blog_posts_sorted
 
 
 def offer_ld(url: str) -> dict[str, Any]:
@@ -283,41 +270,8 @@ def article_full(*, title: str, description: str, path: str, image: str, date: s
     }
 
 
-def llms_txt() -> str:
-    from seo import site_base
+def llms_txt(db=None) -> str:
+    from ai_seo import llms_txt as _gen
 
-    base = site_base()
-    return f"""# BursaApp
-> Bursa şehir rehberi — restoran, gezilecek yer, otel, nöbetçi eczane. Ücretsiz. Rezervasyon, bahis veya emir yok.
+    return _gen(db)
 
-Site: {base}/
-İletişim: WhatsApp {PHONE_DISPLAY}
-WhatsApp: {WHATSAPP_URL}
-Dil: tr
-
-## Hub
-- {base}/ — Bursa’da ne yapalım? (fiyat: ücretsiz, HowTo, SSS)
-
-## Dikey landing (aynı ürün, farklı niyet)
-- {base}/yeme-icme — Bursa restoran ve cafe
-- {base}/gezilecek — Bursa gezilecek yerler
-- {base}/oteller — termal, şehir, Uludağ (rezervasyon siteden yok)
-
-## Blog
-- {base}/blog
-- {base}/blog/bursa-da-kahvalti-nerede
-- {base}/blog/bursa-1-gunluk-gezi-plani
-
-## Trust
-- {base}/kvkk
-
-## Diğer kamuya açık
-- {base}/nobetci-eczaneler
-- {base}/bugun · {base}/hafta-sonu · {base}/rota · {base}/harita
-
-## Index dışı
-- /admin, /hesap, /giris, /kayit, /isletme, /api/, /uploads/ — noindex / robots Disallow
-
-## Not
-BursaApp bir şehir rehberidir. Polymarket veya kripto emri yoktur.
-"""

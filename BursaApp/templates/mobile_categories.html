@@ -1,0 +1,132 @@
+{% extends "_shell.html" %}
+{% block title %}Kategoriler · BursaApp{% endblock %}
+{% block body_class %} is-cats-mobile{% endblock %}
+{% block page_head %}{% endblock %}
+
+{% block main %}
+<div class="mc-page">
+  <header class="mc-bar">
+    <a class="mc-round-btn" href="/" aria-label="Geri">←</a>
+    <h1 class="mc-title">Kategoriler</h1>
+    <button class="mc-round-btn" type="button" aria-label="Menü" onclick="document.getElementById('mc-menu').classList.toggle('open')">☰</button>
+  </header>
+
+  <div class="mh-menu" id="mc-menu">
+    <div class="mh-menu-backdrop" onclick="document.getElementById('mc-menu').classList.remove('open')"></div>
+    <nav class="mh-menu-panel">
+      <a href="/etrafimda">📍 Etrafımda ne var</a>
+      <a href="/harita">🗺 Harita</a>
+      <a href="/rota">🧳 Rota planla</a>
+      <a href="/blog">✍️ Blog</a>
+      <a href="/bursaspor">🟢 Bursaspor</a>
+      <a href="/ilce">📍 İlçeler</a>
+      <a href="/ai">✨ AI öneri</a>
+      <a href="{% if nav_user %}/hesap/ayarlar{% else %}/giris{% endif %}">⚙️ Ayarlar</a>
+    </nav>
+  </div>
+
+  <form class="m-search mc-search" action="/gezilecek" method="get">
+    <span class="m-search-ico" aria-hidden="true">🔍</span>
+    <input name="q" placeholder="Yer, yemek, etkinlik ara…" autocomplete="off">
+    <button type="submit" class="m-search-go" aria-label="Ara">→</button>
+  </form>
+
+  <a class="mh-near-btn mc-near-btn" href="/etrafimda">
+    <span class="mh-near-ico" aria-hidden="true">📍</span>
+    <span class="mh-near-copy">
+      <b>Etrafımda ne var?</b>
+      <small>Haritada en yakın mekanlar</small>
+    </span>
+    <span class="mh-near-go">→</span>
+  </a>
+
+  <div class="mc-stack">
+    {% for card in promo_cards %}
+    <a class="mc-card mc-tone-{{ card.tone }}" href="{{ card.path }}">
+      <div class="mc-card-head">
+        <span class="mc-card-ico" aria-hidden="true">{{ card.icon }}</span>
+        <span class="mc-card-title">{{ card.title }}</span>
+      </div>
+      <p class="mc-card-desc">
+        {{ card.before }}<span class="mc-pill mc-pill-{{ card.pill_tone }}">{{ card.pill }}</span>{{ card.after }}
+      </p>
+      <span class="mc-cta">{{ card.cta }}</span>
+      <img class="mc-card-img" src="{{ url_for('static', filename=card.img) }}" alt="{{ card.title }}" loading="lazy" width="320" height="400">
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="mc-foot">
+    <a href="/harita">🗺 Haritada gör</a>
+    <a href="/#nasil">🧭 Nasıl başlarım?</a>
+  </div>
+</div>
+
+<div class="m-desktop-only m-cats">
+  <div class="page-head">
+    <h1>Kategoriler</h1>
+    <p>Bursa rehberi — tüm listeler</p>
+  </div>
+
+  <form class="m-search" action="/gezilecek" method="get">
+    <span class="m-search-ico" aria-hidden="true">🔍</span>
+    <input name="q" placeholder="Yer, yemek, etkinlik ara…" autocomplete="off">
+    <button type="submit" class="m-search-go" aria-label="Ara">→</button>
+  </form>
+
+  <section class="m-cat-sec">
+    <div class="m-sec-h"><h2>Sağlık</h2></div>
+    <div class="m-cat-grid">
+      {% for c in categories if c.key in ('hospital','doctor','dentist','vet','school') %}
+      <a class="m-cat-card" href="{{ c.path }}">
+        <span class="m-cat-ico">{{ cat_ico.get(c.key, '•') }}</span>
+        <b>{{ c.label }}</b>
+        <small>{{ c.hint }}</small>
+      </a>
+      {% endfor %}
+      <a class="m-cat-card" href="/nobetci-eczaneler">
+        <span class="m-cat-ico">💊</span>
+        <b>Nöbetçi eczaneler</b>
+        <small>Bugünkü liste</small>
+      </a>
+    </div>
+  </section>
+
+  <section class="m-cat-sec">
+    <div class="m-sec-h"><h2>Yeme · alışveriş · gezi</h2></div>
+    <div class="m-cat-grid">
+      {% for c in categories if c.key in ('food','market','shop','visit','hotel','camp') %}
+      <a class="m-cat-card" href="{{ c.path }}">
+        <span class="m-cat-ico">{{ cat_ico.get(c.key, '•') }}</span>
+        <b>{{ c.label }}</b>
+        <small>{{ c.hint }}</small>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="m-cat-sec">
+    <div class="m-sec-h"><h2>Kültür · spor · aile</h2></div>
+    <div class="m-cat-grid">
+      {% for c in categories if c.key in ('concert','theater','cinema','event','fun','org','sport','family') %}
+      <a class="m-cat-card" href="{{ c.path }}">
+        <span class="m-cat-ico">{{ cat_ico.get(c.key, '•') }}</span>
+        <b>{{ c.label }}</b>
+        <small>{{ c.hint }}</small>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="m-cat-sec">
+    <div class="m-sec-h"><h2>Diğer</h2><a href="/harita">Harita →</a></div>
+    <div class="m-cat-list">
+      <a href="/blog">✍️ Blog</a>
+      <a href="/bursaspor">🟢 Bursaspor</a>
+      <a href="/rota">🧳 Rota planla</a>
+      <a href="/ilce">📍 İlçeler</a>
+      <a href="/ai">✨ AI öneri</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

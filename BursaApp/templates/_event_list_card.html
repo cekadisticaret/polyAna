@@ -1,0 +1,34 @@
+{% set ex = p.extra or {} %}
+{% set cover = p.img_url or '' %}
+{% set cat_lab = p.subcategory_label or p.category_label or cat.label %}
+<a class="ev-list-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+  {% if cover %}<img class="ev-hero-bg" src="{{ cover }}" alt="{{ p.title }}" loading="lazy" decoding="async">{% endif %}
+  <div class="ev-hero-veil"></div>
+  <div class="ev-hero-copy">
+    <p class="ev-kicker">{{ cat_lab }}{% if p.ilce %} · {{ p.ilce }}{% endif %}</p>
+    <h2 class="ev-title">{{ p.title }}</h2>
+    <ul class="ev-meta">
+      {% if p.when_long or p.when or p.hours_text %}
+      <li><span>Tarih</span><b>{{ p.when_long or p.when or p.hours_text }}</b></li>
+      {% endif %}
+      {% if p.venue_name or p.address %}
+      <li><span>Mekan</span><b>{{ p.venue_name or p.address }}{% if p.ilce %} · {{ p.ilce }}{% endif %}</b></li>
+      {% endif %}
+      {% if p.ticket_price or ex.price_min or p.price_band %}
+      <li><span>Bilet</span><b>{{ p.ticket_price or ex.price_min or p.price_band }}{% if ex.price_max and ex.price_max != (p.ticket_price or ex.price_min) %} – {{ ex.price_max }}{% endif %}</b></li>
+      {% elif p.web or p.ticket_url %}
+      <li><span>Bilet</span><b>Platformdan kontrol edin</b></li>
+      {% endif %}
+    </ul>
+    {% if p.starts_ts %}
+    <div class="ev-count" data-starts="{{ p.starts_ts }}" aria-hidden="true">
+      <div><b class="d">–</b><i>gün</i></div>
+      <div><b class="h">–</b><i>saat</i></div>
+      <div><b class="m">–</b><i>dk</i></div>
+      <div><b class="s">–</b><i>sn</i></div>
+    </div>
+    {% endif %}
+    {% if p.blurb %}<p class="ev-list-blurb">{{ p.blurb }}</p>{% endif %}
+    <span class="ev-list-go">Detay →</span>
+  </div>
+</a>

@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-09-03T18:00+03:00",
+  "generated_at": "2026-09-05T06:00+03:00",
   "desk": {
-    "updated_at": "2026-09-03T18:00+03:00",
-    "analysis": "BursaApp Maç Masası — 03.09.2026 18:00. Puan durumunda 5. sıradayız (8O 4G 1B 3M · 13 puan). Son 5: B-B-G-G-M Son not: Yenilgi (deplasman): Fatih Karagümrük 2–1 Bursaspor. Sırada: Kayserispor–Bursaspor · 29.08.2026 22:00 · deplasman. Deplasmanda kompakt savunma + ikinci toplar kritik. Yorumumuz: 1. Lig’de üst sıra için istikrar şart; tek maçlık heyecanı sezon planına kurban etmeyin.",
+    "updated_at": "2026-09-05T06:00+03:00",
+    "analysis": "BursaApp Maç Masası — 05.09.2026 06:00. Puan durumunda 5. sıradayız (8O 4G 1B 3M · 13 puan). Son 5: B-B-G-G-M Son not: Yenilgi (deplasman): Fatih Karagümrük 2–1 Bursaspor. Sırada: Kayserispor–Bursaspor · 29.08.2026 22:00 · deplasman. Deplasmanda kompakt savunma + ikinci toplar kritik. Yorumumuz: 1. Lig’de üst sıra için istikrar şart; tek maçlık heyecanı sezon planına kurban etmeyin.",
     "preview": "Önizleme — rakip Kayserispor. Deplasman set oyunu ve set parçaları planın omurgası olmalı. Bilet / Passolig için resmi kanalları kullanın.",
     "review": "Maç arkası — Yenilgi (deplasman): Fatih Karagümrük 2–1 Bursaspor. Bizden satır: Skoru abartmadan okuyun; bir sonraki 90’da aynı temponun sürüp sürmediğine bakın.",
     "form": [
@@ -28,5 +28,146 @@
       "is_home": false
     }
   },
-  "news": []
+  "news": [
+    {
+      "id": "c65ec8fb7ea9",
+      "title": "BURSASPOR’A HIRVAT KANAT: IVAN ŠARANIĆ İMZAYI ATTI",
+      "source": "yenişehir yörem",
+      "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxPZ0l0Z0x2aWpOYldLd01ZZmZCalEzYnhMUEtFd0RaSEphUmFqV09HLTRva3ZNaVhDNDllN2tyUWN6Tm1YUm04ekhoVTFPOUljemh3Sl85WmkwTzhLVGo5UXpMbWhiWXg1UTNvSVlKLVV2dGZUcER0VzFYdmtsZ1JkS1BRT0oxMnFVeVdIcDgxcEZ6cENVS3had3NRdklfZXphUVB0Zm5wUFcwS2NGYmdrdGFR?oc=5",
+      "published_at": "2026-09-05T05:21+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (yenişehir yörem): “BURSASPOR’A HIRVAT KANAT: IVAN ŠARANIĆ İMZAYI ATTI”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-5.jpg"
+    },
+    {
+      "id": "a5ac546253c9",
+      "title": "Hırvat oyuncunun lisansı çıktı! İşte Saranic’in sözleşme süresi…",
+      "source": "SporBursa",
+      "url": "https://news.google.com/rss/articles/CBMiigFBVV95cUxQSjVYaEFGc2xndEFpaGJDVzZidnVSbVpMZ001ZHpvTHpsZWFfZEZ4QVItUFBHU2NwZkhLWjRBSmhwX0xCNWxZLXQxVHNPZEhQRkxrT1lEQlhRVm11bGJ5cjYwb1RKc2t1Z2VIRDh2VFgwNUltNU5MZHpYS0pBcHEwY1NUb21NUzhFeEHSAaYBQVVfeXFMT3Q0MG9fQjA0Yi1XazFmLV9pMlRSUTEyOE16dk1VZVhqVmEzQUdZU2hFZnJGRTBPVDFzUVFQbG9Pa2FtWG82U01MVmctMkVub3ptQmJkbFZqWHpDYmRZSTFHcjYtSDZVc3U4M0tUcjBLNHZXcFpZSkZUX25uWkJXejZjb3F0N2Y5NFpIN0RBWDJqMVdLYUNCSkljb2k3NDBUbVVSd2ZEUQ?oc=5",
+      "published_at": "2026-09-05T04:34+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (SporBursa): “Hırvat oyuncunun lisansı çıktı! İşte Saranic’in sözleşme süresi…”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-6.jpg"
+    },
+    {
+      "id": "4bd05127ff9c",
+      "title": "Iheanacho zirvede! İşte 1.Ligde gol krallığı sıralaması",
+      "source": "SporBursa",
+      "url": "https://news.google.com/rss/articles/CBMif0FVX3lxTE1KV0gzMEJEWktvNUVadUpnZTQ3d0h1bWFZX1JRSHBScl90MnZIbVFLTjY0OVFBMWw0b0xEdFEyVUdoeF9WME5GQm85QUZUeTQ5a3R2ZTBvb3cxTTB0b0Z6Z2NQLVNoSklIOHN0XzBQRHZ0czJxQWxxY3VlTk1pV2c?oc=5",
+      "published_at": "2026-09-05T04:33+03:00",
+      "topic": "mac",
+      "blurb": "Saha tarafı: SporBursa “Iheanacho zirvede! İşte 1.Ligde gol krallığı sıralaması” diye aktardı. Bizim okuma — Timsah’ın 1. Lig temposunda puan kaybı/kazancı kadar iç saha ritmi ve deplasman disiplini kritik; fikstür kartındaki sonraki rakibe bakın.",
+      "img_url": "/static/cache/bursaspor/cover-4.jpg"
+    },
+    {
+      "id": "ad5b2297c60b",
+      "title": "Timsah, eski oyuncusunu Fenerbahçe’den geri aldı!",
+      "source": "SporBursa",
+      "url": "https://news.google.com/rss/articles/CBMidkFVX3lxTFBoanVxZW5ucnp4dGF0WEpIdDI4U0cyUVpxdVlGcmN4QjNuTXZuRXRKV0pMNURNVmJnNXJrOHZXaVFtaEZUb1lnNEVtYzZGRTR3b3RVMm1sQWxQaTdRSzNMRUVTVE1xYkF3NmRrUlMwR0E5S1FWN2fSAZIBQVVfeXFMUDVmS2RkSGpKM3pMRFY5azNXbkItcDFMSFFMdHJYb0lfMFZyOFB0WFp0X2lmVVF1UGxGZG9qUklGbXhCdDlqYjlEYWF6OURueDM3S3hZTnUwMk9nYWVIaWt1MDMxOG5HWnEzSThZbGpsS05nOEItRjc3Y1dneGt0SHJPSjZrWkJqLUN3V2E0dEVyeXc?oc=5",
+      "published_at": "2026-09-05T04:32+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (SporBursa): “Timsah, eski oyuncusunu Fenerbahçe’den geri aldı!”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-1.jpg"
+    },
+    {
+      "id": "1d6c1c172299",
+      "title": "Ertuğrul İdris ile önce sözleşme uzatıldı, sonra kiralandı!",
+      "source": "SporBursa",
+      "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxQMFZpMTJxWk9YU0hjNFVzZXBVOVhRUTRnRWRhZWFLYmpEMVl0QUN5Mkt6Wm1zQVVNRkVfdnhzVmw2U0FZcWpaM2NocmQ5OVZveDg5UUNwZzJWSERQaWd0Y2ZGcVNYYU1CNlFlb3pxdEVNSDhyZ1E2QlNxOEw5MXVZYzZueU7SAaABQVVfeXFMUDlLX2lBbThwRTJfMHdRa3I0U1ZOQlNJNDRZelZ0a0c0bV9FYm11NHAyZVBhWThsTHNhdjlPS3JQNElnYm9lM2FSUzQ0TEItUXhGbDFzWkVUX2xuNmpCWG9lRldfVUUwWXZ2QS1fY3d3LW9WUFhyekdqblVaOWhfWVpURmZGczhjNk1sNVFIZGpwSkFJb1Voa2FJYmZjX3Iweg?oc=5",
+      "published_at": "2026-09-05T04:30+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (SporBursa): “Ertuğrul İdris ile önce sözleşme uzatıldı, sonra kiralandı!”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-5.jpg"
+    },
+    {
+      "id": "6d0bda3d1494",
+      "title": "Bursaspor ile rakipleri arasında uçurum var!",
+      "source": "SporBursa",
+      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE5SMFA2Y0pOQTdMbnhBak9UMVgyb0xETEE1bXpPU2xwT0ZkLWg1S3Mwek9hOHNRZlN6N1JzQ3dibV9nLTFqUWg3dFQyZllkWUpDbHJsUkZjNDhQTG1nZlZsTTlNaFZpTW5DS3BOTHV3MHNnQdIBjgFBVV95cUxQd1hDdHAwMUstWnI4c0NfMHJTcjFZUVM4WnR1MUltOUdkb2V5YWxwUHF2bGR3NnNKa2dMOUVOS3JiWndiWGNTZDdsMmtYRk84TFdMY2h4TkRWY09UczRLbnRKZGNRUzhwakFZTnJFeC1meFh4VGYyRWpscWRNY0V4Q0I4Y1pFRjZaTVZTRlFR?oc=5",
+      "published_at": "2026-09-05T04:28+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (SporBursa): “Bursaspor ile rakipleri arasında uçurum var!”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-1.jpg"
+    },
+    {
+      "id": "d0ef89811486",
+      "title": "Bursaspor, Saranic'in transferini resmen açıkladı",
+      "source": "SporBursa",
+      "url": "https://news.google.com/rss/articles/CBMidEFVX3lxTE9xUDQ0a05EWHdIYzNucGlHcU1DOGZGYTFNNHJnRUdpWnNCaVVjNi1ycE8tb0xwQkZxSHp6a3VuUERKYW5zVHdMc1BqMU90UFVOMU5zc2dvOW5SanZ2czRmaWxITEkzNmllb193WGRESGZpbS1z0gGQAUFVX3lxTE16THVRR3pBVzJTZlIzdHRGTE9sQkliWmFDbGd6QWY1ZE9EaThEZzlsZjA0RmQxN3l1TjFRQkdzTnJLdGQyc05NYXZUVWh3cG9NTjFNSXNJMnpid2k3bjN6OTlVdEprVHJRc1dZRGRfV3JGS2pibVhnWXdRdjZUSVVmTXJoSUYyLTBJVHlDek4wVQ?oc=5",
+      "published_at": "2026-09-05T04:28+03:00",
+      "topic": "transfer",
+      "blurb": "Transfer masasında hareket var: “Bursaspor, Saranic'in transferini resmen açıkladı” başlığıyla SporBursa gündeme taşıdı. BursaApp notu — resmi açıklama gelmeden spekülasyonu skor gibi okumayın; kadro planı ve bütçe çerçevesi netleşince buradan takip edin.",
+      "img_url": "/static/cache/bursaspor/cover-6.jpg"
+    },
+    {
+      "id": "f417a4e65254",
+      "title": "Mustafa Er, ‘Yolumuza devam edeceğiz’",
+      "source": "SporBursa",
+      "url": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE5iY3hibTNybXNIbGxNRVA4ekZUaFZyYWJ4ZTVuLUJja3h4ZFFQTU1XSjkyZjhkdXpPZlczR2hacTlPeXhqSXd5VWxqT20tM3ZOWk5WekxxMlRkM2ZVd0JoQi1CaUFyQdIBggFBVV95cUxOOHFRQTBmQ1VMNkZ3VzUzWW9RdmFJOGF5cDdLSVZ6SlhkUVN3VEtDVWs5ekJvd3lvMFo3VzAyNEZoZUdlbnJLeTh6Ty0yakpiWGdnNVFOVlUyRHJoRVF4cGlxZi1uMXV2X3hBd2hvUGpIVUZPYkMxVnE2azYwbkxKRERR?oc=5",
+      "published_at": "2026-09-05T04:22+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (SporBursa): “Mustafa Er, ‘Yolumuza devam edeceğiz’”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-8.jpg"
+    },
+    {
+      "id": "4ac58c54843a",
+      "title": "Iheanachu Gol Krallığı'nın en büyük adayı!",
+      "source": "SporBursa",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE14WWdmNkRxS0lKQlNJVzJCcUxnYnpCVjZ3aEFHZ1BkUmJsNEJkeVVvS1JBWlAyLUZBdzV0SGlfM2RMc0UydnpGc3FreGFyOEJwRDJRdFpUcUxwWTR3ejhLNzdONk1qb1JPckstNGFR0gGKAUFVX3lxTE82VTAyZ2puWVhRMC1MWHZMMi1aZ3gwZWZqTTdhX3VnYkNkNVNzcHNqTjZWaUV3TkNOOHh4WllSSkdFM0htR3VfWmNrRmVkZVgxM1BQazgwcTkyX19lZ1RsanRxV3NMUDl0SEMtSWV1c0d5VzFBUVdHOURFUG5CemwtWkg2QUdXdk9Gdw?oc=5",
+      "published_at": "2026-09-05T04:11+03:00",
+      "topic": "mac",
+      "blurb": "Saha tarafı: SporBursa “Iheanachu Gol Krallığı'nın en büyük adayı!” diye aktardı. Bizim okuma — Timsah’ın 1. Lig temposunda puan kaybı/kazancı kadar iç saha ritmi ve deplasman disiplini kritik; fikstür kartındaki sonraki rakibe bakın.",
+      "img_url": "/static/cache/bursaspor/cover-1.jpg"
+    },
+    {
+      "id": "57617bfd2f41",
+      "title": "Bursaspor, Ediz Bahtiyaroğlu'nu ölüm yıl dönümünde unutmadı...",
+      "source": "Bursada Bugün",
+      "url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxQZkpidlNPUmZIUU5TeGJvWmlaN2g5UHF5NkVoTVlLcDZrN3VNUVBkZ3ZxX0pBMW5jb1cyZEFuMlhlNU92UUZHbXdIMmxlZERubTQ3R2M5SkJMQ2hTajFNMVB0V01TR3pvTHV2OElVQ2NvMExKQTFhWjUteEVkZEtBUXFocUJFTktBRXcwSkticDMxeklHWlZnQ0lPeUlGMFIyT05sMDRBc2VRUdIBrAFBVV95cUxPT3dNUjNEOFlkeXB4XzMzcEQ2blJmSXJIVXNUQXVlc1h3dHBiZ3NKN055ZllJcGhiYjE4WDRYV0pOV0I3RlpzTHEwVV9WLU9lYXdFazJQMVpXNlZyWmVabm5lSHJlYVliaW9qMlBtYzRYQ1h4RUVHUHhjWXpoVGZtS0RPREhRNmJWVXhsd2E4ak9KS1ZobWJOamtEcDhFaWNLQ1NFQXZFLUwzUE1O?oc=5",
+      "published_at": "2026-09-05T00:29+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (Bursada Bugün): “Bursaspor, Ediz Bahtiyaroğlu'nu ölüm yıl dönümünde unutmadı...”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-7.jpg"
+    },
+    {
+      "id": "bf66b7ef838a",
+      "title": "Taçtan ofsayt gündem oldu: Eski hakemlere sorduk",
+      "source": "odatv.com",
+      "url": "https://news.google.com/rss/articles/CBMijAFBVV95cUxPbTBaaE0xV0NOSGdUenVrSzdPQ1Z0b1F2YTZESkMzSTdPRmFkYzVSN0pXWW5HdV9GeVczS09seTVLMGxsdHh6a0NnLVNHWi1ZN1o0dHBfZjNWSnlvVnB1dmpGdVNBZGd3dHdycDFNT1pvZkFrX2RoQ0xHYjh2dEkyZkl5eHp0RkxJMC1zVw?oc=5",
+      "published_at": "2026-09-04T23:39+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (odatv.com): “Taçtan ofsayt gündem oldu: Eski hakemlere sorduk”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-7.jpg"
+    },
+    {
+      "id": "4676ddc2005f",
+      "title": "Üyelik Başvuruları (Eylül 2026)",
+      "source": "Bursaspor Kulübü Resmi İnternet Sitesi",
+      "url": "https://news.google.com/rss/articles/CBMiekFVX3lxTE4yd0RoLTJhUmhXT3VhM1Y4cW9FR1JDT0M2Qml1Q1FWUmtZZ1VRQkVFTVJqeFFBbmx5bllldWZua09tdWdZdnZKZGtCQW9vNTB0VWIycHpDTnctTG1VZjJGQzBjcGhZamlWQzFtWXZmSERmVl85b0ZYVG5B?oc=5",
+      "published_at": "2026-09-04T22:37+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (Bursaspor Kulübü Resmi İnternet Sitesi): “Üyelik Başvuruları (Eylül 2026)”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-10.png"
+    },
+    {
+      "id": "abbf8a0454b2",
+      "title": "Manisa FK Maçı Hazırlıklarına Başladık",
+      "source": "Bursaspor Kulübü Resmi İnternet Sitesi",
+      "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxQcUdpaE90QlhMQkQ4SFNxVEM3U0djSGQwNUJOVmZHV1JKNmNYY01pYlp6RDh1RG9Ha0NGYkpCNVltWWFGRzdPTVYxeU9mZWV3MEV4WHdCQ1c2Nms1X2xQdjBYa0RjdC1IMEtTNVBuMHFaRldfNkhxaXA0TFJBLTVndS1DeG4zZw?oc=5",
+      "published_at": "2026-09-04T21:57+03:00",
+      "topic": "mac",
+      "blurb": "Saha tarafı: Bursaspor Kulübü Resmi İnternet Sitesi “Manisa FK Maçı Hazırlıklarına Başladık” diye aktardı. Bizim okuma — Timsah’ın 1. Lig temposunda puan kaybı/kazancı kadar iç saha ritmi ve deplasman disiplini kritik; fikstür kartındaki sonraki rakibe bakın.",
+      "img_url": "/static/cache/bursaspor/cover-5.jpg"
+    },
+    {
+      "id": "f60fd22334e2",
+      "title": "Bursaspor'dan genç oyuncusu için yeni hamle!",
+      "source": "Bursada Bugün",
+      "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxOYVlFSk1vVHNzWG1ONWFOMC1YbkptREc5Q01VcDVMYWxkVkhSV0xXNllyYjJkTWNydE1vRjhLSEtnNkpJS0hnNG5tM0xEQmstWUtJZ01lMGZTOTNZUlYzOEdza3Z1S1B0ajdKSERNVnRRTF95Vmx3ZXF2Y1cxQUtIdWh4b0FWM3ZSTGZLQmhhVkNoUHhMemfSAZgBQVVfeXFMTVlZQ2ZvN2FGd0tCNkEtZGpnLUdxN0NCQlVKc0o4UUI5djlFMXhtYnVENDBGMFRhYnZ3WFlIRXlXb1NQcFZESmJQelRzTkNpLXkzSW5LSFhnTFdpOGE3S2dnb255NllHVkxsQmxVNHZ0am9oQVZDald6TEpJbWNhb0NNLUpROUpEdXg2aG9iZmZuRU1HY0NrWWw?oc=5",
+      "published_at": "2026-09-04T21:48+03:00",
+      "topic": "genel",
+      "blurb": "Günün notu (Bursada Bugün): “Bursaspor'dan genç oyuncusu için yeni hamle!”. BursaApp özeti — yeşil-beyaz gündemi buradan süzüyoruz; detay için kaynağa bakın, biz skor ve fikstürle çapraz okuyoruz.",
+      "img_url": "/static/cache/bursaspor/cover-3.png"
+    }
+  ]
 }

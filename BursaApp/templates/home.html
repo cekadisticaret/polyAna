@@ -1,5 +1,6 @@
 {% extends "_shell.html" %}
 {% block title %}{{ seo.title_full }}{% endblock %}
+{% block body_class %} is-home-mobile{% endblock %}
 {% block hello %}Keşfet{% endblock %}
 {% block sub %}Bursa’yı yaşa{% endblock %}
 {% block main %}
@@ -8,13 +9,119 @@
   'sport':'💪','family':'👨‍👩‍👧','concert':'🎵','theater':'🎭','cinema':'🎬','fun':'🎳',
   'event':'📅','org':'🏛','hospital':'🏨','doctor':'🩺','dentist':'🦷','vet':'🐾','pharmacy':'💊','school':'🎓'
 } %}
+{% set first_name = nav_user.name.split()[0] if nav_user and nav_user.name else 'Gezgin' %}
+
+<section class="m-home">
+  <header class="mh-head">
+    <a class="mh-user" href="{% if nav_user %}/hesap{% else %}/giris{% endif %}" rel="nofollow">
+      <span class="mh-av">{% if nav_user and nav_user.avatar_url %}<img src="{{ nav_user.avatar_url }}" alt="{{ first_name }} profil fotoğrafı">{% elif nav_user %}<span>{{ first_name[0]|upper }}</span>{% else %}<span>👋</span>{% endif %}</span>
+      <span class="mh-greet">
+        <small>Merhaba 👋</small>
+        <b>{{ first_name }}</b>
+      </span>
+    </a>
+    <button class="mh-menu-btn" type="button" aria-label="Menü" onclick="document.getElementById('mh-menu').classList.toggle('open')">☰</button>
+  </header>
+
+  <div class="mh-menu" id="mh-menu">
+    <div class="mh-menu-backdrop" onclick="document.getElementById('mh-menu').classList.remove('open')"></div>
+    <nav class="mh-menu-panel">
+      <a href="/kategoriler">📂 Kategoriler</a>
+      <a href="/etrafimda">📍 Etrafımda ne var</a>
+      <a href="/harita">🗺 Harita</a>
+      <a href="/rota">🧳 Rota planla</a>
+      <a href="/nobetci-eczaneler">💊 Nöbetçi eczane</a>
+      <a href="{% if nav_user %}/hesap/bildirimler{% else %}/giris{% endif %}">🔔 Bildirimler</a>
+      {% if nav_user %}<a href="/hesap/ayarlar">⚙️ Ayarlar</a>{% else %}<a href="/giris">Giriş yap</a>{% endif %}
+    </nav>
+  </div>
+
+  <h1 class="mh-welcome">Hoş geldin{% if nav_user %}, {{ first_name }}{% endif %}</h1>
+  {% if weather %}<p class="mh-weather">{{ weather.label }} · {{ weather.temp_c }}°C · {{ weather.hint }}</p>{% endif %}
+
+  <div class="m-chip-row">
+    <a class="m-chip on" href="/">Öne çıkan</a>
+    <a class="m-chip" href="/gezilecek">Gezi</a>
+    <a class="m-chip" href="/yeme-icme">Yeme-içme</a>
+    <a class="m-chip" href="/konserler">Etkinlik</a>
+    <a class="m-chip" href="/oteller">Otel</a>
+    <a class="m-chip" href="/kamp">Kamp</a>
+  </div>
+
+  <article class="mh-promo">
+    <div class="mh-promo-inner">
+      <div class="mh-promo-copy">
+        <h2>Bursa’yı keşfet, planla, paylaş</h2>
+        <ul class="mh-checks">
+          <li>Ücretsiz şehir rehberi</li>
+          <li>{{ place_count }}+ onaylı mekan</li>
+          <li>Rezervasyon veya emir yok</li>
+        </ul>
+        <span class="mh-seal">7/24</span>
+      </div>
+      <div class="mh-promo-visual">
+        <img src="{{ url_for('static', filename='visit/cumalikizik.jpg') }}" alt="Cumalıkızık" loading="eager">
+      </div>
+      <a class="mh-glass-btn" href="/gezilecek">
+        <span class="mh-glass-ico">✓</span>
+        <span class="mh-glass-txt">Keşfetmeye başla</span>
+        <span class="mh-glass-arrow">→</span>
+      </a>
+    </div>
+  </article>
+
+  <a class="mh-tip" href="/#nasil">
+    <span class="mh-tip-ico">🧭</span>
+    <div>
+      <b>Nasıl başlarım?</b>
+      <small>Rota çıkar, etkinlik seç, favorilere ekle — BursaApp rehberi.</small>
+    </div>
+    <span class="mh-tip-go">→</span>
+  </a>
+
+  <form class="m-search" action="/gezilecek" method="get">
+    <span class="m-search-ico" aria-hidden="true">🔍</span>
+    <input name="q" value="{{ q|default('') }}" placeholder="Yer, yemek, etkinlik ara…" autocomplete="off">
+    <button type="submit" class="m-search-go" aria-label="Ara">→</button>
+  </form>
+
+  <a class="mh-near-btn" href="/etrafimda">
+    <span class="mh-near-ico" aria-hidden="true">📍</span>
+    <span class="mh-near-copy">
+      <b>Etrafımda ne var?</b>
+      <small>Çevrendeki mekanlar · harita · filtre</small>
+    </span>
+    <span class="mh-near-go">→</span>
+  </a>
+
+  <div class="m-sec-h"><h2>Senin için seçtiklerimiz</h2><a href="/gezilecek">Tümü →</a></div>
+  <div class="m-hscroll">
+    {% for p in featured[:8] %}
+    <a class="m-place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+      <div class="m-place-img">{% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% endif %}<span class="m-place-price">★ {{ '%.1f'|format(p.rating or 4.8) }}</span></div>
+      <b>{{ p.title }}</b>
+      <small>{{ p.ilce or p.category_label or '' }}</small>
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="m-sec-h"><h2>Hızlı kategoriler</h2><a href="/kategoriler">Hepsi →</a></div>
+  <div class="m-cat-mini">
+    {% for c in categories[:6] %}
+    <a href="{{ c.path }}"><span>{{ cat_ico.get(c.key, '•') }}</span><b>{{ c.label }}</b></a>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="m-desktop-only">
 <section class="wa-hero">
   <div>
     <p class="wa-kicker">Explore</p>
     <h1>Bursa şehir rehberi: restoran, gezilecek yer, otel</h1>
     <p class="lead">Aynı rehber, üç niyet. Ücretsiz — rezervasyon ve bahis emri yok.</p>
     <div class="seo-cta">
-      <a class="pri" href="/yeme-icme">Yeme-içme</a>
+      <a class="pri" href="/etrafimda">📍 Etrafımda ne var</a>
+      <a class="ghost" href="/yeme-icme">Yeme-içme</a>
       <a class="ghost" href="/gezilecek">Gezilecek</a>
       <a class="ghost" href="/oteller">Oteller</a>
       <a class="ghost" href="https://wa.me/905535469948" target="_blank" rel="noopener noreferrer">WhatsApp</a>
@@ -99,7 +206,7 @@
 <section class="wa-sec" id="kategoriler">
   <div class="wa-sec-h">
     <h2>📂 Tüm kategoriler</h2>
-    <a href="/harita">Haritada gör →</a>
+    <a href="/etrafimda">Etrafımda ne var →</a>
   </div>
   <div class="wa-cat-groups">
     <div class="wa-cat-group">
@@ -159,13 +266,15 @@
     <p>İlham al — lezzetler, hafta sonu planları ve gizli köşeler.</p>
   </div>
   <div class="wa-stories">
-    <a class="wa-story" href="/blog/bursa-da-kahvalti-nerede">
-      <img src="{{ url_for('static', filename='food/kahvalti-1.jpg') }}" alt="Bursa kahvaltı rehberi">
-      <div><b>Bursa’da kahvaltı nerede?</b><i>Blog · how-to</i></div>
+    {% for slug, p in blog_teasers %}
+    <a class="wa-story" href="/blog/{{ slug }}">
+      <img src="{{ p.image }}" alt="{{ p.h1 }}">
+      <div><b>{{ p.h1 }}</b><i>Blog{% if p.kind %} · {{ p.kind }}{% endif %}</i></div>
     </a>
-    <a class="wa-story" href="/blog/bursa-1-gunluk-gezi-plani">
-      <img src="{{ url_for('static', filename='visit/ulu-cami.jpg') }}" alt="1 günde Bursa gezisi">
-      <div><b>1 günde Bursa: örnek rota</b><i>Blog · örnek</i></div>
+    {% endfor %}
+    <a class="wa-story" href="/blog" style="grid-column:span 1">
+      <div class="ph" style="display:flex;align-items:center;justify-content:center;height:100%;min-height:90px;background:var(--mint);font-size:28px">✍️</div>
+      <div><b>Tüm blog yazıları</b><i>{{ blog_total }} rehber</i></div>
     </a>
   </div>
 </section>
@@ -218,6 +327,7 @@
     <a class="wa-btn wa-btn-orange" href="/rota">Rotanı planla →</a>
   </div>
 </section>
+</div>
 <script>
 (function(){
   var form = document.getElementById('home-search');

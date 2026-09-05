@@ -32,6 +32,273 @@ CAT_BY_KEY = {c["key"]: c for c in CATEGORIES}
 CAT_BY_PATH = {c["path"]: c for c in CATEGORIES}
 CAT_KEYS = tuple(c["key"] for c in CATEGORIES)
 
+CAT_ICONS = {
+    "food": "🍽",
+    "visit": "🌿",
+    "hotel": "🏨",
+    "camp": "⛺",
+    "shop": "🛍",
+    "market": "🛒",
+    "sport": "💪",
+    "family": "👨‍👩‍👧",
+    "concert": "🎵",
+    "theater": "🎭",
+    "cinema": "🎬",
+    "fun": "🎳",
+    "event": "📅",
+    "org": "🏛",
+    "hospital": "🏥",
+    "doctor": "🩺",
+    "dentist": "🦷",
+    "vet": "🐾",
+    "school": "🎓",
+    "pharmacy": "💊",
+}
+
+# Mobil kategoriler — promosyon kartı stili (ton, vurgu, görsel)
+CAT_PROMO_META = {
+    "visit": {
+        "tone": "pink",
+        "pill_tone": "blue",
+        "before": "Keşfet ",
+        "pill": "cami & köy",
+        "after": " rotaları!",
+        "cta": "Listeyi aç",
+        "img": "visit/cumalikizik.jpg",
+    },
+    "food": {
+        "tone": "yellow",
+        "pill_tone": "orange",
+        "before": "Lezzet turu: ",
+        "pill": "İskender",
+        "after": " & kahvaltı",
+        "cta": "Mekanları gör",
+        "img": "visit/koza-han.jpg",
+    },
+    "hotel": {
+        "tone": "peach",
+        "pill_tone": "blue",
+        "before": "Konaklama: ",
+        "pill": "termal",
+        "after": " & şehir otelleri",
+        "cta": "Otellere bak",
+        "img": "visit/ulu-cami.jpg",
+    },
+    "camp": {
+        "tone": "mint",
+        "pill_tone": "blue",
+        "before": "Doğada ",
+        "pill": "kamp",
+        "after": " & karavan",
+        "cta": "Alanları keşfet",
+        "img": "visit/suuctu.jpg",
+    },
+    "shop": {
+        "tone": "sky",
+        "pill_tone": "orange",
+        "before": "Alışveriş: ",
+        "pill": "AVM",
+        "after": " & yerel dükkan",
+        "cta": "Mağazalara git",
+        "img": "visit/koza-han.jpg",
+    },
+    "market": {
+        "tone": "lemon",
+        "pill_tone": "orange",
+        "before": "Yakın ",
+        "pill": "market",
+        "after": " listesi",
+        "cta": "Marketleri gör",
+        "img": "visit/kale-sokak.jpg",
+    },
+    "sport": {
+        "tone": "lilac",
+        "pill_tone": "blue",
+        "before": "Aktif yaşam: ",
+        "pill": "fitness",
+        "after": " & spor salonu",
+        "cta": "Salonları bul",
+        "img": "visit/panorama-1326.jpg",
+    },
+    "family": {
+        "tone": "rose",
+        "pill_tone": "orange",
+        "before": "Aile için ",
+        "pill": "park",
+        "after": " & piknik",
+        "cta": "Planla",
+        "img": "visit/golyazi.jpg",
+    },
+    "concert": {
+        "tone": "blue",
+        "pill_tone": "orange",
+        "before": "Bu hafta ",
+        "pill": "konser",
+        "after": " & sahne",
+        "cta": "Bilet değil, rehber",
+        "img": "visit/panorama-1326.jpg",
+    },
+    "theater": {
+        "tone": "lavender",
+        "pill_tone": "blue",
+        "before": "Sahne: ",
+        "pill": "tiyatro",
+        "after": " oyunları",
+        "cta": "Oyunlara bak",
+        "img": "visit/muradiye.jpg",
+    },
+    "cinema": {
+        "tone": "indigo",
+        "pill_tone": "orange",
+        "before": "Vizyonda ",
+        "pill": "film",
+        "after": " & salonlar",
+        "cta": "Vizyona git",
+        "img": "visit/tophane.jpg",
+    },
+    "fun": {
+        "tone": "sand",
+        "pill_tone": "blue",
+        "before": "Gece & ",
+        "pill": "eğlence",
+        "after": " mekanları",
+        "cta": "Keşfet",
+        "img": "visit/kale-sokak.jpg",
+    },
+    "event": {
+        "tone": "aqua",
+        "pill_tone": "orange",
+        "before": "Takvimde ",
+        "pill": "etkinlik",
+        "after": " seç",
+        "cta": "Takvimi aç",
+        "img": "visit/yesil-turbe.jpg",
+    },
+    "org": {
+        "tone": "stone",
+        "pill_tone": "blue",
+        "before": "Festival & ",
+        "pill": "organizasyon",
+        "after": "",
+        "cta": "Listele",
+        "img": "visit/inkaya-cinari.jpg",
+    },
+    "hospital": {
+        "tone": "blush",
+        "pill_tone": "blue",
+        "before": "Sağlık: ",
+        "pill": "hastane",
+        "after": " rehberi",
+        "cta": "Hastaneler",
+        "img": "visit/muradiye.jpg",
+    },
+    "doctor": {
+        "tone": "blush",
+        "pill_tone": "orange",
+        "before": "Branşa göre ",
+        "pill": "doktor",
+        "after": " listesi",
+        "cta": "Doktorlar",
+        "img": "visit/ulu-cami.jpg",
+    },
+    "dentist": {
+        "tone": "ice",
+        "pill_tone": "blue",
+        "before": "Diş kliniği & ",
+        "pill": "ADSM",
+        "after": "",
+        "cta": "Klinikleri gör",
+        "img": "visit/yesil-turbe.jpg",
+    },
+    "vet": {
+        "tone": "mint",
+        "pill_tone": "orange",
+        "before": "Evcil dostlar: ",
+        "pill": "veteriner",
+        "after": "",
+        "cta": "Klinikler",
+        "img": "visit/golyazi.jpg",
+    },
+    "school": {
+        "tone": "butter",
+        "pill_tone": "blue",
+        "before": "Eğitim: ",
+        "pill": "okul",
+        "after": " rehberi",
+        "cta": "Okullar",
+        "img": "visit/tirilye.jpg",
+    },
+}
+
+PHARMACY_PROMO = {
+    "key": "pharmacy",
+    "path": "/nobetci-eczaneler",
+    "label": "Nöbetçi eczaneler",
+    "hint": "Bugünkü liste",
+    "tone": "ice",
+    "pill_tone": "orange",
+    "before": "Bugün ",
+    "pill": "nöbetçi",
+    "after": " eczane",
+    "cta": "Listeyi aç",
+    "img": "visit/koza-han.jpg",
+}
+
+
+def category_promo_cards():
+    """Mobil /kategoriler promosyon kartları (sıralı)."""
+    order = (
+        "visit",
+        "food",
+        "hotel",
+        "camp",
+        "concert",
+        "market",
+        "hospital",
+        "shop",
+        "sport",
+        "family",
+        "theater",
+        "cinema",
+        "fun",
+        "event",
+        "org",
+        "doctor",
+        "dentist",
+        "vet",
+        "school",
+    )
+    by_key = CAT_BY_KEY
+    cards = []
+    for key in order:
+        base = by_key.get(key)
+        if not base:
+            continue
+        meta = CAT_PROMO_META.get(key, {})
+        cards.append(
+            {
+                **base,
+                "icon": CAT_ICONS.get(key, "•"),
+                "title": base["label"].upper(),
+                "tone": meta.get("tone", "stone"),
+                "pill_tone": meta.get("pill_tone", "blue"),
+                "before": meta.get("before", ""),
+                "pill": meta.get("pill", base["label"].lower()),
+                "after": meta.get("after", ""),
+                "cta": meta.get("cta", "Listeyi aç"),
+                "img": meta.get("img", "visit/ulu-cami.jpg"),
+            }
+        )
+    cards.append(
+        {
+            **PHARMACY_PROMO,
+            "icon": CAT_ICONS["pharmacy"],
+            "title": PHARMACY_PROMO["label"].upper(),
+        }
+    )
+    return cards
+
+
 # Ana grup → (category, alt tür slug → etiket)
 MEKAN_TAXONOMY = {
     "food": (

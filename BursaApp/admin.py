@@ -310,9 +310,10 @@ def dashboard():
                 ActivityLog.kind == "place_submit", ActivityLog.created_at >= since
             ).count(),
         }
-        from analytics import summary as traffic_summary
+        from analytics import summary as traffic_summary, top_pages as traffic_top_pages
 
         traffic = traffic_summary(db, days=14)
+        page_traffic = traffic_top_pages(db, days=7, limit=30)
         kpi["today_visitors"] = traffic["today_visitors"]
         kpi["today_pageviews"] = traffic["today_pageviews"]
         kpi["d7_visitors"] = traffic["d7_visitors"]
@@ -342,12 +343,29 @@ def dashboard():
             .limit(8)
             .all()
         )
+        badges = _badge_counts(db)
+        badges["pending_campaigns"] = kpi["pending_campaigns"]
+        from admin_dashboard_charts import build_dashboard_charts
+
+        chart_data = build_dashboard_charts(
+            db,
+            traffic=traffic,
+            page_traffic=page_traffic,
+            by_cat=by_cat,
+            badges=badges,
+        )
+        login_stats = chart_data.get("logins") or {}
+        kpi["logins_today"] = int(login_stats.get("today") or 0)
+        kpi["logins_yesterday"] = int(login_stats.get("yesterday") or 0)
+        kpi["logins_14d"] = int(login_stats.get("total") or 0)
         return render_template(
             "admin/dashboard.html",
             kpi=kpi,
             traffic=traffic,
+            page_traffic=page_traffic,
             seo_status=seo_status,
             by_cat=by_cat,
+            chart_data=chart_data,
             recent_users=recent_users,
             recent_activity=recent_activity,
             pending=pending,
@@ -758,6 +776,9 @@ def visit_note_approve(vid: int):
         v = db.get(UserVisit, vid)
         if v:
             v.status = "approved"
+            from feed_social import ensure_visit_feed_post
+
+            ensure_visit_feed_post(db, v)
             db.commit()
             flash("Ziyaret notu onaylandı.", "ok")
         return redirect(request.referrer or "/admin/visit-notes?status=pending")

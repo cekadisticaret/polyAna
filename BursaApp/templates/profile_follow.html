@@ -1,0 +1,51 @@
+{% extends "_shell.html" %}
+{% block title %}{% if list_tab == 'followers' %}Takipçiler{% else %}Takip ettiklerim{% endif %} · BursaApp{% endblock %}
+{% block body_class %} is-feed-page{% endblock %}
+{% block page_head %}{% endblock %}
+{% block hello %}{% endblock %}
+{% block sub %}{% endblock %}
+
+{% block main %}
+<div class="ff-wrap ff-network-page">
+  <header class="ff-network-head">
+    <a class="ff-back" href="/feed" aria-label="Geri">←</a>
+    <div>
+      <h1>{{ u.name }}</h1>
+      <div class="ff-follow-stats">
+        <a class="{% if list_tab == 'following' %}on{% endif %}" href="/hesap/profil/takip?list=following"><b>{{ counts.following }}</b> takip</a>
+        <a class="{% if list_tab == 'followers' %}on{% endif %}" href="/hesap/profil/takip?list=followers"><b>{{ counts.followers }}</b> takipçi</a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="ff-tabs ff-network-tabs">
+    <a class="{% if list_tab == 'following' %}on{% endif %}" href="/hesap/profil/takip?list=following">Takip ettiklerim</a>
+    <a class="{% if list_tab == 'followers' %}on{% endif %}" href="/hesap/profil/takip?list=followers">Beni takip edenler</a>
+  </nav>
+
+  <div class="ff-card ff-panel">
+    {% if network %}
+    {% for fu in network %}
+    <div class="ff-follow" data-user-id="{{ fu.id }}">
+      <div class="ff-avatar sm">{% if fu.avatar_url %}<img src="{{ fu.avatar_url }}" alt="{{ fu.name }} profil fotoğrafı">{% else %}<span>{{ fu.name[0]|upper }}</span>{% endif %}</div>
+      <div class="ff-follow-meta"><b>{{ fu.name }}</b><small>{{ fu.handle }} · {{ fu.posts }} gönderi</small></div>
+      {% if not fu.is_self %}
+      <button type="button" class="ff-btn sm dark ff-follow-btn{% if fu.following %} is-on{% endif %}" data-user-id="{{ fu.id }}" data-following="{{ '1' if fu.following else '0' }}" aria-pressed="{{ 'true' if fu.following else 'false' }}">
+        {% if fu.following %}Takipte{% else %}Takip{% endif %}
+      </button>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="ff-muted">
+      {% if list_tab == 'followers' %}Henüz seni takip eden yok. Feed’de paylaşım yap veya toplulukta aktif ol.{% else %}Henüz kimseyi takip etmiyorsun. Feed’deki önerilerden başlayabilirsin.{% endif %}
+    </p>
+    {% endif %}
+  </div>
+
+  {% if network_has_more %}
+  <p class="ff-muted sm ff-network-more"><a href="/hesap/profil/takip?list={{ list_tab }}&offset={{ next_offset }}">Daha fazla yükle</a></p>
+  {% endif %}
+</div>
+{% include "_feed_actions.html" %}
+{% endblock %}

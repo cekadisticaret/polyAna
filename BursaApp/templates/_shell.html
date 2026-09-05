@@ -9,6 +9,7 @@
   <meta name="robots" content="{{ seo.robots if seo else 'index, follow, max-snippet:-1, max-image-preview:large' }}">
   <meta name="googlebot" content="{{ seo.robots if seo else 'index, follow, max-snippet:-1, max-image-preview:large' }}">
   <link rel="canonical" href="{% block canonical %}{{ seo.canonical if seo else site_url ~ request.path }}{% endblock %}">
+  <link rel="alternate" type="text/plain" href="{{ site_url }}/llms.txt" title="BursaApp LLM site guide">
   {% if seo and seo.hreflang %}
   <link rel="alternate" hreflang="{{ seo.hreflang }}" href="{{ seo.canonical }}">
   <link rel="alternate" hreflang="x-default" href="{{ seo.canonical }}">
@@ -61,7 +62,20 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
   {% block head %}{% endblock %}
 </head>
-<body class="is-mobile-app{% if nav=='hesap' %} is-feed{% endif %}{% block body_class %}{% endblock %}">
+<body class="is-mobile-app m-app-shell{% if nav=='hesap' %} is-feed{% endif %}{% block body_class %}{% endblock %}">
+<header class="m-top" aria-label="Üst bar">
+  <a class="m-top-user" href="{% if nav_user %}/hesap{% else %}/giris{% endif %}" rel="nofollow">
+    <span class="m-top-av">{% if nav_user and nav_user.avatar_url %}<img src="{{ nav_user.avatar_url }}" alt="{{ nav_user.name }} profil fotoğrafı">{% elif nav_user %}<span>{{ nav_user.name[0]|upper }}</span>{% else %}<span>👋</span>{% endif %}</span>
+    <span class="m-top-txt">
+      <small>{% if nav_user %}Hoş geldin{% else %}Merhaba{% endif %}</small>
+      <b>{% if nav_user %}{{ nav_user.name.split()[0] }}{% else %}BursaApp{% endif %}</b>
+    </span>
+  </a>
+  <div class="m-top-actions">
+    <a class="m-icon-btn" href="/kategoriler" aria-label="Ara">🔍</a>
+    <a class="m-icon-btn" href="{% if nav_user %}/hesap/bildirimler{% else %}/giris{% endif %}" aria-label="Bildirimler" rel="nofollow">🔔</a>
+  </div>
+</header>
 <div class="wa-wrap">
   <header class="wa-top">
     <a class="wa-brand" href="/">
@@ -78,7 +92,7 @@
       {% endif %}
       {% if nav_user %}
       <a class="wa-btn wa-btn-forest wa-user-btn" href="/hesap/profil" rel="nofollow">
-        {% if nav_user.avatar_url %}<img class="wa-user-avatar" src="{{ nav_user.avatar_url }}" alt="">{% endif %}
+        {% if nav_user.avatar_url %}<img class="wa-user-avatar" src="{{ nav_user.avatar_url }}" alt="{{ nav_user.name }} profil fotoğrafı">{% endif %}
         <span>{{ nav_user.name.split()[0] }}</span>
       </a>
       <a class="wa-btn wa-btn-ghost" href="/cikis" title="Çıkış" aria-label="Çıkış yap" rel="nofollow">Çıkış</a>
@@ -199,7 +213,29 @@
   </div>
 </footer>
 
-<nav class="wa-bottom" aria-label="Mobil menü">
+<nav class="m-tabbar" aria-label="Ana menü">
+  <a class="m-tab {{ 'on' if mobile_tab=='home' else '' }}" href="/">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    <span>Anasayfa</span>
+  </a>
+  <a class="m-tab {{ 'on' if mobile_tab=='feed' else '' }}" href="/feed">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11h16M4 6h16M4 16h10"/></svg>
+    <span>Feed</span>
+  </a>
+  <a class="m-tab m-tab-fab {{ 'on' if mobile_tab=='create' else '' }}" href="{% if nav_user %}/etkinlik/ekle{% else %}/giris?next=/etkinlik/ekle{% endif %}" title="Etkinlik oluştur" aria-label="Etkinlik oluştur">
+    <span>＋</span>
+  </a>
+  <a class="m-tab {{ 'on' if mobile_tab=='categories' else '' }}" href="/kategoriler">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Kategoriler</span>
+  </a>
+  <a class="m-tab {{ 'on' if mobile_tab=='profile' else '' }}" href="{% if nav_user %}/hesap{% else %}/giris?next=/hesap{% endif %}" rel="nofollow">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/></svg>
+    <span>Profil</span>
+  </a>
+</nav>
+
+<nav class="wa-bottom wa-bottom-legacy" aria-hidden="true">
   <a class="{{ 'on' if nav=='kesfet' else '' }}" href="/">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
     Ana

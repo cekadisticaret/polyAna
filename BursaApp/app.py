@@ -5,6 +5,7 @@ from __future__ import annotations
 import calendar
 import os
 from datetime import datetime
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 from flask import Flask, flash, jsonify, redirect, render_template, request, send_from_directory, Response
@@ -124,10 +125,115 @@ app.register_blueprint(features_bp)
 init_db()
 
 
+def _mobile_tab() -> str:
+    """Alt sekme çubuğu — ana uygulama rotaları."""
+    path = request.path or ""
+    if path in ("/", "/kesfet", "/etrafimda") or path.startswith("/harita"):
+        return "home"
+    if path.startswith("/feed"):
+        return "feed"
+    if path.startswith("/etkinlik/ekle"):
+        return "create"
+    if path.startswith("/kategoriler"):
+        return "categories"
+    if path.startswith("/hesap"):
+        return "profile"
+    return ""
+
+
+def _wants_json() -> bool:
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return True
+    best = request.accept_mimetypes.best_match(["application/json", "text/html"])
+    return best == "application/json"
+
+
 @app.errorhandler(413)
 def _upload_too_large(_e):
     flash("Dosya çok büyük (en fazla 12 MB). Daha küçük bir fotoğraf dene.", "err")
     return redirect(request.referrer or "/hesap/ayarlar")
+
+
+@app.errorhandler(404)
+def _not_found(_e):
+    from seo import page as seo_page
+
+    path = request.path or "/404"
+    seo = seo_page(
+        title="Sayfa bulunamadı",
+        description="Aradığınız sayfa BursaApp rehberinde yok. Ana sayfa veya kategorilerden devam edin.",
+        path=path,
+        noindex=True,
+        breadcrumbs=[("Ana Sayfa", "/"), ("Sayfa bulunamadı", path)],
+    )
+    return render_template("404.html", nav="", seo=seo), 404
+
+
+_TESSEKKUR = {
+    "email": {
+        "title": "E-posta onaylandı",
+        "subtitle": "Hesabın aktif",
+        "body": "Teşekkürler — artık yorum yazabilir, favorilerini kaydedebilir ve profilini düzenleyebilirsin.",
+        "next": "/hesap/profil",
+        "next_label": "Profilim",
+        "hint": "",
+    },
+    "kayit": {
+        "title": "Kayıt tamam",
+        "subtitle": "Hoş geldin",
+        "body": "Üyeliğin oluşturuldu. E-postandaki onay linkine bas; onayladıktan sonra yorum yazabilirsin.",
+        "next": "/hesap/ayarlar",
+        "next_label": "E-posta ayarları",
+        "hint": "Mail gelmediyse spam klasörünü kontrol et veya ayarlardan tekrar gönder.",
+    },
+    "sahiplen": {
+        "title": "Talebin alındı",
+        "subtitle": "İnceleniyor",
+        "body": "Sahiplenme belgelerin admin ekibine iletildi. Sonuç e-posta veya bildirimle paylaşılacak.",
+        "next": "",
+        "next_label": "Devam et",
+        "hint": "",
+    },
+    "yorum": {
+        "title": "Yorum gönderildi",
+        "subtitle": "Onay bekliyor",
+        "body": "Değerlendirmen alındı. Admin onayından sonra yer sayfasında yayınlanacak.",
+        "next": "",
+        "next_label": "Yer sayfasına dön",
+        "hint": "",
+    },
+    "default": {
+        "title": "Teşekkürler",
+        "subtitle": "İşlem tamam",
+        "body": "Talebin kaydedildi. BursaApp rehberinde keşfe devam edebilirsin.",
+        "next": "/",
+        "next_label": "Ana sayfa",
+        "hint": "",
+    },
+}
+
+
+@app.route("/tesekkur")
+def tesekkur_page():
+    from seo import for_tesekkur
+
+    kind = (request.args.get("from") or "default").strip().lower()
+    row = _TESSEKKUR.get(kind) or _TESSEKKUR["default"]
+    nxt = _safe_next(request.args.get("next"), row.get("next") or "")
+    if not nxt and row.get("next"):
+        nxt = row["next"]
+    next_label = (request.args.get("label") or row.get("next_label") or "Devam et").strip()[:40]
+    return render_template(
+        "tesekkur.html",
+        nav="",
+        seo=for_tesekkur(),
+        tks_title=row["title"],
+        tks_subtitle=row["subtitle"],
+        tks_body=row["body"],
+        tks_next=nxt,
+        tks_next_label=next_label,
+        tks_hint=row.get("hint") or "",
+    )
 
 
 @app.context_processor
@@ -159,6 +265,7 @@ def _inject():
         "wa_phone": PHONE_DISPLAY,
         "wa_url": WHATSAPP_URL,
         "static_v": _static_asset_v(),
+        "mobile_tab": _mobile_tab(),
     }
 
 
@@ -177,7 +284,12 @@ def _cache_headers(resp):
         else:
             resp.headers["Cache-Control"] = "public, max-age=86400"
         return resp
-    if path.startswith("/sitemap") or path in ("/favicon.ico", "/robots.txt", "/llms.txt"):
+    if path.startswith("/sitemap") or path in (
+        "/favicon.ico",
+        "/robots.txt",
+        "/llms.txt",
+        "/llms-full.txt",
+    ) or path.startswith("/.well-known/"):
         resp.headers["Cache-Control"] = "public, max-age=3600"
         return resp
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
@@ -207,32 +319,38 @@ def favicon():
 
 @app.route("/robots.txt")
 def robots_txt():
-    from seo import site_base
+    from ai_seo import robots_txt_body
 
-    base = site_base()
-    body = (
-        "User-agent: *\n"
-        "Allow: /\n"
-        "Disallow: /admin\n"
-        "Disallow: /hesap\n"
-        "Disallow: /giris\n"
-        "Disallow: /kayit\n"
-        "Disallow: /cikis\n"
-        "Disallow: /isletme\n"
-        "Disallow: /api/\n"
-        "Disallow: /uploads/\n"
-        "Disallow: /*?*lat=\n"
-        "Disallow: /*?*lng=\n"
-        f"Sitemap: {base}/sitemap.xml\n"
-    )
-    return Response(body, mimetype="text/plain; charset=utf-8")
+    return Response(robots_txt_body(), mimetype="text/plain; charset=utf-8")
 
 
 @app.route("/llms.txt")
+@app.route("/.well-known/llms.txt")
 def llms_txt():
-    from seo_arch import llms_txt as _llms
+    from models import SessionLocal
 
-    return Response(_llms(), mimetype="text/plain; charset=utf-8")
+    from ai_seo import llms_txt as _llms
+
+    db = SessionLocal()
+    try:
+        body = _llms(db)
+    finally:
+        db.close()
+    return Response(body, mimetype="text/plain; charset=utf-8")
+
+
+@app.route("/llms-full.txt")
+def llms_full_txt():
+    from models import SessionLocal
+
+    from ai_seo import llms_full_txt as _full
+
+    db = SessionLocal()
+    try:
+        body = _full(db)
+    finally:
+        db.close()
+    return Response(body, mimetype="text/plain; charset=utf-8")
 
 
 @app.route("/sitemap.xml")
@@ -414,6 +532,7 @@ def home():
         place_count = db.query(Place).filter(Place.status == "approved").count()
         cal = _cal(_month_shows(db))
         from seo import for_home
+        from blog_posts import BLOG_POSTS, blog_posts_sorted
 
         return render_template(
             "home.html",
@@ -424,6 +543,8 @@ def home():
             place_count=place_count,
             nav="kesfet",
             seo=for_home(),
+            blog_teasers=blog_posts_sorted()[:4],
+            blog_total=len(BLOG_POSTS),
             **hub,
             **cal,
         )
@@ -436,14 +557,94 @@ def kesfet_redirect():
     return redirect("/", 301)
 
 
+@app.route("/kategoriler")
+def kategoriler_page():
+    from catalog import CAT_ICONS, category_promo_cards
+
+    return render_template(
+        "mobile_categories.html",
+        cat_ico=CAT_ICONS,
+        promo_cards=category_promo_cards(),
+        nav="categories",
+    )
+
+
+@app.route("/feed")
+def feed_page():
+    from feed_social import (
+        FEED_PAGE_SIZE,
+        build_feed,
+        feed_picker_places,
+        follow_counts,
+        profile_feed,
+        suggest_follow_users,
+        upcoming_events,
+    )
+
+    user = load_user()
+    tab = (request.args.get("tab") or "recents").strip().lower()
+    if tab not in ("recents", "friends", "popular"):
+        tab = "recents"
+    if tab == "friends" and not user:
+        tab = "recents"
+    db = SessionLocal()
+    try:
+        if user:
+            u = db.get(User, user.id)
+            if not u:
+                return redirect("/giris?next=/feed")
+            feed, feed_has_more = profile_feed(db, u, tab, limit=FEED_PAGE_SIZE, offset=0)
+            picker_places = feed_picker_places(db, u.id, limit=20)
+            follow_suggestions = suggest_follow_users(db, u.id, limit=5)
+            social_counts = follow_counts(db, u.id)
+        else:
+            u = None
+            feed, feed_has_more = build_feed(db, viewer=None, tab=tab, limit=FEED_PAGE_SIZE, offset=0)
+            picker_places = []
+            follow_suggestions = []
+            social_counts = {"following": 0, "followers": 0}
+        events = upcoming_events(db, 6)
+        resp = app.make_response(
+            render_template(
+                "mobile_feed.html",
+                u=u,
+                tab=tab,
+                feed=feed,
+                feed_has_more=feed_has_more,
+                picker_places=picker_places,
+                follow_suggestions=follow_suggestions,
+                social_counts=social_counts,
+                events=events,
+                nav="feed",
+            )
+        )
+        resp.headers["Cache-Control"] = "private, no-store"
+        return resp
+    finally:
+        db.close()
+
+
 @app.route("/blog")
 def blog_hub():
     from seo import for_blog_hub
-    from seo_arch import BLOG_POSTS
+    from blog_posts import BLOG_KINDS, BLOG_POSTS, blog_posts_sorted
 
+    kind = (request.args.get("kind") or "").strip()
+    if kind and kind not in BLOG_KINDS:
+        kind = ""
+    kind_counts: dict[str, int] = {}
+    for p in BLOG_POSTS.values():
+        k = p.get("kind") or ""
+        if k:
+            kind_counts[k] = kind_counts.get(k, 0) + 1
+    posts = blog_posts_sorted(kind=kind or None)
     return render_template(
         "blog/index.html",
-        posts=BLOG_POSTS.items(),
+        posts=posts,
+        total_all=len(BLOG_POSTS),
+        kind_filter=kind,
+        kind_counts=kind_counts,
+        blog_kinds=BLOG_KINDS,
         nav="blog",
         seo=for_blog_hub(),
     )
@@ -452,7 +653,7 @@ def blog_hub():
 @app.route("/blog/<slug>")
 def blog_post(slug: str):
     from seo import for_blog_post
-    from seo_arch import BLOG_POSTS
+    from blog_posts import BLOG_KINDS, BLOG_POSTS
 
     post = BLOG_POSTS.get(slug)
     seo = for_blog_post(slug)
@@ -462,6 +663,7 @@ def blog_post(slug: str):
         "blog/post.html",
         slug=slug,
         post=post,
+        blog_kinds=BLOG_KINDS,
         nav="blog",
         seo=seo,
     )
@@ -659,7 +861,7 @@ def veterinerler():
                 ilce=ilce or None,
                 subcategory=sub or None,
                 order="rating",
-                limit=120,
+                limit=500,
             )
             places = [place_public(p) for p in rows]
             groups = _health_ilce_groups(places)
@@ -1350,6 +1552,11 @@ def _visit_href(**upd) -> str:
     return "/gezilecek" + (("?" + qs) if qs else "")
 
 
+@app.route("/gezilecek-yerler")
+def gezilecek_yerler_redirect():
+    return redirect("/gezilecek", 301)
+
+
 @app.route("/yeme-icme")
 @app.route("/gezilecek")
 @app.route("/alisveris")
@@ -1995,8 +2202,7 @@ def yer_yorum(slug: str):
         # puan yalnız onaylı yorumlardan — pending skoru etkilemez
         recompute_place_rating(db, p)
         db.commit()
-        flash("Yorumun alındı — admin onayından sonra yayınlanır.", "ok")
-        return redirect(dest)
+        return redirect("/tesekkur?from=yorum&next=" + quote(dest, safe="") + "&label=" + quote("Yer sayfasına dön", safe=""))
     finally:
         db.close()
 
@@ -2163,18 +2369,13 @@ def kayit():
                             pass
                         login_user(u)
                         if result.get("ok"):
-                            flash(
-                                f"Kayıt tamam — e-postandaki onay linkine bas. "
-                                f"{VERIFY_DAYS} gün içinde onaylamazsan üyelik iptal edilir.",
-                                "ok",
-                            )
-                        else:
-                            flash(
+                            return redirect("/tesekkur?from=kayit")
+                        flash(
                                 "Kayıt tamam ama onay maili gönderilemedi. "
                                 "Biraz sonra Ayarlar’dan tekrar dene; spam klasörünü de kontrol et.",
                                 "err",
                             )
-                        return redirect("/hesap/profil")
+                        return redirect("/tesekkur?from=kayit")
                 finally:
                     db.close()
     return render_template("auth.html", mode="kayit", err=err, next="", nav="auth")
@@ -2189,55 +2390,76 @@ def cikis():
 @app.route("/hesap")
 @login_required
 def hesap():
+    from feed_social import album_photos, post_images
+    from models import EventGoing, Favorite, PlacePhoto, UserPost, UserVisit
+
     user = load_user()
+    tab = (request.args.get("tab") or "media").strip().lower()
+    if tab not in ("about", "posts", "media"):
+        tab = "media"
     db = SessionLocal()
     try:
         rows = db.query(Place).filter(Place.submitted_by_id == user.id).order_by(Place.id.desc()).all()
         u = db.get(User, user.id)
-        return render_template("account.html", places=rows, points=u.loyalty_points if u else 0, nav="hesap")
+        if not u:
+            flash("Oturum geçersiz", "err")
+            return redirect("/giris")
+        posts_n = (
+            db.query(UserPost)
+            .filter(UserPost.user_id == u.id, UserPost.status == "approved")
+            .count()
+        )
+        favs_n = db.query(Favorite).filter(Favorite.user_id == u.id).count()
+        visits_n = db.query(UserVisit).filter(UserVisit.user_id == u.id).count()
+        going_n = db.query(EventGoing).filter(EventGoing.user_id == u.id).count()
+        likes_total = sum(
+            int(p.likes_count or 0)
+            for p in db.query(UserPost).filter(UserPost.user_id == u.id).all()
+        )
+        album = album_photos(db, u.id, limit=36)
+        user_posts = []
+        for post in (
+            db.query(UserPost)
+            .filter(UserPost.user_id == u.id)
+            .order_by(UserPost.id.desc())
+            .limit(24)
+            .all()
+        ):
+            imgs = post_images(post)
+            user_posts.append(
+                {
+                    "id": post.id,
+                    "body": (post.body or "")[:120],
+                    "images": imgs,
+                    "thumb": imgs[0] if imgs else "",
+                    "likes": int(post.likes_count or 0),
+                    "status": post.status,
+                    "created": post.created_at,
+                }
+            )
+        return render_template(
+            "account.html",
+            u=u,
+            tab=tab,
+            places=rows,
+            points=int(u.loyalty_points or 0),
+            posts_n=posts_n,
+            favs_n=favs_n,
+            visits_n=visits_n,
+            going_n=going_n,
+            likes_total=likes_total,
+            album=album,
+            user_posts=user_posts,
+            nav="hesap",
+        )
     finally:
         db.close()
 
 
 def _profile_follow_suggestions(db, user_id: int, *, limit: int = 3) -> list[dict]:
-    """Profil sidebar — sanal üye önerileri (JSON + DB, import cache'e takılmaz)."""
-    import json as _json
+    from feed_social import suggest_follow_users
 
-    from models import UserPost
-
-    path = os.path.join(_DIR, "data", "virtual_users.json")
-    try:
-        personas = _json.loads(open(path, encoding="utf-8").read())
-    except Exception:
-        personas = []
-    emails = [p["email"].lower() for p in personas if p.get("email")]
-    legacy = [f"{p['slug']}.sanal@bursaapp.com" for p in personas if p.get("slug")]
-    all_emails = list(dict.fromkeys(emails + legacy))
-    if not all_emails:
-        return []
-    rows = (
-        db.query(User)
-        .filter(User.email.in_(all_emails), User.id != user_id)
-        .order_by(User.id.asc())
-        .all()
-    )
-    scored: list[tuple[int, User]] = []
-    for u in rows:
-        posts_n = db.query(UserPost).filter(UserPost.user_id == u.id).count()
-        scored.append((posts_n, u))
-    scored.sort(key=lambda x: (-x[0], x[1].id))
-    out: list[dict] = []
-    for posts_n, u in scored[:limit]:
-        out.append(
-            {
-                "id": u.id,
-                "name": u.name,
-                "handle": u.handle(),
-                "avatar_url": u.avatar_url or "",
-                "posts": posts_n,
-            }
-        )
-    return out
+    return suggest_follow_users(db, user_id, limit=limit)
 
 
 @app.route("/hesap/profil")
@@ -2248,6 +2470,7 @@ def hesap_profil():
         build_feed,
         profile_feed,
         FEED_PAGE_SIZE,
+        follow_counts,
         going_count,
         suggest_places,
         suggest_top_restaurants,
@@ -2309,6 +2532,7 @@ def hesap_profil():
                 visit_places.append(_place_card(p))
         picker_places = feed_picker_places(db, u.id, limit=20)
         follow_suggestions = _profile_follow_suggestions(db, u.id, limit=3)
+        social_counts = follow_counts(db, u.id)
         resp = app.make_response(
             render_template(
             "profile_feed.html",
@@ -2323,6 +2547,7 @@ def hesap_profil():
             suggest=suggest_places(db, 8),
             restaurant_suggest=suggest_top_restaurants(db, 6),
             follow_suggestions=follow_suggestions,
+            social_counts=social_counts,
             picker_places=picker_places,
             events=upcoming_events(db, 8),
             visit_places=visit_places,
@@ -2336,9 +2561,8 @@ def hesap_profil():
 
 
 @app.route("/hesap/profil/feed")
-@login_required
 def hesap_profil_feed():
-    from feed_social import FEED_PAGE_SIZE, profile_feed, PROFILE_FEED_TABS
+    from feed_social import FEED_PAGE_SIZE, profile_feed, PROFILE_FEED_TABS, build_feed
 
     tab = (request.args.get("tab") or "recents").strip().lower()
     if tab not in PROFILE_FEED_TABS:
@@ -2347,10 +2571,16 @@ def hesap_profil_feed():
     limit = min(20, max(1, int(request.args.get("limit") or FEED_PAGE_SIZE)))
     db = SessionLocal()
     try:
-        u = db.get(User, load_user().id)
-        if not u:
-            return {"html": "", "has_more": False, "next_offset": 0}, 401
-        feed, has_more = profile_feed(db, u, tab, limit=limit, offset=offset)
+        user = load_user()
+        if user:
+            u = db.get(User, user.id)
+            if not u:
+                return {"html": "", "has_more": False, "next_offset": 0}, 401
+            feed, has_more = profile_feed(db, u, tab, limit=limit, offset=offset)
+        else:
+            if tab not in ("recents", "popular"):
+                return {"html": "", "has_more": False, "next_offset": 0}, 401
+            feed, has_more = build_feed(db, viewer=None, tab=tab, limit=limit, offset=offset)
         html = render_template("_feed_items.html", feed=feed, tone_offset=offset, show_empty=offset == 0)
         return {
             "html": html,
@@ -2513,6 +2743,7 @@ def hesap_profil_post():
 @app.route("/hesap/profil/ziyaret", methods=["POST"])
 @login_required
 def hesap_profil_ziyaret():
+    from feed_social import ensure_visit_feed_post
     from models import UserVisit
 
     user = load_user()
@@ -2545,8 +2776,79 @@ def hesap_profil_ziyaret():
                 f"{place.title} eklendi." + (" Notun onay bekliyor." if visit_status == "pending" else ""),
                 "ok",
             )
+        db.flush()
+        vis = db.query(UserVisit).filter(UserVisit.user_id == user.id, UserVisit.place_id == place.id).first()
+        if vis and vis.status == "approved":
+            ensure_visit_feed_post(db, vis)
         db.commit()
         return redirect("/hesap/profil?tab=visits")
+    finally:
+        db.close()
+
+
+@app.route("/hesap/profil/takip/<int:target_id>", methods=["POST"])
+@login_required
+def hesap_profil_takip(target_id: int):
+    from feed_social import follow_toggle
+
+    user = load_user()
+    if target_id == user.id:
+        if _wants_json():
+            return {"ok": False, "error": "Kendini takip edemezsin."}, 400
+        flash("Kendini takip edemezsin.", "err")
+        return redirect(request.referrer or "/hesap/profil")
+    db = SessionLocal()
+    try:
+        try:
+            following = follow_toggle(db, user.id, target_id)
+        except LookupError:
+            if _wants_json():
+                return {"ok": False, "error": "Kullanıcı bulunamadı."}, 404
+            flash("Kullanıcı bulunamadı.", "err")
+            return redirect(request.referrer or "/hesap/profil")
+        db.commit()
+        if _wants_json():
+            return {"ok": True, "following": following, "user_id": target_id}
+        flash("Takip edildi." if following else "Takip bırakıldı.", "ok")
+        return redirect(request.referrer or "/hesap/profil?tab=friends")
+    finally:
+        db.close()
+
+
+@app.route("/hesap/profil/takip")
+@login_required
+def hesap_profil_takip_liste():
+    from feed_social import follow_counts, follow_network
+
+    user = load_user()
+    list_tab = (request.args.get("list") or "following").strip().lower()
+    if list_tab not in ("following", "followers"):
+        list_tab = "following"
+    offset = max(0, int(request.args.get("offset") or 0))
+    db = SessionLocal()
+    try:
+        u = db.get(User, user.id)
+        if not u:
+            return redirect("/giris?next=/hesap/profil/takip")
+        network, has_more = follow_network(
+            db,
+            u.id,
+            list_kind=list_tab,
+            viewer_id=u.id,
+            limit=40,
+            offset=offset,
+        )
+        counts = follow_counts(db, u.id)
+        return render_template(
+            "profile_follow.html",
+            u=u,
+            list_tab=list_tab,
+            network=network,
+            network_has_more=has_more,
+            next_offset=offset + len(network),
+            counts=counts,
+            nav="feed",
+        )
     finally:
         db.close()
 
@@ -2561,17 +2863,81 @@ def hesap_profil_like(post_id: int):
     try:
         post = db.get(UserPost, post_id)
         if not post or post.status != "approved":
+            if _wants_json():
+                return {"ok": False, "error": "Gönderi bulunamadı."}, 404
             flash("Gönderi bulunamadı veya henüz onaylanmadı.", "err")
             return redirect("/hesap/profil")
         like = db.query(PostLike).filter(PostLike.user_id == user.id, PostLike.post_id == post_id).first()
+        liked = False
         if like:
             db.delete(like)
             post.likes_count = max(0, int(post.likes_count or 0) - 1)
         else:
             db.add(PostLike(user_id=user.id, post_id=post_id))
             post.likes_count = int(post.likes_count or 0) + 1
+            liked = True
         db.commit()
+        if _wants_json():
+            return {"ok": True, "liked": liked, "likes": int(post.likes_count or 0)}
         return redirect(request.referrer or "/hesap/profil")
+    finally:
+        db.close()
+
+
+@app.route("/hesap/profil/comment/<int:post_id>", methods=["POST"])
+@login_required
+def hesap_profil_comment(post_id: int):
+    from content_filter import filter_profanity, profanity_ok
+    from models import PostComment, UserPost
+
+    user = load_user()
+    raw = (request.form.get("body") or "").strip()[:500]
+    if not raw:
+        if _wants_json():
+            return {"ok": False, "error": "Yorum boş olamaz."}, 400
+        flash("Yorum boş olamaz.", "err")
+        return redirect(request.referrer or "/feed")
+    if not rate_ok("feed_comment", limit=30):
+        if _wants_json():
+            return {"ok": False, "error": "Çok sık deneme. Biraz bekle."}, 429
+        flash("Çok sık deneme. Biraz bekle.", "err")
+        return redirect(request.referrer or "/feed")
+
+    body = filter_profanity(raw)
+    if not profanity_ok(body):
+        if _wants_json():
+            return {"ok": False, "error": "Yorum uygun değil."}, 400
+        flash("Yorum uygun değil.", "err")
+        return redirect(request.referrer or "/feed")
+
+    db = SessionLocal()
+    try:
+        post = db.get(UserPost, post_id)
+        if not post or post.status != "approved":
+            if _wants_json():
+                return {"ok": False, "error": "Gönderi bulunamadı."}, 404
+            flash("Gönderi bulunamadı.", "err")
+            return redirect(request.referrer or "/feed")
+        comment = PostComment(post_id=post_id, user_id=user.id, body=body, status="approved")
+        db.add(comment)
+        post.comments_count = int(post.comments_count or 0) + 1
+        db.commit()
+        db.refresh(comment)
+        u = db.get(User, user.id)
+        payload = {
+            "ok": True,
+            "comment": {
+                "id": comment.id,
+                "user_name": u.display_name() if u else (user.name or "Üye"),
+                "body": body,
+                "ago": "az önce",
+            },
+            "comments": int(post.comments_count or 0),
+        }
+        if _wants_json():
+            return payload
+        flash("Yorumun yayınlandı.", "ok")
+        return redirect(request.referrer or "/feed")
     finally:
         db.close()
 
@@ -2623,8 +2989,7 @@ def hesap_email_onay():
         u.email_token = ""
         db.commit()
         login_user(u)
-        flash("E-posta onaylandı. Teşekkürler!", "ok")
-        return redirect("/hesap")
+        return redirect("/tesekkur?from=email")
     finally:
         db.close()
 

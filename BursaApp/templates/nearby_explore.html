@@ -1,0 +1,154 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else 'Çevremde ne var · BursaApp' }}{% endblock %}
+{% block body_class %} is-near-explore{% endblock %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="{{ url_for('static', filename='nearby-explore.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block main %}
+{% set cat_ico = {
+  'food':'🍽','visit':'🌿','hotel':'🏨','camp':'⛺','shop':'🛍','market':'🛒',
+  'sport':'💪','family':'👨‍👩‍👧','concert':'🎵','theater':'🎭','cinema':'🎬','fun':'🎳',
+  'event':'📅','hospital':'🏥','vet':'🐾','school':'🎓'
+} %}
+<div class="nx-shell">
+  <header class="nx-top">
+    <a class="nx-back" href="/" aria-label="Ana sayfa">←</a>
+    <form class="nx-search" action="/etrafimda" method="get">
+      <span aria-hidden="true">🔍</span>
+      <input name="q" value="{{ q|default('') }}" placeholder="Haritada ara…" autocomplete="off">
+      {% if not used_fallback %}
+      <input type="hidden" name="lat" value="{{ '%.5f'|format(lat) }}">
+      <input type="hidden" name="lng" value="{{ '%.5f'|format(lng) }}">
+      {% endif %}
+      {% if cat %}<input type="hidden" name="cat" value="{{ cat }}">{% endif %}
+      {% if radius_m %}<input type="hidden" name="r" value="{{ radius_m }}">{% endif %}
+    </form>
+    <button type="button" class="nx-icon-btn" id="nx-toggle-list" aria-label="Liste / harita" title="Liste">☰</button>
+    <button type="button" class="nx-icon-btn" data-nx-geo aria-label="Konumum">📍</button>
+  </header>
+
+  {% if used_fallback %}
+  <p class="nx-loc-banner" id="nx-loc-banner">📍 Konumun alınıyor…</p>
+  {% elif not used_fallback %}
+  <p class="nx-loc-banner">📍 Konumuna göre · {{ total }} mekan{% if q %} · “{{ q }}”{% endif %}{% if radius_m %} · {% if radius_m >= 1000 %}{{ radius_m // 1000 }} km{% else %}{{ radius_m }} m{% endif %} yarıçap{% endif %}</p>
+  {% endif %}
+
+  <div class="nx-filters" aria-label="Kategori filtresi">
+    <a class="nx-pill {{ 'on' if not cat else '' }}" href="{{ map_query(cat='', lat=lat, lng=lng, near=True, radius_m=radius_m, q=q) }}">Tümü</a>
+    {% for key, label in map_categories %}
+    {% if key %}
+    <a class="nx-pill {{ 'on' if cat == key else '' }}" href="{{ map_query(cat=key, lat=lat, lng=lng, near=True, radius_m=radius_m, q=q) }}">{{ label }}</a>
+    {% endif %}
+    {% endfor %}
+    <button type="button" class="nx-pill nx-pill-geo" data-nx-geo>📍 Konumum</button>
+  </div>
+
+  <div class="nx-mobile-dist nx-filters" aria-label="Mesafe filtresi">
+    {% for r_val, r_label in map_radius_options %}
+    <a class="nx-pill {{ 'on' if radius_m == r_val else '' }}" href="{{ map_query(cat=cat, lat=lat, lng=lng, near=True, radius_m=r_val, q=q) }}">{{ r_label }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="nx-stage" id="nx-stage">
+    <aside class="nx-rail-left">
+      <div class="nx-spot-card dark">
+        <span class="nx-spot-tag">Çevremde ne var</span>
+        <h2>{{ total }} mekan</h2>
+        <p>{% if radius_m %}{% if radius_m >= 1000 %}{{ radius_m // 1000 }} km{% else %}{{ radius_m }} m{% endif %} yarıçap{% else %}Sınırsız{% endif %} · en yakından</p>
+        <button type="button" class="nx-spot-add" data-nx-geo aria-label="Konumumu güncelle">+</button>
+      </div>
+      <div class="nx-list" id="nx-list">
+        {% for p in pins[:24] %}
+        <button type="button" class="nx-place" data-idx="{{ loop.index0 }}">
+          <span class="nx-place-av">
+            {% if p.img_url %}<img src="{{ p.img_url }}" alt="" loading="lazy">{% else %}{{ cat_ico.get(p.category, '📍') }}{% endif %}
+          </span>
+          <span>
+            <b>{{ p.title }}</b>
+            <small>{{ p.category_label or p.category }}{% if p.rating %} · ★ {{ '%.1f'|format(p.rating) }}{% endif %}</small>
+          </span>
+          <span class="nx-badge">{% if p.distance_m >= 1000 %}{{ '%.1f'|format(p.distance_m / 1000) }} km{% else %}{{ p.distance_m }} m{% endif %}</span>
+        </button>
+        {% else %}
+        <p class="nx-empty">Bu filtrede yakın mekan yok.<br>Mesafeyi genişlet veya kategoriyi değiştir.</p>
+        {% endfor %}
+      </div>
+    </aside>
+
+    <div class="nx-canvas">
+      <div id="nx-map" class="nx-map" role="img" aria-label="Yakın mekanlar haritası"></div>
+    </div>
+
+    <aside class="nx-rail-detail" id="nx-detail" aria-label="Seçili mekan">
+      <div class="nx-detail-empty" id="nx-detail-empty">
+        <span class="nx-detail-empty-ico">📍</span>
+        <p>Haritadan veya listeden bir mekan seçin</p>
+      </div>
+      <div class="nx-detail-panel" id="nx-detail-panel" hidden>
+        <div class="nx-detail-media" id="nx-detail-media">
+          <div class="nx-detail-hero" id="nx-detail-hero">
+            <img id="nx-detail-img" src="" alt="" loading="lazy">
+            <span class="nx-detail-hero-ph" id="nx-detail-ph" hidden>📍</span>
+          </div>
+          <div class="nx-detail-thumbs" id="nx-detail-thumbs" hidden></div>
+        </div>
+        <div class="nx-detail-scroll">
+          <div class="nx-detail-head">
+            <span class="nx-detail-kicker">Seçili mekan</span>
+            <button type="button" class="nx-detail-close" id="nx-detail-close" aria-label="Seçimi kaldır">×</button>
+          </div>
+          <h3 id="nx-detail-title">—</h3>
+          <p class="nx-detail-meta" id="nx-detail-meta">—</p>
+          <p class="nx-detail-blurb" id="nx-detail-blurb" hidden></p>
+          <dl class="nx-detail-facts">
+            <div class="nx-fact" id="nx-fact-address" hidden>
+              <dt>Adres</dt>
+              <dd id="nx-detail-address"></dd>
+            </div>
+            <div class="nx-fact" id="nx-fact-hours" hidden>
+              <dt>Saatler</dt>
+              <dd id="nx-detail-hours"></dd>
+            </div>
+            <div class="nx-fact" id="nx-fact-phone" hidden>
+              <dt>Telefon</dt>
+              <dd><a id="nx-detail-phone" href="#"></a></dd>
+            </div>
+            <div class="nx-fact" id="nx-fact-web" hidden>
+              <dt>Web</dt>
+              <dd><a id="nx-detail-web" href="#" target="_blank" rel="noopener"></a></dd>
+            </div>
+          </dl>
+          <a class="nx-detail-go" id="nx-detail-go" href="#">Detay sayfası →</a>
+        </div>
+      </div>
+    </aside>
+
+    <aside class="nx-rail-right" aria-label="Mesafe">
+      <div class="nx-time-rail">
+        {% for r_val, r_label in map_radius_options %}
+        <a class="nx-dist {{ 'on' if radius_m == r_val else '' }}" href="{{ map_query(cat=cat, lat=lat, lng=lng, near=True, radius_m=r_val, q=q) }}">
+          <span class="nx-dist-dot"></span>
+          <span>{{ r_label }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+window.__NX_NEAR__ = {
+  pins: {{ pins_json|safe }},
+  lat: {{ lat }},
+  lng: {{ lng }},
+  radiusM: {{ radius_m|int }},
+  usedFallback: {{ used_fallback|tojson }},
+  cat: {{ cat|tojson }},
+  tiles: {{ map_tiles|tojson }}
+};
+</script>
+<script src="{{ url_for('static', filename='nearby-explore.js') }}?v={{ static_v }}"></script>
+{% endblock %}

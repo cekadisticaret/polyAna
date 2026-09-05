@@ -31,22 +31,14 @@
 {% endmacro %}
 
 {% macro follow_panel() %}
-{% for fu in follow_suggestions %}
-<div class="ff-follow">
-  <div class="ff-avatar sm">{% if fu.avatar_url %}<img src="{{ fu.avatar_url }}" alt="">{% else %}<span>{{ (fu.name or 'U')[0]|upper }}</span>{% endif %}</div>
-  <div class="ff-follow-meta"><b>{{ fu.name }}</b><small>{{ fu.handle }} · {{ fu.posts }} gönderi</small></div>
-  <a class="ff-btn sm dark" href="/hesap/profil?tab=friends">Takip</a>
-</div>
-{% else %}
-<p class="ff-muted sm">Şu an öneri yok.</p>
-{% endfor %}
+{% include "_feed_follow.html" %}
 {% endmacro %}
 
 {% block main %}
 <div class="ff-wrap">
   <div class="ff-appbar">
     <div class="ff-appbar-user">
-      <div class="ff-avatar">{% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}</div>
+      <div class="ff-avatar">{% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="{{ u.name }} profil fotoğrafı">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}</div>
       <div><b>{{ u.name.split()[0] if u.name else 'Üye' }}</b><small>{{ u.handle() }}</small></div>
     </div>
     <a class="ff-appbar-set" href="/hesap/ayarlar" aria-label="Ayarlar">⚙️</a>
@@ -64,9 +56,15 @@
     <div class="ff-card ff-profile-card">
       <div class="ff-profile-splash" aria-hidden="true"></div>
       <div class="ff-profile-body">
-        <div class="ff-avatar xl">{% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}</div>
+        <div class="ff-avatar xl">{% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="{{ u.name }} profil fotoğrafı">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}</div>
         <b class="ff-name">{{ u.name }}</b>
         <div class="ff-handle">{{ u.handle() }}</div>
+        {% if social_counts %}
+        <div class="ff-follow-stats">
+          <a href="/hesap/profil/takip?list=following"><b>{{ social_counts.following }}</b> takip</a>
+          <a href="/hesap/profil/takip?list=followers"><b>{{ social_counts.followers }}</b> takipçi</a>
+        </div>
+        {% endif %}
       </div>
     </div>
     <nav class="ff-nav">
@@ -115,7 +113,7 @@
       <div class="ff-stories-row">
         {% for e in events[:6] %}
         <a class="ff-story-card" href="{{ e.path }}">
-          <div class="ff-story-bg">{% if e.img_url %}<img src="{{ e.img_url }}" alt="">{% endif %}</div>
+          <div class="ff-story-bg">{% if e.img_url %}<img src="{{ e.img_url }}" alt="{{ e.title or 'Etkinlik' }} görseli">{% endif %}</div>
           <div class="ff-story-foot"><span>{{ e.title[:14] }}{% if e.title|length>14 %}…{% endif %}</span></div>
         </a>
         {% endfor %}
@@ -131,7 +129,7 @@
       <div class="ff-card">
         <h3 class="ff-h2">İlgi alanları</h3>
         <div class="ff-interest-grid">
-          <a class="ff-interest tone-a" href="/gezilecek-yerler"><span>🗺</span><b>Gezi</b></a>
+          <a class="ff-interest tone-a" href="/gezilecek"><span>🗺</span><b>Gezi</b></a>
           <a class="ff-interest tone-b" href="/konserler"><span>🎵</span><b>Müzik</b></a>
           <a class="ff-interest tone-c" href="/yeme-icme"><span>🍽</span><b>Lezzet</b></a>
           <a class="ff-interest tone-d" href="/kamp"><span>⛰</span><b>Doğa</b></a>
@@ -144,8 +142,9 @@
       <h1>Feeds</h1>
       <div class="ff-tabs">
         <a class="{% if tab=='recents' %}on{% endif %}" href="/hesap/profil?tab=recents">Recents</a>
-        <a class="{% if tab=='friends' %}on{% endif %}" href="/hesap/profil?tab=friends">Friends</a>
-        <a class="{% if tab=='popular' %}on{% endif %}" href="/hesap/profil?tab=popular">Popular</a>
+      <a class="{% if tab=='friends' %}on{% endif %}" href="/hesap/profil?tab=friends">Friends</a>
+      <a href="/hesap/profil/takip?list=following">Takip listesi</a>
+      <a class="{% if tab=='popular' %}on{% endif %}" href="/hesap/profil?tab=popular">Popular</a>
       </div>
     </header>
 
@@ -155,7 +154,7 @@
       <div class="ff-album">
         {% for ph in album %}
         <figure>
-          <img src="{{ ph.img_url }}" alt="" loading="lazy">
+          <img src="{{ ph.img_url }}" alt="{{ ph.caption or 'Fotoğraf' }}" loading="lazy">
           {% if ph.status=='pending' %}<span class="ff-pill">onay</span>{% endif %}
           {% if ph.place %}<figcaption><a href="{{ ph.place.path }}">{{ ph.place.title }}</a></figcaption>{% endif %}
         </figure>
@@ -175,7 +174,7 @@
       <div class="ff-visit-list">
         {% for v in visits %}
         <a class="ff-visit" href="{{ v.place.path if v.place else '#' }}">
-          {% if v.place and v.place.img_url %}<img src="{{ v.place.img_url }}" alt="">{% endif %}
+          {% if v.place and v.place.img_url %}<img src="{{ v.place.img_url }}" alt="{{ v.place.title }}">{% endif %}
           <div><b>{{ v.place.title if v.place else 'Yer' }}</b><small>{{ v.note or v.ago }}{% if v.status and v.status != 'approved' %} · onay bekliyor{% endif %}</small></div>
         </a>
         {% else %}<p class="ff-muted">Henüz yer eklemedin.</p>{% endfor %}
@@ -188,7 +187,7 @@
       {% for it in feed if it.kind=='review' %}
       <article class="ff-post tone-{{ loop.index0 % 3 }}">
         <div class="ff-post-h">
-          <div class="ff-avatar">{% if it.user.avatar_url %}<img src="{{ it.user.avatar_url }}" alt="">{% else %}<span>{{ it.user.name[0]|upper }}</span>{% endif %}</div>
+          <div class="ff-avatar">{% if it.user.avatar_url %}<img src="{{ it.user.avatar_url }}" alt="{{ it.user.name }} profil fotoğrafı">{% else %}<span>{{ it.user.name[0]|upper }}</span>{% endif %}</div>
           <div><b>{{ it.user.name }}</b><div class="ff-muted">{{ it.ago }}</div></div>
         </div>
         {% if it.body %}<p class="ff-body">{{ it.body }}</p>{% endif %}
@@ -203,7 +202,7 @@
       <div class="ff-visit-list">
         {% for g in goings %}
         <a class="ff-visit" href="{{ g.place.path if g.place else '#' }}">
-          {% if g.place and g.place.img_url %}<img src="{{ g.place.img_url }}" alt="">{% endif %}
+          {% if g.place and g.place.img_url %}<img src="{{ g.place.img_url }}" alt="{{ g.place.title }}">{% endif %}
           <div><b>{{ g.place.title if g.place else 'Etkinlik' }}</b><small>{{ g.going }} kişi · {{ g.starts_at or '' }}</small></div>
         </a>
         {% else %}<p class="ff-muted">Henüz etkinlik seçmedin.</p>{% endfor %}
@@ -211,6 +210,9 @@
     </div>
 
     {% else %}
+    {% if tab=='friends' and not feed %}
+    <div class="ff-card ff-empty"><p class="ff-muted">Takip ettiğin kişilerin gönderileri burada listelenir. Sağdaki <b>Takip öner</b> kartından birini seç.</p></div>
+    {% endif %}
     <div class="ff-stream" id="ff-stream" data-tab="{{ tab }}" data-offset="{{ feed|length }}" data-has-more="{{ '1' if feed_has_more else '0' }}">
       {% with tone_offset=0, show_empty=true %}
       {% include "_feed_items.html" %}
@@ -230,7 +232,7 @@
       <div class="ff-stories-row">
         {% for e in events[:5] %}
         <a class="ff-story-card" href="{{ e.path }}">
-          <div class="ff-story-bg">{% if e.img_url %}<img src="{{ e.img_url }}" alt="">{% else %}<span class="ph"></span>{% endif %}</div>
+          <div class="ff-story-bg">{% if e.img_url %}<img src="{{ e.img_url }}" alt="{{ e.title or 'Etkinlik' }} görseli">{% else %}<span class="ph"></span>{% endif %}</div>
           <div class="ff-story-foot"><span>{{ e.title[:16] }}{% if e.title|length>16 %}…{% endif %}</span><small>{{ e.going }} gidecek</small></div>
         </a>
         {% else %}<p class="ff-muted">Yakın etkinlik yok.</p>{% endfor %}
@@ -245,7 +247,7 @@
     <div class="ff-card">
       <h3 class="ff-h2">İlgi alanları</h3>
       <div class="ff-interest-grid">
-        <a class="ff-interest tone-a" href="/gezilecek-yerler"><span>🗺</span><b>Gezi</b></a>
+        <a class="ff-interest tone-a" href="/gezilecek"><span>🗺</span><b>Gezi</b></a>
         <a class="ff-interest tone-b" href="/konserler"><span>🎵</span><b>Müzik</b></a>
         <a class="ff-interest tone-c" href="/yeme-icme"><span>🍽</span><b>Lezzet</b></a>
         <a class="ff-interest tone-d" href="/kamp"><span>⛰</span><b>Doğa</b></a>
@@ -258,7 +260,7 @@
       {% for s in restaurant_suggest %}
       {% if s %}
       <div class="ff-suggest">
-        {% if s.img_url %}<img src="{{ s.img_url }}" alt="">{% else %}<div class="ff-avatar sm"><span>{{ s.title[0] }}</span></div>{% endif %}
+        {% if s.img_url %}<img src="{{ s.img_url }}" alt="{{ s.title }}">{% else %}<div class="ff-avatar sm"><span>{{ s.title[0] }}</span></div>{% endif %}
         <div class="ff-suggest-meta">
           <b>{{ s.title }}</b>
           <small>{% if s.rating %}★ {{ '%.1f'|format(s.rating) }} · {% endif %}{{ s.subcategory_label or s.price_band or 'Restoran' }}{% if s.ilce %} · {{ s.ilce }}{% endif %}</small>
@@ -330,5 +332,6 @@
   }
 })();
 </script>
+{% include "_feed_actions.html" %}
 {% endif %}
 {% endblock %}

@@ -17,7 +17,7 @@
     {% if hero_note %}<p class="rx-src">{{ hero_note }}</p>{% endif %}
   </div>
   <div class="rx-hero-art" aria-hidden="true">
-    <img src="{{ url_for('static', filename=hero_art) }}" alt="">
+    <img src="{{ url_for('static', filename=hero_art) }}" alt="{{ hero_title or 'Sağlık rehberi' }}">
   </div>
 </section>
 

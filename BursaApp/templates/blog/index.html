@@ -6,22 +6,47 @@
 {% block main %}
 <div class="seo-page">
   <h1>BursaApp Blog</h1>
-  <p class="lead">How-to ve örnek yazılar — restoran ve gezilecek sayfalarına köprü. Rehber ücretsizdir.</p>
+  <p class="lead">Bursa gezi rotası, kahvaltı, İskender, Uludağ, İznik, termal otel ve hafta sonu planları — how-to yazılar; restoran ve gezilecek listelerine köprü. Rehber ücretsizdir.</p>
+
+  <nav class="blog-filters" aria-label="Blog kategorileri">
+    <a class="{{ 'on' if not kind_filter else '' }}" href="/blog">Tümü <span>{{ total_all }}</span></a>
+    {% for k, lab in blog_kinds.items() %}
+    {% if kind_counts.get(k) %}
+    <a class="{{ 'on' if kind_filter == k else '' }}" href="/blog?kind={{ k }}">{{ lab }} <span>{{ kind_counts[k] }}</span></a>
+    {% endif %}
+    {% endfor %}
+  </nav>
+
   <div class="seo-posts">
     {% for slug, p in posts %}
     <a href="/blog/{{ slug }}">
       <img src="{{ p.image }}" alt="{{ p.h1 }}" width="240" height="180" loading="lazy">
       <div>
+        {% if p.kind and blog_kinds.get(p.kind) %}<span class="blog-chip">{{ blog_kinds[p.kind] }}</span>{% endif %}
         <b>{{ p.h1 }}</b>
         <i>{{ p.desc }}</i>
+        {% if p.date %}<time datetime="{{ p.date }}">{{ p.date }}</time>{% endif %}
       </div>
     </a>
     {% endfor %}
   </div>
+
+  <section class="seo-block">
+    <h2>Sık okunan konular</h2>
+    <ul>
+      <li><a href="/blog/bursa-da-kahvalti-nerede">Bursa’da kahvaltı nerede?</a></li>
+      <li><a href="/blog/bursa-iskender-nerede-yenir">İskender nerede yenir?</a></li>
+      <li><a href="/blog/bursa-1-gunluk-gezi-plani">1 günde Bursa rotası</a></li>
+      <li><a href="/blog/cumalikizik-gezi-rehberi">Cumalıkızık rehberi</a></li>
+      <li><a href="/blog/bursa-hafta-sonu-2-gun">Hafta sonu 2 gün planı</a></li>
+    </ul>
+  </section>
+
   <nav class="seo-cross" style="margin-top:24px">
     <a href="/yeme-icme">Yeme-içme</a>
     <a href="/gezilecek">Gezilecek</a>
     <a href="/oteller">Oteller</a>
+    <a href="/rota">Rota planla</a>
     <a href="/kvkk">KVKK</a>
   </nav>
 </div>

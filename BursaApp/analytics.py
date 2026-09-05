@@ -48,6 +48,46 @@ def today_ist() -> str:
     return datetime.now(_IST).strftime("%Y-%m-%d")
 
 
+def normalize_path(path: str) -> str:
+    """Sayaç için yol — sorgu dizgisiz, uzun yollar kısaltılır."""
+    p = ((path or "/").split("?")[0].split("#")[0].strip() or "/")
+    if len(p) > 190:
+        p = p[:190]
+    return p
+
+
+_PATH_LABELS = {
+    "/": "Ana sayfa",
+    "/feed": "Feed",
+    "/kategoriler": "Kategoriler",
+    "/hesap": "Profil",
+    "/hesap/profil": "Feed · profil",
+    "/gezilecek": "Gezilecek",
+    "/yeme-icme": "Yeme-içme",
+    "/oteller": "Oteller",
+    "/konserler": "Konserler",
+    "/etkinlikler": "Etkinlikler",
+    "/nobetci-eczaneler": "Nöbetçi eczaneler",
+    "/harita": "Harita",
+    "/rota": "Rota",
+    "/giris": "Giriş",
+    "/kayit": "Kayıt",
+}
+
+
+def path_label(path: str) -> str:
+    p = normalize_path(path)
+    if p in _PATH_LABELS:
+        return _PATH_LABELS[p]
+    if p.startswith("/yer/"):
+        return f"Yer · {p[5:]}"
+    if p.startswith("/blog/"):
+        return f"Blog · {p[6:]}"
+    if p.startswith("/ilce/"):
+        return f"İlçe · {p[6:]}"
+    return p
+
+
 def client_ip(request) -> str:
     """Nginx X-Real-IP / X-Forwarded-For; yoksa remote_addr."""
     xri = (request.headers.get("X-Real-IP") or "").strip()
@@ -119,8 +159,10 @@ def ensure_vid(request, response) -> str:
     return vid
 
 
-def record_hit(db, *, day: str, vid: str) -> None:
-    from models import SiteDayStat, SiteVisitorDay
+def record_hit(db, *, day: str, vid: str, path: str = "/") -> None:
+    from models import SiteDayStat, SitePageStat, SitePageVisitorDay, SiteVisitorDay
+
+    norm = normalize_path(path)
 
     row = db.query(SiteDayStat).filter(SiteDayStat.day == day).first()
     if row is None:
@@ -138,6 +180,22 @@ def record_hit(db, *, day: str, vid: str) -> None:
         db.add(SiteVisitorDay(day=day, vid=vid))
         row.visitors = int(row.visitors or 0) + 1
 
+    prow = db.query(SitePageStat).filter(SitePageStat.day == day, SitePageStat.path == norm).first()
+    if prow is None:
+        prow = SitePageStat(day=day, path=norm, pageviews=0, visitors=0)
+        db.add(prow)
+        db.flush()
+    prow.pageviews = int(prow.pageviews or 0) + 1
+
+    pex = (
+        db.query(SitePageVisitorDay.id)
+        .filter(SitePageVisitorDay.day == day, SitePageVisitorDay.path == norm, SitePageVisitorDay.vid == vid)
+        .first()
+    )
+    if pex is None:
+        db.add(SitePageVisitorDay(day=day, path=norm, vid=vid))
+        prow.visitors = int(prow.visitors or 0) + 1
+
 
 def track_response(request, response) -> None:
     """after_request içinde çağır — hata olursa sessiz geç."""
@@ -148,9 +206,10 @@ def track_response(request, response) -> None:
 
         vid = ensure_vid(request, response)
         day = today_ist()
+        path = request.path or "/"
         db = SessionLocal()
         try:
-            record_hit(db, day=day, vid=vid)
+            record_hit(db, day=day, vid=vid, path=path)
             db.commit()
         except Exception:
             db.rollback()
@@ -162,11 +221,64 @@ def track_response(request, response) -> None:
 
 def reset_all_stats(db) -> None:
     """Kirlenmiş sayaçları sıfırla (bot / smoke şişirmesi sonrası)."""
-    from models import SiteDayStat, SiteVisitorDay
+    from models import SiteDayStat, SitePageStat, SitePageVisitorDay, SiteVisitorDay
 
+    db.query(SitePageVisitorDay).delete()
+    db.query(SitePageStat).delete()
     db.query(SiteVisitorDay).delete()
     db.query(SiteDayStat).delete()
     db.commit()
+
+
+def top_pages(db, *, days: int = 7, limit: int = 25) -> dict:
+    """En çok görüntülenen sayfalar — bugün + son N gün."""
+    from models import SitePageStat
+    from sqlalchemy import func
+
+    today = today_ist()
+    since = (datetime.now(_IST) - timedelta(days=max(0, days - 1))).strftime("%Y-%m-%d")
+
+    today_rows = (
+        db.query(SitePageStat)
+        .filter(SitePageStat.day == today)
+        .order_by(SitePageStat.pageviews.desc())
+        .limit(limit)
+        .all()
+    )
+    period_q = (
+        db.query(
+            SitePageStat.path,
+            func.coalesce(func.sum(SitePageStat.pageviews), 0).label("pv"),
+            func.coalesce(func.sum(SitePageStat.visitors), 0).label("uv"),
+        )
+        .filter(SitePageStat.day >= since)
+        .group_by(SitePageStat.path)
+        .order_by(func.sum(SitePageStat.pageviews).desc())
+        .limit(limit)
+    )
+    period_rows = period_q.all()
+    return {
+        "today": today,
+        "since": since,
+        "today_pages": [
+            {
+                "path": r.path,
+                "label": path_label(r.path),
+                "pageviews": int(r.pageviews or 0),
+                "visitors": int(r.visitors or 0),
+            }
+            for r in today_rows
+        ],
+        "period_pages": [
+            {
+                "path": r.path,
+                "label": path_label(r.path),
+                "pageviews": int(r.pv or 0),
+                "visitors": int(r.uv or 0),
+            }
+            for r in period_rows
+        ],
+    }
 
 
 def summary(db, days: int = 14) -> dict:

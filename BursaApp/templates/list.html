@@ -2,6 +2,8 @@
 {% block hello %}{{ cat.label }}{% endblock %}
 {% block sub %}{% if cat.key=='food' %}Alt tür ve ilçe filtreleri. BursaApp puanı varsa onu, yoksa listedeki puanı gösterir.{% elif cat.key=='visit' %}Gerçek duraklar, mekanın kendi fotoğrafı. Bursaray yok — o metro.{% elif cat.key=='hotel' %}Termal Çekirge, şehir, Uludağ kayak. Rezervasyon siteden yapılmaz.{% elif cat.key=='camp' %}İnsanların gerçekten gittiği Uludağ, deniz, göl ve ücretsiz koylar. Çadır / karavan — emir yok.{% elif cat.key=='shop' %}AVM, mağaza, outlet, hediyelik, yerel ürün.{% elif cat.key=='sport' %}Fitness, pilates, yüzme, tenis, halı saha.{% elif cat.key=='family' %}Park, piknik, çocuk alanı, aile aktivitesi.{% elif cat.key=='concert' %}Yaklaşan konserler üstte. Bilet siteden satılmaz.{% elif cat.key=='theater' %}Yakın tarihli oyunlar, sonra salonlar. Bilet siteden yok.{% elif cat.key=='cinema' %}Vizyondaki filmler + salonlar. Seans değişir, teyit et.{% elif cat.key=='event' %}Şehir takvimi: fuar, festival, sahne. Bilet siteden yok.{% elif cat.key=='hospital' %}Devlet, özel, üniversite. Karttaki hekimler o hastaneye bağlı.{% elif cat.key=='doctor' %}Branşa göre hekim. Hastane sayfasına bağlı. Randevu / tıbbi tavsiye yok.{% elif cat.key=='vet' %}Oda kayıtlı klinik ve hayvan hastanesi. Randevu siteden yok.{% elif cat.key=='fun' %}Canlı müzik, bar, bowling, escape, AVM. Bilet / rezervasyon siteden yok.{% elif cat.key=='org' %}Etkinliği üreten kurum — takvim değil. Bilet siteden yok.{% else %}{{ cat.hint }}{% endif %}{% endblock %}
 {% block main %}
+{% set ev_hero_list = cat.key in ('concert', 'theater', 'event', 'cinema', 'fun') %}
+{% if ev_hero_list %}<div class="ev-page">{% endif %}
 {% if cat.key in ('hospital','doctor') %}
 {% include "_health_tabs.html" %}
 {% endif %}
@@ -107,8 +109,11 @@
       <h2>{{ g.label }}</h2>
       <span class="see">{{ g.places|length }} yer{% if cat.key=='food' %} · ★ yüksekten{% endif %}</span>
     </div>
-    <div class="cards">
+    <div class="{% if ev_hero_list %}ev-list{% else %}cards{% endif %}">
       {% for p in g.places %}
+      {% if ev_hero_list %}
+      {% include '_event_list_card.html' %}
+      {% else %}
       <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
         {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
         <div class="body">
@@ -120,13 +125,17 @@
           {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
         </div>
       </a>
+      {% endif %}
       {% endfor %}
     </div>
   </section>
   {% endfor %}
 {% elif places %}
-<div class="cards">
+<div class="{% if ev_hero_list %}ev-list{% else %}cards{% endif %}">
   {% for p in places %}
+  {% if ev_hero_list %}
+  {% include '_event_list_card.html' %}
+  {% else %}
   <a class="place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
     {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph"></div>{% endif %}
     <div class="body">
@@ -138,12 +147,38 @@
       {% if p.blurb %}<p class="blurb">{{ p.blurb }}</p>{% endif %}
     </div>
   </a>
+  {% endif %}
   {% endfor %}
 </div>
 {% else %}
 <div class="empty-box">
   <p>Bu kategoride henüz yayınlı kayıt yok.</p>
   <p>Yakında — veya <a href="/hesap/ekle?cat={{ cat.key }}">sen ekle</a>.</p>
+</div>
+{% endif %}
+{% if ev_hero_list %}
+<script>
+(function(){
+  function tickAll(){
+    document.querySelectorAll('.ev-count[data-starts]').forEach(function(box){
+      var t=parseInt(box.getAttribute('data-starts'),10)*1000;
+      if(!t) return;
+      var left=Math.max(0, t-Date.now());
+      var s=Math.floor(left/1000);
+      var d=Math.floor(s/86400); s%=86400;
+      var h=Math.floor(s/3600); s%=3600;
+      var m=Math.floor(s/60); s%=60;
+      var el=box.querySelector.bind(box);
+      if(el('.d')) el('.d').textContent=d;
+      if(el('.h')) el('.h').textContent=h;
+      if(el('.m')) el('.m').textContent=m;
+      if(el('.s')) el('.s').textContent=s;
+    });
+  }
+  tickAll();
+  setInterval(tickAll, 1000);
+})();
+</script>
 </div>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,33 @@
+{% extends "_shell.html" %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block hello %}Sayfa bulunamadı{% endblock %}
+{% block sub %}Aradığın adres taşınmış veya hiç olmamış olabilir.{% endblock %}
+{% block main %}
+<article class="seo-page err404">
+  <p class="err404-code" aria-hidden="true">404</p>
+  <p class="lead">Bu sayfa BursaApp rehberinde yok. Yazım hatası olabilir; aşağıdan devam edebilirsin.</p>
+  <div class="seo-cta">
+    <a class="pri" href="/">Ana sayfa</a>
+    <a class="ghost" href="/yeme-icme">Yeme-içme</a>
+    <a class="ghost" href="/gezilecek">Gezilecek</a>
+    <a class="ghost" href="/harita">Harita</a>
+    <a class="ghost" href="{{ wa_url }}">WhatsApp</a>
+  </div>
+  <form class="wa-search err404-search" action="/gezilecek" method="get">
+    <div class="field">
+      <label for="err404-q">Yer ara</label>
+      <input id="err404-q" name="q" placeholder="Restoran, gezi, etkinlik…" autocomplete="off">
+    </div>
+    <button type="submit" class="wa-btn wa-btn-orange">Ara</button>
+  </form>
+  <nav class="seo-cross">
+    <a href="/blog">Blog</a>
+    <a href="/nobetci-eczaneler">Nöbetçi eczane</a>
+    <a href="/kategoriler">Kategoriler</a>
+    <a href="/kvkk">KVKK</a>
+  </nav>
+</article>
+{% endblock %}

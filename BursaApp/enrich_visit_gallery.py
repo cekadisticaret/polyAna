@@ -145,6 +145,13 @@ VISIT_GALLERY: dict[str, list[str]] = {
         "Panorama 1326 Bursa.jpg",
         "Bursa 1326 panorama museum.jpg",
     ],
+    "mudanya-mutareke-evi": [
+        "Mudanya ateşkes anlaşmasının yapıldığı tarihi bina.JPG",
+        "MUDANYA MUTAKERE EVİ.JPG",
+        "MudanyaMütareke2016.jpg",
+        "Mutareke binası-Mudanya-Bursa - panoramio.jpg",
+        "Mudanya 02.jpg",
+    ],
     "emir-sultan": [
         "Emir Sultan Camii 7067.jpg",
         "Emir Sultan Camii - Bursa 2017 (4).jpg",

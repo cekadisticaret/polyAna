@@ -10,37 +10,58 @@
   <a class="food-map-btn" href="/harita?cat=visit">Harita</a>
 </div>
 
+<form class="food-search" method="get" action="/gezilecek" role="search">
+  <label class="visually-hidden" for="visit-q">Gezilecek yer ara</label>
+  <input id="visit-q" name="q" value="{{ q|default('') }}" placeholder="Yer, müze, köy, ilçe ara…" autocomplete="off" enterkeyhint="search">
+  {% for k in kinds_on %}<input type="hidden" name="kind" value="{{ k }}">{% endfor %}
+  {% for k in fees_on %}<input type="hidden" name="fee" value="{{ k }}">{% endfor %}
+  {% for k in tags_on %}<input type="hidden" name="tag" value="{{ k }}">{% endfor %}
+  {% if ilce %}<input type="hidden" name="ilce" value="{{ ilce }}">{% endif %}
+  {% if sub %}<input type="hidden" name="sub" value="{{ sub }}">{% endif %}
+  {% if sort and sort != 'featured' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+  <button type="submit" class="food-search-btn">Ara</button>
+  {% if q %}<a class="food-search-clear" href="{{ visit_href(q='', page='') }}" title="Aramayı temizle" aria-label="Aramayı temizle">×</a>{% endif %}
+</form>
+
 <div class="food-browse-grid">
   <aside class="food-side">
     <details class="food-filter-panel" open>
       <summary>Filtreler</summary>
       <div class="food-filters">
-        <section>
-          <h3>Türler</h3>
+        <details class="ff-fold"{% if kinds_on %} open{% endif %}>
+          <summary>Türler{% if kinds_on %}<span class="ff-fold-n">{{ kinds_on|length }}</span>{% endif %}</summary>
+          <div class="ff-fold-body">
           {% for k, lab, _s in visit_kind %}
           <a class="food-ff {{ 'on' if k in kinds_on else '' }}" href="{{ visit_href(toggle=('kind', k)) }}">{{ lab }}</a>
           {% endfor %}
-        </section>
-        <section>
-          <h3>Giriş</h3>
+          </div>
+        </details>
+        <details class="ff-fold"{% if fees_on %} open{% endif %}>
+          <summary>Giriş{% if fees_on %}<span class="ff-fold-n">{{ fees_on|length }}</span>{% endif %}</summary>
+          <div class="ff-fold-body">
           {% for k, lab in visit_fee %}
           <a class="food-ff {{ 'on' if k in fees_on else '' }}" href="{{ visit_href(toggle=('fee', k)) }}">{{ lab }}</a>
           {% endfor %}
-        </section>
-        <section>
-          <h3>Öne çıkan</h3>
+          </div>
+        </details>
+        <details class="ff-fold"{% if tags_on %} open{% endif %}>
+          <summary>Öne çıkan{% if tags_on %}<span class="ff-fold-n">{{ tags_on|length }}</span>{% endif %}</summary>
+          <div class="ff-fold-body">
           {% for k, lab in visit_tag %}
           <a class="food-ff {{ 'on' if k in tags_on else '' }}" href="{{ visit_href(toggle=('tag', k)) }}">{{ lab }}</a>
           {% endfor %}
-        </section>
-        <section>
-          <h3>Bölge</h3>
+          </div>
+        </details>
+        <details class="ff-fold"{% if ilce %} open{% endif %}>
+          <summary>Bölge{% if ilce %}<span class="ff-fold-n">1</span>{% endif %}</summary>
+          <div class="ff-fold-body">
           <a class="food-ff {{ 'on' if not ilce else '' }}" href="{{ visit_href(ilce='') }}">Tüm ilçeler</a>
           {% for ad in ilceler %}
           <a class="food-ff {{ 'on' if ilce==ad else '' }}" href="{{ visit_href(ilce=ad) }}">{{ ad }}</a>
           {% endfor %}
-        </section>
-        {% if kinds_on or fees_on or tags_on or ilce %}
+          </div>
+        </details>
+        {% if kinds_on or fees_on or tags_on or ilce or q %}
         <a class="ff-clear" href="/gezilecek">Filtreleri temizle</a>
         {% endif %}
       </div>
@@ -49,7 +70,7 @@
 
   <div class="food-main">
     <div class="food-toolbar">
-      <span>{{ total }} sonuç</span>
+      <span>{{ total }} sonuç{% if q %} · “{{ q }}”{% endif %}</span>
       <label>Sırala
         <select onchange="if(this.value) location.href=this.value">
           <option value="{{ visit_href(sort='featured', page='') }}" {% if sort=='featured' %}selected{% endif %}>Öne çıkanlar</option>
@@ -108,11 +129,12 @@
     {% endif %}
     {% else %}
     <div class="empty-box">
-      <p>Bu filtrelere uyan gezilecek yer yok.</p>
+      <p>{% if q %}“{{ q }}” için sonuç yok.{% else %}Bu filtrelere uyan gezilecek yer yok.{% endif %}</p>
       <p><a href="/gezilecek">Filtreleri temizle</a></p>
     </div>
     {% endif %}
   </div>
 </div>
 {% include "_seo_vertical_after.html" %}
+{% include "_browse_filter_script.html" %}
 {% endblock %}

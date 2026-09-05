@@ -258,7 +258,7 @@
   <div class="ph-grid" style="margin:0 0 12px">
     {% for ph in user_photos %}
     <a class="ph-cell" href="{{ ph.img_url }}" target="_blank" rel="noopener">
-      <img src="{{ ph.img_url }}" alt="" loading="lazy">
+      <img src="{{ ph.img_url }}" alt="{{ place.title }} fotoğrafı" loading="lazy">
       {% if ph.caption %}<span class="ph-cap">{{ ph.caption }}</span>{% endif %}
     </a>
     {% endfor %}
@@ -347,7 +347,7 @@
       </div>
     </div>
     {% if r.body %}<p>{{ r.body }}</p>{% endif %}
-    {% if r.img_url %}<img class="review-photo" src="{{ r.img_url }}" alt="" loading="lazy">{% endif %}
+    {% if r.img_url %}<img class="review-photo" src="{{ r.img_url }}" alt="{{ r.user_name }} yorum fotoğrafı" loading="lazy">{% endif %}
   </div>
   {% else %}
   <p class="empty">{% if is_film %}Henüz onaylı film değerlendirmesi yok — ilk puanı sen ver.{% else %}Henüz onaylı üye değerlendirmesi yok.{% endif %}</p>

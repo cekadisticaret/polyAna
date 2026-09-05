@@ -1,0 +1,113 @@
+{% extends "_shell.html" %}
+{% block title %}Feed · BursaApp{% endblock %}
+{% block body_class %} is-feed-page{% endblock %}
+{% block page_head %}{% endblock %}
+{% block hello %}{% endblock %}
+{% block sub %}{% endblock %}
+
+{% block main %}
+<div class="m-feed">
+  <header class="m-feed-head">
+    <h1>Feed</h1>
+    <div class="m-feed-tabs">
+      <a class="{% if tab=='recents' %}on{% endif %}" href="/feed?tab=recents">Yeni</a>
+      <a class="{% if tab=='popular' %}on{% endif %}" href="/feed?tab=popular">Popüler</a>
+      {% if u %}<a class="{% if tab=='friends' %}on{% endif %}" href="/feed?tab=friends">Takip</a>{% endif %}
+    </div>
+    {% if u and social_counts %}
+    <div class="ff-follow-stats m-feed-social">
+      <a href="/hesap/profil/takip?list=following"><b>{{ social_counts.following }}</b> takip</a>
+      <a href="/hesap/profil/takip?list=followers"><b>{{ social_counts.followers }}</b> takipçi</a>
+    </div>
+    {% endif %}
+  </header>
+
+  {% if u %}
+  <form class="m-compose" method="post" action="/hesap/profil/post" enctype="multipart/form-data">
+    <div class="m-compose-row">
+      <div class="m-compose-av">{% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="{{ u.name }} profil fotoğrafı">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}</div>
+      <textarea name="body" rows="1" placeholder="Bir şey paylaş… kamp, etkinlik, gezi" maxlength="2000"></textarea>
+    </div>
+    <div class="m-compose-tools">
+      <label class="m-tool"><span>📷</span> Görsel<input type="file" name="photos" accept="image/*" multiple hidden></label>
+      <select name="place_slug" class="m-tool-select">
+        <option value="">Konum</option>
+        {% for s in picker_places %}{% if s %}<option value="{{ s.slug }}">{{ s.title }}</option>{% endif %}{% endfor %}
+      </select>
+      <button type="submit" class="m-btn-pri sm">Gönder</button>
+    </div>
+  </form>
+  {% else %}
+  <div class="m-login-card">
+    <p>Paylaşım yapmak için giriş yap.</p>
+    <a class="m-btn-pri" href="/giris?next=/feed">Giriş yap</a>
+  </div>
+  {% endif %}
+
+  {% if u and follow_suggestions %}
+  <section class="m-follow-card ff-card">
+    <h3 class="ff-h2">Takip öner</h3>
+    {% include "_feed_follow.html" %}
+  </section>
+  {% endif %}
+
+  {% if tab=='friends' and u and not feed %}
+  <div class="ff-card ff-empty m-feed-empty">
+    <p class="ff-muted">Takip ettiğin kişilerin gönderileri burada görünür. Yukarıdan birini takip etmeyi dene.</p>
+  </div>
+  {% endif %}
+
+  {% if events %}
+  <div class="m-stories">
+    {% for e in events[:5] %}
+    <a class="m-story" href="{{ e.path }}">
+      <div class="m-story-img">{% if e.img_url %}<img src="{{ e.img_url }}" alt="{{ e.title or 'Etkinlik' }} görseli">{% endif %}</div>
+      <span>{{ e.title[:14] }}{% if e.title|length>14 %}…{% endif %}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="m-feed-stream" id="m-feed-stream" data-tab="{{ tab }}" data-offset="{{ feed|length }}" data-has-more="{{ '1' if feed_has_more else '0' }}">
+    {% with tone_offset=0, show_empty=true %}
+    {% include "_feed_items.html" %}
+    {% endwith %}
+  </div>
+  <p id="m-feed-end" class="m-feed-end" {% if feed_has_more or not feed %}hidden{% endif %}>Tüm gönderiler yüklendi</p>
+</div>
+<script>
+(function(){
+  var stream = document.getElementById('m-feed-stream');
+  if (!stream || stream.dataset.hasMore !== '1') return;
+  var tab = stream.dataset.tab || 'recents';
+  var offset = parseInt(stream.dataset.offset || '0', 10);
+  var loading = false;
+  var endEl = document.getElementById('m-feed-end');
+  function loadMore(){
+    if (loading) return;
+    loading = true;
+    fetch('/hesap/profil/feed?tab=' + encodeURIComponent(tab) + '&offset=' + offset, {credentials:'same-origin'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.html) stream.insertAdjacentHTML('beforeend', d.html);
+        offset = d.next_offset || offset;
+        stream.dataset.offset = offset;
+        if (!d.has_more) {
+          stream.dataset.hasMore = '0';
+          if (endEl) endEl.hidden = false;
+        }
+      })
+      .catch(function(){})
+      .finally(function(){ loading = false; });
+  }
+  var obs = new IntersectionObserver(function(entries){
+    if (entries[0].isIntersecting) loadMore();
+  }, {rootMargin:'200px'});
+  var sentinel = document.createElement('div');
+  sentinel.className = 'm-feed-sentinel';
+  stream.after(sentinel);
+  obs.observe(sentinel);
+})();
+</script>
+{% include "_feed_actions.html" %}
+{% endblock %}

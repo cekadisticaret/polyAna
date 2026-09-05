@@ -231,6 +231,16 @@ def collect(app=None, db=None) -> dict[str, Any]:
         )
     )
 
+    try:
+        from ai_seo import collect_checks as ai_collect_checks, ai_grade
+
+        ai_checks = ai_collect_checks(app=app, db=db)
+        checks.extend(ai_checks)
+        ai_grade_s, ai_ok, ai_total = ai_grade(ai_checks)
+    except Exception as e:
+        ai_grade_s, ai_ok, ai_total = "uyarı", 0, 0
+        checks.append(_check(False, "Yapay zeka SEO modülü", str(e)[:120]))
+
     ok_n = sum(1 for c in checks if c["ok"])
     fail_n = sum(1 for c in checks if not c["ok"] and c.get("critical"))
     warn_n = sum(1 for c in checks if not c["ok"] and not c.get("critical"))
@@ -273,4 +283,9 @@ def collect(app=None, db=None) -> dict[str, Any]:
         "audit_issues": audit_issues,
         "sitemap_submit_url": f"{base}/sitemap.xml",
         "robots_url": f"{base}/robots.txt",
+        "llms_url": f"{base}/llms.txt",
+        "llms_full_url": f"{base}/llms-full.txt",
+        "ai_seo_grade": ai_grade_s,
+        "ai_seo_ok": ai_ok,
+        "ai_seo_total": ai_total,
     }

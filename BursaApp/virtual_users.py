@@ -322,9 +322,6 @@ def _post_for_user(db, user: User, persona: dict) -> bool:
     )
     set_post_images(post, imgs)
     db.add(post)
-    db.flush()
-    if random.random() < 0.35:
-        _ensure_visit(db, user.id, place, persona)
     db.commit()
     return True
 
