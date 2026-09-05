@@ -1,0 +1,232 @@
+{% extends "_shell.html" %}
+{% from '_news_youtube.html' import yt_embed %}
+{% block page_head %}{% endblock %}
+{% block body_class %} is-news-page is-news-detail{% endblock %}
+{% block hello %}{{ article.title }}{% endblock %}
+{% block sub %}{% endblock %}
+
+{% macro side_row(n) %}
+<a class="bn-m-side-row" href="{{ n.path }}">
+  {% if n.img_url %}<img src="{{ n.img_url }}" alt="" loading="lazy">{% else %}<span class="bn-m-ph sm"></span>{% endif %}
+  <div>
+    <b>{{ n.title }}</b>
+    <small>{{ n.topic_label }} · {{ n.date_label }}</small>
+  </div>
+</a>
+{% endmacro %}
+
+{% block main %}
+<div class="bn-mag bn-detail-page">
+
+<section class="bn-m-detail-hero topic-{{ article.topic or 'genel' }}">
+  <div class="bn-m-hero-bg">
+    {% if article.img_url %}
+    <img src="{{ article.img_url }}" alt="" fetchpriority="high" decoding="async">
+    {% else %}
+    <span class="bn-m-ph"></span>
+    {% endif %}
+    <div class="bn-m-hero-shade"></div>
+  </div>
+
+  <div class="bn-m-hero-bar">
+    <a class="bn-m-brand" href="/haberler"><span class="bn-m-dot"></span> Bursa<span>Haber</span></a>
+    <nav class="bn-m-topnav" aria-label="Konu menüsü">
+      <a href="/haberler">Tümü</a>
+      {% for key, lab in topics.items() %}
+      <a class="{{ 'on' if article.topic==key else '' }}" href="/haberler?konu={{ key }}">{{ lab|upper }}</a>
+      {% endfor %}
+    </nav>
+    <a class="bn-d-back" href="/haberler">← Haberler</a>
+  </div>
+
+  <div class="bn-m-hero-layout bn-d-hero-grid">
+    <header class="bn-m-hero-main">
+      <nav class="bn-crumb light" aria-label="Konum">
+        <a href="/">Keşfet</a><span class="crumbs-sep">/</span>
+        <a href="/haberler">Bursa haberleri</a><span class="crumbs-sep">/</span>
+        <span aria-current="page">{{ article.topic_label }}</span>
+      </nav>
+      <span class="bn-m-pill lg">{{ article.topic_label }}</span>
+      <h1>{{ article.title }}</h1>
+      <p class="bn-m-hero-dek">{{ article.blurb }}</p>
+      <div class="bn-m-meta-line">
+        <span>{{ article.source }}</span>
+        <span>·</span>
+        <time datetime="{{ article.published_at }}">{{ article.date_label }}</time>
+        <span>·</span>
+        <span>{{ read_mins }} dk okuma</span>
+      </div>
+    </header>
+
+    <aside class="bn-m-hero-panel" aria-label="Son haberler">
+      <div class="bn-m-panel-head">
+        <h2>Son dakika</h2>
+        {% if article.topic == 'spor' %}
+        <a href="/bursaspor">Bursaspor →</a>
+        {% else %}
+        <a href="/haberler?konu={{ article.topic }}">Konu →</a>
+        {% endif %}
+      </div>
+      {% if article.topic == 'spor' and bursaspor.next_match %}
+      <div class="bn-m-score-card">
+        <span class="bn-m-live">SIRADAKİ MAÇ</span>
+        <div class="bn-m-score-line">
+          <span>{{ bursaspor.next_match.home }}</span>
+          <strong>{% if bursaspor.next_match.kickoff %}{{ bursaspor.next_match.kickoff.split(' ')[-1] }}{% else %}—{% endif %}</strong>
+          <span>{{ bursaspor.next_match.away }}</span>
+        </div>
+        {% if bursaspor.form %}
+        <div class="bn-m-form">{% for ch in bursaspor.form %}<i class="f-{{ ch }}">{{ ch }}</i>{% endfor %}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+      <div class="bn-m-panel-list">
+        {% for n in latest[:6] %}
+        {{ side_row(n) }}
+        {% endfor %}
+      </div>
+    </aside>
+  </div>
+</section>
+
+<div class="bn-d-layout">
+  <article class="bn-d-main">
+
+    {% if video %}
+    <section class="bn-d-vid panel" aria-label="İlgili video">
+      <div class="bn-d-vid-head">
+        <h2>Video</h2>
+        <span>{{ video.channel }} · sitede izle</span>
+      </div>
+      {{ yt_embed(video, 'bn-yt-main') }}
+      <p class="bn-d-vid-cap"><b>{{ video.title }}</b> · {{ video.date_label }}</p>
+    </section>
+    {% elif article.img_url %}
+    <figure class="bn-d-figure panel">
+      <img src="{{ article.img_url }}" alt="{{ article.title }}" loading="lazy" decoding="async">
+    </figure>
+    {% endif %}
+
+    <blockquote class="bn-d-pull panel topic-{{ article.topic or 'genel' }}">
+      <p>{{ article.blurb }}</p>
+      <footer>— BursaApp haber masası · {{ article.source }}</footer>
+    </blockquote>
+
+    <div class="bn-detail-body panel">
+      {% for sec in article.sections or [] %}
+      {% if sec.h2 and sec.h2|lower != 'kaynak' %}
+      <h2 id="sec-{{ loop.index }}">{{ sec.h2 }}</h2>
+      {% for para in sec.paras %}
+      {% if 'orijinal kaynağa gidin' not in para|lower %}
+      <p>{{ para }}</p>
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+
+      {% if article.topic == 'spor' %}
+      <div class="bn-d-callout">
+        <b>🐊 Bursaspor masası</b>
+        <p>Fikstür, puan durumu ve yeşil-beyaz video — <a href="/bursaspor">/bursaspor</a> sayfasında.</p>
+      </div>
+      {% endif %}
+
+      <div class="bn-m-keep inline">
+        <h3>Bursa'da devam et</h3>
+        <div class="bn-m-keep-grid">
+          <a href="/gezilecek">Gezilecek</a>
+          <a href="/yeme-icme">Yeme-içme</a>
+          <a href="/konserler">Konser</a>
+          <a href="/etkinlikler">Etkinlik</a>
+          {% if article.topic == 'spor' %}<a href="/bursaspor">Bursaspor</a>{% endif %}
+          <a href="/harita">Harita</a>
+        </div>
+      </div>
+
+      {% if article.url %}
+      <div class="bn-source-box">
+        <h3>Kaynak</h3>
+        <p>Tam metin ve güncel gelişmeler için orijinal habere bakın.</p>
+        <a class="bn-d-src-btn" href="{{ article.url }}" rel="nofollow noopener noreferrer" target="_blank">{{ article.source }} · orijinal haber →</a>
+      </div>
+      {% endif %}
+
+      {% if article.disclaimer %}
+      <p class="bn-m-footnote">{{ article.disclaimer }}</p>
+      {% endif %}
+    </div>
+  </article>
+
+  <aside class="bn-d-rail" aria-label="Yan sütun">
+    {% if topic_videos %}
+    <section class="bn-d-rail-card panel">
+      <h2>{% if article.topic == 'spor' %}Bursaspor video{% else %}Bursa video{% endif %}</h2>
+      <div class="bn-m-vid-list">
+        {% for v in topic_videos %}
+        <div class="bn-d-rail-vid">
+          {{ yt_embed(v, 'bn-yt-sm') }}
+          <b>{{ v.title }}</b>
+          <small>{{ v.channel }} · {{ v.date_label }}</small>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if related %}
+    <section class="bn-d-rail-card panel">
+      <div class="bn-m-section-bar">
+        <h2>İlgili</h2>
+        <a href="/haberler?konu={{ article.topic }}">Tümü</a>
+      </div>
+      {% for n in related[:4] %}
+      {{ side_row(n) }}
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    <section class="bn-d-rail-card panel bn-d-share">
+      <h2>Paylaş</h2>
+      <div class="bn-d-share-row">
+        <a href="https://wa.me/?text={{ (article.title ~ ' ' ~ seo.canonical)|urlencode }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <a href="https://twitter.com/intent/tweet?text={{ article.title|urlencode }}&amp;url={{ seo.canonical|urlencode }}" target="_blank" rel="noopener noreferrer">X</a>
+        <a href="/haberler">← Haberler</a>
+      </div>
+    </section>
+  </aside>
+</div>
+
+{% if related|length > 2 %}
+<section class="bn-m-band bn-m-band-light">
+  <header class="bn-m-section-bar">
+    <h2>Aynı konuda daha fazla</h2>
+    <a href="/haberler?konu={{ article.topic }}">Tüm {{ article.topic_label }} haberleri →</a>
+  </header>
+  <div class="bn-m-more-grid">
+    {% for n in related %}
+    <a class="bn-m-tile card topic-{{ n.topic or 'genel' }}" href="{{ n.path }}">
+      {% if n.img_url %}<img src="{{ n.img_url }}" alt="" loading="lazy">{% else %}<span class="bn-m-ph"></span>{% endif %}
+      <span class="bn-m-pill">{{ n.topic_label }}</span>
+      <h3>{{ n.title }}</h3>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="bn-m-band bn-m-band-gray">
+  <div class="bn-m-keep">
+    <h2>BursaApp'te kal</h2>
+    <div class="bn-m-keep-grid">
+      <a href="/haberler">📰 Tüm haberler</a>
+      <a href="/bursaspor">🟢 Bursaspor</a>
+      <a href="/gezilecek">🌿 Gezilecek</a>
+      <a href="/yeme-icme">🍽 Yeme-içme</a>
+      <a href="/konserler">🎵 Konser</a>
+      <a href="/blog">✍️ Blog</a>
+    </div>
+  </div>
+</section>
+
+</div>
+{% endblock %}

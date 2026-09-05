@@ -533,8 +533,22 @@ BLOG_POSTS: dict[str, dict[str, Any]] = {
 }
 
 
+def all_blog_posts() -> dict[str, dict[str, Any]]:
+    """Statik + cron ile üretilmiş blog yazıları."""
+    out = dict(BLOG_POSTS)
+    for slug, post in load_generated_posts().items():
+        out[slug] = post
+    return out
+
+
+def load_generated_posts() -> dict[str, dict[str, Any]]:
+    from weekend_blog import load_generated_posts as _load
+
+    return _load()
+
+
 def blog_posts_sorted(*, kind: str | None = None) -> list[tuple[str, dict[str, Any]]]:
-    items = list(BLOG_POSTS.items())
+    items = list(all_blog_posts().items())
     if kind:
         items = [(s, p) for s, p in items if p.get("kind") == kind]
     items.sort(key=lambda x: x[1].get("date", ""), reverse=True)

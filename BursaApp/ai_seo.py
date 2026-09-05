@@ -6,7 +6,8 @@ from typing import Any
 
 from catalog import CAT_BY_KEY, CATEGORIES
 from seo import site_base
-from seo_arch import BLOG_POSTS, HOME_FAQ, PHONE_DISPLAY, VERTICALS, WHATSAPP_URL
+from blog_posts import all_blog_posts
+from seo_arch import HOME_FAQ, PHONE_DISPLAY, VERTICALS, WHATSAPP_URL
 
 # Kamu içerik — AI tarayıcılarına açık (analytics sayacında hariç tutulabilir)
 AI_CRAWLERS = (
@@ -131,7 +132,7 @@ def llms_txt(db=None) -> str:
         f"- {base}{path} — {meta['h1']}" for path, meta in VERTICALS.items()
     )
     blog_lines = "\n".join(
-        f"- {base}/blog/{slug} — {meta['title']}" for slug, meta in BLOG_POSTS.items()
+        f"- {base}/blog/{slug} — {meta['title']}" for slug, meta in all_blog_posts().items()
     )
     faq_lines = "\n".join(f"- {q}" for q, _ in HOME_FAQ)
 

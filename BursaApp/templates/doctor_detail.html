@@ -22,6 +22,9 @@
       {% endif %}
       <p class="blurb">{{ place.blurb }}</p>
       <div class="doc-acts">
+        {% if place.extra and place.extra.mhrs_url and place.price_band == 'Devlet' %}
+        <a class="btn" href="{{ place.extra.mhrs_url }}" target="_blank" rel="noopener">MHRS randevu</a>
+        {% endif %}
         {% if place.extra and place.extra.profile_url %}
         <a class="btn" href="{{ place.extra.profile_url }}" target="_blank" rel="noopener">Hastane profili</a>
         {% elif place.web %}
@@ -39,7 +42,7 @@
         <a class="btn sm" href="{{ place.maps }}" target="_blank" rel="noopener">Harita</a>
         {% endif %}
       </div>
-      <p class="empty" style="margin-top:10px">Randevu BursaApp’ten alınmaz — hastane / MHRS üzerinden.</p>
+      <p class="empty" style="margin-top:10px">Randevu BursaApp’ten alınmaz — {% if place.price_band == 'Devlet' %}MHRS / 182{% else %}klinik telefonu veya web sitesi{% endif %} üzerinden.</p>
     </div>
   </div>
 

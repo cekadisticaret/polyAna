@@ -1,0 +1,3502 @@
+[
+  {
+    "slug": "ozel-verimli-ilgili-profesyonel-vip-pratik-dershanesi",
+    "title": "Veri̇mli̇ İlgi̇li̇ Profesyonel (Vi̇p) Prati̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "ORHANBEY MAH. TAŞKAPI CAD. NO: 19 İÇ KAPI NO: 101 OSMANGAZİ / BURSA",
+    "phone": "05334359713",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL VERİMLİ İLGİLİ PROFESYONEL (VİP) PRATİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-setbasi-final-dershanesi",
+    "title": "Setbaşi Fi̇nal Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yıldırım",
+    "address": "KARAAĞAÇ MAH. NAMAZGAH CAD. NO: 24 İÇ KAPI NO: 3 YILDIRIM / BURSA (DİĞER İÇ KAPILAR: 4-5)",
+    "phone": "02243283900",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yıldırım · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL SETBAŞI FİNAL DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-karekok-akademi-matematik-dershanesi",
+    "title": "Karekök Akademi̇ Matemati̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yıldırım",
+    "address": "ERİKLİ MAH. EFLAK CAD. ADANUR APT. SİTESİ A BLOK NO: 1-3 İÇ KAPI NO: 4 YILDIRIM / BURSA",
+    "phone": "02243412493",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yıldırım · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KAREKÖK AKADEMİ MATEMATİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-yontem-dershanesi",
+    "title": "Bursa Yöntem Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. YILDIRIM CAD. 22 NOLU BB. SİTESİ NO: 119B NİLÜFER / BURSA",
+    "phone": "05550550816",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA YÖNTEM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-sembol-arti-dershanesi",
+    "title": "Bursa Sembol Arti Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "DOĞANBEY MAH. DOĞANBEY ÇIKMAZI SK. BERK 2 PLAZA SİTESİ NO: 3 İÇ KAPI NO: 14 OSMANGAZİ / BURSA",
+    "phone": "02242222257",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA SEMBOL ARTI DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-fen-bilimleri-dershanesi",
+    "title": "Bursa Fen Bi̇li̇mleri̇ Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. İZMİR YOLU CAD. NO: 182 İÇ KAPI NO: 6 NİLÜFER / BURSA",
+    "phone": "02242212290",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA FEN BİLİMLERİ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-bilim-dershanesi",
+    "title": "Bursa Bi̇li̇m Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "ORHANBEY MAH. RESSAM ŞEFİK BURSALI CAD. NO: 34 İÇ KAPI NO: 1 OSMANGAZİ / BURSA",
+    "phone": "02242231007",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA BİLİM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-nilufer-akademi-dershanesi",
+    "title": "Ni̇lüfer Akademi̇ Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. İZMİR YOLU CAD. ARIKANLAR İŞ MERKEZİ SİTESİ ARIKANLAR İŞ MERKEZİ BLOK NO: 160 İÇ KAPI NO: 2 NİLÜFER / BURSA (DİĞER İÇ KAPILAR: 3-4-5)",
+    "phone": "02244524046",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL NİLÜFER AKADEMİ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-cekirge-kupkok-dershanesi",
+    "title": "Çeki̇rge Küpkök Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "DİKKALDIRIM MAH. ZÜBEYDE HANIM CAD. NO: 15 İÇ KAPI NO: 1 OSMANGAZİ / BURSA",
+    "phone": "02242333232",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ÇEKİRGE KÜPKÖK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-esen-dershanesi",
+    "title": "Esen Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "ÇAMLICA MAH. LEFKOŞE CAD. NO: 254A NİLÜFER / BURSA",
+    "phone": "05354160836",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ESEN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bilgi-dershanesi",
+    "title": "Bi̇lgi̇ Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "ESENTEPE MAH. OKUL CAD. NO: 6 İÇ KAPI NO: 1 NİLÜFER / BURSA",
+    "phone": "02244513200",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BİLGİ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-nilufer-tas-mektep-dershanesi",
+    "title": "Ni̇lüfer Taş Mektep Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BEŞEVLER MAH. İZMİR YOLU CAD. NO: 107 NİLÜFER / BURSA",
+    "phone": "05397957566",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL NİLÜFER TAŞ MEKTEP DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-inegol-aci-dershanesi",
+    "title": "İnegöl Açi Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "KEMALPAŞA MAH. İSMAİL EFENDİ CAD. NO: 9 İÇ KAPI NO: 1 İNEGÖL / BURSA",
+    "phone": "02247130712",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL İNEGÖL AÇI DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-yenisehir-lider-dershanesi",
+    "title": "Yeni̇şehi̇r Li̇der Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yeni̇şehi̇r",
+    "address": "KURTULUŞ MAH. ATATÜRK CAD. NO: 78 İÇ KAPI NO: 1 YENİŞEHİR / BURSA (DİĞER İÇ KAPILAR: 2)",
+    "phone": "02247120776",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yeni̇şehi̇r · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL YENİŞEHİR LİDER DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-fomara-farkli-kalite-modern-dershanesi",
+    "title": "Fomara Farkli Kali̇te Modern Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "AKTARHÜSSAM MAH. 1.BÖLÜNTÜ SK. NO: 2 OSMANGAZİ / BURSA",
+    "phone": "02244521122",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL FOMARA FARKLI KALİTE MODERN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-altiparmak-sinav-dershanesi",
+    "title": "Altiparmak Sinav Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "KURUÇEŞME MAH. 2.OTEL SK. İZZET ULUCA İŞHANI SİTESİ B BLOK NO: 4A OSMANGAZİ / BURSA",
+    "phone": "02242255570",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ALTIPARMAK SINAV DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-nitelikli-egitimin-odak-noktasi-dershanesi",
+    "title": "Ni̇teli̇kli̇ Eği̇ti̇mi̇n Odak Noktasi Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "ESENTEPE MAH. FATİH SULTAN MEHMET BUL. NO: 92A NİLÜFER / BURSA",
+    "phone": "02242461516",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL NİTELİKLİ EĞİTİMİN ODAK NOKTASI DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-elit-dershanesi",
+    "title": "Bursa Eli̇t Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "ESENTEPE MAH. GÜRLER CAD. NO: 2/1 İÇ KAPI NO: 1 NİLÜFER / BURSA (DİĞER İÇ KAPILAR: 2-3-4-5)",
+    "phone": "05454464770",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA ELİT DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-inegol-kultur-dershanesi",
+    "title": "İnegöl Kültür Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "SİNANBEY MAH. NURİ DOĞRUL CAD. NO: 15 İÇ KAPI NO: 1 İNEGÖL / BURSA",
+    "phone": "02247130505",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL İNEGÖL KÜLTÜR DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-modul-mod-bes-dershanesi",
+    "title": "Modül Mod Beş Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. LEFKOŞE CAD. 7 NOLU BĞMZ BLOK NO: 10G NİLÜFER / BURSA",
+    "phone": "02244520010",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL MODÜL MOD BEŞ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bir-akin-dershanesi",
+    "title": "Bi̇r Akin Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "İHSANİYE MAH. TUNA CAD. AKSEL APT. SİTESİ NO: 161F NİLÜFER / BURSA",
+    "phone": "05536335504",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BİR AKIN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-pusula-ogrenci-dershanesi",
+    "title": "Pusula Öğrenci̇ Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Karacabey",
+    "address": "EMİRSULTAN MAH. 185. SK. MELİHA AĞRAŞ SİTESİ NO: 33 İÇ KAPI NO: 5 KARACABEY / BURSA",
+    "phone": "02246600066",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Karacabey · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL PUSULA ÖĞRENCİ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-yildirim-uzman-kariyer-dershanesi",
+    "title": "Yildirim Uzman Kari̇yer Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yıldırım",
+    "address": "DEĞİRMENÖNÜ MAH. ANKARAYOLU CAD. NO: 818A YILDIRIM / BURSA",
+    "phone": "02248880999",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yıldırım · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL YILDIRIM UZMAN KARİYER DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-besevler-farkli-kaliteli-modern-dershanesi",
+    "title": "Beşevler Farkli Kali̇teli̇ Modern Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. DEFNE SK. NO: 28 İÇ KAPI NO: 4 NİLÜFER / BURSA",
+    "phone": "02244521122",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BEŞEVLER FARKLI KALİTELİ MODERN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-ilk-baskent-dershanesi",
+    "title": "İlk Başkent Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. İZMİR YOLU CAD. BÜRO BLOK NO: 174 İÇ KAPI NO: 4 NİLÜFER / BURSA",
+    "phone": "05058251819",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL İLK BAŞKENT DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-gursu-altinkure-dershanesi",
+    "title": "Gürsu Altinküre Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Gürsu",
+    "address": "KURTULUŞ MAH. ERGUVAN SK. NO: 16 İÇ KAPI NO: 1 GÜRSU / BURSA",
+    "phone": "05498401213",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Gürsu · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL GÜRSU ALTINKÜRE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-fiziki-arena-dershanesi",
+    "title": "Bursa Fi̇zi̇ki̇ Arena Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "ÜÇEVLER MAH. BAYRAKTEPE SK. NO: 17 İÇ KAPI NO: 1 NİLÜFER / BURSA",
+    "phone": "02245029223",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA FİZİKİ ARENA DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-net-dershanesi",
+    "title": "Net Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "KEMALPAŞA MAH. ADNAN MENDERES BUL. NO: 28 İÇ KAPI NO: 1 İNEGÖL / BURSA",
+    "phone": "02247112000",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL NET DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-yildirim-beyoglu-dershanesi",
+    "title": "Yildirim Beyoğlu Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yıldırım",
+    "address": "DUAÇINARI MAH. 6.PINAR SK. NO: 6-8 YILDIRIM / BURSA",
+    "phone": "05548751139",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yıldırım · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL YILDIRIM BEYOĞLU DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-bireysel-basari-dershanesi",
+    "title": "Bursa Bi̇reysel Başari Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "KÜKÜRTLÜ MAH. 2.ÜSTÜN SK. B BLOK NO: 8A OSMANGAZİ / BURSA",
+    "phone": "05358139460",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA BİREYSEL BAŞARI DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-nilufer-ucgen-dershanesi",
+    "title": "Ni̇lüfer Üçgen Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BEŞEVLER MAH. İZMİR YOLU CAD. NO: 115 İÇ KAPI NO: 1 NİLÜFER / BURSA",
+    "phone": "05363572500",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL NİLÜFER ÜÇGEN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-etkin-klas-dershanesi",
+    "title": "Etki̇n Klas Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "OSMANİYE MAH. ZÜMRÜT SK. NO: 2 İÇ KAPI NO: 13 İNEGÖL / BURSA",
+    "phone": "05058021389",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ETKİN KLAS DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-besevler-kultur-dershanesi",
+    "title": "Bursa Beşevler Kültür Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. BEŞEVLER CAD. KÜLTÜR ÖZEL EĞİTİM VE DERSHANECİLİK A.Ş. BLOK NO: 70 İÇ KAPI NO: 28 NİLÜFER / BURSA",
+    "phone": "02244511112",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA BEŞEVLER KÜLTÜR DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-turk-dili-edebiyati-arena-dershanesi",
+    "title": "Bursa Türk Di̇li̇ Edebi̇yati Arena Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "ÜÇEVLER MAH. RİTİM SK. NO: 12A NİLÜFER / BURSA",
+    "phone": "05072159992",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA TÜRK DİLİ EDEBİYATI ARENA DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-kare-dershanesi",
+    "title": "Bursa Kare Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. İZMİR YOLU CAD. NO: 200B İÇ KAPI NO: 3 NİLÜFER / BURSA",
+    "phone": "02242422999",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA KARE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-varlik-dershanesi",
+    "title": "Bursa Varlik Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "İHSANİYE MAH. CAN(110) SK. NO: 2/1 İÇ KAPI NO: 5 NİLÜFER / BURSA",
+    "phone": "05056972575",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA VARLIK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-arena-matematik-dershanesi",
+    "title": "Bursa Arena Matemati̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "ÜÇEVLER MAH. RİTİM SK. NO: 12 İÇ KAPI NO: 4 NİLÜFER / BURSA",
+    "phone": "05072159992",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA ARENA MATEMATİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-ofis-matematik-dershanesi",
+    "title": "Ofi̇s Matemati̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "İHSANİYE MAH. AVCI SK. B BLOK NO: 2-6BB NİLÜFER / BURSA",
+    "phone": "05366531433",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL OFİS MATEMATİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-venus-kampus-turk-dili-ve-edebiyati-dershanesi",
+    "title": "Venüs Kampüs Türk Di̇li̇ Ve Edebi̇yati Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "BAĞLARBAŞI MAH. 3.BARIŞ SK. B BLOK NO: 5A OSMANGAZİ / BURSA",
+    "phone": "02242426868",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL VENÜS KAMPÜS TÜRK DİLİ VE EDEBİYATI DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-optimum-dershanesi",
+    "title": "Bursa Opti̇mum Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "İHSANİYE MAH. İZMİR YOLU CAD. NO: 116 İÇ KAPI NO: 3 NİLÜFER / BURSA",
+    "phone": "02242474050",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA OPTİMUM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-inegol-final-fizik-dershanesi",
+    "title": "İnegöl Fi̇nal Fi̇zi̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "SÜLEYMANİYE MAH. İSTİKLAL CAD. NO: 90 İÇ KAPI NO: 1 İNEGÖL / BURSA",
+    "phone": "02247121000",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL İNEGÖL FİNAL FİZİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-kagan-er-dershanesi",
+    "title": "Kağan Er Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. DEFNE(140) SK. KAYA İŞ MERKEZİ BLOK NO: 12B NİLÜFER / BURSA",
+    "phone": "05324789170",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KAĞAN ER DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-nilufer-farkli-kaliteli-modern-dershanesi",
+    "title": "Ni̇lüfer Farkli Kali̇teli̇ Modern Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "FETHİYE MAH. ALEV(240) SK. CORNER PLUS İŞ MERKEZİ BLOK NO: 10 NİLÜFER / BURSA",
+    "phone": "02244521122",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL NİLÜFER FARKLI KALİTELİ MODERN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-yenisehir-dershanesi",
+    "title": "Yeni̇şehi̇r Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yeni̇şehi̇r",
+    "address": "KURTULUŞ MAH. YÜZBAŞI İSMAİL HAKKI BEY BUL. ERTAT PRESTİJ EVLERİ E BLOK NO: 18E YENİŞEHİR / BURSA",
+    "phone": "05549278008",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yeni̇şehi̇r · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL YENİŞEHİR DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-enka-matematik-dershanesi",
+    "title": "Enka Matemati̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "19 MAYIS MAH. MEŞELİ(350) SK. NO: 9 NİLÜFER / BURSA",
+    "phone": "05366531433",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ENKA MATEMATİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-nilufer-uzman-kariyer-derece-dershanesi",
+    "title": "Ni̇lüfer Uzman Kari̇yer Derece Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. İZMİR YOLU CAD. DERSANE-1 SİTESİ NO: 91/1A1 NİLÜFER / BURSA",
+    "phone": "05324635604",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL NİLÜFER UZMAN KARİYER DERECE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-sayisal-modul-dershanesi",
+    "title": "Sayisal Modül Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. FATİH SULTAN MEHMET BUL. AS DENİZ APT. NO: 1 NİLÜFER / BURSA",
+    "phone": "02244526688",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL SAYISAL MODÜL DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-karacabey-dogru-cevap-dershanesi",
+    "title": "Karacabey Doğru Cevap Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Karacabey",
+    "address": "TABAKLAR MAH. 83. SK. DERSHANE SİTESİ NO: 3 KARACABEY / BURSA",
+    "phone": "02246132020",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Karacabey · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KARACABEY DOĞRU CEVAP DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-besevler-uzman-kariyer-derece-dershanesi",
+    "title": "Beşevler Uzman Kari̇yer Derece Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. İZMİR YOLU CAD. DERSANE-2 SİTESİ NO: 91/1A2 NİLÜFER / BURSA",
+    "phone": "05324635604",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BEŞEVLER UZMAN KARİYER DERECE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-ozluce-murat-dershanesi",
+    "title": "Özlüce Murat Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "ALTINŞEHİR MAH. 163.(280) SK. A BLOK NO: 11A NİLÜFER / BURSA",
+    "phone": "05550661683",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ÖZLÜCE MURAT DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-deha-dershanesi",
+    "title": "Deha Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BEŞEVLER MAH. KAYA(130) SK. NO: 3A NİLÜFER / BURSA",
+    "phone": "05055893048",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL DEHA DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-detay-hoca-dershanesi",
+    "title": "Detay Hoca Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BALAT MAH. SIHHİYE CAD. 42.BAĞIMSIZ SİTESİ NO: 2B NİLÜFER / BURSA",
+    "phone": "05368195996",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL DETAY HOCA DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-orhangazi-cizgi-fizik-dershanesi",
+    "title": "Orhangazi̇ Çi̇zgi̇ Fi̇zi̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Orhangazi",
+    "address": "ARAPZADE MAH. ORHANBEY CAD. NO: 92 ORHANGAZİ / BURSA",
+    "phone": "05353082123",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Orhangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ORHANGAZİ ÇİZGİ FİZİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-kosegen-dershanesi",
+    "title": "Köşegen Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "KÜPLÜPINAR MAH. AYBER CAD. NO: 20 OSMANGAZİ / BURSA",
+    "phone": "05359323315",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KÖŞEGEN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-orhangazi-cozum-dershanesi",
+    "title": "Orhangazi̇ Çözüm Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Orhangazi",
+    "address": "CAMİİKEBİR MAH. ORHANBEY CAD. NO: 28 ORHANGAZİ / BURSA",
+    "phone": "02245721010",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Orhangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ORHANGAZİ ÇÖZÜM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-fora-dershanesi",
+    "title": "Fora Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KARAMAN MAH. İZMİR YOLU CAD. NO: 84 NİLÜFER / BURSA",
+    "phone": "05062774827",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL FORA DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-ertugrulkent-matematik-dershanesi",
+    "title": "Ertuğrulkent Matemati̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "19 MAYIS MAH. SEVGİ CAD. NO: 5 NİLÜFER / BURSA",
+    "phone": "05412979890",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ERTUĞRULKENT MATEMATİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-yildirim-altinkure-dershanesi",
+    "title": "Yildirim Altinküre Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yıldırım",
+    "address": "DEĞİRMENLİKIZIK MAH. 2.DALYAN SK. NO: 2 YILDIRIM / BURSA",
+    "phone": "05330478739",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yıldırım · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL YILDIRIM ALTINKÜRE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-pi-eksen-dershanesi",
+    "title": "Pi̇ Eksen Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. YASEMİN(120) SK. NO: 9 NİLÜFER / BURSA",
+    "phone": "02244515573",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL Pİ EKSEN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-kultur-dershanesi",
+    "title": "Bursa Kültür Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "KÜKÜRTLÜ MAH. MUDANYA CAD. TELEKOM LOJMANI NO: 99B OSMANGAZİ / BURSA",
+    "phone": "02242332627",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA KÜLTÜR DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-yeni-nesil-dershanesi",
+    "title": "Yeni̇ Nesi̇l Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "HAMİTLER MAH. ABDÜLHAMİD HAN CAD. NO: 12A OSMANGAZİ / BURSA",
+    "phone": "05396901739",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL YENİ NESİL DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-mavi-mega-dershanesi",
+    "title": "Mavi̇ Mega Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BEŞEVLER MAH. YILDIRIM CAD. NO: 337 NİLÜFER / BURSA",
+    "phone": "05325409987",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL MAVİ MEGA DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bogazici-osmangazi-dershanesi",
+    "title": "Boğazi̇çi̇ Osmangazi̇ Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "HOCAALİZADE MAH. KONAKARDI SK. C BLOK NO: 4C OSMANGAZİ / BURSA",
+    "phone": "05342920927",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BOĞAZİÇİ OSMANGAZİ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-modern-dershanesi",
+    "title": "Modern Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yıldırım",
+    "address": "HACİVAT MAH. ANKARAYOLU CAD. NO: 507B YILDIRIM / BURSA",
+    "phone": "05071373614",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yıldırım · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL MODERN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-rota-bireysel-dershanesi",
+    "title": "Rota Bi̇reysel Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "İHSANİYE MAH. İMECE SK. NO: 1 NİLÜFER / BURSA",
+    "phone": "02244416377",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ROTA BİREYSEL DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-atolye-dershanesi",
+    "title": "Bursa Atölye Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Mudanya",
+    "address": "ÇAĞRIŞAN MAH. KOCAÇINAR SK. NO: 10/B MUDANYA / BURSA",
+    "phone": "02245493176",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Mudanya · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA ATÖLYE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bogazici-as-dershanesi",
+    "title": "Boğazi̇çi̇ As Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "HOCAALİZADE MAH. KONAKARDI SK. A BLOK NO: 4A OSMANGAZİ / BURSA",
+    "phone": "05342920927",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BOĞAZİÇİ AS DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-iznik-buyuk-dershanesi",
+    "title": "İzni̇k Büyük Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İzni̇k",
+    "address": "SELÇUK MAH. ATATÜRK CAD. ÖZPAŞ BLOK NO: 65 İZNİK / BURSA",
+    "phone": "02247574242",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İzni̇k · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL İZNİK BÜYÜK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-serhan-eylemer-dershanesi",
+    "title": "Serhan Eylemer Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Mudanya",
+    "address": "BADEMLİ MAH. DOĞU SK. NO: 6 MUDANYA / BURSA",
+    "phone": "02245490309",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Mudanya · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL SERHAN EYLEMER DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bogazici-grup-dershanesi",
+    "title": "Boğazi̇çi̇ Grup Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "HOCAALİZADE MAH. KONAKARDI SK. B BLOK NO: 4B OSMANGAZİ / BURSA",
+    "phone": "05342920927",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BOĞAZİÇİ GRUP DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-okur-dershanesi",
+    "title": "Okur Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. ÇAĞ SK. KONAK APT. BLOK NO: 5A NİLÜFER / BURSA",
+    "phone": "05308805395",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL OKUR DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-gezegen-dershanesi",
+    "title": "Gezegen Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. YILDIRIM CAD. NO: 117 NİLÜFER / BURSA",
+    "phone": "05433085040",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL GEZEGEN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-demir-bilgi-dershanesi",
+    "title": "Demi̇r Bi̇lgi̇ Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BEŞEVLER MAH. YILDIRIM(130) CAD. B BLOK NO: 254BA NİLÜFER / BURSA",
+    "phone": "02245021868",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL DEMİR BİLGİ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-inegol-matematik-evim-dershanesi",
+    "title": "İnegöl Matemati̇k Evi̇m Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "SÜLEYMANİYE MAH. MİMAR SİNAN CAD. B BLOK NO: 78BA İNEGÖL / BURSA",
+    "phone": "02247114747",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL İNEGÖL MATEMATİK EVİM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-inegol-final-matematik-dershanesi",
+    "title": "İnegöl Fi̇nal Matemati̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "SÜLEYMANİYE MAH. İSTİKLAL CAD. NO: 90B İNEGÖL / BURSA",
+    "phone": "02247121000",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL İNEGÖL FİNAL MATEMATİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-konak-fizik-dershanesi",
+    "title": "Konak Fi̇zi̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. BEŞEVLER CAD. NO: 93/1C NİLÜFER / BURSA",
+    "phone": "02244529596",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KONAK FİZİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-ozlu-fenomen-dershanesi",
+    "title": "Özlü Fenomen Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "İHSANİYE MAH. AVCI SK. C BLOK NO: 2-6CB NİLÜFER / BURSA",
+    "phone": "02244512078",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ÖZLÜ FENOMEN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-konak-kimya-dershanesi",
+    "title": "Konak Ki̇mya Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. BEŞEVLER CAD. NO: 93/1A NİLÜFER / BURSA",
+    "phone": "02244529596",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KONAK KİMYA DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-venus-kampus-kimya-dershanesi",
+    "title": "Venüs Kampüs Ki̇mya Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "BAĞLARBAŞI MAH. ŞHT.ER ALİ KIZILKAYA SK. NO: 3 OSMANGAZİ / BURSA",
+    "phone": "02242426868",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL VENÜS KAMPÜS KİMYA DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-kalitem-dershanesi",
+    "title": "Kali̇tem Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "OSMANİYE MAH. ÇAĞLAR SK. NO: 4/6 İNEGÖL / BURSA",
+    "phone": "02247116601",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KALİTEM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-basarida-son-nokta-dershanesi",
+    "title": "Başarida Son Nokta Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "AHMETPAŞA MAH. 298. SK. FOMARA İŞ MERKEZİ NO: 1 OSMANGAZİ / BURSA",
+    "phone": "02242231661",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BAŞARIDA SON NOKTA DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-egitmen-kare-dershanesi",
+    "title": "Eği̇tmen Kare Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. İZMİR YOLU CAD. NO: 200B/B NİLÜFER / BURSA",
+    "phone": "02242422999",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL EĞİTMEN KARE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-uludag-dershanesi",
+    "title": "Uludağ Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yıldırım",
+    "address": "KAZIM KARABEKİR MAH. 2.VATAN CAD. B BLOK NO: 232/1B YILDIRIM / BURSA",
+    "phone": "02242453005",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yıldırım · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ULUDAĞ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-hurriyet-batikent-dershanesi",
+    "title": "Hürri̇yet Batikent Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "HÜRRİYET MAH. 8.UĞUR SK. NO: 16 OSMANGAZİ / BURSA",
+    "phone": "02242492232",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL HÜRRİYET BATIKENT DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-orhangazi-cizgi-dershanesi",
+    "title": "Orhangazi̇ Çi̇zgi̇ Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Orhangazi",
+    "address": "ARAPZADE MAH. BAHÇELİ EVLER SK. NO: 1A ORHANGAZİ / BURSA",
+    "phone": "05312828761",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Orhangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ORHANGAZİ ÇİZGİ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-besevler-kultur-dershanesi",
+    "title": "Beşevler Kültür Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. YASEMİN(120) SK. KÜLTÜR ÖZEL EĞİTİM BLOK NO: 4 NİLÜFER / BURSA",
+    "phone": "02242497980",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BEŞEVLER KÜLTÜR DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bilgi-basari-matematik-dershanesi",
+    "title": "Bi̇lgi̇ Başari Matemati̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. MERKEZ(120) SK. NO: 33-35 NİLÜFER / BURSA",
+    "phone": "02244535380",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BİLGİ BAŞARI MATEMATİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-iznik-ugur-dershanesi",
+    "title": "İzni̇k Uğur Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İzni̇k",
+    "address": "MUSTAFA KEMAL PAŞA MAH. ATATÜRK CAD. NO: 101 İZNİK / BURSA",
+    "phone": "02247578101",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İzni̇k · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL İZNİK UĞUR DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-inegol-kalite-dershanesi",
+    "title": "İnegöl Kali̇te Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "KEMALPAŞA MAH. ADNAN MENDERES BUL. NO: 8 İNEGÖL / BURSA",
+    "phone": "02247151117",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL İNEGÖL KALİTE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-uzman-kariyer-dershanesi",
+    "title": "Bursa Uzman Kari̇yer Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "ALACAMESCİT MAH. OKÇULAR SK. OKÇULAR ÇARŞISI NO: 3 OSMANGAZİ / BURSA",
+    "phone": "02242209584",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA UZMAN KARİYER DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-orhangazi-bilim-dershanesi",
+    "title": "Orhangazi̇ Bi̇li̇m Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Orhangazi",
+    "address": "CAMİİKEBİR MAH. TOZKOPARAN CAD. NO: 10 ORHANGAZİ / BURSA",
+    "phone": "02245731200",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Orhangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ORHANGAZİ BİLİM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-birey-dershanesi",
+    "title": "Bi̇rey Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yıldırım",
+    "address": "ERİKLİ MAH. EĞRİYOL SK. NO: 1 YILDIRIM / BURSA",
+    "phone": "02243718687",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yıldırım · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BİREY DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bilge-dershanesi",
+    "title": "Bi̇lge Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Kestel",
+    "address": "KALE MAH. BURSA CADDESİ NO: 6 KESTEL / BURSA",
+    "phone": "05325562337",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Kestel · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BİLGE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-cozum-dershanesi",
+    "title": "Bursa Çözüm Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "BAĞLARBAŞI MAH. 1.SEDİR SK. B1 BLOK NO: 1-3 OSMANGAZİ / BURSA",
+    "phone": "02242494970",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA ÇÖZÜM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-matematik-dershanesi",
+    "title": "Bursa Matemati̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "19 MAYIS MAH. KUŞKONMAZ SK. K BLOK NO: 1K NİLÜFER / BURSA",
+    "phone": "05374512467",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA MATEMATİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-yavuz-ersat-kabukcu-dershanesi",
+    "title": "Yavuz Erşat Kabukcu Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. DEFNE(140) SK. GÜRSES İŞ MERKEZİ NO: 32 NİLÜFER / BURSA",
+    "phone": "02249994099",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL YAVUZ ERŞAT KABUKCU DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-altiparmak-dershanesi",
+    "title": "Altiparmak Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "İNTİZAM MAH. ALTIPARMAK CAD. NO: 52 OSMANGAZİ / BURSA",
+    "phone": "02242212776",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ALTIPARMAK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-etkin-grup-dershanesi",
+    "title": "Etki̇n Grup Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "OSMANİYE MAH. ALTAY CAD. NO: 16 İNEGÖL / BURSA",
+    "phone": "02247150687",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ETKİN GRUP DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-kavram-dershanesi",
+    "title": "Kavram Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "İnegöl",
+    "address": "KEMALPAŞA MAH. YEŞİL ÇAYIR CAD. B BLOK NO: 77B İNEGÖL / BURSA",
+    "phone": "02242402240",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · İnegöl · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KAVRAM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-kupkok-dershanesi",
+    "title": "Küpkök Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BEŞEVLER MAH. YILDIRIM CAD. NO: 330 NİLÜFER / BURSA",
+    "phone": "02244431531",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KÜPKÖK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-frekans-dershanesi",
+    "title": "Frekans Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. YILDIRIM CAD. NO: 152B NİLÜFER / BURSA",
+    "phone": "02244517714",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL FREKANS DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-etkin-grup-karacabey-dershanesi",
+    "title": "Etki̇n Grup Karacabey Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Karacabey",
+    "address": "ABDULLAHPAŞA MAH. FARUK KATIRCI SK. NO: 7 KARACABEY / BURSA",
+    "phone": "02246600090",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Karacabey · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ETKİN GRUP KARACABEY DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-ozluce-final-dershanesi",
+    "title": "Özlüce Fi̇nal Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "19 MAYIS MAH. KUŞKONMAZ SK. NO: 13 NİLÜFER / BURSA",
+    "phone": "02244131018",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ÖZLÜCE FİNAL DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-yenisehir-kalite-dershanesi",
+    "title": "Yeni̇şehi̇r Kali̇te Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Yeni̇şehi̇r",
+    "address": "YENİGÜN MAH. SERAP SK. FİRDES MUTAF SİTESİ B BLOK NO: 3/1A YENİŞEHİR / BURSA",
+    "phone": "02247723335",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Yeni̇şehi̇r · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL YENİŞEHİR KALİTE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-ugur-dershanesi",
+    "title": "Bursa Uğur Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "İHSANİYE MAH. İZMİR YOLU CAD. NO: 126 NİLÜFER / BURSA",
+    "phone": "02242492400",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA UĞUR DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-konak-dershanesi",
+    "title": "Konak Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. YALI SK. NO: 13A NİLÜFER / BURSA",
+    "phone": "02244529596",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KONAK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-osmangazi-kavram-dershanesi",
+    "title": "Osmangazi̇ Kavram Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "AKPINAR MAH. 367. SK. NO: 3 OSMANGAZİ / BURSA",
+    "phone": "02242256349",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL OSMANGAZİ KAVRAM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bilgitepe-dershanesi",
+    "title": "Bi̇lgi̇tepe Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. 1.AKÇAY SK. NO: 16 NİLÜFER / BURSA",
+    "phone": "05321323307",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BİLGİTEPE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bilgi-dunyasi-dershanesi",
+    "title": "Bi̇lgi̇ Dünyasi Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Mudanya",
+    "address": "HALİTPAŞA MAH. ŞEHİT ÖMER HALİSDEMİR CAD. BİREL 2 B BLOK NO: 9A MUDANYA / BURSA",
+    "phone": "05359469972",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Mudanya · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BİLGİ DÜNYASI DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-guzel-dershanesi",
+    "title": "Güzel Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "AKPINAR MAH. ŞHT.MÜMİN MUTLU SK. A BLOK NO: 2 OSMANGAZİ / BURSA",
+    "phone": "02244521122",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL GÜZEL DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-kazanim-dershanesi",
+    "title": "Kazanim Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "AKPINAR MAH. ŞHT.MÜMİN MUTLU SK. A BLOK NO: 2 OSMANGAZİ / BURSA",
+    "phone": "02244521122",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL KAZANIM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-senturk-dershanesi",
+    "title": "Şentürk Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Mustafakemalpaşa",
+    "address": "HAMZABEY MAH. SOKULLU SK. NO: 17 MUSTAFAKEMALPAŞA / BURSA",
+    "phone": "05052955527",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Mustafakemalpaşa · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ŞENTÜRK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-farkli-kaliteli-modern-dershanesi",
+    "title": "Farkli Kali̇teli̇ Modern Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BEŞEVLER MAH. YILDIRIM(130) CAD. A BLOK NO: 286A NİLÜFER / BURSA",
+    "phone": "02244522888",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL FARKLI KALİTELİ MODERN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-onur-celik-dershanesi",
+    "title": "Onur Çeli̇k Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Mudanya",
+    "address": "HALİTPAŞA MAH. GÜR SK. ORKUN SİTESİ A BLOK NO: 3 MUDANYA / BURSA",
+    "phone": "02245430838",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Mudanya · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ONUR ÇELİK DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-yediiklim-dershanesi",
+    "title": "Bursa Yedi̇i̇kli̇m Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "ALACAMESCİT MAH. ÇANCILAR CAD. NO: 21 OSMANGAZİ / BURSA",
+    "phone": "02242239684",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA YEDİİKLİM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bursa-final-dershanesi",
+    "title": "Bursa Fi̇nal Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "AKTARHÜSSAM MAH. 1.DEĞİRMEN SK. ELİT İŞ MERKEZİ NO: 4 OSMANGAZİ / BURSA",
+    "phone": "02242230808",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BURSA FİNAL DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-arzu-taner-dershanesi",
+    "title": "Arzu Taner Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "ÜÇEVLER MAH. BURÇAK(220) SK. NO: 4B NİLÜFER / BURSA",
+    "phone": "02244437314",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ARZU TANER DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-bireysel-dershanesi",
+    "title": "Bi̇reysel Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "AKPINAR MAH. ŞHT.MÜMİN MUTLU SK. A BLOK NO: 2 OSMANGAZİ / BURSA",
+    "phone": "02244521122",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BİREYSEL DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-serkan-kare-dershanesi",
+    "title": "Serkan Kare Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. YILDIRIM CAD. ŞEKER APT. NO: 91B NİLÜFER / BURSA",
+    "phone": "05397957566",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL SERKAN KARE DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-besevler-beyaz-dershanesi",
+    "title": "Beşevler Beyaz Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "KONAK MAH. İZMİR YOLU CAD. NO: 85 NİLÜFER / BURSA",
+    "phone": "02244535595",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL BEŞEVLER BEYAZ DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-akgun-dershanesi",
+    "title": "Akgün Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "BARIŞ MAH. İZMİR YOLU CAD. NO: 182 NİLÜFER / BURSA",
+    "phone": "02244512825",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL AKGÜN DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-final-dershanesi",
+    "title": "Fi̇nal Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "İHSANİYE MAH. ALAGEYİK(110) SK. GÜVEN APT. NO: 1/2 NİLÜFER / BURSA",
+    "phone": "02242497979",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL FİNAL DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-osmangazi-onadim-dershanesi",
+    "title": "Osmangazi̇ Onadim Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "DOĞANBEY MAH. DOĞANBEY CAD. ÖRTAŞ İŞHANI NO: 7 OSMANGAZİ / BURSA",
+    "phone": "02242256401",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Osmangazi · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": true,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL OSMANGAZİ ONADIM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-onadim-dershanesi",
+    "title": "Onadim Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "FETHİYE MAH. GAZİ(240) SK. OFİS B BLOK NO: 9B1 NİLÜFER / BURSA",
+    "phone": "02242434353",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL ONADIM DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  },
+  {
+    "slug": "ozel-19-mayis-dershanesi",
+    "title": "19 Mayis Dershanesi̇",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "ilce": "Ni̇lüfer",
+    "address": "19 MAYIS MAH. UĞUR MUMCU BUL. NO: 130 NİLÜFER / BURSA",
+    "phone": "02244130202",
+    "web": "",
+    "hours_text": "08:00 – 21:00",
+    "blurb": "Dershane · Ni̇lüfer · MEB kayıtlı",
+    "tags": [
+      "dershane",
+      "lgs",
+      "yks",
+      "meb"
+    ],
+    "featured": false,
+    "source": "meb",
+    "extra": {
+      "meb_title": "ÖZEL 19 MAYIS DERSHANESİ",
+      "programs": [
+        "LGS",
+        "YKS",
+        "TYT-AYT"
+      ]
+    }
+  }
+]

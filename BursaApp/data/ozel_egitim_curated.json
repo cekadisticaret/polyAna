@@ -1,0 +1,63 @@
+[
+  {
+    "slug": "aci-ozel-egitim-kurumlari",
+    "title": "Açı Özel Eğitim Kurumları",
+    "subcategory": "ozel-egitim",
+    "price_band": "Özel",
+    "ilce": "Gemlik",
+    "address": "Dr. Ziya Kaya Mah. Orhangazi Cad. No: 46, Gemlik / Bursa",
+    "phone": "02245040110",
+    "web": "https://aciegitimkurumlari.com",
+    "hours_text": "08:30 – 18:00",
+    "blurb": "Özel eğitim · Gemlik · gelişim destek programları",
+    "tags": ["ozel-egitim", "rehabilitasyon", "gemlik"],
+    "featured": true,
+    "source": "curated"
+  },
+  {
+    "slug": "ruveyde-dortcelik-ozel-egitim-mesleki-egitim-merkezi-okulu",
+    "title": "Rüveyde Dörtçelik Özel Eğitim Mesleki Eğitim Merkezi Okulu",
+    "subcategory": "ozel-egitim",
+    "price_band": "Özel",
+    "ilce": "Yıldırım",
+    "address": "Dörtçelik Eğitimi Kampüsü Demetevler Mah. B201 Sok. No: 3, Yıldırım / Bursa",
+    "phone": "02243761524",
+    "web": "https://ruveydedortcelikozelegitim.meb.k12.tr",
+    "blurb": "Özel eğitim meslek okulu · Dörtçelik kampüsü",
+    "tags": ["ozel-egitim", "mesleki-egitim", "yildirim"],
+    "featured": true,
+    "source": "meb_k12"
+  },
+  {
+    "slug": "ipek-ozel-egitim-uygulama-okulu",
+    "title": "İpek Özel Eğitim Uygulama Okulu",
+    "subcategory": "ozel-egitim",
+    "price_band": "Özel",
+    "ilce": "Osmangazi",
+    "address": "Osmangazi / Bursa",
+    "blurb": "Özel eğitim uygulama okulu",
+    "tags": ["ozel-egitim", "uygulama-okulu"],
+    "featured": true,
+    "source": "osm"
+  },
+  {
+    "slug": "karacabey-ozel-egitim-meslek-okulu",
+    "title": "Karacabey Özel Eğitim Meslek Okulu",
+    "subcategory": "ozel-egitim",
+    "price_band": "Devlet",
+    "ilce": "Karacabey",
+    "address": "Karacabey / Bursa",
+    "blurb": "Devlet özel eğitim meslek okulu · Karacabey",
+    "tags": ["ozel-egitim", "devlet", "mesleki-egitim"],
+    "featured": false,
+    "source": "osm"
+  },
+  {
+    "slug": "bil-fen-dershanecilik-kurs-merkezi",
+    "subcategory": "dershane",
+    "price_band": "Özel",
+    "blurb": "Dershane · Nilüfer",
+    "tags": ["dershane", "lgs", "yks"],
+    "source": "curated"
+  }
+]

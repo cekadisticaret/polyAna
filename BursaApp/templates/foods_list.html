@@ -1,161 +1,208 @@
 {% extends "_shell.html" %}
-{% block body_class %} food-browse{% endblock %}
+{% block body_class %} food-browse food-live{% endblock %}
 {% block page_head %}{% endblock %}
 {% block main %}
-<div class="food-top" id="liste">
-  <div>
-    <h1>{{ seo_vertical.h1 if seo_vertical else 'Bursa Restoranları' }}</h1>
-    {% include "_seo_vertical_intro.html" %}
+<div class="food-live-wrap" id="liste">
+  <h1 class="visually-hidden">{{ seo_vertical.h1 if seo_vertical else 'Bursa Restoranları' }}</h1>
+
+  <div class="food-live-top">
+    <form class="food-search food-search-live" method="get" action="/yeme-icme" role="search">
+    <label class="visually-hidden" for="food-q">Restoran ara</label>
+    <span class="food-search-ico" aria-hidden="true">🔍</span>
+    <input id="food-q" name="q" value="{{ q|default('') }}" placeholder="Restoran, cafe, İskender, ilçe ara…" autocomplete="off" enterkeyhint="search">
+    {% for k in kinds_on %}<input type="hidden" name="kind" value="{{ k }}">{% endfor %}
+    {% for k in meals_on %}<input type="hidden" name="meal" value="{{ k }}">{% endfor %}
+    {% for k in cuisines_on %}<input type="hidden" name="cuisine" value="{{ k }}">{% endfor %}
+    {% for k in dishes_on %}<input type="hidden" name="dish" value="{{ k }}">{% endfor %}
+    {% for k in prices_on %}<input type="hidden" name="price" value="{{ k }}">{% endfor %}
+    {% if ilce %}<input type="hidden" name="ilce" value="{{ ilce }}">{% endif %}
+    {% if sub %}<input type="hidden" name="sub" value="{{ sub }}">{% endif %}
+    {% if sort and sort != 'featured' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+    <button type="submit" class="food-search-btn">Ara</button>
+    {% if q %}<a class="food-search-clear" href="{{ food_href(q='', page='') }}" title="Aramayı temizle" aria-label="Aramayı temizle">×</a>{% endif %}
+    </form>
+    <a class="food-map-btn food-map-btn-compact" href="/harita?cat=food">Harita</a>
   </div>
-  <a class="food-map-btn" href="/harita?cat=food">Harita</a>
-</div>
 
-<form class="food-search" method="get" action="/yeme-icme" role="search">
-  <label class="visually-hidden" for="food-q">Restoran ara</label>
-  <input id="food-q" name="q" value="{{ q|default('') }}" placeholder="Restoran, cafe, İskender, ilçe ara…" autocomplete="off" enterkeyhint="search">
-  {% for k in kinds_on %}<input type="hidden" name="kind" value="{{ k }}">{% endfor %}
-  {% for k in meals_on %}<input type="hidden" name="meal" value="{{ k }}">{% endfor %}
-  {% for k in cuisines_on %}<input type="hidden" name="cuisine" value="{{ k }}">{% endfor %}
-  {% for k in dishes_on %}<input type="hidden" name="dish" value="{{ k }}">{% endfor %}
-  {% for k in prices_on %}<input type="hidden" name="price" value="{{ k }}">{% endfor %}
-  {% if ilce %}<input type="hidden" name="ilce" value="{{ ilce }}">{% endif %}
-  {% if sub %}<input type="hidden" name="sub" value="{{ sub }}">{% endif %}
-  {% if sort and sort != 'featured' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
-  <button type="submit" class="food-search-btn">Ara</button>
-  {% if q %}<a class="food-search-clear" href="{{ food_href(q='', page='') }}" title="Aramayı temizle" aria-label="Aramayı temizle">×</a>{% endif %}
-</form>
-
-<div class="food-browse-grid">
-  <aside class="food-side">
-    <details class="food-filter-panel" open>
-      <summary>Filtreler</summary>
-      <div class="food-filters">
-        <details class="ff-fold"{% if kinds_on %} open{% endif %}>
-          <summary>Kuruluş türü{% if kinds_on %}<span class="ff-fold-n">{{ kinds_on|length }}</span>{% endif %}</summary>
-          <div class="ff-fold-body">
-          {% for k, lab, _s in food_kind %}
-          <a class="food-ff {{ 'on' if k in kinds_on else '' }}" href="{{ food_href(toggle=('kind', k)) }}">{{ lab }}</a>
-          {% endfor %}
-          </div>
-        </details>
-        <details class="ff-fold"{% if meals_on %} open{% endif %}>
-          <summary>Yemek türü{% if meals_on %}<span class="ff-fold-n">{{ meals_on|length }}</span>{% endif %}</summary>
-          <div class="ff-fold-body">
-          {% for k, lab in food_meal %}
-          <a class="food-ff {{ 'on' if k in meals_on else '' }}" href="{{ food_href(toggle=('meal', k)) }}">{{ lab }}</a>
-          {% endfor %}
-          </div>
-        </details>
-        <details class="ff-fold"{% if cuisines_on %} open{% endif %}>
-          <summary>Mutfaklar{% if cuisines_on %}<span class="ff-fold-n">{{ cuisines_on|length }}</span>{% endif %}</summary>
-          <div class="ff-fold-body">
-          {% for k, lab in food_cuisine %}
-          <a class="food-ff {{ 'on' if k in cuisines_on else '' }}" href="{{ food_href(toggle=('cuisine', k)) }}">{{ lab }}</a>
-          {% endfor %}
-          </div>
-        </details>
-        <details class="ff-fold"{% if dishes_on %} open{% endif %}>
-          <summary>Yemekler{% if dishes_on %}<span class="ff-fold-n">{{ dishes_on|length }}</span>{% endif %}</summary>
-          <div class="ff-fold-body">
-          {% for k, lab in food_dish %}
-          <a class="food-ff {{ 'on' if k in dishes_on else '' }}" href="{{ food_href(toggle=('dish', k)) }}">{{ lab }}</a>
-          {% endfor %}
-          </div>
-        </details>
-        <details class="ff-fold"{% if prices_on %} open{% endif %}>
-          <summary>Fiyat{% if prices_on %}<span class="ff-fold-n">{{ prices_on|length }}</span>{% endif %}</summary>
-          <div class="ff-fold-body">
-          {% for k, lab in food_price %}
-          <a class="food-ff {{ 'on' if k in prices_on else '' }}" href="{{ food_href(toggle=('price', k)) }}">{{ lab }}</a>
-          {% endfor %}
-          </div>
-        </details>
-        <details class="ff-fold"{% if ilce %} open{% endif %}>
-          <summary>Bölge{% if ilce %}<span class="ff-fold-n">1</span>{% endif %}</summary>
-          <div class="ff-fold-body">
-          <a class="food-ff {{ 'on' if not ilce else '' }}" href="{{ food_href(ilce='') }}">Tüm ilçeler</a>
-          {% for ad in ilceler %}
-          <a class="food-ff {{ 'on' if ilce==ad else '' }}" href="{{ food_href(ilce=ad) }}">{{ ad }}</a>
-          {% endfor %}
-          </div>
-        </details>
-        {% if kinds_on or meals_on or cuisines_on or dishes_on or prices_on or ilce or q %}
-        <a class="ff-clear" href="/yeme-icme">Filtreleri temizle</a>
-        {% endif %}
+  {% if food_hero and food_hero|length >= 1 %}
+  <section class="food-hero" aria-label="Öne çıkan mekanlar">
+    {% set h0 = food_hero[0] %}
+    <a class="food-hero-main" href="{{ h0.path or ('/yer/' ~ h0.slug) }}">
+      <div class="food-hero-copy">
+        <span class="food-hero-tag">Editör seçimi</span>
+        <h2>{{ h0.title }}</h2>
+        <p>{% if h0.rating %}★ {{ '%.1f'|format(h0.rating) }}{% endif %}{% if h0.ilce %} · {{ h0.ilce }}{% endif %}{% if h0.subcategory_label %} · {{ h0.subcategory_label }}{% endif %}</p>
+        <span class="food-hero-cta">Mekanı gör →</span>
       </div>
-    </details>
-  </aside>
-
-  <div class="food-main">
-    <div class="food-toolbar">
-      <span>{{ total }} sonuç{% if q %} · “{{ q }}”{% endif %}</span>
-      <label>Sırala
-        <select onchange="if(this.value) location.href=this.value">
-          <option value="{{ food_href(sort='featured', page='') }}" {% if sort=='featured' %}selected{% endif %}>Öne çıkanlar</option>
-          <option value="{{ food_href(sort='rating', page='') }}" {% if sort=='rating' %}selected{% endif %}>Puana göre</option>
-          <option value="{{ food_href(sort='name', page='') }}" {% if sort=='name' %}selected{% endif %}>Ada göre</option>
-        </select>
-      </label>
+      {% if h0.img_url %}<img src="{{ h0.img_url }}" alt="{{ h0.title }}" loading="eager">{% else %}<div class="food-hero-ph">🍽</div>{% endif %}
+    </a>
+    {% if food_hero|length > 1 %}
+    <div class="food-hero-side">
+      {% for h in food_hero[1:3] %}
+      <a class="food-hero-mini" href="{{ h.path or ('/yer/' ~ h.slug) }}">
+        {% if h.img_url %}<img src="{{ h.img_url }}" alt="{{ h.title }}" loading="lazy">{% else %}<div class="food-hero-ph">🍽</div>{% endif %}
+        <span>
+          <b>{{ h.title }}</b>
+          <small>{% if h.rating %}★ {{ '%.1f'|format(h.rating) }}{% endif %}{% if h.ilce %} · {{ h.ilce }}{% endif %}</small>
+        </span>
+      </a>
+      {% endfor %}
     </div>
+    {% endif %}
+  </section>
+  {% endif %}
 
-    {% if places %}
-    <div class="food-hits">
-      {% for p in places %}
-      <article class="food-hit">
-        <a class="food-hit-photo" href="{{ p.path or ('/yer/' ~ p.slug) }}">
-          {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🍽</div>{% endif %}
-          {% if p.gallery and p.gallery|length > 1 %}
-          <span class="food-hit-dots" aria-hidden="true">{% for g in p.gallery %}<i{% if loop.first %} class="on"{% endif %}></i>{% endfor %}</span>
+  <section class="food-curated" aria-label="Lezzet rotaları">
+    <div class="food-section-head">
+      <h2>Lezzet rotaları</h2>
+      <p>Küratör seçimleri — tek tıkla filtrele</p>
+    </div>
+    <div class="food-curated-track">
+      {% for c in food_curated %}
+      <a class="food-curate-card tone-{{ c.tone }} {{ 'on' if c.active else '' }}"
+         href="{{ c.href }}">
+        <span class="food-curate-tag">{{ c.tag }}</span>
+        <strong>{{ c.title }}</strong>
+        <span class="food-curate-go">Keşfet →</span>
+        <img src="{{ c.img }}" alt="" loading="lazy">
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="food-quick" aria-label="Hızlı kategori">
+    <div class="food-section-head food-section-head-tight">
+      <h2>Ne arıyorsun?</h2>
+    </div>
+    <div class="food-quick-track">
+      {% for k, lab, _s in food_kind %}
+      <a class="food-quick-chip {{ 'on' if k in kinds_on else '' }}" href="{{ food_href(toggle=('kind', k), page='') }}">{{ lab }}</a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="food-browse-grid">
+    <aside class="food-side">
+      <details class="food-filter-panel" open>
+        <summary>Filtreler</summary>
+        <div class="food-filters">
+          <details class="ff-fold"{% if kinds_on %} open{% endif %}>
+            <summary>Kuruluş türü{% if kinds_on %}<span class="ff-fold-n">{{ kinds_on|length }}</span>{% endif %}</summary>
+            <div class="ff-fold-body">
+            {% for k, lab, _s in food_kind %}
+            <a class="food-ff {{ 'on' if k in kinds_on else '' }}" href="{{ food_href(toggle=('kind', k)) }}">{{ lab }}</a>
+            {% endfor %}
+            </div>
+          </details>
+          <details class="ff-fold"{% if meals_on %} open{% endif %}>
+            <summary>Yemek türü{% if meals_on %}<span class="ff-fold-n">{{ meals_on|length }}</span>{% endif %}</summary>
+            <div class="ff-fold-body">
+            {% for k, lab in food_meal %}
+            <a class="food-ff {{ 'on' if k in meals_on else '' }}" href="{{ food_href(toggle=('meal', k)) }}">{{ lab }}</a>
+            {% endfor %}
+            </div>
+          </details>
+          <details class="ff-fold"{% if cuisines_on %} open{% endif %}>
+            <summary>Mutfaklar{% if cuisines_on %}<span class="ff-fold-n">{{ cuisines_on|length }}</span>{% endif %}</summary>
+            <div class="ff-fold-body">
+            {% for k, lab in food_cuisine %}
+            <a class="food-ff {{ 'on' if k in cuisines_on else '' }}" href="{{ food_href(toggle=('cuisine', k)) }}">{{ lab }}</a>
+            {% endfor %}
+            </div>
+          </details>
+          <details class="ff-fold"{% if dishes_on %} open{% endif %}>
+            <summary>Yemekler{% if dishes_on %}<span class="ff-fold-n">{{ dishes_on|length }}</span>{% endif %}</summary>
+            <div class="ff-fold-body">
+            {% for k, lab in food_dish %}
+            <a class="food-ff {{ 'on' if k in dishes_on else '' }}" href="{{ food_href(toggle=('dish', k)) }}">{{ lab }}</a>
+            {% endfor %}
+            </div>
+          </details>
+          <details class="ff-fold"{% if prices_on %} open{% endif %}>
+            <summary>Fiyat{% if prices_on %}<span class="ff-fold-n">{{ prices_on|length }}</span>{% endif %}</summary>
+            <div class="ff-fold-body">
+            {% for k, lab in food_price %}
+            <a class="food-ff {{ 'on' if k in prices_on else '' }}" href="{{ food_href(toggle=('price', k)) }}">{{ lab }}</a>
+            {% endfor %}
+            </div>
+          </details>
+          <details class="ff-fold"{% if ilce %} open{% endif %}>
+            <summary>Bölge{% if ilce %}<span class="ff-fold-n">1</span>{% endif %}</summary>
+            <div class="ff-fold-body">
+            <a class="food-ff {{ 'on' if not ilce else '' }}" href="{{ food_href(ilce='') }}">Tüm ilçeler</a>
+            {% for ad in ilceler %}
+            <a class="food-ff {{ 'on' if ilce==ad else '' }}" href="{{ food_href(ilce=ad) }}">{{ ad }}</a>
+            {% endfor %}
+            </div>
+          </details>
+          {% if kinds_on or meals_on or cuisines_on or dishes_on or prices_on or ilce or q %}
+          <a class="ff-clear" href="/yeme-icme">Filtreleri temizle</a>
           {% endif %}
-        </a>
-        <div class="food-hit-body">
-          <h2><a href="{{ p.path or ('/yer/' ~ p.slug) }}">{{ p.rank }}. {{ p.title }}</a></h2>
-          {% if p.rating %}
-          <div class="food-hit-rate">
-            <b>{{ '%.1f'|format(p.rating) }}</b>
-            <span class="food-bubbles" title="{{ p.rating }}">
-              {% for i in range(5) %}
-              <i class="{% if p.rating >= i+0.8 %}full{% elif p.rating >= i+0.3 %}half{% endif %}"></i>
-              {% endfor %}
-            </span>
-            {% if p.rating_count %}<small>({{ p.rating_count }} yorum)</small>{% else %}<small>liste puanı</small>{% endif %}
-          </div>
-          {% endif %}
-          <p class="food-hit-meta">
-            {{ p.subcategory_label or p.price_band or 'Restoran' }}
-            · {{ p.price_marks }}
-            {% if p.ilce %} · {{ p.ilce }}{% endif %}
-            {% if p.hours_text %} · {{ p.hours_text }}{% endif %}
-          </p>
-          {% if p.has_menu %}
-          <a class="food-hit-menu" href="{{ p.path or ('/yer/' ~ p.slug) }}#menu">Menü</a>
-          {% endif %}
-          {% if p.blurb %}<p class="food-hit-snip">“{{ p.blurb[:140] }}{% if p.blurb|length > 140 %}…{% endif %}”</p>{% endif %}
         </div>
-      </article>
-      {% endfor %}
+      </details>
+    </aside>
+
+    <div class="food-main">
+      <div class="food-toolbar">
+        <span>{{ total }} sonuç{% if q %} · “{{ q }}”{% endif %}</span>
+        <label>Sırala
+          <select onchange="if(this.value) location.href=this.value">
+            <option value="{{ food_href(sort='featured', page='') }}" {% if sort=='featured' %}selected{% endif %}>Öne çıkanlar</option>
+            <option value="{{ food_href(sort='rating', page='') }}" {% if sort=='rating' %}selected{% endif %}>Puana göre</option>
+            <option value="{{ food_href(sort='name', page='') }}" {% if sort=='name' %}selected{% endif %}>Ada göre</option>
+          </select>
+        </label>
+      </div>
+
+      {% if places %}
+      <div class="food-grid">
+        {% for p in places %}
+        <article class="food-card">
+          <a class="food-card-media" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+            {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="food-card-ph">🍽</div>{% endif %}
+            {% if p.rating %}<span class="food-card-rate">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+            {% if p.featured %}<span class="food-card-hot">Öne çıkan</span>{% endif %}
+          </a>
+          <div class="food-card-body">
+            <p class="food-card-rank">#{{ p.rank }}</p>
+            <h2><a href="{{ p.path or ('/yer/' ~ p.slug) }}">{{ p.title }}</a></h2>
+            <p class="food-card-meta">
+              {{ p.subcategory_label or 'Restoran' }}
+              · {{ p.price_marks }}
+              {% if p.ilce %} · {{ p.ilce }}{% endif %}
+            </p>
+            {% if p.blurb %}<p class="food-card-snip">{{ p.blurb[:90] }}{% if p.blurb|length > 90 %}…{% endif %}</p>{% endif %}
+            <div class="food-card-foot">
+              {% if p.has_menu %}
+              <a class="food-card-link" href="{{ p.path or ('/yer/' ~ p.slug) }}#menu">Menü</a>
+              {% endif %}
+              <a class="food-card-btn" href="{{ p.path or ('/yer/' ~ p.slug) }}">Detay →</a>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% if pages > 1 %}
+      <nav class="food-pages" aria-label="Sayfalar">
+        {% if page > 1 %}<a href="{{ food_href(page=page-1) }}">←</a>{% endif %}
+        {% for n in range(1, pages+1) %}
+          {% if n == page %}<span class="on">{{ n }}</span>
+          {% elif n <= 3 or n > pages-2 or (n >= page-1 and n <= page+1) %}
+          <a href="{{ food_href(page=n) }}">{{ n }}</a>
+          {% elif n == 4 or n == pages-2 %}<span class="gap">…</span>
+          {% endif %}
+        {% endfor %}
+        {% if page < pages %}<a href="{{ food_href(page=page+1) }}">→</a>{% endif %}
+      </nav>
+      {% endif %}
+      {% else %}
+      <div class="empty-box food-empty-live">
+        <p>{% if q %}“{{ q }}” için sonuç yok.{% else %}Bu filtrelere uyan restoran yok.{% endif %}</p>
+        <p><a href="/yeme-icme">Filtreleri temizle</a></p>
+      </div>
+      {% endif %}
     </div>
-    {% if pages > 1 %}
-    <nav class="food-pages" aria-label="Sayfalar">
-      {% if page > 1 %}<a href="{{ food_href(page=page-1) }}">←</a>{% endif %}
-      {% for n in range(1, pages+1) %}
-        {% if n == page %}<span class="on">{{ n }}</span>
-        {% elif n <= 3 or n > pages-2 or (n >= page-1 and n <= page+1) %}
-        <a href="{{ food_href(page=n) }}">{{ n }}</a>
-        {% elif n == 4 or n == pages-2 %}<span class="gap">…</span>
-        {% endif %}
-      {% endfor %}
-      {% if page < pages %}<a href="{{ food_href(page=page+1) }}">→</a>{% endif %}
-    </nav>
-    {% endif %}
-    {% else %}
-    <div class="empty-box">
-      <p>{% if q %}“{{ q }}” için sonuç yok.{% else %}Bu filtrelere uyan restoran yok.{% endif %}</p>
-      <p><a href="/yeme-icme">Filtreleri temizle</a></p>
-    </div>
-    {% endif %}
   </div>
 </div>
-{% include "_seo_vertical_after.html" %}
 {% include "_browse_filter_script.html" %}
 {% endblock %}

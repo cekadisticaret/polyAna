@@ -1,0 +1,9 @@
+{# Faturalar / abonelik alt sekmeleri #}
+{% set un = nav_util or 'hub' %}
+<nav class="util-tabs" aria-label="Fatura ve abonelik">
+  <a class="util-tab {{ 'on' if un == 'hub' else '' }}" href="/faturalar">Özet</a>
+  <a class="util-tab {{ 'on' if un == 'su' else '' }}" href="/buski-su-fiyatlari">Su · BUSKİ</a>
+  <a class="util-tab {{ 'on' if un == 'elec' else '' }}" href="/bursa-elektrik-fiyatlari">Elektrik · UEDAŞ</a>
+  <a class="util-tab {{ 'on' if un == 'gas' else '' }}" href="/bursa-dogalgaz-fiyatlari">Doğalgaz · Aksa · Bursagaz</a>
+  <a class="util-tab {{ 'on' if un == 'teleferik' else '' }}" href="/uludag-teleferik">Uludağ Teleferik</a>
+</nav>

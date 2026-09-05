@@ -91,9 +91,15 @@
       <a class="wa-btn wa-btn-ghost wa-admin-btn" href="/admin/dashboard" rel="nofollow">Admin</a>
       {% endif %}
       {% if nav_user %}
-      <a class="wa-btn wa-btn-forest wa-user-btn" href="/hesap/profil" rel="nofollow">
-        {% if nav_user.avatar_url %}<img class="wa-user-avatar" src="{{ nav_user.avatar_url }}" alt="{{ nav_user.name }} profil fotoğrafı">{% endif %}
-        <span>{{ nav_user.name.split()[0] }}</span>
+      <a class="wa-user-chip" href="/hesap/profil" rel="nofollow" title="{{ nav_user.name }}">
+        <span class="wa-user-chip-av">
+          {% if nav_user.avatar_url %}
+          <img src="{{ nav_user.avatar_url }}" alt="{{ nav_user.name }} profil fotoğrafı">
+          {% else %}
+          <span>{{ nav_user.name[0]|upper }}</span>
+          {% endif %}
+        </span>
+        <span class="wa-user-chip-name">{{ nav_user.name.split()[0] }}</span>
       </a>
       <a class="wa-btn wa-btn-ghost" href="/cikis" title="Çıkış" aria-label="Çıkış yap" rel="nofollow">Çıkış</a>
       {% else %}
@@ -103,14 +109,18 @@
   </header>
 
   <nav class="wa-nav wa-nav-desktop" aria-label="Ana menü">
+    <div class="wa-nav-main">
     <a class="{{ 'on' if nav=='kesfet' else '' }}" href="/">🏠 Keşfet</a>
     <a class="{{ 'on' if nav=='visit' else '' }}" href="/gezilecek">🌿 Gezilecek</a>
+    <a class="{{ 'on' if nav=='teleferik' else '' }}" href="/uludag-teleferik">🚡 Teleferik</a>
     <a class="{{ 'on' if nav=='food' else '' }}" href="/yeme-icme">🍽 Yeme-içme</a>
     <a class="{{ 'on' if nav=='market' else '' }}" href="/marketler">🛒 Marketler</a>
     <a class="{{ 'on' if nav in ('hospital','doctor','dentist','vet','pharmacy','school') else '' }}" href="/hastaneler">🏨 Sağlık</a>
     <a class="{{ 'on' if nav in ('concert','event','theater') else '' }}" href="/konserler">🎵 Etkinlik</a>
     <a class="{{ 'on' if nav=='blog' else '' }}" href="/blog">✍️ Blog</a>
+    <a class="{{ 'on' if nav=='news' else '' }}" href="/haberler">📰 Haberler</a>
     <a class="{{ 'on' if nav=='bursaspor' else '' }}" href="/bursaspor">🟢 Bursaspor</a>
+    </div>
     <details class="wa-nav-more">
       <summary>⋯ Daha fazla</summary>
       <div class="wa-nav-drop">
@@ -118,6 +128,8 @@
         <a href="/doktorlar">Doktorlar</a>
         <a href="/dis-hekimleri">Diş hekimleri</a>
         <a href="/nobetci-eczaneler"><b>Nöbetçi eczaneler</b></a>
+        <a href="/faturalar"><b>Su · elektrik · gaz</b></a>
+        <a href="/uludag-teleferik">Uludağ Teleferik</a>
         <a href="/veterinerler">Veterinerler</a>
         <a href="/okullar"><b>Okullar</b></a>
         <a href="/oteller">Oteller</a>
@@ -132,7 +144,9 @@
         <a href="/etkinlikler">Etkinlikler</a>
         <a href="/organizasyonlar">Organizasyonlar</a>
         <a href="/blog"><b>Blog</b></a>
-        <a href="/kvkk">KVKK</a>
+        <a href="/haberler"><b>Haberler</b></a>
+        <a href="/bursaspor">Bursaspor</a>
+        <a href="/iletisim">İletişim</a>
         <a href="/ilce">İlçeler</a>
         <a href="/harita">Harita</a>
         <a href="/rota">Rota</a>
@@ -201,13 +215,14 @@
     <nav aria-label="Dikeyler">
       <a href="/yeme-icme">Yeme-içme</a>
       <a href="/gezilecek">Gezilecek</a>
+      <a href="/uludag-teleferik">Uludağ Teleferik</a>
       <a href="/oteller">Oteller</a>
       <a href="/blog">Blog</a>
       <a href="/#nasil">Nasıl</a>
     </nav>
     <div class="meta">
       <a href="/kvkk">KVKK</a>
-      <a href="https://wa.me/905535469948" target="_blank" rel="noopener noreferrer">WhatsApp {{ wa_phone or '+90 553 546 99 48' }}</a>
+      <a href="/iletisim">İletişim</a>
       <span>Ücretsiz rehber · rezervasyon yok</span>
     </div>
   </div>
@@ -257,9 +272,5 @@
   </a>
 </nav>
 
-<a class="ba-wa-support" href="https://wa.me/905535469948?text={{ 'Merhaba, BursaApp hakkında destek istiyorum.'|urlencode }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp anlık destek">
-  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M12.04 2c-5.46 0-9.91 4.43-9.91 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.9-4.44 9.9-9.9C21.94 6.43 17.5 2 12.04 2zm5.52 14.18c-.23.65-1.34 1.2-1.85 1.28-.47.07-1.07.1-1.73-.11-.4-.12-.91-.28-1.57-.55-2.76-1.19-4.56-3.97-4.7-4.15-.13-.18-1.1-1.46-1.1-2.79 0-1.33.7-1.98.94-2.25.24-.27.53-.34.7-.34h.51c.16 0 .38-.06.59.45.23.54.77 1.88.84 2.02.07.13.11.29.02.47-.09.18-.13.29-.26.45-.13.16-.27.35-.39.47-.13.13-.26.27-.11.52.15.26.66 1.09 1.42 1.77 1.01.9 1.85 1.18 2.11 1.31.26.13.41.11.56-.07.15-.18.65-.76.82-1.02.18-.26.35-.22.59-.13.24.09 1.52.72 1.78.85.26.13.44.2.5.31.07.11.07.64-.16 1.29z"/></svg>
-  <span class="ba-wa-label">Destek</span>
-</a>
 </body>
 </html>

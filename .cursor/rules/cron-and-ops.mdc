@@ -22,7 +22,7 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `31 14 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
 | `59 23 * * *` | `cd /root/aiProject && python3 BistAnaliz/backup.py` | `/tmp/backup.log` |
 | `* * * * *` | `cd /root/aiProject && python3 ops/gpsusdt_close_retry.py` (CoptC `live_close_fail` / `bn_status_unknown` → GPSUSDT MARKET reduceOnly, 4×6sn; **emir açmaz**) | `/tmp/gpsusdt_close_retry.log` |
-| `* * * * *` | `cd /root/aiProject && python3 temmuzPoly/hourly_path_log.py tick` (BTC/ETH/SOL dakika yolu · 1h referans çizgisi · **emir yok**) | `/tmp/hourly_path.log` |
+| ~~`* * * * *`~~ | ~~`hourly_path_log.py tick`~~ **KALDIRILDI** — `binance_ws_marks.py` WS → `hourly_path/apply_prices` (~15 sn / dk değişimi) · yedek: `hourly_path_log.py tick` | `/tmp/binance_ws_marks.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
 | `1 * * * *` | `temmuzPoly/poly_trader_analiz1.py close` | `/tmp/poly_trader_analiz1.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz1.py open` (**F16** sanal — eski A1 / 1. Analiz, :02) | `/tmp/poly_trader_analiz1.log` |
@@ -33,6 +33,9 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `* * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_jarvis2026.py open` (**JARVIS2026** — evrilen fikir · her dk kural uyunca girer · $16/24/32 · sanal **$1000**; **:02/:05/:07 kilit yok**; gerçek PM yok) | `/tmp/poly_trader_jarvis2026.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_jarvis2026.py weekly` | `/tmp/poly_trader_jarvis2026.log` |
 | `30 */2 * * *` | `cd /root/aiProject && python3 temmuzPoly/jarvis2026_evolve.py` (kendi hatalarından fikir üretir; **2 saatte bir** :30; TG yok) | `/tmp/jarvis2026_evolve.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref01.py close` | `/tmp/poly_trader_ref01.log` |
+| `* * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref01.py open` (**REF01** — saatlik yol 20 bps trend / erken kesiş fade · $24/36/48 · sanal **$1000**; **:02/:05/:07 kilit yok**; gerçek PM yok) | `/tmp/poly_trader_ref01.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref01.py weekly` | `/tmp/poly_trader_ref01.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 temmuzPoly/backtest_watch_1y.py` (izleme 5’li 1Y · 00:00 İST · **emir yok**) | `/tmp/backtest_watch_1y.log` |
 | `1 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py close` (`/algoritma-islemler`) | `/tmp/poly_trader_analiz*.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py open` | `/tmp/poly_trader_analiz*.log` |
@@ -166,7 +169,11 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `20 4 * * 1` | `cd /root/aiProject && python3 bahis/calib.py` (7 lig walk-forward · Brier/log-loss · **emir yok**) | `/tmp/bahis_calib.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 BursaApp/events_fetch.py` (Bursa konser/etkinlik · Etkinlinkler + kapak foto · **00:00 İST** · emir yok) | `/tmp/bursaapp_events_fetch.log` |
 | `0 3,15 * * *` | `cd /root/aiProject && python3 BursaApp/bursaspor_feed.py` (Bursaspor haber + maç masası · **06:00/18:00 İST** · özgün özet · emir yok) | `/tmp/bursaspor_feed.log` |
-| `0 4,16 * * *` | `cd /root/aiProject && python3 BursaApp/nobetci_eczane_fetch.py` (Bursa nöbetçi eczane · **07:00/19:00 İST** · emir yok) | `/tmp/nobetci_eczane.log` |
+| `0 4,9,12,16 * * *` + `45 15 * * *` | `cd /root/aiProject && python3 BursaApp/nobetci_eczane_fetch.py` (Bursa nöbetçi eczane · **07:00 / 12:00 / 15:00 / 18:45 / 19:00 İST** · beo.org.tr · emir yok) | `/tmp/nobetci_eczane.log` |
+| `30 4 * * *` | `cd /root/aiProject && python3 BursaApp/health_refresh.py` (diş MHRS/resmi + Doruk kadro + doktor zenginleştirme · **08:30 İST** · emir yok) | `/tmp/health_refresh.log` |
+| `0 3 * * *` | `cd /root/aiProject && python3 BursaApp/utilities_fetch.py` (BUSKİ/UEDAŞ/Bursagaz tarife + ilçe ofisleri · **06:00 İST** · emir yok) | `/tmp/utilities_fetch.log` |
+| `15 3 * * *` | `cd /root/aiProject && python3 BursaApp/teleferik_fetch.py` (Uludağ teleferik bilet/saat/ulaşım · **06:15 İST** · emir yok) | `/tmp/teleferik_fetch.log` |
+| `30 23 * * *` | `cd /root/aiProject && python3 BursaApp/bursaapp_nightly.py` (OSM+Panorama delta · ≤80 saat/kapak/ilçe · seo + görsel · **02:30 İST** · emir yok) | `/tmp/bursaapp_nightly.log` |
 
 ## Forex sanal defter — giriş/çıkış rejimi (2026-08-17; motor **CoptC**, bu sunucuda `EylulForex/` **silindi**)
 `$100 × 500x` demek altında **1$ hareket = $11.19**; marj $100 = **8.9$**, kasa $300 = **26.8$**. Altın son ölçümde bir saat içinde tek yöne ortalama **12.31$** (p90 23.1$, maks 43$) gidiyor — yani stopsuz *ortalama* bir ters saat kasanın %46'sını yiyor. Eski defterde tek fren M5'in dönmesiydi, likidasyon kontrolü yoktu (`balance` eksiye düşebiliyordu). Beş katman eklendi:
@@ -196,11 +203,12 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `EylulForex/` (bu sunucu) | **SİLİNDİ (2026-08-22)** — motor CoptC; cron + `tweet_forex_wins` düştü; sayfa `web/forex_pages.py` + `FOREX_REMOTE_URL` |
 | `poly_algo_analyst.py` · `poly_algo_daily_report.py` | **PASIF (2026-09-01)** — `/poly/yapay-zeka-analiz` üretimi durdu; cron yorum; `analyst_control.json` paused |
 | `kripto_test_analyst.py` | **PASIF (2026-09-01)** — `/kripto/yapay-zeka-analiz` üretimi durdu; cron yorum; `kripto_analyst_control.json` paused |
+| ~~`30 21 * * *` `seo_nightly.py`~~ | **KATILDI** `bursaapp_nightly.py` (2026-09-02) — ayrı 00:30 İST cron kalktı |
 
 ## Zamanlama Notları
 - `bist_signal_hunter` seans dışında çıkar (betik içi saat kontrolü).
 - `bist_scanner.py` bağımlılıkları: `yfinance`, `pandas`, `numpy`, `matplotlib`.
-- Saatlik `/algoritma-islemler` sanal: close **:01**, open **:02** (B1#04/#05 **:02:30**, COMBO **:02:25**, COMBO2 **:02:40**). **JARVIS2026 her dakika** (fikir kapısı; :02/:05/:07 kilit yok, kopya open yok). Aynı 69 algoritmanın **:05 / :07 kopyaları** ayrı dosyada (`*_t05_*` / `*_t07_*`, `slot_trader.py`); close **:01**, open **:05** / **:07**. Ayna API her defterin **:02/:05/:07** içinden en çok kazandıran (net P&L) dilimini yayınlar (`open_minute` / `best_slot` defter bazında; `?slot=` yalnız teşhis). **:01'de yeni open yok.** Sayfada olmayan A5 + Live PM: close **:02**, open **:05** (B1 Live :06/:06:30). **10. Analiz (sanal + live) kaldırıldı (2026-08-24).**
+- Saatlik `/algoritma-islemler` sanal: close **:01**, open **:02** (B1#04/#05 **:02:30**, COMBO **:02:25**, COMBO2 **:02:40**). **JARVIS2026** ve **REF01 her dakika** (:02/:05/:07 kilit yok, kopya open yok). Aynı 69 algoritmanın **:05 / :07 kopyaları** ayrı dosyada (`*_t05_*` / `*_t07_*`, `slot_trader.py`); close **:01**, open **:05** / **:07**. Ayna API her defterin **:02/:05/:07** içinden en çok kazandıran (net P&L) dilimini yayınlar (`open_minute` / `best_slot` defter bazında; `?slot=` yalnız teşhis). **:01'de yeni open yok.** Sayfada olmayan A5 + Live PM: close **:02**, open **:05** (B1 Live :06/:06:30). **10. Analiz (sanal + live) kaldırıldı (2026-08-24).**
 - **`/algoritma-islemler` giriş kademesi (78 defter):** sembol WR **$24 / $36 / $48** (veri yok → orta); **COMBO** ve **JARVIS2026** **$16 / $24 / $32**; **COMBO2 sabit $64** (WR/soğuk saat yok); soğuk saat **−%30** (COMBO2 hariç); sıcak saat büyütme kapalı. **Net kâr kapısı:** kazanırsa net (ödeme−harcama−ücret) < stake’in %50’si ise açılmaz (`pm_hourly_profit_entry_ok` · sinyal yok). Canlı PM `/ayarlar` kademeleri ayrı, değişmedi.
 - A7’nin cron’u yoktu; trader kaldırıldı.
 - **Hafta sonu:** Cum **22:00** – Pzt **11:00** İST — Live **open** varsayılan olarak atlanır (**close** çalışır); **dashboard'dan Aç** yapılan Live analiz hafta sonu dahil işlem açar. **`/algoritma-islemler` (tamamı):** A1 Top-34 + A1/A2/A6/V2/V3/MELEZ/A15/B1#01-05 + COMBO/COMBO2 + A2 Top-17 — hafta sonu da open/close devam (7/24 sanal).
@@ -211,8 +219,8 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
  - İlk hafta sonu turu (15.08 00:30, Cumartesi): Algoritmalar 33 + Analizler 7 pozisyon açtı; **18 defter `max_open`'a takıldı** — yeni çıkış rejiminin (uzun tutma → dolu slot → az giriş) kısma mekanizması çalışıyor.
  - **Poly tarafı etkilenmedi** — `pm_weekend_sync.py` ve Poly defterlerinin hafta sonu kuralları ayrı, değişmedi. Algoritmalar sanal: **tüm 51 defter open $30×10x** (komisyon dahil net PnL); A2#05/#06/#07 + A1#11 ek olarak `real_live` işaretli. **Binance Algoritmalar Live (gerçek para)** ayrı sistem — aynı 4 algonun çoğunluk oyu, **$7×20x**; dashboard Live toggle + top-N.
 - **fapi okuma kotası:** canlı fiyat/book/pozisyon/cüzdan `binance_ws_marks.py` (`/market` + `/public` GPS-XAU book + `/private`). Mum `public_klines` **fapi kullanmaz** (spot/data-api + `/tmp` dosya önbelleği). Dashboard `get_price`/`get_klines` fapi’ye düşmez. urllib/requests/aiohttp `fapi.binance.com` okuması `FapiReadDenied`. Client GET **kapalı** (yalnız `GET /fapi/v1/order` teyit); hesap/pozisyon REST seed yok. Emir POST/PUT/DELETE + listenKey. Ban’de `alert` yok — üst şerit.
-- **AgustosKripto/Test (`/kripto/test`, menü Algoritma İşlemler):** Tek kripto sanal ekran — **$100×6x**, deposit $1000/defter, **max 8** (JARVIS 10 · CEBU 8). Evren `Test/um_universe.txt` (Binance USDT-M liste); **yeni açık** `day_movers` 24s aktif 30+30 (`TEST_SCAN_N=60`, dosya 90 dk’dan bayatsa hacim yedeği). BTC/ETH yok. Dolum/fee/liq/funding = `binance_um`. Çıkış: zaman kapanışı yok · 24s tavan · 3×ATR · ATR kilit. `scan` */10 · movers `*/30`. **73 defter**. B1#03 MUM **KAITO pasif**. LIVE yok.
-- **CEBU (`/kripto`):** yalnız **sanal** Test defteri, **max 8**; motor = Lider Analiz coin 1. sıra (PnL→WR). Binance Isolated live kapalı (`.CEBU_VIRTUAL_ONLY` · dashboard toggle yok). Manuel open yok.
+- **AgustosKripto/Test (`/kripto/test`, menü Algoritma İşlemler):** Tek kripto sanal ekran — **$100×6x**, deposit $1000/defter, **max 8**. Evren `Test/um_universe.txt` (Binance USDT-M liste); **yeni açık** `day_movers` 24s aktif 30+30 (`TEST_SCAN_N=60`, dosya 90 dk’dan bayatsa hacim yedeği). BTC/ETH yok. Dolum/fee/liq/funding = `binance_um`. Çıkış: zaman kapanışı yok · 24s tavan · 3×ATR · ATR kilit. `scan` */10 · movers `*/30`. **14 defter** (2026-09-04: bakiye < $1005 kesildi — CEBU/JARVIS_V1/PRO dahil). LIVE yok.
+- **CEBU (`/kripto`):** Test kataloğundan çıktı (2026-09-04, bakiye < $1005). `/kripto/cebu` sayfası duruyor; yeni Test işlemi yok. Binance Isolated live kapalı. Manuel open yok.
 - **Eksik aynalar tamamlandı (2026-08-14):** `/algoritma-islemler`'de olup Test'te olmayan 5 defter tarandı; **4'ü eklendi** (`b1_04` · `b1_05` · `c101` · `c101_v2`). Eklenmeyen tek defter **`a2_05_v2`**: tek farkı Polymarket biletinde fiyat filtresi (bugün 0,30–0,40 bandı) ve futures'ta fiyat-olasılık boyutu olmadığı için kriptoda `a2_05` ile **birebir aynı** sinyali üretirdi; eklenseydi JARVIS'in "kaç defter pozitif" sayımını çift sayımla bozardı. Kripto karşılığı istenirse önce kuralın futures'taki anlamı tanımlanmalı (uydurma parametre eklemek yerine).
  - `b1_04`/`b1_05` mevcut `b1_04_signal` / `b1_05_signal` modüllerini kullanır (arayüz B1#01 ile aynı: `async resolve_live_signal(sym)`). **Majörlerle sınırlı** (`_B1_MAJORS_ONLY`): #04'ün küme ağırlıkları ve #05'in coin→motor eşlemesi Poly geçmişinden geliyor, o geçmiş yalnız BTC/ETH/SOL için var. Ölçüldü: 30 coine açmak b1_04 turunu **2 sn → 34 sn** yapıyor ve tur saatte 6 kez koşuyor. `b1_01`/`b1_02` 30 coinde kalmaya devam ediyor, davranışları değiştirilmedi.
  - `c101` aynası **Polymarket'siz** çalışır: `c101_signal.fair_probability(..., update_baseline=False)` yalnız Binance verisiyle P(UP) üretir, yön = 0,50'den en az `EDGE_MIN` (5 puan) sapma. `update_baseline=False` **şart** — derinlik referansı EWMA'sı Poly defterinin dosyası, ayna kirletmemeli. Bu ayna "C1#01 kâr eder mi"yi değil, projedeki tek emir-akışı beslemeli modelin (derinlik · funding · OI · CVD) **yönü tutturup tutturmadığını** sınar; Poly'deki "piyasa yanlış fiyatlamış mı" tezinin futures'ta karşılığı yok.
@@ -323,6 +331,7 @@ tail -f /tmp/bist_signal_hunter.log
 tail -f /tmp/poly_trader_analiz1.log
 tail -f /tmp/poly_trader_f16v2.log
 tail -f /tmp/poly_trader_jarvis2026.log
+tail -f /tmp/poly_trader_ref01.log
 tail -f /tmp/jarvis2026_evolve.log
 tail -f /tmp/hourly_path.log
 tail -f /tmp/pm_balance_hourly.log
@@ -375,6 +384,10 @@ tail -f /tmp/bahis_calib.log
 tail -f /tmp/bursaapp_events_fetch.log
 tail -f /tmp/bursaspor_feed.log
 tail -f /tmp/nobetci_eczane.log
+tail -f /tmp/health_refresh.log
+tail -f /tmp/utilities_fetch.log
+tail -f /tmp/teleferik_fetch.log
+tail -f /tmp/bursaapp_nightly.log
 tail -f /tmp/slot_trader_t05.log
 tail -f /tmp/algo_consensus.log
 tail -f /tmp/slot_trader_t07.log

@@ -58,12 +58,14 @@ VISIT_GALLERY: dict[str, list[str]] = {
         "Cumalıkızık 7121.jpg",
     ],
     "uludag": [
-        "Uludağ.jpg",
+        "Uludağ Teleferik @ Kurbağakaya (Oteller Bölgesi), January 2026 (1).jpg",
+        "Uludağ Teleferik @ Kurbağakaya (Oteller Bölgesi), January 2026 (2).jpg",
+        "Uludağ Teleferik - Kurbağakaya (Oteller Bölgesi) station building, January 2026 (1).jpg",
+        "Bursa Uludağ in the snow winter wonderland 2004 0185a.jpg",
+        "Uludağ Kayak Merkezi- Uludag Ski Center.jpg",
         "Bursa Uludağ Ski-related activities and slopes 2004 0138.jpg",
         "Bursa Uludağ Ski-related activities and slopes 2004 0134.jpg",
-        "Bursa Uludağ Ski-related activities and slopes 2004 0123.jpg",
-        "Bursa Uludağ Ski-related activities and slopes 2004 0126.jpg",
-        "Bursa Uludağ Ski-related activities and slopes 2004 0130.jpg",
+        "View of Uludağ from Sarıalan.JPG",
     ],
     "yesil-turbe": [
         "Yeşil Türbe.jpg",
@@ -75,6 +77,14 @@ VISIT_GALLERY: dict[str, list[str]] = {
         "Yeşil Cami.jpg",
         "Green Mosque Bursa.jpg",
         "Yesil Camii Bursa.jpg",
+    ],
+    "hudavendigar-camii": [
+        "Bursa, Hüdavendigar Camii, main facade from north.jpg",
+        "Hüdavendigar (1).jpg",
+        "Hüdavendigar (2).jpg",
+        "Çekirge cami.jpg",
+        "Bursa, Hüdavendigar Camii, ground floor, entrance porch towards west.jpg",
+        "Bursa, Hüdavendigar Camii, main facade, ground floor, middle arches, from north.jpg",
     ],
     "koza-han": [
         "Koza Han, Bursa.jpg",
@@ -152,6 +162,14 @@ VISIT_GALLERY: dict[str, list[str]] = {
         "Mutareke binası-Mudanya-Bursa - panoramio.jpg",
         "Mudanya 02.jpg",
     ],
+    "tofas-anadolu-arabalari-muzesi": [
+        "Tofaş Bursa Anadolu Arabaları Müzesi.jpg",
+        "Tofaş Anadolu Arabaları Müzesi.jpg",
+        "Tofaş Anadolu Arabaları Müzesi 2.jpg",
+        "Tofaş Anadolu Arabaları Müzesi 3.jpg",
+        "Tofaş Anadolu Arabaları Müzesi 4.jpg",
+        "Tofaş Bursa Anadolu Arabaları Müzesi 2.jpg",
+    ],
     "emir-sultan": [
         "Emir Sultan Camii 7067.jpg",
         "Emir Sultan Camii - Bursa 2017 (4).jpg",
@@ -178,9 +196,14 @@ VISIT_GALLERY: dict[str, list[str]] = {
         "Bursa botanik park.jpg",
     ],
     "tirilye": [
-        "Tirilye.jpg",
-        "Zeytinbağı.jpg",
-        "Tirilye Mudanya.jpg",
+        "Tirilye mudanya bursa 2015 - panoramio (6).jpg",
+        "Tirilye houses.jpg",
+        "Tirilye liman.jpg",
+        "Tirilye Fatih cami.jpg",
+        "Tirilye'de gün batımı - panoramio.jpg",
+        "Tirilye sahil1.jpg",
+        "Tirilye Eski Evleri 2014.jpg",
+        "Trilye bursa türkiye - panoramio.jpg",
     ],
     "oylat": [
         "Oylat mağarası - panoramio.jpg",
@@ -195,6 +218,13 @@ VISIT_GALLERY: dict[str, list[str]] = {
         "Iznik gölü M.ACAR.jpg",
         "Sahildeniznik.jpg",
         "İznik Gölünün manzarası.jpg",
+    ],
+    "karacabey-longozu": [
+        "Karacabey Longozu - Bahar.jpg",
+        "Eskikaraağaç Leylek Köyü.jpg",
+        "BURSA-KARACABEY - panoramio - HALUK COMERTEL (3).jpg",
+        "BURSA-KARACABEY - panoramio - HALUK COMERTEL (5).jpg",
+        "BURSA-KARACABEY - panoramio.jpg",
     ],
 }
 

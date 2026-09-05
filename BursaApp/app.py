@@ -30,6 +30,7 @@ from catalog import (
     CONCERT_KINDS,
     DOCTOR_SPECS,
     FOOD_CUISINE,
+    FOOD_CURATED,
     FOOD_DISH,
     FOOD_KIND,
     FOOD_MEAL,
@@ -83,7 +84,7 @@ _TZ = ZoneInfo("Europe/Istanbul")
 def _static_asset_v() -> str:
     """CSS/JS cache-bust — dosya mtime değişince tarayıcı yeni sürümü çeker."""
     mt = 0
-    for name in ("app.css", "seo-pages.css"):
+    for name in ("app.css", "seo-pages.css", "utilities-pages.css", "nearby-explore.css", "nearby-explore.js"):
         try:
             mt = max(mt, int(os.path.getmtime(os.path.join(_DIR, "static", name))))
         except OSError:
@@ -239,7 +240,7 @@ def tesekkur_page():
 @app.context_processor
 def _inject():
     from seo import resolve_seo, site_base
-    from seo_arch import HOME_FAQ, HOME_HOWTO, PHONE_DISPLAY, VERTICALS, WHATSAPP_URL
+    from seo_arch import HOME_FAQ, HOME_HOWTO, PHONE_DISPLAY, PHONE_E164, VERTICALS, WHATSAPP_URL
     from seo_status import ga_measurement_id, google_verification_token
     from mail_verify import VERIFY_DAYS, can_review, verify_banner
     from admin_permissions import can_access_panel
@@ -264,6 +265,7 @@ def _inject():
         "seo_vertical": VERTICALS.get(path),
         "wa_phone": PHONE_DISPLAY,
         "wa_url": WHATSAPP_URL,
+        "phone_e164": PHONE_E164,
         "static_v": _static_asset_v(),
         "mobile_tab": _mobile_tab(),
     }
@@ -362,6 +364,7 @@ def sitemap_xml():
         render_sitemap_index(
             [
                 "/sitemap-pages.xml",
+                "/sitemap-news.xml",
                 "/sitemap-places.xml",
                 "/sitemap-images.xml",
             ]
@@ -399,6 +402,33 @@ def sitemap_pages():
         seen.add(loc)
         uniq.append(e)
     return Response(render_urlset(uniq), mimetype="application/xml; charset=utf-8")
+
+
+@app.route("/sitemap-news.xml")
+def sitemap_news():
+    from news_pages import load_news_feed, decorate_article
+    from seo import abs_url, render_urlset
+
+    feed = load_news_feed()
+    entries = [
+        {
+            "loc": abs_url("/haberler"),
+            "changefreq": "hourly",
+            "priority": "0.95",
+            "lastmod": feed.get("generated_at"),
+        }
+    ]
+    for raw in feed.get("articles") or []:
+        art = decorate_article(raw)
+        entries.append(
+            {
+                "loc": abs_url(art["path"]),
+                "changefreq": "daily",
+                "priority": "0.82",
+                "lastmod": raw.get("published_at") or feed.get("generated_at"),
+            }
+        )
+    return Response(render_urlset(entries), mimetype="application/xml; charset=utf-8")
 
 
 @app.route("/sitemap-places.xml")
@@ -520,9 +550,11 @@ def home():
     db = SessionLocal()
     try:
         hub = hub_context(db)
-        featured, _ = query_places(db, featured=True, q=q or None, limit=8)
+        from blog_posts import all_blog_posts, blog_posts_sorted
+
+        featured, _ = query_places(db, category="visit", featured=True, q=q or None, limit=8)
         if len(featured) < 8:
-            extra, _ = query_places(db, q=q or None, limit=16)
+            extra, _ = query_places(db, category="visit", q=q or None, order="rating", limit=16)
             seen = {p.id for p in featured}
             for p in extra:
                 if p.id not in seen:
@@ -532,11 +564,13 @@ def home():
         place_count = db.query(Place).filter(Place.status == "approved").count()
         cal = _cal(_month_shows(db))
         from seo import for_home
-        from blog_posts import BLOG_POSTS, blog_posts_sorted
+        from blog_posts import all_blog_posts, blog_posts_sorted
+        from news_pages import headline_articles
 
         return render_template(
             "home.html",
             featured=[place_public(p) for p in featured],
+            news_headlines=headline_articles(limit=4),
             q=q,
             weather=_weather(),
             ilce_n=len(ILCELER),
@@ -544,7 +578,7 @@ def home():
             nav="kesfet",
             seo=for_home(),
             blog_teasers=blog_posts_sorted()[:4],
-            blog_total=len(BLOG_POSTS),
+            blog_total=len(all_blog_posts()),
             **hub,
             **cal,
         )
@@ -627,13 +661,14 @@ def feed_page():
 @app.route("/blog")
 def blog_hub():
     from seo import for_blog_hub
-    from blog_posts import BLOG_KINDS, BLOG_POSTS, blog_posts_sorted
+    from blog_posts import BLOG_KINDS, all_blog_posts, blog_posts_sorted
 
     kind = (request.args.get("kind") or "").strip()
     if kind and kind not in BLOG_KINDS:
         kind = ""
+    all_posts = all_blog_posts()
     kind_counts: dict[str, int] = {}
-    for p in BLOG_POSTS.values():
+    for p in all_posts.values():
         k = p.get("kind") or ""
         if k:
             kind_counts[k] = kind_counts.get(k, 0) + 1
@@ -641,7 +676,7 @@ def blog_hub():
     return render_template(
         "blog/index.html",
         posts=posts,
-        total_all=len(BLOG_POSTS),
+        total_all=len(all_posts),
         kind_filter=kind,
         kind_counts=kind_counts,
         blog_kinds=BLOG_KINDS,
@@ -653,9 +688,9 @@ def blog_hub():
 @app.route("/blog/<slug>")
 def blog_post(slug: str):
     from seo import for_blog_post
-    from blog_posts import BLOG_KINDS, BLOG_POSTS
+    from blog_posts import BLOG_KINDS, all_blog_posts
 
-    post = BLOG_POSTS.get(slug)
+    post = all_blog_posts().get(slug)
     seo = for_blog_post(slug)
     if not post or not seo:
         return redirect("/blog")
@@ -669,11 +704,90 @@ def blog_post(slug: str):
     )
 
 
+@app.route("/haberler")
+def news_index():
+    from news_pages import NEWS_TOPICS, list_articles, load_bursaspor_sidebar, load_videos
+    from seo import for_news_hub
+
+    topic = (request.args.get("konu") or "").strip()
+    q = (request.args.get("q") or "").strip()
+    page = max(1, int(request.args.get("page") or 1))
+    articles, total, meta = list_articles(topic=topic, q=q, page=page, per_page=24)
+    videos = load_videos()
+    return render_template(
+        "news_index.html",
+        articles=articles,
+        total=total,
+        meta=meta,
+        topic=topic if topic in NEWS_TOPICS else "",
+        topics=NEWS_TOPICS,
+        q=q,
+        bursaspor=load_bursaspor_sidebar(),
+        videos=videos,
+        featured_video=videos[0] if videos else None,
+        nav="news",
+        seo=for_news_hub(total=total, topic=topic, articles=articles),
+    )
+
+
+@app.route("/haber/<slug>")
+def news_detail(slug: str):
+    from news_pages import (
+        NEWS_TOPICS,
+        get_article,
+        headline_articles,
+        load_bursaspor_sidebar,
+        load_videos,
+        match_video,
+        reading_minutes,
+        related_articles,
+        videos_for_topic,
+    )
+    from seo import for_news_article
+
+    article = get_article(slug)
+    if not article:
+        return redirect("/haberler")
+    videos = load_videos()
+    video = match_video(article, videos)
+    topic_videos = videos_for_topic(
+        article.get("topic") or "genel",
+        limit=4,
+        exclude_id=(video or {}).get("id") or "",
+    )
+    related = related_articles(article, limit=6)
+    latest = [a for a in headline_articles(limit=10) if a.get("id") != article.get("id")][:7]
+    bursaspor = load_bursaspor_sidebar()
+    seo = for_news_article(article, video=video)
+    if not seo:
+        return redirect("/haberler")
+    return render_template(
+        "news_detail.html",
+        article=article,
+        video=video,
+        topic_videos=topic_videos,
+        related=related,
+        latest=latest,
+        topics=NEWS_TOPICS,
+        bursaspor=bursaspor,
+        read_mins=reading_minutes(article),
+        nav="news",
+        seo=seo,
+    )
+
+
 @app.route("/kvkk")
 def kvkk_page():
     from seo import for_kvkk
 
     return render_template("kvkk.html", nav="kvkk", seo=for_kvkk())
+
+
+@app.route("/iletisim")
+def iletisim_page():
+    from seo import for_iletisim
+
+    return render_template("iletisim.html", nav="iletisim", seo=for_iletisim())
 
 
 @app.route("/bugun")
@@ -914,8 +1028,18 @@ def dis_hekimleri():
     band = (request.args.get("band") or "").strip()
     db = SessionLocal()
     try:
-        clinics, _ = query_places(db, category="dentist", ilce=ilce or None, order="rating", limit=200)
-        docs, _ = query_places(db, category="doctor", price_band="Diş", ilce=ilce or None, limit=200)
+        clinics, _ = query_places(db, category="dentist", ilce=ilce or None, order="rating", limit=500)
+        docs_dis, _ = query_places(db, category="doctor", price_band="Diş", ilce=ilce or None, limit=200)
+        docs_dh, _ = query_places(
+            db, category="doctor", price_band="Diş hekimi", ilce=ilce or None, limit=200
+        )
+        seen_doc: set[int] = set()
+        docs = []
+        for p in docs_dis + docs_dh:
+            if p.id in seen_doc:
+                continue
+            seen_doc.add(p.id)
+            docs.append(p)
         places = [place_public(p) for p in clinics] + [place_public(p) for p in docs]
         if band:
             places = [p for p in places if (p.get("price_band") or "") == band]
@@ -995,12 +1119,12 @@ def okullar():
         return _render_health_page(
             nav="school",
             page_title="Okullar",
-            page_sub="Devlet, özel ve üniversiteler · kayıt, etkinlik ve iletişim",
+            page_sub="Okul, dershane, özel eğitim · kayıt, etkinlik ve iletişim",
             hero_theme="school",
             hero_art="health/school.svg",
             hero_kicker="Eğitim rehberi",
             hero_headline="Bursa okulları",
-            hero_desc=f"{total} okul · devlet, özel kolej, anaokulu, lise ve üniversite.",
+            hero_desc=f"{total} kurum · okul, dershane, özel eğitim, kolej ve üniversite.",
             stat1_label="okul",
             stat2_value=len(groups),
             stat2_label="ilçe",
@@ -1186,7 +1310,7 @@ def _render_health_page(**ctx):
 _HOSPITAL_BANDS = ("Özel", "Devlet", "Üniversite", "Kampüs", "Göz", "Diş")
 _DENTIST_BANDS = ("Devlet", "Özel", "Klinik")
 _SCHOOL_BANDS = ("Devlet", "Özel", "Üniversite")
-_SCHOOL_SUBS = ("anaokul", "ilkokul", "ortaokul", "lise", "kolej", "universite")
+_SCHOOL_SUBS = ("anaokul", "ilkokul", "ortaokul", "lise", "kolej", "universite", "dershane", "ozel-egitim")
 
 
 def _load_nobetci_feed() -> dict:
@@ -1282,6 +1406,135 @@ def nobetci_eczane_detail(slug: str):
             title=(place["name"] if place else "Nöbetçi eczane") + " · Bursa",
             description=(place.get("address") if place else "Bursa nöbetçi eczane") or "",
             path=f"/nobetci-eczaneler/{slug}",
+        ),
+    )
+
+
+def _utilities_ctx(kind: str):
+    from utilities_pages import branches_by_ilce, fmt_tl, load_teleferik, load_utilities
+
+    feed = load_utilities()
+    key = {"su": "water", "elec": "electricity", "gas": "gas"}[kind]
+    section = feed.get(key) or {}
+    aksa = section.get("aksa") or {}
+    return dict(
+        feed=feed,
+        section=section,
+        kind=kind,
+        branch_groups=branches_by_ilce(section.get("branches")),
+        aksa_branch_groups=branches_by_ilce(aksa.get("branches")),
+        fmt_tl=fmt_tl,
+        teleferik=load_teleferik(),
+    )
+
+
+@app.route("/faturalar")
+def utilities_hub():
+    from seo import page as seo_page
+    from utilities_pages import load_teleferik, load_utilities
+
+    feed = load_utilities()
+    return render_template(
+        "utilities_hub.html",
+        feed=feed,
+        teleferik=load_teleferik(),
+        nav_util="hub",
+        nav="faturalar",
+        seo=seo_page(
+            title="Bursa su, elektrik ve doğalgaz fiyatları 2026",
+            description="BUSKİ su tarifesi (m³/ton), UEDAŞ elektrik kWh fiyatı, Bursagaz doğalgaz birim bedeli — ilçe ilçe abone merkezleri. Güncel özet.",
+            path="/faturalar",
+            keywords="bursa su fiyatı, buski tarife, uedaş elektrik fiyatı, bursagaz doğalgaz fiyatı, bursa fatura",
+        ),
+    )
+
+
+@app.route("/buski-su-fiyatlari")
+def utilities_water():
+    from seo import page as seo_page
+
+    ctx = _utilities_ctx("su")
+    return render_template(
+        "utilities_kind.html",
+        page_h1="BUSKİ su fiyatları 2026 — ton / m³ tarife",
+        nav_util="su",
+        nav="faturalar",
+        seo=seo_page(
+            title="BUSKİ su fiyatları 2026 — Bursa m³ ve ton tarifesi",
+            description="Bursa BUSKİ güncel su fiyatları: kademeli m³ tarifesi, atıksu bedeli, 17 ilçe abone merkezi telefon ve adres. 1 m³ = 1 ton.",
+            path="/buski-su-fiyatlari",
+            keywords="buski su fiyatı, bursa su fiyatı 2026, buski tarife, ton su fiyatı bursa, buski abone",
+        ),
+        **ctx,
+    )
+
+
+@app.route("/bursa-elektrik-fiyatlari")
+def utilities_electric():
+    from seo import page as seo_page
+
+    ctx = _utilities_ctx("elec")
+    return render_template(
+        "utilities_kind.html",
+        page_h1="Bursa elektrik fiyatları 2026 — UEDAŞ tarife",
+        nav_util="elec",
+        nav="faturalar",
+        seo=seo_page(
+            title="Bursa elektrik fiyatları 2026 — UEDAŞ kWh tarifesi",
+            description="UEDAŞ Bursa mesken elektrik birim fiyatları, kademe dilimleri ve ilçe bölge müdürlükleri. Arıza: 186.",
+            path="/bursa-elektrik-fiyatlari",
+            keywords="bursa elektrik fiyatı, uedaş tarife, bursa kwh fiyatı 2026, elektrik birim fiyat bursa",
+        ),
+        **ctx,
+    )
+
+
+@app.route("/bursa-dogalgaz-fiyatlari")
+def utilities_gas():
+    from seo import page as seo_page
+
+    ctx = _utilities_ctx("gas")
+    return render_template(
+        "utilities_kind.html",
+        page_h1="Bursa doğalgaz fiyatları 2026 — Aksa · Bursagaz tarife",
+        nav_util="gas",
+        nav="faturalar",
+        seo=seo_page(
+            title="Bursa doğalgaz fiyatları 2026 — Aksa Doğalgaz · Bursagaz sm³",
+            description="Aksa Doğalgaz Bursa ve Bursagaz güncel konut doğalgaz tarifesi, 444 11 33 / 444 4 827 çağrı merkezleri ve ilçe müşteri merkezleri. Acil: 187.",
+            path="/bursa-dogalgaz-fiyatlari",
+            keywords="aksa doğalgaz bursa, bursagaz tarife, bursa doğalgaz fiyatı 2026, aksa bursa gaz fiyatı, sm3 doğalgaz bursa",
+        ),
+        **ctx,
+    )
+
+
+@app.route("/uludag-teleferik")
+def teleferik_guide():
+    from datetime import datetime
+    from flask import url_for
+    from seo import abs_url, page as seo_page
+    from utilities_pages import load_teleferik
+
+    data = load_teleferik()
+    year = datetime.now(tz=_TZ).year
+    hero_img = url_for("static", filename="visit/teleferik.jpg")
+    gallery_uludag = url_for("static", filename="visit/uludag.jpg")
+
+    return render_template(
+        "teleferik_guide.html",
+        data=data,
+        year=year,
+        hero_img=hero_img,
+        gallery_uludag=gallery_uludag,
+        nav_util="teleferik",
+        nav="teleferik",
+        seo=seo_page(
+            title=f"Uludağ teleferik bilet fiyatları {year} — saatler, halk günü, otobüs",
+            description="Bursa Teleferik güncel bilet fiyatı, cuma halk günü indirimi, açılış-kapanış saatleri, Teferrüç'e giden otobüs ve Bursaray bilgisi.",
+            path="/uludag-teleferik",
+            image=abs_url("/static/visit/teleferik.jpg"),
+            keywords="uludağ teleferik fiyat, bursa teleferik bilet, teleferik halk günü, teferrüç otobüs, teleferik saatleri",
         ),
     )
 
@@ -1648,6 +1901,24 @@ def category_list():
                 gals = ex.get("gallery") if isinstance(ex.get("gallery"), list) else []
                 p["gallery"] = [p["img_url"]] + [g for g in gals if g and g != p.get("img_url")]
                 p["gallery"] = [g for g in p["gallery"] if g][:6]
+            food_hero = []
+            if page_n == 1 and not q:
+                for p in filtered[:3]:
+                    if p.get("img_url"):
+                        food_hero.append(p)
+            food_curated_rows = []
+            for c in FOOD_CURATED:
+                kw: dict = {"page": ""}
+                kw.update(c.get("filter") or {})
+                active = False
+                fd = c.get("filter") or {}
+                if fd.get("dish") and fd["dish"] in dishes:
+                    active = True
+                if fd.get("kind") and fd["kind"] in kinds:
+                    active = True
+                if fd.get("meal") and fd["meal"] in meals:
+                    active = True
+                food_curated_rows.append({**c, "href": _food_href(**kw), "active": active})
             from seo import for_category
 
             return render_template(
@@ -1671,6 +1942,8 @@ def category_list():
                 food_cuisine=FOOD_CUISINE,
                 food_dish=FOOD_DISH,
                 food_price=FOOD_PRICE,
+                food_curated=food_curated_rows,
+                food_hero=food_hero,
                 food_href=_food_href,
                 nav="food",
                 seo=for_category(cat, ilce=ilce, sub=sub, total=total_f, places=page_rows),
@@ -1932,43 +2205,72 @@ def album_page():
 def bursaspor_page():
     db = SessionLocal()
     try:
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        from news_pages import load_bursaspor_videos
+
         rows = (
             db.query(SportMatch)
             .filter(SportMatch.club == "bursaspor", SportMatch.season == "2026-27")
             .order_by(SportMatch.week.asc().nullslast(), SportMatch.kickoff_at.asc().nullslast())
             .all()
         )
+        now = datetime.now(ZoneInfo("Europe/Istanbul"))
         matches = []
+        next_match = None
+        last_match = None
+        upcoming = []
+        played_items = []
         for m in rows:
-            matches.append(
-                {
-                    "id": m.id,
-                    "week": m.week,
-                    "competition": m.competition,
-                    "kickoff_at": m.kickoff_at.strftime("%d.%m.%Y %H:%M") if m.kickoff_at else "",
-                    "kickoff_raw": m.kickoff_at,
-                    "home_team": m.home_team,
-                    "away_team": m.away_team,
-                    "home_score": m.home_score,
-                    "away_score": m.away_score,
-                    "venue": m.venue,
-                    "is_home": m.is_home,
-                    "ticket_price": m.ticket_price,
-                    "ticket_url": m.ticket_url,
-                    "status": m.status,
-                    "note": m.note,
-                    "played": m.home_score is not None and m.away_score is not None,
-                }
-            )
+            played = m.home_score is not None and m.away_score is not None
+            item = {
+                "id": m.id,
+                "week": m.week,
+                "competition": m.competition,
+                "kickoff_at": m.kickoff_at.strftime("%d.%m.%Y %H:%M") if m.kickoff_at else "",
+                "kickoff_date": m.kickoff_at.strftime("%d.%m.%Y") if m.kickoff_at else "",
+                "kickoff_time": m.kickoff_at.strftime("%H:%M") if m.kickoff_at else "",
+                "kickoff_raw": m.kickoff_at,
+                "home_team": m.home_team,
+                "away_team": m.away_team,
+                "home_score": m.home_score,
+                "away_score": m.away_score,
+                "venue": m.venue,
+                "is_home": m.is_home,
+                "ticket_price": m.ticket_price,
+                "ticket_url": m.ticket_url,
+                "status": m.status,
+                "note": m.note,
+                "played": played,
+            }
+            matches.append(item)
+            if played:
+                last_match = item
+                played_items.append(item)
+            elif m.kickoff_at:
+                kickoff = m.kickoff_at
+                if kickoff.tzinfo is None:
+                    kickoff = kickoff.replace(tzinfo=ZoneInfo("Europe/Istanbul"))
+                if next_match is None and kickoff >= now:
+                    next_match = item
+                if len(upcoming) < 8 and kickoff >= now:
+                    upcoming.append(item)
+        recent = list(reversed(played_items[-3:]))
         from seo import page as seo_page
         import json as _json
         import os as _os
 
         standings = []
+        bs_row = None
         sp = _os.path.join(_DIR, "data", "bursaspor_standings.json")
         if _os.path.isfile(sp):
             try:
                 standings = _json.loads(open(sp, encoding="utf-8").read())
+                for r in standings:
+                    if "Bursaspor" in (r.get("team") or ""):
+                        bs_row = r
+                        break
             except Exception:
                 standings = []
 
@@ -1980,16 +2282,57 @@ def bursaspor_page():
             except Exception:
                 pass
 
+        desk = feed.get("desk") or {}
+        if not next_match and desk.get("next_match"):
+            nm = desk["next_match"]
+            next_match = {
+                "home_team": nm.get("home") or "",
+                "away_team": nm.get("away") or "",
+                "kickoff_at": nm.get("kickoff") or "",
+                "kickoff_date": (nm.get("kickoff") or "").split(" ")[0],
+                "kickoff_time": (nm.get("kickoff") or "").split(" ")[-1] if nm.get("kickoff") else "",
+                "venue": nm.get("venue") or "",
+                "is_home": nm.get("is_home"),
+                "ticket_url": "https://www.bursaspor.org.tr/",
+                "played": False,
+            }
+
+        hero_bg = "/static/cache/bursaspor/cover-1.jpg"
+        mf = _os.path.join(_DIR, "static", "cache", "bursaspor", "manifest.json")
+        if _os.path.isfile(mf):
+            try:
+                pool = _json.loads(open(mf, encoding="utf-8").read())
+                if isinstance(pool, list) and pool:
+                    hero_bg = pool[0]
+            except Exception:
+                pass
+
+        videos = load_bursaspor_videos(limit=6)
+        featured_video = videos[0] if videos else None
+
         return render_template(
             "bursaspor.html",
             matches=matches,
+            upcoming=upcoming,
+            recent=recent,
+            next_match=next_match,
+            last_match=last_match,
             standings=standings,
+            bs_row=bs_row,
             feed=feed,
+            desk=desk,
+            videos=videos,
+            featured_video=featured_video,
+            hero_bg=hero_bg,
             nav="bursaspor",
             seo=seo_page(
-                title="Bursaspor haber · maç masası · fikstür 2026-27",
-                description="Bursaspor haber özetleri, maç analizi, Trendyol 1. Lig puan durumu ve fikstür.",
+                title="Bursaspor haber · maç · video · fikstür 2026-27",
+                description=(
+                    "Bursaspor maç önizlemesi, video, gündem özeti, Trendyol 1. Lig puan durumu "
+                    "ve fikstür — BursaApp'te izle, oku, siteden çıkma."
+                ),
                 path="/bursaspor",
+                keywords="bursaspor, bursaspor haber, bursaspor maç, bursaspor fikstür, yeşil beyaz, timsah",
             ),
         )
     finally:

@@ -218,7 +218,7 @@ NEW_RESTAURANTS = [
         "hours_text": "Pzt–Cmt 11:00–19:30 · Pazar kapalı",
         "price_band": "köfte",
         "rating": 4.3,
-        "photo": "kofte-1.jpg",
+        "photo": "omur-koftecisi-1965.jpg",
         "tags": ["kofte", "inegol-kofte", "piyaz"],
         "featured": True,
         "lat": 40.1842,
@@ -230,7 +230,7 @@ NEW_RESTAURANTS = [
             {"name": "Bursa kebabı", "price": "360 TL", "note": ""},
             {"name": "Sütlü kadayıf", "price": "90 TL", "note": ""},
         ],
-        "gallery": ["/static/food/kofte-1.jpg", "/static/food/kofte-2.jpg"],
+        "gallery": ["/static/food/omur-koftecisi-1965.jpg", "/static/food/ne-yenir-inegol-kofte.jpg"],
     },
     {
         "slug": "tophane-kebapcisi",

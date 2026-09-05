@@ -1,0 +1,229 @@
+{% extends "_shell.html" %}
+{% from '_news_youtube.html' import yt_embed %}
+{% block page_head %}{% endblock %}
+{% block body_class %} is-news-page{% endblock %}
+{% block hello %}Bursa haberleri{% endblock %}
+{% block sub %}{% endblock %}
+
+{% macro news_tile(n, mod='') %}
+<a class="bn-m-tile {{ mod }} topic-{{ n.topic or 'genel' }}" href="{{ n.path }}">
+  {% if n.img_url %}<img src="{{ n.img_url }}" alt="" loading="lazy" decoding="async">{% else %}<span class="bn-m-ph"></span>{% endif %}
+  <span class="bn-m-pill">{{ n.topic_label }}</span>
+  <h3>{{ n.title }}</h3>
+</a>
+{% endmacro %}
+
+{% macro side_row(n) %}
+<a class="bn-m-side-row" href="{{ n.path }}">
+  {% if n.img_url %}<img src="{{ n.img_url }}" alt="" loading="lazy">{% else %}<span class="bn-m-ph sm"></span>{% endif %}
+  <div>
+    <b>{{ n.title }}</b>
+    <small>{{ n.topic_label }} · {{ n.date_label }}</small>
+  </div>
+</a>
+{% endmacro %}
+
+{% block main %}
+<div class="bn-mag">
+
+<section class="bn-m-search-bar panel" aria-label="Haber ara">
+  <form method="get" action="/haberler">
+    {% if topic %}<input type="hidden" name="konu" value="{{ topic }}">{% endif %}
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="Bursa haber ara — trafik, belediye, spor…">
+    <button type="submit" class="wa-btn wa-btn-forest">Ara</button>
+  </form>
+</section>
+
+<p class="bn-m-seo-lead">Bursa haberleri ve şehir gündemi — trafik, belediye, sanayi, kültür etkinlikleri ve Bursaspor. Metin ve video burada; dışarı çıkmadan oku, izle, BursaApp rehberine geç.</p>
+
+{% if articles %}
+{% set hero = articles[0] %}
+
+<section class="bn-m-hero">
+  <div class="bn-m-hero-bg">
+    {% if hero.img_url %}<img src="{{ hero.img_url }}" alt="" fetchpriority="high" decoding="async">{% endif %}
+    <div class="bn-m-hero-shade"></div>
+  </div>
+
+  <div class="bn-m-hero-bar">
+    <a class="bn-m-brand" href="/haberler"><span class="bn-m-dot"></span> Bursa<span>Haber</span></a>
+    <nav class="bn-m-topnav" aria-label="Konu menüsü">
+      <a class="{{ 'on' if not topic else '' }}" href="/haberler{% if q %}?q={{ q|urlencode }}{% endif %}">Tümü</a>
+      {% for key, lab in topics.items() %}
+      <a class="{{ 'on' if topic==key else '' }}" href="/haberler?konu={{ key }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}">{{ lab|upper }}</a>
+      {% endfor %}
+    </nav>
+    {% if meta.generated_at %}<span class="bn-m-updated">Güncellendi {{ meta.generated_at }}</span>{% endif %}
+  </div>
+
+  <div class="bn-m-hero-layout">
+    <div class="bn-m-hero-main topic-{{ hero.topic or 'genel' }}">
+      <span class="bn-m-pill lg">{{ hero.topic_label }}</span>
+      <h1><a href="{{ hero.path }}">{{ hero.title }}</a></h1>
+      <p class="bn-m-hero-dek">{{ hero.blurb }}</p>
+      <a class="bn-m-read" href="{{ hero.path }}">Haberi oku <span aria-hidden="true">→</span></a>
+      {% if articles|length > 3 %}
+      <div class="bn-m-mini-row">
+        {% for n in articles[1:4] %}
+        <a class="bn-m-mini" href="{{ n.path }}">
+          {% if n.img_url %}<img src="{{ n.img_url }}" alt="" loading="lazy">{% endif %}
+          <span>{{ n.title }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <aside class="bn-m-hero-panel" aria-label="Son dakika">
+      <div class="bn-m-panel-head">
+        <h2>Son dakika</h2>
+        <a href="/bursaspor">Bursaspor masası →</a>
+      </div>
+      {% if bursaspor.next_match %}
+      <div class="bn-m-score-card">
+        <span class="bn-m-live">SIRADAKİ MAÇ</span>
+        <div class="bn-m-score-line">
+          <span>{{ bursaspor.next_match.home }}</span>
+          <strong>{% if bursaspor.next_match.kickoff %}{{ bursaspor.next_match.kickoff.split(' ')[-1] }}{% else %}—{% endif %}</strong>
+          <span>{{ bursaspor.next_match.away }}</span>
+        </div>
+        {% if bursaspor.form %}
+        <div class="bn-m-form">{% for ch in bursaspor.form %}<i class="f-{{ ch }}">{{ ch }}</i>{% endfor %}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+      <div class="bn-m-panel-list">
+        {% for n in articles[1:7] %}
+        {{ side_row(n) }}
+        {% endfor %}
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="bn-m-band bn-m-band-light">
+  <div class="bn-m-band-grid">
+    <div class="bn-m-mosaic">
+      {% if articles|length > 4 %}{{ news_tile(articles[4], 'tall') }}{% endif %}
+      {% if articles|length > 5 %}{{ news_tile(articles[5], 'wide') }}{% endif %}
+      {% if articles|length > 6 %}{{ news_tile(articles[6], 'sq') }}{% endif %}
+      {% if articles|length > 7 %}{{ news_tile(articles[7], 'sq') }}{% endif %}
+      {% if articles|length > 8 %}{{ news_tile(articles[8], 'sq') }}{% endif %}
+    </div>
+    <aside class="bn-m-rail">
+      <h2>Öne çıkanlar</h2>
+      {% for n in articles[4:12] %}
+      {{ side_row(n) }}
+      {% endfor %}
+    </aside>
+  </div>
+</section>
+
+{% if featured_video %}
+<section class="bn-m-band bn-m-band-gray">
+  <header class="bn-m-section-bar">
+    <h2>Bursa video gündemi</h2>
+    <span class="bn-m-tabs"><span class="on">YOUTUBE · SİTEDE İZLE</span></span>
+  </header>
+  <div class="bn-m-feature-split">
+    <div class="bn-m-vid-feature">
+      {{ yt_embed(featured_video, 'bn-yt-main') }}
+      <div class="bn-m-vid-cap">
+        <span class="bn-m-pill">{{ featured_video.topic_label }}</span>
+        <h3>{{ featured_video.title }}</h3>
+        <small>{{ featured_video.channel }} · {{ featured_video.date_label }}</small>
+      </div>
+    </div>
+    <div class="bn-m-vid-list">
+      <h3>Diğer videolar</h3>
+      {% for v in videos[1:6] %}
+      <div class="bn-m-vid-stack">
+        {{ yt_embed(v, 'bn-yt-sm') }}
+        <div>
+          <b>{{ v.title }}</b>
+          <small>{{ v.channel }} · {{ v.topic_label }}</small>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if articles|length > 12 %}
+<section class="bn-m-band bn-m-band-gray">
+  <header class="bn-m-section-bar">
+    <h2>Daha fazla haber</h2>
+    <div class="bn-m-tabs" role="tablist" aria-label="Konu filtreleri">
+      <a class="{{ 'on' if not topic else '' }}" href="/haberler">GÜNDEM</a>
+      {% for key, lab in topics.items() if key in ('sehir','spor','ekonomi','ulasim') %}
+      <a class="{{ 'on' if topic==key else '' }}" href="/haberler?konu={{ key }}">{{ lab|upper }}</a>
+      {% endfor %}
+    </div>
+  </header>
+  <div class="bn-m-feature-split">
+    {% set feat = articles[12] %}
+    <a class="bn-m-feature topic-{{ feat.topic or 'genel' }}" href="{{ feat.path }}">
+      {% if feat.img_url %}<img src="{{ feat.img_url }}" alt="{{ feat.title }}" loading="lazy">{% else %}<span class="bn-m-ph"></span>{% endif %}
+      <div class="bn-m-feature-copy">
+        <span class="bn-m-pill">{{ feat.topic_label }}</span>
+        <h3>{{ feat.title }}</h3>
+        <p>{{ feat.blurb }}</p>
+      </div>
+    </a>
+    <div class="bn-m-rail">
+      <h2>Son haberler</h2>
+      {% for n in articles[13:19] %}
+      {{ side_row(n) }}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if articles|length > 19 %}
+<section class="bn-m-more-grid">
+  {% for n in articles[19:] %}
+  {{ news_tile(n, 'card') }}
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if meta.pages > 1 %}
+<nav class="bn-m-pager" aria-label="Sayfalar">
+  {% if meta.page > 1 %}
+  <a href="/haberler?page={{ meta.page - 1 }}{% if topic %}&amp;konu={{ topic }}{% endif %}{% if q %}&amp;q={{ q|urlencode }}{% endif %}">← Önceki</a>
+  {% endif %}
+  <span>Sayfa {{ meta.page }} / {{ meta.pages }} · {{ total }} haber</span>
+  {% if meta.page < meta.pages %}
+  <a href="/haberler?page={{ meta.page + 1 }}{% if topic %}&amp;konu={{ topic }}{% endif %}{% if q %}&amp;q={{ q|urlencode }}{% endif %}">Sonraki →</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<section class="bn-m-empty panel">
+  <h2>Haber bulunamadı</h2>
+  <p>Bu filtrede sonuç yok. Konuyu değiştirin veya aramayı genişletin.</p>
+  <a class="wa-btn wa-btn-forest" href="/haberler">Tüm haberler</a>
+</section>
+{% endif %}
+
+{% if meta.disclaimer %}
+<p class="bn-m-footnote">{{ meta.disclaimer }}</p>
+{% endif %}
+
+<section class="bn-m-keep panel">
+  <h2>BursaApp'te kal — keşfet</h2>
+  <div class="bn-m-keep-grid">
+    <a href="/gezilecek">🌿 Gezilecek yerler</a>
+    <a href="/yeme-icme">🍽 Yeme-içme</a>
+    <a href="/konserler">🎵 Konserler</a>
+    <a href="/etkinlikler">📅 Etkinlikler</a>
+    <a href="/bursaspor">🟢 Bursaspor</a>
+    <a href="/rota">🗺 Rota planla</a>
+  </div>
+</section>
+
+</div>
+{% endblock %}

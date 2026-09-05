@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "disclaimer": "Tarifeler EPDK / BUSKİ / Bursagaz resmi duyurularına dayanır; aylık TÜFE güncellemesi ve vergi değişiklikleri faturayı etkileyebilir. Kesin tutar için faturanızı veya resmi kaynağı kontrol edin.",
+  "water": {
+    "company": "BUSKİ",
+    "legal_name": "Bursa Su ve Kanalizasyon İdaresi Genel Müdürlüğü",
+    "scope": "Bursa Büyükşehir Belediyesi sınırları — tüm ilçeler",
+    "phones": ["444 17 27", "0224 280 10 00"],
+    "web": "https://www.buski.gov.tr/",
+    "emergency": "Su arızası: 444 17 27",
+    "tariff_note": "Mesken tarifesi kademeli (toplam tüketime göre). Su bedeline %50 oranında atıksu bedeli eklenir. Su KDV %1, atıksu KDV %10. Mayıs 2026 sonrası sabit katı atık/bakım kalemleri kaldırıldı; tarife m³ üzerinden.",
+    "effective_label": "2026 mesken (KDV hariç birim — BUSKİ tarife tablosu)",
+    "tariffs": [
+      {"band": "0–15 m³", "unit": "m³", "water_tl": 38.49, "wastewater_tl": 19.25, "note": "İlk kademe"},
+      {"band": "16–20 m³", "unit": "m³", "water_tl": 73.13, "wastewater_tl": 36.57, "note": "Kademe eşiği aşılınca tüm tüketim bu birimden"},
+      {"band": "21 m³ ve üzeri", "unit": "m³", "water_tl": 111.62, "wastewater_tl": 55.81, "note": "Yüksek tüketim"}
+    ],
+    "ton_hint": "1 m³ = 1 ton su. 10 m³ ≈ 10 ton.",
+    "sources": [
+      {"label": "BUSKİ resmi site", "url": "https://www.buski.gov.tr/"},
+      {"label": "Tarife duyuruları", "url": "https://www.buski.gov.tr/tarifeler"}
+    ],
+    "branches": [
+      {"ilce": "Osmangazi", "name": "BUSKİ Abone İşlem Merkezi · Osmangazi", "address": "Altıparmak / Osmangazi, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Nilüfer", "name": "BUSKİ Abone İşlem Merkezi · Nilüfer", "address": "FSM Bulvarı civarı, Nilüfer, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Yıldırım", "name": "BUSKİ Abone İşlem Merkezi · Yıldırım", "address": "Yıldırım, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Gürsu", "name": "BUSKİ Genel Müdürlük", "address": "Gürsu, Bursa", "phone": "0224 280 10 00", "hours": "Hafta içi 08:30–17:30"},
+      {"ilce": "İnegöl", "name": "BUSKİ İnegöl Birimi", "address": "İnegöl, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Gemlik", "name": "BUSKİ Gemlik Birimi", "address": "Gemlik, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Mudanya", "name": "BUSKİ Mudanya Birimi", "address": "Mudanya, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "İznik", "name": "BUSKİ İznik Birimi", "address": "İznik, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Karacabey", "name": "BUSKİ Karacabey Birimi", "address": "Karacabey, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Mustafakemalpaşa", "name": "BUSKİ Mustafakemalpaşa Birimi", "address": "Mustafakemalpaşa, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Orhangazi", "name": "BUSKİ Orhangazi Birimi", "address": "Orhangazi, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Kestel", "name": "BUSKİ Kestel Birimi", "address": "Kestel, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Yenişehir", "name": "BUSKİ Yenişehir Birimi", "address": "Yenişehir, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Orhaneli", "name": "BUSKİ Orhaneli Birimi", "address": "Orhaneli, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Keles", "name": "BUSKİ Keles Birimi", "address": "Keles, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Harmancık", "name": "BUSKİ Harmancık Birimi", "address": "Harmancık, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"},
+      {"ilce": "Büyükorhan", "name": "BUSKİ Büyükorhan Birimi", "address": "Büyükorhan, Bursa", "phone": "444 17 27", "hours": "Hafta içi mesai"}
+    ]
+  },
+  "electricity": {
+    "company": "UEDAŞ",
+    "legal_name": "Uludağ Elektrik Dağıtım A.Ş.",
+    "scope": "Bursa ili tüm ilçeler (dağıtım şebekesi). Perakende faturalandırma ayrı şirketler üzerinden.",
+    "phones": ["186", "0224 600 00 00"],
+    "web": "https://www.uedas.com.tr/",
+    "emergency": "Arıza / kesinti: 186 (7/24)",
+    "hq": {"ilce": "Osmangazi", "name": "UEDAŞ Genel Müdürlük", "address": "Yeni Karaman Mah. 6. Yonca Sk. No:4 Osmangazi/Bursa", "phone": "0224 600 00 00"},
+    "tariff_note": "Konut tarifesi EPDK onaylı birim bedeller + dağıtım + vergi ile oluşur. Tek zamanlı mesken aboneleri için gösterilen birim fiyat tahmini tüketim dilimine göre değişir.",
+    "effective_label": "2026 mesken tek zamanlı (yaklaşık — EPDK tarife bileşenleri)",
+    "tariffs": [
+      {"band": "0–240 kWh / ay", "unit": "kWh", "energy_tl": 2.481, "note": "Enerji bedeli (yaklaşık)"},
+      {"band": "241–600 kWh / ay", "unit": "kWh", "energy_tl": 3.094, "note": "Enerji bedeli (yaklaşık)"},
+      {"band": "601 kWh ve üzeri", "unit": "kWh", "energy_tl": 4.128, "note": "Enerji bedeli (yaklaşık)"}
+    ],
+    "extra_fees": [
+      {"label": "Dağıtım bedeli", "note": "kWh başına UEDAŞ dağıtım tarifesi faturaya eklenir"},
+      {"label": "TRT payı / enerji fonu / KDV", "note": "Yasal kalemler toplam birim fiyatı artırır"}
+    ],
+    "sources": [
+      {"label": "UEDAŞ resmi site", "url": "https://www.uedas.com.tr/"},
+      {"label": "EPDK tarifeler", "url": "https://www.epdk.gov.tr/"}
+    ],
+    "branches": [
+      {"ilce": "Osmangazi", "name": "UEDAŞ Osmangazi Müşteri Hizmetleri", "address": "Yeni Karaman Mah. 6. Yonca Sk. No:4 Osmangazi", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Nilüfer", "name": "UEDAŞ Nilüfer Bölge", "address": "Nilüfer, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Yıldırım", "name": "UEDAŞ Yıldırım Bölge", "address": "Yıldırım, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "İnegöl", "name": "UEDAŞ İnegöl Bölge", "address": "İnegöl, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Gemlik", "name": "UEDAŞ Gemlik Bölge", "address": "Gemlik, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Mudanya", "name": "UEDAŞ Mudanya Bölge", "address": "Mudanya, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "İznik", "name": "UEDAŞ İznik Bölge", "address": "İznik, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Karacabey", "name": "UEDAŞ Karacabey Bölge", "address": "Karacabey, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Mustafakemalpaşa", "name": "UEDAŞ Mustafakemalpaşa Bölge", "address": "Mustafakemalpaşa, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Orhangazi", "name": "UEDAŞ Orhangazi Bölge", "address": "Orhangazi, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Kestel", "name": "UEDAŞ Kestel Bölge", "address": "Kestel, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Gürsu", "name": "UEDAŞ Gürsu Bölge", "address": "Gürsu, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Yenişehir", "name": "UEDAŞ Yenişehir Bölge", "address": "Yenişehir, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Orhaneli", "name": "UEDAŞ Orhaneli Bölge", "address": "Orhaneli, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Keles", "name": "UEDAŞ Keles Bölge", "address": "Keles, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Harmancık", "name": "UEDAŞ Harmancık Bölge", "address": "Harmancık, Bursa", "phone": "186", "hours": "Hafta içi mesai"},
+      {"ilce": "Büyükorhan", "name": "UEDAŞ Büyükorhan Bölge", "address": "Büyükorhan, Bursa", "phone": "186", "hours": "Hafta içi mesai"}
+    ]
+  },
+  "gas": {
+    "company": "Aksa Doğalgaz · Bursagaz",
+    "legal_name": "Aksa Bursa Doğal Gaz Dağıtım A.Ş.",
+    "merger_note": "25 Mart 2025 itibarıyla Bursagaz ve Kayserigaz’ın Aksa Doğalgaz’a devri tamamlandı. Bursa’daki dağıtım lisansı Aksa Bursa Doğal Gaz Dağıtım A.Ş. unvanıyla sürdürülür; abone işlemleri Bursagaz çağrı merkezi (444 11 33) ve bursagaz.com üzerinden de yapılabilir.",
+    "group_note": "Google’da “Aksa doğalgaz Bursa” veya “Bursagaz” arayanlar aynı şebekeye gelir — ikisi ayrı il değil, aynı Bursa dağıtım bölgesi.",
+    "scope": "Bursa Büyükşehir — tüm ilçeler (EPDK lisans alanı)",
+    "phones": ["444 11 33", "444 4 827", "187"],
+    "web": "https://www.bursagaz.com/",
+    "emergency": "Gaz kaçağı / acil: 187 (7/24)",
+    "aksa": {
+      "company": "Aksa Doğalgaz Bursa",
+      "legal_name": "Aksa Bursa Doğal Gaz Dağıtım A.Ş.",
+      "phones": ["444 4 827"],
+      "web": "https://www.aksadogalgaz.com.tr/Dogal-Gaz-Dagitim-Bolgelerimiz/Aksa-Dogalgaz-Bursa",
+      "license": "EPDK DAG/211-13/030",
+      "license_since": "2003",
+      "merger_date": "2025-03-25",
+      "scope_note": "Resmi lisans yatırım bölgeleri: Osmangazi, Yıldırım, Nilüfer, Mudanya, Kestel, Gürsu, İznik, Keles, Orhaneli, Büyükorhan (+ Bursa merkez). Diğer ilçelerde şebeke Bursagaz/Aksa ağı üzerinden.",
+      "sources": [
+        {"label": "Aksa Doğalgaz Bursa", "url": "https://www.aksadogalgaz.com.tr/Dogal-Gaz-Dagitim-Bolgelerimiz/Aksa-Dogalgaz-Bursa"}
+      ],
+      "branches": [
+        {"ilce": "Osmangazi", "name": "Aksa Doğalgaz Bursa · Osmangazi", "address": "Osmangazi, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"},
+        {"ilce": "Nilüfer", "name": "Aksa Doğalgaz Bursa · Nilüfer", "address": "Nilüfer, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"},
+        {"ilce": "Yıldırım", "name": "Aksa Doğalgaz Bursa · Yıldırım", "address": "Yıldırım, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"},
+        {"ilce": "Mudanya", "name": "Aksa Doğalgaz Bursa · Mudanya", "address": "Mudanya, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"},
+        {"ilce": "Kestel", "name": "Aksa Doğalgaz Bursa · Kestel", "address": "Kestel, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"},
+        {"ilce": "Gürsu", "name": "Aksa Doğalgaz Bursa · Gürsu", "address": "Gürsu, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"},
+        {"ilce": "İznik", "name": "Aksa Doğalgaz Bursa · İznik", "address": "İznik, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"},
+        {"ilce": "Keles", "name": "Aksa Doğalgaz Bursa · Keles", "address": "Keles, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"},
+        {"ilce": "Orhaneli", "name": "Aksa Doğalgaz Bursa · Orhaneli", "address": "Orhaneli, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"},
+        {"ilce": "Büyükorhan", "name": "Aksa Doğalgaz Bursa · Büyükorhan", "address": "Büyükorhan, Bursa", "phone": "444 4 827", "hours": "Hafta içi mesai"}
+      ]
+    },
+    "bursagaz": {
+      "company": "Bursagaz",
+      "legal_name": "Bursagaz Bursa Şehiriçi Doğalgaz Dağıtım A.Ş.",
+      "phones": ["444 11 33"],
+      "web": "https://www.bursagaz.com/",
+      "note": "Müşteri hizmetleri markası — Aksa Doğalgaz grubu (devir sonrası da 444 11 33 geçerli).",
+      "hq": {"ilce": "Osmangazi", "name": "Bursagaz Genel Müdürlük / MHM", "address": "Bağlarbaşı Mah. 1. Bakım Sok. No:2 Osmangazi/Bursa", "phone": "444 11 33", "hours": "MHM hafta içi 08:30–17:30"}
+    },
+    "hq": {"ilce": "Osmangazi", "name": "Bursagaz Genel Müdürlük", "address": "Bağlarbaşı Mah. 1. Bakım Sok. No:2 Osmangazi/Bursa", "phone": "444 11 33", "hours": "MHM hafta içi 08:30–17:30"},
+    "tariff_note": "Konut tarifesi EPDK onaylı sm³ birim bedeli + sayaç okuma + vergiler. Aksa ve Bursagaz aboneleri aynı Bursa dağıtım tarifesine tabidir.",
+    "effective_label": "2026 mesken (yaklaşık birim — EPDK / Aksa-Bursagaz tarifesi)",
+    "tariffs": [
+      {"band": "Konut (mesken)", "unit": "sm³", "gas_tl": 12.84, "note": "Birim gaz bedeli (yaklaşık, KDV hariç bileşen)"},
+      {"band": "Sayaç okuma / hizmet", "unit": "ay", "gas_tl": null, "note": "Dönemsel sabit kalemler faturada ayrı satır"}
+    ],
+    "sources": [
+      {"label": "Aksa Doğalgaz Bursa", "url": "https://www.aksadogalgaz.com.tr/Dogal-Gaz-Dagitim-Bolgelerimiz/Aksa-Dogalgaz-Bursa"},
+      {"label": "Bursagaz resmi site", "url": "https://www.bursagaz.com/"},
+      {"label": "e-Devlet Bursagaz", "url": "https://turkiye.gov.tr/bursagaz-bursa-sehirici-dogalgaz-dagitim-as"}
+    ],
+    "branches": [
+      {"ilce": "Osmangazi", "name": "Bursagaz Müşteri Hizmetleri Merkezi (Aksa grubu)", "address": "Bağlarbaşı Mah. 1. Bakım Sok. No:2 Osmangazi", "phone": "444 11 33", "hours": "Hafta içi 08:30–17:30", "operator": "bursagaz"},
+      {"ilce": "Nilüfer", "name": "Bursagaz Nilüfer MHM", "address": "Nilüfer, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Yıldırım", "name": "Bursagaz Yıldırım MHM", "address": "Yıldırım, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "İnegöl", "name": "Bursagaz İnegöl MHM", "address": "İnegöl, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Gemlik", "name": "Bursagaz Gemlik MHM", "address": "Gemlik, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Mudanya", "name": "Bursagaz Mudanya MHM", "address": "Mudanya, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "İznik", "name": "Bursagaz İznik MHM", "address": "İznik, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Karacabey", "name": "Bursagaz Karacabey MHM", "address": "Karacabey, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Mustafakemalpaşa", "name": "Bursagaz Mustafakemalpaşa MHM", "address": "Mustafakemalpaşa, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Orhangazi", "name": "Bursagaz Orhangazi MHM", "address": "Orhangazi, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Kestel", "name": "Bursagaz Kestel MHM", "address": "Kestel, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Gürsu", "name": "Bursagaz Gürsu MHM", "address": "Gürsu, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Yenişehir", "name": "Bursagaz Yenişehir MHM", "address": "Yenişehir, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Orhaneli", "name": "Bursagaz Orhaneli MHM", "address": "Orhaneli, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Keles", "name": "Bursagaz Keles MHM", "address": "Keles, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Harmancık", "name": "Bursagaz Harmancık MHM", "address": "Harmancık, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"},
+      {"ilce": "Büyükorhan", "name": "Bursagaz Büyükorhan MHM", "address": "Büyükorhan, Bursa", "phone": "444 11 33", "hours": "Hafta içi mesai", "operator": "bursagaz"}
+    ]
+  }
+}

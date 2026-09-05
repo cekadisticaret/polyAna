@@ -52,7 +52,27 @@
               </div>
               <div class="odin-chart-wrap">
                 <div id="ba-chart-traffic"></div>
-                <small class="text-muted d-block mt-2">Son {{ traffic.series|length if traffic and traffic.series else 14 }} gün · İstanbul · bot hariç</small>
+                {% if traffic and traffic.series %}
+                <table class="odin-traffic-daily" aria-label="Günlük trafik">
+                  <thead>
+                    <tr>
+                      <th>Gün</th>
+                      <th>Tekil ziyaretçi</th>
+                      <th>Sayfa görüntüleme</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for s in traffic.series %}
+                    <tr>
+                      <td>{{ s.day[8:10] }}.{{ s.day[5:7] }}</td>
+                      <td><b>{{ s.visitors }}</b></td>
+                      <td>{{ s.pageviews }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                {% endif %}
+                <small class="text-muted d-block mt-2">Son {{ traffic.series|length if traffic and traffic.series else 14 }} gün · İstanbul · bot hariç · her satır o günün kendi sayısı</small>
               </div>
             </div>
           </div>
@@ -61,19 +81,20 @@
 
       <section class="odin-section" id="odin-logins">
         <div class="odin-panel">
-          <div class="odin-panel-head">
+            <div class="odin-panel-head">
             <h2>Günlük giriş</h2>
             <div class="odin-legend">
               <span><i style="background:#0f3d32"></i> Üye girişi · web + API</span>
             </div>
           </div>
+          <p class="odin-panel-note">Site trafiği değil — yalnızca e-posta/şifre ile <b>üye girişi</b> sayılır. Ziyaretçi trafiği üstteki grafikte.</p>
           <div class="odin-panel-body">
             <div class="odin-panel-split">
               <div class="odin-stat-rail">
                 <div class="odin-stat odin-stat--hero">
                   <div class="odin-stat-label">Bugün giriş</div>
                   <div class="odin-stat-value">{{ kpi.logins_today|default(0) }}</div>
-                  <div class="odin-stat-sub">Dün: {{ kpi.logins_yesterday|default(0) }}</div>
+                  <div class="odin-stat-sub">Dün: {{ kpi.logins_yesterday|default(0) }}{% if chart_data.logins.last_at %} · Son: {{ chart_data.logins.last_at }}{% endif %}</div>
                 </div>
                 <div class="odin-stat">
                   <div class="odin-stat-label">Son 7 gün</div>
@@ -216,6 +237,10 @@
                 <div class="odin-mini-grid">
                   <div class="odin-mini"><b>{{ kpi.restaurants }}</b><span>Restoran</span></div>
                   <div class="odin-mini"><b>{{ kpi.hospitals }}</b><span>Hastane</span></div>
+                  <div class="odin-mini"><b>{{ kpi.doctors }}</b><span>Doktor</span></div>
+                  <div class="odin-mini"><b>{{ kpi.dentists }}</b><span>Diş hekimi</span></div>
+                  <div class="odin-mini"><b>{{ kpi.vets }}</b><span>Veteriner</span></div>
+                  <div class="odin-mini"><b>{{ kpi.pharmacies }}</b><span>Nöbetçi eczane</span></div>
                   <div class="odin-mini"><b>{{ kpi.hotels }}</b><span>Otel</span></div>
                   <div class="odin-mini"><b>{{ kpi.events }}</b><span>Etkinlik</span></div>
                   <div class="odin-mini"><b>{{ kpi.favorites }}</b><span>Favori</span></div>

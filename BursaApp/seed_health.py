@@ -58,15 +58,27 @@ def _upsert_place(db, raw: dict, *, category: str) -> str:
     if p is None:
         if fields["rating_admin"] is None:
             fields.pop("rating_admin")
-        db.add(Place(slug=slug, **fields))
-        return "new"
-    for k, v in fields.items():
-        if k == "rating_admin" and v is None:
-            continue
-        if k == "img_url" and category == "hospital" and resolve_img_url(raw, p) is None:
-            continue
-        setattr(p, k, v)
-    return "upd"
+        p = Place(slug=slug, **fields)
+        db.add(p)
+        db.flush()
+        st = "new"
+    else:
+        st = "upd"
+        for k, v in fields.items():
+            if k == "rating_admin" and v is None:
+                continue
+            if k == "img_url" and category == "hospital" and resolve_img_url(raw, p) is None:
+                continue
+            setattr(p, k, v)
+    if category == "dentist" and (raw.get("mhrs_url") or raw.get("price_band") == "Devlet"):
+        from models import merge_place_extra
+
+        patch = {
+            "mhrs_url": (raw.get("mhrs_url") or "").strip() or "https://mhrs.gov.tr/vatandas/#/Randevu",
+            "fee_note": "Devlet ADSM — randevu MHRS (182) veya mhrs.gov.tr. BursaApp randevu satmaz.",
+        }
+        merge_place_extra(p, patch)
+    return st
 
 
 def main() -> None:

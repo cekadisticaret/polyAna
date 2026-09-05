@@ -1,0 +1,53 @@
+{% extends "_shell.html" %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='utilities-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block main %}
+{% include "_utilities_tabs.html" %}
+
+<section class="util-hero">
+  <p class="util-kicker">Güncel tarife · ilçe ilçe iletişim</p>
+  <h1>Bursa su, elektrik ve doğalgaz fiyatları</h1>
+  <p class="util-lead">BUSKİ su tarifesi (m³ / ton), UEDAŞ elektrik birim fiyatları ve Bursagaz doğalgaz tarifesi — 17 ilçe için abone merkezi telefon ve adresleri. Veriler cron ile güncellenir.</p>
+  {% if feed.generated_label %}<p class="util-src">Son güncelleme: {{ feed.generated_label }}</p>{% endif %}
+</section>
+
+<div class="util-grid">
+  <a class="util-card" href="/buski-su-fiyatlari">
+    <span class="util-ico">💧</span>
+    <h2>BUSKİ su fiyatları</h2>
+    <p>Kademeli m³ tarifesi · atıksu · ilçe ofisleri</p>
+    {% if feed.water.tariffs %}<b>{{ feed.water.tariffs[0].water_tl|round(2) }} ₺</b><i>/m³ ilk kademe</i>{% endif %}
+  </a>
+  <a class="util-card" href="/bursa-elektrik-fiyatlari">
+    <span class="util-ico">⚡</span>
+    <h2>Elektrik fiyatları</h2>
+    <p>UEDAŞ dağıtım · mesken kWh birim bedeli</p>
+    {% if feed.electricity.tariffs %}<b>{{ feed.electricity.tariffs[0].energy_tl|round(3) }} ₺</b><i>/kWh (yaklaşık)</i>{% endif %}
+  </a>
+  <a class="util-card" href="/bursa-dogalgaz-fiyatlari">
+    <span class="util-ico">🔥</span>
+    <h2>Aksa · Bursagaz doğalgaz</h2>
+    <p>Bursa dağıtım · aynı tarife · ilçe MHM</p>
+    {% if feed.gas.tariffs and feed.gas.tariffs[0].gas_tl %}<b>{{ feed.gas.tariffs[0].gas_tl|round(2) }} ₺</b><i>/sm³ (yaklaşık)</i>{% endif %}
+  </a>
+  <a class="util-card util-card--alt" href="/uludag-teleferik">
+    <span class="util-ico">🚡</span>
+    <h2>Uludağ Teleferik</h2>
+    <p>Bilet · halk günü · otobüs · saatler</p>
+    {% if teleferik.prices %}<b>{{ teleferik.prices[0].amount_tl }} ₺</b><i>tam bilet</i>{% endif %}
+  </a>
+</div>
+
+<section class="util-block">
+  <h2>Sık sorulanlar</h2>
+  <div class="seo-faq">
+    <details><summary>Bursa su fiyatı ton başına ne kadar?</summary><p>BUSKİ tarifesi m³ (metreküp) üzerinden; 1 m³ = 1 ton. İlk kademe 0–15 m³ için su bedeli {{ feed.water.tariffs[0].water_tl if feed.water.tariffs else '—' }} ₺/m³ (KDV hariç). Detay: <a href="/buski-su-fiyatlari">BUSKİ su fiyatları</a>.</p></details>
+    <details><summary>Bursa'da elektrik dağıtım şirketi hangisi?</summary><p>Bursa ilinde dağıtım UEDAŞ (Uludağ Elektrik Dağıtım). Arıza bildirimi <strong>186</strong>. <a href="/bursa-elektrik-fiyatlari">Elektrik tarifesi</a>.</p></details>
+    <details><summary>Aksa mı Bursagaz mı?</summary><p><strong>İkisi de Bursa’da aynı şebeke.</strong> 25 Mart 2025’ten itibaren Bursagaz, Aksa Doğalgaz çatısına devredildi. Resmi unvan: Aksa Bursa Doğal Gaz Dağıtım A.Ş. Abone işlemleri <strong>444 11 33</strong> (Bursagaz) ve <strong>444 4 827</strong> (Aksa) üzerinden. <a href="/bursa-dogalgaz-fiyatlari">Doğalgaz fiyatları</a>.</p></details>
+  </div>
+</section>
+
+<p class="util-disclaimer">{{ feed.disclaimer }}</p>
+{% endblock %}

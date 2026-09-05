@@ -1,0 +1,281 @@
+[
+  {
+    "slug": "acibadem-dis-bursa",
+    "title": "Acıbadem Bursa · Ağız ve Diş",
+    "ilce": "Nilüfer",
+    "address": "Karaman Mah., Nilüfer (Acıbadem Bursa Hastanesi)",
+    "phone": "444 55 44",
+    "web": "https://www.acibadem.com.tr/hastane/bursa-hastanesi/",
+    "hours_text": "Poliklinik mesai",
+    "price_band": "Özel",
+    "featured": true,
+    "tags": [
+      "ozel",
+      "hastane"
+    ],
+    "blurb": "Acıbadem Bursa diş hekimleri — hastane bünyesinde.",
+    "rating": 4.4
+  },
+  {
+    "slug": "dentgroup-bursa",
+    "title": "DentGroup Bursa",
+    "ilce": "Nilüfer",
+    "address": "FSM Bulvarı, Nilüfer / Bursa",
+    "phone": "0224 451 45 45",
+    "web": "https://www.dentgroup.com.tr/",
+    "hours_text": "Hafta içi · randevu",
+    "price_band": "Özel",
+    "featured": true,
+    "tags": [
+      "ozel",
+      "implant",
+      "ortodonti"
+    ],
+    "blurb": "Ulusal zincir — implant, estetik, ortodonti. Randevu telefon / web.",
+    "rating": 4.3
+  },
+  {
+    "title": "Korudiş Kliniği",
+    "ilce": "Nilüfer",
+    "address": "Nilüfer / Bursa",
+    "web": "https://www.korudis.com.tr/",
+    "price_band": "Özel",
+    "featured": true,
+    "tags": [
+      "ozel"
+    ],
+    "blurb": "Multidisipliner özel diş kliniği.",
+    "slug": "korudis-klinigi",
+    "hours_text": "Randevu ile"
+  },
+  {
+    "slug": "nilufer-adsm-dis",
+    "title": "Nilüfer Ağız ve Diş Sağlığı Merkezi",
+    "ilce": "Nilüfer",
+    "address": "Beşevler Mah. Beşevler Cad. No:103/B, Nilüfer",
+    "phone": "0224 452 38 16",
+    "web": "https://niluferadsm.saglik.gov.tr/",
+    "hours_text": "Mesai · MHRS / 182",
+    "price_band": "Devlet",
+    "featured": true,
+    "tags": [
+      "adsm",
+      "devlet"
+    ],
+    "blurb": "Nilüfer ADSM — devlet diş hekimi. Randevu MHRS veya 182.",
+    "lat": 40.2089,
+    "lng": 28.9847,
+    "rating": 3.8
+  },
+  {
+    "title": "Vizyon Diş · Estetik · İmplant · Ortodonti",
+    "ilce": "Nilüfer",
+    "address": "Odunluk Mah. Lefkoşe Cad. Zeno İş Merkezi A Blok, Nilüfer",
+    "phone": "0224 453 18 17",
+    "web": "http://www.bursavizyondis.com/",
+    "price_band": "Özel",
+    "featured": true,
+    "tags": [
+      "ozel",
+      "implant",
+      "ortodonti"
+    ],
+    "blurb": "Odunluk · estetik ve implant.",
+    "slug": "vizyon-dis-estetik-implant-ortodonti",
+    "hours_text": "Randevu ile"
+  },
+  {
+    "title": "Klinik Bursa Yıldırım Ağız ve Diş Sağlığı Polikliniği",
+    "ilce": "Yıldırım",
+    "address": "Sinandede Kasım Önadım Blv. 128/B, Yıldırım",
+    "phone": "0224 362 04 04",
+    "web": "http://www.klinikbursa.com/",
+    "price_band": "Özel",
+    "featured": true,
+    "tags": [
+      "ozel"
+    ],
+    "blurb": "Yıldırım · geniş poliklinik.",
+    "slug": "klinik-bursa-yildirim-agiz-ve-dis-sagligi-poliklinigi",
+    "hours_text": "Randevu ile"
+  },
+  {
+    "title": "Burcu Özden Ortodonti Kliniği",
+    "ilce": "Nilüfer",
+    "address": "Konak Lotus Ofis 1. Badem Sk. No:26, Nilüfer",
+    "web": "https://www.burcuozden.com.tr/",
+    "price_band": "Klinik",
+    "tags": [
+      "ortodonti",
+      "ozel"
+    ],
+    "blurb": "Uzm. Dt. Burcu Özden · ortodonti.",
+    "slug": "burcu-ozden-ortodonti-klinigi",
+    "hours_text": "Randevu ile"
+  },
+  {
+    "slug": "bursa-cocuk-dis-klinigi",
+    "title": "Bursa Çocuk Diş Kliniği",
+    "ilce": "Nilüfer",
+    "address": "Nilüfer / Bursa",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "tags": [
+      "cocuk",
+      "ozel"
+    ],
+    "blurb": "Pedodonti — çocuk diş hekimliği.",
+    "rating": 4.2
+  },
+  {
+    "title": "Dt. Semra Güler Beşer Diş Kliniği",
+    "ilce": "Nilüfer",
+    "address": "Çamlıca Kavakdere Cad. Çamlıca İş Merkezi 170/9, Nilüfer",
+    "phone": "0555 169 55 00",
+    "web": "https://semragulerbeser.com.tr/",
+    "price_band": "Klinik",
+    "tags": [
+      "hekim",
+      "implant"
+    ],
+    "blurb": "Çamlıca · implant ve gülüş tasarımı.",
+    "slug": "dt-semra-guler-beser-dis-klinigi",
+    "hours_text": "Randevu ile"
+  },
+  {
+    "title": "EON Dental Bursa",
+    "ilce": "Nilüfer",
+    "address": "Odunluk Liman Cad. 17C, Nilüfer",
+    "phone": "0224 453 00 99",
+    "web": "https://eondental.com.tr/",
+    "price_band": "Özel",
+    "tags": [
+      "ozel",
+      "implant"
+    ],
+    "blurb": "Odunluk · implant ve gülüş tasarımı.",
+    "slug": "eon-dental-bursa",
+    "hours_text": "Randevu ile"
+  },
+  {
+    "slug": "pan-dental-bursa",
+    "title": "Pan Dental Bursa",
+    "ilce": "Nilüfer",
+    "address": "Üçevler Mah., Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Klinik mesai",
+    "price_band": "Özel",
+    "tags": [
+      "ozel",
+      "klinik"
+    ],
+    "blurb": "Özel diş polikliniği — Üçevler bölgesi.",
+    "rating": 4.1
+  },
+  {
+    "slug": "smile-art-dis-klinigi",
+    "title": "Smile Art Diş Kliniği",
+    "ilce": "Nilüfer",
+    "address": "Görükle / Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "tags": [
+      "estetik",
+      "ozel"
+    ],
+    "blurb": "Estetik diş hekimliği — Görükle bölgesi.",
+    "rating": 4.1
+  },
+  {
+    "title": "Tuval Ağız ve Diş Sağlığı Polikliniği",
+    "ilce": "Nilüfer",
+    "address": "Cumhuriyet Mah. Anıt Sokak Efeler Sitesi 2B, Nilüfer",
+    "phone": "0224 503 05 07",
+    "web": "http://www.tuvalklinik.com/",
+    "price_band": "Özel",
+    "tags": [
+      "ozel"
+    ],
+    "blurb": "Tuval klinik · Cumhuriyet mahallesi.",
+    "slug": "tuval-agiz-ve-dis-sagligi-poliklinigi",
+    "hours_text": "Randevu ile"
+  },
+  {
+    "slug": "bursa-ortodonti-merkezi",
+    "title": "Bursa Ortodonti Merkezi",
+    "ilce": "Osmangazi",
+    "address": "Osmangazi / Bursa",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "tags": [
+      "ortodonti",
+      "ozel"
+    ],
+    "blurb": "Ortodonti odaklı özel merkez.",
+    "rating": 4.0
+  },
+  {
+    "slug": "doruk-dis-cekirge",
+    "title": "Doruk Çekirge · Diş",
+    "ilce": "Osmangazi",
+    "address": "Çekirge, Osmangazi",
+    "phone": "",
+    "web": "https://doruktip.com/",
+    "hours_text": "Poliklinik mesai",
+    "price_band": "Özel",
+    "tags": [
+      "ozel",
+      "doruk"
+    ],
+    "blurb": "Doruk Sağlık Grubu Çekirge diş birimi.",
+    "rating": 4.0
+  },
+  {
+    "slug": "medical-park-dis-bursa",
+    "title": "Medical Park Bursa · Diş",
+    "ilce": "Osmangazi",
+    "address": "Fevzi Çakmak Cad., Osmangazi",
+    "phone": "444 44 84",
+    "web": "https://www.medicalpark.com.tr/hastanelerimiz/medicalpark-bursa-hastanesi",
+    "hours_text": "Poliklinik mesai",
+    "price_band": "Özel",
+    "tags": [
+      "ozel",
+      "hastane"
+    ],
+    "blurb": "Medical Park Bursa ağız diş polikliniği.",
+    "rating": 4.2
+  },
+  {
+    "title": "Prof. Dr. Bülent Baydaş Ortodonti Diş Polikliniği",
+    "ilce": "Osmangazi",
+    "address": "Bağlarbaşı 1. Sedir Sk. No:10, Osmangazi",
+    "phone": "0224 220 34 44",
+    "web": "https://www.bulentbaydas.com/",
+    "price_band": "Klinik",
+    "tags": [
+      "ortodonti"
+    ],
+    "blurb": "Prof. Dr. Baydaş · ortodonti.",
+    "slug": "prof-dr-bulent-baydas-ortodonti-dis-poliklinigi",
+    "hours_text": "Randevu ile"
+  },
+  {
+    "title": "Özel Meta Ağız ve Diş Sağlığı Polikliniği",
+    "slug": "ozel-meta-dis-nilufer",
+    "ilce": "Nilüfer",
+    "address": "Cumhuriyet Mah. Gazi Cad. No:31-33, Nilüfer",
+    "phone": "0224 452 13 13",
+    "price_band": "Özel",
+    "tags": ["ozel", "verified"],
+    "blurb": "Nilüfer · Gazi Caddesi · teyitli iletişim.",
+    "hours_text": "Randevu ile"
+  }
+]

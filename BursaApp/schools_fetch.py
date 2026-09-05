@@ -20,6 +20,8 @@ DATA = os.path.join(_DIR, "data")
 SCHOOLS_PATH = os.path.join(DATA, "schools.json")
 EVENTS_PATH = os.path.join(DATA, "school_events.json")
 CURATED_PATH = os.path.join(DATA, "schools_curated.json")
+DERSHANE_PATH = os.path.join(DATA, "meb_dershaneler_bursa.json")
+OZEL_EGITIM_PATH = os.path.join(DATA, "meb_ozel_egitim_bursa.json")
 
 ILCELER = (
     "Osmangazi", "Nilüfer", "Yıldırım", "Mudanya", "Gemlik", "İnegöl",
@@ -59,6 +61,20 @@ def norm_ilce(raw: str) -> str:
 def infer_subcategory(name: str, tags: dict) -> str:
     n = (name or "").lower()
     isced = (tags.get("isced:level") or tags.get("school:levels") or "").lower()
+    if "dershane" in n or "dershanecilik" in n:
+        return "dershane"
+    if any(
+        x in n
+        for x in (
+            "özel eğitim",
+            "ozel egitim",
+            "rehabilitasyon",
+            "uygulama okulu",
+            "otizm",
+            "disleksi",
+        )
+    ):
+        return "ozel-egitim"
     if any(x in n for x in ("anaokul", "ana okul", "kreş", "kres", "kindergarten")):
         return "anaokul"
     if "üniversite" in n or "universite" in n or tags.get("amenity") == "university":
@@ -181,10 +197,24 @@ def load_curated_file() -> list[dict]:
     return CURATED
 
 
-def merge_schools(osm_rows: list[dict], curated: list[dict]) -> list[dict]:
+def load_extra_json(path: str) -> list[dict]:
+    if os.path.isfile(path):
+        return json.loads(open(path, encoding="utf-8").read())
+    return []
+
+
+def merge_schools(osm_rows: list[dict], *extra_lists: list[dict]) -> list[dict]:
     by_slug = {r["slug"]: r for r in osm_rows}
     by_title = {r["title"].lower(): r for r in osm_rows}
-    for c in curated:
+    by_phone: dict[str, dict] = {}
+    for r in osm_rows:
+        ph = re.sub(r"\D", "", r.get("phone") or "")
+        if len(ph) >= 10:
+            by_phone[ph[-10:]] = r
+    all_curated: list[dict] = []
+    for lst in extra_lists:
+        all_curated.extend(lst or [])
+    for c in all_curated:
         slug = c.get("slug") or slugify(c["title"])
         c = dict(c)
         c["slug"] = slug
@@ -200,7 +230,16 @@ def merge_schools(osm_rows: list[dict], curated: list[dict]) -> list[dict]:
                 if v not in (None, "", [], {}):
                     base[k] = v
         else:
-            by_slug[slug] = c
+            ph = re.sub(r"\D", "", c.get("phone") or "")
+            if len(ph) >= 10 and ph[-10:] in by_phone and c.get("phone"):
+                base = by_phone[ph[-10:]]
+                for k, v in c.items():
+                    if k == "slug":
+                        continue
+                    if v not in (None, "", [], {}):
+                        base[k] = v
+            else:
+                by_slug[slug] = c
     rows = list(by_slug.values())
     rows.sort(
         key=lambda r: (
@@ -259,7 +298,21 @@ def main() -> None:
         print(f"OSM hata ({exc}) — yalnız curated kullanılacak", flush=True)
         osm = []
     curated = load_curated_file()
-    merged = merge_schools(osm, curated)
+    dershaneler = load_extra_json(DERSHANE_PATH)
+    ozel_egitim = load_extra_json(OZEL_EGITIM_PATH)
+    if not dershaneler and os.path.isfile(os.path.join(_DIR, "dershane_fetch.py")):
+        print("meb_dershaneler_bursa.json yok — dershane_fetch çalıştırılıyor…", flush=True)
+        import subprocess
+
+        subprocess.run([sys.executable, os.path.join(_DIR, "dershane_fetch.py")], check=False)
+        dershaneler = load_extra_json(DERSHANE_PATH)
+    if not ozel_egitim and os.path.isfile(os.path.join(_DIR, "ozel_egitim_fetch.py")):
+        print("meb_ozel_egitim_bursa.json yok — ozel_egitim_fetch çalıştırılıyor…", flush=True)
+        import subprocess
+
+        subprocess.run([sys.executable, os.path.join(_DIR, "ozel_egitim_fetch.py")], check=False)
+        ozel_egitim = load_extra_json(OZEL_EGITIM_PATH)
+    merged = merge_schools(osm, curated, dershaneler, ozel_egitim)
     os.makedirs(DATA, exist_ok=True)
     with open(SCHOOLS_PATH, "w", encoding="utf-8") as f:
         json.dump(merged, f, ensure_ascii=False, indent=2)

@@ -57,4 +57,14 @@
     <p class="nf-foot">Bildirimler <b>{{ u.email }}</b> adresine gider.</p>
   </form>
 </div>
+<script>
+(function () {
+  document.querySelectorAll('.nf-item input[type=checkbox]').forEach(function (cb) {
+    cb.addEventListener('change', function () {
+      cb.closest('.nf-item')?.classList.toggle('is-on', cb.checked);
+    });
+    cb.closest('.nf-item')?.classList.toggle('is-on', cb.checked);
+  });
+})();
+</script>
 {% endblock %}

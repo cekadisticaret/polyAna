@@ -171,6 +171,35 @@ body.odin-admin .footer {
 .odin-chart-wrap .apexcharts-canvas {
   margin: 0 auto;
 }
+.odin-traffic-daily {
+  width: 100%;
+  margin-top: 14px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.odin-traffic-daily th,
+.odin-traffic-daily td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #eef0f3;
+  text-align: left;
+}
+.odin-traffic-daily th {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--odin-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.odin-traffic-daily td:nth-child(2),
+.odin-traffic-daily td:nth-child(3),
+.odin-traffic-daily th:nth-child(2),
+.odin-traffic-daily th:nth-child(3) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.odin-traffic-daily tbody tr:last-child td {
+  border-bottom: 0;
+}
 .odin-legend {
   display: flex;
   flex-wrap: wrap;
@@ -184,11 +213,12 @@ body.odin-admin .footer {
   align-items: center;
   gap: 6px;
 }
-.odin-legend i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
+.odin-panel-note {
+  margin: -4px 0 0;
+  padding: 0 20px 12px;
+  font-size: 12px;
+  color: var(--odin-muted);
+  line-height: 1.45;
 }
 
 .odin-sidebar .odin-panel {

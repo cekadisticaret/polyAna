@@ -1,6 +1,7 @@
 """Admin HTML — Ventic UI · kapsamlı yönetim paneli."""
 from __future__ import annotations
 
+import os
 import re
 from datetime import datetime, timedelta
 
@@ -296,6 +297,15 @@ def dashboard():
             "hospitals": db.query(Place)
             .filter(Place.status == "approved", Place.category == "hospital")
             .count(),
+            "doctors": db.query(Place)
+            .filter(Place.status == "approved", Place.category == "doctor")
+            .count(),
+            "dentists": db.query(Place)
+            .filter(Place.status == "approved", Place.category == "dentist")
+            .count(),
+            "vets": db.query(Place)
+            .filter(Place.status == "approved", Place.category == "vet")
+            .count(),
             "hotels": db.query(Place)
             .filter(Place.status == "approved", Place.category == "hotel")
             .count(),
@@ -310,6 +320,15 @@ def dashboard():
                 ActivityLog.kind == "place_submit", ActivityLog.created_at >= since
             ).count(),
         }
+        try:
+            import json as _json
+
+            _neo = os.path.join(os.path.dirname(__file__), "data", "nobetci_eczaneler.json")
+            with open(_neo, encoding="utf-8") as _f:
+                _feed = _json.load(_f)
+            kpi["pharmacies"] = int(_feed.get("total") or len(_feed.get("pharmacies") or []))
+        except Exception:
+            kpi["pharmacies"] = 0
         from analytics import summary as traffic_summary, top_pages as traffic_top_pages
 
         traffic = traffic_summary(db, days=14)
@@ -887,11 +906,19 @@ def approve(pid: int):
     try:
         p = db.get(Place, pid)
         if p:
+            was_pending = p.status == "pending"
             p.status = "approved"
             p.reviewed_by_id = user.id if user else None
             p.reviewed_at = datetime.utcnow()
             p.reject_reason = ""
             db.commit()
+            if was_pending:
+                try:
+                    from notify import notify_place_approved
+
+                    notify_place_approved(db, p)
+                except Exception:
+                    pass
             flash("Onaylandı.", "ok")
         return redirect(request.referrer or "/admin?status=pending")
     finally:

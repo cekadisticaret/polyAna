@@ -59,6 +59,7 @@ CURATED: dict[str, list[str]] = {
     "cicek-izgara": ["Pideli kofte.jpg", "Pideli köfte - Istanbul.jpg"],
     "kebapci-idris": ["Pideli kofte.jpg"],
     "kayhan-koftecisi-eker": ["Pideli kofte.jpg"],
+    "omur-koftecisi-1965": ["Pideli Köfte in Bursa.jpg", "Pideli kofte.jpg"],
     "pideli-kofte-osmangazi": ["Pideli kofte.jpg"],
     "inegol-restaurant": ["Pideli kofte.jpg"],
     "hasbihal-bahcesi-cumalikizik": ["Cumalıkızık 7112.jpg", "Turkey-1409 (2215838173) (2).jpg"],

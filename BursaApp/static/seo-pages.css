@@ -28,6 +28,7 @@
 .seo-page article p,.seo-page article li{line-height:1.7;color:#2a3a33}
 .seo-page article h2{margin:28px 0 10px;font-size:1.2rem}
 .seo-page .hero-pic{width:100%;border-radius:16px;margin:0 0 22px;aspect-ratio:16/9;object-fit:cover}
+.seo-page .sec-pic{width:100%;border-radius:14px;margin:8px 0 16px;aspect-ratio:16/9;object-fit:cover;box-shadow:var(--shadow)}
 .seo-posts{display:grid;gap:14px}
 .seo-posts a{
   display:grid;grid-template-columns:120px 1fr;gap:14px;padding:12px;
@@ -35,9 +36,29 @@
   border:1px solid rgba(27,59,43,.08);
 }
 .seo-posts img{width:120px;height:90px;object-fit:cover;border-radius:10px}
-.seo-posts b{display:block;margin-bottom:4px}
-.seo-posts i{font-style:normal;color:#6B7A72;font-size:13px;display:block;margin-top:4px}
+.seo-posts b{display:block;margin-bottom:4px;line-height:1.35}
+.seo-posts i{font-style:normal;color:#6B7A72;font-size:13px;display:block;margin-top:4px;line-height:1.45}
 .seo-posts time{font-size:12px;color:#8a9690;margin-top:6px;display:block}
+
+/* Blog indeks — 2 sütun kart */
+.seo-page--blog{width:min(980px,100%)}
+.seo-page--blog .seo-posts{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+.seo-page--blog .seo-posts a{
+  grid-template-columns:1fr;
+  gap:0;padding:0;overflow:hidden;
+  transition:box-shadow .15s ease,transform .15s ease;
+}
+.seo-page--blog .seo-posts a:hover{
+  box-shadow:0 8px 24px rgba(27,59,43,.1);
+  transform:translateY(-1px);
+}
+.seo-page--blog .seo-posts img{
+  width:100%;height:168px;border-radius:0;
+}
+.seo-page--blog .seo-posts a > div{padding:14px 16px 16px}
 
 .blog-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
 .blog-filters a{
@@ -71,7 +92,24 @@
 @media (max-width:640px){
   .seo-posts a{grid-template-columns:1fr}
   .seo-posts img{width:100%;height:160px}
+  .seo-page--blog .seo-posts{grid-template-columns:1fr}
 }
+
+.contact-cards{display:grid;gap:14px;margin:24px 0 20px;max-width:480px}
+.contact-card{
+  display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+  padding:18px 20px;background:#fff;border-radius:16px;text-decoration:none;color:inherit;
+  border:1px solid rgba(27,59,43,.1);box-shadow:0 4px 18px rgba(27,59,43,.06);
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+.contact-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(27,59,43,.1)}
+.contact-card.contact-wa{border-color:rgba(37,211,102,.25);background:linear-gradient(135deg,#f0fdf4 0%,#fff 100%)}
+.contact-ico{font-size:28px;line-height:1}
+.contact-card b{display:block;font-size:15px;margin-bottom:2px}
+.contact-card i{font-style:normal;font-size:14px;color:#6B7A72;font-weight:600}
+.contact-go{font-size:13px;font-weight:800;color:#1B3B2B;white-space:nowrap}
+.contact-card.contact-wa .contact-go{color:#15803d}
+.contact-note{font-size:14px;color:#6B7A72;line-height:1.6;max-width:56ch;margin:0 0 24px}
 
 .err404 .err404-code{
   margin:0 0 8px;font-size:clamp(48px,12vw,72px);font-weight:900;letter-spacing:-.08em;

@@ -30,9 +30,11 @@
       <a href="/etrafimda">📍 Etrafımda ne var</a>
       <a href="/harita">🗺 Harita</a>
       <a href="/rota">🧳 Rota planla</a>
+      <a href="/uludag-teleferik">🚡 Uludağ Teleferik</a>
       <a href="/nobetci-eczaneler">💊 Nöbetçi eczane</a>
       <a href="{% if nav_user %}/hesap/bildirimler{% else %}/giris{% endif %}">🔔 Bildirimler</a>
       {% if nav_user %}<a href="/hesap/ayarlar">⚙️ Ayarlar</a>{% else %}<a href="/giris">Giriş yap</a>{% endif %}
+      <a href="/iletisim">📞 İletişim</a>
     </nav>
   </div>
 
@@ -42,6 +44,7 @@
   <div class="m-chip-row">
     <a class="m-chip on" href="/">Öne çıkan</a>
     <a class="m-chip" href="/gezilecek">Gezi</a>
+    <a class="m-chip" href="/uludag-teleferik">Teleferik</a>
     <a class="m-chip" href="/yeme-icme">Yeme-içme</a>
     <a class="m-chip" href="/konserler">Etkinlik</a>
     <a class="m-chip" href="/oteller">Otel</a>
@@ -124,7 +127,7 @@
       <a class="ghost" href="/yeme-icme">Yeme-içme</a>
       <a class="ghost" href="/gezilecek">Gezilecek</a>
       <a class="ghost" href="/oteller">Oteller</a>
-      <a class="ghost" href="https://wa.me/905535469948" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+      <a class="ghost" href="/iletisim">İletişim</a>
     </div>
     <form class="wa-search" id="home-search" action="/gezilecek" method="get">
       <div class="field">
@@ -156,8 +159,9 @@
       <a class="wa-feat" href="/doktorlar"><div class="ico" style="background:var(--mint)">🩺</div><b>Doktorlar</b><i>Branş</i></a>
       <a class="wa-feat" href="/dis-hekimleri"><div class="ico" style="background:#e0f2fe">🦷</div><b>Diş hekimleri</b><i>ADSM · klinik</i></a>
       <a class="wa-feat" href="/nobetci-eczaneler"><div class="ico" style="background:#e8f5e9">💊</div><b>Nöbetçi eczane</b><i>Bugün</i></a>
+      <a class="wa-feat" href="/uludag-teleferik"><div class="ico" style="background:#e8f2ea">🚡</div><b>Uludağ Teleferik</b><i>Bilet · saat</i></a>
       <a class="wa-feat" href="/veterinerler"><div class="ico" style="background:var(--sand)">🐾</div><b>Veteriner</b><i>Klinik</i></a>
-      <a class="wa-feat" href="/okullar"><div class="ico" style="background:#ede9fe">🎓</div><b>Okullar</b><i>Devlet · özel · lise</i></a>
+      <a class="wa-feat" href="/okullar"><div class="ico" style="background:#ede9fe">🎓</div><b>Okullar</b><i>Dershane · okul</i></a>
       <a class="wa-feat" href="/marketler"><div class="ico" style="background:var(--lilac)">🛒</div><b>Marketler</b><i>Yakın + kampanya</i></a>
       <a class="wa-feat" href="/sinema"><div class="ico" style="background:var(--lilac)">🎬</div><b>Sinema</b><i>Vizyon</i></a>
       <a class="wa-feat" href="/eglence"><div class="ico" style="background:var(--sand)">🎳</div><b>Eğlence</b><i>Gece & aktivite</i></a>
@@ -224,6 +228,7 @@
         {% for c in categories if c.key in ('food','market','shop','visit','hotel','camp') %}
         <a class="wa-cat" href="{{ c.path }}"><span>{{ cat_ico.get(c.key, '•') }}</span><b>{{ c.label }}</b><i>{{ c.hint }}</i></a>
         {% endfor %}
+        <a class="wa-cat" href="/uludag-teleferik"><span>🚡</span><b>Uludağ Teleferik</b><i>Bilet · halk günü · otobüs</i></a>
       </div>
     </div>
     <div class="wa-cat-group">
@@ -239,8 +244,8 @@
 
 <section class="wa-sec">
   <div class="wa-sec-h">
-    <h2>🌿 Popüler destinasyonlar</h2>
-    <a href="/gezilecek">Tüm destinasyonlar →</a>
+    <h2>🌿 Popüler yerler</h2>
+    <a href="/gezilecek">Tüm gezilecek yerler →</a>
   </div>
   <div class="wa-grid">
     {% for p in featured[:8] %}
@@ -258,6 +263,24 @@
     {% endfor %}
   </div>
 </section>
+
+{% if news_headlines %}
+<section class="wa-sec bn-home-strip">
+  <div class="wa-sec-h">
+    <h2>📰 Bursa gündemi</h2>
+    <a href="/haberler">Tüm haberler →</a>
+  </div>
+  <div class="bn-home-grid">
+    {% for n in news_headlines %}
+    <a class="bn-home-card" href="{{ n.path }}">
+      <span class="bn-m-pill">{{ n.topic_label }}</span>
+      <b>{{ n.title }}</b>
+      <small>{{ n.date_label }} · {{ n.source }}</small>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 <section class="wa-inspire">
   <div>
@@ -317,7 +340,7 @@
 </section>
 
   <div class="wa-stats-grid">
-    <div><div>📍</div><b>50+</b><span>Destinasyon</span></div>
+    <div><div>📍</div><b>50+</b><span>Gezilecek yer</span></div>
     <div><div>😊</div><b>{{ place_count }}+</b><span>Kayıtlı yer</span></div>
     <div><div>★</div><b>4.8</b><span>Ortalama puan</span></div>
     <div><div>💬</div><b>7/24</b><span>Destek</span></div>

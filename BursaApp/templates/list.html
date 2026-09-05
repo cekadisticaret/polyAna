@@ -104,11 +104,13 @@
 {% endif %}
 {% if groups %}
   {% for g in groups %}
-  <section class="ilce-block" id="grp-{{ g.label }}">
+  <section class="ilce-block{% if ev_hero_list and g.label == 'Yaklaşan' %} ilce-block--headless{% endif %}" id="grp-{{ g.label }}">
+    {% if not (ev_hero_list and g.label == 'Yaklaşan') %}
     <div class="sec-h">
       <h2>{{ g.label }}</h2>
       <span class="see">{{ g.places|length }} yer{% if cat.key=='food' %} · ★ yüksekten{% endif %}</span>
     </div>
+    {% endif %}
     <div class="{% if ev_hero_list %}ev-list{% else %}cards{% endif %}">
       {% for p in g.places %}
       {% if ev_hero_list %}

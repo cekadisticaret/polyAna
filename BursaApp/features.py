@@ -910,8 +910,10 @@ def bildirimler():
             u.notify_campaign = request.form.get("notify_campaign") == "1"
             u.notify_new_place = request.form.get("notify_new_place") == "1"
             db.commit()
+            db.refresh(u)
             flash("Bildirim tercihleri kaydedildi.", "ok")
             return redirect("/hesap/bildirimler?saved=1")
+        db.refresh(u)
         return render_template("notify.html", u=u, nav="hesap")
     finally:
         db.close()

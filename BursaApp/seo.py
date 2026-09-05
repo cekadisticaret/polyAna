@@ -615,10 +615,11 @@ DISCOVER_META = {
 
 
 def for_blog_hub() -> PageSEO:
-    from seo_arch import BLOG_POSTS, OG_IMAGE
-    from blog_posts import blog_posts_sorted
+    from blog_posts import all_blog_posts, blog_posts_sorted
+    from seo_arch import OG_IMAGE
 
-    n = len(BLOG_POSTS)
+    all_p = all_blog_posts()
+    n = len(all_p)
     desc = (
         f"Bursa gezi, kahvaltı, İskender, Uludağ, İznik, termal otel ve hafta sonu planları — "
         f"{n} how-to yazı; restoran ve gezilecek listelerine köprü."
@@ -660,9 +661,10 @@ def for_blog_hub() -> PageSEO:
 
 
 def for_blog_post(slug: str) -> PageSEO | None:
-    from seo_arch import BLOG_POSTS, OG_IMAGE
+    from blog_posts import all_blog_posts
+    from seo_arch import OG_IMAGE
 
-    post = BLOG_POSTS.get(slug)
+    post = all_blog_posts().get(slug)
     if not post:
         return None
     path = f"/blog/{slug}"
@@ -699,6 +701,19 @@ def for_kvkk() -> PageSEO:
     )
 
 
+def for_iletisim() -> PageSEO:
+    from seo_arch import OG_IMAGE
+
+    return page(
+        title="İletişim",
+        description="BursaApp destek — telefon ve WhatsApp ile ulaşın.",
+        path="/iletisim",
+        image=OG_IMAGE,
+        breadcrumbs=[("Ana Sayfa", "/"), ("İletişim", "/iletisim")],
+        keywords="bursaapp iletişim, destek, whatsapp",
+    )
+
+
 def for_tesekkur() -> PageSEO:
     from seo_arch import OG_IMAGE
 
@@ -709,6 +724,115 @@ def for_tesekkur() -> PageSEO:
         image=OG_IMAGE,
         noindex=True,
         breadcrumbs=[("Ana Sayfa", "/"), ("Teşekkürler", "/tesekkur")],
+    )
+
+
+def for_news_hub(*, total: int = 0, topic: str = "", articles: list | None = None) -> PageSEO:
+    from news_pages import NEWS_TOPICS
+    from seo_arch import OG_IMAGE
+
+    topic_lab = NEWS_TOPICS.get(topic, "")
+    title = f"Bursa haberleri — güncel gündem{f' · {topic_lab}' if topic_lab else ''}"
+    desc = (
+        "Bursa haberleri ve şehir gündemi: trafik, belediye, ekonomi, kültür, sağlık, spor. "
+        "Video özeti + detaylı haber sayfaları — BursaApp'te kal, keşfet."
+    )
+    if total:
+        desc = clip(f"{desc} {total} haber.", 165)
+    json_ld = [
+        {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": title,
+            "url": abs_url("/haberler"),
+            "description": clip(desc, 200),
+        }
+    ]
+    if articles:
+        elements = []
+        for i, a in enumerate(articles[:20], 1):
+            elements.append(
+                {
+                    "@type": "ListItem",
+                    "position": i,
+                    "url": abs_url(a.get("path") or f"/haber/{a.get('slug')}"),
+                    "name": a.get("title"),
+                }
+            )
+        json_ld.append(
+            {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "itemListElement": elements,
+            }
+        )
+    return page(
+        title=title,
+        description=desc,
+        path="/haberler" + (f"?konu={topic}" if topic else ""),
+        image=OG_IMAGE,
+        breadcrumbs=[("Ana Sayfa", "/"), ("Bursa Haberleri", "/haberler")],
+        keywords="bursa haber, bursa haberleri, bursa gündem, bursa son dakika, bursa trafik, bursaspor haber",
+        og_type="website",
+        json_ld=json_ld,
+        schema_breadcrumbs=True,
+    )
+
+
+def for_news_article(article: dict, *, video: dict | None = None) -> PageSEO | None:
+    from seo_arch import OG_IMAGE
+
+    if not article:
+        return None
+    path = f"/haber/{article.get('slug') or article.get('id')}"
+    desc = clip(article.get("body_plain") or article.get("blurb") or article.get("title") or "", 165)
+    img = article.get("img_url") or OG_IMAGE
+    pub = article.get("published_at") or ""
+    news_ld: dict = {
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "headline": clip(article.get("title") or "", 110),
+        "description": desc,
+        "datePublished": pub,
+        "dateModified": article.get("generated_at") or pub,
+        "author": {"@type": "Organization", "name": article.get("source") or "BursaApp"},
+        "publisher": {
+            "@type": "Organization",
+            "name": SITE_NAME,
+            "logo": {"@type": "ImageObject", "url": abs_url("/static/logo-192.png")},
+        },
+        "mainEntityOfPage": abs_url(path),
+        "image": [abs_url(img)],
+        "articleSection": article.get("topic_label") or "Gündem",
+        "inLanguage": "tr-TR",
+    }
+    json_ld = [news_ld]
+    if video and video.get("id"):
+        json_ld.append(
+            {
+                "@context": "https://schema.org",
+                "@type": "VideoObject",
+                "name": video.get("title"),
+                "description": clip(video.get("title"), 160),
+                "thumbnailUrl": video.get("thumb"),
+                "uploadDate": video.get("published_at") or pub,
+                "embedUrl": video.get("embed_url"),
+            }
+        )
+    return page(
+        title=f"{clip(article.get('title') or 'Bursa haberi', 58)} — Bursa haberleri",
+        description=desc,
+        path=path,
+        image=img,
+        breadcrumbs=[
+            ("Ana Sayfa", "/"),
+            ("Bursa Haberleri", "/haberler"),
+            (clip(article.get("title") or "Haber", 48), path),
+        ],
+        keywords=f"bursa haber, bursa haberleri, {article.get('topic_label', '')}, {article.get('source', '')}",
+        og_type="article",
+        json_ld=json_ld,
+        schema_breadcrumbs=True,
     )
 
 
@@ -799,9 +923,9 @@ def sitemap_static_urls() -> list[dict[str, Any]]:
     add("/gezilecek", "daily", "0.8")
     add("/oteller", "daily", "0.8")
     add("/blog", "weekly", "0.7")
-    from seo_arch import BLOG_POSTS
+    from blog_posts import all_blog_posts
 
-    for slug in BLOG_POSTS:
+    for slug in all_blog_posts():
         add(f"/blog/{slug}", "weekly", "0.65")
     add("/kvkk", "yearly", "0.3")
     for p, freq, pri in (
@@ -826,7 +950,13 @@ def sitemap_static_urls() -> list[dict[str, Any]]:
 
     # kategori dışı kamuya açık sayfalar
     add("/bursaspor", "daily", "0.85")
+    add("/haberler", "hourly", "0.95")
     add("/nobetci-eczaneler", "hourly", "0.9")
+    add("/faturalar", "daily", "0.88")
+    add("/buski-su-fiyatlari", "daily", "0.9")
+    add("/bursa-elektrik-fiyatlari", "daily", "0.9")
+    add("/bursa-dogalgaz-fiyatlari", "daily", "0.9")
+    add("/uludag-teleferik", "daily", "0.9")
     add("/album", "weekly", "0.6")
 
     for slug in SEO_LANDINGS:

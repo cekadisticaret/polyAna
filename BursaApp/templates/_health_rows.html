@@ -29,6 +29,9 @@
             {% endif %}
           </p>
           <div class="rx-acts">
+            {% if row_kind == 'dentist' and p.extra and p.extra.mhrs_url and p.price_band == 'Devlet' %}
+            <a class="rx-btn" href="{{ p.extra.mhrs_url }}" target="_blank" rel="noopener">MHRS</a>
+            {% endif %}
             {% if p.phone %}<a class="rx-btn" href="tel:{{ p.phone }}">Ara</a>{% endif %}
             {% if p.maps %}<a class="rx-btn ghost" href="{{ p.maps }}" target="_blank" rel="noopener">Yol tarifi</a>{% endif %}
             <a class="rx-btn ghost" href="{{ p.path or ('/yer/' ~ p.slug) }}">Detay</a>

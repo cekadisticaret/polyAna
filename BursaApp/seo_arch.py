@@ -107,7 +107,7 @@ VERTICALS = {
     },
 }
 
-from blog_posts import BLOG_KINDS, BLOG_POSTS, blog_posts_sorted
+from blog_posts import BLOG_KINDS, all_blog_posts, blog_posts_sorted
 
 
 def offer_ld(url: str) -> dict[str, Any]:

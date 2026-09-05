@@ -1,0 +1,223 @@
+/* Faturalar · teleferik rehberi */
+.util-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.util-tab{display:inline-flex;padding:8px 14px;border-radius:999px;background:#F6F3EC;border:1px solid rgba(27,59,43,.08);font-weight:700;font-size:13px;text-decoration:none;color:#1B3B2B}
+.util-tab.on{background:#1B3B2B;color:#fff}
+.util-hero{margin:0 0 22px}
+.util-kicker{margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6B7A72}
+.util-hero h1{margin:0 0 10px;font-size:clamp(26px,4vw,34px);letter-spacing:-.6px}
+.util-lead{margin:0;color:#4a5c54;line-height:1.55;max-width:58ch}
+.util-src{margin:10px 0 0;font-size:12px;color:#8a9690}
+.util-hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.util-btn{display:inline-flex;padding:10px 16px;border-radius:999px;background:#1B3B2B;color:#fff;font-weight:700;text-decoration:none}
+.util-btn.ghost{background:#fff;color:#1B3B2B;border:1px solid rgba(27,59,43,.12)}
+.util-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 24px}
+.util-card{display:block;padding:18px;border-radius:18px;background:#fff;border:1px solid rgba(27,59,43,.08);text-decoration:none;color:inherit;transition:box-shadow .15s ease,transform .15s ease}
+.util-card:hover{box-shadow:0 10px 28px rgba(27,59,43,.1);transform:translateY(-1px)}
+.util-card--alt{background:linear-gradient(145deg,#E8F2EA,#fff)}
+.util-ico{font-size:28px;display:block;margin-bottom:8px}
+.util-card h2{margin:0 0 6px;font-size:18px}
+.util-card p{margin:0 0 10px;font-size:13px;color:#6B7A72;line-height:1.45}
+.util-card b{font-size:22px;color:#1B3B2B}
+.util-card i{display:block;font-size:12px;color:#8a9690;font-style:normal;margin-top:2px}
+.util-block{margin:0 0 26px}
+.util-block h2{margin:0 0 12px;font-size:22px}
+.util-block h3{margin:14px 0 8px;font-size:17px}
+.util-note{margin:0 0 12px;color:#6B7A72;line-height:1.5;font-size:14px}
+.util-table-wrap{overflow:auto;border-radius:14px;border:1px solid rgba(27,59,43,.08);background:#fff}
+.util-table{width:100%;border-collapse:collapse;font-size:14px}
+.util-table th,.util-table td{padding:10px 12px;text-align:left;border-bottom:1px solid rgba(27,59,43,.06)}
+.util-table th{background:#F6F3EC;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.util-ilce{margin:0 0 16px;padding:14px;border-radius:14px;background:#fff;border:1px solid rgba(27,59,43,.06)}
+.util-branch{padding:10px 0;border-top:1px solid rgba(27,59,43,.06)}
+.util-branch:first-of-type{border-top:0;padding-top:0}
+.util-branch p{margin:4px 0 0;font-size:13px;color:#4a5c54}
+.util-branch-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;font-size:13px}
+.util-branch-meta a{font-weight:700;color:#1B3B2B}
+.util-list{margin:0;padding-left:18px;line-height:1.6;color:#4a5c54}
+.util-links{margin:0;padding-left:18px;line-height:1.8}
+.util-disclaimer{margin:24px 0 0;padding:14px;border-radius:12px;background:#F6F3EC;font-size:13px;color:#6B7A72;line-height:1.5}
+.util-price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.util-price-card{padding:16px;border-radius:14px;background:#fff;border:1px solid rgba(27,59,43,.08);text-align:center}
+.util-price-card b{display:block;font-size:26px;color:#1B3B2B}
+.util-price-card span{display:block;margin-top:4px;font-weight:700;font-size:13px}
+.util-price-card i{display:block;margin-top:6px;font-size:12px;color:#6B7A72;font-style:normal}
+.util-hours-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.util-hours-grid article{padding:14px;border-radius:14px;background:#fff;border:1px solid rgba(27,59,43,.08)}
+.util-hours-grid h3{margin:0 0 8px;font-size:16px}
+.util-hours-grid p{margin:0 0 4px;font-size:14px}
+.util-hours-grid i{font-size:12px;color:#6B7A72}
+.util-bus{padding:12px 0;border-bottom:1px solid rgba(27,59,43,.06)}
+.util-bus b{display:block;margin-bottom:4px}
+.util-bus p{margin:0;font-size:14px}
+.util-bus i{display:block;margin-top:4px;font-size:12px;color:#6B7A72}
+.util-hero--teleferik{background:linear-gradient(135deg,#E7F0F8 0%,#E8F2EA 100%);padding:20px;border-radius:20px}
+
+/* —— Uludağ Teleferik görsel sayfa —— */
+body.is-teleferik-page{background:#eef3f0}
+.tf-hero{
+  position:relative;margin:0 -22px 20px;min-height:min(520px,78vh);border-radius:0 0 28px 28px;
+  overflow:hidden;color:#fff;display:flex;align-items:flex-end;
+  background:#1a2e24 center/cover no-repeat;
+  background-image:linear-gradient(115deg,rgba(12,28,22,.92) 0%,rgba(12,28,22,.55) 48%,rgba(12,28,22,.25) 100%),var(--tf-hero);
+}
+.tf-hero-overlay{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 85% 20%,rgba(232,120,46,.25),transparent 55%);pointer-events:none}
+.tf-hero-inner{position:relative;z-index:1;width:100%;max-width:1180px;margin:0 auto;padding:clamp(28px,6vw,56px) 22px 32px;display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:end}
+.tf-kicker{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.75)}
+.tf-hero h1{margin:0 0 12px;font-size:clamp(32px,5.5vw,52px);line-height:1.05;letter-spacing:-.03em;font-weight:800}
+.tf-hero h1 em{font-style:normal;color:#ffb86a}
+.tf-lead{margin:0;max-width:42ch;line-height:1.55;color:rgba(255,255,255,.88);font-size:15px}
+.tf-hero-pills{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 14px}
+.tf-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);font-size:13px;font-weight:600}
+.tf-pill b{font-size:15px}
+.tf-pill--price{background:rgba(232,120,46,.35);border-color:rgba(255,184,106,.4)}
+.tf-pill--deal{background:rgba(72,160,120,.35);border-color:rgba(168,230,200,.35)}
+.tf-jump{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tf-jump a{padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.25);color:#fff;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(255,255,255,.12)}
+.tf-jump a:hover{background:rgba(255,255,255,.15)}
+.tf-hero-actions{display:flex;flex-wrap:wrap;gap:10px}
+.tf-btn{display:inline-flex;align-items:center;padding:12px 20px;border-radius:999px;font-weight:800;font-size:14px;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease}
+.tf-btn--main{background:#E8782E;color:#fff;box-shadow:0 8px 24px rgba(232,120,46,.35)}
+.tf-btn--ghost{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.tf-btn:hover{transform:translateY(-1px)}
+.tf-src{margin:12px 0 0;font-size:11px;color:rgba(255,255,255,.55)}
+.tf-hero-visual{display:flex;justify-content:flex-end;align-items:flex-end}
+.tf-hero-card{
+  padding:22px 26px;border-radius:20px;text-align:center;
+  background:rgba(255,255,255,.12);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);
+  box-shadow:0 20px 50px rgba(0,0,0,.25);min-width:160px
+}
+.tf-hero-card-tag{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin-bottom:6px}
+.tf-hero-card strong{display:block;font-size:42px;line-height:1;font-weight:800;letter-spacing:-.03em}
+.tf-hero-card strong small{font-size:.55em;font-weight:700;opacity:.85}
+.tf-hero-card span{display:block;margin-top:6px;font-size:13px;opacity:.85}
+
+.tf-strip{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 22px
+}
+.tf-strip article{
+  padding:14px 12px;border-radius:16px;background:#fff;border:1px solid rgba(27,59,43,.08);
+  text-align:center;box-shadow:0 4px 16px rgba(27,59,43,.04)
+}
+.tf-strip span{font-size:22px;display:block;margin-bottom:4px}
+.tf-strip b{display:block;font-size:14px;color:#1B3B2B}
+.tf-strip i{display:block;margin-top:2px;font-size:11px;color:#6B7A72;font-style:normal}
+
+.tf-gallery{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin:0 0 28px}
+.tf-gallery figure{margin:0;border-radius:18px;overflow:hidden;position:relative;background:#1B3B2B}
+.tf-gallery img{width:100%;height:100%;object-fit:cover;min-height:200px;display:block}
+.tf-gallery-main{min-height:280px}
+.tf-gallery-side{min-height:200px}
+.tf-gallery figcaption{
+  position:absolute;left:0;right:0;bottom:0;padding:10px 14px;font-size:12px;font-weight:700;color:#fff;
+  background:linear-gradient(transparent,rgba(0,0,0,.65))
+}
+
+.tf-section{margin:0 0 32px}
+.tf-section--soft{padding:22px 18px;border-radius:22px;background:linear-gradient(180deg,#fff 0%,#f6f3ec 100%);border:1px solid rgba(27,59,43,.06)}
+.tf-section--cta{padding:0}
+.tf-sec-head{margin-bottom:16px}
+.tf-sec-head h2{margin:0 0 4px;font-size:24px;letter-spacing:-.4px}
+.tf-sec-head p{margin:0;color:#6B7A72;font-size:14px}
+
+.tf-price-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tf-price-card{
+  padding:18px 16px;border-radius:18px;background:#fff;border:1px solid rgba(27,59,43,.08);
+  box-shadow:0 6px 20px rgba(27,59,43,.05);display:flex;flex-direction:column;gap:8px
+}
+.tf-price-card--tam,.tf-price-card--1{
+  grid-column:span 1;background:linear-gradient(145deg,#1B3B2B 0%,#244A38 100%);color:#fff;border:none
+}
+.tf-price-card--tam .tf-price-top strong,.tf-price-card--1 .tf-price-top strong{color:#ffb86a}
+.tf-price-card--tam h3,.tf-price-card--1 h3{color:#fff}
+.tf-price-card--tam p,.tf-price-card--1 p{color:rgba(255,255,255,.75)}
+.tf-price-card--halk_tam,.tf-price-card--halk_ogrenci{border-color:rgba(72,160,120,.35);background:linear-gradient(180deg,#fff,#eef8f2)}
+.tf-price-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tf-price-ico{font-size:24px}
+.tf-price-top strong{font-size:32px;line-height:1;letter-spacing:-.03em;color:#1B3B2B}
+.tf-price-top strong small{font-size:.55em;font-weight:700}
+.tf-price-card h3{margin:0;font-size:14px;font-weight:800;line-height:1.35}
+.tf-price-card p{margin:0;font-size:12px;color:#6B7A72;line-height:1.45}
+
+.tf-discount-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tf-discount-card{
+  padding:16px;border-radius:16px;background:#fff;border:1px solid rgba(27,59,43,.08);position:relative;overflow:hidden
+}
+.tf-discount-card:first-child{border-color:rgba(232,120,46,.35);background:linear-gradient(135deg,#fff8f0,#fff)}
+.tf-discount-rate{
+  display:inline-block;padding:4px 10px;border-radius:999px;background:#1B3B2B;color:#fff;
+  font-size:12px;font-weight:800;margin-bottom:8px
+}
+.tf-discount-card:first-child .tf-discount-rate{background:#E8782E}
+.tf-discount-card h3{margin:0 0 6px;font-size:16px}
+.tf-discount-when{margin:0 0 4px;font-size:13px;font-weight:700;color:#1B3B2B}
+.tf-discount-who{margin:0;font-size:12px;color:#6B7A72;line-height:1.45}
+
+.tf-hours-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tf-hours-card{padding:20px;border-radius:18px;background:#fff;border:1px solid rgba(27,59,43,.08)}
+.tf-hours-card--summer{border-top:4px solid #E8782E}
+.tf-hours-card--winter{border-top:4px solid #5b9bd5}
+.tf-hours-icon{font-size:28px;margin-bottom:8px}
+.tf-hours-card h3{margin:0 0 8px;font-size:17px}
+.tf-hours-time{margin:0;font-size:22px;font-weight:800;color:#1B3B2B;letter-spacing:-.02em}
+.tf-hours-sub{margin:4px 0 8px;font-size:13px;color:#4a5c54}
+.tf-hours-card i{font-size:12px;color:#6B7A72;font-style:normal}
+.tf-alert{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff3e6;border:1px solid rgba(232,120,46,.2)}
+.tf-alert span{font-size:18px}
+.tf-alert p{margin:0;font-size:13px;color:#5c4a3a;line-height:1.45}
+
+.tf-bus-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tf-bus-card{
+  padding:16px 16px 16px 18px;border-radius:16px;background:#fff;border:1px solid rgba(27,59,43,.08);
+  border-left:4px solid #1B3B2B
+}
+.tf-bus-card:nth-child(1){border-left-color:#3d8bfd}
+.tf-bus-card:nth-child(2){border-left-color:#E8782E}
+.tf-bus-ico{font-size:26px;display:block;margin-bottom:8px}
+.tf-bus-card h3{margin:0 0 6px;font-size:16px}
+.tf-bus-route{margin:0 0 4px;font-size:14px;font-weight:700;color:#1B3B2B}
+.tf-bus-note{margin:0;font-size:12px;color:#6B7A72;line-height:1.45}
+
+.tf-route{position:relative;padding-left:8px}
+.tf-route-stop{display:grid;grid-template-columns:28px 1fr;gap:12px;padding-bottom:22px;position:relative}
+.tf-route-stop:not(:last-child)::before{
+  content:"";position:absolute;left:13px;top:28px;bottom:0;width:2px;
+  background:linear-gradient(180deg,#1B3B2B,#a8c4b0)
+}
+.tf-route-dot{
+  width:16px;height:16px;margin-top:4px;border-radius:50%;background:#E8782E;border:3px solid #fff;
+  box-shadow:0 0 0 2px #1B3B2B
+}
+.tf-route-stop:first-child .tf-route-dot{background:#1B3B2B}
+.tf-route-stop:last-child .tf-route-dot{background:#48a878}
+.tf-route-body h3{margin:0 0 2px;font-size:17px}
+.tf-route-ilce{display:inline-block;font-size:11px;font-weight:800;color:#6B7A72;text-transform:uppercase;letter-spacing:.04em}
+.tf-route-body p{margin:6px 0 0;font-size:13px;color:#4a5c54;line-height:1.45}
+
+.tf-cta-inner{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;
+  padding:24px;border-radius:22px;color:#fff;
+  background:linear-gradient(120deg,#1B3B2B 0%,#2d5a44 50%,#1a3344 100%)
+}
+.tf-cta-inner h2{margin:0 0 6px;font-size:22px}
+.tf-cta-inner p{margin:0;opacity:.88;font-size:14px;max-width:36ch}
+.tf-cta-links{display:flex;flex-wrap:wrap;gap:10px}
+.tf-cta-inner .tf-btn--ghost{background:transparent;border:1px solid rgba(255,255,255,.35)}
+
+.tf-faq details{border-radius:12px;background:#fff;border:1px solid rgba(27,59,43,.08);padding:4px 0;margin-bottom:8px}
+.tf-sources p{margin:0;font-size:13px;color:#6B7A72}
+.tf-sources a{font-weight:700;color:#1B3B2B}
+
+@media(max-width:900px){
+  .tf-hero-inner{grid-template-columns:1fr}
+  .tf-hero-visual{display:none}
+  .tf-hero{margin-left:-12px;margin-right:-12px;border-radius:0 0 22px 22px}
+  .tf-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tf-gallery{grid-template-columns:1fr}
+  .tf-price-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tf-discount-grid,.tf-bus-grid,.tf-hours-grid{grid-template-columns:1fr}
+}
+@media(max-width:720px){
+  .util-grid{grid-template-columns:1fr}
+  .util-hours-grid{grid-template-columns:1fr}
+  .tf-price-grid{grid-template-columns:1fr}
+}

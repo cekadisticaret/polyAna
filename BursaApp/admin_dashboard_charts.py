@@ -73,7 +73,27 @@ def login_stats(db, *, days: int = 14) -> dict:
         "total": sum(series),
         "total_7d": sum(series[-7:]),
         "days": days,
+        "last_at": _last_login_at(db),
     }
+
+
+def _last_login_at(db) -> str | None:
+    row = (
+        db.query(ActivityLog)
+        .filter(ActivityLog.kind == "login")
+        .order_by(ActivityLog.id.desc())
+        .first()
+    )
+    if not row or not row.created_at:
+        return None
+    dt = row.created_at
+    if dt.tzinfo is None:
+        from datetime import timezone
+
+        dt = dt.replace(tzinfo=timezone.utc).astimezone(_IST)
+    else:
+        dt = dt.astimezone(_IST)
+    return dt.strftime("%d.%m.%Y · %H:%M")
 
 
 def _activity_series(db, *, days: int = 7) -> dict:

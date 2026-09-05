@@ -1,0 +1,196 @@
+{% extends "_shell.html" %}
+{% block body_class %} is-teleferik-page{% endblock %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='utilities-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block main %}
+{% include "_utilities_tabs.html" %}
+
+{% set tam = data.prices[0].amount_tl if data.prices else 500 %}
+{% set ogr = data.prices[1].amount_tl if data.prices|length > 1 else 250 %}
+
+<section class="tf-hero" style="--tf-hero:url('{{ hero_img }}')">
+  <div class="tf-hero-overlay"></div>
+  <div class="tf-hero-inner">
+    <div class="tf-hero-copy">
+      <p class="tf-kicker">Türkiye'nin ilk teleferiği · 1963</p>
+      <h1>Uludağ'a<br><em>kuşbakışı</em> çıkış</h1>
+      <p class="tf-lead">Teferrüç'ten oteller bölgesine — güncel bilet, cuma halk günü, sefer saatleri ve ulaşım rehberi.</p>
+      <div class="tf-hero-pills">
+        <span class="tf-pill tf-pill--price"><b>{{ tam }} ₺</b> tam bilet</span>
+        <span class="tf-pill">🎓 {{ ogr }} ₺ öğrenci</span>
+        <span class="tf-pill tf-pill--deal">Cuma %50 halk günü</span>
+      </div>
+      <nav class="tf-jump" aria-label="Sayfa bölümleri">
+        <a href="#fiyat">Bilet</a>
+        <a href="#indirim">İndirim</a>
+        <a href="#saat">Saatler</a>
+        <a href="#otobus">Otobüs</a>
+        <a href="#hat">İstasyonlar</a>
+      </nav>
+      <div class="tf-hero-actions">
+        {% if data.web %}<a class="tf-btn tf-btn--main" href="{{ data.web }}" target="_blank" rel="noopener">Online bilet</a>{% endif %}
+        <a class="tf-btn tf-btn--ghost" href="/yer/teleferik">Gezilecek kaydı</a>
+      </div>
+      {% if data.generated_label %}<p class="tf-src">Güncelleme: {{ data.generated_label }}</p>{% endif %}
+    </div>
+    <div class="tf-hero-visual" aria-hidden="true">
+      <div class="tf-hero-card">
+        <span class="tf-hero-card-tag">Gidiş-dönüş</span>
+        <strong>{{ tam }}<small>₺</small></strong>
+        <span>Tam bilet · {{ year }}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tf-strip" aria-label="Özet bilgiler">
+  <article><span>🕐</span><b>{{ data.hours.summer.weekday }}</b><i>Yaz sezonu</i></article>
+  <article><span>❄️</span><b>{{ data.hours.winter.weekday }}</b><i>Kış sezonu</i></article>
+  <article><span>🚡</span><b>4 istasyon</b><i>9 km hat</i></article>
+  <article><span>🚇</span><b>Teferrüç</b><i>Bursaray + otobüs</i></article>
+</section>
+
+<section class="tf-gallery" aria-label="Uludağ görselleri">
+  <figure class="tf-gallery-main">
+    <img src="{{ hero_img }}" alt="Bursa Uludağ teleferik manzarası" width="900" height="600" loading="eager">
+    <figcaption>Teferrüç — Sarıalan hattı</figcaption>
+  </figure>
+  <figure class="tf-gallery-side">
+    <img src="{{ gallery_uludag }}" alt="Uludağ yaylası ve teleferik rotası" width="600" height="400" loading="lazy">
+    <figcaption>Uludağ · yaz ve kış</figcaption>
+  </figure>
+</section>
+
+<section class="tf-section" id="fiyat">
+  <div class="tf-sec-head">
+    <h2>Bilet fiyatları {{ year }}</h2>
+    <p>Gidiş-dönüş · gişe ve online tarife</p>
+  </div>
+  <div class="tf-price-grid">
+    {% for p in data.prices %}
+    <article class="tf-price-card tf-price-card--{{ p.category or loop.index }}">
+      <div class="tf-price-top">
+        <span class="tf-price-ico">{% if 'halk' in (p.category or '') %}🏷️{% elif 'ogrenci' in (p.category or '') %}🎓{% else %}🎫{% endif %}</span>
+        <strong>{{ p.amount_tl }}<small>₺</small></strong>
+      </div>
+      <h3>{{ p.label }}</h3>
+      {% if p.note %}<p>{{ p.note }}</p>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="tf-section tf-section--soft" id="indirim">
+  <div class="tf-sec-head">
+    <h2>İndirimli günler</h2>
+    <p>Kimlik veya belge gişede sorulur</p>
+  </div>
+  <div class="tf-discount-grid">
+    {% for d in data.discounts %}
+    <article class="tf-discount-card">
+      <span class="tf-discount-rate">{{ d.rate }}</span>
+      <h3>{{ d.title }}</h3>
+      <p class="tf-discount-when">{{ d.schedule }}</p>
+      <p class="tf-discount-who">{{ d.who }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="tf-section" id="saat">
+  <div class="tf-sec-head">
+    <h2>Açılış · kapanış</h2>
+    <p>Hava muhalefetinde seferler durabilir</p>
+  </div>
+  <div class="tf-hours-grid">
+    <article class="tf-hours-card tf-hours-card--summer">
+      <div class="tf-hours-icon">☀️</div>
+      <h3>{{ data.hours.summer.label }}</h3>
+      <p class="tf-hours-time">{{ data.hours.summer.weekday }}</p>
+      <p class="tf-hours-sub">Hafta sonu: {{ data.hours.summer.weekend }}</p>
+      <i>{{ data.hours.summer.note }}</i>
+    </article>
+    <article class="tf-hours-card tf-hours-card--winter">
+      <div class="tf-hours-icon">❄️</div>
+      <h3>{{ data.hours.winter.label }}</h3>
+      <p class="tf-hours-time">{{ data.hours.winter.weekday }}</p>
+      <p class="tf-hours-sub">Hafta sonu: {{ data.hours.winter.weekend }}</p>
+      <i>{{ data.hours.winter.note }}</i>
+    </article>
+  </div>
+  <div class="tf-alert">
+    <span>⚠️</span>
+    <p>Kapalı olabilecek durumlar: {{ data.hours.closed_when|join(' · ') }}</p>
+  </div>
+</section>
+
+<section class="tf-section tf-section--soft" id="otobus">
+  <div class="tf-sec-head">
+    <h2>Teleferiğe nasıl gidilir?</h2>
+    <p>Teferrüç alt istasyonu — Bursaray en pratik seçenek</p>
+  </div>
+  <div class="tf-bus-grid">
+    {% for b in data.buses %}
+    <article class="tf-bus-card">
+      <span class="tf-bus-ico">{% if 'Bursaray' in b.lines %}🚇{% elif 'dolmuş' in b.lines|lower %}🚐{% elif 'Özel' in b.lines %}🚗{% else %}🚌{% endif %}</span>
+      <h3>{{ b.lines }}</h3>
+      <p class="tf-bus-route">{{ b.from }} → {{ b.to }}</p>
+      <p class="tf-bus-note">{{ b.note }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="tf-section" id="hat">
+  <div class="tf-sec-head">
+    <h2>İstasyon hattı</h2>
+    <p>Teferrüç'ten oteller bölgesine tek yön yolculuk</p>
+  </div>
+  <div class="tf-route">
+    {% for s in data.stations %}
+    <article class="tf-route-stop">
+      <div class="tf-route-dot" aria-hidden="true"></div>
+      <div class="tf-route-body">
+        <h3>{{ s.name }}</h3>
+        <span class="tf-route-ilce">{{ s.ilce }}</span>
+        <p>{{ s.note }}</p>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="tf-section tf-section--cta">
+  <div class="tf-cta-inner">
+    <div>
+      <h2>Uludağ gününü planla</h2>
+      <p>Teleferik sonrası yeme-içme, gezilecek ve hafta sonu rotası — BursaApp'te.</p>
+    </div>
+    <div class="tf-cta-links">
+      <a class="tf-btn tf-btn--main" href="/rota">Rota planla</a>
+      <a class="tf-btn tf-btn--ghost" href="/gezilecek?q=uludağ">Uludağ rehberi</a>
+    </div>
+  </div>
+</section>
+
+<section class="tf-section" id="sss">
+  <div class="tf-sec-head"><h2>Sık sorulanlar</h2></div>
+  <div class="seo-faq tf-faq">
+    <details open><summary>Uludağ teleferik halk günü ne zaman?</summary><p>Her <strong>cuma</strong> (resmi tatil ve sömestr hariç) Bursa ikametlilerine %50 indirim — kimlik gerekir.</p></details>
+    <details><summary>Teleferik kaçta açılıyor?</summary><p>Yaz sezonunda genelde <strong>10:00–19:00</strong>; kış sezonunda <strong>08:00–19:00</strong>. Hava koşuluna göre değişebilir.</p></details>
+    <details><summary>{{ year }} teleferik bilet fiyatı ne kadar?</summary><p>Tam bilet <strong>{{ tam }} ₺</strong>, öğrenci <strong>{{ ogr }} ₺</strong> (gidiş-dönüş).</p></details>
+  </div>
+</section>
+
+{% if data.sources %}
+<section class="tf-section tf-sources">
+  <p>Resmi kaynaklar:
+  {% for s in data.sources %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.label }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+  </p>
+</section>
+{% endif %}
+
+<p class="util-disclaimer">{{ data.disclaimer }}</p>
+{% endblock %}

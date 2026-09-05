@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "operator": "Bursa Teleferik A.Ş. (Uludağ Belediyesi iştiraki)",
+  "disclaimer": "Bilet fiyatları ve sefer saatleri mevsime göre değişebilir. Resmi duyuru ve gişe tarifesini kontrol edin.",
+  "stations": [
+    {"name": "Teferrüç", "ilce": "Yıldırım", "note": "Alt istasyon — Bursaray Teferrüç"},
+    {"name": "Kadıyayla", "ilce": "Yıldırım", "note": "Ara istasyon"},
+    {"name": "Sarıalan", "ilce": "Osmangazi", "note": "Yayla / piknik alanı"},
+    {"name": "Oteller Bölgesi (Kurbağa Kaya)", "ilce": "Osmangazi", "note": "Üst istasyon — oteller hattı"}
+  ],
+  "prices": [
+    {"label": "Tam bilet (gidiş-dönüş)", "amount_tl": 500, "category": "tam", "since": "2026-01-01"},
+    {"label": "Öğrenci (gidiş-dönüş)", "amount_tl": 250, "category": "ogrenci", "since": "2026-01-01", "note": "E-Devlet aktif öğrenci belgesi"},
+    {"label": "Halk günü tam (Cuma)", "amount_tl": 250, "category": "halk_tam", "since": "2026", "note": "Bursa ikamet — kimlik"},
+    {"label": "Halk günü öğrenci (Cuma)", "amount_tl": 125, "category": "halk_ogrenci", "since": "2026", "note": "Bursa ikamet — kimlik"}
+  ],
+  "discounts": [
+    {"title": "Halk günü", "schedule": "Her cuma (resmi tatil / sömestr hariç)", "rate": "%50", "who": "Bursa'da ikamet edenler — nüfus cüzdanı / ikamet"},
+    {"title": "Öğrenci", "schedule": "Haftanın tüm günleri", "rate": "Tam biletin yarısı", "who": "E-Devlet öğrenci belgesi"},
+    {"title": "2017 sonrası doğan çocuklar", "schedule": "Yıl boyu", "rate": "Ücretsiz", "who": "Kimlik — bilet gerekmez"},
+    {"title": "Gazi / şehit yakını", "schedule": "Resmi uygulama", "rate": "İndirimli / muafiyet", "who": "İlgili belgeler gişede"}
+  ],
+  "hours": {
+    "summer": {"label": "Yaz sezonu (yaklaşık)", "weekday": "10:00–19:00", "weekend": "10:00–19:00", "note": "Son kabin genelde kapanıştan ~30 dk önce"},
+    "winter": {"label": "Kış / kayak sezonu", "weekday": "08:00–19:00", "weekend": "08:00–19:00", "note": "Kar ve hava koşuluna bağlı geçici duruş olabilir"},
+    "closed_when": ["Şiddetli fırtına", "Bakım", "Resmi duyuru ile iptal"]
+  },
+  "buses": [
+    {"lines": "Bursaray", "from": "Şehir merkezi hatları", "to": "Teferrüç istasyonu", "note": "Metro + yürüyüş — en pratik seçenek"},
+    {"lines": "1T / 1TY / Teferrüç hatları", "from": "Heykel · Otogar · Çekirge", "to": "Teferrüç Teleferik", "note": "Bursa Ulaşım otobüsleri — güzergâh değişebilir"},
+    {"lines": "Uludağ dolmuşları", "from": "Merkez duraklar", "to": "Uludağ yolu / otogar çıkışı", "note": "Teleferik yerine karayolu tercih edenler için"},
+    {"lines": "Özel araç", "from": "Bursa merkez", "to": "Teferrüç otopark", "note": "Navigasyon: Bursa Teleferik Teferrüç"}
+  ],
+  "tips": [
+    "Cuma halk gününde kimlik ve ikamet belgesi yanınızda olsun.",
+    "Hafta sonu öğleden sonra yoğunluk artar; sabah erken saatler daha sakin.",
+    "Hava muhalefetinde seferler durabilir — gitmeden önce resmi duyuruya bakın.",
+    "Gezilecek kaydı: <a href=\"/yer/teleferik\">Bursa Teleferik</a> · rota: <a href=\"/rota\">Rota planla</a>"
+  ],
+  "sources": [
+    {"label": "Uludağ Belediyesi Teleferik", "url": "https://uludag.uludagbel.com.tr/teleferik"},
+    {"label": "Bursa Teleferik online bilet", "url": "https://www.bursateleferik.com.tr/"},
+    {"label": "Bursa Ulaşım", "url": "https://www.burulas.com.tr/"}
+  ],
+  "phones": ["0224 236 66 44", "444 0 287"],
+  "web": "https://uludag.uludagbel.com.tr/teleferik"
+}

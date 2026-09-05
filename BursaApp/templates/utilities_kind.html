@@ -1,0 +1,115 @@
+{% extends "_shell.html" %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='utilities-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block main %}
+{% include "_utilities_tabs.html" %}
+
+<section class="util-hero">
+  <p class="util-kicker">{{ section.company }}</p>
+  <h1>{{ page_h1 }}</h1>
+  <p class="util-lead">{{ section.scope }}</p>
+  <div class="util-hero-actions">
+    {% if section.phones %}<a class="util-btn" href="tel:{{ section.phones[0]|replace(' ','') }}">Ara {{ section.phones[0] }}</a>{% endif %}
+    {% if section.web %}<a class="util-btn ghost" href="{{ section.web }}" target="_blank" rel="noopener">Resmi site</a>{% endif %}
+  </div>
+  {% if feed.generated_label %}<p class="util-src">Son güncelleme: {{ feed.generated_label }} · {{ section.effective_label }}</p>{% endif %}
+</section>
+
+<section class="util-block">
+  <h2>Güncel tarife</h2>
+  {% if section.tariff_note %}<p class="util-note">{{ section.tariff_note }}</p>{% endif %}
+  <div class="util-table-wrap">
+    <table class="util-table">
+      <thead>
+        <tr>
+          <th>Dilim</th>
+          <th>Birim</th>
+          {% if kind == 'su' %}<th>Su (₺)</th><th>Atıksu (₺)</th>{% elif kind == 'elec' %}<th>Enerji (₺)</th>{% else %}<th>Bedel (₺)</th>{% endif %}
+          <th>Not</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in section.tariffs %}
+        <tr>
+          <td><b>{{ row.band }}</b></td>
+          <td>{{ row.unit }}</td>
+          {% if kind == 'su' %}
+          <td>{{ fmt_tl(row.water_tl) }}</td>
+          <td>{{ fmt_tl(row.wastewater_tl) }}</td>
+          {% elif kind == 'elec' %}
+          <td>{{ fmt_tl(row.energy_tl) }}</td>
+          {% else %}
+          <td>{% if row.gas_tl %}{{ fmt_tl(row.gas_tl) }}{% else %}—{% endif %}</td>
+          {% endif %}
+          <td>{{ row.note or '' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if kind == 'su' and section.ton_hint %}<p class="util-note"><strong>Ton:</strong> {{ section.ton_hint }}</p>{% endif %}
+  {% if kind == 'gas' and section.merger_note %}<p class="util-note">{{ section.merger_note }}</p>{% endif %}
+  {% if kind == 'gas' and section.group_note %}<p class="util-note">{{ section.group_note }}</p>{% endif %}
+  {% if kind == 'elec' and section.extra_fees %}
+  <ul class="util-list">{% for x in section.extra_fees %}<li><b>{{ x.label }}</b> — {{ x.note }}</li>{% endfor %}</ul>
+  {% endif %}
+</section>
+
+{% if kind == 'gas' and section.aksa %}
+<section class="util-block" id="aksa">
+  <h2>Aksa Doğalgaz Bursa</h2>
+  <p class="util-note">{{ section.aksa.scope_note }}</p>
+  <div class="util-hero-actions" style="margin-bottom:12px">
+    {% if section.aksa.phones %}<a class="util-btn" href="tel:{{ section.aksa.phones[0]|replace(' ','') }}">Aksa {{ section.aksa.phones[0] }}</a>{% endif %}
+    {% if section.aksa.web %}<a class="util-btn ghost" href="{{ section.aksa.web }}" target="_blank" rel="noopener">Aksa Bursa sayfası</a>{% endif %}
+  </div>
+  {% for g in aksa_branch_groups %}
+  <div class="util-ilce">
+    <h3>{{ g.ilce }}</h3>
+    {% for b in g.rows %}
+    <article class="util-branch">
+      <b>{{ b.name }}</b>
+      {% if b.address %}<p>{{ b.address }}</p>{% endif %}
+      <div class="util-branch-meta">
+        {% if b.phone %}<a href="tel:{{ b.phone|replace(' ','') }}">{{ b.phone }}</a>{% endif %}
+        {% if b.hours %}<span>{{ b.hours }}</span>{% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section class="util-block" id="bolgeler">
+  <h2>{% if kind == 'gas' %}Bursagaz — ilçe ilçe MHM{% else %}İlçe ilçe abone merkezleri{% endif %}</h2>
+  {% if kind == 'gas' and section.bursagaz and section.bursagaz.note %}<p class="util-note">{{ section.bursagaz.note }}</p>{% endif %}
+  <p class="util-note">Acil: {{ section.emergency }}</p>
+  {% for g in branch_groups %}
+  <div class="util-ilce">
+    <h3>{{ g.ilce }}</h3>
+    {% for b in g.rows %}
+    <article class="util-branch">
+      <b>{{ b.name }}</b>
+      {% if b.address %}<p>{{ b.address }}</p>{% endif %}
+      <div class="util-branch-meta">
+        {% if b.phone %}<a href="tel:{{ b.phone|replace(' ','') }}">{{ b.phone }}</a>{% endif %}
+        {% if b.hours %}<span>{{ b.hours }}</span>{% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+
+{% if section.sources %}
+<section class="util-block">
+  <h2>Resmi kaynaklar</h2>
+  <ul class="util-links">{% for s in section.sources %}<li><a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.label }}</a></li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+<p class="util-disclaimer">{{ feed.disclaimer }}</p>
+{% endblock %}

@@ -73,97 +73,144 @@
   var mapEl = document.getElementById("nx-map");
   if (!mapEl) return;
 
-  var map = L.map(mapEl, {
-    scrollWheelZoom: true,
-    zoomControl: false,
-  }).setView(center, 14);
+  var stageEl = document.getElementById("nx-stage");
+  var mobileMq = window.matchMedia("(max-width: 820px)");
+  var isMobile = mobileMq.matches;
+  var toggleBtn = document.getElementById("nx-toggle-list");
 
-  L.control.zoom({ position: "topright" }).addTo(map);
-
-  function addTileLayers(target, layers) {
-    (layers || []).forEach(function (layer) {
-      var opts = {
-        maxZoom: layer.maxZoom || 19,
-        attribution: layer.attribution || "",
-      };
-      if (layer.subdomains) opts.subdomains = layer.subdomains;
-      if (layer.opacity != null) opts.opacity = layer.opacity;
-      L.tileLayer(layer.url, opts).addTo(target);
-    });
+  function syncMapFocusLayout() {
+    if (!stageEl) return;
+    isMobile = mobileMq.matches;
+    if (isMobile) {
+      stageEl.classList.add("is-map-focus");
+    } else {
+      stageEl.classList.remove("is-map-focus");
+    }
+    if (toggleBtn) {
+      toggleBtn.classList.toggle("on", stageEl.classList.contains("is-map-focus"));
+      toggleBtn.setAttribute(
+        "title",
+        stageEl.classList.contains("is-map-focus") ? "Listeyi göster" : "Haritayı büyüt"
+      );
+    }
+    scheduleMapResize();
   }
-  addTileLayers(map, cfg.tiles);
-
-  var userMarker = L.circleMarker(center, {
-    radius: 10,
-    color: "#fff",
-    weight: 3,
-    fillColor: "#2563eb",
-    fillOpacity: 1,
-  }).addTo(map);
-
-  if (radiusM > 0) {
-    L.circle(center, {
-      radius: radiusM,
-      color: "#2563eb",
-      weight: 1,
-      fillColor: "#2563eb",
-      fillOpacity: 0.05,
-      dashArray: "4 8",
-    }).addTo(map);
-  }
-
-  var routeLayer = L.layerGroup().addTo(map);
+  var map;
+  var routeLayer;
   var markers = [];
-  var bounds = [center];
-
-  pins.forEach(function (p, idx) {
-    if (p.lat == null || p.lng == null) return;
-    var m = L.circleMarker([p.lat, p.lng], {
-      radius: 8,
-      color: "#fff",
-      weight: 2,
-      fillColor: colorFor(p),
-      fillOpacity: 0.95,
-    }).addTo(map);
-    m._nxIdx = idx;
-    m.on("click", function () {
-      selectPlace(idx);
-    });
-    markers.push(m);
-    bounds.push([p.lat, p.lng]);
-  });
-
-  if (bounds.length > 1) {
-    try {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-    } catch (e) {}
-  }
 
   function resizeMap() {
-    setTimeout(function () {
-      map.invalidateSize({ pan: false });
-    }, 150);
+    if (!map) return;
+    map.invalidateSize({ pan: false });
   }
 
-  var stageEl = document.getElementById("nx-stage");
-  var toggleBtn = document.getElementById("nx-toggle-list");
-  if (stageEl && window.matchMedia("(max-width: 820px)").matches) {
-    stageEl.classList.add("is-map-focus");
+  function scheduleMapResize() {
+    resizeMap();
+    requestAnimationFrame(resizeMap);
+    setTimeout(resizeMap, 120);
+    if (isMobile) setTimeout(resizeMap, 420);
   }
+
   if (toggleBtn && stageEl) {
     toggleBtn.addEventListener("click", function () {
+      if (!mobileMq.matches) return;
       stageEl.classList.toggle("is-map-focus");
       toggleBtn.classList.toggle("on", stageEl.classList.contains("is-map-focus"));
       toggleBtn.setAttribute(
         "title",
         stageEl.classList.contains("is-map-focus") ? "Listeyi göster" : "Haritayı büyüt"
       );
-      resizeMap();
+      scheduleMapResize();
     });
   }
-  window.addEventListener("resize", resizeMap);
-  resizeMap();
+  syncMapFocusLayout();
+  if (mobileMq.addEventListener) {
+    mobileMq.addEventListener("change", syncMapFocusLayout);
+  } else if (mobileMq.addListener) {
+    mobileMq.addListener(syncMapFocusLayout);
+  }
+  window.addEventListener("resize", scheduleMapResize);
+  window.addEventListener("load", scheduleMapResize);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleMapResize);
+  }
 
+  function bootMap() {
+    map = L.map(mapEl, {
+      scrollWheelZoom: true,
+      zoomControl: false,
+    }).setView(center, 14);
+
+    L.control.zoom({ position: "topright" }).addTo(map);
+
+    function addTileLayers(target, layers) {
+      (layers || []).forEach(function (layer) {
+        var opts = {
+          maxZoom: layer.maxZoom || 19,
+          attribution: layer.attribution || "",
+        };
+        if (layer.subdomains) opts.subdomains = layer.subdomains;
+        if (layer.opacity != null) opts.opacity = layer.opacity;
+        L.tileLayer(layer.url, opts).addTo(target);
+      });
+    }
+    addTileLayers(map, cfg.tiles);
+
+    L.circleMarker(center, {
+      radius: 10,
+      color: "#fff",
+      weight: 3,
+      fillColor: "#2563eb",
+      fillOpacity: 1,
+    }).addTo(map);
+
+    if (radiusM > 0) {
+      L.circle(center, {
+        radius: radiusM,
+        color: "#2563eb",
+        weight: 1,
+        fillColor: "#2563eb",
+        fillOpacity: 0.05,
+        dashArray: "4 8",
+      }).addTo(map);
+    }
+
+    routeLayer = L.layerGroup().addTo(map);
+    markers = [];
+    var bounds = [center];
+
+    pins.forEach(function (p, idx) {
+      if (p.lat == null || p.lng == null) return;
+      var m = L.circleMarker([p.lat, p.lng], {
+        radius: 8,
+        color: "#fff",
+        weight: 2,
+        fillColor: colorFor(p),
+        fillOpacity: 0.95,
+      }).addTo(map);
+      m._nxIdx = idx;
+      m.on("click", function () {
+        selectPlace(idx);
+      });
+      markers.push(m);
+      bounds.push([p.lat, p.lng]);
+    });
+
+    if (bounds.length > 1) {
+      try {
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+      } catch (e) {}
+    }
+
+    scheduleMapResize();
+    finishBoot();
+  }
+
+  requestAnimationFrame(function () {
+    requestAnimationFrame(bootMap);
+  });
+
+  function finishBoot() {
   var detailRail = document.getElementById("nx-detail");
   var detailEmpty = document.getElementById("nx-detail-empty");
   var detailPanel = document.getElementById("nx-detail-panel");
@@ -243,6 +290,8 @@
     if (detailRail) detailRail.classList.toggle("is-empty", !show);
     if (detailEmpty) detailEmpty.hidden = show;
     if (detailPanel) detailPanel.hidden = !show;
+    if (stageEl) stageEl.classList.toggle("has-detail", show && isMobile);
+    if (show && isMobile) scheduleMapResize();
   }
 
   function clearSelection() {
@@ -349,6 +398,11 @@
 
     if (p.lat != null && p.lng != null) {
       map.panTo([p.lat, p.lng], { animate: true, duration: 0.4 });
+      if (isMobile) {
+        setTimeout(function () {
+          map.panBy([0, 90], { animate: true });
+        }, 120);
+      }
     }
   }
 
@@ -382,9 +436,10 @@
 
   if (usedFallback) goGeo();
 
-  if (pins.length && listButtons.length) {
+  if (pins.length && listButtons.length && !isMobile) {
     selectPlace(0);
   } else {
     clearSelection();
+  }
   }
 })();

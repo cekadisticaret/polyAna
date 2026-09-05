@@ -183,6 +183,31 @@ def telegram_send(text: str) -> bool:
         return False
 
 
+def notify_place_approved(db, place) -> None:
+    """Onaylanan yeni mekan — notify_new_place açık kullanıcılara mail."""
+    emails = recipients_for_kind(db, "place")
+    if not emails:
+        return
+    try:
+        from seo import abs_url
+    except Exception:
+        abs_url = lambda p: p  # type: ignore[assignment,misc]
+    slug = getattr(place, "slug", "") or ""
+    title = getattr(place, "title", "") or "Yeni mekan"
+    ilce = getattr(place, "ilce", "") or ""
+    blurb = (getattr(place, "blurb", "") or getattr(place, "body", "") or "").strip()
+    path = f"/yer/{slug}" if slug else "/yeme-icme"
+    body = "\n".join(x for x in (ilce, blurb[:240] if blurb else "") if x)
+    enqueue(
+        kind="place",
+        title=f"Bursa · Yeni mekan: {title}",
+        body=body,
+        url=abs_url(path),
+        user_emails=emails[:80],
+    )
+    flush_outbox(limit=20)
+
+
 def notify_register(*, name: str, email: str, user_id: int | None = None, source: str = "web") -> None:
     """Yeni üye kaydı — Telegram: başlık + kayıt bilgileri (şifre yok)."""
     from zoneinfo import ZoneInfo

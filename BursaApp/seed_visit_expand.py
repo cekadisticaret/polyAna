@@ -71,7 +71,7 @@ EXISTING_SUB = {
 
 CURATED = [
     {"title": "Karagöz Müzesi", "ilce": "Osmangazi", "address": "Çekirge Cad., Osmangazi", "lat": 40.203, "lng": 29.038, "sub": "muze", "rating": 4.4, "featured": False, "blurb": "Karagöz-Hacivat gölge oyunu koleksiyonu. Çekirge hattında kısa durak."},
-    {"title": "Tofaş Anadolu Arabaları Müzesi", "ilce": "Yıldırım", "address": "Umurbey, Yıldırım", "lat": 40.1832, "lng": 29.0755, "sub": "muze", "rating": 4.6, "featured": True, "blurb": "Restöre ipek fabrikası. Fayton, kağnı, klasik otomobil. Irgandı yanında."},
+    {"title": "Tofaş Anadolu Arabaları Müzesi", "ilce": "Yıldırım", "address": "Umurbey, Yıldırım", "lat": 40.1832, "lng": 29.0755, "sub": "muze", "rating": 4.6, "featured": True, "blurb": "Restöre ipek fabrikası. Fayton, kağnı, klasik otomobil. Irgandı yanında.", "img": "/static/visit/tofas-anadolu-arabalari-muzesi.jpg"},
     {"title": "Bursa Kent Müzesi", "ilce": "Osmangazi", "address": "Heykel, Atatürk Cad., Osmangazi", "lat": 40.1836, "lng": 29.0612, "sub": "muze", "rating": 4.5, "featured": False, "blurb": "Şehir tarihi, Hanlar bölgesi. Ulu Cami–Heykel aksında."},
     {"title": "Hüsnü Züber Evi", "ilce": "Osmangazi", "address": "Hisar, Osmangazi", "lat": 40.1862, "lng": 29.0574, "sub": "muze", "rating": 4.5, "featured": False, "blurb": "Osmanlı evi müze. Tophane–Kale Sokak yürüyüşünde."},
     {"title": "Atatürk Evi Müzesi", "ilce": "Osmangazi", "address": "Çekirge, Osmangazi", "lat": 40.2014, "lng": 29.0332, "sub": "muze", "rating": 4.3, "featured": False, "blurb": "Atatürk’ün Bursa konaklaması. Çekirge kaplıca hattı."},
@@ -80,7 +80,7 @@ CURATED = [
     {"title": "Mudanya Mütareke Evi", "ilce": "Mudanya", "address": "Mütareke, 12 Eylül Cd. No:8, Mudanya", "lat": 40.3764, "lng": 28.8832, "sub": "muze", "rating": 4.5, "featured": True, "blurb": "1922 ateşkes evi. Sahil yürüyüşüyle birlikte.", "img": "/static/visit/mudanya-mutareke-evi.jpg"},
     {"title": "Merinos Parkı", "ilce": "Osmangazi", "address": "Merinos / Atatürk Kongre Kültür Merkezi", "lat": 40.1955, "lng": 29.0554, "sub": "park", "rating": 4.5, "featured": False, "blurb": "Eski merinos fabrikası parkı + AKKM. Şehir içi yeşil."},
     {"title": "Kültürpark", "ilce": "Osmangazi", "address": "Çekirge Cad. / Kültürpark, Osmangazi", "lat": 40.1988, "lng": 29.0485, "sub": "park", "rating": 4.3, "featured": False, "blurb": "Fuar alanı, gölet, yürüyüş. Çekirge altı."},
-    {"title": "Hüdavendigar Camii", "ilce": "Osmangazi", "address": "Çekirge, Osmangazi", "lat": 40.2018, "lng": 29.0314, "sub": "cami", "rating": 4.6, "featured": False, "blurb": "I. Murad külliyesi. Çekirge sırtı, erken Osmanlı."},
+    {"title": "Hüdavendigar Camii", "ilce": "Osmangazi", "address": "Çekirge, Osmangazi", "lat": 40.2018, "lng": 29.0314, "sub": "cami", "rating": 4.6, "featured": False, "blurb": "I. Murad külliyesi. Çekirge sırtı, erken Osmanlı.", "img": "/static/visit/hudavendigar-camii.jpg"},
     {"title": "Yıldırım Bayezid Camii", "ilce": "Yıldırım", "address": "Yıldırım, Yıldırım Bayezid Cad.", "lat": 40.1874, "lng": 29.0862, "sub": "cami", "rating": 4.5, "featured": False, "blurb": "Yıldırım külliyesi. Şehir doğusu, Yeşil’den ayrı durak."},
     {"title": "Orhan Camii", "ilce": "Osmangazi", "address": "Hanlar bölgesi, Osmangazi", "lat": 40.1839, "lng": 29.0626, "sub": "cami", "rating": 4.6, "featured": False, "blurb": "Orhan Gazi camisi. Koza Han–Ulu Cami üçgeni."},
     {"title": "Osman Gazi Türbesi", "ilce": "Osmangazi", "address": "Tophane Parkı, Osmangazi", "lat": 40.1867, "lng": 29.0601, "sub": "turbe", "rating": 4.7, "featured": True, "blurb": "Osman Gazi. Saat kulesi yanı, Hisar sırtı."},
@@ -91,7 +91,7 @@ CURATED = [
     {"title": "İznik Ayasofya", "ilce": "İznik", "address": "İznik merkez", "lat": 40.4291, "lng": 29.7214, "sub": "antik", "rating": 4.6, "featured": True, "blurb": "Nikaia Ayasofyası. Konsil tarihi, cami olarak da ziyaret."},
     {"title": "İznik Lefke Kapısı", "ilce": "İznik", "address": "Lefke Kapı, İznik", "lat": 40.4308, "lng": 29.7315, "sub": "antik", "rating": 4.5, "featured": False, "blurb": "Doğu sur kapısı. İznik sur turunun duraklarından."},
     {"title": "İznik Yeşil Cami", "ilce": "İznik", "address": "Yeşil Cami, İznik", "lat": 40.4302, "lng": 29.7206, "sub": "cami", "rating": 4.6, "featured": False, "blurb": "Erken Osmanlı, minare çinisi. İznik merkez."},
-    {"title": "Karacabey Longozu", "ilce": "Karacabey", "address": "Yeniköy / Karadağ, Karacabey", "lat": 40.268, "lng": 28.452, "sub": "doga", "rating": 4.5, "featured": True, "blurb": "Kuş cenneti, su basar orman. Kuş gözlem ve yürüyüş."},
+    {"title": "Karacabey Longozu", "ilce": "Karacabey", "address": "Yeniköy / Karadağ, Karacabey", "lat": 40.268, "lng": 28.452, "sub": "doga", "rating": 4.5, "featured": True, "blurb": "Kuş cenneti, su basar orman. Kuş gözlem ve yürüyüş.", "img": "/static/visit/karacabey-longozu.jpg"},
     {"title": "Güzelyalı", "ilce": "Mudanya", "address": "Güzelyalı sahil, Mudanya", "lat": 40.358, "lng": 28.918, "sub": "koy", "rating": 4.4, "featured": False, "blurb": "Mudanya–Bursa sahil beldesi. Yürüyüş + deniz."},
     {"title": "İznik Gölü", "ilce": "İznik", "address": "İznik göl kıyısı", "lat": 40.426, "lng": 29.708, "sub": "gol", "rating": 4.6, "featured": False, "blurb": "Göl kenarı, gün batımı. Sur ve çini ile aynı gün."},
 ]

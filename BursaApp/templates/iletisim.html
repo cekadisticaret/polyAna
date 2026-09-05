@@ -1,0 +1,39 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full }}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block main %}
+<article class="seo-page contact-page">
+  <h1>İletişim</h1>
+  <p class="lead">BursaApp hakkında soru, öneri veya teknik destek için bize ulaşın. Rezervasyon veya bilet satışı yapmıyoruz.</p>
+
+  <div class="contact-cards">
+    <a class="contact-card" href="tel:{{ phone_e164 }}">
+      <span class="contact-ico" aria-hidden="true">📞</span>
+      <span>
+        <b>Telefon</b>
+        <i>{{ wa_phone }}</i>
+      </span>
+      <span class="contact-go">Ara →</span>
+    </a>
+    <a class="contact-card contact-wa" href="{{ wa_url }}?text={{ 'Merhaba, BursaApp hakkında destek istiyorum.'|urlencode }}" target="_blank" rel="noopener noreferrer">
+      <span class="contact-ico" aria-hidden="true">💬</span>
+      <span>
+        <b>WhatsApp</b>
+        <i>{{ wa_phone }}</i>
+      </span>
+      <span class="contact-go">Yaz →</span>
+    </a>
+  </div>
+
+  <p class="contact-note">Mesai saatlerinde genelde aynı gün dönüş yapılır. Mekan ekleme ve yorum onayları admin panelinden yürür — acil yayın talebi değilse WhatsApp yeterli.</p>
+
+  <nav class="seo-cross">
+    <a href="/">Keşfet</a>
+    <a href="/kvkk">KVKK</a>
+    <a href="/blog">Blog</a>
+  </nav>
+</article>
+{% endblock %}

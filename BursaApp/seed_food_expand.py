@@ -15,6 +15,20 @@ import urllib.request
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
+REMOVED_PLACES_JSON = os.path.join(_DIR, "data", "places_removed.json")
+
+
+def _removed_place_keys() -> tuple[set[str], set[str]]:
+    """Silinen mekanlar — OSM delta tekrar eklemez."""
+    try:
+        with open(REMOVED_PLACES_JSON, encoding="utf-8") as f:
+            raw = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return set(), set()
+    titles = {str(x).strip() for x in raw.get("title_slugs") or [] if str(x).strip()}
+    slugs = {str(x).strip() for x in raw.get("slugs") or [] if str(x).strip()}
+    return titles, slugs
+
 
 from catalog import ILCELER, slugify, tags_dump
 from media_cache import ensure_cached
@@ -390,9 +404,10 @@ def import_osm_delta(db, *, max_age_h: float | None = 16.0, imgs: dict | None = 
     """Yalnız OSM yeme-içme — yeni kayıt, mevcut başlık atlanır. Curated upsert yok."""
     imgs = imgs or LOCAL_IMG
     stats = {"new": 0, "upd": 0, "skip": 0}
+    removed_titles, removed_slugs = _removed_place_keys()
     existing_names = {
         slugify(p.title) for p in db.query(Place).filter(Place.category == "food").all()
-    }
+    } | removed_titles
     for amenity, sub, tags, base_rating, tag in (
         ("cafe", "cafe", ["cafe", "kahve", "osm"], 4.1, "amenity"),
         ("bar", "bar", ["bar", "alkol", "osm"], 4.0, "amenity"),
@@ -410,12 +425,12 @@ def import_osm_delta(db, *, max_age_h: float | None = 16.0, imgs: dict | None = 
         print(f"osm {amenity}: {len(pts)}")
         for i, raw in enumerate(pts):
             nm = slugify(raw["title"])
-            if not nm or nm in existing_names:
+            slug = make_slug(raw["title"], prefix=f"osm-{amenity}")
+            if not nm or nm in existing_names or slug in removed_slugs:
                 stats["skip"] = stats.get("skip", 0) + 1
                 continue
             existing_names.add(nm)
             sub_use = cuisine_sub(raw.get("cuisine") or "", amenity) if amenity in ("restaurant", "fast_food") else sub
-            slug = make_slug(raw["title"], prefix=f"osm-{amenity}")
             rating = round(base_rating + max(0, 0.4 - (i * 0.002)), 1)
             hours = raw.get("hours") or ""
             blurb = f"Bursa {sub_use} · {raw['ilce']}."

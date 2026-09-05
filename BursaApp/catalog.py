@@ -26,7 +26,7 @@ CATEGORIES = (
     {"key": "doctor", "path": "/doktorlar", "label": "Doktorlar", "hint": "branş + bağlı olduğu hastane"},
     {"key": "dentist", "path": "/dis-hekimleri", "label": "Diş hekimleri", "hint": "ADSM, özel klinik, Dt."},
     {"key": "vet", "path": "/veterinerler", "label": "Veterinerler", "hint": "klinik, hayvan hastanesi"},
-    {"key": "school", "path": "/okullar", "label": "Okullar", "hint": "devlet, özel, anaokulu, lise, üniversite"},
+    {"key": "school", "path": "/okullar", "label": "Okullar", "hint": "devlet, özel, dershane, özel eğitim, lise"},
 )
 CAT_BY_KEY = {c["key"]: c for c in CATEGORIES}
 CAT_BY_PATH = {c["path"]: c for c in CATEGORIES}
@@ -244,6 +244,20 @@ PHARMACY_PROMO = {
     "img": "visit/koza-han.jpg",
 }
 
+TELEFERIK_PROMO = {
+    "key": "teleferik",
+    "path": "/uludag-teleferik",
+    "label": "Uludağ Teleferik",
+    "hint": "Bilet · saat · otobüs",
+    "tone": "mint",
+    "pill_tone": "orange",
+    "before": "Uludağ'a ",
+    "pill": "teleferik",
+    "after": " — bilet & saat",
+    "cta": "Rehberi aç",
+    "img": "visit/teleferik.jpg",
+}
+
 
 def category_promo_cards():
     """Mobil /kategoriler promosyon kartları (sıralı)."""
@@ -289,6 +303,14 @@ def category_promo_cards():
                 "img": meta.get("img", "visit/ulu-cami.jpg"),
             }
         )
+        if key == "visit":
+            cards.append(
+                {
+                    **TELEFERIK_PROMO,
+                    "icon": "🚡",
+                    "title": TELEFERIK_PROMO["label"].upper(),
+                }
+            )
     cards.append(
         {
             **PHARMACY_PROMO,
@@ -416,6 +438,8 @@ MEKAN_TAXONOMY = {
         ("lise", "Lise"),
         ("kolej", "Kolej"),
         ("universite", "Üniversite"),
+        ("dershane", "Dershane"),
+        ("ozel-egitim", "Özel eğitim"),
     ),
 }
 
@@ -566,6 +590,74 @@ FOOD_DISH = (
     ("doner", "Döner"),
 )
 FOOD_PRICE = (("ucuz", "Ucuz"), ("orta", "Ortalama"), ("kaliteli", "Kaliteli yemek"))
+
+# Yeme-içme küratör kartları (görselli hızlı filtre)
+FOOD_CURATED = (
+    {
+        "key": "iskender",
+        "tag": "Bursa klasiği",
+        "title": "Asıl İskender nerede?",
+        "img": "/static/food/ne-yenir-iskender.jpg",
+        "tone": "gold",
+        "filter": {"dish": "iskender"},
+    },
+    {
+        "key": "burger",
+        "tag": "Fast food",
+        "title": "Şehrin en iyi hamburgeri",
+        "img": "/static/food/doner-2.jpg",
+        "tone": "sun",
+        "filter": {"dish": "burger"},
+    },
+    {
+        "key": "kahvalti",
+        "tag": "Sabah sofrası",
+        "title": "Serpme kahvaltı rotası",
+        "img": "/static/food/kahvalti-uludag-yolu.jpg",
+        "tone": "mint",
+        "filter": {"kind": "kahvalti"},
+    },
+    {
+        "key": "cantik",
+        "tag": "Kayhan",
+        "title": "Cantık & pideli lezzet",
+        "img": "/static/food/cantikci-yildirim.jpg",
+        "tone": "rose",
+        "filter": {"dish": "cantik"},
+    },
+    {
+        "key": "balik",
+        "tag": "Sahil",
+        "title": "Balık & rakı sofrası",
+        "img": "/static/food/balikci-raki-mudanya.jpg",
+        "tone": "sea",
+        "filter": {"dish": "balik"},
+    },
+    {
+        "key": "kofte",
+        "tag": "1965'ten beri",
+        "title": "İnegöl köfte durakları",
+        "img": "/static/food/ne-yenir-inegol-kofte.jpg",
+        "tone": "ember",
+        "filter": {"dish": "inegol-kofte"},
+    },
+    {
+        "key": "cafe",
+        "tag": "3. nesil",
+        "title": "Specialty kahve",
+        "img": "/static/food/gloria-jeans-nilufer.jpg",
+        "tone": "violet",
+        "filter": {"kind": "cafe"},
+    },
+    {
+        "key": "meyhane",
+        "tag": "Meze",
+        "title": "Meyhane gecesi",
+        "img": "/static/food/meyhane-cekirge.jpg",
+        "tone": "wine",
+        "filter": {"kind": "meyhane"},
+    },
+)
 
 # Gezilecek kenar filtresi (TripAdvisor tür grupları)
 VISIT_KIND = (
@@ -794,7 +886,7 @@ def place_public(p) -> dict:
     shown = display_rating(p)
     sub = (getattr(p, "subcategory", None) or "").strip()
     path = place_seo_path(p)
-    return {
+    d = {
         "id": p.id,
         "slug": p.slug,
         "path": path,
@@ -862,6 +954,15 @@ def place_public(p) -> dict:
         "menu_text": getattr(p, "menu_text", None) or "",
         "extra": _place_extra_public(p),
     }
+    if d.get("category") == "dentist" and (
+        d.get("price_band") == "Devlet" or "mhrs" in (d.get("tags") or [])
+    ):
+        ex = d.get("extra") or {}
+        if not ex.get("mhrs_url"):
+            ex = dict(ex)
+            ex["mhrs_url"] = "https://mhrs.gov.tr/vatandas/#/Randevu"
+            d["extra"] = ex
+    return d
 
 
 def _place_extra_public(p) -> dict:
@@ -908,6 +1009,7 @@ def _place_extra_public(p) -> dict:
         "catalog_url": (ex.get("catalog_url") or "") if isinstance(ex.get("catalog_url") or "", str) else "",
         "logo_bg": (ex.get("logo_bg") or "") if isinstance(ex.get("logo_bg") or "", str) else "",
         "branch_note": (ex.get("branch_note") or "") if isinstance(ex.get("branch_note") or "", str) else "",
+        "mhrs_url": (ex.get("mhrs_url") or "") if isinstance(ex.get("mhrs_url") or "", str) else "",
     }
 
 

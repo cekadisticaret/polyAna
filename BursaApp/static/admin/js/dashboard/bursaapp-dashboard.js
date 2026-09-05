@@ -22,40 +22,68 @@
   var grid = { borderColor: "#eef0f3", strokeDashArray: 0, xaxis: { lines: { show: false } } };
 
   var traffic = data.traffic || {};
+  var trafficLabels = traffic.labels || [];
+  var trafficVisitors = traffic.visitors || [];
+  var trafficPageviews = traffic.pageviews || [];
   mount(document.querySelector("#ba-chart-traffic"), {
     series: [
-      { name: "Tekil ziyaretçi", type: "area", data: traffic.visitors || [] },
-      { name: "Sayfa görüntüleme", type: "area", data: traffic.pageviews || [] },
+      { name: "Tekil ziyaretçi", data: trafficVisitors },
+      { name: "Sayfa görüntüleme", data: trafficPageviews },
     ],
     chart: {
-      height: 300,
-      type: "area",
+      height: 280,
+      type: "bar",
       toolbar: { show: false },
       fontFamily: "inherit",
       zoom: { enabled: false },
     },
     colors: [teal, sand],
-    stroke: { width: [0, 0], curve: "stepline" },
-    fill: {
-      type: "solid",
-      opacity: [0.92, 0.55],
+    plotOptions: {
+      bar: {
+        borderRadius: 6,
+        columnWidth: trafficLabels.length > 10 ? "78%" : "62%",
+        dataLabels: { position: "top" },
+      },
     },
-    dataLabels: { enabled: false },
+    dataLabels: {
+      enabled: trafficLabels.length <= 10,
+      offsetY: -14,
+      style: { fontSize: "10px", fontWeight: 700, colors: [ink] },
+    },
     xaxis: {
-      categories: traffic.labels || [],
+      categories: trafficLabels,
       axisBorder: { show: false },
       axisTicks: { show: false },
       labels: { style: { colors: muted, fontSize: "11px" } },
     },
     yaxis: {
+      min: 0,
+      forceNiceScale: true,
       labels: {
         formatter: function (v) { return Math.round(v); },
         style: { colors: muted, fontSize: "11px" },
       },
     },
-    legend: { show: false },
+    legend: {
+      show: true,
+      position: "top",
+      horizontalAlign: "right",
+      fontSize: "12px",
+      markers: { width: 10, height: 10, radius: 10 },
+    },
     grid: grid,
-    tooltip: { shared: true, intersect: false, theme: "light" },
+    tooltip: {
+      shared: true,
+      intersect: false,
+      theme: "light",
+      y: {
+        formatter: function (v, opts) {
+          var n = Math.round(v) || 0;
+          if (opts.seriesIndex === 0) return n + " tekil";
+          return n + " sayfa";
+        },
+      },
+    },
   });
 
   var logins = data.logins || {};
