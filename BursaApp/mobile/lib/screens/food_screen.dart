@@ -4,99 +4,72 @@ import 'package:provider/provider.dart';
 import '../core/api/models.dart';
 import '../core/auth/auth_store.dart';
 import '../core/theme/app_theme.dart';
-import '../widgets/place_list_tile.dart';
+import '../widgets/category_pills.dart';
+import '../widgets/destination_card.dart';
 
 class FoodScreen extends StatefulWidget {
-  const FoodScreen({super.key, this.onProfileTap});
-  final VoidCallback? onProfileTap;
+  const FoodScreen({super.key});
 
   @override
   State<FoodScreen> createState() => _FoodScreenState();
 }
 
-class _FoodScreenState extends State<FoodScreen> with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
-  final _data = <String, List<PlaceItem>>{};
-  final _loading = <String, bool>{};
-
+class _FoodScreenState extends State<FoodScreen> {
   static const _sections = [
-    ('food', 'Restoran & kafe', 'cafe'),
-    ('food', 'Canlı müzik', 'live'),
-    ('fun', 'Eğlence', null),
+    ('food', 'Restoran & kafe'),
+    ('fun', 'Canlı müzik'),
+    ('fun', 'Eğlence'),
   ];
+
+  String _filterKey = 'food';
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 3, vsync: this);
-    _tabs.addListener(() {
-      if (!_tabs.indexIsChanging) _ensure(_tabs.index);
-    });
-    _ensure(0);
+    _load();
   }
 
-  Future<void> _ensure(int index) async {
-    final key = 's$index';
-    if (_data.containsKey(key)) return;
-    setState(() => _loading[key] = true);
+  Future<void> _load() async {
+    setState(() => _loading = true);
     try {
       final auth = context.read<AuthStore>();
-      final sec = _sections[index];
-      final rows = await auth.api.places(
-        category: sec.$1,
-        sub: sec.$3,
-        limit: 30,
-      );
-      setState(() => _data[key] = rows);
+      final cat = _filterKey == 'fun2' ? 'fun' : _filterKey;
+      final rows = await auth.api.places(category: cat, limit: 24);
+      setState(() => _places = rows);
     } finally {
-      if (mounted) setState(() => _loading[key] = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Yeme & içme',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+        const Text('Yeme & içme', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 12),
+        CategoryPills(
+          items: const [
+            ('food', 'Restoran & kafe'),
+            ('live', 'Canlı müzik'),
+            ('fun2', 'Eğlence'),
+          ],
+          selected: _filterKey,
+          onSelected: (v) {
+            setState(() => _filterKey = v);
+            _load();
+          },
+        ),
+        const SizedBox(height: 16),
+        if (_loading)
+          const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()))
+        else
+          ..._places.map(
+            (p) => Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: DestinationCard(place: p),
+            ),
           ),
-        ),
-        TabBar(
-          controller: _tabs,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          labelColor: AppColors.ink,
-          unselectedLabelColor: AppColors.muted,
-          indicatorColor: AppColors.accentDeep,
-          tabs: _sections.map((s) => Tab(text: s.$2)).toList(),
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabs,
-            children: List.generate(3, (i) {
-              final key = 's$i';
-              final rows = _data[key] ?? [];
-              if (_loading[key] == true && rows.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                itemCount: rows.length,
-                itemBuilder: (_, j) => PlaceListTile(place: rows[j]),
-              );
-            }),
-          ),
-        ),
       ],
     );
   }

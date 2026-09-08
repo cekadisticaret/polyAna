@@ -69,10 +69,11 @@ class _LoginSheetState extends State<LoginSheet> {
       padding: EdgeInsets.only(bottom: bottom),
       child: Container(
         margin: const EdgeInsets.all(12),
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        padding: const EdgeInsets.fromLTRB(22, 16, 22, 26),
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+          boxShadow: AppShadows.soft,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -80,7 +81,7 @@ class _LoginSheetState extends State<LoginSheet> {
           children: [
             Center(
               child: Container(
-                width: 42,
+                width: 44,
                 height: 5,
                 decoration: BoxDecoration(
                   color: AppColors.muted.withValues(alpha: 0.25),
@@ -88,43 +89,29 @@ class _LoginSheetState extends State<LoginSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             Text(
-              _register ? 'BursaApp\'e katıl' : 'Devam etmek için giriş yap',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.ink),
+              _register ? 'BursaApp\'e katıl ✨' : 'Devam etmek için giriş yap',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Beğeni ve yorum için ücretsiz hesap aç.',
-              style: TextStyle(color: AppColors.muted),
-            ),
+            const Text('Beğeni, yorum ve etkinlik için ücretsiz hesap.', style: TextStyle(color: AppColors.muted)),
             const SizedBox(height: 18),
-            if (_register)
-              TextField(
-                controller: _name,
-                decoration: const InputDecoration(labelText: 'Ad Soyad'),
-              ),
-            TextField(
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'E-posta'),
-            ),
-            TextField(
-              controller: _password,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Şifre'),
-            ),
+            if (_register) TextField(controller: _name, decoration: const InputDecoration(labelText: 'Ad Soyad')),
+            TextField(controller: _email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'E-posta')),
+            TextField(controller: _password, obscureText: true, decoration: const InputDecoration(labelText: 'Şifre')),
             if (_error != null) ...[
               const SizedBox(height: 8),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
+              Text(_error!, style: const TextStyle(color: AppColors.coral)),
             ],
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _submit,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.ink,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                backgroundColor: AppColors.nav,
+                foregroundColor: AppColors.lime,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.md)),
               ),
               child: Text(_register ? 'Kayıt ol' : 'Giriş yap'),
             ),

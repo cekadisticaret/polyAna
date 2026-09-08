@@ -12,8 +12,7 @@ import 'leaders_screen.dart';
 import 'okey_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, this.onProfileTap});
-  final VoidCallback? onProfileTap;
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -43,137 +42,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthStore>();
     final user = auth.user;
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
       children: [
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(color: AppColors.ink.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 8)),
-            ],
-          ),
-          child: Row(
-            children: [
-              _ProfileAvatar(name: user?.name ?? 'Misafir', url: user?.avatarUrl),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user?.name ?? 'Misafir',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-                    ),
-                    Text(
-                      auth.isLoggedIn ? '${user?.points ?? 0} puan' : 'Giriş yap · puan kazan',
-                      style: const TextStyle(color: AppColors.muted),
-                    ),
-                  ],
-                ),
+        Column(
+          children: [
+            CircleAvatar(
+              radius: 48,
+              backgroundColor: AppColors.accentDeep,
+              backgroundImage: user?.avatarUrl != null && user!.avatarUrl.isNotEmpty
+                  ? NetworkImage(user.avatarUrl.startsWith('http') ? user.avatarUrl : '${AppConfig.siteBase}${user.avatarUrl}')
+                  : null,
+              child: user?.avatarUrl.isEmpty != false
+                  ? Text(
+                      (user?.name ?? 'B').substring(0, 1),
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 12),
+            Text(user?.name ?? 'Misafir', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+            Text(
+              auth.isLoggedIn ? '${user?.points ?? 0} puan · Bursa rehberi' : 'Giriş yap, puan kazan',
+              style: const TextStyle(color: AppColors.muted),
+            ),
+            const SizedBox(height: 12),
+            if (auth.isLoggedIn)
+              OutlinedButton(onPressed: () => auth.logout(), child: const Text('Çıkış'))
+            else
+              FilledButton(
+                onPressed: () => showLoginSheet(context),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.nav, foregroundColor: AppColors.lime),
+                child: const Text('Giriş / Kayıt'),
               ),
-              if (auth.isLoggedIn)
-                IconButton(
-                  onPressed: () => auth.logout(),
-                  icon: const Icon(Icons.logout_rounded),
-                )
-              else
-                TextButton(
-                  onPressed: () => showLoginSheet(context),
-                  child: const Text('Giriş'),
-                ),
-            ],
-          ),
+          ],
         ),
-        const SizedBox(height: 14),
-        _QuickActions(
-          onCreateEvent: () {
-            requireAuth(context, () {
-              Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const CreateEventScreen()));
-            });
-          },
-          onLeaders: () {
-            Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const LeadersScreen()));
-          },
-          onOkey: () {
-            Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const OkeyScreen()));
-          },
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(child: _QuickTile(icon: Icons.add_circle, label: 'Etkinlik', color: AppColors.pink, onTap: () => requireAuth(context, () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const CreateEventScreen()))))),
+            const SizedBox(width: 10),
+            Expanded(child: _QuickTile(icon: Icons.emoji_events, label: 'Liderler', color: AppColors.sky, onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const LeadersScreen())))),
+            const SizedBox(width: 10),
+            Expanded(child: _QuickTile(icon: Icons.grid_view, label: 'Okey', color: AppColors.accentDeep, onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const OkeyScreen())))),
+          ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         if (_loading)
-          const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()))
+          const Center(child: CircularProgressIndicator())
         else
-          ..._menu.map((g) => _MenuGroupCard(group: g)),
+          ..._menu.map((g) => _MenuBlock(group: g)),
       ],
     );
   }
 }
 
-class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar({required this.name, this.url});
-  final String name;
-  final String? url;
-
-  @override
-  Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: 34,
-      backgroundColor: AppColors.accentDeep,
-      backgroundImage: url != null && url!.isNotEmpty
-          ? NetworkImage(url!.startsWith('http') ? url! : '${AppConfig.siteBase}$url')
-          : null,
-      child: url == null || url!.isEmpty
-          ? Text(name.isNotEmpty ? name[0] : 'B', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold))
-          : null,
-    );
-  }
-}
-
-class _QuickActions extends StatelessWidget {
-  const _QuickActions({required this.onCreateEvent, required this.onLeaders, required this.onOkey});
-  final VoidCallback onCreateEvent;
-  final VoidCallback onLeaders;
-  final VoidCallback onOkey;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _ActionCard(
-            icon: Icons.add_circle_outline,
-            label: 'Etkinlik\noluştur',
-            color: AppColors.coral,
-            onTap: onCreateEvent,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ActionCard(
-            icon: Icons.emoji_events_outlined,
-            label: 'Lider\nharitası',
-            color: AppColors.sky,
-            onTap: onLeaders,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ActionCard(
-            icon: Icons.grid_view_rounded,
-            label: 'Okey\n4. arayan',
-            color: AppColors.accentDeep,
-            onTap: onOkey,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({required this.icon, required this.label, required this.color, required this.onTap});
+class _QuickTile extends StatelessWidget {
+  const _QuickTile({required this.icon, required this.label, required this.color, required this.onTap});
   final IconData icon;
   final String label;
   final Color color;
@@ -181,21 +107,19 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
+          color: color.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(AppRadii.md),
         ),
         child: Column(
           children: [
             Icon(icon, color: color),
-            const SizedBox(height: 8),
-            Text(label, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, height: 1.2)),
+            const SizedBox(height: 6),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
           ],
         ),
       ),
@@ -203,8 +127,8 @@ class _ActionCard extends StatelessWidget {
   }
 }
 
-class _MenuGroupCard extends StatelessWidget {
-  const _MenuGroupCard({required this.group});
+class _MenuBlock extends StatelessWidget {
+  const _MenuBlock({required this.group});
   final MenuGroup group;
 
   @override
@@ -213,23 +137,27 @@ class _MenuGroupCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
             child: Text(group.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
           ),
           ...group.items.map(
             (item) => ListTile(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               title: Text(item.label, style: const TextStyle(fontWeight: FontWeight.w600)),
-              trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
-              onTap: () {
-                final url = Uri.parse('${AppConfig.siteBase}${item.path}');
-                launchUrl(url, mode: LaunchMode.externalApplication);
-              },
+              trailing: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(color: AppColors.bgSoft, borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+              ),
+              onTap: () => launchUrl(Uri.parse('${AppConfig.siteBase}${item.path}'), mode: LaunchMode.externalApplication),
             ),
           ),
         ],
