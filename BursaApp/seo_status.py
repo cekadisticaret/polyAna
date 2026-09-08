@@ -44,6 +44,14 @@ def ga_measurement_id() -> str:
     return str(_load_cfg().get("ga_measurement_id") or "").strip()
 
 
+def google_ads_id() -> str:
+    """Google Ads dönüşüm etiketi (AW-XXXX). Env > seo_config."""
+    env = (os.environ.get("GOOGLE_ADS_ID") or "").strip()
+    if env:
+        return env
+    return str(_load_cfg().get("google_ads_id") or "").strip()
+
+
 def gsc_connected() -> bool:
     """Domain DNS doğrulama veya manuel işaret — HTML meta şart değil."""
     cfg = _load_cfg()

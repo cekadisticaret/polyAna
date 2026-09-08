@@ -1,0 +1,32 @@
+workflows:
+  bursaapp-ios-testflight:
+    name: BursaApp iOS TestFlight
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    working_directory: BursaApp/mobile
+    environment:
+      flutter: stable
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bursaapp.mobile
+    scripts:
+      - name: Bootstrap Flutter platforms
+        script: |
+          if [ ! -f ios/Runner.xcodeproj/project.pbxproj ]; then
+            flutter create . --org com.bursaapp --project-name bursaapp_mobile --platforms=ios,android
+          fi
+          /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string 'Yakınındaki mekanları haritada göstermek için konum kullanılır.'" ios/Runner/Info.plist 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSLocationWhenInUseUsageDescription 'Yakınındaki mekanları haritada göstermek için konum kullanılır.'" ios/Runner/Info.plist
+      - name: Dependencies
+        script: flutter pub get
+      - name: Analyze
+        script: flutter analyze
+      - name: Build IPA
+        script: flutter build ipa --release
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

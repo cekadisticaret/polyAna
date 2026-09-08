@@ -32,7 +32,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16.png') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
-  <meta name="theme-color" content="#1B3B2B">
+  <meta name="theme-color" content="#DCE8DC">
   <meta name="application-name" content="BursaApp">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -43,14 +43,15 @@
   {% if google_site_verification %}
   <meta name="google-site-verification" content="{{ google_site_verification }}">
   {% endif %}
-  {% if ga_measurement_id %}
+  {% if ga_measurement_id or google_ads_id %}
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id or google_ads_id }}"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', '{{ ga_measurement_id }}');
+    {% if ga_measurement_id %}gtag('config', '{{ ga_measurement_id }}');{% endif %}
+    {% if google_ads_id %}gtag('config', '{{ google_ads_id }}');{% endif %}
   </script>
   {% endif %}
   {% if seo %}
@@ -60,9 +61,10 @@
   {% endif %}
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v={{ static_v }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mobile-travel.css') }}?v={{ static_v }}">
   {% block head %}{% endblock %}
 </head>
-<body class="is-mobile-app m-app-shell{% if nav=='hesap' %} is-feed{% endif %}{% block body_class %}{% endblock %}">
+<body class="is-mobile-app m-app-shell{% if nav=='hesap' %} is-feed{% endif %}{% block body_class %}{% endblock %}"{% block body_attrs %}{% endblock %}>
 <header class="m-top" aria-label="Üst bar">
   <a class="m-top-user" href="{% if nav_user %}/hesap{% else %}/giris{% endif %}" rel="nofollow">
     <span class="m-top-av">{% if nav_user and nav_user.avatar_url %}<img src="{{ nav_user.avatar_url }}" alt="{{ nav_user.name }} profil fotoğrafı">{% elif nav_user %}<span>{{ nav_user.name[0]|upper }}</span>{% else %}<span>👋</span>{% endif %}</span>
@@ -231,18 +233,18 @@
 <nav class="m-tabbar" aria-label="Ana menü">
   <a class="m-tab {{ 'on' if mobile_tab=='home' else '' }}" href="/">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-    <span>Anasayfa</span>
+    <span>Ana</span>
+  </a>
+  <a class="m-tab {{ 'on' if mobile_tab=='explore' else '' }}" href="/kategoriler">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+    <span>Keşfet</span>
+  </a>
+  <a class="m-tab m-tab-fab {{ 'on' if mobile_tab=='route' else '' }}" href="/rota" title="Rota planla" aria-label="Rota planla">
+    <span>🧳</span>
   </a>
   <a class="m-tab {{ 'on' if mobile_tab=='feed' else '' }}" href="/feed">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11h16M4 6h16M4 16h10"/></svg>
-    <span>Feed</span>
-  </a>
-  <a class="m-tab m-tab-fab {{ 'on' if mobile_tab=='create' else '' }}" href="{% if nav_user %}/etkinlik/ekle{% else %}/giris?next=/etkinlik/ekle{% endif %}" title="Etkinlik oluştur" aria-label="Etkinlik oluştur">
-    <span>＋</span>
-  </a>
-  <a class="m-tab {{ 'on' if mobile_tab=='categories' else '' }}" href="/kategoriler">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    <span>Kategoriler</span>
+    <span>Akış</span>
   </a>
   <a class="m-tab {{ 'on' if mobile_tab=='profile' else '' }}" href="{% if nav_user %}/hesap{% else %}/giris?next=/hesap{% endif %}" rel="nofollow">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/></svg>
@@ -272,5 +274,6 @@
   </a>
 </nav>
 
+<script src="{{ url_for('static', filename='analytics.js') }}?v={{ static_v }}" defer></script>
 </body>
 </html>

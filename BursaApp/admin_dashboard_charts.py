@@ -13,7 +13,7 @@ except Exception:  # pragma: no cover
     _IST = timezone(timedelta(hours=3))
 
 from catalog import CAT_BY_KEY
-from models import ActivityLog
+from models import ActivityLog, member_login_query
 
 _WD_TR = ("Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz")
 
@@ -46,12 +46,8 @@ def login_stats(db, *, days: int = 14) -> dict:
         d = today - timedelta(days=i)
         start, end = _ist_day_bounds_utc(d)
         cnt = (
-            db.query(ActivityLog)
-            .filter(
-                ActivityLog.kind == "login",
-                ActivityLog.created_at >= start,
-                ActivityLog.created_at < end,
-            )
+            member_login_query(db)
+            .filter(ActivityLog.created_at >= start, ActivityLog.created_at < end)
             .count()
         )
         labels.append(d.strftime("%d.%m"))
@@ -78,12 +74,7 @@ def login_stats(db, *, days: int = 14) -> dict:
 
 
 def _last_login_at(db) -> str | None:
-    row = (
-        db.query(ActivityLog)
-        .filter(ActivityLog.kind == "login")
-        .order_by(ActivityLog.id.desc())
-        .first()
-    )
+    row = member_login_query(db).order_by(ActivityLog.id.desc()).first()
     if not row or not row.created_at:
         return None
     dt = row.created_at
@@ -116,12 +107,8 @@ def _activity_series(db, *, days: int = 7) -> dict:
             .count()
         )
         login.append(
-            db.query(ActivityLog)
-            .filter(
-                ActivityLog.kind == "login",
-                ActivityLog.created_at >= start,
-                ActivityLog.created_at < end,
-            )
+            member_login_query(db)
+            .filter(ActivityLog.created_at >= start, ActivityLog.created_at < end)
             .count()
         )
         submit.append(
@@ -141,7 +128,9 @@ def _activity_series(db, *, days: int = 7) -> dict:
     }
 
 
-def build_dashboard_charts(db, *, traffic, page_traffic, by_cat, badges) -> dict:
+def build_dashboard_charts(
+    db, *, traffic, page_traffic, by_cat, badges, engagement=None, click_stats=None
+) -> dict:
     series = (traffic or {}).get("series") or []
     traffic_chart = {
         "labels": [_fmt_day(s["day"]) for s in series],
@@ -184,6 +173,29 @@ def build_dashboard_charts(db, *, traffic, page_traffic, by_cat, badges) -> dict
         ],
     }
 
+    eng = engagement or {}
+    eng_series = eng.get("series") or []
+    engagement_chart = {
+        "labels": [_fmt_day(s["day"]) for s in eng_series],
+        "avg_seconds": [int(s.get("avg_seconds") or 0) for s in eng_series],
+    }
+    scroll = eng.get("scroll") or {}
+    scroll_chart = {
+        "labels": ["%25+", "%50+", "%75+", "%100"],
+        "series": [
+            int(scroll.get("25") or 0),
+            int(scroll.get("50") or 0),
+            int(scroll.get("75") or 0),
+            int(scroll.get("100") or 0),
+        ],
+    }
+    clicks = click_stats or {}
+    kind_rows = clicks.get("by_kind") or []
+    click_kind_chart = {
+        "labels": [r.get("kind") or "?" for r in kind_rows],
+        "series": [int(r.get("clicks") or 0) for r in kind_rows],
+    }
+
     return {
         "traffic": traffic_chart,
         "categories": categories_chart,
@@ -191,4 +203,7 @@ def build_dashboard_charts(db, *, traffic, page_traffic, by_cat, badges) -> dict
         "activity": _activity_series(db, days=7),
         "logins": login_stats(db, days=14),
         "moderation": moderation_chart,
+        "engagement": engagement_chart,
+        "scroll": scroll_chart,
+        "click_kinds": click_kind_chart,
     }

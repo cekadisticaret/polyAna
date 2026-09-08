@@ -16,6 +16,7 @@
       <a class="on" href="#odin-overview">Özet</a>
       <a href="#odin-logins">Girişler</a>
       <a href="#odin-traffic">Trafik</a>
+      <a href="#odin-engage">Etkileşim</a>
       <a href="#odin-moderation">Moderasyon</a>
     </nav>
   </div>
@@ -87,7 +88,7 @@
               <span><i style="background:#0f3d32"></i> Üye girişi · web + API</span>
             </div>
           </div>
-          <p class="odin-panel-note">Site trafiği değil — yalnızca e-posta/şifre ile <b>üye girişi</b> sayılır. Ziyaretçi trafiği üstteki grafikte.</p>
+          <p class="odin-panel-note">Site trafiği değil — yalnızca <b>üye</b> girişi (admin/editör panel girişleri sayılmaz). Ziyaretçi trafiği üstteki grafikte.</p>
           <div class="odin-panel-body">
             <div class="odin-panel-split">
               <div class="odin-stat-rail">
@@ -178,6 +179,89 @@
         <div class="odin-panel mt-3">
           <div class="odin-panel-head"><h2>Son 7 gün üye aktivitesi</h2><small>Kayıt · giriş · yer gönderimi</small></div>
           <div class="odin-panel-body pt-0"><div id="ba-chart-activity"></div></div>
+        </div>
+      </section>
+
+      <section class="odin-section" id="odin-engage">
+        <div class="row g-3">
+          <div class="col-lg-4">
+            <div class="odin-panel h-100">
+              <div class="odin-panel-head"><h2>Kalma süresi</h2><small>Son 7 gün ortalama</small></div>
+              <div class="odin-panel-body">
+                <div class="odin-stat odin-stat--hero mb-3">
+                  <div class="odin-stat-label">Sayfa başına</div>
+                  <div class="odin-stat-value">{{ engagement.avg_page_seconds|default(0) }} sn</div>
+                  <div class="odin-stat-sub">Bugün: {{ engagement.today_avg_page_seconds|default(0) }} sn · {{ engagement.samples|default(0) }} ölçüm</div>
+                </div>
+                <div class="odin-stat">
+                  <div class="odin-stat-label">Oturum</div>
+                  <div class="odin-stat-value">{{ engagement.avg_session_seconds|default(0) }} sn</div>
+                  <div class="odin-stat-sub">{{ engagement.sessions|default(0) }} oturum · sekme kapanınca</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="odin-panel h-100">
+              <div class="odin-panel-head"><h2>Scroll derinliği</h2><small>Sayfa terk ölçümü</small></div>
+              <div class="odin-panel-body pt-0"><div id="ba-chart-scroll"></div></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="odin-panel h-100">
+              <div class="odin-panel-head"><h2>Tıklama türleri</h2><small>Telefon · harita · gezinme</small></div>
+              <div class="odin-panel-body pt-0"><div id="ba-chart-clicks"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-3 mt-1">
+          <div class="col-lg-6">
+            <div class="odin-panel h-100">
+              <div class="odin-panel-head"><h2>En çok tıklanan</h2>{% if click_stats %}<small>{{ click_stats.since }} → {{ click_stats.today }}</small>{% endif %}</div>
+              <div class="odin-table-wrap">
+                <table class="odin-table">
+                  <thead><tr><th>Tür</th><th>Hedef</th><th class="text-end">Tık</th></tr></thead>
+                  <tbody>
+                  {% for c in (click_stats.top or [])[:12] %}
+                  <tr>
+                    <td><code>{{ c.kind }}</code></td>
+                    <td><b>{{ c.label }}</b>{% if c.target and c.target != c.label %}<br><small class="text-muted">{{ c.target[:60] }}</small>{% endif %}</td>
+                    <td class="text-end"><b>{{ c.clicks }}</b></td>
+                  </tr>
+                  {% else %}
+                  <tr><td colspan="3" class="text-muted">Henüz tıklama kaydı yok — ziyaretçi trafiği geldikçe dolar.</td></tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="odin-panel h-100">
+              <div class="odin-panel-head"><h2>Yer · telefon / harita</h2><small>İşletme sayfaları</small></div>
+              <div class="odin-table-wrap">
+                <table class="odin-table">
+                  <thead><tr><th>Yer</th><th>Tel</th><th>Harita</th><th>Web</th></tr></thead>
+                  <tbody>
+                  {% for p in (place_clicks or []) %}
+                  <tr>
+                    <td><b>{{ p.title }}</b><br><small class="text-muted"><a href="/yer/{{ p.slug }}" target="_blank">/yer/{{ p.slug }}</a></small></td>
+                    <td>{{ p.phone }}</td>
+                    <td>{{ p.maps }}</td>
+                    <td>{{ p.web }}</td>
+                  </tr>
+                  {% else %}
+                  <tr><td colspan="4" class="text-muted">Henüz yer tıklaması yok.</td></tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="odin-panel mt-3">
+          <div class="odin-panel-head"><h2>Günlük ortalama süre</h2></div>
+          <div class="odin-panel-body pt-0"><div id="ba-chart-engage-time"></div></div>
         </div>
       </section>
 

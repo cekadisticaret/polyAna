@@ -303,9 +303,15 @@ def main() -> int:
         log("Onarım atlandı")
 
     if not args.skip_seo:
+        import fix_seo_content
         import seo_nightly
 
-        s, err = step("4 seo_nightly", lambda: (seo_nightly.main() or "ok"))
+        s, err = step("4 fix_seo_content", lambda: (fix_seo_content.main() or "ok"))
+        if err:
+            summary["errors"].append(f"fix_seo: {err}")
+        summary["fix_seo"] = s if s else ("fail" if err else "ok")
+
+        s, err = step("5 seo_nightly", lambda: (seo_nightly.main() or "ok"))
         if err:
             summary["errors"].append(f"seo: {err}")
         summary["seo"] = s if s else ("fail" if err else "ok")

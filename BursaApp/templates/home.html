@@ -12,75 +12,19 @@
 {% set first_name = nav_user.name.split()[0] if nav_user and nav_user.name else 'Gezgin' %}
 
 <section class="m-home">
-  <header class="mh-head">
-    <a class="mh-user" href="{% if nav_user %}/hesap{% else %}/giris{% endif %}" rel="nofollow">
-      <span class="mh-av">{% if nav_user and nav_user.avatar_url %}<img src="{{ nav_user.avatar_url }}" alt="{{ first_name }} profil fotoğrafı">{% elif nav_user %}<span>{{ first_name[0]|upper }}</span>{% else %}<span>👋</span>{% endif %}</span>
-      <span class="mh-greet">
-        <small>Merhaba 👋</small>
-        <b>{{ first_name }}</b>
+  <header class="mh-loc-bar">
+    <a class="mh-loc" href="/etrafimda">
+      <span class="mh-loc-pin" aria-hidden="true">📍</span>
+      <span>
+        <small>Konum</small>
+        <b>Bursa, Türkiye</b>
       </span>
     </a>
-    <button class="mh-menu-btn" type="button" aria-label="Menü" onclick="document.getElementById('mh-menu').classList.toggle('open')">☰</button>
+    <a class="mh-bell" href="{% if nav_user %}/hesap/bildirimler{% else %}/giris?next=/hesap/bildirimler{% endif %}" aria-label="Bildirimler" rel="nofollow">🔔</a>
   </header>
 
-  <div class="mh-menu" id="mh-menu">
-    <div class="mh-menu-backdrop" onclick="document.getElementById('mh-menu').classList.remove('open')"></div>
-    <nav class="mh-menu-panel">
-      <a href="/kategoriler">📂 Kategoriler</a>
-      <a href="/etrafimda">📍 Etrafımda ne var</a>
-      <a href="/harita">🗺 Harita</a>
-      <a href="/rota">🧳 Rota planla</a>
-      <a href="/uludag-teleferik">🚡 Uludağ Teleferik</a>
-      <a href="/nobetci-eczaneler">💊 Nöbetçi eczane</a>
-      <a href="{% if nav_user %}/hesap/bildirimler{% else %}/giris{% endif %}">🔔 Bildirimler</a>
-      {% if nav_user %}<a href="/hesap/ayarlar">⚙️ Ayarlar</a>{% else %}<a href="/giris">Giriş yap</a>{% endif %}
-      <a href="/iletisim">📞 İletişim</a>
-    </nav>
-  </div>
-
-  <h1 class="mh-welcome">Hoş geldin{% if nav_user %}, {{ first_name }}{% endif %}</h1>
+  <h1 class="mh-hero-title">Nereye gitmek<br>istersin?</h1>
   {% if weather %}<p class="mh-weather">{{ weather.label }} · {{ weather.temp_c }}°C · {{ weather.hint }}</p>{% endif %}
-
-  <div class="m-chip-row">
-    <a class="m-chip on" href="/">Öne çıkan</a>
-    <a class="m-chip" href="/gezilecek">Gezi</a>
-    <a class="m-chip" href="/uludag-teleferik">Teleferik</a>
-    <a class="m-chip" href="/yeme-icme">Yeme-içme</a>
-    <a class="m-chip" href="/konserler">Etkinlik</a>
-    <a class="m-chip" href="/oteller">Otel</a>
-    <a class="m-chip" href="/kamp">Kamp</a>
-  </div>
-
-  <article class="mh-promo">
-    <div class="mh-promo-inner">
-      <div class="mh-promo-copy">
-        <h2>Bursa’yı keşfet, planla, paylaş</h2>
-        <ul class="mh-checks">
-          <li>Ücretsiz şehir rehberi</li>
-          <li>{{ place_count }}+ onaylı mekan</li>
-          <li>Rezervasyon veya emir yok</li>
-        </ul>
-        <span class="mh-seal">7/24</span>
-      </div>
-      <div class="mh-promo-visual">
-        <img src="{{ url_for('static', filename='visit/cumalikizik.jpg') }}" alt="Cumalıkızık" loading="eager">
-      </div>
-      <a class="mh-glass-btn" href="/gezilecek">
-        <span class="mh-glass-ico">✓</span>
-        <span class="mh-glass-txt">Keşfetmeye başla</span>
-        <span class="mh-glass-arrow">→</span>
-      </a>
-    </div>
-  </article>
-
-  <a class="mh-tip" href="/#nasil">
-    <span class="mh-tip-ico">🧭</span>
-    <div>
-      <b>Nasıl başlarım?</b>
-      <small>Rota çıkar, etkinlik seç, favorilere ekle — BursaApp rehberi.</small>
-    </div>
-    <span class="mh-tip-go">→</span>
-  </a>
 
   <form class="m-search" action="/gezilecek" method="get">
     <span class="m-search-ico" aria-hidden="true">🔍</span>
@@ -88,32 +32,99 @@
     <button type="submit" class="m-search-go" aria-label="Ara">→</button>
   </form>
 
-  <a class="mh-near-btn" href="/etrafimda">
-    <span class="mh-near-ico" aria-hidden="true">📍</span>
-    <span class="mh-near-copy">
+  <div class="m-chip-row">
+    <a class="m-chip m-chip-ico on" href="/"><span>✨</span>Tümü</a>
+    <a class="m-chip m-chip-ico" href="/gezilecek"><span>🌿</span>Gezi</a>
+    <a class="m-chip m-chip-ico" href="/yeme-icme"><span>🍽</span>Yemek</a>
+    <a class="m-chip m-chip-ico" href="/konserler"><span>🎵</span>Etkinlik</a>
+    <a class="m-chip m-chip-ico" href="/oteller"><span>🏨</span>Otel</a>
+    <a class="m-chip m-chip-ico" href="/kamp"><span>⛺</span>Kamp</a>
+    <a class="m-chip m-chip-ico" href="/uludag-teleferik"><span>🚡</span>Teleferik</a>
+  </div>
+
+  <a class="mh-near-pill" href="/etrafimda">
+    <span class="mh-near-pill-ico" aria-hidden="true">🧭</span>
+    <span>
       <b>Etrafımda ne var?</b>
-      <small>Çevrendeki mekanlar · harita · filtre</small>
+      <small>Harita · yakın mekanlar · filtre</small>
     </span>
-    <span class="mh-near-go">→</span>
+    <span class="mh-near-pill-go">→</span>
   </a>
 
-  <div class="m-sec-h"><h2>Senin için seçtiklerimiz</h2><a href="/gezilecek">Tümü →</a></div>
+  {% set hero_p = featured[0] if featured else none %}
+  {% if hero_p %}
+  <article class="mh-discover">
+    <a class="mh-discover-card" href="{{ hero_p.path or ('/yer/' ~ hero_p.slug) }}">
+      <div class="mh-discover-img">
+        {% if hero_p.img_url %}<img src="{{ hero_p.img_url }}" alt="{{ hero_p.title }}" loading="eager" fetchpriority="high">{% endif %}
+        <span class="mh-discover-badge">{{ hero_p.category_label or 'Keşfet' }}{% if hero_p.ilce %} · {{ hero_p.ilce }}{% endif %}</span>
+        <span class="mh-discover-rating">★ {{ '%.1f'|format(hero_p.rating or 4.8) }}</span>
+      </div>
+      <div class="mh-discover-foot">
+        <div>
+          <b>{{ hero_p.title }}</b>
+          <small>{{ place_count }}+ kayıtlı mekan · ücretsiz rehber</small>
+        </div>
+        <span class="mh-discover-cta">İncele</span>
+      </div>
+    </a>
+  </article>
+  {% endif %}
+
+  <div class="m-sec-h"><h2>Popüler rotalar</h2><a href="/gezilecek">Tümü →</a></div>
   <div class="m-hscroll">
-    {% for p in featured[:8] %}
+    {% for p in featured[1:8] %}
+    <a class="m-place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+      <div class="m-place-img">{% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% endif %}<span class="m-place-price">★ {{ '%.1f'|format(p.rating or 4.8) }}</span></div>
+      <b>{{ p.title }}</b>
+      <small>{{ p.ilce or p.category_label or '' }}</small>
+    </a>
+    {% else %}
+    {% for p in featured %}
     <a class="m-place-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
       <div class="m-place-img">{% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% endif %}<span class="m-place-price">★ {{ '%.1f'|format(p.rating or 4.8) }}</span></div>
       <b>{{ p.title }}</b>
       <small>{{ p.ilce or p.category_label or '' }}</small>
     </a>
     {% endfor %}
+    {% endfor %}
   </div>
 
-  <div class="m-sec-h"><h2>Hızlı kategoriler</h2><a href="/kategoriler">Hepsi →</a></div>
+  {% if news_headlines %}
+  <div class="m-sec-h"><h2>Bursa gündemi</h2><a href="/haberler">Tümü →</a></div>
+  <div class="m-news-scroll">
+    {% for n in news_headlines %}
+    <a class="m-news-card topic-{{ n.topic or 'genel' }}" href="{{ n.path }}">
+      {% if n.img_url %}<img src="{{ n.img_url }}" alt="" loading="lazy">{% else %}<span class="m-news-card-ph"></span>{% endif %}
+      <div class="m-news-card-body">
+        <span class="bn-m-pill">{{ n.topic_label }}</span>
+        <b>{{ n.title }}</b>
+        <small>{{ n.date_label }} · {{ n.source }}</small>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="m-sec-h"><h2>Kategoriler</h2><a href="/kategoriler">Hepsi →</a></div>
   <div class="m-cat-mini">
     {% for c in categories[:6] %}
     <a href="{{ c.path }}"><span>{{ cat_ico.get(c.key, '•') }}</span><b>{{ c.label }}</b></a>
     {% endfor %}
   </div>
+
+  <details class="mh-more-menu">
+    <summary>Daha fazla</summary>
+    <nav class="mh-more-links">
+      <a href="/harita">🗺 Harita</a>
+      <a href="/rota">🧳 Rota</a>
+      <a href="/feed">📰 Akış</a>
+      <a href="/haberler">📋 Haberler</a>
+      <a href="/blog">✍️ Blog</a>
+      <a href="/nobetci-eczaneler">💊 Nöbetçi eczane</a>
+      <a href="/iletisim">📞 İletişim</a>
+    </nav>
+  </details>
 </section>
 
 <div class="m-desktop-only">
@@ -270,12 +281,17 @@
     <h2>📰 Bursa gündemi</h2>
     <a href="/haberler">Tüm haberler →</a>
   </div>
-  <div class="bn-home-grid">
+  <div class="bn-m-home-grid">
     {% for n in news_headlines %}
-    <a class="bn-home-card" href="{{ n.path }}">
-      <span class="bn-m-pill">{{ n.topic_label }}</span>
-      <b>{{ n.title }}</b>
-      <small>{{ n.date_label }} · {{ n.source }}</small>
+    <a class="bn-home-card topic-{{ n.topic or 'genel' }}" href="{{ n.path }}">
+      <div class="bn-home-thumb">
+        {% if n.img_url %}<img src="{{ n.img_url }}" alt="" loading="lazy" decoding="async">{% else %}<span class="bn-m-ph sm"></span>{% endif %}
+      </div>
+      <div class="bn-home-body">
+        <span class="bn-m-pill">{{ n.topic_label }}</span>
+        <b>{{ n.title }}</b>
+        <small>{{ n.date_label }} · {{ n.source }}</small>
+      </div>
     </a>
     {% endfor %}
   </div>

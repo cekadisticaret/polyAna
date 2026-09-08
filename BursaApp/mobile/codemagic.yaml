@@ -1,0 +1,50 @@
+workflows:
+  bursaapp-ios-testflight:
+    name: BursaApp iOS TestFlight
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bursaapp.mobile
+      vars:
+        APP_STORE_APPLE_ID: 6750000000
+        scripts:
+      - name: Bootstrap Flutter project files
+        script: |
+          cd mobile
+          if [ ! -f ios/Runner.xcodeproj/project.pbxproj ]; then
+            flutter create . --org com.bursaapp --project-name bursaapp_mobile --platforms=ios,android
+          fi
+          /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string 'Yakınındaki mekanları haritada göstermek için konum kullanılır.'" ios/Runner/Info.plist 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSLocationWhenInUseUsageDescription 'Yakınındaki mekanları haritada göstermek için konum kullanılır.'" ios/Runner/Info.plist
+      - name: Install dependencies
+        script: |
+          cd mobile
+          flutter pub get
+      - name: Run analyzer
+        script: |
+          cd mobile
+          flutter analyze
+      - name: Build IPA
+        script: |
+          cd mobile
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - mobile/build/ios/ipa/*.ipa
+      - mobile/build/ios/archive/Runner.xcarchive
+    publishing:
+      email:
+        recipients:
+          - build@bursaapp.com
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers

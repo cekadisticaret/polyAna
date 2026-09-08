@@ -127,17 +127,17 @@ init_db()
 
 
 def _mobile_tab() -> str:
-    """Alt sekme çubuğu — ana uygulama rotaları."""
+    """Alt sekme çubuğu — keşif odaklı mobil rotalar."""
     path = request.path or ""
-    if path in ("/", "/kesfet", "/etrafimda") or path.startswith("/harita"):
+    if path in ("/", "/etrafimda") or path.startswith("/harita"):
         return "home"
     if path.startswith("/feed"):
         return "feed"
-    if path.startswith("/etkinlik/ekle"):
-        return "create"
-    if path.startswith("/kategoriler"):
-        return "categories"
-    if path.startswith("/hesap"):
+    if path.startswith("/rota"):
+        return "route"
+    if path.startswith("/kategoriler") or path.startswith("/gezilecek") or path.startswith("/yeme-icme"):
+        return "explore"
+    if path.startswith("/hesap") or path.startswith("/giris") or path.startswith("/kayit"):
         return "profile"
     return ""
 
@@ -241,7 +241,7 @@ def tesekkur_page():
 def _inject():
     from seo import resolve_seo, site_base
     from seo_arch import HOME_FAQ, HOME_HOWTO, PHONE_DISPLAY, PHONE_E164, VERTICALS, WHATSAPP_URL
-    from seo_status import ga_measurement_id, google_verification_token
+    from seo_status import ga_measurement_id, google_ads_id, google_verification_token
     from mail_verify import VERIFY_DAYS, can_review, verify_banner
     from admin_permissions import can_access_panel
 
@@ -258,6 +258,7 @@ def _inject():
         "mekan_taxonomy": MEKAN_TAXONOMY,
         "google_site_verification": google_verification_token(),
         "ga_measurement_id": ga_measurement_id(),
+        "google_ads_id": google_ads_id(),
         "site_url": site_base(),
         "seo": resolve_seo(),
         "home_faq": HOME_FAQ,
@@ -1594,7 +1595,7 @@ def kamp_list():
             nav="camp",
             seo=seo_page(
                 title="Bursa kamp yerleri",
-                description="Çobankaya, Kapanca, Gölyazı, Longoz, Saitabat ve Balıkesir kaçışları — BursaApp kamp rehberi.",
+                description="42 kamp noktası: Çobankaya, Yalıntaş, Kilimli, Kapanca, Trilye, Longoz, Gölyazı ve Balıkesir kaçışları — BursaApp rehberi.",
                 path="/kamp",
                 breadcrumbs=[("Keşfet", "/"), ("Kamp", "/kamp")],
                 keywords="bursa kamp, çobankaya, kapanca, gölyazı kamp, uludağ kamp, karacabey longoz",
@@ -2636,6 +2637,7 @@ def giris():
                         detail=u.name or "",
                         user_id=u.id,
                         email=u.email,
+                        user_role=u.role,
                     )
                     db.commit()
                     dest = nxt
@@ -3447,6 +3449,30 @@ def legacy_categories():
 @app.route("/events")
 def legacy_events():
     return redirect("/etkinlikler", 301)
+
+
+@app.route("/api/analytics/beacon", methods=["POST"])
+def api_analytics_beacon():
+    """İstemci tıklama + sayfa süresi olayları (sendBeacon)."""
+    try:
+        payload = request.get_json(silent=True) or {}
+    except Exception:
+        payload = {}
+    if not isinstance(payload, dict):
+        return jsonify({"ok": False}), 400
+    from analytics import ingest_beacon
+
+    db = SessionLocal()
+    try:
+        ok = ingest_beacon(db, request=request, payload=payload)
+        if ok:
+            db.commit()
+        return ("", 204) if ok else (jsonify({"ok": False}), 200)
+    except Exception:
+        db.rollback()
+        return jsonify({"ok": False}), 500
+    finally:
+        db.close()
 
 
 @app.route("/places")

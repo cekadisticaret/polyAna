@@ -210,4 +210,60 @@
     dataLabels: { enabled: false },
     grid: grid,
   });
+
+  var scroll = data.scroll || {};
+  mount(document.querySelector("#ba-chart-scroll"), {
+    series: [{ name: "Sayfa", data: scroll.series || [] }],
+    chart: { type: "bar", height: 240, toolbar: { show: false }, fontFamily: "inherit" },
+    plotOptions: { bar: { borderRadius: 8, columnWidth: "48%", distributed: true } },
+    colors: palette,
+    dataLabels: { enabled: true, style: { fontSize: "10px", colors: [ink] } },
+    legend: { show: false },
+    xaxis: { categories: scroll.labels || [], labels: { style: { colors: muted, fontSize: "11px" } } },
+    yaxis: { labels: { formatter: function (v) { return Math.round(v); }, style: { colors: muted } } },
+    grid: grid,
+  });
+
+  var clickKinds = data.click_kinds || {};
+  mount(document.querySelector("#ba-chart-clicks"), {
+    series: clickKinds.series || [],
+    chart: { type: "donut", height: 240, fontFamily: "inherit" },
+    labels: clickKinds.labels || [],
+    colors: palette,
+    legend: { position: "bottom", fontSize: "11px" },
+    dataLabels: { enabled: false },
+    stroke: { width: 0 },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "68%",
+          labels: {
+            show: true,
+            total: {
+              show: true,
+              label: "Tık",
+              fontSize: "11px",
+              color: muted,
+              formatter: function (w) {
+                return w.globals.seriesTotals.reduce(function (a, b) { return a + b; }, 0);
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  var engagement = data.engagement || {};
+  mount(document.querySelector("#ba-chart-engage-time"), {
+    series: [{ name: "Ort. sn", data: engagement.avg_seconds || [] }],
+    chart: { type: "area", height: 220, toolbar: { show: false }, fontFamily: "inherit", sparkline: { enabled: false } },
+    colors: [teal],
+    stroke: { curve: "smooth", width: 2 },
+    fill: { type: "gradient", gradient: { shadeIntensity: 0.2, opacityFrom: 0.35, opacityTo: 0.05 } },
+    dataLabels: { enabled: false },
+    xaxis: { categories: engagement.labels || [], labels: { style: { colors: muted, fontSize: "11px" } } },
+    yaxis: { labels: { formatter: function (v) { return Math.round(v) + " sn"; }, style: { colors: muted } } },
+    grid: grid,
+  });
 })();

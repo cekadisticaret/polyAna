@@ -272,6 +272,7 @@ def login():
             detail=u.name or "",
             user_id=u.id,
             email=u.email,
+            user_role=u.role,
         )
         db.commit()
         return jsonify({"ok": True, "user": u.public(), "token": make_token(u)})
@@ -440,3 +441,248 @@ def admin_patch(pid: int):
         return jsonify({"ok": True, "place": place_mine(p)})
     finally:
         db.close()
+
+
+def _events_notify_cards(db, rows) -> list[dict]:
+    from feed_social import going_count
+
+    now = datetime.utcnow()
+    out = []
+    for p in rows:
+        d = place_public(p)
+        when = ""
+        if p.starts_at:
+            delta = p.starts_at - now
+            days = max(0, delta.days)
+            if days == 0:
+                hrs = max(1, delta.seconds // 3600)
+                when = "bugün" if delta.seconds < 43200 else f"{hrs} saat sonra"
+            elif days == 1:
+                when = "yarın"
+            else:
+                when = f"{days} gün sonra"
+            d["starts_at_iso"] = p.starts_at.isoformat() + "Z"
+            d["starts_at_label"] = p.starts_at.strftime("%d.%m %H:%M")
+        d["when_label"] = when
+        d["going"] = going_count(db, p.id)
+        out.append(d)
+    return out
+
+
+@bp.route("/feed")
+def feed_api():
+    from feed_social import FEED_PAGE_SIZE, build_feed, profile_feed, upcoming_events
+
+    limit, offset = _paging()
+    tab = (request.args.get("tab") or "recents").strip().lower()
+    if tab not in ("recents", "friends", "popular"):
+        tab = "recents"
+    user = load_user()
+    db = SessionLocal()
+    try:
+        if user:
+            feed, has_more = profile_feed(db, user, tab, limit=limit, offset=offset)
+        else:
+            feed, has_more = build_feed(db, viewer=None, tab=tab, limit=limit, offset=offset)
+        ev_rows = (
+            db.query(Place)
+            .filter(
+                Place.status == "approved",
+                Place.category.in_(("event", "concert", "theater", "cinema", "family")),
+                Place.starts_at.isnot(None),
+                Place.starts_at >= datetime.utcnow(),
+            )
+            .order_by(Place.starts_at.asc())
+            .limit(12)
+            .all()
+        )
+        events = _events_notify_cards(db, ev_rows)
+        return jsonify(
+            {
+                "ok": True,
+                "feed": feed,
+                "events": events,
+                "has_more": has_more,
+                "tab": tab,
+                "logged_in": bool(user),
+            }
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/events/upcoming")
+def events_upcoming_api():
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(Place)
+            .filter(
+                Place.status == "approved",
+                Place.category.in_(("event", "concert", "theater", "cinema", "family")),
+                Place.starts_at.isnot(None),
+                Place.starts_at >= datetime.utcnow(),
+            )
+            .order_by(Place.starts_at.asc())
+            .limit(40)
+            .all()
+        )
+        return jsonify({"ok": True, "events": _events_notify_cards(db, rows), "total": len(rows)})
+    finally:
+        db.close()
+
+
+@bp.route("/me")
+@login_required
+def me_api():
+    user = load_user()
+    from feed_social import follow_counts
+
+    db = SessionLocal()
+    try:
+        u = db.get(User, user.id)
+        if not u:
+            return _err("bulunamadı", 404)
+        data = u.public()
+        data["counts"] = follow_counts(db, u.id)
+        return jsonify({"ok": True, "user": data})
+    finally:
+        db.close()
+
+
+@bp.route("/posts/<int:post_id>/like", methods=["POST"])
+@login_required
+def post_like_api(post_id: int):
+    from models import PostLike, UserPost
+
+    user = load_user()
+    db = SessionLocal()
+    try:
+        post = db.get(UserPost, post_id)
+        if not post or post.status != "approved":
+            return _err("gönderi bulunamadı", 404)
+        like = db.query(PostLike).filter(PostLike.user_id == user.id, PostLike.post_id == post_id).first()
+        liked = False
+        if like:
+            db.delete(like)
+            post.likes_count = max(0, int(post.likes_count or 0) - 1)
+        else:
+            db.add(PostLike(user_id=user.id, post_id=post_id))
+            post.likes_count = int(post.likes_count or 0) + 1
+            liked = True
+        db.commit()
+        return jsonify({"ok": True, "liked": liked, "likes": int(post.likes_count or 0)})
+    finally:
+        db.close()
+
+
+@bp.route("/mobile/menu")
+def mobile_menu():
+    groups = [
+        {
+            "title": "Sağlık",
+            "icon": "health",
+            "items": [
+                {"label": "Hastaneler", "path": "/hastaneler", "category": "hospital"},
+                {"label": "Doktorlar", "path": "/doktorlar", "category": "doctor"},
+                {"label": "Diş hekimleri", "path": "/dis-hekimleri", "category": "dentist"},
+                {"label": "Nöbetçi eczaneler", "path": "/nobetci-eczaneler", "category": "pharmacy"},
+                {"label": "Veterinerler", "path": "/veterinerler", "category": "vet"},
+            ],
+        },
+        {
+            "title": "Konaklama & doğa",
+            "icon": "nature",
+            "items": [
+                {"label": "Oteller", "path": "/oteller", "category": "hotel"},
+                {"label": "Kamp alanları", "path": "/kamp", "category": "camp"},
+                {"label": "Uludağ teleferik", "path": "/uludag-teleferik", "category": "visit"},
+            ],
+        },
+        {
+            "title": "Şehir",
+            "icon": "city",
+            "items": [
+                {"label": "Bursa haberleri", "path": "/haberler"},
+                {"label": "Bursaspor", "path": "/bursaspor"},
+                {"label": "Faturalar & tarifeler", "path": "/faturalar"},
+                {"label": "Hafta sonu planı", "path": "/hafta-sonu"},
+                {"label": "Rota planlayıcı", "path": "/rota"},
+            ],
+        },
+        {
+            "title": "Etkinlik",
+            "icon": "event",
+            "items": [
+                {"label": "Konserler", "path": "/konserler", "category": "concert"},
+                {"label": "Tiyatro", "path": "/tiyatro", "category": "theater"},
+                {"label": "Sinema", "path": "/sinema", "category": "cinema"},
+                {"label": "Etkinlik takvimi", "path": "/etkinlikler", "category": "event"},
+            ],
+        },
+    ]
+    return jsonify({"ok": True, "groups": groups, "categories": list(CATEGORIES)})
+
+
+@bp.route("/leaders/weekly")
+def leaders_weekly():
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(User)
+            .filter(User.is_active.is_(True), User.role == "user", ~User.email.like("%.sanal@bursaapp.com"))
+            .order_by(User.loyalty_points.desc(), User.id.desc())
+            .limit(10)
+            .all()
+        )
+        leaders = []
+        for i, u in enumerate(rows, start=1):
+            leaders.append(
+                {
+                    "rank": i,
+                    "user": {
+                        "id": u.id,
+                        "name": u.display_name(),
+                        "avatar_url": u.avatar_url or "",
+                        "points": int(u.loyalty_points or 0),
+                    },
+                }
+            )
+        return jsonify(
+            {
+                "ok": True,
+                "week_label": datetime.utcnow().strftime("%d.%m.%Y"),
+                "leaders": leaders,
+                "note": "Haftalık lider — puan tablosu (loyalty_points)",
+            }
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/okey/seeking")
+def okey_seeking():
+    """Okey 4. oyuncu — şimdilik örnek + boş slot; ileride gerçek eşleşme."""
+    return jsonify(
+        {
+            "ok": True,
+            "seeking": [
+                {
+                    "id": 1,
+                    "host": "Ayşe K.",
+                    "ilce": "Nilüfer",
+                    "time_label": "Bu akşam 21:00",
+                    "note": "3 kişiyiz, 1 kişi arıyoruz",
+                    "points_min": 120,
+                },
+                {
+                    "id": 2,
+                    "host": "Mehmet T.",
+                    "ilce": "Osmangazi",
+                    "time_label": "Yarın 20:30",
+                    "note": "Kısa oyun, acele etmeyin :)",
+                    "points_min": 80,
+                },
+            ],
+        }
+    )

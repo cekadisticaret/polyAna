@@ -93,6 +93,7 @@ SUB_QUERIES = {
     "meyhane": ["Turkish meze rakı", "Meze platter"],
     "cafe": ["Specialty coffee shop", "Coffee barista pour"],
     "bar": ["Cocktail bar interior", "Bar counter night"],
+    "burger": ["Gourmet burger plate", "Cheeseburger close up"],
 }
 
 MENU_TMPL: dict[str, list[str]] = {
@@ -159,6 +160,12 @@ MENU_TMPL: dict[str, list[str]] = {
         "Kokteyl | 350–550 TL",
         "Bira | 180–280 TL",
         "Snack / tabak | 250–420 TL",
+    ],
+    "burger": [
+        "Klasik burger | 220–320 TL",
+        "Double / smash | 300–420 TL",
+        "Patates | 100–160 TL",
+        "İçecek | 40–90 TL",
     ],
 }
 
@@ -270,6 +277,8 @@ def score_hit(place_title: str, file_title: str, sub: str) -> float:
         bonus += 0.25
     if sub == "cantik" and "cantik" in fl:
         bonus += 0.3
+    if sub in ("burger", "fast-food") and ("burger" in fl or "hamburger" in fl or "cheeseburger" in fl):
+        bonus += 0.25
     # başlıkta mekân adı hiç yoksa ve sadece genel yemekse düşük tut
     score = overlap * 0.25 + ratio + bonus
     if overlap == 0 and bonus < 0.3:
@@ -378,6 +387,7 @@ def select_places(db, *, limit: int, slug: str | None) -> list[Place]:
             "cantik",
             "kahvalti",
             "meyhane",
+            "burger",
         ) or (sub in ("cafe", "bar") and score(p) >= 4.55):
             out.append(p)
         if len(out) >= limit:

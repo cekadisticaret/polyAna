@@ -22,7 +22,7 @@
       "instagram"
     ],
     "blurb": "Instagram’da en çok paylaşılan Uludağ kampı. Kaynak suyu, WC/duş, büfe; Softaboğan yürüyüşü ~20 dk.",
-    "body": "Uludağ Milli Parkı içinde ~1740 m. 2026 sezonunda resmi çadır/karavan kaydı alınan alanlardan. Yiğitali–Karabelen HGS gişesi veya teleferik Kurbağa Kaya + yürüyüş. Ateş doğrudan toprağa yasak — ayaklı mangal/ocak. Gece 7–10°C’ye düşebilir; yazın ova sıcağından kaçış için favori.",
+    "body": "Uludağ Milli Parkı içinde ~1740 m. 2026 sezonunda çadır ~500 TL/gün, karavan ~725 TL/gün bandı raporlanıyor (Doğa Koruma duyurusu). Yiğitali–Karabelen HGS gişesi veya teleferik Kurbağa Kaya + yürüyüş. Ateş doğrudan toprağa yasak — ayaklı mangal/ocak. Gece 7–10°C'ye düşebilir; yazın ova sıcağından kaçış için favori.",
     "facilities": [
       "kaynak suyu",
       "WC/duş",
@@ -55,7 +55,7 @@
       "milli-park"
     ],
     "blurb": "Teleferik sonu ~1650 m. Valilik: yüzlerce çadır + bungalov/baraka. Yaz sezonu resmi kiralama.",
-    "body": "Uludağ’ın en bilinen resmi kamp üslerinden. Teleferikle çıkış kolay; Temmuz–Eylül yoğun. Milli park kuralları ve kayıt zorunluluğu için Doğa Koruma duyurularını kontrol et.",
+    "body": "Uludağ'ın en bilinen resmi kamp üslerinden. Teleferikle çıkış kolay; Temmuz–Eylül yoğun. 2026 sezonu çadır ~500 TL/gün, karavan ~725 TL/gün (güncel tarife için Doğa Koruma). Milli park kuralları ve kayıt zorunluluğu için duyuruları kontrol et.",
     "facilities": [
       "çadır",
       "bungalov",
@@ -977,5 +977,282 @@
     "tips": "Çöpünü götür.",
     "rating_admin": 4.2,
     "city": "Balıkesir"
+  },
+  {
+    "slug": "yalintas-kamp",
+    "title": "Yalıntaş · Uludağ Camping",
+    "ilce": "Osmangazi",
+    "address": "Yalıntaş, Uludağ etek (~1200 m), Osmangazi",
+    "hours_text": "çadır · karavan · resmi kayıt",
+    "price_band": "milli park",
+    "subcategory": "uludag",
+    "featured": true,
+    "vibe": "instagram",
+    "lat": 40.076,
+    "lng": 29.108,
+    "search": "Yalıntaş Uludağ kamp",
+    "copy": "uludag",
+    "tags": [
+      "uludag",
+      "cadir",
+      "karavan",
+      "milli-park",
+      "instagram"
+    ],
+    "blurb": "Uludağ eteğinde resmi Yalıntaş kamp alanı. Çobankaya'ya alternatif — araçla ulaşım daha kolay.",
+    "body": "Uludağ Milli Parkı Yalıntaş bölgesi; 2026 sezonunda çadır ~500 TL/gün, karavan ~725 TL/gün bandı raporlanıyor (Doğa Koruma duyurusu). Orman içi düzlükler, su ve WC. Yangın sezonunda ateş yasağına uy.",
+    "facilities": [
+      "çadır",
+      "karavan",
+      "WC",
+      "su",
+      "orman"
+    ],
+    "tips": "Hafta sonu erken gel; Sarıalan/Çobankaya'dan daha sakin alternatif arayanlar için.",
+    "rating_admin": 4.55
+  },
+  {
+    "slug": "yalintas-goleti-kamp",
+    "title": "Yalıntaş Göleti",
+    "ilce": "Osmangazi",
+    "address": "Yalıntaş Göleti, Uludağ yolu, Osmangazi",
+    "hours_text": "gölet · çadır · piknik",
+    "price_band": "gölet",
+    "subcategory": "uludag",
+    "featured": false,
+    "vibe": "gol",
+    "lat": 40.082,
+    "lng": 29.112,
+    "search": "Yalıntaş Göleti Uludağ",
+    "copy": "teleferik",
+    "tags": [
+      "uludag",
+      "golet",
+      "piknik",
+      "cadir"
+    ],
+    "blurb": "Uludağ yolunda küçük gölet manzarası. Yalıntaş kamp alanına yakın günübirlik + çadır.",
+    "body": "Yalıntaş hattında gölet çevresi düzlükler. Resmi kamp kaydı Yalıntaş alanında; gölet çevresinde günübirlik piknik yoğun. Su ve tuvalet için yakın tesisleri kullan.",
+    "facilities": [
+      "gölet",
+      "piknik",
+      "çadır"
+    ],
+    "tips": "Gece için Yalıntaş resmi kamp alanını tercih et.",
+    "rating_admin": 4.35
+  },
+  {
+    "slug": "kilimli-golu-kamp",
+    "title": "Kilimli Gölü · Uludağ",
+    "ilce": "Osmangazi",
+    "address": "Kilimli Gölü, Uludağ Milli Parkı (~1650 m)",
+    "hours_text": "göl · trekking · yakın kamp üssü",
+    "price_band": "milli park",
+    "subcategory": "uludag",
+    "featured": true,
+    "vibe": "instagram",
+    "lat": 40.118,
+    "lng": 29.085,
+    "search": "Kilimli Gölü Uludağ",
+    "copy": "uludag",
+    "tags": [
+      "uludag",
+      "gol",
+      "trekking",
+      "instagram"
+    ],
+    "blurb": "Uludağ'ın yüksek irtifa gölü. Fotoğraf + yürüyüş; gece konaklama Çobankaya/Sarıalan kayıtlı alanlarda.",
+    "body": "Kilimli Gölü çevresi serin ve rüzgarlı; göl kenarında kalabalık kamp kurulmaz. Patika ile ulaşım; gece için resmi milli park kamp alanlarına dön.",
+    "facilities": [
+      "göl",
+      "trekking",
+      "manzara"
+    ],
+    "tips": "Hava ani değişir — yağmurluk ve sıcak uyku tulumu.",
+    "rating_admin": 4.5
+  },
+  {
+    "slug": "alacam-yayla-kamp",
+    "title": "Alaçam Yaylası",
+    "ilce": "Osmangazi",
+    "address": "Alaçam Yaylası, Uludağ çevresi",
+    "hours_text": "yayla · çadır · piknik",
+    "price_band": "yayla",
+    "subcategory": "yayla",
+    "featured": false,
+    "vibe": "yayla",
+    "lat": 40.095,
+    "lng": 29.088,
+    "search": "Alaçam Yaylası Uludağ",
+    "copy": "inkaya-cinari",
+    "tags": [
+      "uludag",
+      "yayla",
+      "piknik",
+      "cadir"
+    ],
+    "blurb": "Uludağ yamaçlarında serin yayla düzlüğü. Hafta sonu piknik + çadır.",
+    "body": "Alaçam yaylası Uludağ rotasında ara durak. Tesis sınırlı; kendi suyun ve çöp poşetinle gel. Orman yangını döneminde ateş yasağı.",
+    "facilities": [
+      "yayla",
+      "piknik",
+      "çadır"
+    ],
+    "tips": "Rüzgarlı düzlük — çadır gergi ipleri şart.",
+    "rating_admin": 4.3
+  },
+  {
+    "slug": "sudusen-selalesi-kamp",
+    "title": "Sudüşen Şelalesi",
+    "ilce": "Osmangazi",
+    "address": "Sudüşen Şelalesi, Uludağ, Osmangazi",
+    "hours_text": "şelale · trekking · günübirlik",
+    "price_band": "şelale",
+    "subcategory": "selale",
+    "featured": true,
+    "vibe": "instagram",
+    "lat": 40.105,
+    "lng": 29.115,
+    "search": "Sudüşen Şelalesi Uludağ",
+    "copy": "teleferik",
+    "tags": [
+      "uludag",
+      "selale",
+      "trekking",
+      "instagram"
+    ],
+    "blurb": "Uludağ'ın en bilinen şelale patikalarından. Softaboğan/Çobankaya rotasıyla kombine edilir.",
+    "body": "Sudüşen çevresi nemli ve kaygan; şelale alanında kalabalık kamp yerine günübirlik ziyaret. Gece için Çobankaya veya Yalıntaş resmi alanları.",
+    "facilities": [
+      "şelale",
+      "trekking",
+      "fotoğraf"
+    ],
+    "tips": "Patika kaygan — trekking ayakkabısı.",
+    "rating_admin": 4.45
+  },
+  {
+    "slug": "golkuk-uludag-kamp",
+    "title": "Gölcük · Uludağ",
+    "ilce": "Osmangazi",
+    "address": "Gölcük (sanatoryum göleti), Kirazlıyayla, Uludağ",
+    "hours_text": "gölet · piknik · günübirlik",
+    "price_band": "milli park",
+    "subcategory": "uludag",
+    "featured": false,
+    "vibe": "gol",
+    "lat": 40.115,
+    "lng": 29.118,
+    "search": "Gölcük Uludağ lake",
+    "copy": "panorama-1326",
+    "tags": [
+      "uludag",
+      "golet",
+      "piknik",
+      "sanatoryum"
+    ],
+    "blurb": "Eski sanatoryum göleti — Uludağ'ın klasik fotoğraf noktası. Kirazlıyayla yürüyüşüyle birleşir.",
+    "body": "Gölcük çevresi günübirlik yoğun; gölet kenarında gece kampı sınırlı olabilir. Resmi gece konaklama için Sarıalan/Çobankaya kaydı.",
+    "facilities": [
+      "gölet",
+      "piknik",
+      "yürüyüş"
+    ],
+    "tips": "Hafta sonu park yeri dar — erken saat.",
+    "rating_admin": 4.4
+  },
+  {
+    "slug": "karacabey-yenikoy-kamp",
+    "title": "Karacabey Yeniköy Kamp",
+    "ilce": "Karacabey",
+    "address": "Yeniköy, Karacabey Longozu girişi",
+    "hours_text": "çadır · karavan · resmi alan",
+    "price_band": "orman",
+    "subcategory": "orman",
+    "featured": true,
+    "vibe": "gol",
+    "lat": 40.44,
+    "lng": 28.32,
+    "search": "Karacabey Yeniköy kamp",
+    "copy": "karacabey-longozu",
+    "tags": [
+      "karacabey",
+      "orman",
+      "longoz",
+      "cadir",
+      "karavan"
+    ],
+    "blurb": "Longoz girişinde resmi kamp alanı. Dalyan Gölü ve nilüfer mevsimi rotasına yakın.",
+    "body": "Karacabey Orman İşletmesi / turizm listelerinde geçen Yeniköy kamp alanı. Longoz içi kurallar geçerli; sinek sezonunda hazırlıklı gel.",
+    "facilities": [
+      "çadır",
+      "karavan",
+      "orman",
+      "göl yakın"
+    ],
+    "tips": "Longoz ile aynı gün planla; giriş saatlerini kontrol et.",
+    "rating_admin": 4.55
+  },
+  {
+    "slug": "trilye-sahil-kamp",
+    "title": "Trilye · Zeytinbağı Kıyı",
+    "ilce": "Mudanya",
+    "address": "Trilye (Tirilye), Zeytinbağı kıyısı, Mudanya",
+    "hours_text": "çadır · karavan · tarihi köy",
+    "price_band": "deniz",
+    "subcategory": "deniz",
+    "featured": true,
+    "vibe": "instagram",
+    "lat": 40.322,
+    "lng": 28.675,
+    "search": "Trilye Tirilye Mudanya",
+    "copy": "tirilye",
+    "tags": [
+      "mudanya",
+      "deniz",
+      "tarih",
+      "instagram",
+      "karavan"
+    ],
+    "blurb": "Tarihi Trilye + kıyı kampı. Kapanca'dan farklı — taş evler, zeytin rotası, gün batımı.",
+    "body": "Tirilye köyü ve Zeytinbağı hattında karavan/çadır noktaları. Kapanca'ya göre daha köy dokulu; restoran ve market Trilye merkezde. Rüzgarlı kıyıda sağlam kurulum.",
+    "facilities": [
+      "deniz",
+      "tarihi köy",
+      "çadır",
+      "karavan",
+      "restoran"
+    ],
+    "tips": "Hafta sonu köy içi trafik — kıyıya erken yer seç.",
+    "rating_admin": 4.65
+  },
+  {
+    "slug": "alic-yayla-kamp",
+    "title": "Alıç Yaylası · Keles",
+    "ilce": "Keles",
+    "address": "Alıç Yaylası, Keles",
+    "hours_text": "yayla · ücretsiz · çadır",
+    "price_band": "ücretsiz",
+    "subcategory": "yayla",
+    "featured": false,
+    "vibe": "ucretsiz",
+    "lat": 39.85,
+    "lng": 29.18,
+    "search": "Alıç Yaylası Keles",
+    "copy": "cumalikizik",
+    "tags": [
+      "yayla",
+      "keles",
+      "ucretsiz",
+      "cadir"
+    ],
+    "blurb": "Keles hattında az bilinen yayla. Kocayayla'ya alternatif — daha sakin, tesis az.",
+    "body": "Alıç yaylası ücretsiz doğa kampı listelerinde geçer. Su, tuvalet ve market yok — tam yükümlülük. Orman duyurularını oku.",
+    "facilities": [
+      "yayla",
+      "çadır"
+    ],
+    "tips": "Keles'ten araç şart; hava hızlı değişir.",
+    "rating_admin": 4.25
   }
 ]

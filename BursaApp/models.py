@@ -451,6 +451,46 @@ class SitePageVisitorDay(Base):
     vid: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
 
 
+class SiteClickStat(Base):
+    """Günlük tıklama özeti — kind: phone|maps|web|nav|cta."""
+
+    __tablename__ = "site_click_stats"
+    __table_args__ = (UniqueConstraint("day", "kind", "target", name="uq_site_click_day_kind_target"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    kind: Mapped[str] = mapped_column(String(24), nullable=False, index=True)
+    target: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    clicks: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class SiteEngagementDay(Base):
+    """Günlük sayfa süresi + scroll derinliği."""
+
+    __tablename__ = "site_engagement_days"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[str] = mapped_column(String(10), unique=True, nullable=False, index=True)
+    samples: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    total_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    scroll_25: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    scroll_50: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    scroll_75: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    scroll_100: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class SiteSessionDay(Base):
+    """Ziyaretçi başına günlük oturum süresi (saniye, max)."""
+
+    __tablename__ = "site_session_days"
+    __table_args__ = (UniqueConstraint("day", "vid", name="uq_site_session_day_vid"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    vid: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
 class SportMatch(Base):
     """Bursaspor (ve ileride diğer kulüp) maç fikstürü."""
 
@@ -720,6 +760,27 @@ def seed_places(db) -> None:
         )
 
 
+STAFF_ROLES = frozenset({"admin", "editor"})
+
+
+def is_staff_role(role: str | None) -> bool:
+    return (role or "").strip().lower() in STAFF_ROLES
+
+
+def member_login_query(db):
+    """Üye giriş kayıtları — admin/editör panel girişleri hariç."""
+    from sqlalchemy import or_
+
+    return (
+        db.query(ActivityLog)
+        .outerjoin(User, ActivityLog.user_id == User.id)
+        .filter(
+            ActivityLog.kind == "login",
+            or_(User.id.is_(None), User.role.notin_(tuple(STAFF_ROLES))),
+        )
+    )
+
+
 def log_activity(
     db,
     *,
@@ -730,8 +791,11 @@ def log_activity(
     email: str = "",
     path: str = "",
     meta: dict | None = None,
+    user_role: str | None = None,
 ) -> None:
     """Admin paneli aktivite kaydı — hata yutmaz."""
+    if kind == "login" and is_staff_role(user_role):
+        return
     try:
         from flask import request as _req
 

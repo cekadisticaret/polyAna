@@ -30,6 +30,7 @@ from models import (
     User,
     UserPost,
     UserVisit,
+    member_login_query,
     place_extra,
     set_place_extra,
 )
@@ -310,9 +311,9 @@ def dashboard():
             .filter(Place.status == "approved", Place.category == "hotel")
             .count(),
             "matches": db.query(SportMatch).filter(SportMatch.club == "bursaspor").count(),
-            "logins_7d": db.query(ActivityLog).filter(
-                ActivityLog.kind == "login", ActivityLog.created_at >= since
-            ).count(),
+            "logins_7d": member_login_query(db)
+            .filter(ActivityLog.created_at >= since)
+            .count(),
             "registers_7d": db.query(ActivityLog).filter(
                 ActivityLog.kind == "register", ActivityLog.created_at >= since
             ).count(),
@@ -329,10 +330,19 @@ def dashboard():
             kpi["pharmacies"] = int(_feed.get("total") or len(_feed.get("pharmacies") or []))
         except Exception:
             kpi["pharmacies"] = 0
-        from analytics import summary as traffic_summary, top_pages as traffic_top_pages
+        from analytics import (
+            engagement_summary as traffic_engagement,
+            summary as traffic_summary,
+            top_clicks as traffic_top_clicks,
+            top_pages as traffic_top_pages,
+            top_place_clicks,
+        )
 
         traffic = traffic_summary(db, days=14)
         page_traffic = traffic_top_pages(db, days=7, limit=30)
+        engagement = traffic_engagement(db, days=7)
+        click_stats = traffic_top_clicks(db, days=7, limit=15)
+        place_clicks = top_place_clicks(db, limit=8)
         kpi["today_visitors"] = traffic["today_visitors"]
         kpi["today_pageviews"] = traffic["today_pageviews"]
         kpi["d7_visitors"] = traffic["d7_visitors"]
@@ -370,6 +380,8 @@ def dashboard():
             db,
             traffic=traffic,
             page_traffic=page_traffic,
+            engagement=engagement,
+            click_stats=click_stats,
             by_cat=by_cat,
             badges=badges,
         )
@@ -382,6 +394,9 @@ def dashboard():
             kpi=kpi,
             traffic=traffic,
             page_traffic=page_traffic,
+            engagement=engagement,
+            click_stats=click_stats,
+            place_clicks=place_clicks,
             seo_status=seo_status,
             by_cat=by_cat,
             chart_data=chart_data,
