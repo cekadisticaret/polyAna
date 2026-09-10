@@ -49,11 +49,15 @@ _STANDALONE: dict[str, str] = {
     "combo2": "poly_trader_e02",
     "a2_05_v2": "poly_trader_a2_05_v2",
     "f16v2": "poly_trader_f16v2",
+    "jarvis2026": "poly_trader_jarvis2026",
+    "ref01": "poly_trader_ref01",
 }
 _A1_BATCH = "a1"
 _A2_BATCH = "a2"
 _F1_BATCH = "f1"
 _BOOK_ORDER = list(_STANDALONE) + [_A1_BATCH, _A2_BATCH, _F1_BATCH]
+# JARVIS serbest dakika — :05/:07 kopyası yeni açık açmaz (close settle eder).
+_SKIP_SLOT_OPEN = frozenset({"jarvis2026", "ref01"})
 
 
 def _silence_telegram() -> None:
@@ -192,6 +196,9 @@ def run_book(book: str, mode: str, slot: int) -> None:
     mod_name = _STANDALONE.get(book)
     if not mod_name:
         raise SystemExit(f"bilinmeyen defter: {book}")
+    if mode == "open" and book in _SKIP_SLOT_OPEN:
+        print(f"[slot :{slot:02d}] {book} open atlandı — serbest dakika", flush=True)
+        return
     print(f"[slot :{slot:02d}] {book} {mode}", flush=True)
     mod = importlib.import_module(mod_name)
     _remap_module(mod, slot)

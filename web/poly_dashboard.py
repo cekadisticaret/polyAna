@@ -80,6 +80,8 @@ _HEATMAP_SYMS = {
     "combo": ["BTC", "ETH", "SOL"],
     "combo2": ["BTC", "ETH", "SOL"],
     "f16v2": ["BTC", "ETH", "SOL"],
+    "jarvis2026": ["BTC", "ETH", "SOL"],
+    "ref01": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz5":  ["BTC", "SOL"],
@@ -131,6 +133,13 @@ _ALGO_BOOK_ALIASES: dict[str, str] = {
     "f16-v2": "f16v2",
     "f16_v2": "f16v2",
     "f1#16v2": "f16v2",
+    "jarvis": "jarvis2026",
+    "jarvis-2026": "jarvis2026",
+    "jarvis_2026": "jarvis2026",
+    "ref-01": "ref01",
+    "ref_01": "ref01",
+    "ref1": "ref01",
+    "yol01": "ref01",
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Algoritma performansı / harita / analizler — gerçek PM (Live) gösterilmez; sanal karşılığı kullanılır
@@ -171,14 +180,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
+    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
 _HISTORY_ORDER_GECMIS = [
@@ -207,6 +216,8 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "combo":      "COMBO · F16+C101+V2 oy",
     "combo2":     "COMBO2 · BTC→C1#01 · ETH/SOL→COMBO",
     "f16v2":      "F16V2 · BTC/SOL F16 · ETH A2#03",
+    "jarvis2026": "JARVIS2026 · evrilen fikir",
+    "ref01": "REF01 · referans çizgisi",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz2_live": "A2 Live",
@@ -228,13 +239,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "analiz1": 1000, "analiz2": 1000, "analiz6": 1000, "analiz6_v2": 1000,
     "analiz6_v3": 1000, "analiz15": 1000, "b1_01": 1000, "b1_02": 1000, "b1_mum": 1000,
-    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000, "combo2": 1000, "f16v2": 1000,
+    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000, "combo2": 1000, "f16v2": 1000, "jarvis2026": 1000, "ref01": 1000,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -289,6 +300,8 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "combo": "COMBO",
     "combo2": "COMBO2",
     "f16v2": "F16V2",
+    "jarvis2026": "JARVIS2026",
+    "ref01": "REF01",
     "analiz3": "A3",
     "analiz8": "A8",
 }
@@ -353,8 +366,13 @@ for _num, _name, *_rest in _F1_META:
 # /algoritma-islemler + /poly/api/mirror: featured sarı kartlar, kendi içinde bakiye → P&L → WR
 # Kart + ayna: defterin :02/:05/:07 içinden en çok kazandıran (net P&L) dilim.
 _ALGO_FEATURED_KEYS: list[str] = ["combo", "c101", "a2_05_v2", "analiz1", "combo2", "f16v2"]
-_WATCH_PIN_KEYS: list[str] = ["analiz1", "a2_03", "a2_05", "f16v2"]
-_WATCH_PIN_LABEL = {"analiz1": "F16", "a2_03": "A2#03", "a2_05": "A2#05", "f16v2": "F16V2"}
+_WATCH_PIN_KEYS: list[str] = ["ref01", "analiz1", "a2_03", "a2_05", "f16v2", "jarvis2026"]
+_WATCH_PIN_LABEL = {
+    "analiz1": "F16", "a2_03": "A2#03", "a2_05": "A2#05",
+    "f16v2": "F16V2", "jarvis2026": "JARVIS2026", "ref01": "REF01",
+}
+# slot_trader._SKIP_SLOT_OPEN — :05/:07 kopyası yok; kart her zaman :02 state okumalı
+_STANDALONE_MINUTE_BOOKS = frozenset({"jarvis2026", "ref01"})
 _ALGO_FEATURED_SORT = "best_slot_pnl"
 _TR_MONTH_SHORT = (
     "Oca", "Şub", "Mar", "Nis", "May", "Haz",
@@ -390,7 +408,7 @@ def _sort_algo_islemler_books(books: list, id_field: str = "id") -> list:
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
 ] + _A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS
 
 # Motor tipi → piyasa rejimi (ölçülmüş WR değil).
@@ -418,7 +436,7 @@ _NAMED_REGIME = {
     "b1_01": "live", "b1_02": "live", "b1_mum": "live",
     "b1_04": "live", "b1_05": "live",
     "c101": "live", "c101_v2": "live", "x101": "live",
-    "combo": "live", "combo2": "live", "f16v2": "live",
+    "combo": "live", "combo2": "live", "f16v2": "live", "jarvis2026": "live", "ref01": "live",
     "a2_05_v2": "range",
 }
 for _num, _name, *_rest in _F1_META:
@@ -463,6 +481,8 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("combo",      "COMBO · F16+C101+V2 oy", 1000, "F16 + C1#01 + A2#05 V2 oy · çatışmada yok · sembol WR $16/24/32 · ask ≤ 0,50"),
     ("combo2",     "COMBO2 · BTC→C1#01 · ETH/SOL→COMBO", 1000, "Kart eşlemesi: BTC C1#01 · ETH/SOL COMBO · sabit $64"),
     ("f16v2",      "F16V2",                 1000, "BTC/SOL→F16 predict · ETH→A2#03 Stoch RSI"),
+    ("jarvis2026", "JARVIS2026",            1000, "fikir + serbest dk · $16/24/32"),
+    ("ref01",      "REF01",                 1000, "saatlik yol · 18 bps trend / fade ≥10 · ask≤0.75 · kâr %25 · $24/36/48"),
     ("a2_05_v2",   "A2#05 V2 · Z KAPISI", 1000, "A2#05 sinyali + yalnız 1,0 ≤ |z| < 1,5 · $24/36/48"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
@@ -930,8 +950,8 @@ def get_klines(symbol: str, interval="15m", limit=80, start_time_ms: int | None 
 _trade_chart_cache: dict[tuple, tuple[float, dict]] = {}
 _TRADE_CHART_CACHE_TTL = 2.0
 
-def load_state(name: str) -> dict:
-    path = _trader_state_path(name)
+def load_state(name: str, slot: int | None = None) -> dict:
+    path = _trader_state_path(name, slot)
     if os.path.exists(path):
         with open(path) as f:
             return json.load(f)
@@ -1168,6 +1188,22 @@ def set_pm_home_display_book(key: str, *, source: str = "dashboard") -> dict:
     return data
 
 
+def _home_display_ctx() -> tuple[str, str, int, float]:
+    """Anasayfa defteri + en iyi dilim (:02/:05/:07)."""
+    key = get_pm_home_display_key()
+    slot = _best_slot_for_book(key)
+    return key, get_pm_home_display_label(key), int(slot), get_pm_home_display_init_bal(key)
+
+
+def _home_display_hist(key: str, slot: int, state: dict) -> list[dict]:
+    """WR/P&L yalnız sıfırlama damgasından sonrası — kartla aynı skor."""
+    hist = _load_trader_history(key, slot)
+    reset_at = state.get("balance_reset_at_tr")
+    if not reset_at:
+        return hist
+    return [t for t in hist if (t.get("exit_time_tr") or "") >= reset_at]
+
+
 def _format_display_pm_trade(t: dict, label: str) -> dict | None:
     """Sanal PM kaydı → anasayfa işlem geçmişi satırı."""
     if t.get("win") is None:
@@ -1215,9 +1251,8 @@ def _format_display_pm_open(pos: dict, label: str) -> dict:
 
 def _collect_display_pm_positions() -> list[dict]:
     """Anasayfa pozisyon kartları — seçili sanal defterin açık pozisyonları."""
-    key = get_pm_home_display_key()
-    label = get_pm_home_display_label(key)
-    state = load_state(key)
+    key, label, slot, _init = _home_display_ctx()
+    state = load_state(key, slot)
     out: list[dict] = []
     for pos in state.get("open_positions") or []:
         spent = pos.get("pm_spent") or pos.get("amount")
@@ -1229,16 +1264,15 @@ def _collect_display_pm_positions() -> list[dict]:
 
 def _display_pm_recent_trades(*, limit: int = 20) -> tuple[list[dict], list[dict]]:
     """(bekleyen açık, kapanmış) — anasayfa Son İşlemler paneli."""
-    key = get_pm_home_display_key()
-    label = get_pm_home_display_label(key)
-    state = load_state(key)
+    key, label, slot, _init = _home_display_ctx()
+    state = load_state(key, slot)
     pending = []
     for p in state.get("open_positions") or []:
         if not (p.get("pm_spent") or p.get("amount")) or not p.get("symbol"):
             continue
         pending.append(_format_display_pm_open(p, label))
     recent: list[dict] = []
-    for t in reversed(_load_trader_history(key)):
+    for t in reversed(_home_display_hist(key, slot, state)):
         row = _format_display_pm_trade(t, label)
         if row:
             recent.append(row)
@@ -1249,9 +1283,8 @@ def _display_pm_recent_trades(*, limit: int = 20) -> tuple[list[dict], list[dict
 
 def _display_pm_balance() -> tuple[float, float]:
     """(nakit, portföy) — sanal defter bakiyesi + açık pozisyon riski."""
-    key = get_pm_home_display_key()
-    init_bal = get_pm_home_display_init_bal(key)
-    state = load_state(key)
+    key, _label, slot, init_bal = _home_display_ctx()
+    state = load_state(key, slot)
     cash = float(state.get("balance") or init_bal)
     open_val = sum(
         float(p.get("pm_spent") or p.get("amount") or 0)
@@ -1309,11 +1342,10 @@ def _live_system_open_stats(key: str) -> tuple[int, int]:
 
 
 def _real_pm_overview_stats() -> dict:
-    """Overview üst kartlar — anasayfada seçili sanal defter (A2#05) gerçek PM gibi."""
-    key = get_pm_home_display_key()
-    label = get_pm_home_display_label(key)
-    init_bal = get_pm_home_display_init_bal(key)
-    hist = _load_trader_history(key)
+    """Overview üst kartlar — anasayfada seçili sanal defter gerçek PM gibi."""
+    key, label, slot, init_bal = _home_display_ctx()
+    state = load_state(key, slot)
+    hist = _home_display_hist(key, slot, state)
     graded = [t for t in hist if t.get("win") is not None]
     wins = sum(1 for t in graded if t.get("win"))
     losses = len(graded) - wins
@@ -1321,7 +1353,6 @@ def _real_pm_overview_stats() -> dict:
     wr = round(wins / total * 100, 1) if total else 0.0
     pnl = round(sum(float(t.get("pnl") or 0) for t in graded), 2)
     cash, portfolio = _display_pm_balance()
-    state = load_state(key)
     open_n = sum(
         1 for p in state.get("open_positions") or []
         if (p.get("pm_spent") or p.get("amount")) and p.get("symbol")
@@ -1343,6 +1374,7 @@ def _real_pm_overview_stats() -> dict:
         "source": "display_book",
         "display_book": key,
         "display_label": label,
+        "display_slot": slot,
         "closed_trades": total,
         "wins": wins,
         "losses": losses,
@@ -2047,6 +2079,7 @@ def api_data():
         "updated":   datetime.now(_TZ_TR).strftime("%H:%M:%S"),
         "display_book": get_pm_home_display_key(),
         "display_label": get_pm_home_display_label(),
+        "display_slot": _best_slot_for_book(get_pm_home_display_key()),
         **get_pm_system_control(),
     })
 
@@ -2105,6 +2138,151 @@ def api_positions_live():
         "positions": out,
         "updated": datetime.now(_TZ_TR).strftime("%H:%M:%S"),
     })
+
+_HOURLY_PATH_COINS = ("BTC", "ETH", "SOL")
+_PATH_SERIES_CACHE: dict = {"sig": "", "ts": 0.0, "payload": None}
+_PATH_PAGE_IDS = frozenset({"saatlik-yol", "saatlik_yol", "hourly-path"})
+
+
+def _hourly_path_hours() -> list[str]:
+    folder = os.path.join(_DIR_POLY, "hourly_path")
+    try:
+        return sorted(
+            n[:-5] for n in os.listdir(folder)
+            if n.endswith(".json") and n[:2] == "20" and n[4] == "-"
+        )
+    except OSError:
+        return []
+
+
+def _hourly_path_series(limit: int = 168) -> dict:
+    """Tüm saatlerin dakika yolunu coin bazında sıkıştırır. Emir yok."""
+    hours = _hourly_path_hours()
+    cap = max(1, min(int(limit or 168), 168))
+    hours = hours[-cap:]
+    folder = os.path.join(_DIR_POLY, "hourly_path")
+    last_fp = os.path.join(folder, f"{hours[-1]}.json") if hours else ""
+    try:
+        mtime = os.path.getmtime(last_fp) if last_fp else 0.0
+    except OSError:
+        mtime = 0.0
+    sig = f"{len(hours)}:{hours[-1] if hours else ''}:{mtime:.0f}"
+    now = time.time()
+    hit = _PATH_SERIES_CACHE.get("payload")
+    if (
+        hit
+        and _PATH_SERIES_CACHE.get("sig") == sig
+        and now - float(_PATH_SERIES_CACHE.get("ts") or 0) < 8
+    ):
+        return hit
+    coins: dict[str, dict] = {
+        c: {"symbol": f"{c}USDT", "pts": [], "hours": []}
+        for c in _HOURLY_PATH_COINS
+    }
+    for key in hours:
+        fp = os.path.join(folder, f"{key}.json")
+        try:
+            data = json.load(open(fp, encoding="utf-8"))
+        except Exception:
+            continue
+        try:
+            hs = datetime.strptime(key, "%Y-%m-%d_%H").replace(tzinfo=_TZ_TR)
+        except ValueError:
+            continue
+        raw_coins = data.get("coins") or {}
+        for coin in _HOURLY_PATH_COINS:
+            row = raw_coins.get(coin) or {}
+            ref = row.get("ref")
+            try:
+                ref_f = float(ref) if ref is not None else None
+            except (TypeError, ValueError):
+                ref_f = None
+            coins[coin]["hours"].append({
+                "key": key,
+                "ref": ref_f,
+                "end": row.get("end") or row.get("last"),
+                "winner": row.get("winner"),
+                "bps": row.get("now_vs_ref_bps"),
+                "max_up_bps": row.get("max_up_bps"),
+                "max_dn_bps": row.get("max_dn_bps"),
+                "above_n": row.get("above_n"),
+                "below_n": row.get("below_n"),
+            })
+            for mrow in row.get("minutes") or []:
+                try:
+                    m = int(mrow.get("m"))
+                    px = float(mrow.get("px"))
+                except (TypeError, ValueError):
+                    continue
+                if m < 0 or m > 59 or px <= 0:
+                    continue
+                ts = int((hs + timedelta(minutes=m)).timestamp())
+                try:
+                    bps = float(mrow["d_bps"]) if mrow.get("d_bps") is not None else None
+                except (TypeError, ValueError):
+                    bps = None
+                if bps is None and ref_f:
+                    bps = round((px - ref_f) / ref_f * 10000.0, 3)
+                coins[coin]["pts"].append([ts, bps if bps is not None else 0.0, px])
+    payload = {
+        "ok": True,
+        "hours_n": len(hours),
+        "first_hour": hours[0] if hours else None,
+        "last_hour": hours[-1] if hours else None,
+        "updated_at_tr": datetime.now(_TZ_TR).isoformat(),
+        "coins": coins,
+    }
+    _PATH_SERIES_CACHE["sig"] = sig
+    _PATH_SERIES_CACHE["ts"] = now
+    _PATH_SERIES_CACHE["payload"] = payload
+    return payload
+
+
+@app.route("/poly/api/hourly-path")
+def api_hourly_path():
+    """BTC/ETH/SOL saatlik dakika yolu — referans = 1h açılış. Emir yok."""
+    if _auth_required():
+        return jsonify({"error": "unauthorized"}), 401
+    folder = os.path.join(_DIR_POLY, "hourly_path")
+    hours = _hourly_path_hours()
+    key = (request.args.get("hour") or "").strip()
+    if request.args.get("meta") == "1":
+        return jsonify({
+            "ok": True,
+            "hours_n": len(hours),
+            "first_hour": hours[0] if hours else None,
+            "last_hour": hours[-1] if hours else None,
+            "hour": hours[-1] if hours else None,
+        })
+    if request.args.get("series") == "1":
+        try:
+            limit = int(request.args.get("hours") or 168)
+        except (TypeError, ValueError):
+            limit = 168
+        return jsonify(_hourly_path_series(limit))
+    fp = os.path.join(folder, f"{key}.json") if key else os.path.join(folder, "latest.json")
+    if not os.path.isfile(fp):
+        return jsonify({
+            "ok": False,
+            "error": "henüz kayıt yok",
+            "hours_n": len(hours),
+            "first_hour": hours[0] if hours else None,
+            "last_hour": hours[-1] if hours else None,
+        }), 404
+    try:
+        data = json.load(open(fp, encoding="utf-8"))
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+    return jsonify({
+        "ok": True,
+        "hour": data.get("hour_key"),
+        "hours": hours[-48:],
+        "hours_n": len(hours),
+        "first_hour": hours[0] if hours else None,
+        "last_hour": hours[-1] if hours else None,
+        "data": data,
+    })
+
 
 @app.route("/poly/api/klines/<symbol>")
 def api_klines(symbol):
@@ -2626,10 +2804,17 @@ def api_analyst_feed():
         _journal_fallback_feed_entries(),
     )
     entries = entries[-limit:][::-1]
+    paused = False
+    try:
+        with open(os.path.join(_DIR_POLY, "analyst_control.json"), encoding="utf-8") as f:
+            paused = bool((json.load(f) or {}).get("paused"))
+    except Exception:
+        paused = False
     return jsonify({
         "ok": True,
         "count": len(entries),
         "entries": entries,
+        "paused": paused,
         "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
     })
 
@@ -2792,10 +2977,17 @@ def api_kripto_analyst_feed():
         limit = 50
     entries = _read_kripto_test_analyst_feed()
     entries = entries[-limit:][::-1]
+    paused = False
+    try:
+        with open(os.path.join(_DIR_KRIPTO, "Test", "kripto_analyst_control.json"), encoding="utf-8") as f:
+            paused = bool((json.load(f) or {}).get("paused"))
+    except Exception:
+        paused = False
     return jsonify({
         "ok": True,
         "count": len(entries),
         "entries": entries,
+        "paused": paused,
         "generated_at_tr": datetime.now(_TZ_TR).isoformat(),
     })
 
@@ -3558,6 +3750,11 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
         }
     except Exception:
         return None
+    try:
+        if state.get("initial_balance") is not None:
+            init_bal = float(state["initial_balance"])
+    except (TypeError, ValueError):
+        pass
     reset_at = state.get("balance_reset_at_tr")
     hist_stats = hist
     if reset_at:
@@ -3613,6 +3810,8 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
             "slot_label": p.get("pm_title") or p.get("pm_slug") or "",
             "entry_time_tr": p.get("entry_time_tr"),
             "algo_name": p.get("algo_name"),
+            "ref01_mode": p.get("ref01_mode") or "",
+            "ref01_detail": p.get("ref01_detail") or "",
         })
     num = None
     m = re.match(r"^a2_(\d+)$", key)
@@ -3661,6 +3860,16 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
         panel = "poly_f16v2"
         name = short or label
         title = "BTC/SOL→F16 predict · ETH→A2#03 Stoch RSI"
+    elif key == "jarvis2026":
+        category = "Poly sanal · JARVIS2026"
+        panel = "poly_jarvis2026"
+        name = short or label
+        title = "2 saatte evrim · takip motoru · $16/24/32"
+    elif key == "ref01":
+        category = "Poly sanal · REF01"
+        panel = "poly_ref01"
+        name = short or label
+        title = "saatlik yol · 18 bps trend / fade ≥10 · ask≤0.75 · kâr %25 · $24/36/48"
     elif key == "b1_01":
         category = "Poly sanal · B1#01"
         panel = "poly_b1"
@@ -3748,7 +3957,7 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
             pnl_val = round(float(t.get("pnl") or 0), 2)
             spent = float(t.get("pm_spent") or t.get("amount") or 0)
             exit_tr = t.get("exit_time_tr") or t.get("entry_time_tr") or ""
-            recent.append({
+            rec = {
                 "symbol": sym or sym_raw,
                 "dir": pred,
                 "dir_tr": "YÜKSELİR" if pred == "UP" else "DÜŞER",
@@ -3758,9 +3967,17 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
                 "pm_entry_price": t.get("pm_entry_price"),
                 "entry_price": t.get("entry_price"),
                 "exit_price": t.get("exit_price"),
+                "entry_time_tr": t.get("entry_time_tr") or "",
                 "exit_time_tr": exit_tr,
                 "slot_label": t.get("pm_title") or t.get("pm_slug") or "",
-            })
+            }
+            if key == "jarvis2026":
+                rec["jarvis_book"] = t.get("jarvis_book") or ""
+                rec["jarvis_detail"] = t.get("jarvis_detail") or ""
+            if key == "ref01":
+                rec["ref01_mode"] = t.get("ref01_mode") or ""
+                rec["ref01_detail"] = t.get("ref01_detail") or ""
+            recent.append(rec)
     started_iso, started_label = _poly_book_started_at(state, hist_stats, hist, reset_at)
     month_ym = datetime.now(_TZ_TR).strftime("%Y-%m")
     month_pnl = 0.0
@@ -3813,7 +4030,80 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
         row["trade_amounts"] = {"low": 24.0, "mid": 36.0, "high": 48.0}
     if include_history:
         row["recent_history"] = recent
+    if key == "jarvis2026":
+        row["jarvis"] = _jarvis2026_snapshot()
     return row
+
+
+def _jarvis2026_snapshot() -> dict:
+    """JARVIS2026 evrim politikası + son notlar — detay kartı."""
+    pol_path = os.path.join(_DIR_POLY, "jarvis2026_policy.json")
+    feed_path = os.path.join(_DIR_POLY, "jarvis2026_feed.jsonl")
+    try:
+        pol = json.load(open(pol_path, encoding="utf-8"))
+        if not isinstance(pol, dict):
+            pol = {}
+    except Exception:
+        pol = {}
+    feed: list[dict] = []
+    try:
+        with open(feed_path, encoding="utf-8") as f:
+            lines = f.readlines()[-8:]
+        for line in reversed(lines):
+            try:
+                rec = json.loads(line)
+            except Exception:
+                continue
+            if isinstance(rec, dict):
+                feed.append({
+                    "ts": str(rec.get("ts") or "")[:16],
+                    "title": rec.get("title") or "",
+                    "body": rec.get("body") or "",
+                })
+    except Exception:
+        pass
+    try:
+        sys.path.insert(0, _DIR_POLY)
+        from jarvis2026_signal import book_label
+    except Exception:
+        def book_label(k):  # type: ignore
+            return k or "—"
+    sources = []
+    src = pol.get("sources") or {}
+    for coin, sym in (("BTC", "BTCUSDT"), ("ETH", "ETHUSDT"), ("SOL", "SOLUSDT")):
+        row = src.get(sym) if isinstance(src, dict) else {}
+        if not isinstance(row, dict):
+            row = {}
+        book = str(row.get("book") or "")
+        sources.append({
+            "coin": coin,
+            "book": book,
+            "label": book_label(book) if book else "—",
+            "why": str(row.get("why") or "")[:160],
+        })
+    ideas = []
+    for raw in pol.get("ideas") or []:
+        if not isinstance(raw, dict):
+            continue
+        ideas.append({
+            "id": raw.get("id") or "",
+            "symbol": str(raw.get("symbol") or "").replace("USDT", ""),
+            "mode": raw.get("dir_mode") or raw.get("mode") or "",
+            "book": book_label(str(raw.get("book") or "")) if raw.get("book") else "—",
+            "ask_max": raw.get("ask_max"),
+            "why": str(raw.get("why") or "")[:140],
+            "lesson": str(raw.get("lesson") or "")[:140],
+        })
+    return {
+        "generation": int(pol.get("generation") or 0),
+        "source": pol.get("source") or "",
+        "note": pol.get("note") or "",
+        "updated_at_tr": str(pol.get("updated_at_tr") or "")[:16],
+        "scan_books": pol.get("scan_books"),
+        "sources": sources,
+        "ideas": ideas,
+        "feed": feed[:6],
+    }
 
 
 def _chip_from_book_row(row: dict | None, slot: int) -> dict:
@@ -3866,6 +4156,8 @@ def _remember_best_slots(by_key: dict) -> None:
 
 def _best_slot_for_book(key: str) -> int:
     """Ayna / liste — bu defterin en iyi açılış dakikası."""
+    if key in _STANDALONE_MINUTE_BOOKS:
+        return 2
     now = time.time()
     cached = _BEST_SLOT_CACHE.get("by_key") or {}
     if now - float(_BEST_SLOT_CACHE.get("ts") or 0) < _BEST_SLOT_TTL:
@@ -3885,7 +4177,7 @@ def _best_slot_for_book(key: str) -> int:
 def _attach_slot_chips(row: dict) -> dict:
     key = row.get("id") or row.get("key")
     chips = {s: _poly_book_slot_chip(key, s) for s in _SLOT_MINUTES}
-    best = _pick_best_slot(chips)
+    best = 2 if key in _STANDALONE_MINUTE_BOOKS else _pick_best_slot(chips)
     for s, c in chips.items():
         c["best"] = s == best
     row["slots"] = chips
@@ -4090,14 +4382,24 @@ def _bt_ranked_monthly(path: str, book_id: str) -> tuple[dict[str, float], float
 _WATCH_BT_CACHE: dict = {"sig": "", "data": None}
 
 
+def _watch_last_year_ym(now: datetime | None = None) -> str:
+    t = now or datetime.now(_TZ_TR)
+    return f"{t.year - 1:04d}-{t.month:02d}"
+
+
 def _watch_month_backtest(books: list | None = None) -> dict:
-    """F16 / A2#03 / A2#05 — bu ay 1Y backtest vs canlı settle."""
+    """İzleme 1Y — geçen yılın aynı ayı vs bu ay canlı settle."""
     now = datetime.now(_TZ_TR)
-    ym = now.strftime("%Y-%m")
+    ym = _watch_last_year_ym(now)
+    p_watch = os.path.join(_DIR_POLY, "backtest_watch_1y.json")
     p_all = os.path.join(_DIR_POLY, "backtest_algo_islemler_1y.json")
     p_sel = os.path.join(_DIR_POLY, "backtest_selected_algos_1y.json")
     try:
-        sig = f"{ym}:{os.path.getmtime(p_all):.0f}:{os.path.getmtime(p_sel):.0f}"
+        sig = (
+            f"{ym}:{os.path.getmtime(p_watch) if os.path.isfile(p_watch) else 0:.0f}"
+            f":{os.path.getmtime(p_all) if os.path.isfile(p_all) else 0:.0f}"
+            f":{os.path.getmtime(p_sel) if os.path.isfile(p_sel) else 0:.0f}"
+        )
     except OSError:
         sig = ym
     cached = _WATCH_BT_CACHE.get("data")
@@ -4113,34 +4415,32 @@ def _watch_month_backtest(books: list | None = None) -> dict:
             })
         return {**cached, "rows": rows}
 
-    sources = {
+    fallback = {
         "analiz1": (p_sel, "analiz1"),
         "a2_03": (p_all, "a2_03"),
         "a2_05": (p_all, "a2_05"),
+        "f16v2": (p_watch, "f16v2"),
+        "jarvis2026": (p_watch, "jarvis2026"),
     }
     live_map = {str(b.get("id")): b for b in (books or [])}
     rows = []
     for key in _WATCH_PIN_KEYS:
-        src = sources.get(key)
-        if src:
-            path, bid = src
-            monthly, year_pnl, period = _bt_ranked_monthly(path, bid)
-        else:
-            monthly, year_pnl, period = {}, 0.0, ""
-        use_ym = ym if ym in monthly else (max(monthly) if monthly else ym)
+        monthly, year_pnl, period = {}, 0.0, ""
+        if os.path.isfile(p_watch):
+            monthly, year_pnl, period = _bt_ranked_monthly(p_watch, key)
+        if not monthly:
+            src = fallback.get(key)
+            if src:
+                monthly, year_pnl, period = _bt_ranked_monthly(src[0], src[1])
         rows.append({
             "id": key,
             "label": _WATCH_PIN_LABEL.get(key, key),
-            "month": use_ym,
-            "month_label": _ym_tr_label(use_ym),
-            "pnl": round(float(monthly.get(use_ym) or 0), 2),
+            "month": ym,
+            "month_label": _ym_tr_label(ym),
+            "pnl": round(float(monthly.get(ym) or 0), 2),
             "year_pnl": round(year_pnl, 2),
             "period": period,
-            "note": (
-                "predict() · 15.08–15.08" if key == "analiz1"
-                else "canlı · 1Y yok" if key == "f16v2"
-                else "30.08–30.08"
-            ),
+            "note": "geçen yıl aynı ay · 1Y walk-forward",
             "live_pnl": float((live_map.get(key) or {}).get("month_pnl") or 0),
             "live_n": int((live_map.get(key) or {}).get("month_n") or 0),
         })
@@ -4180,7 +4480,7 @@ def _build_a2_poly_books() -> dict:
         if not built:
             continue
         chips = {s: _chip_from_book_row(built.get(s), s) for s in _SLOT_MINUTES}
-        best = _pick_best_slot(chips)
+        best = 2 if key in _STANDALONE_MINUTE_BOOKS else _pick_best_slot(chips)
         for s, c in chips.items():
             c["best"] = s == best
         row = dict(built.get(best) or next(iter(built.values())))
@@ -4340,7 +4640,7 @@ def api_a2_algoritma_detail(book_id: str):
             for s in _SLOT_MINUTES
         }
         chips = {s: _chip_from_book_row(slots.get(s), s) for s in _SLOT_MINUTES}
-        best = _pick_best_slot(chips)
+        best = 2 if key in _STANDALONE_MINUTE_BOOKS else _pick_best_slot(chips)
         want = best
         raw_slot = request.args.get("slot")
         if raw_slot:
@@ -5296,11 +5596,9 @@ def _aggregate_balance_4h(records: list) -> list:
 
 def _display_book_balance_history_points(interval: str) -> dict:
     """Seçili sanal defter (pm_home_display) portföy eğrisi — gerçek PM hourly değil."""
-    key = get_pm_home_display_key()
-    init_bal = get_pm_home_display_init_bal(key)
-    label = get_pm_home_display_label(key)
-    hist = _load_trader_history(key)
-    state = load_state(key)
+    key, label, slot, init_bal = _home_display_ctx()
+    state = load_state(key, slot)
+    hist = _load_trader_history(key, slot)
     reset_at = state.get("balance_reset_at_tr")
     hist_stats = hist
     if reset_at:
@@ -5360,6 +5658,7 @@ def _display_book_balance_history_points(interval: str) -> dict:
             "delta": None,
             "display_book": key,
             "display_label": label,
+            "display_slot": slot,
             "source": "display_book",
         }
 
@@ -5400,6 +5699,7 @@ def _display_book_balance_history_points(interval: str) -> dict:
         "delta": delta,
         "display_book": key,
         "display_label": label,
+        "display_slot": slot,
         "source": "display_book",
     }
 
@@ -5667,7 +5967,7 @@ def _patch_sidebar_profit(html: str) -> str:
     return html
 
 
-_DASH_UI_VER = "20260824-pos-row4"
+_DASH_UI_VER = "20260902-harita-poly"
 
 _SORA_FONT_LINKS = (
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
@@ -5955,6 +6255,37 @@ body{
 @media(max-width:768px){
   .sidebar{display:none !important}
 }
+.book-card.book-jarvis2026 .bt,
+.book-card.book-jarvis2026 .br,
+.book-card.book-jarvis2026 .br span,
+.book-card.book-jarvis2026 .br b,
+.book-card.book-jarvis2026 .book-since{color:#141100 !important}
+.book-card.book-jarvis2026 .bs,
+.book-card.book-jarvis2026 .book-opens,
+.book-card.book-jarvis2026 .book-since.wait{color:#3d3208 !important}
+.book-card.book-jarvis2026 .pos,
+.book-card.book-jarvis2026 .br b.pos{color:#0a5c28 !important}
+.book-card.book-jarvis2026 .neg,
+.book-card.book-jarvis2026 .br b.neg{color:#9b1228 !important}
+.book-card.book-ref01,
+.book-card.book-ref01.regime-live,
+.book-card.book-ref01.book-featured,
+.book-card.book-ref01.book-wr-best{
+  background:#5fd68a !important;
+  border-color:#2a9a54 !important;
+}
+.book-card.book-ref01 .bt,
+.book-card.book-ref01 .br,
+.book-card.book-ref01 .br span,
+.book-card.book-ref01 .br b,
+.book-card.book-ref01 .book-since{color:#0d1f12 !important}
+.book-card.book-ref01 .bs,
+.book-card.book-ref01 .book-opens,
+.book-card.book-ref01 .book-since.wait{color:#1a3d28 !important}
+.book-card.book-ref01 .pos,
+.book-card.book-ref01 .br b.pos{color:#064422 !important}
+.book-card.book-ref01 .neg,
+.book-card.book-ref01 .br b.neg{color:#9b1228 !important}
 """
 
 
@@ -6373,7 +6704,7 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item active" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
   <a class="nav-item" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
@@ -7968,7 +8299,7 @@ body{background:#0a0a0a;color:#e0e0e0;font-family:'Inter',system-ui,sans-serif;m
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
   <a class="nav-item active" href="/poly/grafik"><span class="nav-dot"></span>Grafik</a>
@@ -9285,7 +9616,7 @@ h1{font-size:22px;font-weight:800;margin-bottom:6px}
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item active" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
@@ -9434,7 +9765,7 @@ tr:hover td{background:#141414}
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item active" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
@@ -12017,7 +12348,7 @@ ALGORITMA_HTML = r"""<!DOCTYPE html>
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item active" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
@@ -12965,7 +13296,7 @@ AYARLAR_HTML = r"""<!DOCTYPE html>
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
@@ -13647,7 +13978,7 @@ HARITA_HTML = r"""<!DOCTYPE html>
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item active" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item active" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
   <div class="nav-label">Hesap</div>
@@ -14441,7 +14772,7 @@ HTML = r"""<!DOCTYPE html>
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item active" id="nav-overview" onclick="showView('overview')" href="#"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item" id="nav-heatmap" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" id="nav-heatmap" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="/poly/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
@@ -14616,7 +14947,7 @@ HTML = r"""<!DOCTYPE html>
           </div>
         </div>
         <div class="mobile-recent-section">
-          <div class="section-title" style="margin:16px 0 12px">Son İşlemler <span style="font-size:11px;color:#666;font-weight:600">Gerçek PM</span></div>
+          <div class="section-title" style="margin:16px 0 12px">Son İşlemler <span style="font-size:11px;color:#666;font-weight:600" id="recent-trades-tag">A2#05</span></div>
           <div id="recent-trades-mob"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
         </div>
       </div>
@@ -14764,7 +15095,7 @@ HTML = r"""<!DOCTYPE html>
   </div>
 
   <div class="rp-section">
-    <div class="rp-title">Son İşlemler <span style="font-size:10px;color:#666;font-weight:600">Gerçek PM</span></div>
+    <div class="rp-title">Son İşlemler <span style="font-size:10px;color:#666;font-weight:600" id="recent-trades-tag-rp">A2#05</span></div>
     <div id="recent-trades"><div style="color:#666;font-size:13px">Yükleniyor...</div></div>
   </div>
 
@@ -14964,10 +15295,13 @@ async function loadPortfolioChart() {
     dEl.textContent = (delta >= 0 ? '+' : '-') + '$' + Math.abs(delta).toFixed(2);
     dEl.className = 'port-delta ' + (delta >= 0 ? 'up' : 'down');
     const lbl = d.display_label || '';
+    const slotTxt = (d.display_slot != null)
+      ? (':' + String(d.display_slot).padStart(2, '0')) : '';
     const subEl = document.getElementById('port-sub-val');
     if (subEl) subEl.textContent = (portfolioInterval === '1h' ? 'son 24 saat' : 'son 24 saat (4s)')
       + ' · giriş $' + baseline.toFixed(0)
-      + (lbl ? (' · ' + lbl) : '');
+      + (lbl ? (' · ' + lbl) : '')
+      + (slotTxt ? (' ' + slotTxt) : '');
     const upd = document.getElementById('portfolio-updated');
     if (upd) upd.textContent = new Date().toLocaleTimeString('tr-TR');
   } catch(e) { console.error('portfolio', e); }
@@ -15162,8 +15496,11 @@ async function refresh() {
     if (updW) updW.textContent = d.updated || '—';
     const posTitle = document.getElementById('positions-display-title');
     if (posTitle) {
+      const slotTxt = (d.display_slot != null)
+        ? (':' + String(d.display_slot).padStart(2, '0')) : '';
       posTitle.textContent = 'Açık Pozisyonlar'
-        + (d.display_label ? (' · ' + d.display_label) : '');
+        + (d.display_label ? (' · ' + d.display_label) : '')
+        + (slotTxt ? (' · ' + slotTxt) : '');
     }
 
     // PM kotasyon — yalnızca açık pozisyonun timeframe/sembolü
@@ -15336,8 +15673,15 @@ async function refresh() {
         wrEl.textContent = rpm.wr + '%';
         wrEl.className = 'stat-val ' + (rpm.wr >= 50 ? 'up' : 'down');
         const openNote = rpm.open > 0 ? ` · ${rpm.open} açık` : '';
-        const lbl = rpm.display_label || 'A2#05';
+        const slotTxt = rpm.display_slot != null
+          ? (':' + String(rpm.display_slot).padStart(2, '0')) : '';
+        const lbl = [rpm.display_label || 'A2#05', slotTxt].filter(Boolean).join(' ');
         if (wrSub) wrSub.textContent = rpm.wins + 'W / ' + rpm.losses + 'L · ' + rpm.closed_trades + ' işlem · ' + lbl + openNote;
+        const tagTxt = lbl || 'A2#05';
+        const tagMob = document.getElementById('recent-trades-tag');
+        const tagRp = document.getElementById('recent-trades-tag-rp');
+        if (tagMob) tagMob.textContent = tagTxt;
+        if (tagRp) tagRp.textContent = tagTxt;
       } else {
         wrEl.textContent = '—';
         wrEl.className = 'stat-val';
@@ -15967,7 +16311,10 @@ body{
 .book-split-pane{min-width:0}
 .book-split-h{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
 .book-split-right{padding-left:18px;border-left:1px solid var(--line)}
-.book-tops{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(220px,.78fr);gap:12px;margin-bottom:16px;align-items:stretch}
+.book-tops{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px;align-items:stretch}
+.book-yillik{margin-top:6px;text-align:center;font-size:11px;font-weight:700;color:var(--muted)}
+.book-yillik b{font-weight:800}
+.book-yillik .pos{color:var(--green)}.book-yillik .neg{color:var(--red)}
 .book-tops .book-grid{display:contents}
 .book-tops .book-card-wrap{min-width:0;height:100%}
 .book-tops .book-card{height:100%}
@@ -15976,21 +16323,21 @@ body{
 .book-bt b{font-weight:800}
 .book-bt .pos{color:var(--green)}.book-bt .neg{color:var(--red)}
 .watch-bt{
-  position:relative;overflow:hidden;border-radius:16px;padding:12px 14px;
+  position:relative;overflow:hidden;border-radius:16px;padding:14px 16px;
   background:linear-gradient(160deg,#0f1a2e 0%,#13233d 55%,#1a2a18 100%);
   color:#fff;border:1px solid rgba(245,193,74,.28);
   box-shadow:0 12px 28px rgba(8,16,32,.35);height:100%;min-height:0;
-  display:flex;flex-direction:column;
+  display:flex;flex-direction:column;min-width:280px;
 }
 .watch-bt-h{font-size:11px;font-weight:800;letter-spacing:-.2px;color:#f5c14a}
 .watch-bt-h span{font-size:10px;font-weight:600;opacity:.75;color:#c8d4e8}
-.watch-bt-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.08)}
+.watch-bt-row{display:grid;grid-template-columns:minmax(4.5em,1fr) 7.4em 6.8em;align-items:baseline;column-gap:10px;margin-top:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.08)}
 .watch-bt-row:last-of-type{border-bottom:0}
 .watch-bt-row .n{font-size:13px;font-weight:800}
-.watch-bt-row .bt{font-size:15px;font-weight:800}
+.watch-bt-row .bt{font-size:15px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
 .watch-bt-row .bt.pos,.watch-bt .pos{color:#39ff8e}
 .watch-bt-row .bt.neg,.watch-bt .neg{color:#fda4af}
-.watch-bt-row .lv{font-size:11px;color:#8b95a8}
+.watch-bt-row .lv{font-size:11px;color:#8b95a8;text-align:right;font-variant-numeric:tabular-nums}
 .watch-bt-meta{font-size:10px;color:#8b95a8;margin-top:auto;padding-top:8px;line-height:1.35}
 .sym-best{
   position:relative;overflow:hidden;border-radius:16px;padding:10px 12px 10px;
@@ -16066,6 +16413,91 @@ body{
 .book-card.book-wr-best.book-featured{
   background:rgba(57,255,142,.16);
 }
+.book-card.book-jarvis2026,
+.book-card.book-jarvis2026.regime-live,
+.book-card.book-jarvis2026.book-featured,
+.book-card.book-jarvis2026.book-wr-best{
+  background:#f5e56a !important;
+  border-color:#d4b20a !important;
+  color:#1a1500;
+  box-shadow:0 0 0 1px rgba(255,220,40,.4);
+}
+.book-card.book-jarvis2026:hover{
+  background:#ffe978 !important;
+  border-color:#c9a508 !important;
+}
+.book-card.book-jarvis2026 .bt,
+.book-card.book-jarvis2026 .br,
+.book-card.book-jarvis2026 .br span,
+.book-card.book-jarvis2026 .br b{color:#141100 !important}
+.book-card.book-jarvis2026 .bs,
+.book-card.book-jarvis2026 .book-opens,
+.book-card.book-jarvis2026 .book-since.wait{color:#3d3208 !important}
+.book-card.book-jarvis2026 .book-since{color:#141100 !important}
+.book-card.book-jarvis2026 .pos{color:#0a5c28 !important}
+.book-card.book-jarvis2026 .neg{color:#9b1228 !important}
+.book-card.book-jarvis2026 .wr-chip{
+  background:#fff6c2;
+  border-color:#8a7418;
+  color:#141100 !important;
+}
+.book-card.book-jarvis2026 .wr-chip.best{
+  color:#0a3d42 !important;
+  border-color:#0a5c64;
+  background:#fff;
+}
+.book-card.book-jarvis2026 .regime-chip.live{
+  color:#fff !important;
+  border-color:#4a1878;
+  background:#5b1d8a;
+}
+.book-card.book-ref01,
+.book-card.book-ref01.regime-live,
+.book-card.book-ref01.book-featured,
+.book-card.book-ref01.book-wr-best{
+  background:#5fd68a !important;
+  border-color:#2a9a54 !important;
+  color:#0d1f12;
+  box-shadow:0 0 0 1px rgba(45,160,90,.35);
+}
+.book-card.book-ref01:hover{
+  background:#72e49a !important;
+  border-color:#238a49 !important;
+}
+.book-card.book-ref01 .bt,
+.book-card.book-ref01 .br,
+.book-card.book-ref01 .br span,
+.book-card.book-ref01 .br b{color:#0d1f12 !important}
+.book-card.book-ref01 .bs,
+.book-card.book-ref01 .book-opens,
+.book-card.book-ref01 .book-since.wait{color:#1a3d28 !important}
+.book-card.book-ref01 .book-since{color:#0d1f12 !important}
+.book-card.book-ref01 .pos{color:#064422 !important}
+.book-card.book-ref01 .neg{color:#9b1228 !important}
+.book-card.book-ref01 .wr-chip{
+  background:#d8f8e4;
+  border-color:#2a9a54;
+  color:#0d1f12 !important;
+}
+.book-card.book-ref01 .wr-chip.best{
+  color:#064422 !important;
+  border-color:#0a5c28;
+  background:#fff;
+}
+.book-card.book-ref01 .regime-chip.live{
+  color:#fff !important;
+  border-color:#14532d;
+  background:#166534;
+}
+#view-detail.book-ref01 .head{
+  background:#163d28;
+  border:1px solid #2a9a54;
+  border-radius:16px;
+  padding:16px 18px;
+}
+#view-detail.book-ref01 .page-title{color:#b8f0cc}
+#view-detail.book-ref01 .page-sub{color:#8dcea4}
+#view-detail.book-ref01 .detail-back{color:#5fd68a}
 .regime-chip{
   display:inline-block;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
   border-radius:999px;padding:3px 8px;margin-top:6px;
@@ -16127,6 +16559,28 @@ body{
 .vote-tape .mkt-tape-head{min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
 .vote-tape .mkt-tape-v{font-size:13px;margin:0}
 .vote-tape .mkt-tape-h{font-size:10px;margin:0}
+.path-tape{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;
+  margin:-4px 0 16px;padding:8px 12px;border-radius:12px;
+  background:var(--card);border:1px solid var(--line);
+  text-decoration:none;color:inherit;cursor:pointer;
+  transition:border-color .15s, background .15s;
+}
+.path-tape:hover{border-color:rgba(200,241,53,.35);background:#16161f}
+.path-tape-k{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.path-tape-v{font-size:14px;font-weight:800}
+.path-tape-h{font-size:11px;color:var(--muted)}
+.path-charts{display:flex;flex-direction:column;gap:14px}
+.path-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px 10px}
+.path-card-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.path-card-t{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.path-card-t i{font-style:normal;margin-left:8px;width:8px;height:8px;border-radius:50%;display:inline-block;vertical-align:middle}
+.path-card-s{font-size:12px;color:var(--muted);font-weight:600}
+.path-card-s b{font-weight:800}
+.path-card-s .pos{color:var(--green)}
+.path-card-s .neg{color:var(--red)}
+.path-svg{display:block;width:100%;height:220px}
+.path-card-f{font-size:11px;color:var(--muted);margin-top:6px}
 .vote-groups{display:flex;flex-direction:column;gap:4px}
 .vote-group{
   display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;
@@ -16279,6 +16733,16 @@ body{
 .detail-back{display:inline-flex;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--accent);text-decoration:none}
 .detail-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,320px);gap:16px;align-items:start}
 .detail-main{min-width:0;display:flex;flex-direction:column;gap:16px}
+.j26-map{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.j26-coin{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.j26-k{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.5px}
+.j26-v{font-size:16px;font-weight:800;margin:4px 0 6px}
+.j26-w{font-size:11px;color:var(--muted);line-height:1.4}
+.j26-note{font-size:12px;color:#ccc;margin-top:10px}
+.j26-feed{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.j26-feed-row{font-size:12px;color:#bbb;line-height:1.4}
+.j26-feed-row b{color:#eee}
+@media(max-width:720px){.j26-map{grid-template-columns:1fr}}
 .edit-panel{
   position:sticky;top:24px;background:var(--card);border:1px solid var(--line);
   border-radius:18px;padding:16px 18px;max-height:calc(100vh - 48px);overflow-y:auto;
@@ -16321,7 +16785,7 @@ body{
   .book-split{grid-template-columns:1fr}
   .book-split-right{padding-left:0;border-left:none;padding-top:16px;border-top:1px solid var(--line)}
   .book-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .book-tops{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .book-tops{grid-template-columns:repeat(3,minmax(0,1fr))}
   .book-tops .book-grid{display:contents}
 }
 @media(max-width:860px){
@@ -16340,7 +16804,7 @@ body{
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
   <a class="nav-item active" href="/algoritma-islemler"><span class="nav-dot"></span>Algoritma işlemler</a>
-  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item" href="/poly/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <a class="nav-item" href="/poly/islemler"><span class="nav-dot"></span>İşlemler</a>
@@ -16367,14 +16831,11 @@ body{
       </div>
       <div id="mkt-coins" style="display:flex;flex-wrap:wrap;gap:8px;flex:1"></div>
     </div>
-    <div class="vote-tape" id="vote-tape">
-      <div class="mkt-tape-head">
-        <div class="mkt-tape-k">Algoritma oyu · :05</div>
-        <div class="mkt-tape-v" id="vote-slot">…</div>
-        <div class="mkt-tape-h" id="vote-hint">durgun · trend · canlı</div>
-      </div>
-      <div id="vote-coins"></div>
-    </div>
+    <a class="path-tape" id="path-tape" href="/algoritma-islemler/saatlik-yol">
+      <div class="path-tape-k">Saatlik yol · BTC ETH SOL</div>
+      <div class="path-tape-v" id="path-hours">veri bekleniyor</div>
+      <div class="path-tape-h" id="path-span"></div>
+    </a>
     <div class="section">
       <div class="section-title">algoritma durumu · en iyi → en kötü</div>
       <div class="regime-filters" id="regime-filters">
@@ -16407,6 +16868,12 @@ body{
     </div>
     <div class="detail-layout">
       <div class="detail-main">
+        <div class="section" id="jarvis-box" style="display:none">
+          <div class="section-title" id="jarvis-title">JARVIS2026 evrim</div>
+          <div class="j26-map" id="jarvis-map"></div>
+          <div class="j26-note" id="jarvis-note"></div>
+          <div class="j26-feed" id="jarvis-feed"></div>
+        </div>
         <div class="section">
           <div class="section-title" id="detail-sec-title">Açık Pozisyonlar</div>
           <div class="positions" id="detail-positions"><div class="empty">yükleniyor…</div></div>
@@ -16423,11 +16890,29 @@ body{
       </aside>
     </div>
   </div>
+  <div id="view-path" style="display:none">
+    <div class="head">
+      <div>
+        <a class="detail-back" href="/algoritma-islemler">← Algoritmalar</a>
+        <div class="page-title">Saatlik yol</div>
+        <div class="page-sub" id="path-detail-sub">BTC / ETH / SOL · dakika yolu · referans = 1h açılış · emir yok</div>
+      </div>
+      <div class="chip" id="path-detail-chip">—</div>
+    </div>
+    <div class="path-charts" id="path-charts">
+      <div class="empty">yükleniyor…</div>
+    </div>
+  </div>
 </div>
 <script>
 const PATH = location.pathname.replace(/\/+$/,'');
 const m = PATH.match(/\/algoritma-islemler\/([a-zA-Z0-9_-]+)$/);
 const DETAIL_ID = m ? m[1] : null;
+const PATH_VIEW = /^(saatlik-yol|saatlik_yol|hourly-path)$/i.test(DETAIL_ID || '');
+if(String(DETAIL_ID||'').toLowerCase()==='ref01'){
+  const vd = document.getElementById('view-detail');
+  if(vd) vd.classList.add('book-ref01');
+}
 let _detailBook = null;
 let _detailSlots = {};
 let _viewSlot = 5;
@@ -16520,6 +17005,10 @@ function posCard(p){
   const payout = Number(p.win_payout != null ? p.win_payout : (p.to_win != null ? p.to_win : (p.pm_size || 0)));
   const net = p.win_profit != null ? Number(p.win_profit) : (payout > 0 ? payout - spent : 0);
   const slot = p.slot_label || p.slot || '—';
+  const et = fmtClock(p.entry_time_tr);
+  const mode = p.ref01_mode ? String(p.ref01_mode).toUpperCase() : '';
+  const when = et ? ('Giriş ' + et + ' İST') : '';
+  const slotLine = [when, mode, slot].filter(Boolean).join(' · ');
   const pmEp = p.pm_entry_price != null ? Number(p.pm_entry_price).toFixed(3) : '—';
   const payoutHtml = payout > 0
     ? `<span class="live-close-val" style="color:var(--green)">$${payout.toFixed(2)}</span>
@@ -16534,7 +17023,7 @@ function posCard(p){
     <div class="pos-pct">Ödenen $${spent.toFixed(2)} @ ${pmEp}</div>
     <div class="pos-pct">Poly kâr · fill ${pmEp}</div>
     <div class="pos-entry">Spot giriş: $${fmtPx(p.entry_price)}</div>
-    <div class="pos-slot">${slot}</div>
+    <div class="pos-slot">${slotLine}</div>
     <div class="pos-close-row">
       <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:4px">KAZANIRSA (Poly CLOB)</div>
       ${payoutHtml}
@@ -16546,6 +17035,11 @@ function fmtHistTime(raw){
   if (s.length >= 16) return s.slice(5, 16).replace('T', ' ');
   return s.slice(0, 11) || '—';
 }
+function fmtClock(raw){
+  const s = String(raw || '');
+  const m = s.match(/T(\d{2}:\d{2})/);
+  return m ? m[1] : '';
+}
 function histRow(t){
   const win = !!t.win;
   const pnl = Number(t.pnl || 0);
@@ -16553,12 +17047,17 @@ function histRow(t){
   const dir = (t.dir || '').toUpperCase();
   const dc = dir === 'UP' ? 'up' : 'down';
   const slot = t.slot_label ? String(t.slot_label).replace(/ Up or Down.*/i, '') : '';
+  const isRef = String(DETAIL_ID||'').toLowerCase()==='ref01' || !!t.ref01_mode;
+  const mode = t.ref01_mode ? String(t.ref01_mode).toUpperCase() : '';
+  const timeTxt = isRef && t.entry_time_tr ? fmtHistTime(t.entry_time_tr) : fmtHistTime(t.exit_time_tr);
+  const extra = [mode, slot, t.jarvis_book || '']
+    .filter(Boolean).join(' · ');
   return `<div class="hist-row">
-    <div class="hist-time">${fmtHistTime(t.exit_time_tr)}</div>
+    <div class="hist-time">${timeTxt}</div>
     <div class="hist-sym">${t.symbol || '—'}</div>
     <div>
       <span class="hist-dir ${dc}">${t.dir_tr || (dir === 'UP' ? 'UP' : 'DN')}</span>
-      <div class="hist-meta">giriş $${spent.toFixed(2)}${slot ? ' · ' + slot : ''}</div>
+      <div class="hist-meta">giriş $${spent.toFixed(2)}${extra ? ' · ' + extra : ''}</div>
     </div>
     <div class="hist-pnl ${win ? 'win' : 'loss'}">${win ? '✓' : '✗'} ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</div>
   </div>`;
@@ -16632,6 +17131,159 @@ function voteStatHtml(st, coins){
     + '<span class="vote-stat-m">'+((st && st.detail) || '')+'</span></div>'
     + votePnlHtml(st);
 }
+function pathHourLabel(key){
+  if(!key || key.length < 13) return key || '';
+  const dd = key.slice(8,10), mm = key.slice(5,7), hh = key.slice(11,13);
+  return dd + '.' + mm + ' ' + hh + ':00';
+}
+async function loadPathTape(){
+  const v = document.getElementById('path-hours');
+  const s = document.getElementById('path-span');
+  if(!v) return;
+  try{
+    const r = await fetch('/poly/api/hourly-path?meta=1', {cache:'no-store'});
+    const d = await r.json();
+    const n = Number(d && d.hours_n || 0);
+    if(!d || !d.ok || n < 1){
+      v.textContent = 'veri henüz yok';
+      if(s) s.textContent = '';
+      return;
+    }
+    v.textContent = n + ' saatlik veri oluştu';
+    if(s){
+      const a = pathHourLabel(d.first_hour);
+      const b = pathHourLabel(d.last_hour);
+      s.textContent = a && b ? (a + ' → ' + b) : '';
+    }
+  }catch(e){
+    v.textContent = 'yol kaydı okunamadı';
+  }
+}
+const PATH_COIN_META = {
+  BTC: {color:'#f5a623', name:'Bitcoin'},
+  ETH: {color:'#7b8cff', name:'Ethereum'},
+  SOL: {color:'#14f195', name:'Solana'},
+};
+function pathFmtBps(n){
+  if(n==null || isNaN(n)) return '—';
+  const v = Number(n);
+  return (v>=0?'+':'') + v.toFixed(1) + ' bps';
+}
+function pathFmtTs(ts){
+  const d = new Date(Number(ts)*1000);
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0');
+  return dd + '.' + mm + ' ' + hh + ':00';
+}
+function pathDrawSvg(pts, color, w, h){
+  if(!pts || !pts.length) return '<div class="empty">bu coinde dakika yok</div>';
+  const pad = {l:46, r:14, t:12, b:26};
+  const xs = pts.map(p => p[0]);
+  const ys = pts.map(p => p[1]);
+  const xmin = xs[0], xmax = xs[xs.length-1] === xs[0] ? xs[0]+1 : xs[xs.length-1];
+  let ymin = Math.min(0, ...ys), ymax = Math.max(0, ...ys);
+  if(ymin === ymax){ ymin -= 8; ymax += 8; }
+  const ypad = Math.max(4, (ymax-ymin)*0.08);
+  ymin -= ypad; ymax += ypad;
+  const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const X = t => pad.l + (t-xmin)/(xmax-xmin)*iw;
+  const Y = v => pad.t + (ymax-v)/(ymax-ymin)*ih;
+  const line = pts.map((p,i) => (i?'L':'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ');
+  const z = Y(0);
+  const area = 'M' + X(pts[0][0]).toFixed(1) + ' ' + z.toFixed(1) + ' ' +
+    pts.map(p => 'L' + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ') +
+    ' L' + X(pts[pts.length-1][0]).toFixed(1) + ' ' + z.toFixed(1) + ' Z';
+  const hourStarts = [];
+  let lastH = null;
+  pts.forEach(p => {
+    const d = new Date(p[0]*1000);
+    const k = d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()+'-'+d.getHours();
+    if(k !== lastH){ hourStarts.push(p[0]); lastH = k; }
+  });
+  const step = hourStarts.length > 16 ? 4 : (hourStarts.length > 8 ? 2 : 1);
+  const ticks = hourStarts.filter((_,i) => i%step===0 || i===hourStarts.length-1);
+  const vlines = hourStarts.map(t => {
+    const x = X(t).toFixed(1);
+    return '<line x1="'+x+'" x2="'+x+'" y1="'+pad.t+'" y2="'+(h-pad.b)+'" stroke="rgba(255,255,255,.06)" />';
+  }).join('');
+  const labels = ticks.map(t => {
+    const x = X(t);
+    return '<text x="'+x.toFixed(1)+'" y="'+(h-8)+'" text-anchor="middle" fill="#6b6b78" font-size="10">'+pathFmtTs(t)+'</text>';
+  }).join('');
+  const yTicks = [ymin, 0, ymax].filter((v,i,a) => a.indexOf(v)===i);
+  const yLbl = yTicks.map(v => {
+    const y = Y(v);
+    return '<text x="'+(pad.l-6)+'" y="'+(y+3)+'" text-anchor="end" fill="#6b6b78" font-size="10">'+v.toFixed(0)+'</text>';
+  }).join('');
+  return '<svg class="path-svg" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" preserveAspectRatio="xMinYMid meet">'
+    + vlines
+    + '<line x1="'+pad.l+'" x2="'+(w-pad.r)+'" y1="'+z.toFixed(1)+'" y2="'+z.toFixed(1)+'" stroke="rgba(255,255,255,.22)" stroke-dasharray="4 3" />'
+    + '<path d="'+area+'" fill="'+color+'" opacity=".12" />'
+    + '<path d="'+line+'" fill="none" stroke="'+color+'" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" />'
+    + yLbl + labels
+    + '</svg>';
+}
+function pathCoinCard(sym, coin, w){
+  const meta = PATH_COIN_META[sym] || {color:'#c8f135', name:sym};
+  const pts = coin && coin.pts || [];
+  const hours = coin && coin.hours || [];
+  const lastH = hours.length ? hours[hours.length-1] : {};
+  const lastPt = pts.length ? pts[pts.length-1] : null;
+  const bps = lastH.bps != null ? Number(lastH.bps) : (lastPt ? lastPt[1] : null);
+  const px = lastPt ? lastPt[2] : lastH.end;
+  const win = lastH.winner || '';
+  const cls = bps==null ? '' : (bps>=0 ? 'pos' : 'neg');
+  const svg = pathDrawSvg(pts, meta.color, w, 220);
+  return '<article class="path-card">'
+    + '<div class="path-card-h"><div class="path-card-t">'+sym+' <i style="background:'+meta.color+'"></i></div>'
+    + '<div class="path-card-s"><b class="'+cls+'">'+pathFmtBps(bps)+'</b> · '
+    + (px!=null ? fmtPx(px) : '—')
+    + (win ? ' · '+win : '')
+    + ' · 1h açık '+(lastH.ref!=null ? fmtPx(lastH.ref) : '—')
+    + '</div></div>'
+    + svg
+    + '<div class="path-card-f">max '+pathFmtBps(lastH.max_up_bps)+' · min −'
+    + (lastH.max_dn_bps!=null ? Number(lastH.max_dn_bps).toFixed(1)+' bps' : '—')
+    + (lastH.above_n!=null ? ' · '+lastH.above_n+' dk üstte / '+(lastH.below_n||0)+' altta' : '')
+    + ' · bu saat</div></article>';
+}
+async function loadPathDetail(){
+  const box = document.getElementById('path-charts');
+  const sub = document.getElementById('path-detail-sub');
+  const chip = document.getElementById('path-detail-chip');
+  if(!box) return;
+  try{
+    const r = await fetch('/poly/api/hourly-path?series=1', {cache:'no-store'});
+    const d = await r.json();
+    if(!d || !d.ok){
+      box.innerHTML = '<div class="empty">'+(d&&d.error?d.error:'yol kaydı yok')+'</div>';
+      return;
+    }
+    const n = Number(d.hours_n||0);
+    if(sub){
+      const a = pathHourLabel(d.first_hour);
+      const b = pathHourLabel(d.last_hour);
+      sub.textContent = 'BTC / ETH / SOL · '+n+' saat · referans = 1h açılış · '
+        + (a && b ? (a+' → '+b) : '') + ' · emir yok';
+    }
+    if(chip) chip.textContent = n + ' saat';
+    const w = Math.max(320, (box.clientWidth || 720));
+    box.innerHTML = ['BTC','ETH','SOL'].map(sym => pathCoinCard(sym, (d.coins||{})[sym], w)).join('');
+  }catch(e){
+    box.innerHTML = '<div class="empty">yol kaydı okunamadı</div>';
+  }
+}
+function showPathView(){
+  const list = document.getElementById('view-list');
+  const det = document.getElementById('view-detail');
+  const path = document.getElementById('view-path');
+  if(list) list.style.display = 'none';
+  if(det) det.style.display = 'none';
+  if(path) path.style.display = 'block';
+}
+if(PATH_VIEW) showPathView();
+window.addEventListener('resize', () => { if(PATH_VIEW) loadPathDetail(); });
 function renderVotes(v){
   const slotEl = document.getElementById('vote-slot');
   const hint = document.getElementById('vote-hint');
@@ -16735,14 +17387,14 @@ function bookCardHtml(b, homeKey, wrBest){
   const actLbl = isActive ? '✓ Poly overview aktif' : 'Poly overview\'da aktif et';
   const regime = b.regime || 'live';
   const regimeLbl = b.regime_label || (regime === 'range' ? 'Durgun' : regime === 'trend' ? 'Trend' : 'Canlı');
-  const btLine = (b.bt_month_pnl != null || b.month_pnl != null) ? `<div class="book-bt">
-      <span>Bu ay canlı <b class="${Number(b.month_pnl||0)>=0?'pos':'neg'}">${moneyTxt(b.month_pnl)}</b></span>
-      <span>1Y ${b.bt_month_label||''} <b class="${Number(b.bt_month_pnl||0)>=0?'pos':'neg'}">${moneyTxt(b.bt_month_pnl)}</b></span>
-    </div>` : '';
   const hrefId = (watchPin && String(b.id||'') === 'analiz1') ? 'f16' : (b.id || '');
   const href = '/algoritma-islemler/' + encodeURIComponent(hrefId);
+  const yilN = b.bt_month_pnl;
+  const yilLine = watchPin
+    ? `<div class="book-yillik">yıllık backtest ${yilN==null ? '—' : `<b class="${Number(yilN)>=0?'pos':'neg'}">${moneyTxt(yilN)}$</b>`}</div>`
+    : '';
   return `<div class="book-card-wrap">
-    <a class="book-card regime-${regime}${isActive ? ' book-active' : ''}${b.featured || featSet[b.id] ? ' book-featured' : ''}${wrBest ? ' book-wr-best' : ''}${watchPin ? ' book-watch' : ''}" href="${href}">
+    <a class="book-card regime-${regime}${isActive ? ' book-active' : ''}${b.featured || featSet[b.id] ? ' book-featured' : ''}${wrBest ? ' book-wr-best' : ''}${watchPin ? ' book-watch' : ''}${String(b.id||'').toLowerCase()==='jarvis2026' ? ' book-jarvis2026' : ''}${String(b.id||'').toLowerCase()==='ref01' ? ' book-ref01' : ''}" href="${href}">
       <div class="book-since${b.wr == null ? ' wait' : ''}" title="${since ? (sinceTitle + ' · ' + since) : 'Seçili dilim WR'}">${b.wr == null ? 'WR —' : ('WR %'+String(b.wr).replace('.',','))}</div>
       <div class="bt">${title}</div>
       <div class="bs">${sub} · ${histN} işlem · ${padSlot(b.best_slot || b.open_minute || 5)}</div>
@@ -16752,8 +17404,8 @@ function bookCardHtml(b, homeKey, wrBest){
       <div class="br"><span>Net P&L</span><b class="${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${pnl.toFixed(2)}</b></div>
       <div class="br"><span>Anlık net</span><b class="${upnl>=0?'pos':'neg'}">${upnl>=0?'+':''}${upnl.toFixed(2)}</b></div>
       <div class="book-opens">${b.open_count||0} açık · ${opens}</div>
-      ${watchPin ? btLine : ''}
     </a>
+    ${yilLine}
     ${b.vote_paper || b.no_home ? '' : `<button type="button" class="book-activate${actCls}" ${isActive ? 'disabled' : ''}
       onclick="setHomeDisplay('${String(b.id).replace(/'/g, '')}', this)"
       title="Poly /poly overview bu defterden devam eder">${actLbl}</button>`}
@@ -16826,9 +17478,9 @@ function watchBtHtml(wb){
     </div>`;
   }).join('');
   return `<div class="watch-bt">
-    <div class="watch-bt-h">1Y aylık net $ <span>· ${wb.month_label||''} · coin fiyatı değil</span></div>
+    <div class="watch-bt-h">1Y aylık net $ <span>· ${wb.month_label||''} · geçen yıl aynı ay</span></div>
     ${body}
-    <div class="watch-bt-meta">Büyük sayı = o ayın walk-forward kâr/zararı (kasa $). Canlı = bu ay sanal settle. F16 Ağu yalnız 1–15 · A2 tam ay · F16V2 henüz 1Y yok.</div>
+    <div class="watch-bt-meta">Büyük sayı = geçen yılın bu ayındaki walk-forward kasa $. Canlı = bu ay sanal settle. Her gece 00:00 yenilenir.</div>
   </div>`;
 }
 function renderBooks(books, homeKey, symBest, watchBt){
@@ -16842,7 +17494,7 @@ function renderBooks(books, homeKey, symBest, watchBt){
     el.innerHTML = '<div class="empty">defter yok</div>';
     return;
   }
-  const WATCH_IDS = ['analiz1','a2_03','a2_05','f16v2'];
+  const WATCH_IDS = ['ref01','analiz1','a2_03','a2_05','f16v2','jarvis2026'];
   const watch = WATCH_IDS.map(id => all.find(b => String(b.id||'').toLowerCase() === id)).filter(Boolean);
   const ranked = rows.filter(b => !isVoteTopBook(b) && !WATCH_IDS.includes(String(b.id||'').toLowerCase()));
   const byPnl = sortBooksByPnl(ranked);
@@ -16852,12 +17504,10 @@ function renderBooks(books, homeKey, symBest, watchBt){
     if (Number(b.history_n||0) >= 6 && b.wr != null && Number(b.wr) > bestWr) bestWr = Number(b.wr);
   });
   const card = b => bookCardHtml(b, homeKey, !isVoteTopBook(b) && bestWr >= 0 && Number(b.history_n||0) >= 6 && b.wr != null && Number(b.wr) === bestWr);
-  const side = watchBtHtml(_lastWatchBt) || symBestHtml(_lastSymBest);
   el.innerHTML =
-    '<div class="book-split-h">İzleme · F16 · A2#03 · A2#05 · F16V2</div>'
+    '<div class="book-split-h">İzleme · REF01 · F16 · A2#03 · A2#05 · F16V2 · JARVIS2026</div>'
     + '<div class="book-tops">'
       + '<div class="book-grid">'+(watch.length?watch.map(card).join(''):'')+'</div>'
-      + side
     + '</div>'
     + '<div class="book-split">'
       + '<div class="book-split-pane"><div class="book-split-h">En çok kazandıran</div>'
@@ -17038,10 +17688,57 @@ function renderDetail(book, skipEdit){
     const ef = document.getElementById('detail-edit-forms');
     if(ef) ef.innerHTML = '';
   }
+  renderJarvisBox(book);
+}
+function renderJarvisBox(book){
+  const box = document.getElementById('jarvis-box');
+  if(!box) return;
+  const j = book && book.jarvis;
+  if(!j){ box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  const title = document.getElementById('jarvis-title');
+  if(title){
+    title.textContent = 'JARVIS2026 evrim #' + (j.generation || 0)
+      + (j.updated_at_tr ? ' · ' + j.updated_at_tr : '')
+      + (j.source ? ' · ' + j.source : '');
+  }
+  const map = document.getElementById('jarvis-map');
+  if(map){
+    const ideas = j.ideas || [];
+    if(ideas.length){
+      map.innerHTML = ideas.map(s =>
+        `<div class="j26-coin"><div class="j26-k">${s.symbol || ''} · ${s.id || ''}</div>`
+        + `<div class="j26-v">${s.mode || '—'} ${s.book && s.book !== '—' ? '· '+s.book : ''}`
+        + (s.ask_max != null ? ' · ask≤'+s.ask_max : '') + `</div>`
+        + `<div class="j26-w">${s.why || ''}</div>`
+        + (s.lesson ? `<div class="j26-w">ders: ${s.lesson}</div>` : '')
+        + `</div>`
+      ).join('');
+    } else {
+      map.innerHTML = (j.sources || []).map(s =>
+        `<div class="j26-coin"><div class="j26-k">${s.coin}</div>`
+        + `<div class="j26-v">${s.label || '—'}</div>`
+        + `<div class="j26-w">${s.why || ''}</div></div>`
+      ).join('');
+    }
+  }
+  const note = document.getElementById('jarvis-note');
+  if(note) note.textContent = j.note || '';
+  const feed = document.getElementById('jarvis-feed');
+  if(feed){
+    feed.innerHTML = (j.feed || []).map(e =>
+      `<div class="j26-feed-row"><b>${e.ts || ''}</b> ${e.body || e.title || ''}</div>`
+    ).join('');
+  }
 }
 async function load(){
   const gen = ++_booksLoadGen;
   try{
+    if(PATH_VIEW){
+      showPathView();
+      await loadPathDetail();
+      return;
+    }
     if(DETAIL_ID){
       const r = await fetch('/poly/api/a2-algoritmalar/' + encodeURIComponent(DETAIL_ID), {cache:'no-store'});
       const d = await r.json();
@@ -17067,7 +17764,7 @@ async function load(){
       renderDetail(book, !!editing);
       return;
     }
-    if(!DETAIL_ID) loadMarketTape();
+    if(!DETAIL_ID){ loadMarketTape(); loadPathTape(); }
     const r = await fetch('/poly/api/a2-algoritmalar', {cache:'no-store'});
     const d = await r.json();
     if(!d || !d.ok){
@@ -17085,7 +17782,6 @@ async function load(){
       + ' · Net P&L ' + (pnl>=0?'+':'') + Number(pnl).toFixed(1)
       + ' · ' + histSum + ' işlem'
       + ' · açık ' + (d.total_open||0);
-    renderVotes(d.votes);
     renderBooks(books, d.home_display_book, d.sym_best, d.watch_backtest);
   } catch(e){
     console.error(e);
@@ -17184,7 +17880,7 @@ h1{font-size:22px;font-weight:800;margin-bottom:6px}
   <div class="nav-label">Ana Menü</div>
   <a class="nav-item" href="/poly"><span class="nav-dot"></span>Overview</a>
   <a class="nav-item" href="/algoritma"><span class="nav-dot"></span>Algoritma</a>
-  <a class="nav-item" href="/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
+  <a class="nav-item" href="/poly/harita"><span class="nav-dot"></span>Sıcaklık Haritası</a>
   <a class="nav-item" href="/analizler"><span class="nav-dot"></span>Analizler</a>
   <a class="nav-item active" href="/poly/yapay-zeka-analiz"><span class="nav-dot"></span>Yapay Zeka Analiz</a>
   <a class="nav-item" href="/poly/gecmis"><span class="nav-dot"></span>Geçmiş</a>
@@ -17282,10 +17978,13 @@ async function load(){
     const data = await r.json();
     if(data.error){ feed.innerHTML = '<div class="empty">Oturum hatası</div>'; return; }
     const entries = data.entries || [];
-    document.getElementById('subtitle').textContent =
-      entries.length + ' bildirim · en yeni üstte · Telegram ile eş zamanlı';
+    document.getElementById('subtitle').textContent = data.paused
+      ? 'Analiz durduruldu · yeni yorum üretilmez · eski bildirimler duruyor'
+      : (entries.length + ' bildirim · en yeni üstte · Telegram ile eş zamanlı');
     if(!entries.length){
-      feed.innerHTML = '<div class="empty">Henüz bildirim yok. İlk analiz 3 saatte bir gelir.</div>';
+      feed.innerHTML = data.paused
+        ? '<div class="empty">Poly Algo Analist durduruldu.</div>'
+        : '<div class="empty">Henüz bildirim yok. İlk analiz 3 saatte bir gelir.</div>';
       return;
     }
     feed.innerHTML = entries.map(renderCard).join('');
@@ -17417,10 +18116,13 @@ async function load(){
     const data = await r.json();
     if(data.error){ feed.innerHTML = '<div class="empty">Oturum hatası</div>'; return; }
     const entries = data.entries || [];
-    document.getElementById('subtitle').textContent =
-      entries.length + ' bildirim · en yeni üstte · Telegram ile eş zamanlı';
+    document.getElementById('subtitle').textContent = data.paused
+      ? 'Analiz durduruldu · yeni yorum üretilmez · eski bildirimler duruyor'
+      : (entries.length + ' bildirim · en yeni üstte · Telegram ile eş zamanlı');
     if(!entries.length){
-      feed.innerHTML = '<div class="empty">Henüz bildirim yok. İlk analiz 3 saatte bir gelir.</div>';
+      feed.innerHTML = data.paused
+        ? '<div class="empty">Kripto Test AI Analist durduruldu.</div>'
+        : '<div class="empty">Henüz bildirim yok. İlk analiz 3 saatte bir gelir.</div>';
       return;
     }
     feed.innerHTML = entries.map(renderCard).join('');
@@ -18143,10 +18845,20 @@ def page_algoritma_islemler():
     return ALGORITMA_ISLEMLER_HTML, 200, {"Cache-Control": "no-store"}
 
 
+@app.route("/algoritma-islemler/saatlik-yol")
+@app.route("/algoritma-islemler/saatlik-yol/")
+def page_algoritma_islemler_path():
+    if _auth_required():
+        return redirect("/poly/login")
+    return ALGORITMA_ISLEMLER_HTML, 200, {"Cache-Control": "no-store"}
+
+
 @app.route("/algoritma-islemler/<book_id>")
 def page_algoritma_islemler_detail(book_id):
     if _auth_required():
         return redirect("/poly/login")
+    if book_id.lower().strip() in _PATH_PAGE_IDS:
+        return ALGORITMA_ISLEMLER_HTML, 200, {"Cache-Control": "no-store"}
     norm = _normalize_algo_book_id(book_id)
     if norm != book_id.lower().strip():
         return redirect(f"/algoritma-islemler/{norm}")
@@ -18664,7 +19376,7 @@ body.kf-overview .kf-right-panel{display:block}
   <div class="head">
     <div>
         <div class="page-title">Kripto Future <span id="mode-badge" class="badge dry">SANAL</span></div>
-        <div class="page-sub" id="page-sub">A1#39 sanal · H1 Kombinasyon · $100×6x · Binance emir yok</div>
+        <div class="page-sub" id="page-sub">MELEZ sanal · A2#05 × A6V3 · $100×6x · Binance emir yok</div>
     </div>
     <button type="button" class="wbtn" title="Yenile" onclick="refreshOverviewFast(true)" style="width:40px;height:40px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);cursor:pointer;font-size:18px">↻</button>
   </div>
@@ -18673,21 +19385,21 @@ body.kf-overview .kf-right-panel{display:block}
     <div class="kf-overview-left">
       <div class="kf-stats-row kf-top-stats">
         <div class="kf-ov-wallet">
-          <div class="kf-ov-tag">A1#39 BAKİYE</div>
+          <div class="kf-ov-tag">MELEZ BAKİYE</div>
           <div class="kf-ov-lbl">Test defteri · sanal</div>
           <div class="kf-ov-bal" id="kf-bal">—</div>
-          <div class="kf-ov-sub" id="kf-books-sub">A1#39 $100×6x · yükleniyor…</div>
+          <div class="kf-ov-sub" id="kf-books-sub">MELEZ $100×6x · yükleniyor…</div>
         </div>
         <div class="kf-ov-wallet cash" id="kf-pnl-card">
           <div class="kf-ov-tag">NET P&L</div>
-          <div class="kf-ov-lbl">A1#39 kapanmış + açık</div>
+          <div class="kf-ov-lbl">MELEZ kapanmış + açık</div>
           <div class="kf-ov-bal" id="kf-pnl">—</div>
           <div class="kf-ov-sub" id="kf-open-sub">açık pozisyon —</div>
         </div>
       </div>
-      <div class="section-title">Açık işlemler · A1#39 <a href="/kripto/test/a1_39" style="color:var(--accent);font-weight:600;text-decoration:none">detay →</a></div>
+      <div class="section-title">Açık işlemler · MELEZ <a href="/kripto/test/melez" style="color:var(--accent);font-weight:600;text-decoration:none">detay →</a></div>
       <div class="positions" id="kf-live-opens" style="margin-bottom:18px"><div class="empty">yükleniyor…</div></div>
-      <div class="section-title">Kapanmış işlemler · A1#39</div>
+      <div class="section-title">Kapanmış işlemler · MELEZ</div>
       <div class="kf-closed-list" id="kf-live-closed"><div class="empty">yükleniyor…</div></div>
       <div class="section-title">Coin bazlı en yetenekli algoritma</div>
       <div class="kf-leaders-box" id="positions"><div class="empty">yükleniyor…</div></div>
@@ -18697,7 +19409,7 @@ body.kf-overview .kf-right-panel{display:block}
     <div class="kf-overview-right">
       <div class="kf-sym-lime">
         <div class="kf-sym-title">İşlem bekleyen · <span id="kf-wait-n">30</span> coin</div>
-        <div class="kf-sym-meta" id="kf-wait-hint">A1#39 sinyal bekleyen coinler</div>
+        <div class="kf-sym-meta" id="kf-wait-hint">MELEZ / tarama bekleyen coinler</div>
         <div class="wait-list kf-wait-compact" id="waiting" style="margin-top:10px;max-height:420px"><div class="empty">yükleniyor…</div></div>
       </div>
     </div>
@@ -18784,7 +19496,7 @@ body.kf-overview .kf-right-panel{display:block}
     <div class="head">
       <div>
         <div class="page-title">Algoritma İşlemler</div>
-        <div class="page-sub">Poly + ALGO1 + A10 Dual + Supertrend + JARVIS_V1 + CEBU → sanal Binance · $1000 · $100×6x · max 8 (JARVIS 10 · CEBU 8) · zaman kapanışı yok · 24s tavan · 3×ATR · ATR kilit · 73 defter · USDT-M evren · 24s hareket · BTC/ETH yok · 7/24</div>
+        <div class="page-sub">Sanal Binance · $1000 · $100×6x · max 8 · zaman kapanışı yok · 24s tavan · 3×ATR · ATR kilit · 14 defter (bakiye ≥ $1005) · USDT-M evren · 24s hareket · BTC/ETH yok · 7/24</div>
       </div>
       <div class="chip" id="test-sum">—</div>
     </div>
@@ -19168,8 +19880,9 @@ async function loadChartCoinList(){
   highlightChartCoin();
 }
 function heroLive(d){
+  if(d && d.melez_paper && d.melez_paper.ok) return d.melez_paper;
   if(d && d.a139_paper && d.a139_paper.ok) return d.a139_paper;
-  return (d && (d.b1_mum_live || d.a139_live)) || {};
+  return {};
 }
 function renderWaiting(d){
   const wl = document.getElementById('waiting');
@@ -19417,13 +20130,13 @@ function renderA139Opens(lv){
   const box = document.getElementById('kf-live-opens');
   if(!box) return;
   if(!lv || !lv.ok){
-    box.innerHTML = '<div class="empty">'+(lv && lv.error ? lv.error : 'A1#39 pozisyon yüklenemedi')+'</div>';
+    box.innerHTML = '<div class="empty">'+(lv && lv.error ? lv.error : 'MELEZ pozisyon yüklenemedi')+'</div>';
     return;
   }
   const paper = !!lv.paper;
   const cards = lv.cards || [];
   if(!cards.length){
-    box.innerHTML = '<div class="empty">Açık işlem yok · A1#39 $100×6x sanal · cron :05 / */10</div>';
+    box.innerHTML = '<div class="empty">Açık işlem yok · MELEZ $100×6x sanal · cron :05 / */10</div>';
     return;
   }
   box.innerHTML = cards.map(p => {
@@ -19433,7 +20146,7 @@ function renderA139Opens(lv){
     const name = p.name || (p.symbol||'').replace('USDT','');
     const lock = p.lock_armed
       ? ('ATR kilit · stop $' + Number(p.stop_upnl||0).toFixed(2))
-      : (paper ? 'A1#39 sanal · taker komisyon düşülür' : (p.mirror_note || 'sanal'));
+      : (paper ? 'MELEZ sanal · taker komisyon düşülür' : (p.mirror_note || 'sanal'));
     const opened = fmtTrWhen(p.entry_time_tr);
     const roe = (p.roe != null && isFinite(Number(p.roe)))
       ? (' · ' + (Number(p.roe)>=0?'+':'') + Number(p.roe).toFixed(1) + '%')
@@ -19511,7 +20224,7 @@ function renderOverview(d){
   if(booksSub){
     const wr = lv.win_rate != null ? ('WR %' + lv.win_rate) : '';
     const n = lv.trade_count != null ? (lv.trade_count + ' işlem') : '';
-    booksSub.textContent = ['A1#39 $100×6x', wr, n].filter(Boolean).join(' · ');
+    booksSub.textContent = ['MELEZ $100×6x', wr, n].filter(Boolean).join(' · ');
   }
   const openN = lv.open_count != null ? lv.open_count : 0;
   const openSub = document.getElementById('kf-open-sub');
@@ -19525,7 +20238,7 @@ function renderOverview(d){
   const waitHint = document.getElementById('kf-wait-hint');
   if(waitHint){
     const sigN = waitRows.filter(w => w.signal === 'UP' || w.signal === 'DOWN').length;
-    waitHint.textContent = sigN + ' coin A1#39 sinyal';
+    waitHint.textContent = sigN + ' coin sinyal';
   }
   renderCoinLeadersTable(d.coin_leaders, 'positions');
   renderTopSuccessList(d.top_success);
@@ -19533,7 +20246,7 @@ function renderOverview(d){
   renderWaiting(d);
   renderJarvisMap(d.jarvis_v1_map, d.jarvis_v1_meta);
   renderRecentTrades(d.recent_test_trades, 'kf-recent-test', 'Henüz Test işlemi yok');
-  renderRecentTrades(lv.recent_trades || d.recent_live_trades, 'kf-recent-live', 'Henüz A1#39 işlemi yok');
+  renderRecentTrades(d.recent_live_trades, 'kf-recent-live', 'Henüz Live işlemi yok');
   renderA139Opens(lv);
   renderA139Closed(lv);
 }
@@ -19635,7 +20348,7 @@ async function loadHistory(){
   const el = document.getElementById('hist-list');
   if(!el) return;
   try{
-    const r = await fetch('/poly/api/kripto/test/a1_39', {cache:'no-store'});
+    const r = await fetch('/poly/api/kripto/test/melez', {cache:'no-store'});
     const d = await r.json();
     const book = (d && d.book) || {};
     const rows = book.recent_history || d.trades || [];
@@ -19676,7 +20389,7 @@ async function loadHistory(){
         <div class="pos-close-row">
           <span class="close-lbl">Net PnL</span>
           <span class="live-close-pnl ${pnlCls}">${fmtMoney(pnl)}</span>
-          <span class="tag">${t.algo||'A1#39'}</span>
+          <span class="tag">${t.algo||'MELEZ'}</span>
           <span class="tag">${t.leverage||'—'}x</span>
         </div>
       </div>`;
@@ -21023,14 +21736,15 @@ def api_kripto_overview():
     waiting = snap.get("waiting") or []
     recent_test = mod.compute_recent_test_trades(limit=12)
     recent_live: list[dict] = []
+    melez_paper: dict = {"ok": False}
     a139_paper: dict = {"ok": False}
     a139_live: dict = {"ok": False}
     b1_mum_live: dict = {"ok": False}
     try:
-        a139_paper = mod.hero_a139(with_marks=True, recent_limit=20)
-        recent_live = list(a139_paper.get("recent_trades") or [])
+        melez_paper = mod.hero_book("melez", with_marks=True, recent_limit=20)
+        a139_paper = melez_paper
     except Exception as exc:
-        print(f"[kripto overview] a139_paper: {exc}", flush=True)
+        print(f"[kripto overview] melez_paper: {exc}", flush=True)
     try:
         from crypto_futures_b1_mum import status_block as _b1_status  # noqa: WPS433
         b1_mum_live = _b1_status(refresh_price=False)
@@ -21084,6 +21798,7 @@ def api_kripto_overview():
         "recent_live_trades": recent_live,
         "jarvis_v1_map": jarvis_map,
         "jarvis_v1_meta": jarvis_meta,
+        "melez_paper": melez_paper,
         "a139_paper": a139_paper,
         "a139_live": a139_live,
         "b1_mum_live": b1_mum_live,
@@ -21456,22 +22171,31 @@ def api_crypto_futures_history():
 _AGUSTOS_RUNNER_CACHE: dict = {}
 
 
-def _expected_agustos_book_count(rel_dir: str) -> int | None:
-    """catalog.py'den güncel defter sayısı — runner cache bayat kalınca snapshot tamamlanır."""
+def _agustos_catalog_uids(rel_dir: str) -> set[str]:
     import importlib.util
     path = os.path.join(_DIR_KRIPTO, rel_dir, "catalog.py")
     if not os.path.isfile(path):
-        return None
+        return set()
     try:
         spec = importlib.util.spec_from_file_location(
-            f"agustos_{rel_dir.lower()}_catalog_check", path,
+            f"agustos_{rel_dir.lower()}_catalog_uids", path,
         )
         mod = importlib.util.module_from_spec(spec)
         assert spec.loader is not None
         spec.loader.exec_module(mod)
-        return len(getattr(mod, "ALL_BOOKS", []) or [])
+        return {
+            str(b.get("uid") or b.get("id") or "")
+            for b in (getattr(mod, "ALL_BOOKS", []) or [])
+            if isinstance(b, dict) and (b.get("uid") or b.get("id"))
+        }
     except Exception:
-        return None
+        return set()
+
+
+def _expected_agustos_book_count(rel_dir: str) -> int | None:
+    """catalog.py'den güncel defter sayısı — runner cache bayat kalınca snapshot tamamlanır."""
+    uids = _agustos_catalog_uids(rel_dir)
+    return len(uids) if uids else None
 
 
 def _snapshot_book_count(snap: dict | None) -> int:
@@ -21534,7 +22258,7 @@ def _kripto_test_coin_leaders() -> list:
 
 
 def _slim_agustos_list(data: dict) -> dict:
-    """Liste yanıtından recent_history çıkar — 73 defter × 30 işlem sayfayı şişiriyordu."""
+    """Liste yanıtından recent_history çıkar — defter × 30 işlem sayfayı şişiriyordu."""
     books = data.get("books")
     if not books:
         return data
@@ -21552,7 +22276,7 @@ def _slim_agustos_list(data: dict) -> dict:
 
 
 def _agustos_status_or_snap(rel_dir: str, snap_key: str):
-    """Disk snapshot'ı anında dön — istek yolunda 73 defter kurulmaz."""
+    """Disk snapshot'ı anında dön — istek yolunda tüm defterler kurulmaz."""
     if _DIR_KRIPTO not in sys.path:
         sys.path.insert(0, _DIR_KRIPTO)
     from virtual_book import read_snapshot  # noqa: WPS433
@@ -21561,6 +22285,16 @@ def _agustos_status_or_snap(rel_dir: str, snap_key: str):
     if snap is None:
         snap = read_snapshot(snap_key, max_age=1e12)
     if snap is not None:
+        keep = _agustos_catalog_uids(rel_dir)
+        if keep:
+            books = [
+                b for b in (snap.get("books") or [])
+                if isinstance(b, dict) and (b.get("id") or b.get("uid")) in keep
+            ]
+            if len(books) != len(snap.get("books") or []):
+                snap = dict(snap)
+                snap["books"] = books
+                snap["count"] = len(books)
         if expected and _snapshot_book_count(snap) < expected:
             snap = dict(snap)
             snap["_stale_snapshot"] = True
@@ -21628,6 +22362,8 @@ def api_kripto_test():
     try:
         detail_id = (request.args.get("detail") or request.args.get("book") or "").strip()
         if detail_id:
+            if detail_id not in _agustos_catalog_uids("Test"):
+                return jsonify({"ok": False, "error": "book not found"}), 404
             mod = _load_agustos_runner("Test")
             book = mod.book_detail(detail_id, recent_limit=80, with_marks=True)
             if book is None:
@@ -21644,6 +22380,8 @@ def api_kripto_test_detail(book_id: str):
     if _auth_required():
         return jsonify({"ok": False, "error": "unauthorized"}), 401
     try:
+        if book_id not in _agustos_catalog_uids("Test"):
+            return jsonify({"ok": False, "error": "book not found"}), 404
         mod = _load_agustos_runner("Test")
         book = mod.book_detail(book_id, recent_limit=80, with_marks=True)
         if book is None:
@@ -21704,7 +22442,7 @@ def _agustos_prewarm_loop():
         for rel in ("Test",):
             try:
                 mod = _load_agustos_runner(rel)
-                # Mark yeter; waiting/sinyal 73 defter × fapi — IP ban'in asıl kaynağı
+                # Mark yeter; waiting/sinyal tüm defter × fapi — IP ban'in asıl kaynağı
                 mod.refresh_status_block(with_marks=True, compute_waiting=False)
             except Exception as e:
                 print(f"[agustos prewarm] {rel}: {e}", flush=True)
@@ -21830,6 +22568,12 @@ def api_crypto_futures_close():
 
 @app.route("/harita")
 @app.route("/harita/")
+def harita_legacy():
+    return redirect("/poly/harita", 301)
+
+
+@app.route("/poly/harita")
+@app.route("/poly/harita/")
 def harita():
     if _auth_required(): return redirect("/poly/login")
     tabs = _harita_tabs_filtered()
