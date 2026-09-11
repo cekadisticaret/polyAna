@@ -82,6 +82,10 @@ _HEATMAP_SYMS = {
     "f16v2": ["BTC", "ETH", "SOL"],
     "jarvis2026": ["BTC", "ETH", "SOL"],
     "ref01": ["BTC", "ETH", "SOL"],
+    "ref02": ["BTC", "ETH", "SOL"],
+    "ref03": ["BTC", "ETH", "SOL"],
+    "ref04": ["BTC", "ETH", "SOL"],
+    "ref05": ["BTC", "ETH", "SOL"],
     "analiz2":  ["SOL"],
     "analiz2_live": ["SOL"],
     "analiz5":  ["BTC", "SOL"],
@@ -140,6 +144,22 @@ _ALGO_BOOK_ALIASES: dict[str, str] = {
     "ref_01": "ref01",
     "ref1": "ref01",
     "yol01": "ref01",
+    "ref-02": "ref02",
+    "ref_02": "ref02",
+    "ref2": "ref02",
+    "yol02": "ref02",
+    "ref-03": "ref03",
+    "ref_03": "ref03",
+    "ref3": "ref03",
+    "yol03": "ref03",
+    "ref-04": "ref04",
+    "ref_04": "ref04",
+    "ref4": "ref04",
+    "yol04": "ref04",
+    "ref-05": "ref05",
+    "ref_05": "ref05",
+    "ref5": "ref05",
+    "yol05": "ref05",
 }
 _DISABLED_SYMS = frozenset({"XRP", "DOGE", "BNB", "HYPE"})
 # Algoritma performansı / harita / analizler — gerçek PM (Live) gösterilmez; sanal karşılığı kullanılır
@@ -180,14 +200,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref02", "ref03", "ref04", "ref05",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref02", "ref03", "ref04", "ref05",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
+    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref02", "ref03", "ref04", "ref05",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
 _HISTORY_ORDER_GECMIS = [
@@ -218,6 +238,10 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "f16v2":      "F16V2 · BTC/SOL F16 · ETH A2#03",
     "jarvis2026": "JARVIS2026 · evrilen fikir",
     "ref01": "REF01 · referans çizgisi",
+    "ref02": "REF02 · trend only",
+    "ref03": "REF03 · ask≤0.55",
+    "ref04": "REF04 · uç dönüş + F16",
+    "ref05": "REF05 · uç dönüş + F1#01",
     "analiz5":    "A1 Live",
     "analiz8":    "8. Analiz Jesse",
     "analiz2_live": "A2 Live",
@@ -239,13 +263,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
+    "analiz1", "analiz2",     "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref02", "ref03", "ref04", "ref05",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "analiz1": 1000, "analiz2": 1000, "analiz6": 1000, "analiz6_v2": 1000,
     "analiz6_v3": 1000, "analiz15": 1000, "b1_01": 1000, "b1_02": 1000, "b1_mum": 1000,
-    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000, "combo2": 1000, "f16v2": 1000, "jarvis2026": 1000, "ref01": 1000,
+    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000, "combo2": 1000, "f16v2": 1000, "jarvis2026": 1000, "ref01": 1000, "ref02": 1000, "ref03": 1000, "ref04": 1000, "ref05": 1000,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -302,6 +326,10 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "f16v2": "F16V2",
     "jarvis2026": "JARVIS2026",
     "ref01": "REF01",
+    "ref02": "REF02",
+    "ref03": "REF03",
+    "ref04": "REF04",
+    "ref05": "REF05",
     "analiz3": "A3",
     "analiz8": "A8",
 }
@@ -365,14 +393,16 @@ for _num, _name, *_rest in _F1_META:
 
 # /algoritma-islemler + /poly/api/mirror: featured sarı kartlar, kendi içinde bakiye → P&L → WR
 # Kart + ayna: defterin :02/:05/:07 içinden en çok kazandıran (net P&L) dilim.
+_ALGO_ISLEMLER_MIN_BALANCE = 500.0  # altı listede görünmez (cron durmaz)
 _ALGO_FEATURED_KEYS: list[str] = ["combo", "c101", "a2_05_v2", "analiz1", "combo2", "f16v2"]
-_WATCH_PIN_KEYS: list[str] = ["ref01", "analiz1", "a2_03", "a2_05", "f16v2", "jarvis2026"]
+_WATCH_PIN_KEYS: list[str] = ["ref01", "ref02", "ref03", "ref04", "ref05", "a2_03"]
 _WATCH_PIN_LABEL = {
-    "analiz1": "F16", "a2_03": "A2#03", "a2_05": "A2#05",
-    "f16v2": "F16V2", "jarvis2026": "JARVIS2026", "ref01": "REF01",
+    "a2_03": "A2#03",
+    "f16v2": "F16V2", "jarvis2026": "JARVIS2026", "ref01": "REF01", "ref02": "REF02",
+    "ref03": "REF03", "ref04": "REF04", "ref05": "REF05",
 }
 # slot_trader._SKIP_SLOT_OPEN — :05/:07 kopyası yok; kart her zaman :02 state okumalı
-_STANDALONE_MINUTE_BOOKS = frozenset({"jarvis2026", "ref01"})
+_STANDALONE_MINUTE_BOOKS = frozenset({"jarvis2026", "ref01", "ref02", "ref03", "ref04", "ref05"})
 _ALGO_FEATURED_SORT = "best_slot_pnl"
 _TR_MONTH_SHORT = (
     "Oca", "Şub", "Mar", "Nis", "May", "Haz",
@@ -388,6 +418,16 @@ _BEST_SLOT_TTL = 30.0
 def _algo_featured_group(bid: str) -> int:
     """0 = featured sarı (bakiye sırası) · 1 = kalanlar."""
     return 0 if bid in _ALGO_FEATURED_KEYS else 1
+
+
+def _algo_book_visible(row: dict | None) -> bool:
+    """/algoritma-islemler listesi — bakiye eşiği altı gizlenir."""
+    if not row:
+        return False
+    try:
+        return float(row.get("balance") or 0) >= _ALGO_ISLEMLER_MIN_BALANCE
+    except (TypeError, ValueError):
+        return False
 
 
 def _sort_algo_islemler_books(books: list, id_field: str = "id") -> list:
@@ -408,7 +448,7 @@ def _sort_algo_islemler_books(books: list, id_field: str = "id") -> list:
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref02", "ref03", "ref04", "ref05",
 ] + _A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS
 
 # Motor tipi → piyasa rejimi (ölçülmüş WR değil).
@@ -436,7 +476,7 @@ _NAMED_REGIME = {
     "b1_01": "live", "b1_02": "live", "b1_mum": "live",
     "b1_04": "live", "b1_05": "live",
     "c101": "live", "c101_v2": "live", "x101": "live",
-    "combo": "live", "combo2": "live", "f16v2": "live", "jarvis2026": "live", "ref01": "live",
+    "combo": "live", "combo2": "live", "f16v2": "live", "jarvis2026": "live", "ref01": "live", "ref02": "live", "ref03": "live", "ref04": "live", "ref05": "live",
     "a2_05_v2": "range",
 }
 for _num, _name, *_rest in _F1_META:
@@ -483,6 +523,10 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("f16v2",      "F16V2",                 1000, "BTC/SOL→F16 predict · ETH→A2#03 Stoch RSI"),
     ("jarvis2026", "JARVIS2026",            1000, "fikir + serbest dk · $16/24/32"),
     ("ref01",      "REF01",                 1000, "saatlik yol · 18 bps trend / fade ≥10 · ask≤0.75 · kâr %25 · $24/36/48"),
+    ("ref02",      "REF02",                 1000, "saatlik yol · trend ≥18 · fade yok · ask≤0.75 · kâr %35 · $24/36/48"),
+    ("ref03",      "REF03",                 1000, "saatlik yol · trend+fade · ask≤0.55 · kâr %25 · $24/36/48"),
+    ("ref04",      "REF04",                 1000, "uç nokta dönüşü ≥25 bps + F16 onayı · ask 0.20-0.35 · 3×-5× oran · $24/36/48"),
+    ("ref05",      "REF05",                 1000, "uç nokta dönüşü ≥25 bps + F1#01 onayı · ask 0.20-0.35 · 3×-5× oran · $24/36/48"),
     ("a2_05_v2",   "A2#05 V2 · Z KAPISI", 1000, "A2#05 sinyali + yalnız 1,0 ≤ |z| < 1,5 · $24/36/48"),
 ]
 _ANALIZLER_SYSTEMS: list[tuple[str, str, int | None, str]] = list(_ANALIZLER_BASE)
@@ -3812,6 +3856,8 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
             "algo_name": p.get("algo_name"),
             "ref01_mode": p.get("ref01_mode") or "",
             "ref01_detail": p.get("ref01_detail") or "",
+            "ref02_mode": p.get("ref02_mode") or "",
+            "ref02_detail": p.get("ref02_detail") or "",
         })
     num = None
     m = re.match(r"^a2_(\d+)$", key)
@@ -3870,6 +3916,26 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
         panel = "poly_ref01"
         name = short or label
         title = "saatlik yol · 18 bps trend / fade ≥10 · ask≤0.75 · kâr %25 · $24/36/48"
+    elif key == "ref02":
+        category = "Poly sanal · REF02"
+        panel = "poly_ref02"
+        name = short or label
+        title = "saatlik yol · trend ≥18 · fade yok · ask≤0.75 · kâr %35 · $24/36/48"
+    elif key == "ref03":
+        category = "Poly sanal · REF03"
+        panel = "poly_ref03"
+        name = short or label
+        title = "saatlik yol · trend+fade · ask≤0.55 · kâr %25 · $24/36/48"
+    elif key == "ref04":
+        category = "Poly sanal · REF04"
+        panel = "poly_ref04"
+        name = short or label
+        title = "uç nokta dönüşü ≥25 bps + F16 onayı · ask 0.20-0.35 · 3×-5× oran · $24/36/48"
+    elif key == "ref05":
+        category = "Poly sanal · REF05"
+        panel = "poly_ref05"
+        name = short or label
+        title = "uç nokta dönüşü ≥25 bps + F1#01 onayı · ask 0.20-0.35 · 3×-5× oran · $24/36/48"
     elif key == "b1_01":
         category = "Poly sanal · B1#01"
         panel = "poly_b1"
@@ -3977,6 +4043,22 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
             if key == "ref01":
                 rec["ref01_mode"] = t.get("ref01_mode") or ""
                 rec["ref01_detail"] = t.get("ref01_detail") or ""
+            if key == "ref02":
+                rec["ref02_mode"] = t.get("ref02_mode") or ""
+                rec["ref02_detail"] = t.get("ref02_detail") or ""
+            if key == "ref03":
+                rec["ref03_mode"] = t.get("ref03_mode") or ""
+                rec["ref03_detail"] = t.get("ref03_detail") or ""
+            if key == "ref04":
+                rec["ref04_mode"] = t.get("ref04_mode") or ""
+                rec["ref04_detail"] = t.get("ref04_detail") or ""
+                rec["ref04_extreme_bps"] = t.get("ref04_extreme_bps")
+                rec["ref04_pullback_bps"] = t.get("ref04_pullback_bps")
+            if key == "ref05":
+                rec["ref05_mode"] = t.get("ref05_mode") or ""
+                rec["ref05_detail"] = t.get("ref05_detail") or ""
+                rec["ref05_extreme_bps"] = t.get("ref05_extreme_bps")
+                rec["ref05_pullback_bps"] = t.get("ref05_pullback_bps")
             recent.append(rec)
     started_iso, started_label = _poly_book_started_at(state, hist_stats, hist, reset_at)
     month_ym = datetime.now(_TZ_TR).strftime("%Y-%m")
@@ -4419,7 +4501,10 @@ def _watch_month_backtest(books: list | None = None) -> dict:
         "analiz1": (p_sel, "analiz1"),
         "a2_03": (p_all, "a2_03"),
         "a2_05": (p_all, "a2_05"),
-        "f16v2": (p_watch, "f16v2"),
+        "ref02": (p_watch, "ref02"),
+        "ref03": (p_watch, "ref03"),
+        "ref04": (p_watch, "ref04"),
+        "ref05": (p_watch, "ref05"),
         "jarvis2026": (p_watch, "jarvis2026"),
     }
     live_map = {str(b.get("id")): b for b in (books or [])}
@@ -4484,6 +4569,8 @@ def _build_a2_poly_books() -> dict:
         for s, c in chips.items():
             c["best"] = s == best
         row = dict(built.get(best) or next(iter(built.values())))
+        if not _algo_book_visible(row):
+            continue
         row["slots"] = chips
         row["best_slot"] = best
         row["mirror_slot"] = best
@@ -4504,11 +4591,16 @@ def _build_a2_poly_books() -> dict:
     votes = _algo_consensus_votes(vote_top, list_books=top_n, slot_books=vote_books)
     try:
         from vote_paper import list_top_books
-        vote_rows = list_top_books()
+        vote_rows = [
+            b for b in (list_top_books() or [])
+            if _algo_book_visible(b)
+        ]
     except Exception:
         vote_rows = []
-    all_books = (vote_rows or []) + books
+    all_books = vote_rows + books
     _sort_algo_islemler_books(all_books, "id")
+    visible_ids = {str(b.get("id") or "") for b in all_books}
+    watch_pin = [k for k in _WATCH_PIN_KEYS if k in visible_ids]
     watch_bt = _watch_month_backtest(books)
     bt_by_id = {r["id"]: r for r in (watch_bt.get("rows") or [])}
     for b in all_books:
@@ -4529,7 +4621,7 @@ def _build_a2_poly_books() -> dict:
         "count": len(all_books),
         "sort": _ALGO_FEATURED_SORT,
         "featured": list(_ALGO_FEATURED_KEYS),
-        "watch_pin": list(_WATCH_PIN_KEYS),
+        "watch_pin": watch_pin,
         "watch_backtest": watch_bt,
         "total_balance": round(sum(float(b.get("balance") or 0) for b in books), 2),
         "total_pnl": round(sum(float(b.get("total_pnl") or 0) for b in books), 2),
@@ -5383,12 +5475,16 @@ def api_mirror_index():
     books = []
     for k in _ALGO_ISLEMLER_KEYS:
         n_slot = len(_mirror_rows(k, with_market=False, current_only=not include_all))
-        books.append(_mirror_book_row(k, open_count=n_slot))
+        row = _mirror_book_row(k, open_count=n_slot)
+        if _algo_book_visible(row):
+            books.append(row)
     top_rows = []
     try:
         sys.path.insert(0, _DIR_POLY)
         from vote_paper import list_top_books
         for b in list_top_books():
+            if not _algo_book_visible(b):
+                continue
             kid = str(b.get("id") or "")
             n_slot = len(_mirror_top_rows(kid, with_market=False, current_only=not include_all))
             top_rows.append(_mirror_top_book_row(kid, open_count=n_slot, book=b))
@@ -6286,6 +6382,82 @@ body{
 .book-card.book-ref01 .br b.pos{color:#064422 !important}
 .book-card.book-ref01 .neg,
 .book-card.book-ref01 .br b.neg{color:#9b1228 !important}
+.book-card.book-ref02,
+.book-card.book-ref02.regime-live,
+.book-card.book-ref02.book-featured,
+.book-card.book-ref02.book-wr-best{
+  background:#3aaf6e !important;
+  border-color:#1e7a45 !important;
+}
+.book-card.book-ref02 .bt,
+.book-card.book-ref02 .br,
+.book-card.book-ref02 .br span,
+.book-card.book-ref02 .br b,
+.book-card.book-ref02 .book-since{color:#071a0f !important}
+.book-card.book-ref02 .bs,
+.book-card.book-ref02 .book-opens,
+.book-card.book-ref02 .book-since.wait{color:#123322 !important}
+.book-card.book-ref02 .pos,
+.book-card.book-ref02 .br b.pos{color:#033318 !important}
+.book-card.book-ref02 .neg,
+.book-card.book-ref02 .br b.neg{color:#9b1228 !important}
+.book-card.book-ref03,
+.book-card.book-ref03.regime-live,
+.book-card.book-ref03.book-featured,
+.book-card.book-ref03.book-wr-best{
+  background:#207a4a !important;
+  border-color:#0f4d2e !important;
+}
+.book-card.book-ref03 .bt,
+.book-card.book-ref03 .br,
+.book-card.book-ref03 .br span,
+.book-card.book-ref03 .br b,
+.book-card.book-ref03 .book-since{color:#111 !important}
+.book-card.book-ref03 .bs,
+.book-card.book-ref03 .book-opens,
+.book-card.book-ref03 .book-since.wait{color:#1a3d28 !important}
+.book-card.book-ref03 .pos,
+.book-card.book-ref03 .br b.pos{color:#f5c518 !important}
+.book-card.book-ref03 .neg,
+.book-card.book-ref03 .br b.neg{color:#dc2626 !important}
+.book-card.book-ref04,
+.book-card.book-ref04.regime-live,
+.book-card.book-ref04.book-featured,
+.book-card.book-ref04.book-wr-best{
+  background:#7a3a00 !important;
+  border-color:#4d2400 !important;
+}
+.book-card.book-ref04 .bt,
+.book-card.book-ref04 .br,
+.book-card.book-ref04 .br span,
+.book-card.book-ref04 .br b,
+.book-card.book-ref04 .book-since{color:#ffe0b2 !important}
+.book-card.book-ref04 .bs,
+.book-card.book-ref04 .book-opens,
+.book-card.book-ref04 .book-since.wait{color:#ff8000 !important}
+.book-card.book-ref04 .pos,
+.book-card.book-ref04 .br b.pos{color:#ffb347 !important}
+.book-card.book-ref04 .neg,
+.book-card.book-ref04 .br b.neg{color:#ffc0c0 !important}
+.book-card.book-ref05,
+.book-card.book-ref05.regime-live,
+.book-card.book-ref05.book-featured,
+.book-card.book-ref05.book-wr-best{
+  background:#1a3a6a !important;
+  border-color:#0d2447 !important;
+}
+.book-card.book-ref05 .bt,
+.book-card.book-ref05 .br,
+.book-card.book-ref05 .br span,
+.book-card.book-ref05 .br b,
+.book-card.book-ref05 .book-since{color:#d6e8ff !important}
+.book-card.book-ref05 .bs,
+.book-card.book-ref05 .book-opens,
+.book-card.book-ref05 .book-since.wait{color:#6eb0ff !important}
+.book-card.book-ref05 .pos,
+.book-card.book-ref05 .br b.pos{color:#f5c518 !important}
+.book-card.book-ref05 .neg,
+.book-card.book-ref05 .br b.neg{color:#dc2626 !important}
 """
 
 
@@ -16489,6 +16661,53 @@ body{
   border-color:#14532d;
   background:#166534;
 }
+.book-card.book-ref02,
+.book-card.book-ref02.regime-live,
+.book-card.book-ref02.book-featured,
+.book-card.book-ref02.book-wr-best{
+  background:#3aaf6e !important;
+  border-color:#1e7a45 !important;
+  color:#071a0f;
+  box-shadow:0 0 0 1px rgba(30,122,69,.4);
+}
+.book-card.book-ref02:hover{
+  background:#45bc7a !important;
+  border-color:#186b3a !important;
+}
+.book-card.book-ref02 .bt,
+.book-card.book-ref02 .br,
+.book-card.book-ref02 .br span,
+.book-card.book-ref02 .br b{color:#071a0f !important}
+.book-card.book-ref02 .bs,
+.book-card.book-ref02 .book-opens,
+.book-card.book-ref02 .book-since.wait{color:#123322 !important}
+.book-card.book-ref02 .book-since{color:#071a0f !important}
+.book-card.book-ref02 .pos{color:#033318 !important}
+.book-card.book-ref02 .neg{color:#9b1228 !important}
+.book-card.book-ref02 .wr-chip{
+  background:#c8efd8;
+  border-color:#1e7a45;
+  color:#071a0f !important;
+}
+.book-card.book-ref02 .wr-chip.best{
+  color:#033318 !important;
+  border-color:#0a5c28;
+  background:#fff;
+}
+.book-card.book-ref02 .regime-chip.live{
+  color:#fff !important;
+  border-color:#0f3d22;
+  background:#14532d;
+}
+#view-detail.book-ref02 .head{
+  background:#0f2e1c;
+  border:1px solid #1e7a45;
+  border-radius:16px;
+  padding:16px 18px;
+}
+#view-detail.book-ref02 .page-title{color:#9de8b8}
+#view-detail.book-ref02 .page-sub{color:#6fcf8f}
+#view-detail.book-ref02 .detail-back{color:#3aaf6e}
 #view-detail.book-ref01 .head{
   background:#163d28;
   border:1px solid #2a9a54;
@@ -16498,6 +16717,149 @@ body{
 #view-detail.book-ref01 .page-title{color:#b8f0cc}
 #view-detail.book-ref01 .page-sub{color:#8dcea4}
 #view-detail.book-ref01 .detail-back{color:#5fd68a}
+.book-card.book-ref03,
+.book-card.book-ref03.regime-live,
+.book-card.book-ref03.book-featured,
+.book-card.book-ref03.book-wr-best{
+  background:#207a4a !important;
+  border-color:#0f4d2e !important;
+  color:#111;
+  box-shadow:0 0 0 1px rgba(15,77,46,.35);
+}
+.book-card.book-ref03:hover{
+  background:#268f56 !important;
+  border-color:#0c3f25 !important;
+}
+.book-card.book-ref03 .bt,
+.book-card.book-ref03 .br,
+.book-card.book-ref03 .br span,
+.book-card.book-ref03 .br b,
+.book-card.book-ref03 .book-since{color:#111 !important}
+.book-card.book-ref03 .bs,
+.book-card.book-ref03 .book-opens,
+.book-card.book-ref03 .book-since.wait{color:#1a3d28 !important}
+.book-card.book-ref03 .pos,
+.book-card.book-ref03 .br b.pos{color:#f5c518 !important}
+.book-card.book-ref03 .neg,
+.book-card.book-ref03 .br b.neg{color:#dc2626 !important}
+.book-card.book-ref03 .wr-chip{
+  background:#d4f0e0;
+  border-color:#0f4d2e;
+  color:#111 !important;
+}
+.book-card.book-ref03 .wr-chip.best{
+  color:#111 !important;
+  border-color:#0f4d2e;
+  background:#fff;
+}
+.book-card.book-ref03 .regime-chip.live{
+  color:#111 !important;
+  border-color:#0f4d2e;
+  background:#a3e8c1;
+}
+#view-detail.book-ref03 .head{
+  background:#0f2e1c;
+  border:1px solid #0f4d2e;
+  border-radius:16px;
+  padding:16px 18px;
+}
+#view-detail.book-ref03 .page-title{color:#d4f0e0}
+#view-detail.book-ref03 .page-sub{color:#7dc9a0}
+#view-detail.book-ref03 .detail-back{color:#207a4a}
+.book-card.book-ref04,
+.book-card.book-ref04.regime-live,
+.book-card.book-ref04.book-featured,
+.book-card.book-ref04.book-wr-best{
+  background:#7a3a00 !important;
+  border-color:#4d2400 !important;
+  color:#ffe0b2;
+  box-shadow:0 0 0 1px rgba(255,128,0,.2);
+}
+.book-card.book-ref04:hover{
+  background:#8f4500 !important;
+  border-color:#5c2d00 !important;
+}
+.book-card.book-ref04 .bt,
+.book-card.book-ref04 .br,
+.book-card.book-ref04 .br span,
+.book-card.book-ref04 .br b{color:#ffe0b2 !important}
+.book-card.book-ref04 .bs,
+.book-card.book-ref04 .book-opens,
+.book-card.book-ref04 .book-since.wait{color:#ff8000 !important}
+.book-card.book-ref04 .book-since{color:#ffe0b2 !important}
+.book-card.book-ref04 .pos{color:#ffb347 !important}
+.book-card.book-ref04 .neg{color:#ffc0c0 !important}
+.book-card.book-ref04 .wr-chip{
+  background:#4d2400;
+  border-color:#ff8000;
+  color:#ffe0b2 !important;
+}
+.book-card.book-ref04 .wr-chip.best{
+  color:#fff !important;
+  border-color:#ff8000;
+  background:#7a3a00;
+}
+.book-card.book-ref04 .regime-chip.live{
+  color:#ffe0b2 !important;
+  border-color:#7a3a00;
+  background:#4d2400;
+}
+#view-detail.book-ref04 .head{
+  background:#3d1a00;
+  border:1px solid #7a3a00;
+  border-radius:16px;
+  padding:16px 18px;
+}
+#view-detail.book-ref04 .page-title{color:#ffcc80}
+#view-detail.book-ref04 .page-sub{color:#ffb347}
+#view-detail.book-ref04 .detail-back{color:#ff8000}
+.book-card.book-ref05,
+.book-card.book-ref05.regime-live,
+.book-card.book-ref05.book-featured,
+.book-card.book-ref05.book-wr-best{
+  background:#1a3a6a !important;
+  border-color:#0d2447 !important;
+  color:#d6e8ff;
+  box-shadow:0 0 0 1px rgba(74,158,255,.2);
+}
+.book-card.book-ref05:hover{
+  background:#204580 !important;
+  border-color:#15325c !important;
+}
+.book-card.book-ref05 .bt,
+.book-card.book-ref05 .br,
+.book-card.book-ref05 .br span,
+.book-card.book-ref05 .br b{color:#111 !important}
+.book-card.book-ref05 .bs,
+.book-card.book-ref05 .book-opens,
+.book-card.book-ref05 .book-since.wait{color:#1a3d28 !important}
+.book-card.book-ref05 .book-since{color:#111 !important}
+.book-card.book-ref05 .pos{color:#f5c518 !important}
+.book-card.book-ref05 .neg{color:#dc2626 !important}
+.book-card.book-ref05 .wr-chip{
+  background:#d6e8ff;
+  border-color:#4a9eff;
+  color:#111 !important;
+}
+.book-card.book-ref05 .wr-chip.best{
+  color:#111 !important;
+  border-color:#4a9eff;
+  background:#fff;
+}
+.book-card.book-ref05 .regime-chip.live{
+  color:#111 !important;
+  border-color:#1a3a6a;
+  background:#a8cfff;
+}
+#view-detail.book-ref05 .head{
+  background:#0d2447;
+  border:1px solid #1a3a6a;
+  border-radius:16px;
+  padding:16px 18px;
+}
+#view-detail.book-ref05 .page-title{color:#b8d4ff}
+#view-detail.book-ref05 .page-sub{color:#8eb8ff}
+#view-detail.book-ref05 .detail-back{color:#4a9eff}
 .regime-chip{
   display:inline-block;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
   border-radius:999px;padding:3px 8px;margin-top:6px;
@@ -16913,6 +17275,22 @@ if(String(DETAIL_ID||'').toLowerCase()==='ref01'){
   const vd = document.getElementById('view-detail');
   if(vd) vd.classList.add('book-ref01');
 }
+if(String(DETAIL_ID||'').toLowerCase()==='ref02'){
+  const vd = document.getElementById('view-detail');
+  if(vd) vd.classList.add('book-ref02');
+}
+if(String(DETAIL_ID||'').toLowerCase()==='ref03'){
+  const vd = document.getElementById('view-detail');
+  if(vd) vd.classList.add('book-ref03');
+}
+if(String(DETAIL_ID||'').toLowerCase()==='ref04'){
+  const vd = document.getElementById('view-detail');
+  if(vd) vd.classList.add('book-ref04');
+}
+if(String(DETAIL_ID||'').toLowerCase()==='ref05'){
+  const vd = document.getElementById('view-detail');
+  if(vd) vd.classList.add('book-ref05');
+}
 let _detailBook = null;
 let _detailSlots = {};
 let _viewSlot = 5;
@@ -17006,7 +17384,7 @@ function posCard(p){
   const net = p.win_profit != null ? Number(p.win_profit) : (payout > 0 ? payout - spent : 0);
   const slot = p.slot_label || p.slot || '—';
   const et = fmtClock(p.entry_time_tr);
-  const mode = p.ref01_mode ? String(p.ref01_mode).toUpperCase() : '';
+  const mode = (p.ref01_mode || p.ref02_mode || p.ref03_mode) ? String(p.ref01_mode || p.ref02_mode || p.ref03_mode).toUpperCase() : '';
   const when = et ? ('Giriş ' + et + ' İST') : '';
   const slotLine = [when, mode, slot].filter(Boolean).join(' · ');
   const pmEp = p.pm_entry_price != null ? Number(p.pm_entry_price).toFixed(3) : '—';
@@ -17047,10 +17425,10 @@ function histRow(t){
   const dir = (t.dir || '').toUpperCase();
   const dc = dir === 'UP' ? 'up' : 'down';
   const slot = t.slot_label ? String(t.slot_label).replace(/ Up or Down.*/i, '') : '';
-  const isRef = String(DETAIL_ID||'').toLowerCase()==='ref01' || !!t.ref01_mode;
-  const mode = t.ref01_mode ? String(t.ref01_mode).toUpperCase() : '';
+  const isRef = ['ref01','ref02','ref03','ref04','ref05'].includes(String(DETAIL_ID||'').toLowerCase()) || !!t.ref01_mode || !!t.ref02_mode || !!t.ref03_mode || !!t.ref04_mode || !!t.ref05_mode;
+  const mode = (t.ref01_mode || t.ref02_mode || t.ref03_mode || t.ref04_mode || t.ref05_mode) ? String(t.ref01_mode || t.ref02_mode || t.ref03_mode || t.ref04_mode || t.ref05_mode).toUpperCase() : '';
   const timeTxt = isRef && t.entry_time_tr ? fmtHistTime(t.entry_time_tr) : fmtHistTime(t.exit_time_tr);
-  const extra = [mode, slot, t.jarvis_book || '']
+  const extra = [mode, slot, t.jarvis_book || '', t.ref01_detail || t.ref02_detail || t.ref03_detail || t.ref04_detail || t.ref05_detail || '']
     .filter(Boolean).join(' · ');
   return `<div class="hist-row">
     <div class="hist-time">${timeTxt}</div>
@@ -17394,7 +17772,7 @@ function bookCardHtml(b, homeKey, wrBest){
     ? `<div class="book-yillik">yıllık backtest ${yilN==null ? '—' : `<b class="${Number(yilN)>=0?'pos':'neg'}">${moneyTxt(yilN)}$</b>`}</div>`
     : '';
   return `<div class="book-card-wrap">
-    <a class="book-card regime-${regime}${isActive ? ' book-active' : ''}${b.featured || featSet[b.id] ? ' book-featured' : ''}${wrBest ? ' book-wr-best' : ''}${watchPin ? ' book-watch' : ''}${String(b.id||'').toLowerCase()==='jarvis2026' ? ' book-jarvis2026' : ''}${String(b.id||'').toLowerCase()==='ref01' ? ' book-ref01' : ''}" href="${href}">
+    <a class="book-card regime-${regime}${isActive ? ' book-active' : ''}${b.featured || featSet[b.id] ? ' book-featured' : ''}${wrBest ? ' book-wr-best' : ''}${watchPin ? ' book-watch' : ''}${String(b.id||'').toLowerCase()==='jarvis2026' ? ' book-jarvis2026' : ''}${String(b.id||'').toLowerCase()==='ref01' ? ' book-ref01' : ''}${String(b.id||'').toLowerCase()==='ref02' ? ' book-ref02' : ''}${String(b.id||'').toLowerCase()==='ref03' ? ' book-ref03' : ''}${String(b.id||'').toLowerCase()==='ref04' ? ' book-ref04' : ''}${String(b.id||'').toLowerCase()==='ref05' ? ' book-ref05' : ''}" href="${href}">
       <div class="book-since${b.wr == null ? ' wait' : ''}" title="${since ? (sinceTitle + ' · ' + since) : 'Seçili dilim WR'}">${b.wr == null ? 'WR —' : ('WR %'+String(b.wr).replace('.',','))}</div>
       <div class="bt">${title}</div>
       <div class="bs">${sub} · ${histN} işlem · ${padSlot(b.best_slot || b.open_minute || 5)}</div>
@@ -17483,10 +17861,13 @@ function watchBtHtml(wb){
     <div class="watch-bt-meta">Büyük sayı = geçen yılın bu ayındaki walk-forward kasa $. Canlı = bu ay sanal settle. Her gece 00:00 yenilenir.</div>
   </div>`;
 }
-function renderBooks(books, homeKey, symBest, watchBt){
+const WATCH_PIN_LABELS = {ref01:'REF01',ref02:'REF02',ref03:'REF03',ref04:'REF04',ref05:'REF05',a2_03:'A2#03'};
+let _watchPinIds = ['ref01','ref02','ref03','ref04','ref05','a2_03'];
+function renderBooks(books, homeKey, symBest, watchBt, watchIds){
   const el = document.getElementById('algo-books');
   if (symBest) _lastSymBest = symBest;
   if (watchBt) _lastWatchBt = watchBt;
+  if (watchIds && watchIds.length) _watchPinIds = watchIds.map(id => String(id||'').toLowerCase());
   if (_regimeFilter === 'coupons') { renderCouponResults(); return; }
   const all = books||[];
   const rows = all.filter(b => !_regimeFilter || (b.regime||'live') === _regimeFilter);
@@ -17494,7 +17875,7 @@ function renderBooks(books, homeKey, symBest, watchBt){
     el.innerHTML = '<div class="empty">defter yok</div>';
     return;
   }
-  const WATCH_IDS = ['ref01','analiz1','a2_03','a2_05','f16v2','jarvis2026'];
+  const WATCH_IDS = _watchPinIds.slice();
   const watch = WATCH_IDS.map(id => all.find(b => String(b.id||'').toLowerCase() === id)).filter(Boolean);
   const ranked = rows.filter(b => !isVoteTopBook(b) && !WATCH_IDS.includes(String(b.id||'').toLowerCase()));
   const byPnl = sortBooksByPnl(ranked);
@@ -17504,8 +17885,9 @@ function renderBooks(books, homeKey, symBest, watchBt){
     if (Number(b.history_n||0) >= 6 && b.wr != null && Number(b.wr) > bestWr) bestWr = Number(b.wr);
   });
   const card = b => bookCardHtml(b, homeKey, !isVoteTopBook(b) && bestWr >= 0 && Number(b.history_n||0) >= 6 && b.wr != null && Number(b.wr) === bestWr);
+  const watchHdr = WATCH_IDS.map(id => WATCH_PIN_LABELS[id] || String(id).toUpperCase()).join(' · ');
   el.innerHTML =
-    '<div class="book-split-h">İzleme · REF01 · F16 · A2#03 · A2#05 · F16V2 · JARVIS2026</div>'
+    '<div class="book-split-h">İzleme · ' + watchHdr + '</div>'
     + '<div class="book-tops">'
       + '<div class="book-grid">'+(watch.length?watch.map(card).join(''):'')+'</div>'
     + '</div>'
@@ -17526,7 +17908,7 @@ function paintHomeDisplay(bookId){
     ...b,
     is_home_display: String(b.id || '').toLowerCase() === key,
   }));
-  if (_lastBooks.length && !DETAIL_ID) renderBooks(_lastBooks, key, _lastSymBest, _lastWatchBt);
+  if (_lastBooks.length && !DETAIL_ID) renderBooks(_lastBooks, key, _lastSymBest, _lastWatchBt, _watchPinIds);
 }
 async function setHomeDisplay(bookId, btn){
   if(!bookId) return;
@@ -17782,7 +18164,7 @@ async function load(){
       + ' · Net P&L ' + (pnl>=0?'+':'') + Number(pnl).toFixed(1)
       + ' · ' + histSum + ' işlem'
       + ' · açık ' + (d.total_open||0);
-    renderBooks(books, d.home_display_book, d.sym_best, d.watch_backtest);
+    renderBooks(books, d.home_display_book, d.sym_best, d.watch_backtest, d.watch_pin);
   } catch(e){
     console.error(e);
     const el = DETAIL_ID ? document.getElementById('detail-positions') : document.getElementById('algo-books');

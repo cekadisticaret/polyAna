@@ -55,10 +55,10 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `bahis/players.py` | Oyuncu API — `data/players.json` (Fotmob 10 sezon) |
 | `bahis/players_fetch.py` | Fotmob oyuncu çekici — `python3 bahis/players_fetch.py [epl …]` |
 | `bahis/data/` | football-data CSV (T1/E0/SP1/I1/D1/F1/BRA) + fikstür + oyuncu JSON |
-| `web/poly_dashboard.py` | Poly dashboard **5050** — `/poly/grafik` mum analizi; `/algoritma-islemler/saatlik-yol` BTC/ETH/SOL yol grafiği; `/algoritma-islemler` A1 Top-34 + A2 Top-17 + A6/V2/V3/A15/B1 (7/24 sanal), **78 defterin tamamı listelenir** (X1#01 + COMBO + COMBO2 + **F1-01…07** dahil); **Algoritma oyu şeridi yok** (2026-09-01); `GET /poly/api/consensus` duruyor; kartta **durgun=yeşil / trend=sarı / canlı=mor** dış bant (motor tipi); **Kupon sonuçları** sekmesi MATCHDAY bitmiş kuponları gösterir + **:02/:05/:07 WR** çipleri, detayda dilim butonları; liste **iki sütun**: sol tüm defterler net P&L · sağ WR (her biri 3’lü ızgara); üstte F16 · A2#03 · A2#05 · F16V2 + 1Y aylık net $ kenarı (TOP1–4 kartı yok); `/poly/yapay-zeka-analiz` Poly Algo Analist bildirim akışı + Lider Analizi; `/kripto/yapay-zeka-analiz` Kripto Test AI Analist bildirim akışı; **`/kripto/lider-analiz`** Kripto Test lider tablosu (`day_movers` aktif 30+30, genel + coin bazlı PnL/WR); **`/kripto/jarvis`** JARVIS denetim ekranı (cyan/magenta/gold HUD, iki sekme: Kripto Test Analizi + Kripto Sistem Denetimi; veri `/kripto/api/jarvis` → `jarvis_report.json` + `jarvis_audit.json`, gece 00:00 tazelenir, CSS sınıfları `j-` önekli); `/kripto` coin liderleri **SKILL + t** ile sıralanır (WR değil); **`/bahis`** BAHİS kabuğu; **`/site`** herkese açık Green Casino + kupon (şifre yok); **`/forex` yok** (CoptC) |
+| `web/poly_dashboard.py` | Poly dashboard **5050** — `/poly/grafik` mum analizi; `/algoritma-islemler/saatlik-yol` BTC/ETH/SOL yol grafiği; `/algoritma-islemler` A1 Top-34 + A2 Top-17 + A6/V2/V3/A15/B1 (7/24 sanal), **bakiye ≥ $500** olanlar listelenir (cron durmaz) (X1#01 + COMBO + COMBO2 + **F1-01…07** dahil); **Algoritma oyu şeridi yok** (2026-09-01); `GET /poly/api/consensus` duruyor; kartta **durgun=yeşil / trend=sarı / canlı=mor** dış bant (motor tipi); **Kupon sonuçları** sekmesi MATCHDAY bitmiş kuponları gösterir + **:02/:05/:07 WR** çipleri, detayda dilim butonları; liste **iki sütun**: sol tüm defterler net P&L · sağ WR (her biri 3’lü ızgara); üstte F16 · A2#03 · A2#05 · F16V2 + 1Y aylık net $ kenarı (TOP1–4 kartı yok); `/poly/yapay-zeka-analiz` Poly Algo Analist bildirim akışı + Lider Analizi; `/kripto/yapay-zeka-analiz` Kripto Test AI Analist bildirim akışı; **`/kripto/lider-analiz`** Kripto Test lider tablosu (`day_movers` aktif 30+30, genel + coin bazlı PnL/WR); **`/kripto/jarvis`** JARVIS denetim ekranı (cyan/magenta/gold HUD, iki sekme: Kripto Test Analizi + Kripto Sistem Denetimi; veri `/kripto/api/jarvis` → `jarvis_report.json` + `jarvis_audit.json`, gece 00:00 tazelenir, CSS sınıfları `j-` önekli); `/kripto` coin liderleri **SKILL + t** ile sıralanır (WR değil); **`/bahis`** BAHİS kabuğu; **`/site`** herkese açık Green Casino + kupon (şifre yok); **`/forex` yok** (CoptC) |
 | `web/poly_dashboard.py` `/forex` | **Yok** — `/forex` ve `/xau` → `/poly`; motor CoptC |
 | `BursaApp/` |
-| `BursaApp/enrich_camps.py` | Gerçek Bursa kamp yerleri (Çobankaya, Kapanca, Gölyazı…) + foto |
+| `BursaApp/enrich_camps.py` | 42 kamp yeri upsert + Wikimedia/visit foto (çift görsel engeli) |
 | `BursaApp/templates/visits_list.html` | Gezilecek — kenar filtre (tür/giriş/UNESCO/ilçe) + dikey kart listesi |
 | `BursaApp/seed_visit_expand.py` | Gezilecek · `import_osm_delta` (yeni OSM, mahalle camisi/zirve atlanır) + meşhur müzeler |
 | `BursaApp/templates/foods_list.html` | Yeme-içme — kenar filtre (tür/mutfak/yemek/fiyat/ilçe) + dikey restoran kartları |
@@ -132,7 +132,9 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BursaApp/data/hotels_enuygun.json` | Enuygun MCP Bursa otel envanteri (foto + örnek fiyat) |
 | `BursaApp/seed_hotels_enuygun.py` | Enuygun otelleri seed · `static/hotel/` galeri · Yalova elenir |
 | `BursaApp/templates/hotels.html` | Oteller landing: hero + arama + kart grid (mockup düzeni) |
-| `BursaApp/data/camps.json` | Kamp: Sarıalan/Çobankaya, gölet, İznik, Suuçtu · `/kamp` |
+| `BursaApp/data/camps.json` | 42 kamp: Uludağ, kıyı, gölet, Longoz, Balıkesir · `/kamp` |
+| `BursaApp/data/burgers_bursa.json` | 40 burger mekanı (Too/Otto/Burgy + zincir şubeler) · `/yeme-icme?dish=burger` |
+| `BursaApp/seed_burger_bursa.py` | Burger seed + işletme/web/Commons foto zenginleştirme |
 | `BursaApp/data/concerts.json` | Konser salonları: Merinos, Kültürpark, Tayyare, Timsah Arena · `/konserler` |
 | `BursaApp/data/shows_theater.json` | Yakın tiyatro: Baba, Hamlet, Don Kişot… · `/tiyatro` |
 | `BursaApp/data/shows_concert.json` | Eylül–Ekim konser: Sibel Can, Grinko, Sertab… · `/konserler` |
@@ -279,8 +281,15 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/c101_depth_baseline.json` | Sembol başına likidite oranı EWMA referansı; ilk 20 tur derinlik çarpanı 1,0 (etkisiz) |
 | `temmuzPoly/algo_islemler_fresh_start.py` | Algoritma-islemler close + **79 defterin** bakiyesini $1000'e sıfırla + **TOP1–4 oy defteri** damgası (cron open bekler, manuel open yok). **t05/t07 kopyaları** da $1000 (yoksa oluşturur). Liste dashboard `_ALGO_ISLEMLER_KEYS` ile birebir; `melez` dosya adı farklı olduğu için `_STATE_FILE_KEY` ile eşlenir. Bayraklar: `--check` (yazmadan eksik dosya raporu) · `--reset-only` · `--wipe-history` (geçmişi `_archive_<tarih>/` klasörüne taşır, silmez) |
 | `temmuzPoly/poly_trader_jarvis2026.py` | **JARVIS2026** sanal $1000 · $16/24/32 · evrilen fikir · her dk open · kâr kapısı **%35** (diğer defterler %50) · `:01` close · gerçek PM yok |
-| `temmuzPoly/poly_trader_ref01.py` | **REF01** sanal $1000 · $24/36/48 · kâr kapısı **%40** · her dk open · `:01` close · sayfada giriş saati (HH:MM İST) · gerçek PM yok |
-| `temmuzPoly/ref01_signal.py` | REF01 — ilk 6 bps · TREND ≥20 kesişsiz · FADE kesiş <:15 + ters ≥12 · ask_max 0,55 |
+| `temmuzPoly/poly_trader_ref01.py` | **REF01** sanal $1000 · $24/36/48 · kâr kapısı **%25** · ask ≤0,75 · her dk open · `:01` close · `daily` 00:00 İST TG (F16 ile aynı format) · gerçek PM yok |
+| `temmuzPoly/ref01_signal.py` | REF01 — ilk 6 bps · TREND ≥18 kesişsiz · FADE kesiş <:15 + ters ≥10 · ask_max 0,75 |
+| `temmuzPoly/poly_trader_ref02.py` | **REF02** sanal $1000 · trend only · kâr kapısı **%35** · ask ≤0,75 · her dk open · `:01` close · gerçek PM yok |
+| `temmuzPoly/ref02_signal.py` | REF02 — aynı yol verisi · yalnız TREND ≥18 kesişsiz · fade yok · ask_max 0,75 |
+| `temmuzPoly/poly_trader_ref04.py` | **REF04** sanal $1000 · uç nokta dönüşü + **F16** onayı · ask 0.20–0.35 · her dk open · `:01` close · gerçek PM yok |
+| `temmuzPoly/ref04_signal.py` | REF04 — saatlik yol ekstrem ≥25 bps + geri çekilme ≥10 bps · ters yön |
+| `temmuzPoly/poly_trader_ref05.py` | **REF05** sanal $1000 · uç nokta dönüşü + **F1#01** onayı · ask 0.20–0.35 · her dk open · `:01` close · gerçek PM yok |
+| `temmuzPoly/ref05_signal.py` | REF05 — REF04 ile aynı yol mantığı (import) · F1#01 filtresi trader'da |
+| `temmuzPoly/f1_01_signal.py` | F1#01 HMM yönü — `/tmp/f1_signals.json` |
 | `temmuzPoly/jarvis2026_signal.py` | Fikir kuralları · `ask_max` taban **0.50** · yol eşiği tavan **6 bps** (evrim daha sıkamaz) |
 | `temmuzPoly/jarvis2026_evolve.py` | 2 saatte fikir üretir (`30 */2`); ask_max <0.50 / path_abs >6 yazsa bile sinyal katmanı düzeltir |
 | `temmuzPoly/backtest_watch_1y.py` | İzleme 5’li 1Y · F16 = BTC+SOL `predict()` · 00:00 İST · `backtest_watch_1y.json` |
@@ -346,7 +355,7 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 ## Cron
 - `BistAnaliz/BistHourSinyal/bist_visual_v2.py 1h` — `1 7-15` + `31 14` iş günü → `/tmp/bist_visual.log`
 - `BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` — `*/5` iş günü → `/tmp/bist_signal_hunter.log`
-- `BistAnaliz/backup.py` — `59 23 * * *` → `/tmp/backup.log`
+- ~~`BistAnaliz/backup.py` — `59 23 * * *`~~ **KALDIRILDI (2026-09-09)** — disk doldu; günlük `backups/` arşivi iptal
 - `/algoritma-islemler` sanal: `close` **:01** / `open` **:02** (B1#04/#05 `:02:30`, COMBO `:02:25`, COMBO2 `:02:40`). Aynı defterlerin **:05/:07 kopyaları** (F1 dahil) (`slot_trader.py`): close **:01** / open **:05** / **:07**. A5 + Live PM: `close` **:02** / `open` **:05**
 - `temmuzPoly/poly_trader_a1.py close/open` — A1 Top-34 sanal ($1000 · $24/36/48); gerçek PM yok; hafta sonu da çalışır
 - `temmuzPoly/poly_trader_analiz1.py close/open` — **F16** BTC+SOL **sanal** ($1000 · $24/36/48); hafta sonu da çalışır

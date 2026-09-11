@@ -1,17 +1,21 @@
-"""REF01 sanal defter. Gerçek PM yok.
+"""REF05 sanal defter. Gerçek PM yok.
 
-Saatlik yol: uzak + kesiş yok → trend; erken geri dönüş → fade.
-Kasa $1000 · sembol WR $24/$36/$48. Cron: :01 close · * * open · 00:00 daily TG.
+Uç nokta dönüşü + F1#01 onayı:
+  1. Saatlik yolda ekstrem oluşmuş (≥25 bps) ve geri çekilmiş (≥10 bps).
+  2. F1#01 (HMM) sinyali ters yöndeyse işlem atlanır; aynı yön veya nötr ise açılır.
+  3. Token ask 0.20–0.35 bandında.
+
+Kasa $1000 · sembol WR $24/$36/$48.
+Cron: :01 close · * * open (her dakika) · Cumartesi 21:00 weekly.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import sys
-import urllib.parse
-import urllib.request
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,48 +30,30 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, _DIR)
 
-from ref01_signal import ASK_MAX, SYMBOLS, decide  # noqa: E402
+from ref05_signal import ASK_MAX, ASK_MIN, SYMBOLS, decide  # noqa: E402
+from f1_01_signal import resolve_direction as _f1_01_dir  # noqa: E402
 from pm_trader_helpers import (  # noqa: E402
     apply_pm_quote,
-    format_daily_history_tg,
     pm_sanal_settle_trade,
     pm_sanal_slot_candle,
     resolve_open_slot_gates,
     skip_if_weekend_pause,
     slot_amount_log,
     symbol_wr_amount_for_book,
-    trades_for_exit_day,
 )
-from telegram_poly_channels import chat_analiz1  # noqa: E402
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 
-STATE_FILE = os.path.join(_DIR, "poly_trader_ref01_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_ref01_history.json")
-LABEL = "REF01"
-BOOK_KEY = "ref01"
-ALGO_NAME = "REF01 · referans çizgisi"
-INITIAL_BALANCE = 1000.0
-REF01_MIN_PROFIT_RATIO = 0.25
-BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
-CHAT_ID = chat_analiz1()
+STATE_FILE   = os.path.join(_DIR, "poly_trader_ref05_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_ref05_history.json")
+LABEL        = "REF05"
+BOOK_KEY     = "ref05"
+ALGO_NAME    = "REF05 · uç dönüş + F1#01"
+INITIAL_BALANCE        = 1000.0
+REF05_MIN_PROFIT_RATIO = 0.50
 
-# :01 close bitmeden open yazmasın (bakiye yarışı).
-_ENTRY_LO = 2
+_ENTRY_LO = 10
 _ENTRY_HI = 50
-
-
-def tg_send(text: str) -> None:
-    try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        body = urllib.parse.urlencode({
-            "chat_id": CHAT_ID, "text": text, "parse_mode": "HTML",
-        }).encode()
-        req = urllib.request.Request(url, data=body)
-        with urllib.request.urlopen(req, timeout=10) as r:
-            r.read()
-    except Exception as e:
-        print(f"[TG] Hata: {e}")
 
 
 def load_state() -> dict:
@@ -80,10 +66,9 @@ def load_state() -> dict:
     return {"balance": INITIAL_BALANCE, "open_positions": [], "total_pnl": 0.0}
 
 
-def save_state(state: dict) -> dict:
+def save_state(state: dict) -> None:
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
-    return state
 
 
 def load_history() -> list:
@@ -105,32 +90,51 @@ def _wr(wins: int, total: int) -> str:
     return f"%{wins/total*100:.0f} ({wins}/{total})" if total else "veri yok"
 
 
-def run_open() -> None:
-    now = datetime.now(timezone.utc)
+async def _get_f1_01(sym: str) -> str | None:
+    """F1#01 yönü: 'UP', 'DOWN' veya None (nötr/hata)."""
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(_f1_01_dir, sym), timeout=8.0)
+    except Exception:
+        return None
+
+
+async def run_open() -> None:
+    now    = datetime.now(timezone.utc)
     now_tr = now.astimezone(_TZ_TR)
-    saat = now_tr.strftime("%H:%M")
+    saat   = now_tr.strftime("%H:%M")
+
     if skip_if_weekend_pause(LABEL, "open", now_tr):
         return
     if now_tr.minute < _ENTRY_LO or now_tr.minute > _ENTRY_HI:
         return
 
-    state = load_state()
+    state   = load_state()
     history = load_history()
     balance = float(state.get("balance") or INITIAL_BALANCE)
     open_syms = {p.get("symbol") for p in (state.get("open_positions") or [])}
     opened, skipped = [], []
-    verbose = os.environ.get("REF01_TICK_VERBOSE") == "1"
+    verbose = os.environ.get("REF05_TICK_VERBOSE") == "1"
 
     for sym in SYMBOLS:
         if sym in open_syms:
             skipped.append((sym, "zaten açık"))
             continue
+
         dec = decide(sym, now_tr.minute)
         if not dec.get("allow"):
             skipped.append((sym, dec.get("reason") or "kapı kapalı"))
             if verbose:
                 print(f"[{LABEL} open] {sym} — {dec.get('reason')} · {dec.get('detail')}")
             continue
+
+        f1_dir = await _get_f1_01(sym)
+        if f1_dir is not None and f1_dir != dec["direction"]:
+            reason = f"F1#01 ters yön ({f1_dir}) — REF05 {dec['direction']}"
+            skipped.append((sym, reason))
+            if verbose:
+                print(f"[{LABEL} open] {sym} — {reason}")
+            continue
+
         base_amt = symbol_wr_amount_for_book(history, sym, BOOK_KEY)
         _sk, stake, hot_boost, cold_cut, _note = resolve_open_slot_gates(
             history, now_tr.hour, base_amt
@@ -139,53 +143,62 @@ def run_open() -> None:
         if stake <= 0 or stake > balance:
             skipped.append((sym, "bakiye/kademe"))
             continue
+
         pos = {
-            "symbol": sym,
-            "predicted_dir": dec["direction"],
-            "entry_price": None,
-            "entry_time_tr": now_tr.isoformat(),
-            "entry_hour_tr": now_tr.hour,
-            "entry_dow": now_tr.weekday(),
-            "entry_is_weekend": now_tr.weekday() >= 5,
-            "amount": stake,
-            "hot_hour_boost": hot_boost,
-            "cold_hour_cut": cold_cut,
-            "algo_signal": dec["direction"],
-            "algo_name": ALGO_NAME,
-            "ref01_mode": dec.get("mode"),
-            "ref01_detail": dec.get("detail"),
-            "ref01_path_bps": dec.get("path_bps"),
-            "ref01_first_side": dec.get("first_side"),
-            "ref01_cross_min": dec.get("cross_min"),
-            "ref01_entry_min": now_tr.minute,
+            "symbol":             sym,
+            "predicted_dir":      dec["direction"],
+            "entry_price":        None,
+            "entry_time_tr":      now_tr.isoformat(),
+            "entry_hour_tr":      now_tr.hour,
+            "entry_dow":          now_tr.weekday(),
+            "entry_is_weekend":   now_tr.weekday() >= 5,
+            "amount":             stake,
+            "hot_hour_boost":     hot_boost,
+            "cold_hour_cut":      cold_cut,
+            "algo_signal":        dec["direction"],
+            "algo_name":          ALGO_NAME,
+            "ref05_mode":         dec.get("mode"),
+            "ref05_detail":       dec.get("detail"),
+            "ref05_extreme_bps":  dec.get("extreme_bps"),
+            "ref05_pullback_bps": dec.get("pullback_bps"),
+            "ref05_extreme_mn":   dec.get("extreme_mn"),
+            "ref05_path_bps":     dec.get("path_bps"),
+            "ref05_entry_min":    now_tr.minute,
+            "ref05_f1_dir":       f1_dir,
         }
-        apply_pm_quote(
-            pos, sym, dec["direction"], stake, now,
-            min_profit_ratio=REF01_MIN_PROFIT_RATIO,
-        )
+
+        apply_pm_quote(pos, sym, dec["direction"], stake, now,
+                       min_profit_ratio=REF05_MIN_PROFIT_RATIO)
         if pos.get("entry_skip"):
             skipped.append((sym, pos["entry_skip"]))
             print(f"[{LABEL} open] {sym} — {pos['entry_skip']}")
             continue
+
         ask = pos.get("pm_entry_price")
         try:
             ask_f = float(ask) if ask is not None else None
         except (TypeError, ValueError):
             ask_f = None
+        lo = dec.get("ask_min", ASK_MIN)
         hi = dec.get("ask_max", ASK_MAX)
+        if ask_f is not None and lo is not None and ask_f < float(lo):
+            skipped.append((sym, f"ask {ask_f:.2f} < {lo} (çok riskli)"))
+            print(f"[{LABEL} open] {sym} — ask_min {lo} · gelen {ask_f:.2f} (piyasa çok olumsuz)")
+            continue
         if ask_f is not None and hi is not None and ask_f > float(hi):
             skipped.append((sym, f"ask {ask_f:.2f} > {hi}"))
             print(f"[{LABEL} open] {sym} — ask_max {hi} · gelen {ask_f:.2f}")
             continue
+
         if not pos.get("pm_slug"):
             skipped.append((sym, "PM dolum yok"))
             continue
+
         state["open_positions"].append(pos)
         open_syms.add(sym)
         opened.append((sym, dec, stake, pos))
-        print(
-            f"[{LABEL} open] {sym} {dec['direction']} ${stake:.2f} · {dec.get('detail')}"
-        )
+        f1_note = f" · F1#01 {f1_dir}" if f1_dir else " · F1#01 nötr"
+        print(f"[{LABEL} open] {sym} {dec['direction']} ${stake:.2f} · {dec.get('detail')}{f1_note}")
 
     save_state(state)
     if not opened:
@@ -197,9 +210,10 @@ def run_open() -> None:
 
 def run_close() -> None:
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    saat = now_tr.strftime("%H:%M")
-    state = load_state()
+    saat   = now_tr.strftime("%H:%M")
+    state  = load_state()
     history = load_history()
+
     if not state.get("open_positions"):
         print(f"[{LABEL} close] {saat} İST — açık pozisyon yok")
         return
@@ -211,32 +225,34 @@ def run_close() -> None:
             failed.append(pos)
             continue
         hour_open, hour_close = candle
-        s = pm_sanal_settle_trade(pos, hour_open, hour_close)
+        s   = pm_sanal_settle_trade(pos, hour_open, hour_close)
         win, pnl, actual = s["win"], s["pnl"], s["actual_dir"]
-        state["balance"] = round(float(state["balance"]) + pnl, 2)
+        state["balance"]   = round(float(state["balance"]) + pnl, 2)
         state["total_pnl"] = round(float(state.get("total_pnl") or 0) + pnl, 2)
         rec = {
-            "symbol": pos["symbol"],
-            "predicted_dir": pos["predicted_dir"],
-            "actual_dir": actual,
-            "win": win,
-            "entry_price": s["entry_price"],
-            "exit_price": s["exit_price"],
-            "entry_time_tr": pos["entry_time_tr"],
-            "entry_hour_tr": pos.get("entry_hour_tr"),
-            "entry_dow": pos.get("entry_dow"),
-            "entry_is_weekend": pos.get("entry_is_weekend"),
-            "amount": pos.get("amount"),
-            "exit_time_tr": now_tr.isoformat(),
-            "pnl": pnl,
-            "algo_signal": pos.get("algo_signal"),
-            "algo_name": pos.get("algo_name", ALGO_NAME),
-            "ref01_mode": pos.get("ref01_mode"),
-            "ref01_detail": pos.get("ref01_detail"),
-            "ref01_path_bps": pos.get("ref01_path_bps"),
-            "ref01_first_side": pos.get("ref01_first_side"),
-            "ref01_cross_min": pos.get("ref01_cross_min"),
-            "ref01_entry_min": pos.get("ref01_entry_min"),
+            "symbol":             pos["symbol"],
+            "predicted_dir":      pos["predicted_dir"],
+            "actual_dir":         actual,
+            "win":                win,
+            "entry_price":        s["entry_price"],
+            "exit_price":         s["exit_price"],
+            "entry_time_tr":      pos["entry_time_tr"],
+            "entry_hour_tr":      pos.get("entry_hour_tr"),
+            "entry_dow":          pos.get("entry_dow"),
+            "entry_is_weekend":   pos.get("entry_is_weekend"),
+            "amount":             pos.get("amount"),
+            "exit_time_tr":       now_tr.isoformat(),
+            "pnl":                pnl,
+            "algo_signal":        pos.get("algo_signal"),
+            "algo_name":          pos.get("algo_name", ALGO_NAME),
+            "ref05_mode":         pos.get("ref05_mode"),
+            "ref05_detail":       pos.get("ref05_detail"),
+            "ref05_extreme_bps":  pos.get("ref05_extreme_bps"),
+            "ref05_pullback_bps": pos.get("ref05_pullback_bps"),
+            "ref05_extreme_mn":   pos.get("ref05_extreme_mn"),
+            "ref05_path_bps":     pos.get("ref05_path_bps"),
+            "ref05_entry_min":    pos.get("ref05_entry_min"),
+            "ref05_f1_dir":       pos.get("ref05_f1_dir"),
         }
         for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug",
                   "pm_fee", "pm_quote_src", "pm_mid_price"):
@@ -252,18 +268,23 @@ def run_close() -> None:
     if not lines:
         print(f"[{LABEL} close] {saat} — kapanan yok")
         return
-    print(f"[{LABEL} close] {saat} İST — {len(lines)} kapandı · "
-          f"bakiye ${state['balance']:.2f}")
+    print(f"[{LABEL} close] {saat} İST — {len(lines)} kapandı · bakiye ${state['balance']:.2f}")
 
 
 def run_preview() -> None:
     now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    print(f"{LABEL} önizleme — {now_tr:%d.%m.%Y %H:%M} İST  saat {now_tr.hour:02d}")
+    print(f"{LABEL} önizleme — {now_tr:%d.%m.%Y %H:%M} İST  dakika {now_tr.minute}")
     for sym in SYMBOLS:
-        dec = decide(sym, now_tr.minute)
+        dec  = decide(sym, now_tr.minute)
         flag = "AÇ" if dec.get("allow") else "YOK"
-        print(f"  {sym:8s} {flag:3s}  {dec.get('direction') or '—':4s}  "
-              f"{dec.get('detail')}")
+        ext  = dec.get("extreme_bps")
+        pb   = dec.get("pullback_bps")
+        ext_str = f" ext={ext:+.1f}" if ext is not None else ""
+        pb_str  = f" pb={pb:.1f}" if pb is not None else ""
+        f1 = _f1_01_dir(sym)
+        print(f"  {sym:9s} {flag:3s}  {dec.get('direction') or '—':4s} "
+              f" {dec.get('detail') or dec.get('reason')}{ext_str}{pb_str}"
+              f"  F1#01={f1 or 'nötr'}")
 
 
 def run_stats() -> None:
@@ -272,34 +293,31 @@ def run_stats() -> None:
         print(f"{LABEL} — işlem yok · bakiye ${state.get('balance', 0):.2f}")
         return
     wins = sum(1 for t in history if t.get("win"))
+    pnl  = state.get("total_pnl", 0)
     print(f"{LABEL} — {len(history)} işlem · {_wr(wins, len(history))} · "
-          f"${state.get('balance', 0):.2f} · {state.get('total_pnl', 0):+.2f}$")
+          f"${state.get('balance', 0):.2f} · {pnl:+.2f}$")
     by: dict[str, list] = defaultdict(list)
     for t in history:
         by[t["symbol"]].append(t)
     for sym, rows in sorted(by.items()):
         w = sum(1 for t in rows if t.get("win"))
-        pnl = sum(float(t.get("pnl") or 0) for t in rows)
-        print(f"  {sym:9s} {_wr(w, len(rows)):>16s}  {pnl:+8.2f}$")
+        p = sum(float(t.get("pnl") or 0) for t in rows)
+        f1_ok = [t for t in rows if t.get("ref05_f1_dir")]
+        f1_n  = [t for t in rows if not t.get("ref05_f1_dir")]
+        print(f"  {sym:9s} {_wr(w, len(rows)):>16s}  {p:+8.2f}$"
+              f"  F1_onay={len(f1_ok)}  F1_nötr={len(f1_n)}")
 
 
 def run_weekly() -> None:
     run_stats()
 
 
-def run_daily() -> None:
-    """00:00 İST — önceki günün kapanan işlemleri Telegram'a gönderir (F16 ile aynı format)."""
-    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    day = (now_tr - timedelta(days=1)).date()
-    trades = trades_for_exit_day(load_history(), day)
-    for msg in format_daily_history_tg("REF01", trades, day, now_tr):
-        tg_send(msg)
-    print(f"[{LABEL} daily] {day} — {len(trades)} işlem gönderildi")
-
-
 _MODES = {
-    "open": run_open, "close": run_close, "preview": run_preview,
-    "stats": run_stats, "weekly": run_weekly, "daily": run_daily,
+    "open": lambda: asyncio.run(run_open()),
+    "close": run_close,
+    "preview": run_preview,
+    "stats": run_stats,
+    "weekly": run_weekly,
 }
 
 if __name__ == "__main__":

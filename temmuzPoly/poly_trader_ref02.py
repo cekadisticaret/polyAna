@@ -1,17 +1,15 @@
-"""REF01 sanal defter. Gerçek PM yok.
+"""REF02 sanal defter. Gerçek PM yok.
 
-Saatlik yol: uzak + kesiş yok → trend; erken geri dönüş → fade.
-Kasa $1000 · sembol WR $24/$36/$48. Cron: :01 close · * * open · 00:00 daily TG.
+REF01 saatlik yol — yalnız TREND (fade yok) · kâr kapısı %35.
+Kasa $1000 · sembol WR $24/$36/$48. Cron: :01 close · * * open.
 """
 from __future__ import annotations
 
 import json
 import os
 import sys
-import urllib.parse
-import urllib.request
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,48 +24,29 @@ if os.path.exists(_ENV_FILE):
 
 sys.path.insert(0, _DIR)
 
-from ref01_signal import ASK_MAX, SYMBOLS, decide  # noqa: E402
+from ref02_signal import ASK_MAX, SYMBOLS, decide  # noqa: E402
 from pm_trader_helpers import (  # noqa: E402
     apply_pm_quote,
-    format_daily_history_tg,
     pm_sanal_settle_trade,
     pm_sanal_slot_candle,
     resolve_open_slot_gates,
     skip_if_weekend_pause,
     slot_amount_log,
     symbol_wr_amount_for_book,
-    trades_for_exit_day,
 )
-from telegram_poly_channels import chat_analiz1  # noqa: E402
 
 _TZ_TR = ZoneInfo("Europe/Istanbul")
 
-STATE_FILE = os.path.join(_DIR, "poly_trader_ref01_state.json")
-HISTORY_FILE = os.path.join(_DIR, "poly_trader_ref01_history.json")
-LABEL = "REF01"
-BOOK_KEY = "ref01"
-ALGO_NAME = "REF01 · referans çizgisi"
+STATE_FILE = os.path.join(_DIR, "poly_trader_ref02_state.json")
+HISTORY_FILE = os.path.join(_DIR, "poly_trader_ref02_history.json")
+LABEL = "REF02"
+BOOK_KEY = "ref02"
+ALGO_NAME = "REF02 · trend only"
 INITIAL_BALANCE = 1000.0
-REF01_MIN_PROFIT_RATIO = 0.25
-BOT_TOKEN = "8727030715:AAEjjvUzAuw2GR-sVlZXUHknI0gT9mkz4WA"
-CHAT_ID = chat_analiz1()
+REF02_MIN_PROFIT_RATIO = 0.35
 
-# :01 close bitmeden open yazmasın (bakiye yarışı).
 _ENTRY_LO = 2
 _ENTRY_HI = 50
-
-
-def tg_send(text: str) -> None:
-    try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        body = urllib.parse.urlencode({
-            "chat_id": CHAT_ID, "text": text, "parse_mode": "HTML",
-        }).encode()
-        req = urllib.request.Request(url, data=body)
-        with urllib.request.urlopen(req, timeout=10) as r:
-            r.read()
-    except Exception as e:
-        print(f"[TG] Hata: {e}")
 
 
 def load_state() -> dict:
@@ -119,7 +98,7 @@ def run_open() -> None:
     balance = float(state.get("balance") or INITIAL_BALANCE)
     open_syms = {p.get("symbol") for p in (state.get("open_positions") or [])}
     opened, skipped = [], []
-    verbose = os.environ.get("REF01_TICK_VERBOSE") == "1"
+    verbose = os.environ.get("REF02_TICK_VERBOSE") == "1"
 
     for sym in SYMBOLS:
         if sym in open_syms:
@@ -152,16 +131,16 @@ def run_open() -> None:
             "cold_hour_cut": cold_cut,
             "algo_signal": dec["direction"],
             "algo_name": ALGO_NAME,
-            "ref01_mode": dec.get("mode"),
-            "ref01_detail": dec.get("detail"),
-            "ref01_path_bps": dec.get("path_bps"),
-            "ref01_first_side": dec.get("first_side"),
-            "ref01_cross_min": dec.get("cross_min"),
-            "ref01_entry_min": now_tr.minute,
+            "ref02_mode": dec.get("mode"),
+            "ref02_detail": dec.get("detail"),
+            "ref02_path_bps": dec.get("path_bps"),
+            "ref02_first_side": dec.get("first_side"),
+            "ref02_cross_min": dec.get("cross_min"),
+            "ref02_entry_min": now_tr.minute,
         }
         apply_pm_quote(
             pos, sym, dec["direction"], stake, now,
-            min_profit_ratio=REF01_MIN_PROFIT_RATIO,
+            min_profit_ratio=REF02_MIN_PROFIT_RATIO,
         )
         if pos.get("entry_skip"):
             skipped.append((sym, pos["entry_skip"]))
@@ -231,12 +210,12 @@ def run_close() -> None:
             "pnl": pnl,
             "algo_signal": pos.get("algo_signal"),
             "algo_name": pos.get("algo_name", ALGO_NAME),
-            "ref01_mode": pos.get("ref01_mode"),
-            "ref01_detail": pos.get("ref01_detail"),
-            "ref01_path_bps": pos.get("ref01_path_bps"),
-            "ref01_first_side": pos.get("ref01_first_side"),
-            "ref01_cross_min": pos.get("ref01_cross_min"),
-            "ref01_entry_min": pos.get("ref01_entry_min"),
+            "ref02_mode": pos.get("ref02_mode"),
+            "ref02_detail": pos.get("ref02_detail"),
+            "ref02_path_bps": pos.get("ref02_path_bps"),
+            "ref02_first_side": pos.get("ref02_first_side"),
+            "ref02_cross_min": pos.get("ref02_cross_min"),
+            "ref02_entry_min": pos.get("ref02_entry_min"),
         }
         for k in ("pm_spent", "pm_size", "pm_entry_price", "to_win", "pm_slug",
                   "pm_fee", "pm_quote_src", "pm_mid_price"):
@@ -287,19 +266,9 @@ def run_weekly() -> None:
     run_stats()
 
 
-def run_daily() -> None:
-    """00:00 İST — önceki günün kapanan işlemleri Telegram'a gönderir (F16 ile aynı format)."""
-    now_tr = datetime.now(timezone.utc).astimezone(_TZ_TR)
-    day = (now_tr - timedelta(days=1)).date()
-    trades = trades_for_exit_day(load_history(), day)
-    for msg in format_daily_history_tg("REF01", trades, day, now_tr):
-        tg_send(msg)
-    print(f"[{LABEL} daily] {day} — {len(trades)} işlem gönderildi")
-
-
 _MODES = {
     "open": run_open, "close": run_close, "preview": run_preview,
-    "stats": run_stats, "weekly": run_weekly, "daily": run_daily,
+    "stats": run_stats, "weekly": run_weekly,
 }
 
 if __name__ == "__main__":

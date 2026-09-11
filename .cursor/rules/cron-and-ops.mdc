@@ -20,7 +20,7 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 |---|---|---|
 | `1 7-15 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
 | `31 14 * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistHourSinyal/bist_visual_v2.py 1h` | `/tmp/bist_visual.log` |
-| `59 23 * * *` | `cd /root/aiProject && python3 BistAnaliz/backup.py` | `/tmp/backup.log` |
+| ~~`59 23 * * *`~~ | ~~`cd /root/aiProject && python3 BistAnaliz/backup.py`~~ **KALDIRILDI (2026-09-09)** — günlük `backups/` arşivi iptal | `/tmp/backup.log` |
 | `* * * * *` | `cd /root/aiProject && python3 ops/gpsusdt_close_retry.py` (CoptC `live_close_fail` / `bn_status_unknown` → GPSUSDT MARKET reduceOnly, 4×6sn; **emir açmaz**) | `/tmp/gpsusdt_close_retry.log` |
 | ~~`* * * * *`~~ | ~~`hourly_path_log.py tick`~~ **KALDIRILDI** — `binance_ws_marks.py` WS → `hourly_path/apply_prices` (~15 sn / dk değişimi) · yedek: `hourly_path_log.py tick` | `/tmp/binance_ws_marks.log` |
 | `*/5 * * * 1-5` | `cd /root/aiProject && python3 BistAnaliz/BistYapayAnaliz/bist_signal_hunter.py` | `/tmp/bist_signal_hunter.log` |
@@ -36,6 +36,10 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref01.py close` | `/tmp/poly_trader_ref01.log` |
 | `* * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref01.py open` (**REF01** — saatlik yol 20 bps trend / erken kesiş fade · $24/36/48 · sanal **$1000**; **:02/:05/:07 kilit yok**; gerçek PM yok) | `/tmp/poly_trader_ref01.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref01.py weekly` | `/tmp/poly_trader_ref01.log` |
+| `0 21 * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref01.py daily` (**REF01** günlük işlem raporu · 00:00 İST · F16 ile aynı TG kanalı) | `/tmp/poly_trader_ref01.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref02.py close` | `/tmp/poly_trader_ref02.log` |
+| `* * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref02.py open` (**REF02** — saatlik yol trend ≥18 · fade yok · kâr %35 · $24/36/48 · sanal **$1000**; gerçek PM yok) | `/tmp/poly_trader_ref02.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref02.py weekly` | `/tmp/poly_trader_ref02.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 temmuzPoly/backtest_watch_1y.py` (izleme 5’li 1Y · 00:00 İST · **emir yok**) | `/tmp/backtest_watch_1y.log` |
 | `1 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py close` (`/algoritma-islemler`) | `/tmp/poly_trader_analiz*.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py open` | `/tmp/poly_trader_analiz*.log` |
@@ -332,6 +336,7 @@ tail -f /tmp/poly_trader_analiz1.log
 tail -f /tmp/poly_trader_f16v2.log
 tail -f /tmp/poly_trader_jarvis2026.log
 tail -f /tmp/poly_trader_ref01.log
+tail -f /tmp/poly_trader_ref02.log
 tail -f /tmp/jarvis2026_evolve.log
 tail -f /tmp/hourly_path.log
 tail -f /tmp/pm_balance_hourly.log
