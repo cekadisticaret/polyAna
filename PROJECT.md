@@ -289,6 +289,9 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `temmuzPoly/ref04_signal.py` | REF04 — saatlik yol ekstrem ≥25 bps + geri çekilme ≥10 bps · ters yön |
 | `temmuzPoly/poly_trader_ref05.py` | **REF05** sanal $1000 · uç nokta dönüşü + **F1#01** onayı · ask 0.20–0.35 · her dk open · `:01` close · gerçek PM yok |
 | `temmuzPoly/ref05_signal.py` | REF05 — REF04 ile aynı yol mantığı (import) · F1#01 filtresi trader'da |
+| `temmuzPoly/poly_trader_ref06.py` | **REF06** sanal $1000 · uç nokta dönüşü + **saat başı WR en iyi** onay · ask 0.20–0.35 · her dk open · `:01` close · gerçek PM yok |
+| `temmuzPoly/ref06_signal.py` | REF06 — REF04 ile aynı yol mantığı (import) · WR onayı trader'da |
+| `temmuzPoly/ref06_wr_pick.py` | REF06 — saat başında coin bazında en yüksek WR defter seçimi (B1#05 havuzu) |
 | `temmuzPoly/f1_01_signal.py` | F1#01 HMM yönü — `/tmp/f1_signals.json` |
 | `temmuzPoly/jarvis2026_signal.py` | Fikir kuralları · `ask_max` taban **0.50** · yol eşiği tavan **6 bps** (evrim daha sıkamaz) |
 | `temmuzPoly/jarvis2026_evolve.py` | 2 saatte fikir üretir (`30 */2`); ask_max <0.50 / path_abs >6 yazsa bile sinyal katmanı düzeltir |

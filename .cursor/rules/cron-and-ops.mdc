@@ -40,6 +40,9 @@ MATCHDAY kabuk (lacivert + sarı). Şifre yok. 7 lig çipi (`?league=`). Maç t�
 | `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref02.py close` | `/tmp/poly_trader_ref02.log` |
 | `* * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref02.py open` (**REF02** — saatlik yol trend ≥18 · fade yok · kâr %35 · $24/36/48 · sanal **$1000**; gerçek PM yok) | `/tmp/poly_trader_ref02.log` |
 | `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref02.py weekly` | `/tmp/poly_trader_ref02.log` |
+| `1 * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref06.py close` | `/tmp/poly_trader_ref06.log` |
+| `* * * * *` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref06.py open` (**REF06** — uç dönüş + saat başı WR en iyi onay · ask 0.20–0.35 · $24/36/48 · sanal **$1000**; gerçek PM yok) | `/tmp/poly_trader_ref06.log` |
+| `0 21 * * 6` | `cd /root/aiProject && python3 temmuzPoly/poly_trader_ref06.py weekly` | `/tmp/poly_trader_ref06.log` |
 | `0 21 * * *` | `cd /root/aiProject && python3 temmuzPoly/backtest_watch_1y.py` (izleme 5’li 1Y · 00:00 İST · **emir yok**) | `/tmp/backtest_watch_1y.log` |
 | `1 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py close` (`/algoritma-islemler`) | `/tmp/poly_trader_analiz*.log` |
 | `2 * * * *` | `temmuzPoly/poly_trader_analiz{2,6,15}.py open` | `/tmp/poly_trader_analiz*.log` |
@@ -337,6 +340,7 @@ tail -f /tmp/poly_trader_f16v2.log
 tail -f /tmp/poly_trader_jarvis2026.log
 tail -f /tmp/poly_trader_ref01.log
 tail -f /tmp/poly_trader_ref02.log
+tail -f /tmp/poly_trader_ref06.log
 tail -f /tmp/jarvis2026_evolve.log
 tail -f /tmp/hourly_path.log
 tail -f /tmp/pm_balance_hourly.log
