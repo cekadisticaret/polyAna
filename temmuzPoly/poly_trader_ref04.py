@@ -58,7 +58,7 @@ _ENTRY_HI = 50
 # ── Ask seviyesi kademe tablosu ─────────────────────────────────
 # WR geçmişten dinamik hesaplanır; seviyede <5 işlem varsa bant WR'si kullanılır.
 _ASK_TIER_MIN_N   = 5     # tek seviyede minimum işlem sayısı
-_ASK_BAND_MIN_N   = 8     # bant toplamında minimum işlem sayısı
+_ASK_BAND_MIN_N   = 2     # bant toplamında minimum işlem sayısı
 _ASK_DEFAULT_AMT  = 12.0  # yetersiz veri varsayılanı
 
 def ask_tier_amount(history: list, ask_price: float) -> float:
