@@ -21,8 +21,8 @@ PULLBACK_BPS  = 10.0   # Ekstremden bu kadar geri çekilmiş olmalı (bps)
 ENTRY_AFTER   = 10     # Bu dakikadan önce sinyal yok (ekstrem oluşmaya vakit)
 ENTRY_BEFORE  = 50     # Bu dakikadan sonra sinyal yok
 ASK_MIN       = 0.25   # Alt sınır — 0.20-0.24 bandı %0 WR gösterdi  [0.20→0.25, 2026-09-12]
-ASK_MAX       = 0.35   # Üst sınır — piyasa %35 altı vermeli → min 2.85× oran
-# Hedef bant 0.25-0.35: altın dilim 0.25-0.29 → %62 WR (27 işlem analizi, 2026-09-12)
+ASK_MAX       = 0.30   # Üst sınır — altın dilim 0.25-0.29 → %62 WR  [0.35→0.30, 2026-09-12]
+# Hedef bant 0.25-0.30: 0.30-0.35 bandı %17 WR gösterdi (6 işlem, teyit için bekleniyor)
 EXCLUDED_SYMBOLS = frozenset({"ETHUSDT"})  # ETH: 0/5 kayıp (-$42), geçici dışlama [2026-09-12]
 
 
