@@ -16,13 +16,14 @@ import ref01_signal as _r1
 SYMBOLS = _r1.SYMBOLS
 
 # ── Parametreler ───────────────────────────────────────────────
-EXTREME_BPS   = 25.0   # Saatte oluşan sapma en az bu kadar büyük olmalı (bps)
+EXTREME_BPS   = 33.0   # Saatte oluşan sapma en az bu kadar büyük olmalı (bps)  [25→33, 2026-09-12]
 PULLBACK_BPS  = 10.0   # Ekstremden bu kadar geri çekilmiş olmalı (bps)
 ENTRY_AFTER   = 10     # Bu dakikadan önce sinyal yok (ekstrem oluşmaya vakit)
 ENTRY_BEFORE  = 50     # Bu dakikadan sonra sinyal yok
-ASK_MIN       = 0.20   # Alt sınır — piyasa %20+ vermeli → max 5× oran
+ASK_MIN       = 0.25   # Alt sınır — 0.20-0.24 bandı %0 WR gösterdi  [0.20→0.25, 2026-09-12]
 ASK_MAX       = 0.35   # Üst sınır — piyasa %35 altı vermeli → min 2.85× oran
-# Hedef bant 0.20-0.35: kazanınca 3×-5× geri döner, kumarbaz değil
+# Hedef bant 0.25-0.35: altın dilim 0.25-0.29 → %62 WR (27 işlem analizi, 2026-09-12)
+EXCLUDED_SYMBOLS = frozenset({"ETHUSDT"})  # ETH: 0/5 kayıp (-$42), geçici dışlama [2026-09-12]
 
 
 def _deny(sym: str, reason: str, detail: str, **extra) -> dict:
@@ -49,6 +50,10 @@ def decide(symbol: str, minute: int | None = None, hour_key: str | None = None) 
         extreme_bps, pullback_bps, path_bps, extreme_mn, ask_max
     """
     sym = _r1.norm_symbol(symbol)
+
+    # Hariç tutulan semboller
+    if sym in EXCLUDED_SYMBOLS:
+        return _deny(sym, "hariç", f"{sym} geçici olarak devre dışı (WR %0)")
 
     # Dakika penceresi
     if minute is not None:
