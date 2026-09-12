@@ -55,6 +55,54 @@ REF04_MIN_PROFIT_RATIO = 0.50  # ask≤0.55'te zaten ~%80 kâr var; %50 yedek ka
 _ENTRY_LO = 10   # ENTRY_AFTER ile uyumlu — bu dakikadan önce çalışma
 _ENTRY_HI = 50
 
+# ── Ask seviyesi kademe tablosu ─────────────────────────────────
+# WR geçmişten dinamik hesaplanır; seviyede <5 işlem varsa bant WR'si kullanılır.
+_ASK_TIER_MIN_N   = 5     # tek seviyede minimum işlem sayısı
+_ASK_BAND_MIN_N   = 8     # bant toplamında minimum işlem sayısı
+_ASK_DEFAULT_AMT  = 12.0  # yetersiz veri varsayılanı
+
+def ask_tier_amount(history: list, ask_price: float) -> float:
+    """Geçmiş WR'ye göre ask-bazlı stake döndürür.
+
+    Tier mantığı (kullanıcı tanımı, 2026-09-12):
+        WR ≥ %80 → $18
+        WR ≥ %65 → $16
+        WR ≥ %50 → $14
+        WR  < %50 → $9
+        veri yok  → $12 (varsayılan)
+    """
+    def _wr_to_amt(wr: float) -> float:
+        if wr >= 0.80: return 18.0
+        if wr >= 0.65: return 16.0
+        if wr >= 0.50: return 14.0
+        return 9.0
+
+    # Seviye (2 ondalık yuvarla)
+    lvl = round(ask_price, 2)
+    # Bant (0.05'e taban)
+    band_lo = round(int(ask_price * 20) / 20, 2)
+    band_hi = round(band_lo + 0.05, 2)
+
+    lvl_w = lvl_t = 0
+    band_w = band_t = 0
+    for t in history:
+        a = float(t.get("pm_entry_price") or 0)
+        if a <= 0:
+            continue
+        a_r = round(a, 2)
+        if a_r == lvl:
+            lvl_t += 1
+            if t.get("win"): lvl_w += 1
+        if band_lo <= a_r < band_hi:
+            band_t += 1
+            if t.get("win"): band_w += 1
+
+    if lvl_t >= _ASK_TIER_MIN_N:
+        return _wr_to_amt(lvl_w / lvl_t)
+    if band_t >= _ASK_BAND_MIN_N:
+        return _wr_to_amt(band_w / band_t)
+    return _ASK_DEFAULT_AMT
+
 
 # ── State / History ────────────────────────────────────────────
 def load_state() -> dict:
@@ -199,6 +247,20 @@ async def run_open() -> None:
             print(f"[{LABEL} open] {sym} — ask_max {hi} · gelen {ask_f:.2f}")
             continue
 
+        # 5b. Ask-tier kademe ayarı (oransal ölçekleme)
+        if ask_f and ask_f > 0:
+            tier_stake = ask_tier_amount(history, ask_f)
+            if tier_stake != stake:
+                ratio = tier_stake / stake
+                pos["amount"]   = tier_stake
+                pos["pm_spent"] = round(float(pos.get("pm_spent") or 0) * ratio, 4)
+                pos["pm_size"]  = round(float(pos.get("pm_size")  or 0) * ratio, 4)
+                pos["to_win"]   = round(float(pos.get("to_win")   or 0) * ratio, 4)
+                pos["pm_fee"]   = round(float(pos.get("pm_fee")   or 0) * ratio, 4)
+                pos["ref04_tier_ask"] = ask_f
+                pos["ref04_tier_amt"] = tier_stake
+                stake = tier_stake
+
         if not pos.get("pm_slug"):
             skipped.append((sym, "PM dolum yok"))
             continue
@@ -207,7 +269,8 @@ async def run_open() -> None:
         open_syms.add(sym)
         opened.append((sym, dec, stake, pos))
         f16_note = f" · F16 {f16_dir}" if f16_dir else " · F16 nötr"
-        print(f"[{LABEL} open] {sym} {dec['direction']} ${stake:.2f} · {dec.get('detail')}{f16_note}")
+        tier_note = f" · ask@{ask_f:.2f}→${stake:.0f}" if ask_f else ""
+        print(f"[{LABEL} open] {sym} {dec['direction']} ${stake:.2f} · {dec.get('detail')}{f16_note}{tier_note}")
 
     save_state(state)
     if not opened:
