@@ -64,18 +64,16 @@ _ASK_DEFAULT_AMT  = 12.0  # yetersiz veri varsayılanı
 def ask_tier_amount(history: list, ask_price: float) -> float:
     """Geçmiş WR'ye göre ask-bazlı stake döndürür.
 
-    Tier mantığı (kullanıcı tanımı, 2026-09-12):
-        WR ≥ %80 → $18
-        WR ≥ %65 → $16
-        WR ≥ %50 → $14
-        WR  < %50 → $9
+    Tier mantığı (2026-09-13):
+        WR ≥ %65 → $20
+        WR ≥ %50 → $16
+        WR  < %50 → $12
         veri yok  → $12 (varsayılan)
     """
     def _wr_to_amt(wr: float) -> float:
-        if wr >= 0.80: return 18.0
-        if wr >= 0.65: return 16.0
-        if wr >= 0.50: return 14.0
-        return 9.0
+        if wr >= 0.65: return 20.0
+        if wr >= 0.50: return 16.0
+        return 12.0
 
     # Seviye (2 ondalık yuvarla)
     lvl = round(ask_price, 2)
