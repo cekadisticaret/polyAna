@@ -82,7 +82,7 @@ _HEATMAP_SYMS = {
     "f16v2": ["BTC", "ETH", "SOL"],
     "jarvis2026": ["BTC", "ETH", "SOL"],
     "ref01": ["BTC", "ETH", "SOL"],
-    "ref03": ["BTC", "ETH", "SOL"],
+    "refsa": ["BTC", "SOL"],
     "ref04": ["BTC", "SOL"],
     "ref05": ["BTC", "SOL"],
     "ref06": ["BTC", "SOL"],
@@ -205,14 +205,14 @@ _REMOVED_ANALYSES = frozenset({
 # ── Analiz kayıt defteri (harita + heatmap API tek kaynak) ─────
 _ANALYSIS_ORDER = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref03", "ref04", "ref05", "ref06", "ref07",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "refsa", "ref04", "ref05", "ref06", "ref07",
 ]
 # Sıcaklık haritası sekmeleri — yalnızca sanal analizler (Live yok)
 _HEATMAP_ORDER = [
-    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref03", "ref04", "ref05", "ref06", "ref07",
+    "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "refsa", "ref04", "ref05", "ref06", "ref07",
 ]
 _HISTORY_ORDER = [
-    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref03", "ref04", "ref05", "ref06", "ref07",
+    "analiz2", "analiz1", "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "refsa", "ref04", "ref05", "ref06", "ref07",
 ]
 # Geçmiş sayfası — sanal + gerçek PM Live kayıtları
 _HISTORY_ORDER_GECMIS = [
@@ -243,7 +243,7 @@ _ANALYSIS_LABELS: dict[str, str] = {
     "f16v2":      "F16V2 · BTC/SOL F16 · ETH A2#03",
     "jarvis2026": "JARVIS2026 · evrilen fikir",
     "ref01": "REF01 · referans çizgisi",
-    "ref03": "REF03 · ask≤0.55",
+    "refsa": "REFSA · uç dönüş (saf)",
     "ref04": "REF04 · uç dönüş + F16",
     "ref05": "REF05 · uç dönüş + F1#01",
     "ref06": "REF06 · uç dönüş + WR en iyi",
@@ -269,13 +269,13 @@ _ANALYSIS_LABELS: dict[str, str] = {
 
 # Overview — sanal algoritmalar (grafik; gerçek PM hariç)
 _OVERVIEW_ACTIVE_ORDER = [
-    "analiz1", "analiz2",     "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref03", "ref04", "ref05", "ref06", "ref07",
+    "analiz1", "analiz2",     "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "refsa", "ref04", "ref05", "ref06", "ref07",
 ]
 _OVERVIEW_INIT_BAL: dict[str, int | None] = {
     "analiz5": None, "analiz2_live": None, "analiz6_live": None, "a2_16_live": None, "a2_02_live": None, "a2_08_live": None, "a2_03_live": None, "a2_04_live": None, "a2_05_live": None, "a2_06_live": None, "a2_07_live": None, "analiz15_live": None,
     "analiz1": 1000, "analiz2": 1000, "analiz6": 1000, "analiz6_v2": 1000,
     "analiz6_v3": 1000, "analiz15": 1000, "b1_01": 1000, "b1_02": 1000, "b1_mum": 1000,
-    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000, "combo2": 1000, "f16v2": 1000, "jarvis2026": 1000, "ref01": 1000, "ref03": 1000, "ref04": 1000, "ref05": 1000, "ref06": 1000, "ref07": 1000,
+    "b1_04": 1000, "melez": 1000, "b1_05": 1000, "c101": 1000, "c101_v2": 1000, "x101": 1000, "combo": 1000, "combo2": 1000, "f16v2": 1000, "jarvis2026": 1000, "ref01": 1000, "refsa": 1000, "ref04": 1000, "ref05": 1000, "ref06": 1000, "ref07": 1000,
 }
 _PM_PAUSE_KEYS = {
     "analiz5": "analiz5_paused",
@@ -332,7 +332,7 @@ _OVERVIEW_SHORT_LABELS: dict[str, str] = {
     "f16v2": "F16V2",
     "jarvis2026": "JARVIS2026",
     "ref01": "REF01",
-    "ref03": "REF03",
+    "refsa": "REFSA",
     "ref04": "REF04",
     "ref05": "REF05",
     "ref06": "REF06",
@@ -402,14 +402,14 @@ for _num, _name, *_rest in _F1_META:
 # Kart + ayna: defterin :02/:05/:07 içinden en çok kazandıran (net P&L) dilim.
 _ALGO_ISLEMLER_MIN_BALANCE = 500.0  # altı listede görünmez (cron durmaz)
 _ALGO_FEATURED_KEYS: list[str] = ["combo", "c101", "a2_05_v2", "analiz1", "combo2", "f16v2"]
-_WATCH_PIN_KEYS: list[str] = ["ref01", "ref03", "ref04", "ref05", "ref06", "ref07", "a2_03"]
+_WATCH_PIN_KEYS: list[str] = ["ref01", "refsa", "ref04", "ref05", "ref06", "ref07", "a2_03"]
 _WATCH_PIN_LABEL = {
     "a2_03": "A2#03",
     "f16v2": "F16V2", "jarvis2026": "JARVIS2026", "ref01": "REF01",
-    "ref03": "REF03", "ref04": "REF04", "ref05": "REF05", "ref06": "REF06", "ref07": "REF07",
+    "refsa": "REFSA", "ref04": "REF04", "ref05": "REF05", "ref06": "REF06", "ref07": "REF07",
 }
 # slot_trader._SKIP_SLOT_OPEN — :05/:07 kopyası yok; kart her zaman :02 state okumalı
-_STANDALONE_MINUTE_BOOKS = frozenset({"jarvis2026", "ref01", "ref03", "ref04", "ref05", "ref06", "ref07"})
+_STANDALONE_MINUTE_BOOKS = frozenset({"jarvis2026", "ref01", "refsa", "ref04", "ref05", "ref06", "ref07"})
 _ALGO_FEATURED_SORT = "best_slot_pnl"
 _TR_MONTH_SHORT = (
     "Oca", "Şub", "Mar", "Nis", "May", "Haz",
@@ -455,7 +455,7 @@ def _sort_algo_islemler_books(books: list, id_field: str = "id") -> list:
 # Algoritma işlemler ekranı: A1/A2 + A6 + V2/V3 + A15 + B1#01/B1#02/B1 MUM + A2 Top-17
 _ALGO_ISLEMLER_KEYS: list[str] = [
     "analiz1", "analiz2",
-    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "ref03", "ref04", "ref05", "ref06", "ref07",
+    "analiz6", "analiz6_v2", "analiz6_v3", "melez", "analiz15", "b1_01", "b1_02", "b1_mum", "b1_04", "b1_05", "c101", "c101_v2", "x101", "combo", "combo2", "f16v2", "jarvis2026", "ref01", "refsa", "ref04", "ref05", "ref06", "ref07",
 ] + _A1_KEYS + _A2_KEYS + [_A2_05_V2] + _F1_KEYS
 
 # Motor tipi → piyasa rejimi (ölçülmüş WR değil).
@@ -483,7 +483,7 @@ _NAMED_REGIME = {
     "b1_01": "live", "b1_02": "live", "b1_mum": "live",
     "b1_04": "live", "b1_05": "live",
     "c101": "live", "c101_v2": "live", "x101": "live",
-    "combo": "live", "combo2": "live", "f16v2": "live", "jarvis2026": "live", "ref01": "live", "ref03": "live", "ref04": "live", "ref05": "live", "ref06": "live", "ref07": "live",
+    "combo": "live", "combo2": "live", "f16v2": "live", "jarvis2026": "live", "ref01": "live", "refsa": "live", "ref04": "live", "ref05": "live", "ref06": "live", "ref07": "live",
     "a2_05_v2": "range",
 }
 for _num, _name, *_rest in _F1_META:
@@ -530,7 +530,7 @@ _ANALIZLER_BASE: list[tuple[str, str, int | None, str]] = [
     ("f16v2",      "F16V2",                 1000, "BTC/SOL→F16 predict · ETH→A2#03 Stoch RSI"),
     ("jarvis2026", "JARVIS2026",            1000, "fikir + serbest dk · $16/24/32"),
     ("ref01",      "REF01",                 1000, "saatlik yol · 18 bps trend / fade ≥10 · ask≤0.75 · kâr %25 · $24/36/48"),
-    ("ref03",      "REF03",                 1000, "saatlik yol · trend+fade · ask≤0.55 · kâr %25 · $24/36/48"),
+    ("refsa",      "REFSA",                 1000, "uç nokta dönüşü ≥33 bps · filtresiz (saf) · ask 0.25-0.30 · ask-tier kademe"),
     ("ref04",      "REF04",                 1000, "uç nokta dönüşü ≥33 bps + F16 onayı · ask 0.25-0.30 · ask-tier kademe"),
     ("ref05",      "REF05",                 1000, "uç nokta dönüşü ≥33 bps + F1#01 onayı · ask 0.25-0.30 · ask-tier kademe"),
     ("ref06",      "REF06",                 1000, "uç nokta dönüşü ≥33 bps + saat başı WR en iyi onay · ask 0.25-0.30"),
@@ -3929,11 +3929,11 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
         panel = "poly_ref02"
         name = short or label
         title = "saatlik yol · trend ≥18 · fade yok · ask≤0.75 · kâr %35 · $24/36/48"
-    elif key == "ref03":
-        category = "Poly sanal · REF03"
-        panel = "poly_ref03"
+    elif key == "refsa":
+        category = "Poly sanal · REFSA"
+        panel = "poly_refsa"
         name = short or label
-        title = "saatlik yol · trend+fade · ask≤0.55 · kâr %25 · $24/36/48"
+        title = "uç nokta dönüşü ≥33 bps · filtresiz (saf) · ask 0.25-0.30 · ETH dışı"
     elif key == "ref04":
         category = "Poly sanal · REF04"
         panel = "poly_ref04"
@@ -4064,9 +4064,11 @@ def _build_single_poly_book(key: str, *, include_history: bool = False,
             if key == "ref02":
                 rec["ref02_mode"] = t.get("ref02_mode") or ""
                 rec["ref02_detail"] = t.get("ref02_detail") or ""
-            if key == "ref03":
-                rec["ref03_mode"] = t.get("ref03_mode") or ""
-                rec["ref03_detail"] = t.get("ref03_detail") or ""
+            if key == "refsa":
+                rec["refsa_mode"] = t.get("refsa_mode") or ""
+                rec["refsa_detail"] = t.get("refsa_detail") or ""
+                rec["refsa_extreme_bps"] = t.get("refsa_extreme_bps")
+                rec["refsa_pullback_bps"] = t.get("refsa_pullback_bps")
             if key == "ref04":
                 rec["ref04_mode"] = t.get("ref04_mode") or ""
                 rec["ref04_detail"] = t.get("ref04_detail") or ""
@@ -4534,7 +4536,7 @@ def _watch_month_backtest(books: list | None = None) -> dict:
         "analiz1": (p_sel, "analiz1"),
         "a2_03": (p_all, "a2_03"),
         "a2_05": (p_all, "a2_05"),
-        "ref03": (p_watch, "ref03"),
+        "refsa": (p_watch, "refsa"),
         "ref04": (p_watch, "ref04"),
         "ref05": (p_watch, "ref05"),
         "ref06": (p_watch, "ref06"),
@@ -6532,6 +6534,26 @@ body{
 .book-card.book-ref07 .br b.pos{color:#f5c518 !important}
 .book-card.book-ref07 .neg,
 .book-card.book-ref07 .br b.neg{color:#dc2626 !important}
+/* REFSA — saf test, mor */
+.book-card.book-refsa,
+.book-card.book-refsa.regime-live,
+.book-card.book-refsa.book-featured,
+.book-card.book-refsa.book-wr-best{
+  background:#2d1a4a !important;
+  border-color:#1a0d33 !important;
+}
+.book-card.book-refsa .bt,
+.book-card.book-refsa .br,
+.book-card.book-refsa .br span,
+.book-card.book-refsa .br b,
+.book-card.book-refsa .book-since{color:#e9d5ff !important}
+.book-card.book-refsa .bs,
+.book-card.book-refsa .book-opens,
+.book-card.book-refsa .book-since.wait{color:#c084fc !important}
+.book-card.book-refsa .pos,
+.book-card.book-refsa .br b.pos{color:#f5c518 !important}
+.book-card.book-refsa .neg,
+.book-card.book-refsa .br b.neg{color:#dc2626 !important}
 """
 
 
@@ -17003,6 +17025,18 @@ body{
 #view-detail.book-ref07 .page-title{color:#e0f2fe}
 #view-detail.book-ref07 .page-sub{color:#7dd3fc}
 #view-detail.book-ref07 .detail-back{color:#0ea5e9}
+/* REFSA */
+.book-card.book-refsa{background:#2d1a4a !important;border-color:#1a0d33 !important}
+.book-card.book-refsa .bt,.book-card.book-refsa .br,.book-card.book-refsa .br span,.book-card.book-refsa .br b{color:#e9d5ff !important}
+.book-card.book-refsa .bs,.book-card.book-refsa .book-opens,.book-card.book-refsa .book-since.wait{color:#c084fc !important}
+.book-card.book-refsa .pos{color:#f5c518 !important}
+.book-card.book-refsa .neg{color:#dc2626 !important}
+.book-card.book-refsa .wr-chip{background:#f3e8ff;border-color:#a855f7;color:#111 !important}
+.book-card.book-refsa .wr-chip.best{color:#111 !important;border-color:#a855f7;background:#fff}
+#view-detail.book-refsa .head{background:#1a0d33;border:1px solid #2d1a4a;border-radius:16px;padding:16px 18px}
+#view-detail.book-refsa .page-title{color:#e9d5ff}
+#view-detail.book-refsa .page-sub{color:#c084fc}
+#view-detail.book-refsa .detail-back{color:#a855f7}
 .regime-chip{
   display:inline-block;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
   border-radius:999px;padding:3px 8px;margin-top:6px;
@@ -17915,7 +17949,7 @@ function bookCardHtml(b, homeKey, wrBest){
     ? `<div class="book-yillik">yıllık backtest ${yilN==null ? '—' : `<b class="${Number(yilN)>=0?'pos':'neg'}">${moneyTxt(yilN)}$</b>`}</div>`
     : '';
   return `<div class="book-card-wrap">
-    <a class="book-card regime-${regime}${isActive ? ' book-active' : ''}${b.featured || featSet[b.id] ? ' book-featured' : ''}${wrBest ? ' book-wr-best' : ''}${watchPin ? ' book-watch' : ''}${String(b.id||'').toLowerCase()==='jarvis2026' ? ' book-jarvis2026' : ''}${String(b.id||'').toLowerCase()==='ref01' ? ' book-ref01' : ''}${String(b.id||'').toLowerCase()==='ref02' ? ' book-ref02' : ''}${String(b.id||'').toLowerCase()==='ref03' ? ' book-ref03' : ''}${String(b.id||'').toLowerCase()==='ref04' ? ' book-ref04' : ''}${String(b.id||'').toLowerCase()==='ref05' ? ' book-ref05' : ''}${String(b.id||'').toLowerCase()==='ref06' ? ' book-ref06' : ''}${String(b.id||'').toLowerCase()==='ref07' ? ' book-ref07' : ''}" href="${href}">
+    <a class="book-card regime-${regime}${isActive ? ' book-active' : ''}${b.featured || featSet[b.id] ? ' book-featured' : ''}${wrBest ? ' book-wr-best' : ''}${watchPin ? ' book-watch' : ''}${String(b.id||'').toLowerCase()==='jarvis2026' ? ' book-jarvis2026' : ''}${String(b.id||'').toLowerCase()==='ref01' ? ' book-ref01' : ''}${String(b.id||'').toLowerCase()==='ref02' ? ' book-ref02' : ''}${String(b.id||'').toLowerCase()==='ref03' ? ' book-ref03' : ''}${String(b.id||'').toLowerCase()==='ref04' ? ' book-ref04' : ''}${String(b.id||'').toLowerCase()==='ref05' ? ' book-ref05' : ''}${String(b.id||'').toLowerCase()==='ref06' ? ' book-ref06' : ''}${String(b.id||'').toLowerCase()==='ref07' ? ' book-ref07' : ''}${String(b.id||'').toLowerCase()==='refsa' ? ' book-refsa' : ''}" href="${href}">
       <div class="book-since${b.wr == null ? ' wait' : ''}" title="${since ? (sinceTitle + ' · ' + since) : 'Seçili dilim WR'}">${b.wr == null ? 'WR —' : ('WR %'+String(b.wr).replace('.',','))}</div>
       <div class="bt">${title}</div>
       <div class="bs">${sub} · ${histN} işlem · ${padSlot(b.best_slot || b.open_minute || 5)}</div>
