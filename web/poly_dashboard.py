@@ -17666,10 +17666,13 @@ function histRow(t){
   const dir = (t.dir || '').toUpperCase();
   const dc = dir === 'UP' ? 'up' : 'down';
   const slot = t.slot_label ? String(t.slot_label).replace(/ Up or Down.*/i, '') : '';
-  const isRef = ['ref01','ref02','ref03','ref04','ref05'].includes(String(DETAIL_ID||'').toLowerCase()) || !!t.ref01_mode || !!t.ref02_mode || !!t.ref03_mode || !!t.ref04_mode || !!t.ref05_mode;
-  const mode = (t.ref01_mode || t.ref02_mode || t.ref03_mode || t.ref04_mode || t.ref05_mode) ? String(t.ref01_mode || t.ref02_mode || t.ref03_mode || t.ref04_mode || t.ref05_mode).toUpperCase() : '';
+  const _refFam = ['ref01','ref02','ref03','refsa','ref04','ref05','ref06','ref07'];
+  const isRef = _refFam.includes(String(DETAIL_ID||'').toLowerCase()) || !!t.ref01_mode || !!t.ref02_mode || !!t.ref03_mode || !!t.ref04_mode || !!t.ref05_mode || !!t.refsa_mode || !!t.ref06_mode || !!t.ref07_mode;
+  const mode = String(t.ref01_mode || t.ref02_mode || t.ref03_mode || t.refsa_mode || t.ref04_mode || t.ref05_mode || t.ref06_mode || t.ref07_mode || '').toUpperCase();
   const timeTxt = isRef && t.entry_time_tr ? fmtHistTime(t.entry_time_tr) : fmtHistTime(t.exit_time_tr);
-  const extra = [mode, slot, t.jarvis_book || '', t.ref01_detail || t.ref02_detail || t.ref03_detail || t.ref04_detail || t.ref05_detail || '']
+  const refDetail = t.ref01_detail || t.ref02_detail || t.ref03_detail || t.refsa_detail || t.ref04_detail || t.ref05_detail || t.ref06_detail || t.ref07_detail || '';
+  const askPrice = (isRef && t.pm_entry_price != null) ? `ask ${Number(t.pm_entry_price).toFixed(2)}` : '';
+  const extra = [mode, slot, t.jarvis_book || '', askPrice, refDetail]
     .filter(Boolean).join(' · ');
   return `<div class="hist-row">
     <div class="hist-time">${timeTxt}</div>
