@@ -3621,6 +3621,70 @@ def _analiz_sym_wr(analiz_key: str, syms: list[str] | None = None, min_trades: i
     return out
 
 
+@app.route("/poly/api/ref-amount")
+def api_ref_amount():
+    """REF serisi WR → giriş miktarı.
+
+    GET /poly/api/ref-amount?book=refsa&symbol=BTC
+    Yanıt: {"amount": 20, "wr": 0.67, "n": 14, "tier": "high", "book": "refsa", "symbol": "BTC"}
+
+    symbol opsiyonel — verilmezse defterin genel (tüm sembol) WR kullanılır.
+    Kimlik doğrulama yok (sadece miktar bilgisi; hassas veri yok).
+    """
+    book  = (request.args.get("book") or "").lower().strip()
+    sym_q = (request.args.get("symbol") or "").upper().strip()
+
+    _VALID_REF = {"ref01", "refsa", "ref04", "ref05", "ref06", "ref07"}
+    if book not in _VALID_REF:
+        return jsonify({"error": f"geçersiz book — geçerliler: {sorted(_VALID_REF)}"}), 400
+
+    # Geçmiş dosyasını oku
+    hist_path = os.path.join(_DIR_POLY, f"poly_trader_{book}_history.json")
+    try:
+        with open(hist_path) as f:
+            history = json.load(f)
+    except Exception:
+        history = []
+
+    # Sembol filtresi (isteğe bağlı)
+    _SYM_MAP = {"BTC": "BTCUSDT", "ETH": "ETHUSDT", "SOL": "SOLUSDT",
+                "BTCUSDT": "BTCUSDT", "ETHUSDT": "ETHUSDT", "SOLUSDT": "SOLUSDT"}
+    sym_full = _SYM_MAP.get(sym_q) if sym_q else None
+    rows = [t for t in history if not sym_full or t.get("symbol") == sym_full]
+
+    # Sıfırlama damgasından sonrası
+    state_path = os.path.join(_DIR_POLY, f"poly_trader_{book}_state.json")
+    try:
+        with open(state_path) as f:
+            st = json.load(f)
+        reset_at = st.get("balance_reset_at_tr")
+        if reset_at:
+            rows = [t for t in rows if (t.get("exit_time_tr") or "") >= reset_at]
+    except Exception:
+        pass
+
+    n    = len(rows)
+    wins = sum(1 for t in rows if t.get("win"))
+    wr   = round(wins / n, 4) if n else None
+
+    # Tier hesapla
+    def _wr_to_amt(w):
+        if w is None:  return (12.0, "no_data")
+        if w >= 0.65:  return (20.0, "high")
+        if w >= 0.50:  return (16.0, "mid")
+        return              (12.0, "low")
+
+    amount, tier = _wr_to_amt(wr)
+    return jsonify({
+        "amount": amount,
+        "wr":     wr,
+        "n":      n,
+        "tier":   tier,
+        "book":   book,
+        "symbol": sym_full or "all",
+    })
+
+
 @app.route("/poly/api/best-by-symbol")
 def api_best_by_symbol():
     """Sembol bazlı en başarılı analiz/algoritma (trader history)."""
