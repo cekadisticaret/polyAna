@@ -335,6 +335,10 @@ OSM_QUERIES = [
         "osm_visit_nature",
         f'[out:json][timeout:90];(node["natural"~"^(waterfall|cave|peak)$"]({BBOX});way["natural"~"^(waterfall|cave)$"]({BBOX});node["leisure"="nature_reserve"]({BBOX});way["leisure"="nature_reserve"]({BBOX});way["leisure"="park"]["wikipedia"]({BBOX});node["leisure"="park"]["wikipedia"]({BBOX});way["leisure"="park"]["wikidata"]({BBOX}););out center tags;',
     ),
+    (
+        "osm_visit_park",
+        f'[out:json][timeout:90];(node["leisure"="park"]["name"]["access"!="private"]({BBOX});way["leisure"="park"]["name"]["access"!="private"]({BBOX}););out center tags;',
+    ),
 ]
 
 

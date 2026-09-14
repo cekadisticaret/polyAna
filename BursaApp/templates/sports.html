@@ -1,0 +1,135 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else 'Bursa Spor · BursaApp' }}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<style>
+.sp-bleed{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+.sp-hero{
+  position:relative;min-height:min(52vh,480px);display:flex;align-items:flex-end;
+  background:#1B3B2B center/cover no-repeat;color:#fff;overflow:hidden;
+}
+.sp-hero::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(105deg,rgba(15,32,24,.9) 0%,rgba(15,32,24,.5) 50%,rgba(15,32,24,.2) 100%);
+}
+.sp-hero-inner{position:relative;z-index:1;width:min(1180px,100%);margin:0 auto;padding:44px 22px 72px}
+.sp-hero h1{margin:0;font-size:clamp(28px,4.5vw,48px);line-height:1.08;letter-spacing:-1px;font-weight:800;max-width:18ch}
+.sp-hero h1 em{font-style:normal;color:#E8782E}
+.sp-hero .lead{margin:12px 0 0;color:rgba(255,255,255,.82);font-size:15px;line-height:1.55;max-width:44ch}
+.sp-hero-stats{display:flex;flex-wrap:wrap;gap:16px;margin-top:18px}
+.sp-hero-stats span{font-size:13px;font-weight:700;background:rgba(255,255,255,.12);padding:8px 14px;border-radius:999px}
+
+.sp-wrap{width:min(1180px,100%);margin:0 auto;padding:0 22px 48px}
+.sp-chips{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 8px}
+.sp-chips a{
+  padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;
+  background:#F6F3EC;color:#6B7A72;text-decoration:none;
+}
+.sp-chips a.on,.sp-chips a:hover{background:#1B3B2B;color:#fff}
+.sp-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 20px;flex-wrap:wrap}
+.sp-bar label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#6B7A72}
+.sp-bar select{border:1px solid rgba(27,59,43,.12);border-radius:12px;padding:9px 12px;background:#fff;font-weight:600}
+
+.sp-block{margin-top:28px}
+.sp-block-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px}
+.sp-block-h h2{margin:0;font-size:20px;letter-spacing:-.3px}
+.sp-block-h span{font-size:13px;color:#6B7A72;font-weight:600}
+
+.sp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (min-width:720px){.sp-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1024px){.sp-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+.sp-card{
+  background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(27,59,43,.06);
+  box-shadow:0 8px 24px rgba(27,59,43,.06);display:flex;flex-direction:column;color:inherit;text-decoration:none;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.sp-card:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(27,59,43,.1)}
+.sp-media{position:relative;aspect-ratio:4/3;background:#E8F2EA;overflow:hidden}
+.sp-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.sp-media .ph{position:absolute;inset:0;display:grid;place-items:center;font-size:36px;color:#6B7A72}
+.sp-badge{
+  position:absolute;left:10px;top:10px;background:#E8782E;color:#fff;
+  font-size:10px;font-weight:800;letter-spacing:.04em;padding:4px 8px;border-radius:999px;
+}
+.sp-body{padding:12px 14px 14px;flex:1;display:flex;flex-direction:column;gap:4px}
+.sp-body h3{margin:0;font-size:15px;line-height:1.25;letter-spacing:-.2px}
+.sp-meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#6B7A72;font-weight:600}
+.sp-star{color:#1B3B2B;white-space:nowrap}
+.sp-blurb{margin:0;font-size:12px;color:#6B7A72;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sp-empty{padding:48px 16px;text-align:center;color:#6B7A72}
+</style>
+{% endblock %}
+{% block hello %}Spor{% endblock %}
+{% block sub %}Fitness, pilates, yüzme, tenis, halı saha — bilinen markalar üstte. Üyelik siteden yapılmaz.{% endblock %}
+{% block main %}
+{% set hero_bg = hero_img or (places[0].img_url if places else '') %}
+<section class="sp-bleed sp-hero" {% if hero_bg %}style="background-image:url('{{ hero_bg }}')"{% endif %}>
+  <div class="sp-hero-inner">
+    <h1>Bursa'da <em>spor</em> &amp; fitness</h1>
+    <p class="lead">MACFit, Sportown ve yerel salonlar — ilçe ve türe göre filtrele. Rezervasyon için salonu arayın.</p>
+    <div class="sp-hero-stats">
+      <span>{{ total }} mekan</span>
+      <span>Fitness öncelikli sıralama</span>
+    </div>
+  </div>
+</section>
+
+<div class="sp-wrap">
+  {% if sub_chips %}
+  <nav class="sp-chips" aria-label="Spor türü">
+    <a class="{{ 'on' if not sub else '' }}" href="/spor{% if ilce %}?ilce={{ ilce|urlencode }}{% endif %}">Tümü</a>
+    {% for key, lab in sub_chips %}
+    <a class="{{ 'on' if sub==key else '' }}" href="/spor?sub={{ key }}{% if ilce %}&amp;ilce={{ ilce|urlencode }}{% endif %}">{{ lab }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  <div class="sp-bar">
+    <span class="list-bar-hint">{{ total }} yer · ★ bilinen markalar üstte</span>
+    <label>
+      Bölge
+      <select aria-label="İlçe seç" onchange="if(this.value) location.href=this.value">
+        <option value="/spor{% if sub %}?sub={{ sub }}{% endif %}" {% if not ilce %}selected{% endif %}>Tüm ilçeler</option>
+        {% for ad in districts %}
+        <option value="/spor?ilce={{ ad }}{% if sub %}&amp;sub={{ sub }}{% endif %}" {% if ilce==ad %}selected{% endif %}>{{ ad }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  {% if groups %}
+    {% for g in groups %}
+    <section class="sp-block" id="grp-{{ g.label }}">
+      <div class="sp-block-h">
+        <h2>{{ g.label }}</h2>
+        <span>{{ g.places|length }} yer</span>
+      </div>
+      <div class="sp-grid">
+        {% for p in g.places %}
+        <a class="sp-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+          <div class="sp-media">
+            {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">💪</div>{% endif %}
+            {% if p.featured or p.brand_rank <= 14 %}<span class="sp-badge">{% if p.brand_rank <= 5 %}Popüler{% else %}Öne çıkan{% endif %}</span>{% endif %}
+          </div>
+          <div class="sp-body">
+            <h3>{{ p.title }}</h3>
+            <div class="sp-meta">
+              <span>{{ p.subcategory_label or 'Spor' }}{% if p.ilce %} · {{ p.ilce }}{% endif %}</span>
+              {% if p.rating %}<span class="sp-star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+            </div>
+            {% if p.blurb %}<p class="sp-blurb">{{ p.blurb }}</p>{% endif %}
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  {% else %}
+  <div class="sp-empty">
+    <p>Bu filtrede spor merkezi yok.</p>
+    <p><a href="/spor">Tüm listeye dön</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

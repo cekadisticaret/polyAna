@@ -580,6 +580,7 @@ function ageActive(s){
 }
 function pxFmt(n){ return n==null?'—':Number(n).toFixed(FX_GPS?5:2); }
 function money(n){ return n==null?'—':Number(n).toFixed(2); }
+function tradePnl(t){ const v=t&&t.display_pnl!=null?t.display_pnl:t&&t.pnl; return v==null?null:Number(v); }
 function fmtCd(sec){
   const n=Math.max(0,sec|0);
   return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
@@ -1027,7 +1028,7 @@ function renderBook(b){
       return '<div class="bk-row"><div><div class="bk-sym '+(sell?'sell':'buy')+'">'+FX_PAIR+', '+(sell?'sell':'buy')+' '+volTxt+'</div>'
         +'<div class="bk-px">'+px(t.entry)+(t.exit!=null?' → '+px(t.exit):'')+'</div>'
         +(extra?'<div class="bk-px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
-        +'<div class="bk-right"><div class="bk-pnl '+(t.pnl>=0?'pos':'neg')+'">'+(t.pnl==null?'—':(FX_GPS?money(t.pnl):fmt(t.pnl)))+'</div>'
+        +'<div class="bk-right"><div class="bk-pnl '+((tradePnl(t)>=0)?'pos':'neg')+'">'+(tradePnl(t)==null?'—':(FX_GPS?money(tradePnl(t)):fmt(tradePnl(t))))+'</div>'
         +(hh?'<div class="bk-ts">'+hh+'</div>':(dur?'<div class="bk-ts">'+dur+'</div>':''))+'</div></div>';
     }).join(''):'<div class="bk-empty">Kapanmış işlem yok.</div>';
   };
@@ -1555,6 +1556,7 @@ body{min-height:100vh;display:flex;color:var(--txt);font-family:'Sora',system-ui
 </div>
 <script>
 function money(n){ return n==null?'—':Number(n).toFixed(2); }
+function tradePnl(t){ const v=t&&t.display_pnl!=null?t.display_pnl:t&&t.pnl; return v==null?null:Number(v); }
 function px(n){ return n==null?'—':Number(n).toFixed(5); }
 function qty(n){ return n==null?'—':(Number(n)>=1?Number(n).toFixed(2):Number(n).toFixed(3)); }
 function clockAt(s){
@@ -1597,7 +1599,7 @@ function rowClosed(t){
   return '<div class="row"><div><div class="sym '+(sell?'sell':'buy')+'">GPSUSDT, '+(sell?'sell':'buy')+' '+qty(t.volume)+'</div>'
     +'<div class="px">'+px(t.entry)+' → '+px(t.exit)+'</div>'
     +(extra?'<div class="px" style="opacity:.65">'+extra+'</div>':'')+'</div>'
-    +'<div class="right"><div class="pnl '+(t.pnl>=0?'pos':'neg')+'">'+money(t.pnl)+'</div>'
+    +'<div class="right"><div class="pnl '+((tradePnl(t)>=0)?'pos':'neg')+'">'+money(tradePnl(t))+'</div>'
     +(hh?'<div class="ts">'+clockAt(t.close_time||t.open_time)+'</div>':'')+'</div></div>';
 }
 function render(b){

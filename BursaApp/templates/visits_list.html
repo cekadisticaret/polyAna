@@ -110,6 +110,10 @@
             {% if p.hours_text %} · {{ p.hours_text }}{% endif %}
           </p>
           {% if p.blurb %}<p class="food-hit-snip">“{{ p.blurb[:140] }}{% if p.blurb|length > 140 %}…{% endif %}”</p>{% endif %}
+          <div class="food-hit-actions">
+            {% include "_fav_place_btn.html" %}
+            <a class="food-hit-detail" href="{{ p.path or ('/yer/' ~ p.slug) }}">Detay →</a>
+          </div>
         </div>
       </article>
       {% endfor %}
@@ -128,9 +132,37 @@
     </nav>
     {% endif %}
     {% else %}
-    <div class="empty-box">
-      <p>{% if q %}“{{ q }}” için sonuç yok.{% else %}Bu filtrelere uyan gezilecek yer yok.{% endif %}</p>
+    <div class="empty-box visit-empty">
+      {% if q %}
+      <p><strong>“{{ q }}”</strong> gezilecek yerlerde bulunamadı.</p>
+      {% if food_suggest %}
+      <p class="visit-empty-hint">Bu arama yemek gibi görünüyor — ilgili restoranlar aşağıda. Tüm sonuçlar için <a href="/yeme-icme?q={{ q|urlencode }}{% if food_dish %}&amp;dish={{ food_dish }}{% endif %}">yeme-içme</a> listesine bak.</p>
+      <div class="food-hits visit-food-fallback">
+        {% for p in food_suggest %}
+        <article class="food-hit">
+          <a class="food-hit-photo" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+            {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🍽</div>{% endif %}
+          </a>
+          <div class="food-hit-body">
+            <h2><a href="{{ p.path or ('/yer/' ~ p.slug) }}">{{ p.title }}</a></h2>
+            {% if p.rating %}<div class="food-hit-rate"><b>{{ '%.1f'|format(p.rating) }}</b></div>{% endif %}
+            <p class="food-hit-meta">{{ p.subcategory_label or 'Restoran' }}{% if p.ilce %} · {{ p.ilce }}{% endif %}</p>
+            <a class="food-hit-detail" href="{{ p.path or ('/yer/' ~ p.slug) }}">Detay →</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      <p class="visit-empty-actions">
+        <a class="bv2-btn bv2-btn-primary" href="/yeme-icme?q={{ q|urlencode }}{% if food_dish %}&amp;dish={{ food_dish }}{% endif %}">Tüm yemek sonuçları →</a>
+        <a href="/gezilecek">Aramayı temizle</a>
+      </p>
+      {% else %}
+      <p><a href="/yeme-icme?q={{ q|urlencode }}">Yeme-içme’de ara</a> · <a href="/gezilecek">Filtreleri temizle</a></p>
+      {% endif %}
+      {% else %}
+      <p>Bu filtrelere uyan gezilecek yer yok.</p>
       <p><a href="/gezilecek">Filtreleri temizle</a></p>
+      {% endif %}
     </div>
     {% endif %}
   </div>

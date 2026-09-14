@@ -1,0 +1,156 @@
+{
+  "balance": 983.26,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 79226.0,
+      "entry_time_tr": "2026-09-14T22:07:38.772576+03:00",
+      "entry_hour_tr": 22,
+      "entry_dow": 0,
+      "entry_is_weekend": false,
+      "amount": 10.0,
+      "algo_signal": "UP",
+      "algo_name": "X1#01 - 13Analiz",
+      "x101_score": 71.1,
+      "x101_verdict": "UP AÇ — skor 71, kenar +4.5p, MTF 3/3",
+      "x101_edge": 0.0454,
+      "x101_regime": "range",
+      "x101_checklist": [
+        {
+          "id": 1,
+          "name": "Sinyal",
+          "score": 65.8,
+          "vote": "DOWN",
+          "ok": true,
+          "hard": false,
+          "reason": "model P(UP) 0.335 · z -0.44"
+        },
+        {
+          "id": 2,
+          "name": "Rejim",
+          "score": 50.0,
+          "vote": "NEUTRAL",
+          "ok": true,
+          "hard": false,
+          "reason": "dar bant (0.5×)"
+        },
+        {
+          "id": 3,
+          "name": "MTF",
+          "score": 100.0,
+          "vote": "UP",
+          "ok": true,
+          "hard": false,
+          "reason": "M5 UP · M15 UP · H1 UP"
+        },
+        {
+          "id": 4,
+          "name": "Yapı",
+          "score": 72.0,
+          "vote": "DOWN",
+          "ok": true,
+          "hard": false,
+          "reason": "spot PTB altında (z -0.44)"
+        },
+        {
+          "id": 5,
+          "name": "Likidite",
+          "score": 48.0,
+          "vote": "NEUTRAL",
+          "ok": false,
+          "hard": false,
+          "reason": "eğim +0.004 · akış +0.005"
+        },
+        {
+          "id": 6,
+          "name": "Filtreler",
+          "score": 70.0,
+          "vote": "NEUTRAL",
+          "ok": true,
+          "hard": false,
+          "reason": "ask · overround +0.020"
+        },
+        {
+          "id": 7,
+          "name": "Risk",
+          "score": 77.2,
+          "vote": "UP",
+          "ok": true,
+          "hard": true,
+          "reason": "kenar +4.5p · ask 0.29 · Kelly 1.6%"
+        },
+        {
+          "id": 8,
+          "name": "Pozisyon",
+          "score": 75.0,
+          "vote": "NEUTRAL",
+          "ok": true,
+          "hard": false,
+          "reason": "slot boş"
+        },
+        {
+          "id": 9,
+          "name": "Performans",
+          "score": 55.0,
+          "vote": "NEUTRAL",
+          "ok": true,
+          "hard": false,
+          "reason": "2 işlem — örneklem küçük"
+        },
+        {
+          "id": 10,
+          "name": "Simülasyon",
+          "score": 50.0,
+          "vote": "NEUTRAL",
+          "ok": true,
+          "hard": false,
+          "reason": "walk-forward yok"
+        },
+        {
+          "id": 11,
+          "name": "Altyapı",
+          "score": 80.0,
+          "vote": "NEUTRAL",
+          "ok": true,
+          "hard": true,
+          "reason": "paper · gerçek ask"
+        },
+        {
+          "id": 12,
+          "name": "Panel",
+          "score": 100.0,
+          "vote": "NEUTRAL",
+          "ok": true,
+          "hard": false,
+          "reason": "/algoritma-islemler/x101"
+        },
+        {
+          "id": 13,
+          "name": "Karar",
+          "score": 71.1,
+          "vote": "UP",
+          "ok": true,
+          "hard": true,
+          "reason": "UP AÇ — skor 71, kenar +4.5p, MTF 3/3"
+        }
+      ],
+      "pm_slug": "bitcoin-up-or-down-september-14-2026-3pm-et",
+      "pm_title": "Bitcoin Up or Down - September 14, 3PM ET",
+      "pm_token_dir": "UP",
+      "pm_entry_price": 0.29,
+      "pm_quote_src": "book",
+      "pm_fill_vwap": 0.29,
+      "pm_mid_price": 0.265,
+      "pm_fee": 0.50445,
+      "pm_spent": 10.15,
+      "pm_size": 35.0,
+      "to_win": 35.0,
+      "pm_win_payout": 35.0,
+      "pm_win_profit": 24.35
+    }
+  ],
+  "total_pnl": -16.74,
+  "balance_reset_at_tr": "2026-09-14T10:34:21.420186+03:00",
+  "balance_reset_note": "t07 reset $1000"
+}

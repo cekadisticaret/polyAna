@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "firevibe": {
+      "url": "https://api.firevibe.ai/mcp",
+      "headers": {
+        "X-API-Key": "${env:FIREVIBE_API_KEY}"
+      }
+    }
+  }
+}

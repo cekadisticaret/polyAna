@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 
@@ -44,6 +45,8 @@ MAP_CATEGORIES = (
     ("vet", "Veteriner"),
     ("hospital", "Hastane"),
     ("school", "Okul"),
+    ("wedding", "Düğün salonu"),
+    ("nightlife", "Gece hayatı"),
 )
 
 MAP_RADIUS_OPTIONS = (
@@ -406,6 +409,61 @@ def _map_pin_detail(d: dict, user_photo_urls: list | None = None) -> dict:
     }
 
 
+_OSRM_PROFILES = {"foot", "driving", "cycling", "bike", "car"}
+
+
+@bp.route("/api/route")
+def api_map_directions():
+    """Konum → mekan yol rotası (OSRM; kuş uçuşu değil)."""
+    try:
+        lat1 = float(request.args.get("from_lat") or request.args.get("lat1"))
+        lng1 = float(request.args.get("from_lng") or request.args.get("lng1"))
+        lat2 = float(request.args.get("to_lat") or request.args.get("lat2"))
+        lng2 = float(request.args.get("to_lng") or request.args.get("lng2"))
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": "coords"}), 400
+
+    profile = (request.args.get("profile") or "foot").strip().lower()
+    if profile in ("car", "drive"):
+        profile = "driving"
+    elif profile == "bike":
+        profile = "cycling"
+    if profile not in _OSRM_PROFILES:
+        profile = "foot"
+
+    osrm_url = (
+        "https://router.project-osrm.org/route/v1/"
+        f"{profile}/{lng1},{lat1};{lng2},{lat2}"
+        "?overview=full&geometries=geojson&steps=false"
+    )
+    try:
+        req = Request(osrm_url, headers={"User-Agent": "BursaApp/1.0"})
+        with urlopen(req, timeout=10) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except OSError:
+        return jsonify({"ok": False, "error": "routing"}), 502
+
+    if payload.get("code") != "Ok" or not payload.get("routes"):
+        return jsonify({"ok": False, "error": "no_route"}), 404
+
+    route = payload["routes"][0]
+    geom = route.get("geometry") or {}
+    coords = geom.get("coordinates") or []
+    latlngs = [[pt[1], pt[0]] for pt in coords if len(pt) >= 2]
+    if len(latlngs) < 2:
+        return jsonify({"ok": False, "error": "no_route"}), 404
+
+    return jsonify(
+        {
+            "ok": True,
+            "coordinates": latlngs,
+            "distance_m": route.get("distance"),
+            "duration_s": route.get("duration"),
+            "profile": profile,
+        }
+    )
+
+
 @bp.route("/harita")
 def harita():
     db = SessionLocal()
@@ -532,7 +590,9 @@ def kampanyalar():
 
 @bp.route("/kuponlar", methods=["GET", "POST"])
 def kuponlar():
-    LOYALTY_COST = 100
+    from user_points import POINTS_COUPON_COST, spend_points, user_points
+
+    LOYALTY_COST = POINTS_COUPON_COST
     LOYALTY_PCT = 10
     user = load_user()
     db = SessionLocal()
@@ -545,16 +605,22 @@ def kuponlar():
             if not u:
                 flash("Oturum geçersiz.", "err")
                 return redirect("/kuponlar")
-            pts = int(u.loyalty_points or 0)
-            if pts < LOYALTY_COST:
-                flash(f"Yetersiz puan ({pts}/{LOYALTY_COST}). Yorum yazarak puan kazan.", "err")
+            ok, err = spend_points(
+                db,
+                u,
+                LOYALTY_COST,
+                reason="coupon_redeem",
+                ref_type="coupon",
+                ref_id=int(datetime.utcnow().timestamp()),
+            )
+            if not ok:
+                flash(err or "Yetersiz puan.", "err")
                 return redirect("/kuponlar")
             import secrets
 
             code = f"BA{u.id}{secrets.token_hex(3).upper()}"
             while db.query(Coupon).filter(Coupon.code == code).first():
                 code = f"BA{u.id}{secrets.token_hex(3).upper()}"
-            u.loyalty_points = pts - LOYALTY_COST
             db.add(
                 Coupon(
                     code=code,
@@ -567,7 +633,7 @@ def kuponlar():
                 )
             )
             db.commit()
-            flash(f"Kupon hazır: {code} · kalan puan {u.loyalty_points}", "ok")
+            flash(f"Kupon hazır: {code} · kalan puan {user_points(u)}", "ok")
             return redirect("/kuponlar")
 
         q = db.query(Coupon).filter(Coupon.status == "active")
@@ -585,7 +651,7 @@ def kuponlar():
         points = 0
         if user:
             u = db.get(User, user.id)
-            points = int(u.loyalty_points or 0) if u else 0
+            points = user_points(u) if u else 0
         return render_template(
             "coupons.html",
             items=items,
@@ -649,6 +715,23 @@ def oneriyor_detail(slug: str):
         )
     finally:
         db.close()
+
+
+def annotate_favorites(db, user, places: list[dict]) -> None:
+    """Liste kartlarına is_fav işareti (POST /favori/<slug> ile güncellenir)."""
+    slugs: set[str] = set()
+    if user:
+        from models import Favorite, Place
+
+        rows = (
+            db.query(Place.slug)
+            .join(Favorite, Favorite.place_id == Place.id)
+            .filter(Favorite.user_id == user.id)
+            .all()
+        )
+        slugs = {r[0] for r in rows if r[0]}
+    for p in places:
+        p["is_fav"] = (p.get("slug") or "") in slugs
 
 
 @bp.route("/favori/<slug>", methods=["POST"])
@@ -1212,16 +1295,24 @@ def api_map():
 @bp.route("/api/v1/route")
 def api_route():
     try:
-        budget = int(request.args.get("budget") or 0)
+        budget = int(request.args.get("budget") or request.args.get("budget_tl") or 0)
     except ValueError:
         budget = 0
     try:
-        people = int(request.args.get("people") or 2)
+        people = max(1, min(int(request.args.get("people") or 2), 8))
     except ValueError:
         people = 2
+    transport = (request.args.get("transport") or "bus").strip()
+    if transport not in ("car", "bus", "walk"):
+        transport = "bus"
     db = SessionLocal()
     try:
-        return jsonify({"ok": True, **build_day_route(db, budget_tl=budget, people=people)})
+        return jsonify(
+            {
+                "ok": True,
+                **build_day_route(db, budget_tl=budget, people=people, transport=transport),
+            }
+        )
     finally:
         db.close()
 

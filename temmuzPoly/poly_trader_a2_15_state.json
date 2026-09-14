@@ -1,9 +1,9 @@
 {
-  "balance": 365.92,
+  "balance": 970.06,
   "open_positions": [],
-  "total_pnl": 65.92,
-  "balance_reset_at_tr": "2026-08-14T21:57:21.469208+03:00",
-  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş karar verisi olarak geri yüklendi, skora dahil değil",
+  "total_pnl": -29.94,
+  "balance_reset_at_tr": "2026-09-14T10:34:21.420186+03:00",
+  "balance_reset_note": "algoritma-islemler toplu reset $1000 — geçmiş arşivlendi",
   "fee_backfill_at": "2026-08-14T14:52:53.128834+03:00",
   "fee_backfill_total": 41.78
 }

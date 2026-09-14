@@ -29,7 +29,6 @@ BOOKS: list[tuple[str, Path]] = [
     ("A1", _DIR / "poly_trader_analiz1_history.json"),
     ("A2", _DIR / "poly_trader_analiz2_history.json"),
     ("A6", _DIR / "poly_trader_analiz6_history.json"),
-    ("A10", _DIR / "poly_trader_analiz10_history.json"),
     ("A15", _DIR / "poly_trader_analiz15_history.json"),
 ]
 for i in range(1, 18):

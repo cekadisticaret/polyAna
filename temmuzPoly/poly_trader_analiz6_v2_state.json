@@ -1,35 +1,9 @@
 {
-  "balance": 308.29,
-  "open_positions": [
-    {
-      "symbol": "ETHUSDT",
-      "predicted_dir": "DOWN",
-      "entry_price": 1878.95,
-      "entry_time_tr": "2026-08-16T16:05:08.501797+03:00",
-      "entry_hour_tr": 16,
-      "entry_dow": 6,
-      "entry_is_weekend": true,
-      "amount": 14.0,
-      "hot_hour_boost": false,
-      "cold_hour_cut": true,
-      "algo_signal": "DOWN",
-      "algo_name": "RSI Divergence",
-      "pm_slug": "ethereum-up-or-down-august-16-2026-9am-et",
-      "pm_title": "Ethereum Up or Down - August 16, 9AM ET",
-      "pm_token_dir": "DOWN",
-      "pm_entry_price": 0.48,
-      "pm_quote_src": "book",
-      "pm_fill_vwap": 0.48,
-      "pm_mid_price": 0.48,
-      "pm_fee": 0.51106,
-      "pm_spent": 14.04,
-      "pm_size": 29.25,
-      "to_win": 29.25
-    }
-  ],
-  "total_pnl": 8.29,
-  "balance_reset_at_tr": "2026-08-14T21:57:21.469208+03:00",
-  "balance_reset_note": "algoritma-islemler toplu reset $300 — geçmiş karar verisi olarak geri yüklendi, skora dahil değil",
+  "balance": 997.43,
+  "open_positions": [],
+  "total_pnl": -2.57,
+  "balance_reset_at_tr": "2026-09-14T10:34:21.420186+03:00",
+  "balance_reset_note": "algoritma-islemler toplu reset $1000 — geçmiş arşivlendi",
   "fee_backfill_at": "2026-08-14T14:52:53.207295+03:00",
   "fee_backfill_total": 81.19
 }

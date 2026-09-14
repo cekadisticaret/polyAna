@@ -6,6 +6,7 @@ Yalova şehir sonuçları elenir. Rezervasyon siteden yapılmaz.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import re
@@ -171,7 +172,7 @@ def _blurb(h: dict) -> str:
         parts.append(" · ".join(suits))
     price = h.get("formatted_price") or ""
     if price:
-        parts.append(f"örnek gecelik {price}")
+        parts.append(f"gecelik {price}")
     score = h.get("review_score")
     if score and str(score) not in ("0", "0,0", "0,1"):
         parts.append(f"misafir {score}/10")
@@ -216,6 +217,10 @@ def prepare_rows() -> list[dict]:
             "rating_admin": _score5(h.get("review_score")),
             "min_price": h.get("min_price"),
             "formatted_price": h.get("formatted_price") or "",
+            "price_fetched_at": h.get("price_fetched_at") or "",
+            "price_check_in": h.get("price_check_in") or "",
+            "price_check_out": h.get("price_check_out") or "",
+            "price_room_from": h.get("price_room_from") or "",
             "image_urls": imgs[:8],
             "suitabilities": h.get("suitabilities") or [],
             "detail_link": (h.get("detail_link") or "").split("?")[0],
@@ -280,21 +285,59 @@ def upsert(db, raw: dict, img: str, gallery: list[str]) -> None:
         for k, v in fields.items():
             setattr(p, k, v)
 
+    extra = {
+        "gallery": gallery if gallery else None,
+        "facilities": list(raw.get("suitabilities") or [])[:8],
+        "price_min": raw.get("formatted_price") or "",
+        "source_url": raw.get("detail_link") or "",
+        "reservation_note": (
+            "Gecelik fiyat Enuygun’dan otomatik çekilir (1 gece · 2 kişi); rezervasyon BursaApp’ten yapılmaz."
+        ),
+        "enuygun_id": raw.get("enuygun_id"),
+        "review_score": score,
+    }
+    if raw.get("price_fetched_at"):
+        extra["price_fetched_at"] = raw["price_fetched_at"]
+    if raw.get("price_check_in"):
+        extra["price_check_in"] = raw["price_check_in"]
+    if raw.get("price_check_out"):
+        extra["price_check_out"] = raw["price_check_out"]
+    if raw.get("price_room_from"):
+        extra["price_room_from"] = raw["price_room_from"]
+    merge_place_extra(p, {k: v for k, v in extra.items() if v not in (None, "", [])})
+
+
+def upsert_prices_only(db, raw: dict) -> bool:
+    """Yalnız fiyat alanlarını güncelle; foto dokunma."""
+    p = _find_existing(db, raw["slug"], raw["title"])
+    if p is None:
+        return False
+    score = raw.get("review_score") or ""
+    if raw.get("formatted_price"):
+        parts = []
+        if score and str(score) not in ("0", "0,0", "0,1"):
+            parts.append(f"{score}/10")
+        parts.append(raw["formatted_price"])
+        p.hours_text = " · ".join(parts)[:160]
+        p.blurb = raw.get("blurb") or p.blurb
     merge_place_extra(
         p,
         {
-            "gallery": gallery,
-            "facilities": list(raw.get("suitabilities") or [])[:8],
             "price_min": raw.get("formatted_price") or "",
-            "source_url": raw.get("detail_link") or "",
-            "reservation_note": "Fiyat örnektir; rezervasyon siteden yapılmaz. Güncel müsaitlik için oteli veya acenteyi arayın.",
-            "enuygun_id": raw.get("enuygun_id"),
-            "review_score": score,
+            "price_fetched_at": raw.get("price_fetched_at") or "",
+            "price_check_in": raw.get("price_check_in") or "",
+            "price_check_out": raw.get("price_check_out") or "",
+            "price_room_from": raw.get("price_room_from") or "",
         },
     )
+    return True
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--prices-only", action="store_true", help="Foto indirmeden yalnız fiyat güncelle")
+    args = ap.parse_args()
+
     if not os.path.isfile(SRC):
         print("missing", SRC)
         sys.exit(1)
@@ -303,25 +346,34 @@ def main() -> None:
     init_db()
     db = SessionLocal()
     try:
-        for i, raw in enumerate(rows, 1):
-            gallery = []
-            cover = ""
-            for idx, url in enumerate(raw.get("image_urls") or []):
-                path = _save_img(raw["slug"], url, idx)
-                if path:
-                    gallery.append(path)
-                    if not cover:
-                        cover = path
-                time.sleep(0.15)
-            if not cover and raw.get("image_urls"):
-                # indirme başarısızsa hotlink (geçici)
-                cover = raw["image_urls"][0]
-                gallery = raw["image_urls"][:6]
-            upsert(db, raw, cover, gallery)
-            print(f"[{i}/{len(rows)}] {raw['title'][:48]} · {cover[:40] if cover else 'NOIMG'}")
-            if i % 10 == 0:
-                db.commit()
-        db.commit()
+        if args.prices_only:
+            ok = 0
+            for i, raw in enumerate(rows, 1):
+                if upsert_prices_only(db, raw):
+                    ok += 1
+                if i % 20 == 0:
+                    db.commit()
+            db.commit()
+            print("prices updated", ok, "/", len(rows))
+        else:
+            for i, raw in enumerate(rows, 1):
+                gallery = []
+                cover = ""
+                for idx, url in enumerate(raw.get("image_urls") or []):
+                    path = _save_img(raw["slug"], url, idx)
+                    if path:
+                        gallery.append(path)
+                        if not cover:
+                            cover = path
+                    time.sleep(0.15)
+                if not cover and raw.get("image_urls"):
+                    cover = raw["image_urls"][0]
+                    gallery = raw["image_urls"][:6]
+                upsert(db, raw, cover, gallery)
+                print(f"[{i}/{len(rows)}] {raw['title'][:48]} · {cover[:40] if cover else 'NOIMG'}")
+                if i % 10 == 0:
+                    db.commit()
+            db.commit()
         n = db.query(Place).filter(Place.category == "hotel", Place.status == "approved").count()
         print("approved hotels", n)
     finally:

@@ -1,16 +1,31 @@
 """REST /api/v1 — site + gelecek native. Yalnız approved public."""
 from __future__ import annotations
 
+import json
+import os
 from datetime import datetime
 
 from flask import Blueprint, jsonify, request
 
 from auth import admin_required, hash_password, load_user, login_required, login_user, make_token, rate_ok, verify_password
+from bursaspor_pages import build_bursaspor_payload
 from catalog import CAT_KEYS, CATEGORIES, MEKAN_TAXONOMY, parse_dt, place_mine, place_public, query_places, tags_dump, unique_slug
 from discover import FALLBACK_LAT, FALLBACK_LNG, nearby, today_bursa, tonight, weekend, weekend_plan
+from news_mobile import build_news_detail, build_news_hub
 from models import Place, Review, SessionLocal, User, clamp_score, recompute_place_rating, review_dimension_avgs
 
 bp = Blueprint("api_v1", __name__, url_prefix="/api/v1")
+_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+
+def _mobile_data_json(filename: str) -> dict:
+    path = os.path.join(_DATA_DIR, filename)
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
 
 
 def _err(msg: str, code: int = 400):
@@ -56,7 +71,11 @@ def places():
             limit=limit,
             offset=offset,
         )
-        return jsonify({"ok": True, "places": [place_public(p) for p in rows], "total": total, "limit": limit, "offset": offset})
+        cards = [place_public(p) for p in rows]
+        from features import annotate_favorites
+
+        annotate_favorites(db, load_user(), cards)
+        return jsonify({"ok": True, "places": cards, "total": total, "limit": limit, "offset": offset})
     finally:
         db.close()
 
@@ -70,7 +89,36 @@ def place_one(slug: str):
             return _err("bulunamadı", 404)
         d = place_public(p)
         d["dimensions"] = review_dimension_avgs(db, p.id)
+        from features import annotate_favorites
+
+        annotate_favorites(db, load_user(), [d])
         return jsonify({"ok": True, "place": d})
+    finally:
+        db.close()
+
+
+@bp.route("/places/<slug>/favorite", methods=["POST"])
+@login_required
+def place_favorite_toggle(slug: str):
+    from models import Favorite
+
+    user = load_user()
+    db = SessionLocal()
+    try:
+        p = db.query(Place).filter(Place.slug == slug, Place.status == "approved").first()
+        if p is None:
+            return _err("bulunamadı", 404)
+        fav = db.query(Favorite).filter(Favorite.user_id == user.id, Favorite.place_id == p.id).first()
+        if fav:
+            db.delete(fav)
+            p.fav_count = max(0, (p.fav_count or 0) - 1)
+            is_fav = False
+        else:
+            db.add(Favorite(user_id=user.id, place_id=p.id))
+            p.fav_count = (p.fav_count or 0) + 1
+            is_fav = True
+        db.commit()
+        return jsonify({"ok": True, "is_fav": is_fav, "fav_count": int(p.fav_count or 0)})
     finally:
         db.close()
 
@@ -276,6 +324,28 @@ def login():
         )
         db.commit()
         return jsonify({"ok": True, "user": u.public(), "token": make_token(u)})
+    finally:
+        db.close()
+
+
+@bp.route("/auth/forgot-password", methods=["POST"])
+def forgot_password():
+    if not rate_ok("forgot_password", limit=3, window=900):
+        return _err("çok sık deneme — 15 dk sonra tekrar dene", 429)
+    body = _json()
+    email = (body.get("email") or "").strip().lower()
+    if "@" not in email or "." not in email.split("@")[-1]:
+        return _err("geçerli e-posta gir")
+    db = SessionLocal()
+    try:
+        from password_reset import send_new_password_email
+
+        send_new_password_email(db, email)
+        # E-posta kayıtlı olmasa da aynı yanıt (enumeration önleme)
+        return jsonify({
+            "ok": True,
+            "message": "Kayıtlıysa yeni şifren e-posta adresine gönderildi. Gelen kutunu ve spam klasörünü kontrol et.",
+        })
     finally:
         db.close()
 
@@ -532,7 +602,7 @@ def events_upcoming_api():
         db.close()
 
 
-@bp.route("/me")
+@bp.route("/me", methods=["GET", "PATCH"])
 @login_required
 def me_api():
     user = load_user()
@@ -543,9 +613,60 @@ def me_api():
         u = db.get(User, user.id)
         if not u:
             return _err("bulunamadı", 404)
+        if request.method == "PATCH":
+            body = _json()
+            action = (body.get("action") or "profile").strip()
+            if action == "profile":
+                name = (body.get("name") or "").strip()
+                if name:
+                    if len(name) < 2:
+                        return _err("ad en az 2 karakter", 400)
+                    u.name = name
+                if "show_full_name" in body:
+                    u.show_full_name = bool(body.get("show_full_name"))
+            elif action == "password":
+                cur = body.get("current_password") or ""
+                new = body.get("new_password") or ""
+                new2 = body.get("new_password2") or ""
+                if not verify_password(cur, u.password_hash):
+                    return _err("mevcut şifre yanlış", 400)
+                if len(new) < 8:
+                    return _err("yeni şifre en az 8 karakter", 400)
+                if new != new2:
+                    return _err("yeni şifreler eşleşmiyor", 400)
+                u.password_hash = hash_password(new)
+            else:
+                return _err("geçersiz işlem", 400)
+            db.commit()
+            db.refresh(u)
         data = u.public()
         data["counts"] = follow_counts(db, u.id)
         return jsonify({"ok": True, "user": data})
+    finally:
+        db.close()
+
+
+@bp.route("/me/avatar", methods=["POST"])
+@login_required
+def me_avatar_api():
+    from admin_forms import save_upload
+
+    user = load_user()
+    db = SessionLocal()
+    try:
+        u = db.get(User, user.id)
+        if not u:
+            return _err("bulunamadı", 404)
+        f = request.files.get("avatar")
+        path, err = save_upload(f, category="avatar")
+        if err:
+            return _err(err, 400)
+        if not path:
+            return _err("geçerli bir görsel seç", 400)
+        u.avatar_url = path
+        db.commit()
+        db.refresh(u)
+        return jsonify({"ok": True, "user": u.public()})
     finally:
         db.close()
 
@@ -580,6 +701,14 @@ def post_like_api(post_id: int):
 def mobile_menu():
     groups = [
         {
+            "title": "Topluluk",
+            "icon": "community",
+            "items": [
+                {"label": "Arkadaş / partner ara", "path": "/arkadas-ara", "category": "buddy"},
+                {"label": "Akış", "path": "/feed"},
+            ],
+        },
+        {
             "title": "Sağlık",
             "icon": "health",
             "items": [
@@ -588,6 +717,13 @@ def mobile_menu():
                 {"label": "Diş hekimleri", "path": "/dis-hekimleri", "category": "dentist"},
                 {"label": "Nöbetçi eczaneler", "path": "/nobetci-eczaneler", "category": "pharmacy"},
                 {"label": "Veterinerler", "path": "/veterinerler", "category": "vet"},
+            ],
+        },
+        {
+            "title": "Gezi",
+            "icon": "visit",
+            "items": [
+                {"label": "Gezilecek yerler", "path": "/gezilecek"},
             ],
         },
         {
@@ -660,29 +796,375 @@ def leaders_weekly():
         db.close()
 
 
+@bp.route("/activities/types")
+def activities_types():
+    from activity_seek import ACTIVITY_TYPES, SKILL_LEVELS
+
+    types = [
+        {"key": k, "label": v["label"], "emoji": v["emoji"], "default_title": v["default_title"]}
+        for k, v in ACTIVITY_TYPES.items()
+    ]
+    return jsonify({"ok": True, "types": types, "skill_levels": SKILL_LEVELS})
+
+
+@bp.route("/activities/seeking")
+def activities_seeking():
+    from activity_seek import ACTIVITY_TYPES, list_open_seeks, seek_public
+
+    activity_type = (request.args.get("type") or request.args.get("activity_type") or "").strip().lower()
+    ilce = (request.args.get("ilce") or "").strip()
+    if activity_type and activity_type not in ACTIVITY_TYPES:
+        activity_type = ""
+    viewer = load_user()
+    db = SessionLocal()
+    try:
+        rows = list_open_seeks(db, activity_type=activity_type or None, ilce=ilce or None)
+        return jsonify(
+            {
+                "ok": True,
+                "seeking": [seek_public(db, s, viewer) for s in rows],
+                "filter": {"type": activity_type or None, "ilce": ilce or None},
+            }
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/activities/seeking", methods=["POST"])
+@login_required
+def activities_seeking_create():
+    from activity_seek import create_seek, seek_public
+
+    if not rate_ok("activity_seek", limit=8):
+        return _err("Çok hızlı — biraz bekle", 429)
+    user = load_user()
+    db = SessionLocal()
+    try:
+        seek, err = create_seek(db, user, _json())
+        if err:
+            return _err(err, 400)
+        return jsonify({"ok": True, "seek": seek_public(db, seek, user)}), 201
+    finally:
+        db.close()
+
+
+@bp.route("/activities/seeking/<int:seek_id>/join", methods=["POST"])
+@login_required
+def activities_seeking_join(seek_id: int):
+    from activity_seek import join_seek, seek_public
+
+    if not rate_ok("activity_join", limit=20):
+        return _err("Çok hızlı — biraz bekle", 429)
+    user = load_user()
+    db = SessionLocal()
+    try:
+        seek, err = join_seek(db, user, seek_id)
+        if err:
+            return _err(err, 400)
+        return jsonify(
+            {
+                "ok": True,
+                "pending": True,
+                "message": "Onay bekleniyor",
+                "seek": seek_public(db, seek, user),
+            }
+        )
+    finally:
+        db.close()
+
+
+@bp.route("/activities/seeking/<int:seek_id>/join/<int:join_user_id>/approve", methods=["POST"])
+@login_required
+def activities_seeking_approve(seek_id: int, join_user_id: int):
+    from activity_seek import approve_join, seek_public
+
+    user = load_user()
+    db = SessionLocal()
+    try:
+        seek, err = approve_join(db, user, seek_id, join_user_id)
+        if err:
+            return _err(err, 400)
+        return jsonify({"ok": True, "seek": seek_public(db, seek, user)})
+    finally:
+        db.close()
+
+
+@bp.route("/activities/seeking/<int:seek_id>/join/<int:join_user_id>/reject", methods=["POST"])
+@login_required
+def activities_seeking_reject(seek_id: int, join_user_id: int):
+    from activity_seek import reject_join, seek_public
+
+    user = load_user()
+    db = SessionLocal()
+    try:
+        seek, err = reject_join(db, user, seek_id, join_user_id)
+        if err:
+            return _err(err, 400)
+        return jsonify({"ok": True, "seek": seek_public(db, seek, user)})
+    finally:
+        db.close()
+
+
+@bp.route("/activities/seeking/<int:seek_id>/join", methods=["DELETE"])
+@login_required
+def activities_seeking_leave(seek_id: int):
+    from activity_seek import leave_seek, seek_public
+
+    user = load_user()
+    db = SessionLocal()
+    try:
+        seek, err = leave_seek(db, user, seek_id)
+        if err:
+            return _err(err, 400)
+        return jsonify({"ok": True, "seek": seek_public(db, seek, user)})
+    finally:
+        db.close()
+
+
+@bp.route("/activities/seeking/<int:seek_id>", methods=["DELETE"])
+@login_required
+def activities_seeking_cancel(seek_id: int):
+    from activity_seek import cancel_seek
+
+    user = load_user()
+    db = SessionLocal()
+    try:
+        err = cancel_seek(db, user, seek_id)
+        if err:
+            return _err(err, 400)
+        return jsonify({"ok": True})
+    finally:
+        db.close()
+
+
 @bp.route("/okey/seeking")
 def okey_seeking():
-    """Okey 4. oyuncu — şimdilik örnek + boş slot; ileride gerçek eşleşme."""
-    return jsonify(
-        {
-            "ok": True,
-            "seeking": [
+    """Geriye uyumluluk — yalnız okey ilanları."""
+    from activity_seek import list_open_seeks, seek_public
+
+    viewer = load_user()
+    db = SessionLocal()
+    try:
+        rows = list_open_seeks(db, activity_type="okey")
+        seeking = [seek_public(db, s, viewer) for s in rows]
+        # Eski mobil alan adları
+        legacy = []
+        for s in seeking:
+            legacy.append(
                 {
-                    "id": 1,
-                    "host": "Ayşe K.",
-                    "ilce": "Nilüfer",
-                    "time_label": "Bu akşam 21:00",
-                    "note": "3 kişiyiz, 1 kişi arıyoruz",
-                    "points_min": 120,
-                },
-                {
-                    "id": 2,
-                    "host": "Mehmet T.",
-                    "ilce": "Osmangazi",
-                    "time_label": "Yarın 20:30",
-                    "note": "Kısa oyun, acele etmeyin :)",
-                    "points_min": 80,
-                },
-            ],
-        }
+                    "id": s["id"],
+                    "host": s["host"],
+                    "ilce": s["ilce"],
+                    "time_label": s["time_label"],
+                    "note": s["note"],
+                    "points_min": s["points_min"],
+                    "activity_type": s["activity_type"],
+                    "activity_label": s["activity_label"],
+                    "emoji": s["emoji"],
+                    "title": s["title"],
+                    "slots_needed": s["slots_needed"],
+                    "spots_left": s["spots_left"],
+                    "joined": s["joined"],
+                    "is_mine": s["is_mine"],
+                }
+            )
+        return jsonify({"ok": True, "seeking": legacy})
+    finally:
+        db.close()
+
+
+@bp.route("/mobile/nobetci-eczaneler")
+def mobile_nobetci():
+    from pharmacy_mobile import build_pharmacy_payload
+
+    lat = lng = None
+    try:
+        if request.args.get("lat") not in (None, ""):
+            lat = float(request.args.get("lat"))
+        if request.args.get("lng") not in (None, ""):
+            lng = float(request.args.get("lng"))
+    except (TypeError, ValueError):
+        lat = lng = None
+    payload = build_pharmacy_payload(
+        ilce=request.args.get("ilce") or "",
+        lat=lat,
+        lng=lng,
     )
+    return jsonify(payload)
+
+
+@bp.route("/mobile/nobetci-eczaneler/<slug>")
+def mobile_nobetci_detail(slug):
+    from pharmacy_mobile import build_pharmacy_detail
+
+    return jsonify(build_pharmacy_detail(slug))
+
+
+@bp.route("/mobile/news")
+def mobile_news():
+    topic = (request.args.get("konu") or request.args.get("topic") or "").strip()
+    q = (request.args.get("q") or "").strip()
+    try:
+        page = max(1, int(request.args.get("page") or 1))
+    except ValueError:
+        page = 1
+    try:
+        per_page = max(1, min(int(request.args.get("limit") or 24), 48))
+    except ValueError:
+        per_page = 24
+    payload = build_news_hub(topic=topic, q=q, page=page, per_page=per_page)
+    return jsonify({"ok": True, **payload})
+
+
+@bp.route("/mobile/news/<slug>")
+def mobile_news_detail(slug: str):
+    payload = build_news_detail(slug)
+    if not payload:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+    return jsonify({"ok": True, "article": payload})
+
+
+@bp.route("/mobile/bursaspor")
+def mobile_bursaspor():
+    db = SessionLocal()
+    try:
+        payload = build_bursaspor_payload(db)
+        return jsonify({"ok": True, **payload})
+    finally:
+        db.close()
+
+
+@bp.route("/mobile/teleferik")
+def mobile_teleferik():
+    data = _mobile_data_json("teleferik.json")
+    if not data:
+        return jsonify({"ok": False})
+    return jsonify({"ok": True, **data})
+
+
+@bp.route("/mobile/utilities")
+def mobile_utilities():
+    data = _mobile_data_json("utilities.json")
+    return jsonify({"ok": True, "utilities": data if data else {}})
+
+
+@bp.route("/mobile/hotels")
+def mobile_hotels():
+    from hotels_mobile import build_hotels_payload
+
+    db = SessionLocal()
+    try:
+        payload = build_hotels_payload(
+            db,
+            q=request.args.get("q") or "",
+            ilce=request.args.get("ilce") or "",
+            sub=request.args.get("sub") or "",
+            band=request.args.get("band") or "",
+            sort=request.args.get("sort") or "rating",
+            price_filter=request.args.get("price") or "",
+        )
+        return jsonify({"ok": True, **payload})
+    finally:
+        db.close()
+
+
+@bp.route("/mobile/visit")
+def mobile_visit():
+    from visit_mobile import build_visit_payload
+
+    try:
+        page = max(1, int(request.args.get("page") or 1))
+    except ValueError:
+        page = 1
+    db = SessionLocal()
+    try:
+        payload = build_visit_payload(
+            db,
+            q=request.args.get("q") or "",
+            ilce=request.args.get("ilce") or "",
+            sub=request.args.get("sub") or "",
+            sort=request.args.get("sort") or "featured",
+            kinds=request.args.getlist("kind"),
+            fees=request.args.getlist("fee"),
+            tags=request.args.getlist("tag"),
+            page=page,
+        )
+        return jsonify({"ok": True, **payload})
+    finally:
+        db.close()
+
+
+@bp.route("/mobile/vets")
+def mobile_vets():
+    from vets_mobile import build_vets_payload
+
+    tab = (request.args.get("tab") or "hepsi").strip().lower()
+    lat = lng = None
+    try:
+        if request.args.get("lat") not in (None, ""):
+            lat = float(request.args.get("lat"))
+        if request.args.get("lng") not in (None, ""):
+            lng = float(request.args.get("lng"))
+    except (TypeError, ValueError):
+        lat = lng = None
+    db = SessionLocal()
+    try:
+        payload = build_vets_payload(
+            db,
+            tab=tab,
+            ilce=request.args.get("ilce") or "",
+            sub=request.args.get("sub") or "",
+            lat=lat,
+            lng=lng,
+        )
+        return jsonify({"ok": True, **payload})
+    finally:
+        db.close()
+
+
+@bp.route("/mobile/dentists")
+def mobile_dentists():
+    from dentists_mobile import build_dentists_payload
+
+    db = SessionLocal()
+    try:
+        payload = build_dentists_payload(
+            db,
+            ilce=request.args.get("ilce") or "",
+            band=request.args.get("band") or "",
+        )
+        return jsonify({"ok": True, **payload})
+    finally:
+        db.close()
+
+
+@bp.route("/mobile/doctors")
+def mobile_doctors():
+    from doctors_mobile import build_doctors_payload
+
+    db = SessionLocal()
+    try:
+        payload = build_doctors_payload(
+            db,
+            ilce=request.args.get("ilce") or "",
+            spec=request.args.get("spec") or "",
+        )
+        return jsonify({"ok": True, **payload})
+    finally:
+        db.close()
+
+
+@bp.route("/mobile/hospitals")
+def mobile_hospitals():
+    from hospitals_mobile import build_hospitals_payload
+
+    db = SessionLocal()
+    try:
+        payload = build_hospitals_payload(
+            db,
+            ilce=request.args.get("ilce") or "",
+            band=request.args.get("band") or "",
+        )
+        return jsonify({"ok": True, **payload})
+    finally:
+        db.close()

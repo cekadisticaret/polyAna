@@ -1,0 +1,118 @@
+{
+  "Karaman Mah., Nilüfer (Acıbadem Bursa Hastanesi), Nilüfer, Bursa, Türkiye": null,
+  "FSM Bulvarı, Nilüfer / Bursa, Nilüfer, Bursa, Türkiye": {
+    "place_id": 59075984,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 4913626121,
+    "lat": "40.2175588",
+    "lon": "28.9778517",
+    "class": "amenity",
+    "type": "cafe",
+    "place_rank": 30,
+    "importance": 6.865110246428652e-05,
+    "addresstype": "amenity",
+    "name": "FSM Celebihan Plus",
+    "display_name": "FSM Celebihan Plus, Fatih Sultan Mehmet Bulvarı, İhsaniye, İhsaniye Mahallesi, Nilüfer, Bursa, Marmara Bölgesi, 16022, Türkiye",
+    "boundingbox": [
+      "40.2175088",
+      "40.2176088",
+      "28.9778017",
+      "28.9779017"
+    ]
+  },
+  "Nilüfer / Bursa, Nilüfer, Bursa, Türkiye": {
+    "place_id": 59437892,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 628486522,
+    "lat": "40.2377192",
+    "lon": "28.9215662",
+    "class": "highway",
+    "type": "residential",
+    "place_rank": 26,
+    "importance": 0.053401984435797634,
+    "addresstype": "road",
+    "name": "Türkiye Jokey Kulübü Caddesi",
+    "display_name": "Türkiye Jokey Kulübü Caddesi, Altınşehir, Altınşehir Mahallesi, Nilüfer, Bursa, Marmara Bölgesi, 16120, Türkiye",
+    "boundingbox": [
+      "40.2360323",
+      "40.2396016",
+      "28.9204232",
+      "28.9229741"
+    ]
+  },
+  "Odunluk Mah. Lefkoşe Cad. Zeno İş Merkezi A Blok, Nilüfer, Nilüfer, Bursa, Türkiye": null,
+  "Sinandede Kasım Önadım Blv. 128/B, Yıldırım, Yıldırım, Bursa, Türkiye": null,
+  "Şükraniye Mahallesi 3. Hastane Sokak No:11 Yıldırım / BURSA, Yıldırım, Bursa, Türkiye": null,
+  "Odunluk Liman Cad. 17C, Nilüfer, Nilüfer, Bursa, Türkiye": null,
+  "Üçevler Mah., Nilüfer, Nilüfer, Bursa, Türkiye": null,
+  "Cumhuriyet Mah. Anıt Sokak Efeler Sitesi 2B, Nilüfer, Nilüfer, Bursa, Türkiye": null,
+  "Çekirge, Osmangazi, Osmangazi, Bursa, Türkiye": {
+    "place_id": 59996230,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 4656262800,
+    "lat": "40.2014492",
+    "lon": "29.0238352",
+    "class": "place",
+    "type": "suburb",
+    "place_rank": 19,
+    "importance": 0.3263790596244939,
+    "addresstype": "suburb",
+    "name": "Çekirge",
+    "display_name": "Çekirge, Çekirge Mahallesi, Osmangazi, Bursa, Marmara Bölgesi, 16080, Türkiye",
+    "boundingbox": [
+      "40.1814492",
+      "40.2214492",
+      "29.0038352",
+      "29.0438352"
+    ]
+  },
+  "Fevzi Çakmak Cad., Osmangazi, Osmangazi, Bursa, Türkiye": null,
+  "Konak Lotus Ofis 1. Badem Sk. No:26, Nilüfer, Nilüfer, Bursa, Türkiye": null,
+  "Çamlıca Kavakdere Cad. Çamlıca İş Merkezi 170/9, Nilüfer, Nilüfer, Bursa, Türkiye": null,
+  "Görükle / Nilüfer, Nilüfer, Bursa, Türkiye": {
+    "place_id": 59403908,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 1155214895,
+    "lat": "40.2261319",
+    "lon": "28.8743843",
+    "class": "amenity",
+    "type": "bank",
+    "place_rank": 30,
+    "importance": 4.5979247730174985e-05,
+    "addresstype": "amenity",
+    "name": "Türkiye İş Bankası",
+    "display_name": "Türkiye İş Bankası, Uludağ Üniversitesi, Görükle Mahallesi, Nilüfer, Bursa, Marmara Bölgesi, 16065, Türkiye",
+    "boundingbox": [
+      "40.2260348",
+      "40.2262246",
+      "28.8743051",
+      "28.8745471"
+    ]
+  },
+  "Osmangazi / Bursa, Osmangazi, Bursa, Türkiye": {
+    "place_id": 59808604,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 684586245,
+    "lat": "40.2070380",
+    "lon": "29.0842196",
+    "class": "building",
+    "type": "school",
+    "place_rank": 30,
+    "importance": 6.865110246428652e-05,
+    "addresstype": "building",
+    "name": "Türkiye Odalar ve Borsalar Birliği Anadolu İmam Hatip Lisesi",
+    "display_name": "Türkiye Odalar ve Borsalar Birliği Anadolu İmam Hatip Lisesi, Sevgi Caddesi, Veysel Karani, Veysel Karani Mahallesi, Osmangazi, Bursa, Marmara Bölgesi, 16050, Türkiye",
+    "boundingbox": [
+      "40.2067018",
+      "40.2072871",
+      "29.0838327",
+      "29.0847740"
+    ]
+  },
+  "Bağlarbaşı 1. Sedir Sk. No:10, Osmangazi, Osmangazi, Bursa, Türkiye": null
+}

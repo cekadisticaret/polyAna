@@ -19,6 +19,9 @@ a{color:inherit;text-decoration:none}
 .links a{font:600 12px Oswald,sans-serif;letter-spacing:.1em;color:#c5c9d1}
 .links a.on,.links a:hover{color:var(--y)}
 .cta{margin-left:auto;background:var(--y);color:var(--ink);border-radius:6px;padding:8px 14px;font:800 12px Oswald,sans-serif}
+.lgbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.lgchip{border:1px solid var(--line);background:var(--card);color:#e8e8e8;border-radius:999px;padding:6px 10px;font:700 11px Oswald,sans-serif;cursor:pointer}
+.lgchip.on{background:var(--y);color:var(--ink)}
 .wrap{max-width:900px;margin:0 auto;padding:22px 18px 56px}
 h1{font:italic 800 36px/1 Anton,sans-serif;color:var(--y);margin:8px 0 6px}
 .note{font-size:13px;color:var(--muted);margin-bottom:16px}
@@ -43,11 +46,13 @@ h1{font:italic 800 36px/1 Anton,sans-serif;color:var(--y);margin:8px 0 6px}
   <nav class="links">
     <a href="/site">MAÇLAR</a>
     <a class="on" href="/site/biten">BİTMİŞ</a>
+    <a href="/site/kuponlar">KUPONLAR</a>
   </nav>
   <a class="cta" href="/site">GERİ</a>
 </header>
 <div class="wrap">
   <h1>BİTMİŞ MAÇLAR</h1>
+  <div class="lgbar" id="lgbar"></div>
   <div class="note" id="meta">yükleniyor…</div>
   <div class="stat" id="stat"></div>
   <div id="list"></div>
@@ -64,12 +69,26 @@ function badge(m){
   if(m.hit===false) return '<span class="hit no">TUTMADI</span>';
   return '<span class="hit wait">TAHMİN YOK</span>';
 }
+let LEAGUE = new URLSearchParams(location.search).get('league') || 'tr';
+function withLg(url){
+  const join = url.includes('?') ? '&' : '?';
+  return url + join + 'league=' + encodeURIComponent(LEAGUE);
+}
 async function load(){
-  const d = await (await fetch('/site/api/finished',{cache:'no-store'})).json();
+  const d = await (await fetch(withLg('/site/api/finished'),{cache:'no-store'})).json();
+  const bar=document.getElementById('lgbar');
+  if(bar && d.league){
+    const list = await (await fetch('/site/api/leagues',{cache:'no-store'})).json();
+    bar.innerHTML = ((list.leagues)||[]).map(x=>
+      `<button class="lgchip${x.id===LEAGUE?' on':''}" type="button" data-id="${esc(x.id)}">${esc(x.flag)} ${esc(x.short)}</button>`
+    ).join('');
+  }
   document.getElementById('meta').textContent =
     (d.note||'') + (d.updated?(' · güncelleme '+when(d.updated)):'') + (d.src&&d.src.length?(' · '+d.src.join(' + ')):'');
+  const cl=d.clv||{};
   document.getElementById('stat').innerHTML =
-    `<b>${d.n||0} MAÇ</b><b>İSABET ${d.hits||0}/${d.graded_n||0}</b><b>WR ${d.wr==null?'—':('%'+d.wr)}</b>`;
+    `<b>${d.n||0} MAÇ</b><b>İSABET ${d.hits||0}/${d.graded_n||0}</b><b>WR ${d.wr==null?'—':('%'+d.wr)}</b>` +
+    (cl.n?`<b>CLV ${cl.beat_pct}% · n ${cl.n}</b>`:'');
   const rows = d.matches||[];
   document.getElementById('list').innerHTML = rows.map(m=>{
     const h=m.home||{}, a=m.away||{};
@@ -80,13 +99,21 @@ async function load(){
         <div class="sc">${m.hg??'—'}–${m.ag??'—'}</div>
         <div>
           <div class="nm">${esc(h.name||m.home_name)} — ${esc(a.name||m.away_name)}</div>
-          <div class="sub">${when(m.kickoff)}${m.week?(' · H'+m.week):''} · tahmin ${esc(pred)} · sonuç ${esc(act)}</div>
+          <div class="sub">${when(m.kickoff)}${m.week?(' · H'+m.week):''} · tahmin ${esc(pred)} · sonuç ${esc(act)}${m.clv?(' · CLV '+(m.clv.beat?'+':'')+((m.clv.clv||0)*100).toFixed(1)+'p'):''}</div>
         </div>
         ${badge(m)}
       </div>
     </a>`;
   }).join('') || '<div class="note">Henüz bitmiş maç yok — cron sonuçları çekince dolacak.</div>';
 }
+document.getElementById('lgbar').addEventListener('click', e=>{
+  const b=e.target.closest('.lgchip'); if(!b) return;
+  LEAGUE = b.dataset.id || 'tr';
+  const u=new URL(location.href);
+  u.searchParams.set('league', LEAGUE);
+  history.replaceState(null,'',u);
+  load();
+});
 load();
 </script>
 </body>

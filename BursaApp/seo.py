@@ -701,6 +701,19 @@ def for_kvkk() -> PageSEO:
     )
 
 
+def for_gizlilik() -> PageSEO:
+    from seo_arch import OG_IMAGE
+
+    return page(
+        title="Gizlilik politikası",
+        description="BursaApp mobil uygulama ve web sitesi gizlilik politikası — veri, haklar, iletişim.",
+        path="/gizlilik",
+        image=OG_IMAGE,
+        breadcrumbs=[("Ana Sayfa", "/"), ("Gizlilik", "/gizlilik")],
+        keywords="gizlilik politikası, privacy policy, bursaapp, kvkk",
+    )
+
+
 def for_iletisim() -> PageSEO:
     from seo_arch import OG_IMAGE
 
@@ -864,6 +877,8 @@ def resolve_seo(req=None) -> PageSEO:
             return post_seo
     if path == "/kvkk":
         return for_kvkk()
+    if path == "/gizlilik":
+        return for_gizlilik()
     if path == "/tesekkur":
         return for_tesekkur()
     if path == "/oteller":
@@ -928,6 +943,7 @@ def sitemap_static_urls() -> list[dict[str, Any]]:
     for slug in all_blog_posts():
         add(f"/blog/{slug}", "weekly", "0.65")
     add("/kvkk", "yearly", "0.3")
+    add("/gizlilik", "yearly", "0.3")
     for p, freq, pri in (
         ("/bugun", "hourly", "0.9"),
         ("/bu-aksam", "hourly", "0.9"),

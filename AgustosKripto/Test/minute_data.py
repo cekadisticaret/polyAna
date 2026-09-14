@@ -149,6 +149,89 @@ async def fetch_all(symbols: list[str], days: int) -> None:
         await asyncio.gather(*(one(s) for s in symbols))
 
 
+VISION_DAILY = (
+    "https://data.binance.vision/data/futures/um/daily/klines/"
+    "{sym}/1m/{sym}-1m-{day}.zip"
+)
+
+
+def _merge_npz(sym: str, ts, hi, lo, cl) -> int:
+    """Var olan cache ile birleştir, sırala, tekilleştir."""
+    if not ts:
+        prev = load_minutes(sym)
+        return 0 if prev is None else int(len(prev["t"]))
+    t = np.asarray(ts, dtype=np.int64)
+    h = np.asarray(hi, dtype=np.float32)
+    l = np.asarray(lo, dtype=np.float32)
+    c = np.asarray(cl, dtype=np.float32)
+    prev = load_minutes(sym)
+    if prev is not None and len(prev["t"]):
+        t = np.concatenate([prev["t"], t])
+        h = np.concatenate([prev["high"], h])
+        l = np.concatenate([prev["low"], l])
+        c = np.concatenate([prev["close"], c])
+    order = np.argsort(t, kind="stable")
+    t, h, l, c = t[order], h[order], l[order], c[order]
+    uniq = np.concatenate(([True], np.diff(t) > 0))
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    np.savez_compressed(path_for(sym), t=t[uniq], high=h[uniq], low=l[uniq], close=c[uniq])
+    return int(uniq.sum())
+
+
+def fetch_vision_days(symbols: list[str], days: int, end_date: str | None = None) -> None:
+    """data.binance.vision günlük zip — fapi yok.
+
+    Cache'in kuyruğunu (ve istenirse geçmişi) tamamlar. 30 coin × 10 gün
+    birkaç dakikadır; 90 gün ~1000 zip, ağ + disk.
+    """
+    import csv
+    import io
+    import urllib.request
+    import zipfile
+    from datetime import datetime, timedelta, timezone
+
+    end = datetime.now(timezone.utc).date()
+    if end_date:
+        end = datetime.fromisoformat(end_date).date()
+    start = end - timedelta(days=days - 1)
+    print(f"vision {len(symbols)} coin × {days} gün  {start} → {end}", flush=True)
+
+    day = start
+    fetched = missed = 0
+    t0 = time.time()
+    while day <= end:
+        ds = day.isoformat()
+        for i, sym in enumerate(symbols, 1):
+            url = VISION_DAILY.format(sym=sym, day=ds)
+            try:
+                with urllib.request.urlopen(url, timeout=60) as resp:
+                    raw = resp.read()
+            except Exception:
+                missed += 1
+                continue
+            ts, hi, lo, cl = [], [], [], []
+            try:
+                with zipfile.ZipFile(io.BytesIO(raw)) as zf:
+                    name = zf.namelist()[0]
+                    with zf.open(name) as fh:
+                        text = io.TextIOWrapper(fh, encoding="utf-8")
+                        for row in csv.reader(text):
+                            if not row or not row[0].isdigit():
+                                continue
+                            ts.append(int(row[0]))
+                            hi.append(float(row[2]))
+                            lo.append(float(row[3]))
+                            cl.append(float(row[4]))
+            except Exception:
+                missed += 1
+                continue
+            _merge_npz(sym, ts, hi, lo, cl)
+            fetched += 1
+        print(f"  {ds}  zip={fetched}  eksik={missed}  ({time.time()-t0:.0f}s)", flush=True)
+        day += timedelta(days=1)
+    print(f"bitti {fetched} zip · {missed} atlandı · {time.time()-t0:.0f}s")
+
+
 def info() -> None:
     if not os.path.isdir(CACHE_DIR):
         print("cache yok")
@@ -170,14 +253,20 @@ def info() -> None:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="1m OHLC cache")
-    p.add_argument("cmd", choices=["fetch", "info"])
+    p.add_argument("cmd", choices=["fetch", "fetch_vision", "info"])
     p.add_argument("--days", type=int, default=90)
+    p.add_argument("--end", default=None, help="YYYY-MM-DD (UTC, vision)")
     args = p.parse_args()
     if args.cmd == "info":
         info()
         return
     syms = _symbols()
-    print(f"{len(syms)} coin × {args.days} gün 1m indiriliyor…")
+    if args.cmd == "fetch_vision":
+        fetch_vision_days(syms, args.days, args.end)
+        print()
+        info()
+        return
+    print(f"{len(syms)} coin × {args.days} gün 1m indiriliyor (fapi)…")
     asyncio.run(fetch_all(syms, args.days))
     print()
     info()

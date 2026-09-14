@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-08-13T10:05:02.727124+00:00",
+  "source": "2.Poly/signals.py",
+  "algo_num": 5,
+  "signals": {
+    "5": {
+      "BTC": "DOWN",
+      "ETH": "NEUTRAL",
+      "SOL": "NEUTRAL",
+      "name": "Mean Reversion (Z-Score)"
+    }
+  }
+}

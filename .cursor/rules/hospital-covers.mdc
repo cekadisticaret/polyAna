@@ -1,0 +1,36 @@
+---
+description: Hastane kapak fotoğrafları — elle eklenen görsellere dokunma
+globs: BursaApp/**/*
+alwaysApply: false
+---
+
+# Hastane kapak fotoğrafı kuralı
+
+## Kırmızı çizgi
+
+Kullanıcının veya bilinçli oturumda eklenen **hastane kapak fotoğraflarını** otomatik betiklerle **değiştirme, visit stokundan kopyalama, başka hastanenin görseliyle doldurma**.
+
+Yasak örnekler:
+- `hospitals.json` içindeki `"copy": "tophane"` ile `static/visit/*.jpg` → `static/hospital/` kopyası
+- `fix_seo_content.py` ile doruk-yildirim ← doruk-hastanesi gibi çapraz kopya
+- `seed_health.py` çalışınca `img_url` boşaltmak (JSON'da yok diye DB'yi silmek)
+- Commons/Wikipedia aramasıyla mevcut kapak dosyasının üzerine yazmak
+
+## İzinli
+
+- Kullanıcı **açıkça** yeni kapak verdiğinde (`static/hospital/{slug}.jpg` + `hospitals.json` `img_url`)
+- `optimize_images.py` yalnızca **aynı dosyanın** thumb/compress türevi (içerik değiştirmez, visit stokuna düşmez)
+- Eksik kapaklı **yeni** hastane kaydı — kullanıcı henüz foto vermediyse placeholder bırakılabilir ama mevcut kapak **ezilmez**
+
+## Koruma mekanizması
+
+- `BursaApp/hospital_covers.py` — `resolve_img_url()`, `is_locked_path()`, `has_cover_file()`
+- `seed_health.py` güncellemede `img_url` yalnız JSON/diskte kapak varsa yazar; yoksa DB'deki değer kalır
+- `fix_seo_content.py` kilitli `static/hospital/*.jpg` dosyalarına dokunmaz
+
+## Elle kapak ekleme (doğru akış)
+
+1. Görsel → `BursaApp/static/hospital/{slug}.jpg`
+2. `data/hospitals.json` → `"img_url": "/static/hospital/{slug}.jpg"` ( `"copy"` alanı **kullanma** )
+3. `python3 BursaApp/seed_health.py`
+4. `python3 BursaApp/optimize_images.py --dirs hospital --no-compress` (thumb yenile)

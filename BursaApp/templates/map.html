@@ -101,6 +101,9 @@
     return '/harita?' + q.toString();
   }
   const map = L.map('leaflet-map', { scrollWheelZoom: true }).setView(center, nearMode ? 14 : 13);
+  map.createPane('mapNoHit');
+  const noHitPane = map.getPane('mapNoHit');
+  if (noHitPane) noHitPane.style.pointerEvents = 'none';
   ({{ map_tiles|tojson }}).forEach(function(layer){
     var opts = { maxZoom: layer.maxZoom || 19, attribution: layer.attribution || '' };
     if (layer.subdomains) opts.subdomains = layer.subdomains;
@@ -116,23 +119,62 @@
       color: '#5B5FEF',
       weight: 1.5,
       fillColor: '#5B5FEF',
-      fillOpacity: 0.06
+      fillOpacity: 0.06,
+      interactive: false,
+      pane: 'mapNoHit',
     }).addTo(map);
   }
 
+  const pinLayers = [];
   const bounds = [center];
-  pins.forEach(function(p){
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  const dotR = isTouch ? 14 : 12;
+  const hitR = isTouch ? 26 : 20;
+
+  function haversineM(a, b) {
+    const R = 6371000;
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLng = (b.lng - a.lng) * Math.PI / 180;
+    const lat1 = a.lat * Math.PI / 180;
+    const lat2 = b.lat * Math.PI / 180;
+    const h = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  pins.forEach(function(p, idx){
     if (p.lat == null || p.lng == null) return;
     const c = colorFor(p);
-    const m = L.circleMarker([p.lat, p.lng], {
-      radius: 7, color: '#fff', weight: 1.5, fillColor: c, fillOpacity: 0.95
+    const latlng = [p.lat, p.lng];
+    const hit = L.circleMarker(latlng, {
+      radius: hitR, stroke: false, fillColor: c, fillOpacity: 0.01, interactive: true
+    }).addTo(map);
+    const dot = L.circleMarker(latlng, {
+      radius: dotR, color: '#fff', weight: 2, fillColor: c, fillOpacity: 0.95, interactive: false
     }).addTo(map);
     const href = p.path || (p.slug ? ('/yer/' + p.slug) : '');
     const link = href ? ('<br><a href="'+ href +'">Detay →</a>') : '';
-    m.bindPopup(
+    hit.bindPopup(
       '<b>'+ (p.title || '') +'</b><br>'+ fmtDist(p.distance_m) + (p.category_label || p.category || '') + link
     );
-    bounds.push([p.lat, p.lng]);
+    hit.on('click', function(ev){
+      L.DomEvent.stopPropagation(ev);
+      hit.openPopup();
+    });
+    pinLayers.push({ hit, idx });
+    bounds.push(latlng);
+  });
+
+  map.on('click', function(e){
+    let best = -1, bestD = isTouch ? 280 : 180;
+    pins.forEach(function(p, idx){
+      if (p.lat == null || p.lng == null) return;
+      const d = haversineM(e.latlng, L.latLng(p.lat, p.lng));
+      if (d < bestD) { bestD = d; best = idx; }
+    });
+    if (best >= 0) {
+      const layer = pinLayers.find(function(x){ return x.idx === best; });
+      if (layer) layer.hit.openPopup();
+    }
   });
   if (bounds.length > 1) {
     try { map.fitBounds(bounds, { padding: [32, 32], maxZoom: nearMode ? 15 : 14 }); } catch(e) {}

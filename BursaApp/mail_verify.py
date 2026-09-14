@@ -45,6 +45,9 @@ def send_verify_email(*, email: str, name: str, token: str) -> dict:
 def mark_verified(db, user) -> None:
     user.email_verified = True
     user.email_token = ""
+    from user_points import award_email_verified
+
+    award_email_verified(db, user.id)
     db.commit()
 
 

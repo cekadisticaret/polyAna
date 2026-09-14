@@ -15,6 +15,14 @@ import time
 import urllib.request
 
 APP = "/root/aiProject/BursaApp/app.py"
+APP_DIR = "/root/aiProject/BursaApp"
+WATCH_PY = (
+    APP,
+    f"{APP_DIR}/activity_seek.py",
+    f"{APP_DIR}/api_v1.py",
+    f"{APP_DIR}/features.py",
+)
+FP_STAMP = "/tmp/bursaapp_code_fp.txt"
 PY = "/usr/bin/python3"
 LOG = "/tmp/bursaapp.log"
 PORT = "5051"
@@ -135,9 +143,46 @@ def _purge_unverified_daily() -> None:
         print(f"bursaapp purge_unverified err {e}", flush=True)
 
 
+def _code_fingerprint() -> str:
+    parts: list[str] = []
+    for path in WATCH_PY:
+        try:
+            parts.append(f"{path}:{int(os.path.getmtime(path))}")
+        except OSError:
+            pass
+    return "|".join(parts)
+
+
+def _code_changed() -> bool:
+    fp = _code_fingerprint()
+    if not fp:
+        return False
+    try:
+        old = open(FP_STAMP, encoding="utf-8").read().strip()
+    except OSError:
+        return False
+    return old != fp
+
+
+def _mark_code_loaded() -> None:
+    fp = _code_fingerprint()
+    if fp:
+        open(FP_STAMP, "w", encoding="utf-8").write(fp)
+
+
 def main() -> None:
     _purge_unverified_daily()
     if _listening() and _healthy():
+        if _code_changed():
+            rc = _systemctl("restart", UNIT)
+            if rc == 0:
+                time.sleep(2)
+                if _listening() and _healthy():
+                    _mark_code_loaded()
+                    print(f"bursaapp code-reload {time.strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
+                    _kill_orphans(_listen_pid())
+                    return
+        _mark_code_loaded()
         _kill_orphans(_listen_pid())
         return
 
@@ -146,17 +191,20 @@ def main() -> None:
     if rc == 0:
         time.sleep(2)
         if _listening() and _healthy():
+            _mark_code_loaded()
             print(f"bursaapp systemd-restarted {time.strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
             return
 
     # 2) systemd yok / başarısız → orphan (önce sağlıklıysa öldürme)
     if _listening() and _healthy():
+        _mark_code_loaded()
         print(f"bursaapp ok {time.strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
         return
 
     _start_orphan()
     time.sleep(2)
     if _listening() and _healthy():
+        _mark_code_loaded()
         print(f"bursaapp orphan-started {time.strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
         return
 

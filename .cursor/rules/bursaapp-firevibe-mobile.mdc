@@ -1,0 +1,37 @@
+---
+description: FireVibe MCP → BursaVibe → BursaApp SwiftUI merge kuralları
+globs: mobile-ios/**
+alwaysApply: false
+---
+
+# FireVibe → BursaApp iOS
+
+## FireVibe projesi
+
+Dashboard/MCP projesi adı: **BursaVibe** (repo adı BursaApp).
+
+MCP araç sırası:
+1. `list_projects` → BursaVibe `project_id`
+2. `get_design_system` → `AppColors` / `AppTypography` güncelle
+3. `get_screen` (Anasayfa, Harita, …) → ilgili SwiftUI View **body** merge
+4. Export SwiftUI; React/TSX dosyası oluşturma
+
+Örnek prompt: `FireVibe'daki "BursaVibe" projemi aç ve Anasayfa ekranını SwiftUI olarak kodla`
+
+Brief: `mobile-ios/docs/firevibe-brief.md`
+
+## Korunacak katmanlar
+
+- `BursaAPIClient*`, `AuthStore`, `*ViewModel`
+- `MainTabView`, `ShellNavigator`, `MenuNavigation`
+
+## iOS 16 archive (Codemagic)
+
+- `foregroundColor` (Text birleşiminde `foregroundStyle` yok)
+- `navigationBarHidden(true)` (`toolbar(.hidden)` yok)
+- `Array(...prefix(n))` — slice atama yok
+- `Link`/`buttonStyle(.plain)` → View struct veya `@MainActor` zinciri
+
+## Release
+
+Değişiklik sonrası `project.yml` build bump → commit → Codemagic `bursaapp-ios-native`.

@@ -103,21 +103,40 @@ async function load(){
   }
   $('note').textContent = d.note||'';
   const row = (name,o)=> box(name, `1 ${pct(o['1'])} · X ${pct(o.X)} · 2 ${pct(o['2'])}`, false);
+  const cx=d.context||{};
+  const sh=cx.shape_h||{}, sa=cx.shape_a||{};
   $('models').innerHTML = [
     row('POISSON', md.poisson), row('ELO', md.elo), row('XG', md.xg),
     row('ENSEMBLE', md.ensemble), row('MONTE CARLO', md.monteCarlo),
-    box('λ / μ', `${d.xg.home} / ${d.xg.away}`)
+    box('λ / μ · DC+ELO', `${d.xg.home} / ${d.xg.away}`)
   ].join('');
+  const ctxHtml = sec('VERİ KATMANI', grid([
+    box('Dinlenme ev', (cx.rest_h==null?'—':cx.rest_h+' gün')),
+    box('Dinlenme dep', (cx.rest_a==null?'—':cx.rest_a+' gün')),
+    box('xG ev / 5s', sh.xg==null?'—':sh.xg),
+    box('xG dep / 5s', sa.xg==null?'—':sa.xg),
+    box('Şut ev', sh.shots==null?'—':sh.shots),
+    box('Şut dep', sa.shots==null?'—':sa.shots),
+    box('Korner ev', sh.corners==null?'—':sh.corners),
+    box('Korner dep', sa.corners==null?'—':sa.corners),
+    box('Kart ev', sh.cards==null?'—':sh.cards),
+    box('Kart dep', sa.cards==null?'—':sa.cards),
+    box('Sakat ev', ((cx.injuries&&cx.injuries.n_h)||0)+''),
+    box('Sakat dep', ((cx.injuries&&cx.injuries.n_a)||0)+''),
+  ]), (cx.notes||[]).join(' · ') || '5 sezon şekil · ELO λ · Fotmob kadro');
   const ov=d.overround;
   const vextra = ov ? [box('overround', '%'+ov.pct+' · toplam %'+(ov.sum*100).toFixed(1)), box('¼ Kelly','tavan %3 · tam kasa yok')] : [box('¼ Kelly','tavan %3 · tam kasa yok')];
-  $('value').innerHTML = (d.value||[]).map(v=>box(
-    v.sel+' @ '+v.odds,
-    v.isValue? `VALUE +${(v.edge*100).toFixed(1)}p · ${v.stake}` : `pas · ${(v.edge*100).toFixed(1)}p`,
-    v.isValue
-  )).concat(vextra).join('') || box('oran','yok');
+  $('value').innerHTML = (d.value||[]).map(v=>{
+    const e = (v.edgeFair!=null?v.edgeFair:v.edge)||0;
+    return box(
+      v.sel+' @ '+v.odds,
+      v.isValue? `VALUE +${(e*100).toFixed(1)}p fair · ${v.stake}` : `pas · fair ${(e*100).toFixed(1)}p`,
+      v.isValue
+    );
+  }).concat(vextra).join('') || box('oran','yok');
   $('warn').innerHTML = (d.warnings||[]).map(w=>`<div class="wb${w.ok?'':' bad'}"><s>${esc(w.title)}</s><p>${esc(w.text)}</p></div>`).join('');
   const r=mk.result, top=maxKey(r);
-  const parts=[];
+  const parts=[ctxHtml];
   parts.push(sec('SONUÇ · 1X2', grid([
     box('1', '%'+pct(r['1']), top==='1'), box('X','%'+pct(r.X), top==='X'), box('2','%'+pct(r['2']), top==='2'),
     box('1X','%'+pct(mk.doubleChance['1X'])), box('12','%'+pct(mk.doubleChance['12'])), box('X2','%'+pct(mk.doubleChance.X2)),

@@ -1,0 +1,1214 @@
+{
+  "ts_tr": "2026-08-22T05:15:02.300069+03:00",
+  "tz": "Europe/Istanbul",
+  "window_days": 7,
+  "note": "saatlik A1/A2/A4/A6/A10/A15 + A2 Top17; 15m yok",
+  "books": {
+    "A1": {
+      "history_file": "poly_trader_analiz1_history.json",
+      "d7": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      },
+      "d30": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      }
+    },
+    "A2": {
+      "history_file": "poly_trader_analiz2_history.json",
+      "d7": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      },
+      "d30": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      }
+    },
+    "A6": {
+      "history_file": "poly_trader_analiz6_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -2.72,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.72
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.72
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -2.72,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.72
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.72
+          }
+        }
+      }
+    },
+    "A10": {
+      "history_file": "poly_trader_analiz10_history.json",
+      "d7": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      },
+      "d30": {
+        "trades": 25,
+        "wins": 15,
+        "wr": 60.0,
+        "pnl": 44.13,
+        "force_hot_hours": [
+          0
+        ],
+        "by_hour": {
+          "0": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 44.09
+          },
+          "1": {
+            "w": 0,
+            "t": 2,
+            "wr": 0.0,
+            "pnl": -33.06
+          },
+          "7": {
+            "w": 2,
+            "t": 3,
+            "wr": 66.67,
+            "pnl": 8.2
+          },
+          "8": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 26.78
+          },
+          "12": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 12.85
+          },
+          "23": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 15.13
+          },
+          "10": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": 0.72
+          },
+          "5": {
+            "w": 0,
+            "t": 2,
+            "wr": 0.0,
+            "pnl": -33.29
+          },
+          "21": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 29.14
+          },
+          "4": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -3.16
+          },
+          "11": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -23.1
+          },
+          "15": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 19.53
+          },
+          "16": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.56
+          },
+          "2": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 13.39
+          },
+          "3": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.53
+          }
+        },
+        "by_dow_hour": {
+          "4_00": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 12.33
+          },
+          "4_01": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.44
+          },
+          "4_07": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 9.18
+          },
+          "0_08": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 13.39
+          },
+          "0_12": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 12.85
+          },
+          "0_23": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 15.13
+          },
+          "1_10": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 12.33
+          },
+          "3_00": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 31.76
+          },
+          "4_05": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.64
+          },
+          "4_21": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 13.39
+          },
+          "5_04": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.55
+          },
+          "5_05": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.65
+          },
+          "5_07": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -11.57
+          },
+          "5_08": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 13.39
+          },
+          "0_10": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -11.61
+          },
+          "0_11": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -23.1
+          },
+          "1_01": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.62
+          },
+          "1_07": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 10.59
+          },
+          "2_04": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 13.39
+          },
+          "2_15": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 19.53
+          },
+          "2_16": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.56
+          },
+          "2_21": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 15.75
+          },
+          "3_02": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 13.39
+          },
+          "3_03": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.53
+          }
+        }
+      }
+    },
+    "A15": {
+      "history_file": "poly_trader_analiz15_history.json",
+      "d7": {
+        "trades": 1,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -16.67,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.67
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.67
+          }
+        }
+      },
+      "d30": {
+        "trades": 1,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -16.67,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.67
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -16.67
+          }
+        }
+      }
+    },
+    "#01": {
+      "history_file": "poly_trader_a2_01_history.json",
+      "d7": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      },
+      "d30": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      }
+    },
+    "#02": {
+      "history_file": "poly_trader_a2_02_history.json",
+      "d7": {
+        "trades": 1,
+        "wins": 1,
+        "wr": 100.0,
+        "pnl": 10.41,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 10.41
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 10.41
+          }
+        }
+      },
+      "d30": {
+        "trades": 1,
+        "wins": 1,
+        "wr": 100.0,
+        "pnl": 10.41,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 10.41
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 1,
+            "wr": 100.0,
+            "pnl": 10.41
+          }
+        }
+      }
+    },
+    "#03": {
+      "history_file": "poly_trader_a2_03_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    },
+    "#04": {
+      "history_file": "poly_trader_a2_04_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    },
+    "#05": {
+      "history_file": "poly_trader_a2_05_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 25.04,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 25.04
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 25.04
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 25.04,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 25.04
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 25.04
+          }
+        }
+      }
+    },
+    "#06": {
+      "history_file": "poly_trader_a2_06_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    },
+    "#07": {
+      "history_file": "poly_trader_a2_07_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    },
+    "#08": {
+      "history_file": "poly_trader_a2_08_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    },
+    "#09": {
+      "history_file": "poly_trader_a2_09_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -2.26,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -2.26,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        }
+      }
+    },
+    "#10": {
+      "history_file": "poly_trader_a2_10_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    },
+    "#11": {
+      "history_file": "poly_trader_a2_11_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    },
+    "#12": {
+      "history_file": "poly_trader_a2_12_history.json",
+      "d7": {
+        "trades": 3,
+        "wins": 1,
+        "wr": 33.33,
+        "pnl": -14.85,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 3,
+            "wr": 33.33,
+            "pnl": -14.85
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 3,
+            "wr": 33.33,
+            "pnl": -14.85
+          }
+        }
+      },
+      "d30": {
+        "trades": 3,
+        "wins": 1,
+        "wr": 33.33,
+        "pnl": -14.85,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 3,
+            "wr": 33.33,
+            "pnl": -14.85
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 3,
+            "wr": 33.33,
+            "pnl": -14.85
+          }
+        }
+      }
+    },
+    "#13": {
+      "history_file": "poly_trader_a2_13_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -2.26,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -2.26,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        }
+      }
+    },
+    "#14": {
+      "history_file": "poly_trader_a2_14_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    },
+    "#15": {
+      "history_file": "poly_trader_a2_15_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -2.26,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -2.26,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -2.26
+          }
+        }
+      }
+    },
+    "#16": {
+      "history_file": "poly_trader_a2_16_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    },
+    "#17": {
+      "history_file": "poly_trader_a2_17_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 2,
+        "wr": 100.0,
+        "pnl": 18.07,
+        "force_hot_hours": [],
+        "by_hour": {
+          "2": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        },
+        "by_dow_hour": {
+          "5_02": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 18.07
+          }
+        }
+      }
+    }
+  },
+  "winners_prev_hour": [],
+  "prev_hour_tr": "2026-08-22T04:00:00+03:00"
+}

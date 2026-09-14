@@ -285,7 +285,7 @@ def _save_skrs_cache(rows: list[dict]) -> None:
         json.dump(rows, f, ensure_ascii=False, indent=2)
 
 
-def fetch_skrs_dental(*, use_cache: bool = True, timeout: float = 12.0) -> list[dict]:
+def fetch_skrs_dental(*, use_cache: bool = True, timeout: float = 90.0) -> list[dict]:
     """SKRS kurum listesi — Bursa, diş/adsm adı geçen aktif birimler."""
     if use_cache:
         cached = _load_skrs_cache()
@@ -295,14 +295,39 @@ def fetch_skrs_dental(*, use_cache: bool = True, timeout: float = 12.0) -> list[
         {"skrsCodeSystemGuid": SKRS_GUID, "ilKodu": str(MHRS_IL_KODU)}
     )
     url = f"{SKRS_URL}?{q}"
-    req = urllib.request.Request(url, headers={"User-Agent": "BursaApp/1.0"})
+    rows_raw: list[dict] = []
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            data = json.loads(resp.read().decode())
+        import subprocess
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
+            path = tmp.name
+        r = subprocess.run(
+            [
+                "curl",
+                "-fsSL",
+                "--max-time",
+                str(int(timeout)),
+                "-A",
+                "BursaApp/1.0 (+https://bursaapp.com)",
+                "-o",
+                path,
+                url,
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if r.returncode != 0:
+            raise OSError(r.stderr[:200] or f"curl exit {r.returncode}")
+        data = json.loads(open(path, encoding="utf-8").read())
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+        rows_raw = data.get("sonuc") or []
     except Exception as exc:
         print(f"MHRS/SKRS uyarı ({exc})", flush=True)
         return _load_skrs_cache() or []
-    rows_raw = data.get("sonuc") or []
     out: list[dict] = []
     for r in rows_raw:
         if not r.get("AKTIF", True):

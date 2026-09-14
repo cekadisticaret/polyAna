@@ -1,0 +1,262 @@
+{
+  "mapping": {
+    "DASH": "a2_02",
+    "ZEC": "a2_01",
+    "MUBARAK": "a2_01",
+    "ENA": "a2_10",
+    "CHIP": "a2_01",
+    "LINK": "melez",
+    "BICO": "a2_06",
+    "NEAR": "melez",
+    "ADA": "a2_14",
+    "XRP": "a2_01",
+    "ACT": "a1_07",
+    "ANKR": "a1_07",
+    "TIA": "a2_07",
+    "FIL": "a1_16",
+    "APT": "a1_33",
+    "BERA": "a2_10",
+    "BOME": "a2_14",
+    "ARB": "analiz10",
+    "DEXE": "a2_14",
+    "BARD": "a2_10"
+  },
+  "mapped": 20,
+  "symbols": [
+    "DASH",
+    "ZEC",
+    "SIGN",
+    "TWT",
+    "ZEN",
+    "PROM",
+    "MUBARAK",
+    "ENA",
+    "CHIP",
+    "S",
+    "PORTAL",
+    "ENS",
+    "XPL",
+    "ZK",
+    "AT",
+    "VANA",
+    "SYRUP",
+    "PENDLE",
+    "LINK",
+    "BICO",
+    "NEAR",
+    "ENJ",
+    "ADA",
+    "XRP",
+    "LPT",
+    "INIT",
+    "SKL",
+    "BAT",
+    "ACT",
+    "LDO",
+    "AVA",
+    "TOWNS",
+    "SCR",
+    "ZAMA",
+    "JASMY",
+    "SPK",
+    "EGLD",
+    "FF",
+    "ANKR",
+    "PYTH",
+    "MITO",
+    "PUMP",
+    "SSV",
+    "NOM",
+    "FORM",
+    "EUL",
+    "TIA",
+    "F",
+    "FIL",
+    "PARTI",
+    "EIGEN",
+    "APT",
+    "BERA",
+    "BOME",
+    "KITE",
+    "T",
+    "ARB",
+    "DEXE",
+    "CETUS",
+    "BARD"
+  ],
+  "labels": {
+    "DASH": "A2#02",
+    "ZEC": "A2#01",
+    "MUBARAK": "A2#01",
+    "ENA": "A2#10",
+    "CHIP": "A2#01",
+    "LINK": "MELEZ",
+    "BICO": "A2#06",
+    "NEAR": "MELEZ",
+    "ADA": "A2#14",
+    "XRP": "A2#01",
+    "ACT": "A1#07",
+    "ANKR": "A1#07",
+    "TIA": "A2#07",
+    "FIL": "A1#16",
+    "APT": "A1#33",
+    "BERA": "A2#10",
+    "BOME": "A2#14",
+    "ARB": "A10",
+    "DEXE": "A2#14",
+    "BARD": "A2#10"
+  },
+  "coin_stats": {
+    "DASH": {
+      "uid": "a2_02",
+      "pnl": 82.51,
+      "trades": 7,
+      "wr": 85.7,
+      "pinned": false
+    },
+    "ZEC": {
+      "uid": "a2_01",
+      "pnl": 4.83,
+      "trades": 22,
+      "wr": 68.2,
+      "pinned": false
+    },
+    "MUBARAK": {
+      "uid": "a2_01",
+      "pnl": 75.91,
+      "trades": 5,
+      "wr": 100.0,
+      "pinned": false
+    },
+    "ENA": {
+      "uid": "a2_10",
+      "pnl": 232.13,
+      "trades": 67,
+      "wr": 71.6,
+      "pinned": false
+    },
+    "CHIP": {
+      "uid": "a2_01",
+      "pnl": 69.0,
+      "trades": 5,
+      "wr": 100.0,
+      "pinned": false
+    },
+    "LINK": {
+      "uid": "melez",
+      "pnl": -1.56,
+      "trades": 6,
+      "wr": 33.3,
+      "pinned": false
+    },
+    "BICO": {
+      "uid": "a2_06",
+      "pnl": 150.64,
+      "trades": 17,
+      "wr": 100.0,
+      "pinned": false
+    },
+    "NEAR": {
+      "uid": "melez",
+      "pnl": 56.64,
+      "trades": 15,
+      "wr": 73.3,
+      "pinned": false
+    },
+    "ADA": {
+      "uid": "a2_14",
+      "pnl": 43.95,
+      "trades": 249,
+      "wr": 57.4,
+      "pinned": false
+    },
+    "XRP": {
+      "uid": "a2_01",
+      "pnl": -4.33,
+      "trades": 17,
+      "wr": 58.8,
+      "pinned": false
+    },
+    "ACT": {
+      "uid": "a1_07",
+      "pnl": 24.0,
+      "trades": 17,
+      "wr": 82.4,
+      "pinned": false
+    },
+    "ANKR": {
+      "uid": "a1_07",
+      "pnl": 79.89,
+      "trades": 16,
+      "wr": 81.2,
+      "pinned": false
+    },
+    "TIA": {
+      "uid": "a2_07",
+      "pnl": 45.65,
+      "trades": 24,
+      "wr": 66.7,
+      "pinned": false
+    },
+    "FIL": {
+      "uid": "a1_16",
+      "pnl": 58.61,
+      "trades": 31,
+      "wr": 67.7,
+      "pinned": false
+    },
+    "APT": {
+      "uid": "a1_33",
+      "pnl": 245.03,
+      "trades": 94,
+      "wr": 69.1,
+      "pinned": false
+    },
+    "BERA": {
+      "uid": "a2_10",
+      "pnl": 24.31,
+      "trades": 5,
+      "wr": 100.0,
+      "pinned": false
+    },
+    "BOME": {
+      "uid": "a2_14",
+      "pnl": 63.94,
+      "trades": 30,
+      "wr": 80.0,
+      "pinned": false
+    },
+    "ARB": {
+      "uid": "analiz10",
+      "pnl": 51.89,
+      "trades": 5,
+      "wr": 80.0,
+      "pinned": false
+    },
+    "DEXE": {
+      "uid": "a2_14",
+      "pnl": 46.43,
+      "trades": 27,
+      "wr": 77.8,
+      "pinned": false
+    },
+    "BARD": {
+      "uid": "a2_10",
+      "pnl": 57.77,
+      "trades": 18,
+      "wr": 88.9,
+      "pinned": false
+    }
+  },
+  "leader_rows_n": 14,
+  "updated_at_tr": "2026-09-04 13:34:24.207757+03:00",
+  "min_trades": 5,
+  "source": "lider_analiz",
+  "history_fingerprint": 1788517947.5257761,
+  "disabled": [
+    "BTC",
+    "ETH",
+    "HYPE",
+    "KAITO"
+  ]
+}

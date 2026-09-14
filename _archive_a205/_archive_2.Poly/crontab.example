@@ -1,0 +1,9 @@
+# 2.Poly — A2#05 Mean Reversion — sadece GERÇEK PM
+# Log: /tmp/poly2_a2_05_*.log
+
+2 * * * *  /root/aiProject/2.Poly/bin/live_close.sh  >> /tmp/poly2_a2_05_live.log 2>&1
+3 * * * *  /root/aiProject/2.Poly/bin/redeem.sh      >> /tmp/poly2_a2_05_redeem.log 2>&1
+# TR :04:30 sinyal | :05:00 açılış | :05:10 retry (sunucu UTC → -3 saat)
+1 * * * *  sleep 30 && /root/aiProject/2.Poly/bin/signals.sh     >> /tmp/poly2_a2_05_signals.log 2>&1
+2 * * * *  /root/aiProject/2.Poly/bin/live_open.sh   >> /tmp/poly2_a2_05_live.log 2>&1
+2 * * * *  sleep 10 && /root/aiProject/2.Poly/bin/live_open_retry.sh >> /tmp/poly2_a2_05_live.log 2>&1

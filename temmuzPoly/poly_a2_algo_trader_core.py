@@ -87,6 +87,7 @@ class A2Config:
     shadow_log: str | None = None          # atlanan slotları da kaydet (jsonl)
     live_mirror: bool = True               # False = gerçek para aynası hiç çağrılmaz
     init_balance: float | None = None      # None = SANAL_INITIAL_BALANCE ($1000)
+    signals_file: str | None = None        # None = A2 v2 dosyası; A1 → /tmp/algo_signals.json
 
 
 Z_PERIOD = 20
@@ -258,6 +259,19 @@ def _load_v2_signal(algo_num: int) -> dict | None:
         return None
 
 
+def _load_signal(cfg: A2Config) -> dict | None:
+    path = cfg.signals_file or _SIGNALS_FILE
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return (data.get("signals") or {}).get(str(cfg.algo_num))
+    except Exception as e:
+        print(f"[{cfg.label}] sinyal okuma hatası: {e}")
+        return None
+
+
 def _sym_short(symbol: str) -> str:
     return symbol.replace("USDT", "")
 
@@ -384,7 +398,7 @@ async def run_open(cfg: A2Config, *, notify: bool = True) -> str | None:
 
     state = _load_state(cfg)
     history = _load_history(cfg)
-    sig_entry = _load_v2_signal(cfg.algo_num)
+    sig_entry = _load_signal(cfg)
     if not sig_entry:
         print(f"[{cfg.label} open] {saat} — sinyal yok")
         return None

@@ -127,12 +127,15 @@ def already_have(title: str, names: set[str]) -> bool:
 
 
 def upsert(db, raw: dict) -> str:
+    from models import merge_place_extra
+
     title = raw["title"]
     slug = slugify(title)[:80]
     sub = guess_sub(title)
     ilce = guess_ilce(raw.get("address") or "")
     img = SUB_IMG.get(sub) or SUB_IMG["restoran"]
     blurb = f"{ilce} · {title}. {raw.get('address') or ''}".strip()[:400]
+    price = "$" if sub in ("fast-food", "doner", "pastane", "tatli") else "$$"
     fields = dict(
         title=title[:200],
         category="food",
@@ -142,12 +145,12 @@ def upsert(db, raw: dict) -> str:
         phone="",
         web="",
         hours_text="",
-        price_band=sub,
+        price_band=price,
         blurb=blurb,
         body=blurb,
         img_url=img,
         tags=tags_dump([sub, "restoran", "panorama"]),
-        rating_admin=4.2,
+        rating_admin=None,
         featured=False,
         status="approved",
         est_meal_tl=int(raw.get("est_meal_tl") or 0),
@@ -161,11 +164,14 @@ def upsert(db, raw: dict) -> str:
             n += 1
         db.add(Place(slug=final, **fields))
         db.flush()
+        np = db.query(Place).filter(Place.slug == final).first()
+        if np:
+            merge_place_extra(np, {"source": "panorama", "rating_verified": False})
         return "new"
     if p.category == "food":
-        # var olan kaydı ezme — yalnız boş alan doldur
         if not (p.address or "").strip() and fields["address"]:
             p.address = fields["address"]
+        merge_place_extra(p, {"source": "panorama"})
         return "skip"
     return "skip"
 

@@ -1,0 +1,30 @@
+[
+  {
+    "symbol": "ETHUSDT",
+    "predicted_dir": "UP",
+    "actual_dir": "DOWN",
+    "win": false,
+    "entry_price": 2433.67,
+    "exit_price": 2427.05,
+    "entry_time_tr": "2026-08-23T15:02:11.824325+03:00",
+    "entry_hour_tr": 15,
+    "entry_dow": 6,
+    "entry_is_weekend": true,
+    "amount": 36.0,
+    "exit_time_tr": "2026-08-23T16:01:07.481088+03:00",
+    "pnl": -37.69,
+    "algo_signal": "UP",
+    "algo_name": "X1#01 - 13Analiz",
+    "x101_score": 66.4,
+    "x101_edge": 0.0597,
+    "x101_regime": "range",
+    "pm_spent": 36.05,
+    "pm_size": 103.0,
+    "pm_entry_price": 0.35,
+    "to_win": 103.0,
+    "pm_slug": "ethereum-up-or-down-august-23-2026-8am-et",
+    "pm_fee": 1.64028,
+    "pm_quote_src": "book",
+    "pm_mid_price": 0.465
+  }
+]

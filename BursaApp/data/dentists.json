@@ -1,46 +1,5 @@
 [
   {
-    "title": "Nilüfer Ağız ve Diş Sağlığı Merkezi",
-    "slug": "nilufer-adsm-dis",
-    "ilce": "Nilüfer",
-    "address": "Beşevler Mah. Beşevler Cad. No:103/B, Nilüfer",
-    "phone": "0224 452 38 16",
-    "web": "https://niluferadsm.saglik.gov.tr/",
-    "hours_text": "Mesai · MHRS / 182",
-    "price_band": "Devlet",
-    "featured": true,
-    "tags": [
-      "adsm",
-      "devlet",
-      "dis"
-    ],
-    "blurb": "Nilüfer ADSM — devlet diş hekimi. Randevu MHRS veya 182.",
-    "mhrs_url": "https://mhrs.gov.tr/vatandas/#/Randevu",
-    "lat": 40.2089,
-    "lng": 28.9847,
-    "rating": 3.8
-  },
-  {
-    "title": "Bursa Ağız ve Diş Sağlığı Eğitim ve Araştırma Hastanesi",
-    "slug": "bursa-adseah",
-    "ilce": "Osmangazi",
-    "address": "Çekirge, Dr. Sadık Ahmet Cad., Osmangazi / Bursa",
-    "phone": "444 0 476",
-    "web": "https://bursaadseah.saglik.gov.tr/",
-    "hours_text": "Mesai · MHRS / 182",
-    "price_band": "Devlet",
-    "featured": true,
-    "tags": [
-      "mhrs",
-      "devlet",
-      "adsm",
-      "verified",
-      "dis"
-    ],
-    "blurb": "Resmi kurum sitesi · MHRS / 182.",
-    "mhrs_url": "https://mhrs.gov.tr/vatandas/#/Randevu"
-  },
-  {
     "slug": "acibadem-dis-bursa",
     "title": "Acıbadem Bursa · Ağız ve Diş",
     "ilce": "Nilüfer",
@@ -111,6 +70,25 @@
     "hours_text": "Randevu ile"
   },
   {
+    "title": "Bursa Ağız ve Diş Sağlığı Eğitim ve Araştırma Hastanesi",
+    "slug": "bursa-agiz-ve-dis-sagligi-egitim-ve-arastirma-hastanesi",
+    "ilce": "Yıldırım",
+    "address": "Bursa Ağız ve Diş Sağlığı Eğitim ve Araştırma Hastanesi, Emniyet Caddesi, Mimar Sinan, Mimar Sinan Mahallesi, Yıldırım, Bursa, Marmara Bölgesi, 16310, Türkiye",
+    "phone": "444 0 476",
+    "web": "https://bursaadseah.saglik.gov.tr/",
+    "hours_text": "Randevu ile",
+    "price_band": "Özel",
+    "featured": true,
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "blurb": "Nominatim · Bursa Ağız ve Diş Sağlığı Eğitim ve Araştırma Hastanesi",
+    "mhrs_url": "https://mhrs.gov.tr/vatandas/#/Randevu",
+    "lat": 40.1857069,
+    "lng": 29.128447
+  },
+  {
     "title": "Klinik Bursa Yıldırım Ağız ve Diş Sağlığı Polikliniği",
     "ilce": "Yıldırım",
     "address": "Sinandede Kasım Önadım Blv. 128/B, Yıldırım",
@@ -125,6 +103,26 @@
     "blurb": "Yıldırım · geniş poliklinik.",
     "slug": "klinik-bursa-yildirim-agiz-ve-dis-sagligi-poliklinigi",
     "hours_text": "Randevu ile"
+  },
+  {
+    "title": "Nilüfer Ağız ve Diş Sağlığı Merkezi",
+    "slug": "nilufer-agiz-ve-dis-sagligi-merkezi",
+    "ilce": "Nilüfer",
+    "address": "Nilüfer Ağız ve Diş Sağlığı Merkezi, Beşevler Caddesi, Beşevler, Beşevler Mahallesi, Nilüfer, Bursa, Marmara Bölgesi, 16022, Türkiye",
+    "phone": "0224 452 38 16",
+    "web": "https://niluferadsm.saglik.gov.tr/",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "featured": true,
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "blurb": "Nominatim · Nilüfer Ağız ve Diş Sağlığı Merkezi",
+    "mhrs_url": "https://mhrs.gov.tr/vatandas/#/Randevu",
+    "lat": 40.2089,
+    "lng": 28.9847,
+    "rating": 3.8
   },
   {
     "title": "Bursa Duaçınarı Ağız ve Diş Sağlığı Merkezi",
@@ -229,6 +227,199 @@
     "rating": 4.2
   },
   {
+    "title": "Özel Dentisevi Ağız ve Diş Sağlığı Polikliniği",
+    "lat": 40.2626379,
+    "lng": 28.9507502,
+    "ilce": "Osmangazi",
+    "address": "Özel Dentisevi Ağız ve Diş Sağlığı Polikliniği, 7. Akar Sokak, Geçit, Geçit Mahallesi, Osmangazi, Bursa, Marmara Bölgesi, 16085, Türkiye",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Özel",
+    "blurb": "Nominatim · Özel Dentisevi Ağız ve Diş Sağlığı Polikliniği",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "ozel-dentisevi-agiz-ve-dis-sagligi-poliklinigi",
+    "featured": false
+  },
+  {
+    "title": "Özel Klinik Akpınar Ağız ve Diş Sağlığı Polikliniği",
+    "lat": 40.2467744,
+    "lng": 28.9684396,
+    "ilce": "Osmangazi",
+    "address": "Özel Klinik Akpınar Ağız ve Diş Sağlığı Polikliniği, Hancı Caddesi, Akpınar Mahallesi, Bursa, Osmangazi, Bursa, Marmara Bölgesi, 16220, Türkiye",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Özel",
+    "blurb": "Nominatim · Özel Klinik Akpınar Ağız ve Diş Sağlığı Polikliniği",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "ozel-klinik-akpinar-agiz-ve-dis-sagligi-poliklinigi",
+    "featured": false
+  },
+  {
+    "title": "Özel MESAM Bursadent Ağız ve Diş Sağlığı Merkezi Setbaşı Şubesi",
+    "lat": 40.1807581,
+    "lng": 29.0706668,
+    "ilce": "Yıldırım",
+    "address": "Özel MESAM Bursadent Ağız ve Diş Sağlığı Merkezi Setbaşı Şubesi, Gökdere Bulvarı, Kurtoğlu, Kurtoğlu Mahallesi, Yıldırım, Bursa, Marmara Bölgesi, 16360, Türkiye",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Özel",
+    "blurb": "Nominatim · Özel MESAM Bursadent Ağız ve Diş Sağlığı Merkezi Setbaşı Şubesi",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "ozel-mesam-bursadent-agiz-ve-dis-sagligi-merkezi-setbasi-subesi",
+    "featured": false
+  },
+  {
+    "title": "İnegöl Ağız ve Diş Sağlığı Hastanesi",
+    "lat": 40.1076831,
+    "lng": 29.5144922,
+    "ilce": "İnegöl",
+    "address": "İnegöl Ağız ve Diş Sağlığı Hastanesi, Yenişehir Caddesi, Yeni Mahallesi, İnegöl, Bursa, Marmara Bölgesi, 16400, Türkiye",
+    "phone": "+90 224 715 2008",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Özel",
+    "blurb": "Nominatim · İnegöl Ağız ve Diş Sağlığı Hastanesi",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "inegol-agiz-ve-dis-sagligi-hastanesi",
+    "featured": false
+  },
+  {
+    "title": "Bozüyük Ağız ve Diş Sağlığı Merkezi",
+    "lat": 39.9029403,
+    "lng": 30.0673778,
+    "ilce": "Bozüyük",
+    "address": "İsmet İnönü Caddesi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "Photon · Bozüyük Ağız ve Diş Sağlığı Merkezi",
+    "tags": [
+      "photon",
+      "dis"
+    ],
+    "slug": "bozuyuk-agiz-ve-dis-sagligi-merkezi"
+  },
+  {
+    "title": "Estetika Diş Polikinliği",
+    "lat": 40.0732484,
+    "lng": 29.5044502,
+    "ilce": "Bursa",
+    "address": "Adnan Menderes Bulvarı",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "Photon · Estetika Diş Polikinliği",
+    "tags": [
+      "photon",
+      "dis"
+    ],
+    "slug": "estetika-dis-polikinligi",
+    "featured": false
+  },
+  {
+    "title": "Gemlik Diş",
+    "lat": 40.424576,
+    "lng": 29.1612421,
+    "ilce": "Gemlik",
+    "address": "Hürriyet Cd 58 Dr. Ziya Kaya, Mh, Gemlik",
+    "phone": "",
+    "web": "",
+    "hours_text": "Mo-Fr 09:00-19:00",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Gemlik Diş",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "gemlik-dis"
+  },
+  {
+    "title": "Oksijen Tesislerine Araç İle Gidiş İçin Yol Girişi (İlan Orman Ürünleri Önü)",
+    "lat": 40.3863059,
+    "lng": 29.1359729,
+    "ilce": "Gemlik",
+    "address": "Oksijen Tesislerine Araç İle Gidiş İçin Yol Girişi (İlan Orman Ürünleri Önü), Gemlik",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Oksijen Tesislerine Araç İle Gidiş İçin Yol Girişi (İlan Orman Ürünleri Önü)",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "oksijen-tesislerine-arac-ile-gidis-icin-yol-girisi-ilan-orman-urunleri-onu"
+  },
+  {
+    "title": "Olimpum Dis Tic. Paz. Ltd. Sti.",
+    "lat": 40.4334713,
+    "lng": 29.2470618,
+    "ilce": "Gemlik",
+    "address": "Olimpum Dis Tic. Paz. Ltd. Sti., Gemlik",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Olimpum Dis Tic. Paz. Ltd. Sti.",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "olimpum-dis-tic-paz-ltd-sti"
+  },
+  {
+    "title": "Diş Hekimi Ayla Tiryaki",
+    "lat": 40.216857,
+    "lng": 28.359394,
+    "ilce": "Karacabey",
+    "address": "Diş Hekimi Ayla Tiryaki, 49. Sokak, Karacabey, Runguşpaşa Mahallesi, Karacabey, Bursa, Marmara Bölgesi, 16700, Türkiye",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "Nominatim · Diş Hekimi Ayla Tiryaki",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "dis-hekimi-ayla-tiryaki",
+    "featured": false
+  },
+  {
+    "title": "Beşevler Caddisi",
+    "lat": 40.0323696,
+    "lng": 28.378557,
+    "ilce": "Mustafakemalpaşa",
+    "address": "Beşevler Caddisi, Mustafakemalpaşa",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Beşevler Caddisi",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "besevler-caddisi"
+  },
+  {
     "title": "Burcu Özden Ortodonti Kliniği",
     "ilce": "Nilüfer",
     "address": "Konak Lotus Ofis 1. Badem Sk. No:26, Nilüfer",
@@ -261,6 +452,76 @@
     "rating": 4.2
   },
   {
+    "title": "Diş Hekimi Anıl Aslan",
+    "lat": 40.2075068,
+    "lng": 28.9906163,
+    "ilce": "Nilüfer",
+    "address": "Diş Hekimi Anıl Aslan, No:18, Yıldırım Caddesi, Konak, Konak Mahallesi, Nilüfer, Bursa, Marmara Bölgesi, 16110, Türkiye",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "Nominatim · Diş Hekimi Anıl Aslan",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "dis-hekimi-anil-aslan",
+    "featured": false
+  },
+  {
+    "title": "Diş Hekimi Aynur Bayan",
+    "lat": 40.2197948,
+    "lng": 28.9789764,
+    "ilce": "Nilüfer",
+    "address": "Diş Hekimi Aynur Bayan, Kat:6 No:12, İlknur Sokak, İhsaniye, İhsaniye Mahallesi, Nilüfer, Bursa, Marmara Bölgesi, 16210, Türkiye",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "Nominatim · Diş Hekimi Aynur Bayan",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "dis-hekimi-aynur-bayan",
+    "featured": false
+  },
+  {
+    "title": "Diş Hekimliği Fakültesi Temel Bilimler Bölümü",
+    "lat": 40.2250446,
+    "lng": 28.8677305,
+    "ilce": "Nilüfer",
+    "address": "Diş Hekimliği Fakültesi Temel Bilimler Bölümü, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Diş Hekimliği Fakültesi Temel Bilimler Bölümü",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "dis-hekimligi-fakultesi-temel-bilimler-bolumu"
+  },
+  {
+    "title": "Diş Hekimliği Fakültesi İnşaatı",
+    "lat": 40.2194564,
+    "lng": 28.8764624,
+    "ilce": "Nilüfer",
+    "address": "Diş Hekimliği Fakültesi İnşaatı, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Diş Hekimliği Fakültesi İnşaatı",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "dis-hekimligi-fakultesi-insaati"
+  },
+  {
     "title": "Dt. Semra Güler Beşer Diş Kliniği",
     "ilce": "Nilüfer",
     "address": "Çamlıca Kavakdere Cad. Çamlıca İş Merkezi 170/9, Nilüfer",
@@ -275,6 +536,40 @@
     "blurb": "Çamlıca · implant ve gülüş tasarımı.",
     "slug": "dt-semra-guler-beser-dis-klinigi",
     "hours_text": "Randevu ile"
+  },
+  {
+    "title": "Emek Zekai Gümüşdiş",
+    "lat": 40.2558501,
+    "lng": 28.9566797,
+    "ilce": "Nilüfer",
+    "address": "Emek Zekai Gümüşdiş, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Emek Zekai Gümüşdiş",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "emek-zekai-gumusdis"
+  },
+  {
+    "title": "Kayı Dent",
+    "lat": 40.247033,
+    "lng": 28.9872943,
+    "ilce": "Nilüfer",
+    "address": "Kayı Dent, Nilüfer",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Kayı Dent",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "kayi-dent"
   },
   {
     "slug": "smile-art-dis-klinigi",
@@ -292,6 +587,23 @@
     ],
     "blurb": "Estetik diş hekimliği — Görükle bölgesi.",
     "rating": 4.1
+  },
+  {
+    "title": "BTSO Eğitim Vadisi",
+    "lat": 40.2075813,
+    "lng": 29.0856859,
+    "ilce": "Osmangazi",
+    "address": "BTSO Eğitim Vadisi, Osmangazi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · BTSO Eğitim Vadisi",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "btso-egitim-vadisi"
   },
   {
     "slug": "bursa-ortodonti-merkezi",
@@ -324,5 +636,110 @@
     "blurb": "Prof. Dr. Baydaş · ortodonti.",
     "slug": "prof-dr-bulent-baydas-ortodonti-dis-poliklinigi",
     "hours_text": "Randevu ile"
+  },
+  {
+    "title": "Yediselviler",
+    "lat": 40.1812998,
+    "lng": 29.0923303,
+    "ilce": "Osmangazi",
+    "address": "Yediselviler, Osmangazi",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Yediselviler",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "yediselviler"
+  },
+  {
+    "title": "BURSA AĞIZ VE DİŞ SAĞLIĞI MERK 1 (D1308)",
+    "lat": 40.1856855,
+    "lng": 29.1279875,
+    "ilce": "Yıldırım",
+    "address": "BURSA AĞIZ VE DİŞ SAĞLIĞI MERK 1 (D1308), Emniyet Caddesi, Mimar Sinan, Mimar Sinan Mahallesi, Yıldırım, Bursa, Marmara Bölgesi, 16310, Türkiye",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "Nominatim · BURSA AĞIZ VE DİŞ SAĞLIĞI MERK 1 (D1308)",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "bursa-agiz-ve-dis-sagligi-merk-1-d1308",
+    "featured": false
+  },
+  {
+    "title": "BURSA AĞIZ VE DİŞ SAĞLIĞI MERK 2 (D1323)",
+    "lat": 40.1859822,
+    "lng": 29.1279211,
+    "ilce": "Yıldırım",
+    "address": "BURSA AĞIZ VE DİŞ SAĞLIĞI MERK 2 (D1323), 42, Emniyet Caddesi, Mimar Sinan, Mimar Sinan Mahallesi, Yıldırım, Bursa, Marmara Bölgesi, 16310, Türkiye",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "Nominatim · BURSA AĞIZ VE DİŞ SAĞLIĞI MERK 2 (D1323)",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "bursa-agiz-ve-dis-sagligi-merk-2-d1323",
+    "featured": false
+  },
+  {
+    "title": "Varveren Ağız ve Diş Sağlığı Polikliniği",
+    "lat": 40.1826391,
+    "lng": 29.0876191,
+    "ilce": "Yıldırım",
+    "address": "Varveren Ağız ve Diş Sağlığı Polikliniği, 4-6A/1, Teyyareci Mehmet Ali Caddesi, Mehmet Akif Ersoy, Davutkadı Mahallesi, Yıldırım, Bursa, Marmara Bölgesi, 16320, Türkiye",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "Nominatim · Varveren Ağız ve Diş Sağlığı Polikliniği",
+    "tags": [
+      "nominatim",
+      "dis"
+    ],
+    "slug": "varveren-agiz-ve-dis-sagligi-poliklinigi",
+    "featured": false
+  },
+  {
+    "title": "Yıldırım Belediyesi Yediselviler Hizmet Binası",
+    "lat": 40.1825365,
+    "lng": 29.0905639,
+    "ilce": "Yıldırım",
+    "address": "Yıldırım Belediyesi Yediselviler Hizmet Binası, Yıldırım",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Yıldırım Belediyesi Yediselviler Hizmet Binası",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "yildirim-belediyesi-yediselviler-hizmet-binasi"
+  },
+  {
+    "title": "Aldisa Home Collection",
+    "lat": 40.0986305,
+    "lng": 29.4772746,
+    "ilce": "İnegöl",
+    "address": "Aldisa Home Collection, İnegöl",
+    "phone": "",
+    "web": "",
+    "hours_text": "Randevu ile",
+    "price_band": "Klinik",
+    "blurb": "OpenStreetMap · Aldisa Home Collection",
+    "tags": [
+      "osm",
+      "dis"
+    ],
+    "slug": "aldisa-home-collection"
   }
 ]

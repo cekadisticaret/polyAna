@@ -68,6 +68,16 @@ TEST_UNIVERSE = _test_cat.TEST_UNIVERSE
 scan_symbols = _test_cat.scan_symbols
 TEST_SYMBOLS = _test_cat.TEST_SYMBOLS
 
+
+def _sync_books() -> None:
+    """catalog.py kesilince uzun süreç (dashboard) eski ALL_BOOKS ile boş defter üretmesin."""
+    global _test_cat, ALL_BOOKS, TEST_UNIVERSE, scan_symbols, TEST_SYMBOLS
+    _test_cat = _load_test_module("kripto_test_catalog", _CAT_PATH)
+    ALL_BOOKS = _test_cat.ALL_BOOKS
+    TEST_UNIVERSE = _test_cat.TEST_UNIVERSE
+    scan_symbols = _test_cat.scan_symbols
+    TEST_SYMBOLS = _test_cat.TEST_SYMBOLS
+
 _test_sig = _load_test_module("kripto_test_signals", _SIG_PATH)
 signal_for_book = _test_sig.signal_for_book
 build_supertrend_candidates = _test_sig.build_supertrend_candidates
@@ -268,6 +278,41 @@ def book_detail(book_id: str, *, recent_limit: int = 30, with_marks: bool = True
         st["cebu_map"] = mapping_display_rows()
         st["cebu_meta"] = mapping_summary()
     return st
+
+
+HERO_UID = "melez"
+
+
+def hero_book(uid: str, *, with_marks: bool = True, recent_limit: int = 20) -> dict:
+    """Tek Test defterini /kripto overview kahramanı şekline çevirir."""
+    book = book_detail(uid, recent_limit=recent_limit, with_marks=with_marks)
+    if not book:
+        return {"ok": False, "error": f"{uid} bulunamadı"}
+    return {
+        "ok": True,
+        "paper": True,
+        "id": book.get("id") or uid,
+        "name": book.get("name") or uid,
+        "title": book.get("title") or "",
+        "usdt": {"balance": book.get("balance")},
+        "total_pnl": book.get("total_pnl") or 0,
+        "win_rate": book.get("wr"),
+        "trade_count": book.get("history_n"),
+        "open_count": book.get("open_count") or 0,
+        "cards": book.get("cards") or [],
+        "recent_trades": book.get("recent_history") or [],
+        "waiting": [],
+        "deposit": book.get("deposit"),
+        "margin_usd": book.get("margin_usd"),
+        "leverage": book.get("leverage"),
+        "equity": book.get("equity"),
+        "unrealized_pnl": book.get("unrealized_pnl"),
+    }
+
+
+def hero_a139(*, with_marks: bool = True, recent_limit: int = 20) -> dict:
+    """Geriye uyum — overview artık MELEZ gösterir."""
+    return hero_book(HERO_UID, with_marks=with_marks, recent_limit=recent_limit)
 
 
 def _history_path_for_book(book: dict) -> str | None:
@@ -582,6 +627,7 @@ def run_close() -> dict:
     bekletilmez. Kapanış: ters sinyal (scan) · ATR stop/kilit (trail) ·
     24s tavan · 3×ATR zarar. PRO'da yalnız süre tavanı bu turda bakılır.
     """
+    _sync_books()
     skipped = _skip_weekend("close")
     if skipped:
         return skipped
@@ -689,6 +735,7 @@ def _apply_edge_gate(book: dict, cands: list[dict]) -> list[dict]:
 
 
 def run_open() -> dict:
+    _sync_books()
     skipped = _skip_weekend("open")
     if skipped:
         return skipped
@@ -741,6 +788,7 @@ def run_open() -> dict:
 
 
 def run_trail() -> dict:
+    _sync_books()
     skipped = _skip_weekend("trail")
     if skipped:
         return skipped
@@ -777,6 +825,7 @@ def run_scan() -> dict:
         (NEUTRAL veya erken an tetiklemez — flip-flop'u engellemek için).
     Hourly open/close (:05/:02) ve ATR trail (*/2) aynen çalışmaya devam eder.
     """
+    _sync_books()
     skipped = _skip_weekend("scan")
     if skipped:
         return skipped
@@ -922,6 +971,7 @@ def _fapi_blocked() -> bool:
 
 
 def _build_status(*, with_marks: bool = True, compute_waiting: bool | None = None) -> dict:
+    _sync_books()
     open_syms: set[str] = set()
     for book in ALL_BOOKS:
         sp, _hp = _paths(book)

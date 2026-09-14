@@ -1,0 +1,9 @@
+{% if nav_user %}
+<form method="post" action="/favori/{{ p.slug }}" class="fav-place-form">
+  <button type="submit" class="fav-place-btn{% if p.is_fav %} on{% endif %}" aria-pressed="{{ 'true' if p.is_fav else 'false' }}">
+    {% if p.is_fav %}❤️ Favorilerimde{% else %}♡ Favorilerime ekle{% endif %}
+  </button>
+</form>
+{% else %}
+<a class="fav-place-btn fav-place-link" href="/giris?next={{ request.full_path | urlencode }}">♡ Favorilerime ekle</a>
+{% endif %}

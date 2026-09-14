@@ -41,6 +41,7 @@
         <p class="mp-bio">Bursa gezgini · keşfet, paylaş, hatırla</p>
         <div class="mp-badges">
           <span class="mp-badge gold">🏅 {{ points }} puan</span>
+          <span class="mp-badge">{{ user_points_level }}</span>
           {% if not u.email_verified %}<span class="mp-badge muted">E-posta onayı bekliyor</span>{% endif %}
         </div>
       </div>
@@ -144,6 +145,7 @@
 <div class="m-desktop-only mp-desktop">
   <div class="hub-list" style="margin-bottom:18px">
     <a class="hub-row" href="/hesap/profil"><span class="hub-ico">📰</span><div><b>Feeds · Profil</b><small class="muted"> · post · albüm · gittiğim yerler</small></div><span class="hub-go">›</span></a>
+    <a class="hub-row" href="/arkadas-ara"><span class="hub-ico">🎾</span><div><b>Partner ara</b><small class="muted"> · okey · tenis · halı saha</small></div><span class="hub-go">›</span></a>
     <a class="hub-row" href="/hesap/ayarlar"><span class="hub-ico">⚙️</span><div><b>Ayarlar</b></div><span class="hub-go">›</span></a>
     <a class="hub-row" href="/hesap/favoriler"><span class="hub-ico">❤️</span><div><b>Favorilerim</b></div><span class="hub-go">›</span></a>
     <a class="hub-row" href="/cikis"><span class="hub-ico">🚪</span><div><b>Çıkış</b></div><span class="hub-go">›</span></a>

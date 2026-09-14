@@ -67,7 +67,6 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BursaApp/enrich_visit_gallery.py` | Gezilecek kapak+galeri (Wikimedia) · `extra.gallery` · Instagram scrape yok |
 | `BursaApp/templates/camps.html` | Kamp keşif — Airbnb tarzı grid · kategori şeridi · harita FAB |
 | `BursaApp/enrich_food_venues.py` | Yeme-içme kapak+menü enrich (Commons · top ~80 · `static/cache/food-venue/`) |
-| `BursaApp/templates/_shell.html` | Site kabuğu · GA4 `G-HTBTD54V3D` · WhatsApp destek · e-posta onay şeridi |
  Bursa dijital şehir — `bursaapp.com/` · Flask **5051** · Bugün/Akşam/Yakınımda/Hafta sonu · üye puan/yorum · `/poly` ayrı |
 | `BursaApp/feed_social.py` | Feed birleşik akış · ziyaret→post beğeni/yorum · takip listesi · takipçi sayacı |
 | `BursaApp/templates/profile_feed.html` | 3 sütun feed UI — sonsuz kaydırma · stories · sticky compose |
@@ -159,6 +158,10 @@ BIST Telegram betikleri `BistAnaliz/` altında. Ortak motor: `BistAnaliz/bist_sc
 | `BursaApp/media_cache.py` | Uzak görsel disk önbelleği (TTL 30g) · static max-age 7g |
 | `BursaApp/static/admin/` | Event-ticketing (Ventic) CSS/JS — Flask admin UI |
 | `BursaApp/static/app.css` | WanderAsia public UI (krem / orman yeşili / turuncu) · restoran detay `rd-*` |
+| `BursaApp/static/bursa-v2.css` | Canlı şehir rehberi v2 (emerald/slate) · header · hero · kategori matrisi · footer · tüm sayfa kabuğu |
+| `BursaApp/templates/_bv2_nav.html` | v2 nav makrosu — tasarım sekmeleri + market/gece/fatura/AI/okul ek linkleri |
+| `BursaApp/templates/home.html` | Ana sayfa v2 — hero · nöbetçi/teleferik canlı · `#kategoriler` `#nasil` `#sss` SEO |
+| `BursaApp/templates/_shell.html` | Site kabuğu v2 · canlı pulse bar · sticky header · bv2 footer/mtab · GA4 · JSON-LD head |
 | `BursaApp/templates/event_detail.html` | Tiyatro/konser/etkinlik detay — hero · geri sayım · platform bilet · hakkında · kurallar · mekan etkinlikleri |
 | `BursaApp/templates/detail.html` | Genel yer detay · **film** için Hikaye/Oyunculuk/Görsellik/Tempo yıldız değerlendirme |
 | `BursaApp/templates/restaurant_detail.html` | Yeme-içme detay — hero · menü kartları · bilgi grid · galeri · yorum |

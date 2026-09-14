@@ -1,26 +1,19 @@
-"""Ortak üst kabuk — POLY / FOREX / KRİPTO. İşlem mantığı yok."""
+"""Ortak üst kabuk — POLY / KRİPTO / BAHİS. İşlem mantığı yok."""
 from __future__ import annotations
 
 import re
 
 WORLDS = (
     ("poly", "POLY", "/poly", "#C8F135", "#111"),
-    ("forex", "FOREX", "/forex/home", "#3D8BFD", "#fff"),
     ("kripto", "KRİPTO", "/kripto", "#FF6B2C", "#111"),
+    ("bahis", "BAHİS", "/bahis", "#F5C518", "#111"),
 )
-
-_FOREX_HTML = frozenset({
-    "FOREX_HTML", "FOREX_GRAFIK_HTML", "FOREX_CEMBYBIT_HTML", "FOREX_ISLEMLER_HTML",
-    "FOREX_ALGO2_HTML", "FOREX_GPSUSDT_HTML", "FOREX_GPS_ISLEMLER_HTML",
-    "FOREX_GPS2_HTML", "FOREX_GPS2_ISLEMLER_HTML",
-    "FOREX_BINB103_HTML", "FOREX_BINB103_ISLEMLER_HTML",
-    "FOREX_B103_HTML", "FOREX_B103_ISLEMLER_HTML",
-    "FOREX_FX_ALGOS_HTML", "FOREX_CEM02_HTML", "FOREX_CEM02_ISLEMLER_HTML",
-    "FOREX_OAPI_HTML", "FOREX_OAPI_ISLEMLER_HTML", "FOREX_YZA_HTML",
-})
 _KRIPTO_HTML = frozenset({
     "KRIPTO_FUTURE_HTML", "KRIPTO_YAPAY_ZEKA_ANALIZ_HTML",
     "KRIPTO_LIDER_ANALIZ_HTML", "KRIPTO_JARVIS_HTML",
+})
+_BAHIS_HTML = frozenset({
+    "BAHIS_HTML",
 })
 
 _RE_BODY = re.compile(r"<body\b[^>]*>", re.I)
@@ -40,10 +33,10 @@ _RE_SISTEMLER = re.compile(
 
 
 def world_for_html(name: str) -> str:
-    if name in _FOREX_HTML:
-        return "forex"
     if name in _KRIPTO_HTML:
         return "kripto"
+    if name in _BAHIS_HTML:
+        return "bahis"
     return "poly"
 
 
@@ -100,7 +93,12 @@ body[data-world] .main-right{
   font:700 12px/1.35 Sora,system-ui,sans-serif;
   border-bottom:1px solid rgba(245,166,35,.35);text-align:center;
 }
-@media(max-width:800px){#fapi-ban-bar{left:0;top:0}}
+@media(max-width:800px){ #fapi-ban-bar{left:0;top:0}}
+body[data-world="bahis"] .dash-worldbar,
+body[data-world="bahis"] #fapi-ban-bar{display:none !important}
+body[data-world="bahis"] .main,
+body[data-world="bahis"] .desk,
+body[data-world="bahis"] #kf-main{margin-top:0 !important;padding-top:0}
 """
     )
 
@@ -161,7 +159,8 @@ def patch_dash_chrome(html: str, world: str = "poly") -> str:
             tag = re.sub(r'data-world="[^"]*"', f'data-world="{world}"', tag)
         else:
             tag = tag[:-1] + f' data-world="{world}">'
-        return tag + _bar(world)
+        extra = "" if world == "bahis" else _bar(world)
+        return tag + extra
 
     html, n = _RE_BODY.subn(_body, html, count=1)
     if n == 0:

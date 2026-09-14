@@ -4,10 +4,8 @@ Kaynakların o saatteki açık pozisyonuna bakar. Sinyal üretmez.
 Çatışma (biri UP biri DOWN) → açma.
 Sessiz = o defter o coinde pozisyon açmamış.
 
-Kademe (taban $36):
-  1 oy + 2 sessiz → $24
-  2 oy + 1 sessiz → $36
-  3 oy aynı yön  → $48
+Kademe A1 şeması, COMBO tutarları: sembol WR → $16 / $24 / $32 (veri yok → $24).
+Oy sayısı yalnız yön / çatışma içindir, tutarı belirlemez.
 """
 from __future__ import annotations
 
@@ -17,13 +15,13 @@ from pathlib import Path
 _DIR = Path(__file__).resolve().parent
 
 SOURCES = (
-    ("analiz1", "A1", _DIR / "poly_trader_analiz1_state.json"),
+    ("analiz1", "F16", _DIR / "poly_trader_analiz1_state.json"),
     ("c101", "C1#01", _DIR / "poly_trader_c101_state.json"),
     ("a2_05_v2", "A2#05 V2", _DIR / "poly_trader_a2_05_v2_state.json"),
 )
 SYMBOLS = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
-BASE_USD = 36.0
-STAKE_BY_VOTES = {1: 24.0, 2: 36.0, 3: 48.0}
+BASE_USD = 24.0
+STAKE_BY_VOTES = {1: 16.0, 2: 24.0, 3: 32.0}
 
 
 def _stake_by_votes() -> dict[int, float]:
@@ -129,9 +127,8 @@ def decide(symbol: str, hour_tr: int) -> dict:
         }
     direction = "UP" if ups else "DOWN"
     n = len(ballots)
-    stake = float(_stake_by_votes().get(n) or 0)
     return {
-        "allow": stake > 0,
+        "allow": True,
         "symbol": sym,
         "direction": direction,
         "stake": stake,

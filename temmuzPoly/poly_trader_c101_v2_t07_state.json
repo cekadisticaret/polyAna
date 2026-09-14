@@ -1,0 +1,43 @@
+{
+  "balance": 993.69,
+  "open_positions": [
+    {
+      "symbol": "BTCUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 79226.0,
+      "entry_time_tr": "2026-09-14T22:07:37.821936+03:00",
+      "entry_hour_tr": 22,
+      "entry_dow": 0,
+      "entry_is_weekend": false,
+      "amount": 15.9,
+      "algo_signal": "UP",
+      "algo_name": "OPUS-OHLCV V2 · gerçek ask'e karşı adil fiyat",
+      "c101_p_model": 0.3354,
+      "c101_pm_price": 0.29,
+      "c101_edge": 0.0454,
+      "c101_kelly": 0.016,
+      "c101_stake_mode": "wr_24_36_48",
+      "c101_sigma_eff": 0.003574,
+      "c101_z": -0.4373,
+      "c101_spot": 79110.39,
+      "c101_tilt": 0.0045,
+      "c101_depth_mult": 1.0,
+      "pm_slug": "bitcoin-up-or-down-september-14-2026-3pm-et",
+      "pm_title": "Bitcoin Up or Down - September 14, 3PM ET",
+      "pm_token_dir": "UP",
+      "pm_entry_price": 0.29,
+      "pm_quote_src": "book",
+      "pm_fill_vwap": 0.29,
+      "pm_mid_price": 0.265,
+      "pm_fee": 0.79271,
+      "pm_spent": 15.95,
+      "pm_size": 55.0,
+      "to_win": 55.0,
+      "pm_win_payout": 55.0,
+      "pm_win_profit": 38.26
+    }
+  ],
+  "total_pnl": -6.31,
+  "balance_reset_at_tr": "2026-09-14T10:34:21.420186+03:00",
+  "balance_reset_note": "t07 reset $1000"
+}

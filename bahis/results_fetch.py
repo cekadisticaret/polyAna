@@ -1,46 +1,30 @@
-"""Süper Lig sonuç + tahmin defteri. Cron: saatlik. Emir yok.
+"""Lig sonuç + tahmin defteri. Cron: saatlik. Emir yok.
 
   python3 bahis/results_fetch.py
 """
 from __future__ import annotations
 
 import csv
-import gzip
-import io
 import json
 import os
 import sys
-import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(_DIR, "data")
 BOOK = os.path.join(DATA, "results_book.json")
-FIX_JSON = os.path.join(DATA, "superlig_2026_fixtures.json")
-T1 = os.path.join(DATA, "T1_2627.csv")
-FD_URL = "https://www.football-data.co.uk/mmz4281/2627/T1.csv"
-FOTMOB = "https://www.fotmob.com/api/data/leagues?id=71"
-UA = {
-    "User-Agent": (
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-    ),
-    "Accept": "application/json,text/csv,*/*",
-    "Accept-Encoding": "gzip",
-}
 TR = ZoneInfo("Europe/Istanbul")
 
 sys.path.insert(0, os.path.dirname(_DIR))
 
-
-def _get(url: str, timeout: int = 40) -> bytes:
-    req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        raw = r.read()
-    if raw[:2] == b"\x1f\x8b":
-        raw = gzip.decompress(raw)
-    return raw
+from bahis.leagues_cfg import LEAGUES, set_league  # noqa: E402
+from bahis.fetch_leagues import (  # noqa: E402
+    fetch_euro_season,
+    fetch_fotmob_payload,
+    fotmob_fixture_rows,
+    write_fotmob_fixtures,
+)
 
 
 def _now() -> datetime:
@@ -64,91 +48,72 @@ def _save_book(pack: dict) -> None:
     os.replace(tmp, BOOK)
 
 
-def fetch_fd() -> tuple[int, str | None]:
-    try:
-        raw = _get(FD_URL)
-    except Exception as e:
-        return 0, f"fd: {e}"
-    text = raw.decode("utf-8-sig", errors="replace")
-    if "HomeTeam" not in text[:200]:
-        return 0, "fd: csv değil"
-    rows = list(csv.DictReader(io.StringIO(text)))
-    played = sum(1 for r in rows if (r.get("FTHG") or "").strip() != "")
-    with open(T1, "w", encoding="utf-8", newline="") as f:
-        f.write(text if text.endswith("\n") else text + "\n")
+def fetch_fd(lg: dict) -> tuple[int, str | None]:
+    if lg["kind"] == "bra":
+        from bahis.fetch_leagues import fetch_brazil
+        n, err = fetch_brazil()
+        return n, err
+    n, err = fetch_euro_season(lg["fd"], lg["current"])
+    if err == "yok":
+        return 0, "yok"
+    if err:
+        return 0, f"fd {lg['id']}: {err}"
+    dest = os.path.join(DATA, f"{lg['fd']}_{lg['current']}.csv")
+    played = 0
+    if os.path.isfile(dest):
+        with open(dest, encoding="utf-8-sig", newline="") as f:
+            played = sum(
+                1 for r in csv.DictReader(f)
+                if (r.get("FTHG") or r.get("HG") or "").strip() != ""
+            )
     return played, None
 
 
-def _fotmob_score(m: dict) -> tuple[int | None, int | None]:
-    st = m.get("status") or {}
-    if st.get("cancelled") or st.get("awarded"):
-        return None, None
-    hs = st.get("scoreStr") or m.get("score") or ""
-    if isinstance(hs, str) and "-" in hs and st.get("finished"):
-        a, b = hs.split("-", 1)
-        try:
-            return int(a.strip()), int(b.strip())
-        except ValueError:
-            pass
-    home = (m.get("home") or {}).get("score")
-    away = (m.get("away") or {}).get("score")
-    if home is not None and away is not None and st.get("finished"):
-        try:
-            return int(home), int(away)
-        except (TypeError, ValueError):
-            pass
-    return None, None
-
-
-def fetch_fotmob() -> tuple[list[dict], str | None]:
-    from bahis.league import _match_id, _parse_utc, team_info, team_key
-    try:
-        data = json.loads(_get(FOTMOB))
-    except Exception as e:
-        return [], f"fotmob: {e}"
-    matches = (
-        ((data.get("fixtures") or {}).get("allMatches"))
-        or ((data.get("overview") or {}).get("matches") or {}).get("allMatches")
-        or []
-    )
+def fetch_fotmob(lg: dict) -> tuple[list[dict], str | None]:
+    from bahis.league import _match_id, _parse_utc, team_info
+    set_league(lg["id"])
+    data, err = fetch_fotmob_payload(lg)
+    if err or data is None:
+        return [], err
+    rows = fotmob_fixture_rows(data)
+    write_fotmob_fixtures(lg, rows, data)
     out = []
-    for m in matches:
-        hn = (m.get("home") or {}).get("name") or ""
-        an = (m.get("away") or {}).get("name") or ""
-        if not hn or not an:
-            continue
-        utc = (m.get("status") or {}).get("utcTime") or m.get("utcTime") or ""
-        utc = str(utc).replace("Z", "").split(".")[0]
-        dt = _parse_utc(utc)
-        hg, ag = _fotmob_score(m)
-        mid = _match_id(dt, hn, an)
+    for row in rows:
+        hn = row.get("HomeTeam") or ""
+        an = row.get("AwayTeam") or ""
+        dt = _parse_utc(row.get("DateUtc") or "")
+        hg, ag = row.get("HomeTeamScore"), row.get("AwayTeamScore")
+        played = hg is not None and ag is not None
+        mid = _match_id(dt, hn, an, lg["id"])
         out.append({
             "id": mid,
+            "league": lg["id"],
             "home": team_info(hn)["key"],
             "away": team_info(an)["key"],
             "home_name": team_info(hn)["name"],
             "away_name": team_info(an)["name"],
             "kickoff": dt.isoformat() if dt else None,
-            "hg": hg,
-            "ag": ag,
-            "played": hg is not None and ag is not None,
-            "week": None,
+            "hg": int(hg) if played else None,
+            "ag": int(ag) if played else None,
+            "played": played,
+            "week": row.get("RoundNumber"),
             "src": "fotmob",
         })
-        _ = team_key
     return out, None
 
 
-def _patch_fixtures(scores: dict[str, tuple[int, int]]) -> int:
-    if not os.path.isfile(FIX_JSON) or not scores:
+def _patch_fixtures(lg: dict, scores: dict[str, tuple[int, int]]) -> int:
+    path = os.path.join(DATA, lg["fix_json"])
+    if not os.path.isfile(path) or not scores:
         return 0
     from bahis.league import _match_id, _parse_utc
-    with open(FIX_JSON, encoding="utf-8") as f:
+    set_league(lg["id"])
+    with open(path, encoding="utf-8") as f:
         rows = json.load(f)
     n = 0
     for row in rows:
         dt = _parse_utc(row.get("DateUtc") or "")
-        mid = _match_id(dt, row.get("HomeTeam") or "", row.get("AwayTeam") or "")
+        mid = _match_id(dt, row.get("HomeTeam") or "", row.get("AwayTeam") or "", lg["id"])
         sc = scores.get(mid)
         if not sc:
             continue
@@ -161,10 +126,10 @@ def _patch_fixtures(scores: dict[str, tuple[int, int]]) -> int:
         )
         n += 1
     if n:
-        tmp = FIX_JSON + ".tmp"
+        tmp = path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(rows, f, ensure_ascii=False)
-        os.replace(tmp, FIX_JSON)
+        os.replace(tmp, path)
     return n
 
 
@@ -176,7 +141,17 @@ def _actual(hg: int, ag: int) -> str:
     return "X"
 
 
-def _snapshot(mid: str, hk: str, ak: str, hn: str, an: str) -> dict:
+def _odds_taken(m: dict | None) -> dict:
+    od = (m or {}).get("odds") or {}
+    return {
+        "home": od.get("home"),
+        "draw": od.get("draw"),
+        "away": od.get("away"),
+    }
+
+
+def _snapshot(mid: str, hk: str, ak: str, hn: str, an: str,
+              m: dict | None = None) -> dict:
     from bahis.match_intel import _pick, _quick_models
     md = _quick_models(hk, ak)
     ens = md["ensemble"]
@@ -194,23 +169,19 @@ def _snapshot(mid: str, hk: str, ak: str, hn: str, an: str) -> dict:
             "ensemble": ens,
         },
         "xg": md["xg_n"],
+        "odds_taken": _odds_taken(m),
     }
 
 
-def refresh_book(extra: list[dict], src: list[str]) -> dict:
-    from bahis.league import all_matches, team_info
-    all_matches.cache_clear()
-    try:
-        from bahis.match_intel import _played
-        _played.cache_clear()
-    except Exception:
-        pass
-    pack = _load_book()
+def refresh_book(lg: dict, extra: list[dict], src: list[str], pack: dict) -> dict:
+    from bahis.league import all_matches, reload_matches
+    set_league(lg["id"])
+    reload_matches()
     book = pack.get("matches") or {}
     now = _now()
     by_extra = {r["id"]: r for r in extra}
-    for m in all_matches():
-        if m.get("season") != "2627":
+    for m in all_matches(lg["id"]):
+        if m.get("season") != lg["current"]:
             continue
         mid = m["id"]
         hk, ak = m["home"]["key"], m["away"]["key"]
@@ -221,12 +192,14 @@ def refresh_book(extra: list[dict], src: list[str]) -> dict:
         played = hg is not None and ag is not None
         row = book.get(mid) or {
             "id": mid,
+            "league": lg["id"],
             "home": hk,
             "away": ak,
             "home_name": hn,
             "away_name": an,
         }
         row.update({
+            "league": lg["id"],
             "home": hk, "away": ak,
             "home_name": hn, "away_name": an,
             "when": m.get("kickoff"),
@@ -237,14 +210,37 @@ def refresh_book(extra: list[dict], src: list[str]) -> dict:
             "played": played,
         })
         ko = m.get("kickoff") or ""
-        pre_ok = bool(ko and ko > now.isoformat())
-        # Maç başladıktan sonra çekilen ensemble geriye dönük uydurma —
-        # yalnız kickoff öncesi ilk snap kilitlenir ve notlanır.
+        horizon = now.isoformat()[:10]
+        from datetime import timedelta
+        until = (now + timedelta(days=21)).isoformat()
+        pre_ok = bool(ko and ko > now.isoformat() and ko <= until)
         if not row.get("pick") and pre_ok:
-            snap = _snapshot(mid, hk, ak, hn, an)
+            snap = _snapshot(mid, hk, ak, hn, an, m)
             row.update(snap)
             row["snap_ts"] = now.isoformat(timespec="seconds")
             row["snap_kind"] = "pre"
+        if pre_ok:
+            now_od = _odds_taken(m)
+            if now_od.get("home"):
+                hist = list(row.get("odds_line") or [])
+                last = hist[-1] if hist else None
+                changed = (not last) or any(
+                    last.get(k) != now_od.get(k) for k in ("home", "draw", "away")
+                )
+                if changed:
+                    rec = {"ts": now.isoformat(timespec="seconds"), **now_od}
+                    if last and last.get("home") and now_od.get("home"):
+                        from bahis.value import implied_raw
+                        rec["home_pts"] = round(
+                            (implied_raw(now_od["home"]) or 0) - (implied_raw(last["home"]) or 0), 4
+                        )
+                    hist.append(rec)
+                    row["odds_line"] = hist[-24:]
+                    row["odds_now"] = now_od
+                    if rec.get("home_pts") is not None and abs(rec["home_pts"]) >= 0.03:
+                        row["line_move"] = rec
+                if not row.get("odds_taken"):
+                    row["odds_taken"] = now_od
         if row.get("snap_kind") == "post":
             for k in ("pick", "text", "pct", "p1", "px", "p2", "models",
                       "xg", "snap_ts", "snap_kind", "hit", "result"):
@@ -256,47 +252,81 @@ def refresh_book(extra: list[dict], src: list[str]) -> dict:
                 row["hit"] = row.get("pick") == actual
             else:
                 row["hit"] = None
+            if row.get("pick") and row.get("odds_taken") and not row.get("clv"):
+                from bahis.value import append_clv, clv_1x2
+                close = ((m.get("odds") or {}).get("close") or m.get("odds") or {})
+                clv = clv_1x2(row["pick"], row.get("odds_taken"), close)
+                if clv:
+                    row["clv"] = clv
+                    append_clv({
+                        "id": mid,
+                        "league": lg["id"],
+                        "pick": row["pick"],
+                        "hit": row.get("hit"),
+                        **clv,
+                    })
         book[mid] = row
-        _ = team_info
     graded = [r for r in book.values() if r.get("hit") is not None]
     hits = sum(1 for r in graded if r.get("hit"))
-    pack = {
-        "updated": now.isoformat(timespec="seconds"),
-        "src": src,
-        "matches": book,
-        "stats": {
-            "n": len(graded),
-            "hits": hits,
-            "wr": round(hits / len(graded) * 100, 1) if graded else None,
-        },
+    from bahis.value import clv_stats
+    pack["updated"] = now.isoformat(timespec="seconds")
+    pack["src"] = list(dict.fromkeys((pack.get("src") or []) + src))
+    pack["matches"] = book
+    pack["stats"] = {
+        "n": len(graded),
+        "hits": hits,
+        "wr": round(hits / len(graded) * 100, 1) if graded else None,
     }
-    _save_book(pack)
+    pack["clv"] = clv_stats([
+        {"clv": (r.get("clv") or {}).get("clv"), "beat": (r.get("clv") or {}).get("beat")}
+        for r in book.values() if r.get("clv")
+    ])
     return pack
 
 
 def main() -> int:
-    src, notes = [], []
-    n_fd, err = fetch_fd()
-    if err:
-        notes.append(err)
-    else:
-        src.append("football-data")
-        notes.append(f"fd {n_fd} skorlu satır")
-    extra, ferr = fetch_fotmob()
-    if ferr:
-        notes.append(ferr)
-    else:
-        src.append("fotmob")
-        scored = {r["id"]: (r["hg"], r["ag"]) for r in extra if r.get("played")}
-        patched = _patch_fixtures(scored)
-        notes.append(f"fotmob {len(extra)} maç · {len(scored)} skor · fikstür +{patched}")
-    pack = refresh_book(extra, src)
+    pack = _load_book()
+    notes = []
+    for lg in LEAGUES:
+        src = []
+        n_fd, err = fetch_fd(lg)
+        if err == "yok":
+            notes.append(f"{lg['id']} fd yok")
+        elif err:
+            notes.append(err)
+        else:
+            src.append("football-data")
+            notes.append(f"{lg['id']} fd {n_fd}")
+        extra, ferr = fetch_fotmob(lg)
+        if ferr:
+            notes.append(ferr)
+            extra = []
+        else:
+            src.append("fotmob")
+            scored = {r["id"]: (r["hg"], r["ag"]) for r in extra if r.get("played")}
+            patched = _patch_fixtures(lg, scored)
+            notes.append(f"{lg['id']} fotmob {len(extra)} · skor {len(scored)} · +{patched}")
+        pack = refresh_book(lg, extra, src, pack)
+    _save_book(pack)
     st = pack.get("stats") or {}
     print(" · ".join(notes) or "kaynak yok")
     print(
         f"defter {st.get('n') or 0} not · isabet {st.get('hits') or 0}"
         f" · WR {st.get('wr')} · {pack.get('updated')}"
     )
+    from bahis.coupon_book import place_all
+    placed = place_all()
+    if placed:
+        print(f"kupon +{len(placed)}")
+    if "--no-tg" not in sys.argv:
+        from bahis.leagues_cfg import set_league
+        from bahis.notify import alert_value
+        sent = 0
+        for lg in LEAGUES:
+            set_league(lg["id"])
+            sent += alert_value()
+        if sent:
+            print(f"tg {sent}")
     return 0
 
 

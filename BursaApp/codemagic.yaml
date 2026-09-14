@@ -1,0 +1,103 @@
+workflows:
+  bursaapp-ios-native:
+    name: BursaApp iOS Native (SwiftUI)
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    working_directory: mobile-ios
+    integrations:
+      app_store_connect: bursaapp
+    environment:
+      vars:
+        BUNDLE_ID: com.bursaapp.mobile
+        APP_STORE_APPLE_ID: "6809813024"
+      xcode: latest
+      ios_signing:
+        provisioning_profiles:
+          - bursaapp_appstore
+        certificates:
+          - bursaapp_dist
+    scripts:
+      - name: Install XcodeGen
+        script: |
+          set -e
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+          xcodegen --version
+      - name: Resolve iOS build number
+        script: |
+          set -e
+          eval "$(bash scripts/ios_resolve_build.sh resolve project.yml | sed 's/^/export IOS_/')"
+          echo "App Store=$IOS_asc_latest · TestFlight=$IOS_tf_latest · local=+$IOS_local_build · son=$IOS_store_latest · YENİ=+$IOS_next_build"
+          bash scripts/ios_resolve_build.sh apply "$IOS_version_name" "$IOS_next_build" project.yml
+          echo "$IOS_version_name" > .ios_version_name
+          echo "$IOS_next_build" > .ios_build_number
+          grep CURRENT_PROJECT_VERSION project.yml
+      - name: Generate Xcode project
+        script: |
+          set -e
+          xcodegen generate
+          VERSION_NAME=$(cat .ios_version_name)
+          BUILD_NUMBER=$(cat .ios_build_number)
+          bash scripts/ios_resolve_build.sh apply-pbxproj "$VERSION_NAME" "$BUILD_NUMBER"
+          grep CURRENT_PROJECT_VERSION BursaApp.xcodeproj/project.pbxproj | head -3
+          ls -la BursaApp.xcodeproj
+      - name: Set up code signing
+        script: |
+          set -e
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
+          if [ ! -f "$HOME/export_options.plist" ]; then
+            echo "HATA: export_options.plist yok."
+            exit 1
+          fi
+          echo "✓ export_options.plist hazır"
+      - name: Build IPA
+        script: |
+          set -e
+          VERSION_NAME=$(cat .ios_version_name)
+          BUILD_NUMBER=$(cat .ios_build_number)
+          bash scripts/ios_resolve_build.sh apply-pbxproj "$VERSION_NAME" "$BUILD_NUMBER"
+          xcode-project build-ipa \
+            --project BursaApp.xcodeproj \
+            --scheme BursaApp \
+            --archive-flags "MARKETING_VERSION=$VERSION_NAME CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+          bash scripts/ios_resolve_build.sh verify-build "$BUILD_NUMBER"
+          mkdir -p artifacts
+          IPA="build/ios/ipa/BursaApp.ipa"
+          if [ ! -f "$IPA" ]; then IPA=$(find build/ios/ipa -name '*.ipa' | head -1); fi
+          cp "$IPA" artifacts/
+          ls -la artifacts/ build/ios/ipa/
+      - name: Upload to App Store Connect
+        script: |
+          set -e
+          BUILD_NUMBER=$(cat .ios_build_number)
+          ASC=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          TF=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          STORE_LATEST=0
+          for v in "$ASC" "$TF"; do
+            if [[ "$v" =~ ^[0-9]+$ ]] && [ "$v" -gt "$STORE_LATEST" ]; then STORE_LATEST=$v; fi
+          done
+          IPA="artifacts/BursaApp.ipa"
+          if [ ! -f "$IPA" ]; then IPA=$(find artifacts build/ios/ipa -name '*.ipa' 2>/dev/null | head -1); fi
+          if [ -z "$IPA" ] || [ ! -f "$IPA" ]; then echo "HATA: IPA yok"; exit 1; fi
+          IPA_BUILD=$(bash scripts/ios_resolve_build.sh ipa-build "$IPA")
+          echo "Store son=$STORE_LATEST · hedef=$BUILD_NUMBER · IPA CFBundleVersion=$IPA_BUILD · dosya=$IPA"
+          if [ "$IPA_BUILD" != "$BUILD_NUMBER" ]; then
+            echo "HATA: IPA build $IPA_BUILD != $BUILD_NUMBER"
+            exit 1
+          fi
+          if [ "$IPA_BUILD" -le "$STORE_LATEST" ]; then
+            echo "HATA: build $IPA_BUILD zaten App Store'da (son=$STORE_LATEST)"
+            exit 1
+          fi
+          if bash scripts/ios_resolve_build.sh should-upload "$IPA_BUILD" "$STORE_LATEST"; then
+            app-store-connect publish --path "$IPA"
+            echo "✓ Native IPA yüklendi (build $IPA_BUILD)"
+          else
+            echo "✓ Upload atlandı"
+          fi
+    artifacts:
+      - artifacts/*.ipa
+      - build/**/*.ipa

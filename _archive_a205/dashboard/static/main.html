@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>A2#05 — Mean Reversion</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/static/favicon.svg" />
+  <style>
+    :root {
+      --bg: #08080e;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: #2a2a38;
+      --text: #f4f4fa;
+      --muted: #7c7c94;
+      --violet: #8b5cf6;
+      --cyan: #22d3ee;
+      --lime: #c8ff00;
+      --up: #4ade80;
+      --down: #f87171;
+      --neutral: #6b7280;
+      --gap: 14px;
+      --radius: 18px;
+      --pad: 18px 20px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139,92,246,0.16), transparent),
+        radial-gradient(ellipse 50% 40% at 100% 0%, rgba(34,211,238,0.07), transparent);
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 24px 56px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+    }
+
+    /* header */
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 13px; letter-spacing: -0.4px;
+      box-shadow: 0 8px 28px rgba(139,92,246,0.3);
+      flex-shrink: 0;
+    }
+    .brand h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.15; }
+    .brand p { color: var(--muted); font-size: 12px; margin-top: 3px; }
+    .hero-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .pill {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+      padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border);
+      color: var(--muted); white-space: nowrap;
+    }
+    .pill.live-on { border-color: rgba(200,255,0,0.4); color: var(--lime); background: rgba(200,255,0,0.06); }
+    .pill.live-off { border-color: rgba(248,113,113,0.3); color: var(--down); }
+    .btn {
+      border: none; border-radius: 11px; padding: 9px 14px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #252532; }
+    .btn-accent {
+      background: linear-gradient(135deg, var(--violet), #6366f1);
+      border: none; color: #fff;
+    }
+    .btn-danger {
+      background: rgba(248,113,113,0.12);
+      border-color: rgba(248,113,113,0.3);
+      color: var(--down);
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      width: 100%;
+    }
+    .panel-title {
+      font-size: 11px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.08em; font-weight: 700; margin-bottom: 14px;
+    }
+
+    /* cron */
+    .cron {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      background: var(--surface2);
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+    }
+    .cron-item {
+      font-size: 12px;
+      display: flex; gap: 8px; align-items: center;
+      justify-content: center;
+    }
+    .cron-item strong { color: var(--cyan); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .cron-item span { color: var(--muted); }
+
+    /* signals — 3 equal cols */
+    .signals-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap);
+    }
+    .sig-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 210px;
+    }
+    .sig-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--neutral);
+    }
+    .sig-card.up::before { background: linear-gradient(90deg, var(--up), var(--lime)); }
+    .sig-card.down::before { background: linear-gradient(90deg, var(--down), #fb923c); }
+    .sig-top {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .sym { font-size: 18px; font-weight: 800; }
+    .dir-badge {
+      font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+      padding: 4px 10px; border-radius: 8px; min-width: 54px; text-align: center;
+    }
+    .dir-badge.up { background: rgba(74,222,128,0.15); color: var(--up); }
+    .dir-badge.down { background: rgba(248,113,113,0.15); color: var(--down); }
+    .dir-badge.neutral { background: rgba(107,114,128,0.2); color: var(--muted); }
+    .price {
+      font-size: 22px; font-weight: 700; margin-bottom: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+    .z-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .z-val {
+      font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums;
+      line-height: 1.2; margin-top: 2px;
+    }
+    .z-bar-wrap {
+      margin-top: auto; padding-top: 14px; height: 6px; background: var(--surface2);
+      border-radius: 999px; position: relative; overflow: hidden;
+    }
+    .z-bar-center {
+      position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
+      background: var(--border); transform: translateX(-50%);
+    }
+    .z-bar-fill {
+      position: absolute; top: 0; bottom: 0; border-radius: 999px;
+      transition: width 0.4s, left 0.4s;
+    }
+    .sym-stats { margin-top: 10px; font-size: 11px; color: var(--muted); }
+
+    /* metrics — 3 cols same as signals */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--gap);
+    }
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      min-height: 108px;
+      display: flex;
+      flex-direction: column;
+    }
+    .metric .lbl {
+      font-size: 10px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.08em; font-weight: 600;
+    }
+    .metric .val {
+      font-size: 26px; font-weight: 800; margin-top: 8px;
+      font-variant-numeric: tabular-nums; line-height: 1.1;
+    }
+    .metric .sub { font-size: 11px; color: var(--muted); margin-top: auto; padding-top: 8px; }
+    .pos { color: var(--up); }
+    .neg { color: var(--down); }
+
+    /* live book full width */
+    .book-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px;
+    }
+    .book-title { font-size: 15px; font-weight: 700; }
+    .book-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      padding: 4px 8px; border-radius: 6px;
+      background: rgba(248,113,113,0.12); color: var(--down);
+    }
+    .book-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap);
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .bs {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .bs .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .bs .val { font-size: 20px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+    .stake-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+    .stake-field label {
+      display: block; font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+    }
+    .stake-field input {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .stake-field input:focus { outline: none; border-color: var(--violet); }
+    .stake-actions { display: flex; align-items: end; }
+    .stake-actions .btn { height: 42px; padding: 0 20px; }
+    .stake-hint {
+      font-size: 11px; color: var(--muted); margin-top: 12px;
+      line-height: 1.4;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left; padding: 8px 10px; font-size: 10px;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 11px 10px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    .empty {
+      text-align: center; color: var(--muted);
+      padding: 32px 16px; font-size: 13px; line-height: 1.5;
+    }
+
+    /* risk summary card */
+    .risk-card {
+      background: linear-gradient(135deg, #d4ff00 0%, #a8e600 100%);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      color: #10100a;
+    }
+    .risk-card .rc-label {
+      font-size: 12px; font-weight: 700; opacity: 0.7;
+    }
+    .risk-card .rc-value {
+      font-size: 34px; font-weight: 900; margin: 4px 0 16px;
+      font-variant-numeric: tabular-nums;
+    }
+    .rc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .rc-item .k { font-size: 11px; font-weight: 600; opacity: 0.65; }
+    .rc-item .v { font-size: 17px; font-weight: 800; margin-top: 3px; font-variant-numeric: tabular-nums; }
+    .rc-item .v.up { color: #14532d; }
+    .rc-item .v.down { color: #7f1d1d; }
+
+    /* live position cards */
+    .pos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+    .pos-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+    }
+    .pos-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .pos-sym { font-size: 18px; font-weight: 800; }
+    .pos-price {
+      font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums;
+      display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    }
+    .pos-delta { font-size: 13px; font-weight: 700; }
+    .pos-meta { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+    .pos-close {
+      margin-top: 12px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .pos-close .k { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .pos-close .v { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .pos-foot {
+      display: flex; justify-content: space-between; gap: 10px;
+      margin-top: 12px; font-size: 12px; flex-wrap: wrap;
+    }
+    .pos-foot .lbl { color: var(--muted); }
+
+    .hours {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 6px;
+    }
+    .hour-cell {
+      aspect-ratio: 1.4;
+      border-radius: 8px; font-size: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: var(--muted); background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+    .hour-cell.good { background: rgba(74,222,128,0.18); color: var(--up); border-color: rgba(74,222,128,0.3); }
+    .hour-cell.bad { background: rgba(248,113,113,0.14); color: var(--down); border-color: rgba(248,113,113,0.25); }
+    .hour-cell.mid { background: rgba(200,255,0,0.08); color: var(--lime); }
+
+    @media (max-width: 820px) {
+      .signals-grid, .metrics, .pos-grid { grid-template-columns: 1fr; }
+      .rc-grid { grid-template-columns: repeat(2, 1fr); }
+      .cron { grid-template-columns: 1fr; }
+      .cron-item { justify-content: flex-start; }
+      .stake-grid { grid-template-columns: 1fr; }
+      .stake-actions .btn { width: 100%; }
+      .hours { grid-template-columns: repeat(6, 1fr); }
+      .book-stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="brand">
+        <div class="logo">A2#05</div>
+        <div>
+          <h1>Mean Reversion</h1>
+          <p>Z-Score · BTC · ETH · SOL · Saatlik · Sadece Live</p>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <span class="pill" id="livePill">LIVE —</span>
+        <span class="pill" id="clock">—</span>
+        <button class="btn" onclick="redeemWins()">Redeem</button>
+        <button class="btn" onclick="refreshSignals()">Sinyal çek</button>
+        <button class="btn btn-accent" onclick="load()">Yenile</button>
+        <button class="btn btn-danger" id="liveBtn" onclick="toggleLive()">Live</button>
+      </div>
+    </div>
+
+    <div class="cron" id="cron"></div>
+    <div class="signals-grid" id="signals"></div>
+    <div class="metrics" id="metrics"></div>
+    <div class="risk-card" id="riskCard"></div>
+
+    <div class="panel">
+      <div class="panel-title">Açık pozisyonlar — anlık</div>
+      <div id="openPos"></div>
+    </div>
+
+    <div class="panel" id="books"></div>
+
+    <div class="panel">
+      <div class="panel-title">Saat bazlı başarı (live)</div>
+      <div class="hours" id="hourHeat"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">İşlem geçmişi</div>
+      <div id="trades"></div>
+    </div>
+  </div>
+
+  <script>
+    function fmtUsd(n) {
+      if (n == null) return '—';
+      return '$' + Number(n).toFixed(2);
+    }
+    function pnlCls(n) { return n >= 0 ? 'pos' : 'neg'; }
+    function sigCls(d) {
+      if (d === 'UP') return 'up';
+      if (d === 'DOWN') return 'down';
+      return 'neutral';
+    }
+    function zBar(z) {
+      const clamped = Math.max(-3, Math.min(3, z));
+      const pct = Math.abs(clamped) / 3 * 50;
+      const left = clamped < 0 ? 50 - pct : 50;
+      const color = z < -0.5 ? 'var(--up)' : z > 0.5 ? 'var(--down)' : 'var(--neutral)';
+      return `<div class="z-bar-wrap"><div class="z-bar-center"></div>
+        <div class="z-bar-fill" style="left:${left}%;width:${pct}%;background:${color}"></div></div>`;
+    }
+
+    function renderSignals(symbols) {
+      document.getElementById('signals').innerHTML = (symbols || []).map(s => `
+        <div class="sig-card ${sigCls(s.signal)}">
+          <div class="sig-top">
+            <span class="sym">${s.symbol}</span>
+            <span class="dir-badge ${sigCls(s.signal)}">${s.signal}</span>
+          </div>
+          <div class="price">$${Number(s.close).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+          <div class="z-label">Z-Score (20 bar)</div>
+          <div class="z-val" style="color:${s.z < -0.5 ? 'var(--up)' : s.z > 0.5 ? 'var(--down)' : 'var(--muted)'}">
+            ${s.z >= 0 ? '+' : ''}${s.z.toFixed(3)}
+          </div>
+          ${zBar(s.z)}
+          <div class="sym-stats">μ ${s.mean} · σ ${s.std}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderMetrics(d) {
+      const live = d.live || {};
+      const realPnl = d.equity != null && d.start_balance
+        ? +(d.equity - d.start_balance).toFixed(2)
+        : (live.pnl || 0);
+      document.getElementById('metrics').innerHTML = `
+        <div class="metric">
+          <div class="lbl">PM nakit</div>
+          <div class="val">${d.usdc_error ? '?' : fmtUsd(d.cash_usdc)}</div>
+          <div class="sub">${d.usdc_error ? (d.usdc_error_reason || 'Anahtar eksik') : 'serbest USDC'}</div>
+        </div>
+        <div class="metric">
+          <div class="lbl">Redeem bekleyen</div>
+          <div class="val ${d.redeemable > 0 ? 'pos' : ''}">${fmtUsd(d.redeemable)}</div>
+          <div class="sub">${(d.redeemable_items || []).length} kazanan pozisyon</div>
+        </div>
+        <div class="metric">
+          <div class="lbl">Gerçek P&L</div>
+          <div class="val ${pnlCls(realPnl)}">${realPnl >= 0 ? '+' : ''}${fmtUsd(realPnl)}</div>
+          <div class="sub">${live.wins || 0}W / ${live.losses || 0}L · defter ${(live.pnl || 0) >= 0 ? '+' : ''}${fmtUsd(live.pnl || 0)}</div>
+        </div>
+        <div class="metric">
+          <div class="lbl">Anlık toplam</div>
+          <div class="val">${fmtUsd(d.equity)}</div>
+          <div class="sub">başlangıç ${fmtUsd(d.start_balance)}${(d.chain && d.chain.manual_sells) ? ` · ${d.chain.manual_sells} elle satış` : ''}</div>
+        </div>
+      `;
+    }
+
+    function renderBooks(d) {
+      const live = d.live || {};
+      const a = d.amounts || {};
+      document.getElementById('books').innerHTML = `
+        <div class="book-header">
+          <span class="book-title">Gerçek PM — giriş tutarları</span>
+          <span class="book-tag">LIVE</span>
+        </div>
+        <div class="book-stats">
+          <div class="bs"><div class="lbl">Win rate</div><div class="val ${live.wr_pct >= 50 ? 'pos' : (live.wr_pct == null ? '' : 'neg')}">${live.wr_pct != null ? live.wr_pct + '%' : '—'}</div></div>
+          <div class="bs"><div class="lbl">İşlem</div><div class="val">${live.trades || 0}</div></div>
+          <div class="bs"><div class="lbl">Açık</div><div class="val">${live.open_count || 0}</div></div>
+        </div>
+        <div class="stake-grid">
+          <div class="stake-field">
+            <label>Low (WR &lt; 50%)</label>
+            <input id="stakeLow" type="number" min="0.5" step="0.5" value="${a.live_low}" />
+          </div>
+          <div class="stake-field">
+            <label>Mid</label>
+            <input id="stakeMid" type="number" min="0.5" step="0.5" value="${a.live_mid}" />
+          </div>
+          <div class="stake-field">
+            <label>High (WR &gt; 50%)</label>
+            <input id="stakeHigh" type="number" min="0.5" step="0.5" value="${a.live_high}" />
+          </div>
+          <div class="stake-actions">
+            <button class="btn btn-accent" onclick="saveStakes()">Kaydet</button>
+          </div>
+        </div>
+        <div class="stake-hint">Sembol win rate’e göre kademe seçilir. Kaydet → sonraki :05:00 live açılışta geçerli.</div>
+      `;
+    }
+
+    async function saveStakes() {
+      const low = parseFloat(document.getElementById('stakeLow').value);
+      const mid = parseFloat(document.getElementById('stakeMid').value);
+      const high = parseFloat(document.getElementById('stakeHigh').value);
+      const r = await fetch('/api/a205/amounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ low, mid, high }),
+      });
+      const j = await r.json();
+      if (!j.ok) { alert(j.error || 'Kayıt başarısız'); return; }
+      load();
+    }
+
+    function renderRisk(d) {
+      const pnl = d.pnl_open || 0;
+      document.getElementById('riskCard').innerHTML = `
+        <div class="rc-label">Toplam riskteki</div>
+        <div class="rc-value">${fmtUsd(d.risk_total)}</div>
+        <div class="rc-grid">
+          <div class="rc-item">
+            <div class="k">Kazanılacak</div>
+            <div class="v">${d.to_win_total ? fmtUsd(d.to_win_total) : '—'}</div>
+          </div>
+          <div class="rc-item">
+            <div class="k">Açık</div>
+            <div class="v">${d.open_count}</div>
+          </div>
+          <div class="rc-item">
+            <div class="k">Anlık kâr/zarar</div>
+            <div class="v ${pnl >= 0 ? 'up' : 'down'}">${pnl >= 0 ? '+' : '−'}${fmtUsd(Math.abs(pnl))}</div>
+          </div>
+          <div class="rc-item">
+            <div class="k">Anlık kapama toplamı</div>
+            <div class="v">${fmtUsd(d.close_total)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPositions(all) {
+      const open = all.filter(p => p.kind === 'live');
+      const el = document.getElementById('openPos');
+      if (!open.length) {
+        el.innerHTML = '<div class="empty">Şu an açık pozisyon yok — bir sonraki :05:00 live slotunda UP/DOWN sinyalde açılır</div>';
+        return;
+      }
+      const staleN = open.filter(p => p.is_stale).length;
+      const head = staleN
+        ? `<div class="empty" style="margin-bottom:10px;padding:10px 14px;border:1px solid var(--border);border-radius:12px">
+            ${staleN} eski slot pozisyonu (defterde açık, slot bitti) — cron kapatma bekleniyor
+          </div>`
+        : '';
+      el.innerHTML = head + `<div class="pos-grid">` + open.map(p => {
+        const dirTr = p.direction === 'UP' ? 'YÜKSELİR' : 'DÜŞER';
+        const win = p.winning;
+        const delta = p.spot_diff;
+        const deltaTxt = delta == null ? '' :
+          `<span class="pos-delta ${delta >= 0 ? 'pos' : 'neg'}">${delta >= 0 ? '+' : ''}${delta} (${p.spot_pct >= 0 ? '+' : ''}${p.spot_pct}%)</span>`;
+        const slot = p.hour_tr != null
+          ? `${String(p.hour_tr).padStart(2,'0')}:00–${String((p.hour_tr + 1) % 24).padStart(2,'0')}:00 İST` : '—';
+        return `
+          <div class="pos-card">
+            <div class="pos-head">
+              <span class="pos-sym">${p.symbol}${p.is_stale ? ' <span style="color:var(--muted);font-size:10px">eski slot</span>' : ''}</span>
+              <span class="dir-badge ${sigCls(p.direction)}">${dirTr}</span>
+            </div>
+            <div class="pos-price">
+              <span>${p.spot_now != null ? '$' + p.spot_now.toLocaleString(undefined, {maximumFractionDigits: 2}) : '—'}</span>
+              <span style="color:${win ? 'var(--up)' : 'var(--down)'}">${win == null ? '' : (win ? '✓' : '✗')}</span>
+              ${deltaTxt}
+            </div>
+            <div class="pos-meta">
+              Giriş: $${p.entry_price ?? '—'}<br/>
+              Saat slot: ${slot}
+            </div>
+            <div class="pos-close">
+              <div>
+                <div class="k">Anlık kapatma</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">token ${p.token_bid != null ? p.token_bid : '—'}</div>
+              </div>
+              <div class="v ${p.pnl_now >= 0 ? 'pos' : 'neg'}">${fmtUsd(p.close_value)}</div>
+            </div>
+            <div class="pos-foot">
+              <span><span class="lbl">Risk:</span> <b>${fmtUsd(p.amount)}</b></span>
+              <span><span class="lbl">Anlık:</span> <b class="${p.pnl_now >= 0 ? 'pos' : 'neg'}">${p.pnl_now >= 0 ? '+' : ''}${p.pnl_now.toFixed(2)}$${p.pnl_pct != null ? ` (${p.pnl_pct}%)` : ''}</b></span>
+              <span><span class="lbl">Kazanırsa:</span> <b class="pos">${fmtUsd(p.to_win)}${p.win_profit != null ? ` (+${p.win_profit.toFixed(2)})` : ''}</b></span>
+            </div>
+          </div>`;
+      }).join('') + `</div>`;
+    }
+
+    function renderCron(c) {
+      document.getElementById('cron').innerHTML = (c || []).map(x =>
+        `<div class="cron-item"><strong>${x.time}</strong> <span>${x.label}</span></div>`
+      ).join('');
+    }
+
+    function renderHours(hours) {
+      const cells = [];
+      for (let h = 0; h < 24; h++) {
+        const item = (hours || []).find(x => x.hour === h);
+        let cls = '';
+        if (item && item.trades >= 3) {
+          cls = item.wr_pct >= 55 ? 'good' : item.wr_pct < 45 ? 'bad' : 'mid';
+        }
+        cells.push(`<div class="hour-cell ${cls}" title="${item && item.trades ? item.wr_pct + '% (' + item.trades + ')' : 'veri yok'}">${String(h).padStart(2,'0')}</div>`);
+      }
+      document.getElementById('hourHeat').innerHTML = cells.join('');
+    }
+
+    async function load() {
+      try {
+        const r = await fetch('/api/a205');
+        const d = await r.json();
+
+        document.getElementById('clock').textContent = d.updated_at_tr + ' İST';
+        const liveOn = !d.control.a2_05_live_paused;
+        const pill = document.getElementById('livePill');
+        pill.textContent = liveOn ? 'LIVE AÇIK' : 'LIVE KAPALI';
+        pill.className = 'pill ' + (liveOn ? 'live-on' : 'live-off');
+        document.getElementById('liveBtn').textContent = liveOn ? 'Live kapat' : 'Live aç';
+
+        renderCron(d.cron);
+        renderSignals(d.symbols);
+        renderMetrics(d);
+        renderBooks(d);
+        renderHours(d.hour_stats);
+
+        renderRisk(d);
+        renderPositions(d.open_positions || []);
+
+        const trades = (d.recent_trades || []).filter(t => t.live);
+        document.getElementById('trades').innerHTML = trades.length ? `
+          <table>
+            <tr><th>Sembol</th><th>Tahmin</th><th>Gerçek</th><th>Sonuç</th><th>P&L</th><th>Zaman</th></tr>
+            ${trades.map(t => `<tr>
+              <td><b>${t.symbol}</b></td>
+              <td class="${sigCls(t.direction)}">${t.direction}</td>
+              <td>${t.actual || '—'}</td>
+              <td class="${t.win ? 'pos' : 'neg'}">${t.win ? '✓' : '✗'}</td>
+              <td class="${pnlCls(t.pnl)}">${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}$</td>
+              <td>${(t.exit_time_tr || t.entry_time_tr || '').slice(5, 16).replace('T', ' ')}</td>
+            </tr>`).join('')}
+          </table>` : '<div class="empty">Henüz kapanmış live işlem yok</div>';
+      } catch (e) { console.error(e); }
+    }
+
+    async function redeemWins() {
+      const btn = event?.target;
+      if (btn) { btn.disabled = true; btn.textContent = 'Redeem…'; }
+      try {
+        const r = await fetch('/api/redeem', { method: 'POST' });
+        const j = await r.json();
+        if (!j.ok) {
+          const err = (j.errors || []).map(e => e.title + ': ' + e.error).join('\n');
+          alert('Redeem kısmen başarısız: ' + (err || j.error || 'bilinmeyen hata'));
+        } else if (j.redeemed > 0) {
+          alert(`Redeem tamam: ${j.redeemed} pozisyon, +$${j.total_value.toFixed(2)} nakde geçti`);
+        } else {
+          alert('Redeem bekleyen kazanan pozisyon yok');
+        }
+        load();
+      } catch (e) {
+        alert('Redeem hatası: ' + e.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Redeem'; }
+      }
+    }
+
+    async function toggleLive() {
+      await fetch('/api/toggle/a2_05_live', { method: 'POST' });
+      load();
+    }
+    async function refreshSignals() {
+      const btn = event.target;
+      btn.disabled = true; btn.textContent = 'Çekiliyor…';
+      await fetch('/api/refresh_signals', { method: 'POST' });
+      btn.disabled = false; btn.textContent = 'Sinyal çek';
+      load();
+    }
+
+    load();
+    setInterval(load, 10000);
+  </script>
+</body>
+</html>

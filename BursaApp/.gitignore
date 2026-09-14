@@ -1,4 +1,5 @@
 .env
+.cursor/mcp.json
 data/notify_outbox.jsonl
 data/*.db
 data/*.db-journal

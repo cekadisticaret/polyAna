@@ -19,9 +19,11 @@ CATEGORIES = (
     {"key": "concert", "path": "/konserler", "label": "Konserler", "hint": "salon, açıkhava, stadyum"},
     {"key": "theater", "path": "/tiyatro", "label": "Tiyatro", "hint": "sahneler ve oyunlar"},
     {"key": "cinema", "path": "/sinema", "label": "Sinema", "hint": "salonlar ve vizyon"},
-    {"key": "fun", "path": "/eglence", "label": "Eğlence", "hint": "canlı müzik, bar, bowling, escape"},
+    {"key": "fun", "path": "/eglence", "label": "Eğlence", "hint": "bowling, escape, VR, oyun salonu"},
+    {"key": "nightlife", "path": "/gece-hayati", "label": "Gece hayatı", "hint": "bar, pub, gece kulübü, meyhane, canlı müzik"},
     {"key": "event", "path": "/etkinlikler", "label": "Etkinlikler", "hint": "tarihli takvim"},
     {"key": "org", "path": "/organizasyonlar", "label": "Organizasyonlar", "hint": "festival, dernek, ajans"},
+    {"key": "wedding", "path": "/dugun-salonlari", "label": "Düğün salonları", "hint": "kapalı salon, bahçe, davet, fiyat"},
     {"key": "hospital", "path": "/hastaneler", "label": "Hastaneler", "hint": "devlet, özel, üniversite"},
     {"key": "doctor", "path": "/doktorlar", "label": "Doktorlar", "hint": "branş + bağlı olduğu hastane"},
     {"key": "dentist", "path": "/dis-hekimleri", "label": "Diş hekimleri", "hint": "ADSM, özel klinik, Dt."},
@@ -45,8 +47,10 @@ CAT_ICONS = {
     "theater": "🎭",
     "cinema": "🎬",
     "fun": "🎳",
+    "nightlife": "🍸",
     "event": "📅",
     "org": "🏛",
+    "wedding": "💒",
     "hospital": "🏥",
     "doctor": "🩺",
     "dentist": "🦷",
@@ -159,10 +163,19 @@ CAT_PROMO_META = {
     "fun": {
         "tone": "sand",
         "pill_tone": "blue",
-        "before": "Gece & ",
-        "pill": "eğlence",
-        "after": " mekanları",
+        "before": "Aktivite: ",
+        "pill": "bowling",
+        "after": " & escape",
         "cta": "Keşfet",
+        "img": "visit/kale-sokak.jpg",
+    },
+    "nightlife": {
+        "tone": "indigo",
+        "pill_tone": "orange",
+        "before": "Bursa ",
+        "pill": "gece hayatı",
+        "after": " rehberi",
+        "cta": "Mekanları gör",
         "img": "visit/kale-sokak.jpg",
     },
     "event": {
@@ -182,6 +195,15 @@ CAT_PROMO_META = {
         "after": "",
         "cta": "Listele",
         "img": "visit/inkaya-cinari.jpg",
+    },
+    "wedding": {
+        "tone": "rose",
+        "pill_tone": "orange",
+        "before": "Bursa ",
+        "pill": "düğün salonu",
+        "after": " rehberi",
+        "cta": "Salonları gör",
+        "img": "visit/koza-han.jpg",
     },
     "hospital": {
         "tone": "blush",
@@ -275,6 +297,7 @@ def category_promo_cards():
         "theater",
         "cinema",
         "fun",
+        "nightlife",
         "event",
         "org",
         "doctor",
@@ -431,6 +454,23 @@ MEKAN_TAXONOMY = {
         ("manzara", "Manzara"),
         ("hat", "Teleferik"),
     ),
+    "wedding": (
+        ("kapali-salon", "Kapalı salon"),
+        ("acik-hava", "Açık hava / bahçe"),
+        ("davet", "Davet & balo"),
+        ("otel-salonu", "Otel salonu"),
+        ("belediye", "Belediye salonu"),
+    ),
+    "nightlife": (
+        ("gece-kulubu", "Gece kulübü"),
+        ("bar", "Bar"),
+        ("pub", "Pub"),
+        ("canli-muzik", "Canlı müzik"),
+        ("meyhane", "Meyhane"),
+        ("gazino", "Gazino"),
+        ("lounge", "Lounge"),
+        ("karaoke", "Karaoke"),
+    ),
     "school": (
         ("anaokul", "Anaokulu"),
         ("ilkokul", "İlkokul"),
@@ -474,7 +514,7 @@ CINEMA_KINDS = ("Vizyonda", "Salon")
 EVENT_KINDS = ("Festival", "Fuar", "Sahne", "Kent")
 FUN_KINDS = ("Canlı müzik", "Bar", "Bowling", "Escape", "AVM")
 ORG_KINDS = ("Belediye", "Dernek", "Ajans", "Fuar")
-GROUP_ILCE = frozenset(("food", "visit", "hotel", "camp", "vet", "hospital", "dentist", "shop", "market", "sport", "family", "school"))
+GROUP_ILCE = frozenset(("food", "visit", "hotel", "camp", "vet", "hospital", "dentist", "shop", "market", "sport", "family", "school", "wedding", "nightlife"))
 GROUP_BAND = frozenset(("doctor", "concert", "theater", "cinema", "event", "fun", "org"))
 KIND_BY_CAT = {
     "concert": CONCERT_KINDS,
@@ -798,6 +838,68 @@ def food_matches(
     return True
 
 
+def normalize_search_text(s: str) -> str:
+    s = (s or "").strip().lower()
+    tr = str.maketrans("ıİşŞğĞüÜöÖçÇ", "iissgguuoocc")
+    return s.translate(tr)
+
+
+FOOD_QUERY_HINTS: dict[str, str | None] = {
+    "iskender": "iskender",
+    "kebap": "kebap",
+    "kebab": "kebap",
+    "kofte": "inegol-kofte",
+    "köfte": "inegol-kofte",
+    "inegol": "inegol-kofte",
+    "inegöl": "inegol-kofte",
+    "pide": "pide",
+    "pideli": "pide",
+    "cantik": "cantik",
+    "cantık": "cantik",
+    "doner": "doner",
+    "döner": "doner",
+    "burger": "burger",
+    "balik": "balik",
+    "balık": "balik",
+    "kahvalti": "kahvalti",
+    "kahvaltı": "kahvalti",
+    "restoran": None,
+    "yemek": None,
+    "cafe": "cafe",
+    "kafe": "cafe",
+}
+
+
+def food_intent_for_query(q: str) -> str | None:
+    """Yemek araması gibi görünen sorgularda dish anahtarı (veya None)."""
+    n = normalize_search_text(q)
+    if not n:
+        return None
+    for key, _label in FOOD_DISH:
+        kn = key.replace("-", " ")
+        if key in n or kn in n:
+            return key
+    for hint, dish in FOOD_QUERY_HINTS.items():
+        if normalize_search_text(hint) in n:
+            return dish
+    for _key, label in FOOD_DISH:
+        if normalize_search_text(label) in n:
+            return _key
+    return None
+
+
+def food_suggest_for_query(db, q: str, *, limit: int = 8) -> tuple[list[dict], str | None]:
+    """Gezilecek aramasında yemek yönlendirmesi için kısa restoran listesi."""
+    dish = food_intent_for_query(q)
+    rows, _total = query_places(db, category="food", q=q or None, order="rating", limit=80)
+    places = [place_public(p) for p in rows]
+    if dish:
+        by_dish = [p for p in places if food_matches(p, dishes=[dish])]
+        if by_dish:
+            places = by_dish
+    return places[:limit], dish
+
+
 def slugify(text: str) -> str:
     s = (text or "").translate(_TR).lower()
     s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
@@ -838,10 +940,18 @@ def tags_dump(val) -> str:
 
 
 def display_rating(p) -> float | None:
-    """BursaApp puanı varsa onu, yoksa admin/Google puanını göster."""
+    """Kullanıcı puanı veya doğrulanmış admin puanı; OSM uydurma puan göstermez."""
     avg = getattr(p, "rating_avg", None)
     if avg is not None and float(avg) > 0:
         return float(avg)
+    try:
+        from models import place_extra
+
+        ex = place_extra(p)
+    except Exception:
+        ex = {}
+    if ex.get("rating_verified") is not True:
+        return None
     admin = getattr(p, "rating_admin", None)
     if admin is not None and float(admin) > 0:
         return float(admin)
@@ -965,10 +1075,41 @@ def place_public(p) -> dict:
     return d
 
 
+_YT_ID_RE = re.compile(
+    r"(?:youtube\.com/(?:embed/|watch\?v=|shorts/)|youtu\.be/|youtube-nocookie\.com/embed/)"
+    r"([A-Za-z0-9_-]{11})"
+)
+
+
+def youtube_video_id(url_or_id: str | None) -> str:
+    if not url_or_id or not isinstance(url_or_id, str):
+        return ""
+    s = url_or_id.strip()
+    m = _YT_ID_RE.search(s)
+    if m:
+        return m.group(1)
+    if len(s) == 11 and re.fullmatch(r"[A-Za-z0-9_-]+", s):
+        return s
+    return ""
+
+
+def youtube_embed_url(url_or_id: str | None) -> str:
+    vid = youtube_video_id(url_or_id)
+    if not vid:
+        return (url_or_id or "").strip() if isinstance(url_or_id, str) else ""
+    return f"https://www.youtube-nocookie.com/embed/{vid}?rel=0&modestbranding=1&playsinline=1"
+
+
+def youtube_watch_url(url_or_id: str | None) -> str:
+    vid = youtube_video_id(url_or_id)
+    return f"https://www.youtube.com/watch?v={vid}" if vid else ""
+
+
 def _place_extra_public(p) -> dict:
     from models import place_extra
 
     ex = place_extra(p)
+    trailer_raw = (ex.get("trailer_url") or "") if isinstance(ex.get("trailer_url") or "", str) else ""
     menu = ex.get("menu") or []
     gallery = ex.get("gallery") or []
     services = ex.get("services") or []
@@ -999,7 +1140,8 @@ def _place_extra_public(p) -> dict:
         "specialty_detail": (ex.get("specialty_detail") or "") if isinstance(ex.get("specialty_detail"), str) else "",
         "fee_note": (ex.get("fee_note") or "") if isinstance(ex.get("fee_note"), str) else "",
         "menu_url": (ex.get("menu_url") or "") if isinstance(ex.get("menu_url") or "", str) else "",
-        "trailer_url": (ex.get("trailer_url") or "") if isinstance(ex.get("trailer_url") or "", str) else "",
+        "trailer_url": youtube_embed_url(trailer_raw) if trailer_raw else "",
+        "trailer_watch_url": youtube_watch_url(trailer_raw) if trailer_raw else "",
         "reservation_note": (ex.get("reservation_note") or "")
         if isinstance(ex.get("reservation_note") or "", str)
         else "",

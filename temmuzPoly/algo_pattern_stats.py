@@ -29,7 +29,7 @@ _STATS_FILE = os.path.join(_DIR_POLY, "pattern_stats.json")
 BOOK_KEYS: list[str] = [
     "analiz1", "analiz2", "analiz6", "analiz6_v2", "analiz6_v3", "analiz15",
     "b1_01", "b1_02", "b1_mum",
-] + [f"a2_{i:02d}" for i in range(1, 18)] + ["analiz10"]
+] + [f"a2_{i:02d}" for i in range(1, 18)]
 
 MIN_N_WATCH = 8       # bu eşiğin altı gürültü sayılır, rapora girmez
 MIN_N_CONFIDENT = 20  # bu eşiği geçen kalıplar "güvenilir" etiketlenir
@@ -38,7 +38,7 @@ MIN_N_OVERLAP_RAW = 3  # ham JSON'a girmesi için minimum örtüşme (büyümeyi
 
 _LABELS = {
     "analiz1": "A1", "analiz2": "A2(SOL)", "analiz6": "A6", "analiz6_v2": "A6V2",
-    "analiz6_v3": "A6V3", "analiz10": "A10", "analiz15": "A15",
+    "analiz6_v3": "A6V3", "analiz15": "A15",
     "b1_01": "B1#01", "b1_02": "B1#02", "b1_mum": "B1#03 MUM",
 }
 

@@ -32,15 +32,49 @@ ILCELER = (
 )
 ILCE_NORM = {x.lower().replace("i", "ı"): x for x in ILCELER}
 
-OVERPASS = "https://overpass.kumi.systems/api/interpreter"
+OVERPASS = "https://overpass-api.de/api/interpreter"
+OVERPASS_FALLBACK = "https://overpass.kumi.systems/api/interpreter"
 PHOTON = "https://photon.komoot.io/api/"
 NOMINATIM = "https://nominatim.openstreetmap.org/search"
 BURSA_BBOX = "28.07,39.48,30.18,40.52"
 
+# İlçe kutuları — geniş Overpass sorgusu timeout yerine parça parça
+ILCE_BBOXES: dict[str, tuple[float, float, float, float]] = {
+    "Osmangazi": (40.12, 28.95, 40.22, 29.12),
+    "Nilüfer": (40.15, 28.85, 40.28, 29.05),
+    "Yıldırım": (40.16, 29.05, 40.24, 29.18),
+    "Mudanya": (40.30, 28.75, 40.42, 29.05),
+    "Gemlik": (40.38, 29.05, 40.48, 29.25),
+    "İnegöl": (39.95, 29.35, 40.12, 29.65),
+    "Mustafakemalpaşa": (39.90, 28.07, 40.08, 28.55),
+    "İznik": (40.38, 29.45, 40.48, 29.85),
+    "Kestel": (40.12, 29.15, 40.25, 29.35),
+    "Gürsu": (40.18, 29.15, 40.28, 29.28),
+    "Orhangazi": (40.42, 29.15, 40.52, 29.45),
+    "Karacabey": (40.20, 28.10, 40.38, 28.55),
+    "Yenişehir": (40.22, 29.45, 40.38, 29.75),
+    "Orhaneli": (39.82, 28.85, 40.02, 29.25),
+    "Büyükorhan": (39.62, 28.75, 39.92, 29.15),
+    "Harmancık": (39.58, 28.95, 39.82, 29.35),
+    "Keles": (39.72, 29.05, 39.95, 29.45),
+}
+
+NOMINATIM_TERMS = (
+    "diş kliniği",
+    "diş polikliniği",
+    "ağız diş sağlığı",
+    "diş hekimi",
+    "dental klinik",
+    "ortodonti",
+    "implant diş",
+    "estetik diş",
+)
+
 SKIP_NAME = re.compile(
     r"sokak|sokağı|cadde|bulvar|mahalle sınır|ilkokul|lise|fakülte inşaat|"
     r"konsolos|valiliği|koordinasyon|bedesten|dışkapı|dışkaya|dişçi sok|"
-    r"camii|ilkokulu|üniversitesi diş hekimliği fakültesi temel",
+    r"camii|ilkokulu|üniversitesi diş hekimliği fakültesi temel|"
+    r"mühendis|muhendis|elektrik elektronik|bilgisayar mühendis|fizibil|havadis",
     re.I,
 )
 DENTAL_NAME = re.compile(
@@ -100,16 +134,18 @@ def _has_coords(row: dict) -> bool:
 
 
 def is_verified(row: dict) -> bool:
-    """Yalnız teyitli kayıtlar — web, telefon, koordinat, el seçimi veya resmi ADSM."""
+    """Teyit: resmi ADSM, el seçimi, iletişim veya harita kaynağı + koordinat."""
     title = (row.get("title") or "").strip()
     if not title or title in REJECT_TITLES:
         return False
-    if INVENTED_TITLE.search(title) or "Merkez Diş" in title:
-        return False
-    if GENERIC_PRIVATE.match(title):
-        return False
-    slug = row.get("slug") or ""
     src = (row.get("source") or "").lower()
+    external = src in ("osm", "nominatim", "photon")
+    if not external:
+        if INVENTED_TITLE.search(title) or "Merkez Diş" in title:
+            return False
+        if GENERIC_PRIVATE.match(title):
+            return False
+    slug = row.get("slug") or ""
     tags = row.get("tags") or []
     if src.startswith("mhrs") or "mhrs" in tags:
         return True
@@ -121,7 +157,7 @@ def is_verified(row: dict) -> bool:
         _has_web(row) or _has_phone(row) or slug in ORIGINAL_SLUGS
     ):
         return True
-    if row.get("source") == "osm" and _has_coords(row):
+    if external and _has_coords(row) and is_dental_name(title, row):
         return True
     if title.startswith("Diş Hekimi ") and _has_coords(row):
         return True
@@ -224,70 +260,155 @@ def is_dental_name(name: str, tags: dict | None = None) -> bool:
     return bool(DENTAL_NAME.search(name))
 
 
+def _overpass_query(ql: str, *, cache_key: str, max_age_h: float = 72.0) -> list:
+    path = f"/tmp/{cache_key}.json"
+    if os.path.isfile(path) and os.path.getsize(path) > 80:
+        age_h = (time.time() - os.path.getmtime(path)) / 3600.0
+        if age_h <= max_age_h:
+            try:
+                return json.loads(open(path, encoding="utf-8").read())
+            except json.JSONDecodeError:
+                pass
+    for base in (OVERPASS, OVERPASS_FALLBACK):
+        req = urllib.request.Request(
+            base,
+            data=f"data={urllib.parse.quote(ql)}".encode(),
+            headers={"User-Agent": "BursaApp/1.0 (+https://bursaapp.com)"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=90) as resp:
+                els = json.loads(resp.read().decode()).get("elements") or []
+            json.dump(els, open(path, "w", encoding="utf-8"))
+            return els
+        except Exception as exc:
+            print(f"overpass fail {cache_key} ({base.split('/')[2]}): {exc}", flush=True)
+            time.sleep(2.5)
+    if os.path.isfile(path) and os.path.getsize(path) > 80:
+        try:
+            return json.loads(open(path, encoding="utf-8").read())
+        except json.JSONDecodeError:
+            pass
+    return []
+
+
+def _osm_row_from_el(el: dict, *, default_ilce: str) -> dict | None:
+    tags = el.get("tags") or {}
+    name = (tags.get("name") or tags.get("name:tr") or "").strip()
+    if not is_dental_name(name, tags):
+        return None
+    lat = el.get("lat") or (el.get("center") or {}).get("lat")
+    lng = el.get("lon") or (el.get("center") or {}).get("lon")
+    if lat is None or lng is None:
+        return None
+    band = infer_band(name, tags)
+    ilce = norm_ilce(tags.get("addr:district") or tags.get("addr:suburb") or "") or default_ilce
+    return {
+        "title": name,
+        "title_key": _title_key(name),
+        "lat": float(lat),
+        "lng": float(lng),
+        "ilce": ilce,
+        "address": addr_from_tags(tags) or f"{name}, {ilce}",
+        "phone": (tags.get("phone") or tags.get("contact:phone") or "")[:40],
+        "web": (tags.get("website") or tags.get("contact:website") or "")[:280],
+        "hours_text": (tags.get("opening_hours") or "Randevu ile")[:80],
+        "price_band": band,
+        "blurb": f"OpenStreetMap · {name[:80]}",
+        "tags": ["osm", "dis"],
+        "source": "osm",
+    }
+
+
 def fetch_osm() -> list[dict]:
-    boxes = (
-        (40.05, 28.75, 40.35, 29.35),
-        (39.48, 28.07, 40.05, 29.20),
-        (39.48, 29.20, 40.05, 30.18),
-        (40.05, 29.20, 40.52, 30.18),
-    )
+    """İlçe ızgarası — healthcare/amenity/office=dentist + isim araması."""
     out: list[dict] = []
     seen: set[str] = set()
-    for s, w, n, e in boxes:
-        q = f"""
-        [out:json][timeout:90];
+    for ilce, (s, w, n, e) in ILCE_BBOXES.items():
+        ql = f"""
+        [out:json][timeout:55];
         (
           node["healthcare"="dentist"]({s},{w},{n},{e});
           way["healthcare"="dentist"]({s},{w},{n},{e});
           node["amenity"="dentist"]({s},{w},{n},{e});
           way["amenity"="dentist"]({s},{w},{n},{e});
+          node["office"="dentist"]({s},{w},{n},{e});
+          way["office"="dentist"]({s},{w},{n},{e});
+          node["name"~"di[sş]|dental|dent |klini|ortodont|implant",i]({s},{w},{n},{e});
+          way["name"~"di[sş]|dental|dent |klini|ortodont|implant",i]({s},{w},{n},{e});
         );
         out center tags;
         """
-        req = urllib.request.Request(
-            OVERPASS,
-            data=f"data={urllib.parse.quote(q)}".encode(),
-            headers={"User-Agent": "BursaApp/1.0 (+https://bursaapp.com)"},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=100) as resp:
-                data = json.loads(resp.read().decode())
-        except Exception:
-            time.sleep(2)
-            continue
-        for el in data.get("elements") or []:
-            tags = el.get("tags") or {}
-            name = (tags.get("name") or tags.get("name:tr") or "").strip()
-            if not is_dental_name(name, tags):
+        cache_key = f"osm_dentist_{slugify(ilce)}"
+        els = _overpass_query(ql, cache_key=cache_key)
+        added = 0
+        for el in els:
+            row = _osm_row_from_el(el, default_ilce=ilce)
+            if not row:
                 continue
-            lat = el.get("lat") or (el.get("center") or {}).get("lat")
-            lng = el.get("lon") or (el.get("center") or {}).get("lon")
-            if lat is None or lng is None:
-                continue
-            tk = _title_key(name)
+            tk = row["title_key"]
             if tk in seen:
                 continue
             seen.add(tk)
-            band = infer_band(name, tags)
-            out.append(
-                {
-                    "title": name,
-                    "title_key": tk,
-                    "lat": lat,
-                    "lng": lng,
-                    "ilce": norm_ilce(tags.get("addr:district") or tags.get("addr:suburb") or ""),
-                    "address": addr_from_tags(tags),
-                    "phone": (tags.get("phone") or tags.get("contact:phone") or "")[:40],
-                    "web": (tags.get("website") or tags.get("contact:website") or "")[:280],
-                    "hours_text": (tags.get("opening_hours") or "Randevu ile")[:80],
-                    "price_band": band,
-                    "blurb": f"OpenStreetMap · {name[:80]}",
-                    "tags": ["osm", "dis"],
-                    "source": "osm",
-                }
+            out.append(row)
+            added += 1
+        print(f"  OSM {ilce}: +{added} (toplam {len(out)})", flush=True)
+        time.sleep(2.2)
+    return out
+
+
+def fetch_nominatim_ilce(*, limit_per_query: int = 20) -> list[dict]:
+    """Nominatim — ilçe × arama terimi (harita POI)."""
+    out: list[dict] = []
+    seen: set[str] = set()
+    for ilce in ILCELER:
+        for term in NOMINATIM_TERMS:
+            q = f"{term}, {ilce}, Bursa, Türkiye"
+            url = NOMINATIM + "?" + urllib.parse.urlencode(
+                {"q": q, "format": "json", "limit": str(limit_per_query), "countrycodes": "tr"}
             )
-        time.sleep(1)
+            req = urllib.request.Request(
+                url,
+                headers={"User-Agent": "BursaApp/1.0 (+https://bursaapp.com; dentist fetch)"},
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=25) as resp:
+                    hits = json.loads(resp.read().decode())
+            except Exception as exc:
+                print(f"  Nominatim {ilce}/{term}: {exc}", flush=True)
+                time.sleep(1.2)
+                continue
+            for hit in hits or []:
+                name = (hit.get("name") or (hit.get("display_name") or "").split(",")[0]).strip()
+                if not is_dental_name(name, hit):
+                    continue
+                try:
+                    la = float(hit["lat"])
+                    lng = float(hit["lon"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                tk = _title_key(name)
+                if tk in seen:
+                    continue
+                seen.add(tk)
+                out.append(
+                    {
+                        "title": name,
+                        "title_key": tk,
+                        "lat": la,
+                        "lng": lng,
+                        "ilce": norm_ilce(ilce),
+                        "address": (hit.get("display_name") or "")[:280],
+                        "phone": "",
+                        "web": "",
+                        "hours_text": "Randevu ile",
+                        "price_band": infer_band(name, hit),
+                        "blurb": f"Nominatim · {name[:80]}",
+                        "tags": ["nominatim", "dis"],
+                        "source": "nominatim",
+                    }
+                )
+            time.sleep(1.15)
     return out
 
 
@@ -570,11 +691,24 @@ def main() -> None:
             print(f"Photon uyarı ({exc})", flush=True)
             photon = []
 
+    print("Nominatim ilçe araması…", flush=True)
+    skip_nominatim = "--no-nominatim" in sys.argv
+    if skip_nominatim:
+        nominatim: list[dict] = []
+        print("Nominatim: atlandı", flush=True)
+    else:
+        try:
+            nominatim = fetch_nominatim_ilce()
+            print(f"Nominatim: {len(nominatim)}", flush=True)
+        except Exception as exc:
+            print(f"Nominatim uyarı ({exc})", flush=True)
+            nominatim = []
+
     curated = load_curated()
     doctors = load_doctors_dental()
     print(f"El seçimi: {len(curated)} · Doktor (Diş): {len(doctors)} · MHRS/resmi: {len(mhrs_official)}", flush=True)
 
-    merged = merge_all(mhrs_official, curated, osm, photon, doctors)
+    merged = merge_all(mhrs_official, curated, osm, photon, nominatim, doctors)
 
     if do_geocode:
         need = sum(1 for r in merged if r.get("lat") in (None, "") and (r.get("address") or r.get("title")))

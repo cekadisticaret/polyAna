@@ -1,0 +1,167 @@
+{
+  "ts_tr": "2026-08-29 23:45:42 +03",
+  "kind": "DELETE",
+  "path": "/root/aiProject/PROJECT.md",
+  "paths": [
+    "/root/aiProject/PROJECT.md"
+  ],
+  "watcher_pid": 769,
+  "processes": [
+    {
+      "pid": 847,
+      "ppid": "1",
+      "uid": "0",
+      "exe": "/usr/bin/python3.12",
+      "cwd": "/",
+      "cmd": "/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal"
+    },
+    {
+      "pid": 477626,
+      "ppid": "1",
+      "uid": "0",
+      "exe": "/usr/bin/python3.12",
+      "cwd": "/root/aiProject",
+      "cmd": "/usr/bin/python3 /root/aiProject/binance_ws_marks.py"
+    },
+    {
+      "pid": 1079995,
+      "ppid": "1079847",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/multiplex-server/e0e6952a313d583840d50b387ab40c7bba7e66b79d95be1f22b3e7fc0706ae74.js 9a4edb16-389f-492f-95f3-e00c275fe981 0"
+    },
+    {
+      "pid": 1080021,
+      "ppid": "1079847",
+      "uid": "0",
+      "exe": "/usr/bin/dash",
+      "cwd": "/root",
+      "cmd": "sh /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/bin/cursor-server --start-server --host 127.0.0.1 --port 0 --connection-token-file /run/user/0/cursor-remote-code.token.6ca0869f6193ac0d40fa6ae74ed01260 --teleme"
+    },
+    {
+      "pid": 1080033,
+      "ppid": "1080021",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/server-main.js --start-server --host 127.0.0.1 --port 0 --connection-token-file"
+    },
+    {
+      "pid": 1080084,
+      "ppid": "1080033",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out"
+    },
+    {
+      "pid": 1080098,
+      "ppid": "1080033",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher"
+    },
+    {
+      "pid": 1080552,
+      "ppid": "1080033",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=ptyHost --logsPath /root/.cursor-server/data/logs/2026082"
+    },
+    {
+      "pid": 1082407,
+      "ppid": "1080084",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root/aiProject",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProc"
+    },
+    {
+      "pid": 1083497,
+      "ppid": "1",
+      "uid": "0",
+      "exe": "/usr/bin/python3.12",
+      "cwd": "/root/aiProject",
+      "cmd": "/usr/bin/python3 /root/aiProject/web/poly_dashboard.py"
+    },
+    {
+      "pid": 1083960,
+      "ppid": "1083945",
+      "uid": "0",
+      "exe": "/usr/bin/dash",
+      "cwd": "/root/aiProject",
+      "cmd": "/bin/sh -c cd /root/aiProject && /usr/bin/python3 AgustosKripto/Test/runner.py scan >> /tmp/agustos_kripto_test_scan.log 2>&1"
+    },
+    {
+      "pid": 1083966,
+      "ppid": "1083960",
+      "uid": "0",
+      "exe": "/usr/bin/python3.12",
+      "cwd": "/root/aiProject",
+      "cmd": "/usr/bin/python3 AgustosKripto/Test/runner.py scan"
+    },
+    {
+      "pid": 1084555,
+      "ppid": "1080033",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out"
+    },
+    {
+      "pid": 1084568,
+      "ppid": "1080033",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher"
+    },
+    {
+      "pid": 1084622,
+      "ppid": "1084555",
+      "uid": "0",
+      "exe": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node",
+      "cwd": "/root/aiProject",
+      "cmd": "/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clie"
+    },
+    {
+      "pid": 1084792,
+      "ppid": "1084786",
+      "uid": "0",
+      "exe": "/usr/bin/dash",
+      "cwd": "/root/aiProject",
+      "cmd": "/bin/sh -c cd /root/aiProject && /usr/bin/python3 AgustosKripto/Test/runner.py trail >> /tmp/agustos_kripto_test_trail.log 2>&1"
+    },
+    {
+      "pid": 1084794,
+      "ppid": "1084792",
+      "uid": "0",
+      "exe": "/usr/bin/python3.12",
+      "cwd": "/root/aiProject",
+      "cmd": "/usr/bin/python3 AgustosKripto/Test/runner.py trail"
+    },
+    {
+      "pid": 2742133,
+      "ppid": "1",
+      "uid": "0",
+      "exe": "/opt/digitalocean/bin/droplet-agent",
+      "cwd": "/",
+      "cmd": "/opt/digitalocean/bin/droplet-agent"
+    }
+  ],
+  "git_status_short": "M AgustosKripto/Algoritmalar/data/algo1_02_history.json\n M AgustosKripto/Algoritmalar/data/algo1_02_state.json\n M AgustosKripto/Algoritmalar/data/algo1_03_history.json\n M AgustosKripto/Algoritmalar/data/algo1_03_state.json\n M AgustosKripto/Algoritmalar/data/algo1_04_history.json\n M AgustosKripto/Algoritmalar/data/algo1_04_state.json\n M AgustosKripto/Algoritmalar/data/algo1_05_history.json\n M AgustosKripto/Algoritmalar/data/algo1_05_state.json\n M AgustosKripto/Algoritmalar/data/algo1_06_history.json\n M AgustosKripto/Algoritmalar/data/algo1_06_state.json\n M AgustosKripto/Algoritmalar/data/algo1_07_history.json\n M AgustosKripto/Algoritmalar/data/algo1_07_state.json\n M AgustosKripto/Algoritmalar/data/algo1_08_history.json\n M AgustosKripto/Algoritmalar/data/algo1_08_state.json\n M AgustosKripto/Algoritmalar/data/algo1_09_history.json\n M AgustosKripto/Algoritmalar/data/algo1_09_state.json\n M AgustosKripto/Algoritmalar/data/algo1_10_history.json\n M AgustosKripto/Algoritmalar/data/algo1_10_state.json\n M AgustosKripto/Algoritmalar/data/algo1_11_history.json\n M AgustosKripto/Algoritmalar/data/algo1_11_state.json\n M AgustosKripto/Algoritmalar/data/algo1_12_history.json\n M AgustosKripto/Algoritmalar/data/algo1_12_state.json\n M AgustosKripto/Algoritmalar/data/algo1_16_history.json\n M AgustosKripto/Algoritmalar/data/algo1_16_state.json\n M AgustosKripto/Algoritmalar/data/algo1_17_history.json\n M AgustosKripto/Algoritmalar/data/algo1_17_state.json\n M AgustosKripto/Algoritmalar/data/algo1_18_history.json\n M AgustosKripto/Algoritmalar/data/algo1_18_state.json\n M AgustosKripto/Algoritmalar/data/algo1_19_history.json\n M AgustosKripto/Algoritmalar/data/algo1_19_state.json\n M AgustosKripto/Algoritmalar/data/algo1_20_history.json\n M AgustosKripto/Algoritmalar/data/algo1_20_state.json\n M AgustosKripto/Algoritmalar/data/algo1_21_history.json\n M AgustosKripto/Algoritmalar/data/algo1_21_state.json\n M AgustosKripto/Algoritmalar/data/algo1_25_history.json\n M AgustosKripto/Algoritmalar/data/algo1_25_state.json\n M AgustosKripto/Algoritmalar/data/algo1_26_history.json\n M AgustosKripto/Algoritmalar/data/algo1_26_state.json\n M AgustosKripto/Algoritmalar/data/algo1_27_history.json\n M AgustosKripto/Algoritmalar/data/algo1_27_state.json\n M AgustosKripto/Algoritmalar/data/algo1_28_history.json\n M AgustosKripto/Algoritmalar/data/algo1_28_state.json\n M AgustosKripto/Algoritmalar/data/algo1_29_history.json\n M AgustosKripto/Algoritmalar/data/algo1_29_state.json\n M AgustosKripto/Algoritmalar/data/algo1_30_history.json\n M AgustosKripto/Algoritmalar/data/algo1_30_state.json\n M AgustosKripto/Algoritmalar/data/algo1_31_history.json\n M AgustosKripto/Algoritmalar/data/algo1_31_state.json\n M AgustosKripto/Algoritmalar/data/algo1_32_history.json\n M AgustosKripto/Algoritmalar/data/algo1_32_state.json\n M AgustosKripto/Algoritmalar/data/algo1_33_history.json\n M AgustosKripto/Algoritmalar/data/algo1_33_state.json\n M AgustosKripto/Algoritmalar/data/algo1_34_history.json\n M AgustosKripto/Algoritmalar/data/algo1_34_state.json\n M AgustosKripto/Algoritmalar/data/algo1_35_history.json\n M AgustosKripto/Algoritmalar/data/algo1_35_state.json\n M AgustosKripto/Algoritmalar/data/algo1_36_history.json\n M AgustosKripto/Algoritmalar/data/algo1_36_state.json\n M AgustosKripto/Algoritmalar/data/algo1_37_history.json\n M AgustosKripto/Algoritmalar/data/algo1_37_state.json\n M AgustosKripto/Algoritmalar/data/algo1_38_history.json\n M AgustosKripto/Algoritmalar/data/algo1_38_state.json\n M AgustosKripto/Algoritmalar/data/algo1_39_history.json\n M AgustosKripto/Algoritmalar/data/algo1_39_state.json\n M AgustosKripto/Algoritmalar/data/algo_01_history.json\n M AgustosKripto/Algoritmalar/data/algo_01_state.json\n M AgustosKripto/Algoritmalar/data/algo_02_history.json\n M AgustosKripto/Algoritmalar/data/algo_02_state.json\n M AgustosKripto/Algoritmalar/data/algo_03_history.json\n M AgustosKripto/Algoritmalar/data/algo_03_state.json\n M AgustosKripto/Algoritmalar/data/algo_04_history.json\n M AgustosKripto/Algoritmalar/data/algo_04_state.json\n M AgustosKripto/Algoritmalar/data/algo_05_history.json\n M AgustosKripto/Algoritmalar/data/algo_05_state.json\n M AgustosKripto/Algoritmalar/data/algo_06_history.json\n M AgustosKripto/Algoritmalar/data/algo_06_state.json\n M AgustosKripto/Algoritmalar/data/algo_07_history.json\n M AgustosKripto/Algoritmalar/data/algo_07_state.json\n M AgustosKripto/Algoritmalar/data/algo_08_history.json\n M AgustosKripto/Algoritmalar/data/algo_08_state.json\n M AgustosKripto/Algoritmalar/data/algo_09_history.json\n M AgustosKripto/Algoritmalar/data/algo_09_state.json\n M AgustosKripto/Algoritmalar/data/algo_10_history.json\n M AgustosKripto/Algoritmalar/data/algo_10_state.json\n M AgustosKripto/Algoritmalar/data/algo_11_history.json\n M AgustosKripto/Algoritmalar/data/algo_11_state.json\n M AgustosKripto/Algoritmalar/data/algo_12_history.json\n M AgustosKripto/Algoritmalar/data/algo_12_state.json\n M AgustosKripto/Algoritmalar/data/algo_13_history.json\n M AgustosKripto/Algoritmalar/data/algo_13_state.json\n M AgustosKripto/Algoritmalar/data/algo_14_history.json\n M AgustosKripto/Algoritmalar/data/algo_14_state.json\n M AgustosKripto/Algoritmalar/data/algo_15_history.json\n M AgustosKripto/Algoritmalar/data/algo_15_state.json\n M AgustosKripto/Algoritmalar/data/algo_16_history.json\n M AgustosKripto/Algoritmalar/data/algo_16_state.json\n M AgustosKripto/Algoritmalar/data/algo_17_history.json\n M AgustosKripto/Algoritmalar/data/algo_17_state.json\n M AgustosKripto/Analizler/data/a10_history.json\n M AgustosKripto/Analizler/data/a10_state.json\n M AgustosKripto/Analizler/data/a1_history.json\n M AgustosKripto/Analizler/data/a1_state.json\n M AgustosKripto/Analizler/data/a2_history.json\n M AgustosKripto/Analizler/data/a2_state.json\n M AgustosKripto/Analizler/data/a6_history.json\n M AgustosKripto/Analizler/data/a6_state.json\n M AgustosKripto/Test/data/jarvis_v1_mapping.json\n M AgustosKripto/Test/data/test_a1_01_state.json\n M AgustosKripto/Test/data/test_a1_02_history.json\n M AgustosKripto/Test/data/test_a1_02_state.json\n M AgustosKripto/Test/data/test_a1_03_history.json\n M AgustosKripto/Test/data/test_a1_03_state.json\n M AgustosKripto/Test/data/test_a1_04_history.json\n M AgustosKripto/Test/data/test_a1_04_state.json\n M AgustosKripto/Test/data/test_a1_05_history.json\n M AgustosKripto/Test/data/test_a1_05_state.json\n M AgustosKripto/Test/data/test_a1_06_history.json\n M AgustosKripto/Test/data/test_a1_06_state.json\n M AgustosKripto/Test/data/test_a1_07_history.json\n M AgustosKripto/Test/data/test_a1_07_state.json\n M AgustosKripto/Test/data/test_a1_08_history.json\n M AgustosKripto/Test/data/test_a1_08_state.json\n M AgustosKripto/Test/data/test_a1_09_history.json\n M AgustosKripto/Test/data/test_a1_09_state.json\n M AgustosKripto/Test/data/test_a1_10_history.json\n M AgustosKripto/Test/data/test_a1_10_state.json\n M AgustosKripto/Test/data/test_a1_11_history.json\n M AgustosKripto/Test/data/test_a1_11_state.json\n M AgustosKripto/Test/data/test_a1_12_history.json\n M AgustosKripto/Test/data/test_a1_12_state.json\n M AgustosKripto/Test/data/test_a1_15_state.json\n M AgustosKripto/Test/data/test_a1_16_history.json\n M AgustosKripto/Test/data/test_a1_16_state.json\n M AgustosKripto/Test/data/test_a1_17_history.json\n M AgustosKripto/Test/data/test_a1_17_state.json\n M AgustosKripto/Test/data/test_a1_18_history.json\n M AgustosKripto/Test/data/test_a1_18_state.json\n M AgustosKripto/Test/data/test_a1_19_history.json\n M AgustosKripto/Test/data/test_a1_19_state.json\n M AgustosKripto/Test/data/test_a1_20_history.json\n M AgustosKripto/Test/data/test_a1_20_state.json\n M AgustosKripto/Test/data/test_a1_21_history.json\n M AgustosKripto/Test/data/test_a1_21_state.json\n M AgustosKripto/Test/data/test_a1_25_history.json\n M AgustosKripto/Test/data/test_a1_25_state.json\n M AgustosKripto/Test/data/test_a1_26_history.json\n M AgustosKripto/Test/data/test_a1_26_state.json\n M AgustosKripto/Test/data/test_a1_27_history.json\n M AgustosKripto/Test/data/test_a1_27_state.json\n M AgustosKripto/Test",
+  "git_status_deleted": "bash: line 1: rg: command not found",
+  "audit": "<no matches>",
+  "w_who": "system boot  2026-08-08 21:23\n           run-level 5  2026-08-08 21:23\nLOGIN      ttyS0        2026-08-08 21:23               869 id=tyS0\nLOGIN      tty1         2026-08-08 21:23               891 id=tty1",
+  "last_logins": "reboot   system boot  6.8.0-137-generi Sat Aug  8 21:23   still running\nreboot   system boot  6.8.0-137-generi Sat Aug  8 18:12 - 21:20  (03:07)\nroot     pts/0        162.243.188.66   Wed Apr  1 02:48 - 03:06  (00:18)\nroot     pts/0        31.143.164.218   Tue Mar 31 13:52 - 13:55  (00:03)\nroot     pts/0        198.211.111.194  Tue Mar 24 10:09 - 10:10  (00:01)\nroot     pts/0        162.243.188.66   Tue Mar 24 09:40 - 09:44  (00:03)\nroot     pts/0        95.70.209.54     Thu Mar 19 20:57 - 20:57  (00:00)\nreboot   system boot  6.8.0-106-generi Thu Mar 19 20:56 - 18:12 (141+21:15)\n\nwtmp begins Sun Mar 15 14:43:08 2026",
+  "dashboard_log_tail": "20.104.18.15 - - [29/Aug/2026 20:37:30] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:30] \"GET /poly/login HTTP/1.1\" 200 -\n20.104.18.15 - - [29/Aug/2026 20:37:30] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:31] \"GET /poly/login HTTP/1.1\" 200 -\n20.104.18.15 - - [29/Aug/2026 20:37:31] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:31] \"GET /poly/login HTTP/1.1\" 200 -\n20.104.18.15 - - [29/Aug/2026 20:37:31] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:31] \"GET /poly/login HTTP/1.1\" 200 -\n20.104.18.15 - - [29/Aug/2026 20:37:32] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:32] \"GET /poly/login HTTP/1.1\" 200 -\n20.104.18.15 - - [29/Aug/2026 20:37:32] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:32] \"GET /poly/login HTTP/1.1\" 200 -\n20.104.18.15 - - [29/Aug/2026 20:37:32] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:33] \"GET /poly/login HTTP/1.1\" 200 -\n20.104.18.15 - - [29/Aug/2026 20:37:33] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:33] \"GET /poly/login HTTP/1.1\" 200 -\n20.104.18.15 - - [29/Aug/2026 20:37:33] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:33] \"GET /poly/login HTTP/1.1\" 200 -\n20.104.18.15 - - [29/Aug/2026 20:37:34] \"GET /poly HTTP/1.1\" 302 -\n20.104.18.15 - - [29/Aug/2026 20:37:34] \"GET /poly/login HTTP/1.1\" 200 -\n95.70.223.196 - - [29/Aug/2026 20:37:47] \"GET /poly/api/fapi-status HTTP/1.1\" 200 -\n127.0.0.1 - - [29/Aug/2026 20:38:03] \"GET /forex/api/gpsusdt?limit=1 HTTP/1.1\" 200 -\n85.155.75.144 - - [29/Aug/2026 20:38:09] \"GET /poly/api/fapi-status HTTP/1.1\" 200 -\n85.155.75.144 - - [29/Aug/2026 20:38:10] \"GET /poly/api/a2-algoritmalar HTTP/1.1\" 200 -\n85.155.75.144 - - [29/Aug/2026 20:38:12] \"GET /poly/api/market-regime HTTP/1.1\" 200 -\n127.0.0.1 - - [29/Aug/2026 20:39:02] \"GET /forex/api/gpsusdt?limit=1 HTTP/1.1\" 200 -\n95.70.223.196 - - [29/Aug/2026 20:39:40] \"GET /poly/api/kripto/test HTTP/1.1\" 200 -\n127.0.0.1 - - [29/Aug/2026 20:40:02] \"GET /forex/api/gpsusdt?limit=1 HTTP/1.1\" 200 -\n209.38.120.96 - - [29/Aug/2026 20:40:08] \"GET /kripto/api/lider HTTP/1.1\" 200 -\n127.0.0.1 - - [29/Aug/2026 20:41:02] \"GET /forex/api/gpsusdt?limit=1 HTTP/1.1\" 200 -\n168.144.210.201 - - [29/Aug/2026 20:41:52] \"GET /poly/api/consensus HTTP/1.1\" 200 -\n127.0.0.1 - - [29/Aug/2026 20:42:02] \"GET /forex/api/gpsusdt?limit=1 HTTP/1.1\" 200 -\n66.228.40.100 - - [29/Aug/2026 20:42:21] \"GET /poly HTTP/1.1\" 302 -\n127.0.0.1 - - [29/Aug/2026 20:43:02] \"GET /forex/api/gpsusdt?limit=1 HTTP/1.1\" 200 -\n95.70.223.196 - - [29/Aug/2026 20:43:52] \"GET /poly/api/fapi-status HTTP/1.1\" 200 -\n127.0.0.1 - - [29/Aug/2026 20:44:02] \"GET /forex/api/gpsusdt?limit=1 HTTP/1.1\" 200 -\n34.123.170.104 - - [29/Aug/2026 20:44:11] \"GET /poly HTTP/1.1\" 302 -\n34.123.170.104 - - [29/Aug/2026 20:44:11] \"GET /poly/login HTTP/1.1\" 200 -\n34.123.170.104 - - [29/Aug/2026 20:44:11] \"GET /poly/login HTTP/1.1\" 200 -\n127.0.0.1 - - [29/Aug/2026 20:45:02] \"GET /forex/api/gpsusdt?limit=1 HTTP/1.1\" 200 -",
+  "extra": {
+    "kinds": [
+      "DELETE"
+    ],
+    "critical": true
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "slug": "liste-balik-20260913",
+  "title": "Bursa Balık: öne çıkan 5 mekan",
+  "h1": "Bursa Balık listesi — güncel seçim",
+  "desc": "Puan ve kayıt kalitesine göre Balık önerileri. Rezervasyon BursaApp’ten yapılmaz.",
+  "date": "2026-09-13",
+  "image": "/static/food/deniz-2.jpg",
+  "cta_path": "/yeme-icme?kind=balik",
+  "cta_label": "Balık listesi",
+  "kind": "yeme",
+  "generated": true,
+  "sections": [
+    {
+      "h2": "Öne çıkan Balık mekanları",
+      "paras": [
+        "<a href=\"/bursa-ayvalik-restaurant-mudanya\">Ayvalık Restaurant</a> — (Mudanya) — ★ 4.6 — Mudanya yolu. Balık, Ege tabağı.",
+        "<a href=\"/bursa-degirmencayir-restaurant\">Değirmençayır Restaurant</a> — (İnegöl) — ★ 4.2 — Dere kenarı, alabalık. Merkeze ~15 km.",
+        "<a href=\"/bursa-iskele-balik\">İskele Balık</a> — (Nilüfer) — ★ 4.2 — Nilüfer · İskele Balık. Ahmet Taner Kışlalı Cad.No:16D Ertuğrul, Nilüfer, Bursa",
+        "<a href=\"/bursa-assos-balikcisi\">Assos Balıkçısı</a> — (Nilüfer) — ★ 4.2 — Nilüfer · Assos Balıkçısı. Cumhuriyet, Nilüfer Hatun Cd. No:114, 16140 Nilüfer / Bursa, Türkiye",
+        "<a href=\"/bursa-fikret-balikcilik\">Fikret Balıkçılık</a> — (Nilüfer) — ★ 4.2 — Nilüfer · Fikret Balıkçılık. Beşevler Mahallesi, Alim Sokak No:2A/B, Nilüfer / Bursa",
+        "Tüm liste: <a href=\"/yeme-icme?kind=balik\">Bursa Balık mekanları</a>."
+      ]
+    },
+    {
+      "h2": "Nasıl kullanılır?",
+      "paras": [
+        "Detay sayfasında adres, saat ve harita linki var.",
+        "<a href=\"/rota\">Rota planlayıcı</a> ile aynı güne ekleyebilirsin."
+      ]
+    }
+  ],
+  "related": [
+    [
+      "bursa-da-kahvalti-nerede",
+      "Kahvaltı rehberi"
+    ],
+    [
+      "bursa-iskender-nerede-yenir",
+      "İskender rehberi"
+    ]
+  ]
+}

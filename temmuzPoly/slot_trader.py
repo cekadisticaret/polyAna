@@ -51,13 +51,15 @@ _STANDALONE: dict[str, str] = {
     "f16v2": "poly_trader_f16v2",
     "jarvis2026": "poly_trader_jarvis2026",
     "ref01": "poly_trader_ref01",
+    "ref02": "poly_trader_ref02",
+    "ref03": "poly_trader_ref03",
 }
 _A1_BATCH = "a1"
 _A2_BATCH = "a2"
 _F1_BATCH = "f1"
 _BOOK_ORDER = list(_STANDALONE) + [_A1_BATCH, _A2_BATCH, _F1_BATCH]
 # JARVIS serbest dakika — :05/:07 kopyası yeni açık açmaz (close settle eder).
-_SKIP_SLOT_OPEN = frozenset({"jarvis2026", "ref01"})
+_SKIP_SLOT_OPEN = frozenset({"jarvis2026", "ref01", "ref02", "ref03"})
 
 
 def _silence_telegram() -> None:

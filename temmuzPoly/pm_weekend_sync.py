@@ -41,7 +41,6 @@ def main() -> None:
     print(
         f"  analiz5={state['analiz5_paused']} "
         f"analiz2={state['analiz2_paused']} "
-        f"analiz10={state.get('analiz10_paused')} "
         f"analiz6_live={state.get('analiz6_live_paused')} "
         f"by={state.get('updated_by')}"
     )

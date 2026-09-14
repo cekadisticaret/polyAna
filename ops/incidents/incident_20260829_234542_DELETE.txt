@@ -1,0 +1,58 @@
+Zaman: 2026-08-29 23:45:42 +03
+Tür: DELETE
+Path: /root/aiProject/PROJECT.md
+
+=== Process şüpheliler ===
+pid=847 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+  cwd=/
+pid=477626 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /root/aiProject/binance_ws_marks.py
+  cwd=/root/aiProject
+pid=1079995 ppid=1079847 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/multiplex-server/e0e6952a313d583840d50b387ab40c7bba7e66b79d95be1f22b3e7fc0706ae74.js 9a4edb16-389f-492f-95f3-e00c275fe981 0
+  cwd=/root
+pid=1080021 ppid=1079847 uid=0 exe=/usr/bin/dash
+  cmd=sh /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/bin/cursor-server --start-server --host 127.0.0.1 --port 0 --connection-token-file /run/user/0/cursor-remote-code.token.6ca0869f6193ac0d40fa6ae74ed01260 --teleme
+  cwd=/root
+pid=1080033 ppid=1080021 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/server-main.js --start-server --host 127.0.0.1 --port 0 --connection-token-file
+  cwd=/root
+pid=1080084 ppid=1080033 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out
+  cwd=/root
+pid=1080098 ppid=1080033 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=1080552 ppid=1080033 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=ptyHost --logsPath /root/.cursor-server/data/logs/2026082
+  cwd=/root
+pid=1082407 ppid=1080084 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProc
+  cwd=/root/aiProject
+pid=1083497 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /root/aiProject/web/poly_dashboard.py
+  cwd=/root/aiProject
+pid=1083960 ppid=1083945 uid=0 exe=/usr/bin/dash
+  cmd=/bin/sh -c cd /root/aiProject && /usr/bin/python3 AgustosKripto/Test/runner.py scan >> /tmp/agustos_kripto_test_scan.log 2>&1
+  cwd=/root/aiProject
+pid=1083966 ppid=1083960 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 AgustosKripto/Test/runner.py scan
+  cwd=/root/aiProject
+pid=1084555 ppid=1080033 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out
+  cwd=/root
+pid=1084568 ppid=1080033 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=1084622 ppid=1084555 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clie
+  cwd=/root/aiProject
+
+=== git status (D) ===
+bash: line 1: rg: command not found
+
+=== audit ===
+<no matches>
+
+Tam JSON: /root/aiProject/ops/incidents/incident_20260829_234542_DELETE.json

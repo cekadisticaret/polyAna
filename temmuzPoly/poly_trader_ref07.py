@@ -60,15 +60,15 @@ _A2_05_SIGNAL_FILE = "/tmp/algo_signals_v2.json"
 # ── Ask seviyesi kademe tablosu ─────────────────────────────────
 _ASK_TIER_MIN_N  = 5
 _ASK_BAND_MIN_N  = 2
-_ASK_DEFAULT_AMT = 12.0
+_ASK_DEFAULT_AMT = 8.0
 
 
 def ask_tier_amount(history: list, ask_price: float) -> float:
     """Geçmiş WR'ye göre ask-bazlı stake döndürür (REF04 ile aynı mantık)."""
     def _wr_to_amt(wr: float) -> float:
-        if wr >= 0.65: return 20.0
-        if wr >= 0.50: return 16.0
-        return 12.0
+        if wr >= 0.65: return 12.0
+        if wr >= 0.50: return 10.0
+        return 8.0
 
     lvl = round(ask_price, 2)
     band_lo = round(int(ask_price * 20) / 20, 2)

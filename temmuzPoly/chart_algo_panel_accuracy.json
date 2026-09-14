@@ -1,73 +1,73 @@
 {
   "ALG1_5m": {
-    "total": 13262,
-    "correct": 6543,
+    "total": 4589,
+    "correct": 2274,
     "by_sym": {
       "BTC": {
-        "total": 4511,
-        "correct": 2243
+        "total": 1544,
+        "correct": 747
       },
       "ETH": {
-        "total": 4527,
-        "correct": 2197
+        "total": 1538,
+        "correct": 788
       },
       "SOL": {
-        "total": 4224,
-        "correct": 2103
+        "total": 1507,
+        "correct": 739
       }
     }
   },
   "ALG2_5m": {
-    "total": 12935,
-    "correct": 6657,
+    "total": 4484,
+    "correct": 2289,
     "by_sym": {
       "BTC": {
-        "total": 4391,
-        "correct": 2288
+        "total": 1512,
+        "correct": 788
       },
       "ETH": {
-        "total": 4428,
-        "correct": 2294
+        "total": 1506,
+        "correct": 765
       },
       "SOL": {
-        "total": 4116,
-        "correct": 2075
+        "total": 1466,
+        "correct": 736
       }
     }
   },
   "ALG1_15m": {
-    "total": 4591,
-    "correct": 2177,
+    "total": 1556,
+    "correct": 769,
     "by_sym": {
       "BTC": {
-        "total": 1547,
-        "correct": 748
+        "total": 524,
+        "correct": 259
       },
       "ETH": {
-        "total": 1547,
-        "correct": 716
+        "total": 522,
+        "correct": 274
       },
       "SOL": {
-        "total": 1497,
-        "correct": 713
+        "total": 510,
+        "correct": 236
       }
     }
   },
   "ALG2_15m": {
-    "total": 4476,
-    "correct": 2293,
+    "total": 1506,
+    "correct": 753,
     "by_sym": {
+      "SOL": {
+        "total": 496,
+        "correct": 252
+      },
       "BTC": {
-        "total": 1511,
-        "correct": 748
+        "total": 501,
+        "correct": 252
       },
       "ETH": {
-        "total": 1503,
-        "correct": 801
-      },
-      "SOL": {
-        "total": 1462,
-        "correct": 744
+        "total": 509,
+        "correct": 249
       }
     }
   }

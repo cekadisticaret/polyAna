@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2.Poly — A2#05</title>
+  <style>
+    :root {
+      --bg: #0d0d12;
+      --card: #16161f;
+      --text: #f2f2f7;
+      --muted: #8b8b9e;
+      --green: #b8ff3c;
+      --red: #ff5c5c;
+      --purple: linear-gradient(135deg, #6b4cff 0%, #a855f7 55%, #ec4899 100%);
+      --lime: linear-gradient(135deg, #d4ff00 0%, #a8e600 100%);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    .card {
+      border-radius: 24px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card.purple { background: var(--purple); color: #fff; }
+    .card.lime { background: var(--lime); color: #1a1a1a; }
+    .card-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; opacity: 0.85; }
+    .card-title { font-size: 13px; margin-top: 8px; opacity: 0.9; }
+    .card-value { font-size: 36px; font-weight: 800; margin: 6px 0; }
+    .card-sub { font-size: 12px; opacity: 0.8; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .panel {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 18px 20px;
+      border: 1px solid #252532;
+    }
+    .panel h2 { font-size: 13px; color: var(--muted); margin-bottom: 14px; font-weight: 600; }
+    .stat-row { display: flex; gap: 24px; margin-bottom: 16px; }
+    .stat-block .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat-block .val { font-size: 28px; font-weight: 800; margin-top: 4px; }
+    .pos { color: var(--green); }
+    .neg { color: var(--red); }
+    .strategy {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid #252532;
+      font-size: 14px;
+    }
+    .strategy:last-child { border-bottom: none; }
+    .strategy-name { font-weight: 600; }
+    .strategy-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .badge {
+      font-size: 11px; padding: 4px 10px; border-radius: 999px;
+      background: #252532; color: var(--muted);
+    }
+    .badge.on { background: rgba(184,255,60,0.15); color: var(--green); }
+    .btn {
+      border: none; border-radius: 12px; padding: 8px 14px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      background: #252532; color: var(--text);
+    }
+    .btn:hover { background: #32324a; }
+    .btn-primary { background: #6b4cff; color: #fff; }
+    .signals { display: flex; gap: 12px; flex-wrap: wrap; }
+    .sig {
+      background: #1e1e2a; border-radius: 12px; padding: 10px 16px;
+      font-size: 14px; font-weight: 600;
+    }
+    .sig.up { border: 1px solid rgba(184,255,60,0.4); color: var(--green); }
+    .sig.down { border: 1px solid rgba(255,92,92,0.4); color: var(--red); }
+    .sig.neutral { border: 1px solid #333; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #252532; }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .empty { color: var(--muted); font-size: 14px; padding: 20px 0; text-align: center; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .refresh-note { font-size: 12px; color: var(--muted); }
+    @media (max-width: 900px) {
+      .top, .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>2.Poly — A2#05 Mean Reversion</h1>
+    <div class="header-actions">
+      <span class="refresh-note" id="updated">Güncelleme —</span>
+      <button class="btn" onclick="refreshSignals()">Sinyal yenile</button>
+      <button class="btn btn-primary" onclick="load()">Yenile</button>
+    </div>
+  </div>
+
+  <div class="top">
+    <div class="card purple">
+      <div class="card-label">PORTFOLIO</div>
+      <div class="card-title">Toplam portföy</div>
+      <div class="card-value" id="portfolio">—</div>
+      <div class="card-sub">Sanal bakiye + USDC</div>
+    </div>
+    <div class="card purple">
+      <div class="card-label">CASH</div>
+      <div class="card-title">USDC bakiye</div>
+      <div class="card-value" id="cash">—</div>
+      <div class="card-sub" id="cashSub">Nakit</div>
+    </div>
+    <div class="card lime">
+      <div class="card-label">RİSK</div>
+      <div class="card-title">Toplam riskte</div>
+      <div class="card-value" id="risk">—</div>
+      <div class="card-sub" id="riskSub">Açık pozisyonlar</div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom: 16px;">
+    <h2>Sinyaller (saatlik)</h2>
+    <div class="signals" id="signals"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="stat-row">
+        <div class="stat-block">
+          <div class="label">Sanal — kazanma</div>
+          <div class="val pos" id="sanalWr">—</div>
+        </div>
+        <div class="stat-block">
+          <div class="label">Sanal — P&L</div>
+          <div class="val" id="sanalPnl">—</div>
+        </div>
+      </div>
+      <h2>Stratejiler</h2>
+      <div id="strategies"></div>
+    </div>
+    <div class="panel">
+      <h2>Açık pozisyonlar</h2>
+      <div id="openPos"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Son işlemler</h2>
+    <div id="trades"></div>
+  </div>
+
+  <script>
+    function fmtUsd(n) {
+      if (n == null || n === undefined) return '—';
+      return '$' + Number(n).toFixed(2);
+    }
+    function pnlClass(n) {
+      return n >= 0 ? 'pos' : 'neg';
+    }
+    function sigClass(d) {
+      if (d === 'UP') return 'up';
+      if (d === 'DOWN') return 'down';
+      return 'neutral';
+    }
+
+    async function load() {
+      try {
+        const r = await fetch('/api/status');
+        const d = await r.json();
+        document.getElementById('updated').textContent = 'Güncelleme ' + d.updated_at_tr;
+        document.getElementById('portfolio').textContent = fmtUsd(d.portfolio);
+        document.getElementById('cash').textContent = d.usdc_error ? '?' : fmtUsd(d.cash_usdc);
+        document.getElementById('cashSub').textContent = d.usdc_error ? 'PM bakiye okunamadı' : 'Nakit hazır';
+        document.getElementById('risk').textContent = fmtUsd(d.risk_total);
+        document.getElementById('riskSub').textContent =
+          d.open_count + ' açık · kazanılacak ' + fmtUsd(d.to_win_total);
+
+        const sig = d.signals || {};
+        document.getElementById('signals').innerHTML = ['BTC','ETH','SOL'].map(s =>
+          `<div class="sig ${sigClass(sig[s])}">${s}: ${sig[s] || '—'}</div>`
+        ).join('');
+
+        const sw = d.sanal_stats || {};
+        document.getElementById('sanalWr').textContent =
+          sw.wr_pct != null ? sw.wr_pct + '%' : '—';
+        document.getElementById('sanalWr').className = 'val ' + (sw.wr_pct >= 50 ? 'pos' : 'neg');
+        const sp = document.getElementById('sanalPnl');
+        sp.textContent = (sw.pnl >= 0 ? '+' : '') + fmtUsd(sw.pnl);
+        sp.className = 'val ' + pnlClass(sw.pnl);
+
+        document.getElementById('strategies').innerHTML = (d.strategies || []).map(s => `
+          <div class="strategy">
+            <div>
+              <div class="strategy-name">${s.label}</div>
+              <div class="strategy-meta">
+                ${s.wr_pct != null ? s.wr_pct + '%' : '—'}
+                · ${s.wins}W / ${s.losses}L
+                · ${s.pnl >= 0 ? '+' : ''}${s.pnl.toFixed(2)}$
+                · ${s.open_count} açık
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="badge ${s.open ? 'on' : ''}">${s.open ? 'açık' : 'kapalı'}</span>
+              ${s.id === 'a2_05_live' ? `<button class="btn" onclick="toggleLive()">${s.open ? 'Kapat' : 'Aç'}</button>` : ''}
+            </div>
+          </div>
+        `).join('');
+
+        const open = d.open_positions || [];
+        document.getElementById('openPos').innerHTML = open.length
+          ? `<table>
+              <tr><th>Tip</th><th>Sembol</th><th>Yön</th><th>Miktar</th><th>Giriş</th><th>Saat</th></tr>
+              ${open.map(p => `<tr>
+                <td>${p.kind}</td>
+                <td>${p.symbol}</td>
+                <td>${p.direction}</td>
+                <td>${fmtUsd(p.amount)}</td>
+                <td>${p.entry_price ?? '—'}</td>
+                <td>${p.hour_tr != null ? p.hour_tr + ':00' : '—'}</td>
+              </tr>`).join('')}
+            </table>`
+          : '<div class="empty">Şu an açık pozisyon yok</div>';
+
+        const trades = d.recent_trades || [];
+        document.getElementById('trades').innerHTML = trades.length
+          ? `<table>
+              <tr><th>Tip</th><th>Sembol</th><th>Yön</th><th>Sonuç</th><th>P&L</th><th>Zaman</th></tr>
+              ${trades.map(t => `<tr>
+                <td>${t.live ? 'live' : 'sanal'}</td>
+                <td>${t.symbol}</td>
+                <td>${t.direction} → ${t.actual || '—'}</td>
+                <td class="${t.win ? 'pos' : 'neg'}">${t.win ? 'WIN' : 'LOSS'}</td>
+                <td class="${pnlClass(t.pnl)}">${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}$</td>
+                <td>${(t.exit_time_tr || t.entry_time_tr || '').slice(0, 16)}</td>
+              </tr>`).join('')}
+            </table>`
+          : '<div class="empty">Henüz işlem yok</div>';
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function toggleLive() {
+      await fetch('/api/toggle/a2_05_live', { method: 'POST' });
+      load();
+    }
+
+    async function refreshSignals() {
+      await fetch('/api/refresh_signals', { method: 'POST' });
+      load();
+    }
+
+    load();
+    setInterval(load, 30000);
+  </script>
+</body>
+</html>

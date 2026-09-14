@@ -20,7 +20,7 @@ LOG = os.path.join(os.path.dirname(__file__), "data", "preds_log.csv")
 MAXG = 8
 MC_N = 6000
 W_POIS, W_ELO, W_XG = 0.40, 0.30, 0.30
-VALUE_EDGE = 0.05
+VALUE_EDGE = 0.04
 LAST_N = 10
 SAMPLE_MIN = 30
 SAMPLE_OK = 50
@@ -46,9 +46,14 @@ def _sample_pois(lam: float) -> int:
     return k - 1
 
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=8)
+def _played_for(league: str) -> tuple[dict, ...]:
+    return tuple(m for m in all_matches(league) if m.get("played") and m.get("hg") is not None)
+
+
 def _played() -> tuple[dict, ...]:
-    return tuple(m for m in all_matches() if m.get("played") and m.get("hg") is not None)
+    from bahis.leagues_cfg import current_league
+    return _played_for(current_league())
 
 
 def _league_means() -> dict:
@@ -205,21 +210,16 @@ def _pick(p: dict, h: str, a: str) -> tuple[str, str, int]:
 
 
 def _overround(odds: dict | None) -> dict | None:
-    raw = {}
-    for sel, field in (("1", "home"), ("X", "draw"), ("2", "away")):
-        o = (odds or {}).get(field)
-        if not o or o <= 1:
-            return None
-        raw[sel] = 1 / float(o)
-    tot = sum(raw.values())
-    if tot <= 0:
+    from bahis.value import fair_1x2
+    pack = fair_1x2(odds)
+    if not pack:
         return None
     return {
-        "sum": _round_p(tot),
-        "overround": _round_p(tot - 1),
-        "pct": round((tot - 1) * 100, 1),
-        "raw": {k: _round_p(v) for k, v in raw.items()},
-        "fair": {k: _round_p(v / tot) for k, v in raw.items()},
+        "sum": _round_p(pack["sum"]),
+        "overround": _round_p(pack["overround"]),
+        "pct": pack["pct"],
+        "raw": {k: _round_p(v) for k, v in pack["raw"].items()},
+        "fair": {k: _round_p(v) for k, v in pack["fair"].items()},
     }
 
 
@@ -248,17 +248,19 @@ def _value(probs: dict, odds: dict) -> list[dict]:
             continue
         implied = 1 / float(o)
         fair = (ov["fair"][sel] if ov else implied)
-        edge = probs[sel] - implied
-        ev = bm.evaluate_bet("m", "1X2", sel, probs[sel], float(o))
+        ev = bm.evaluate_bet(
+            "m", "1X2", sel, probs[sel], float(o), fair_implied=fair,
+        )
+        edge_f = probs[sel] - fair
         out.append({
             "sel": sel,
             "odds": round(float(o), 2),
             "model": _round_p(probs[sel]),
             "implied": _round_p(implied),
             "impliedFair": _round_p(fair),
-            "edge": _round_p(edge),
-            "edgeFair": _round_p(probs[sel] - fair),
-            "isValue": edge >= VALUE_EDGE,
+            "edge": _round_p(probs[sel] - implied),
+            "edgeFair": _round_p(edge_f),
+            "isValue": edge_f >= VALUE_EDGE,
             "stake": ev.get("suggested_stake") or 0,
             "kelly": ev.get("kelly_fraction_applied") or 0,
             "reason": ev.get("reject_reason") or "",
@@ -279,10 +281,8 @@ def _log(row: dict) -> None:
 
 
 def _find(mid: str) -> dict | None:
-    for m in all_matches():
-        if m["id"] == mid:
-            return m
-    return None
+    from bahis.league import find_match
+    return find_match(mid)
 
 
 def _ht_lambda(home: str, away: str) -> tuple[float, float, float, float]:
@@ -413,6 +413,7 @@ def detail(mid: str) -> dict:
     if not (odds.get("home") and odds.get("draw") and odds.get("away")):
         from bahis.league import h2h
         odds = h2h(hk, ak).get("odds") or odds
+    from bahis.features import pair_lambda
     lam_p, mu_p = simple_lambda(hk, ak)
     try:
         xg = _dc_fit().expected_goals(hk, ak)
@@ -420,8 +421,7 @@ def detail(mid: str) -> dict:
     except Exception:
         lam_d, mu_d = lam_p, mu_p
     lam_x, mu_x = xg_lambda(hk, ak)
-    lam = 0.40 * lam_p + 0.35 * lam_d + 0.25 * lam_x
-    mu = 0.40 * mu_p + 0.35 * mu_d + 0.25 * mu_x
+    lam, mu, feat = pair_lambda(hk, ak, m, fetch_inj=True)
     Mp, Mx = _matrix(lam_p, mu_p), _matrix(lam_x, mu_x)
     Me = _matrix(lam, mu)
     pp, pxg, pe = _from_matrix(Mp), _from_matrix(Mx), _from_matrix(Me)
@@ -574,7 +574,7 @@ def detail(mid: str) -> dict:
         },
         "models": {
             "poisson": {"lam": _round_p(lam_p), "mu": _round_p(mu_p), **{k: _round_p(pp[k]) for k in ("1", "X", "2")}},
-            "dixon": {"lam": _round_p(lam_d), "mu": _round_p(mu_d)},
+            "dixon": {"lam": _round_p(lam_d), "mu": _round_p(mu_d), **{k: _round_p(v) for k, v in _from_matrix(_matrix(lam_d, mu_d)).items() if k in ("1", "X", "2")}},
             "xg": {"lam": _round_p(lam_x), "mu": _round_p(mu_x), **{k: _round_p(pxg[k]) for k in ("1", "X", "2")}},
             "elo": {k: _round_p(elo_p[k]) for k in ("1", "X", "2")},
             "ensemble": {k: _round_p(ens[k]) for k in ("1", "X", "2")},
@@ -633,7 +633,60 @@ def detail(mid: str) -> dict:
                     "Canlıda pre-match model yetmez: maç içi xG, kırmızı kart ve momentum ile güncelle."
                 ),
             },
+            {
+                "id": "rest",
+                "ok": not (
+                    (feat.get("ctx") or {}).get("rest_h") is not None
+                    and (feat["ctx"]["rest_h"] < 3
+                         or ((feat.get("ctx") or {}).get("rest_a") is not None and feat["ctx"]["rest_a"] < 3))
+                ),
+                "title": "Dinlenme",
+                "text": (
+                    f"Ev {(feat.get('ctx') or {}).get('rest_h')} gün · dep {(feat.get('ctx') or {}).get('rest_a')} gün. "
+                    "3 günden az dinlenme λ'yı kısar."
+                ),
+            },
+            {
+                "id": "injury",
+                "ok": not ((feat.get("ctx") or {}).get("injuries") or {}).get("n_h")
+                and not ((feat.get("ctx") or {}).get("injuries") or {}).get("n_a"),
+                "title": "Sakat / kadro dışı",
+                "text": (
+                    f"Ev {((feat.get('ctx') or {}).get('injuries') or {}).get('n_h') or 0} · "
+                    f"dep {((feat.get('ctx') or {}).get('injuries') or {}).get('n_a') or 0}. "
+                    + (
+                        ", ".join(p.get("name") or "" for p in (((feat.get("ctx") or {}).get("injuries") or {}).get("home") or [])[:3])
+                        + " / "
+                        + ", ".join(p.get("name") or "" for p in (((feat.get("ctx") or {}).get("injuries") or {}).get("away") or [])[:3])
+                    ).strip(" /")
+                    if ((feat.get("ctx") or {}).get("injuries") or {}).get("ok")
+                    else "Fotmob kadro dışı yok veya henüz gelmedi."
+                ),
+            },
+            {
+                "id": "line",
+                "ok": True,
+                "title": "Oran hareketi",
+                "text": (
+                    f"Keskin para {((feat.get('ctx') or {}).get('line') or {}).get('sharp')} "
+                    f"(+{(((feat.get('ctx') or {}).get('line') or {}).get('d_imp') or 0)*100:.1f}p implied)."
+                    if (feat.get("ctx") or {}).get("line") and ((feat.get("ctx") or {}).get("line") or {}).get("sharp")
+                    else "Açılış/kapanış yok — satır hareketi yalnız football-data kapanmış maçlarda."
+                ),
+            },
         ],
+        "context": {
+            "rest_h": (feat.get("ctx") or {}).get("rest_h"),
+            "rest_a": (feat.get("ctx") or {}).get("rest_a"),
+            "shape_h": (feat.get("ctx") or {}).get("shape_h"),
+            "shape_a": (feat.get("ctx") or {}).get("shape_a"),
+            "line": (feat.get("ctx") or {}).get("line"),
+            "injuries": (feat.get("ctx") or {}).get("injuries"),
+            "elo_h": feat.get("elo_h"),
+            "elo_a": feat.get("elo_a"),
+            "blend": feat.get("blend"),
+            "notes": feat.get("notes"),
+        },
         "markets": {
             "result": {k: _round_p(ens[k]) for k in ("1", "X", "2")},
             "doubleChance": {"1X": _round_p(ens["1"] + ens["X"]), "12": _round_p(ens["1"] + ens["2"]), "X2": _round_p(ens["X"] + ens["2"])},
@@ -750,7 +803,8 @@ def detail(mid: str) -> dict:
     return out
 
 
-def _quick_models(hk: str, ak: str) -> dict:
+def _quick_models(hk: str, ak: str, match: dict | None = None) -> dict:
+    from bahis.features import pair_lambda
     lam_p, mu_p = simple_lambda(hk, ak)
     try:
         xg = _dc_fit().expected_goals(hk, ak)
@@ -758,20 +812,29 @@ def _quick_models(hk: str, ak: str) -> dict:
     except Exception:
         lam_d, mu_d = lam_p, mu_p
     lam_x, mu_x = xg_lambda(hk, ak)
-    pp, pxg = _from_matrix(_matrix(lam_p, mu_p)), _from_matrix(_matrix(lam_x, mu_x))
+    lam_b, mu_b, meta = pair_lambda(hk, ak, match, fetch_inj=False)
+    pp, pxg, pb = (
+        _from_matrix(_matrix(lam_p, mu_p)),
+        _from_matrix(_matrix(lam_x, mu_x)),
+        _from_matrix(_matrix(lam_b, mu_b)),
+    )
     elo_p = _elo_fit().predict_match(hk, ak)
     ens = _norm(_mix_1x2(
-        {"1": pp["1"], "X": pp["X"], "2": pp["2"]},
+        {"1": pb["1"], "X": pb["X"], "2": pb["2"]},
         {"1": elo_p["1"], "X": elo_p["X"], "2": elo_p["2"]},
         {"1": pxg["1"], "X": pxg["X"], "2": pxg["2"]},
     ))
-    lam = 0.40 * lam_p + 0.35 * lam_d + 0.25 * lam_x
-    mu = 0.40 * mu_p + 0.35 * mu_d + 0.25 * mu_x
     return {
         "poisson": {**{k: _round_p(pp[k]) for k in ("1", "X", "2")}},
         "xg": {**{k: _round_p(pxg[k]) for k in ("1", "X", "2")}},
         "ensemble": {k: _round_p(ens[k]) for k in ("1", "X", "2")},
-        "xg_n": {"home": _round_p(lam), "away": _round_p(mu)},
+        "xg_n": {"home": _round_p(lam_b), "away": _round_p(mu_b)},
+        "ou": {k: {"under": _round_p(v["under"]), "over": _round_p(v["over"])} for k, v in pb["ou"].items()},
+        "bttsYes": _round_p(pb["bttsYes"]),
+        "bttsNo": _round_p(pb["bttsNo"]),
+        "meta": meta,
+        "lam_dc": _round_p(lam_d),
+        "mu_dc": _round_p(mu_d),
     }
 
 
@@ -789,7 +852,7 @@ def upcoming_kind(kind: str, team: str | None = None, limit: int = 24) -> dict:
             continue
         if team and team not in (m["home"]["key"], m["away"]["key"]):
             continue
-        md = _quick_models(m["home"]["key"], m["away"]["key"])
+        md = _quick_models(m["home"]["key"], m["away"]["key"], m)
         if kind == "poisson":
             mr = md["poisson"]
         elif kind == "xg":
@@ -806,17 +869,24 @@ def upcoming_kind(kind: str, team: str | None = None, limit: int = 24) -> dict:
             "away": m["away"],
             "odds": m.get("odds") or {},
             "matchResult": mr,
+            "overUnder": md.get("ou"),
+            "bttsYes": md.get("bttsYes"),
+            "bttsNo": md.get("bttsNo"),
             "pick": pick,
             "text": text,
             "pct": pct,
             "xg": md["xg_n"],
+            "ctx": (md.get("meta") or {}).get("ctx") and {
+                "rest_h": ((md.get("meta") or {}).get("ctx") or {}).get("rest_h"),
+                "rest_a": ((md.get("meta") or {}).get("ctx") or {}).get("rest_a"),
+            },
         })
         if len(rows) >= limit:
             break
     return {
         "ok": True,
         "model": kind,
-        "note": f"{kind} · son {LAST_N} maç · ağırlık {int(W_POIS*100)}/{int(W_ELO*100)}/{int(W_XG*100)}",
+        "note": f"{kind} · DC+ELO λ · son {LAST_N} · {int(W_POIS*100)}/{int(W_ELO*100)}/{int(W_XG*100)}",
         "n": len(rows),
         "preds": rows,
         "strengths": [],

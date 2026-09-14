@@ -1,0 +1,63 @@
+{
+  "slug": "hafta-sonu-doga-golyazi-20260919",
+  "title": "Hafta sonu rotası: Göl ve köy · 19–20 Eylül",
+  "h1": "Hafta sonu rotası: Göl ve köy · 19–20 Eylül",
+  "desc": "Gölyazı, Misi veya Botanik — sakin tempo. Gerçek mekanlarla 2 günlük alternatif rota — Cumartesi · 19.09 / Pazar · 20.09.",
+  "date": "2026-09-14",
+  "image": "/static/cache/thumbs/golyazi-0743791c269f5462-640.jpg",
+  "cta_path": "/hafta-sonu",
+  "cta_label": "Hafta sonu planla",
+  "kind": "plan",
+  "generated": true,
+  "theme_id": "doga-golyazi",
+  "weekend_sat": "2026-09-19",
+  "weekend_sun": "2026-09-20",
+  "sections": [
+    {
+      "h2": "1. gün — Cumartesi · 19.09",
+      "image": "/static/cache/thumbs/golyazi-0743791c269f5462-640.jpg",
+      "paras": [
+        "<strong>10:00</strong> — Doğa: <a href=\"/bursa-golyazi\">Gölyazı</a> (Nilüfer) Yarımada balıkçı köyü, Apollonia izi. Gün batımı + nilüfer mevsimi. Reels’in favorisi.",
+        "<strong>12:30</strong> — Kahvaltı / öğle: <a href=\"/bursa-hasbihal-bahcesi-cumalikizik\">Hasbihal Bahçesi Cumalıkızık</a> (Yıldırım) Köy bahçesi serpme · menemen + pişi · Cumalıkızık’ın en çok yorumlanan sofralarından. ≈ 500 TL Ulaşım: Araç / taksi",
+        "<strong>15:00</strong> — Köy / park: <a href=\"/bursa-misi\">Misi Köyü</a> (Nilüfer) Nilüfer çayı, taş ev, şarap / kahvaltı. Merkeze yakın köy — metro durağı değil. Ulaşım: Araç / taksi",
+        "<strong>17:30</strong> — Cafe: <a href=\"/bursa-greenwich-coffee-fsm\">Greenwich Coffee · FSM</a> (Nilüfer) Specialty kahve · çalışma masası. ≈ 300 TL Ulaşım: Araç / taksi",
+        "<strong>20:00</strong> — Akşam yemeği: <a href=\"/bursa-sembol-ocakbasi-nilufer\">Sembol Ocakbaşı Nilüfer</a> (Nilüfer) Odunluk. Kebap / ocak, vale. Google ~4.8. ≈ 800 TL Ulaşım: Araç / taksi",
+        "Sakin tempo · gün batımı için erken çık.",
+        "Detay ve alternatifler: <a href=\"/rota\">rota planlayıcı</a> · <a href=\"/hafta-sonu\">hafta sonu fikirleri</a>."
+      ]
+    },
+    {
+      "h2": "2. gün — Pazar · 20.09",
+      "image": "/static/cache/thumbs/golyazi-0743791c269f5462-640.jpg",
+      "paras": [
+        "<strong>10:00</strong> — Doğa: <a href=\"/bursa-golyazi\">Gölyazı</a> (Nilüfer) Yarımada balıkçı köyü, Apollonia izi. Gün batımı + nilüfer mevsimi. Reels’in favorisi.",
+        "<strong>12:30</strong> — Kahvaltı / öğle: <a href=\"/bursa-hasbihal-bahcesi-cumalikizik\">Hasbihal Bahçesi Cumalıkızık</a> (Yıldırım) Köy bahçesi serpme · menemen + pişi · Cumalıkızık’ın en çok yorumlanan sofralarından. ≈ 500 TL Ulaşım: Araç / taksi",
+        "<strong>15:00</strong> — Köy / park: <a href=\"/bursa-misi\">Misi Köyü</a> (Nilüfer) Nilüfer çayı, taş ev, şarap / kahvaltı. Merkeze yakın köy — metro durağı değil. Ulaşım: Araç / taksi",
+        "<strong>17:30</strong> — Cafe: <a href=\"/bursa-nevada-coffee-fsm\">Nevada Coffee · FSM</a> (Nilüfer) Bursa cafe · Nilüfer. ≈ 300 TL Ulaşım: Araç / taksi",
+        "<strong>20:00</strong> — Akşam yemeği: <a href=\"/bursa-misi-masal-kahvalti\">Misi Masal Kahvaltı</a> (Nilüfer) Nilüfer Çayı kenarı sınırsız serpme · ödüllü kahvaltıcı · rezervasyon önerilir. ≈ 700 TL Ulaşım: Araç / taksi",
+        "Sakin tempo · gün batımı için erken çık.",
+        "Detay ve alternatifler: <a href=\"/rota\">rota planlayıcı</a> · <a href=\"/hafta-sonu\">hafta sonu fikirleri</a>."
+      ]
+    },
+    {
+      "h2": "Bütçe ve pratik",
+      "image": "/static/visit/koza-han.jpg",
+      "paras": [
+        "Tahmini harcama (2 kişi): Cumartesi ≈ 1600 TL · Pazar ≈ 1500 TL — yemek dahil, konaklama hariç.",
+        "Bilet ve oda rezervasyonu işletme/otel üzerinden; BursaApp satış yapmaz.",
+        "<a href=\"/hafta-sonu\">Hafta sonu planlayıcı</a> ile kişi sayısını değiştir."
+      ]
+    }
+  ],
+  "related": [
+    [
+      "bursa-hafta-sonu-2-gun",
+      "Genel 2 gün planı"
+    ],
+    [
+      "bursa-1-gunluk-gezi-plani",
+      "1 günde Bursa"
+    ]
+  ],
+  "est_total_tl": 3100
+}

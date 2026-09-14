@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Günlük Yedekleme — aiProject
-Her gün 23:59'da çalışır. Son 7 yedek tutulur, eskiler silinir.
+Günlük Yedekleme — aiProject (DURDURULDU 2026-09-09)
+
+Cron kaldırıldı — disk dolduğu için günlük tar.gz arşivi iptal.
+Elle çalıştırmak için: BACKUP_ENABLED=1 python3 BistAnaliz/backup.py
 Yedek konumu: /root/aiProject/backups/
 """
 
@@ -54,6 +56,9 @@ def create_backup():
     return filename
 
 if __name__ == "__main__":
+    if os.environ.get("BACKUP_ENABLED", "").strip() not in ("1", "true", "yes"):
+        log("⏸ Günlük yedekleme kapalı (BACKUP_ENABLED=1 ile elle açılır)")
+        raise SystemExit(0)
     log("─── Yedekleme başladı ───")
     create_backup()
     total = len([f for f in os.listdir(BACKUP_DIR) if f.endswith(".tar.gz")])

@@ -1,0 +1,78 @@
+{% extends "_shell.html" %}
+{% block page_head %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
+{% endblock %}
+{% block main %}
+<article class="seo-page">
+  <h1>Gizlilik politikası</h1>
+  <p class="lead">Bu metin <strong>BursaApp – Keşif</strong> mobil uygulaması (iOS) ve <strong>bursaapp.com</strong> web sitesi için geçerlidir. Son güncelleme: 9 Eylül 2026.</p>
+
+  <h2>1. Veri sorumlusu</h2>
+  <p>
+    BursaApp · bursaapp.com<br>
+    İletişim: <a href="/iletisim">İletişim sayfası</a> · e-posta: <a href="mailto:jemkaya@gmail.com">jemkaya@gmail.com</a>
+  </p>
+
+  <h2>2. Topladığımız veriler</h2>
+  <ul>
+    <li><strong>Hesap:</strong> ad soyad, e-posta, şifrenin şifrelenmiş özeti. E-posta doğrulaması isteğe bağlı değil; onaysız hesaplar belirli süre sonra silinebilir.</li>
+    <li><strong>Profil:</strong> isteğe bağlı profil fotoğrafı, puan ve topluluk içeriği (gönderi, yorum, beğeni).</li>
+    <li><strong>Konum:</strong> yalnızca siz izin verdiğinizde — harita / yakınımda özellikleri için cihaz konumu. Konum sunucuda kalıcı profil alanı olarak saklanmaz; yakın mekan sorgusu anlık yapılır.</li>
+    <li><strong>İçerik:</strong> eklediğiniz mekan, etkinlik ve fotoğraflar; yayın öncesi moderasyon uygulanabilir.</li>
+    <li><strong>Teknik:</strong> cihaz türü, uygulama sürümü, hata günlükleri, anonim kullanım istatistikleri (çerez / oturum tanımlayıcıları web tarafında).</li>
+  </ul>
+
+  <h2>3. Verileri neden kullanıyoruz</h2>
+  <ul>
+    <li>Hesabınızı oluşturmak, giriş yapmanızı sağlamak ve profilinizi göstermek</li>
+    <li>Bursa rehberi içeriğini sunmak (mekan, etkinlik, sağlık, haber vb.)</li>
+    <li>Topluluk özellikleri: akış, partner arama, yorum ve etkinlik paylaşımı</li>
+    <li>Kötüye kullanımı önlemek, spam ve sahte içeriği filtrelemek</li>
+    <li>Hizmeti geliştirmek ve hataları gidermek</li>
+  </ul>
+  <p>Verilerinizi <strong>satmıyoruz</strong> ve reklam ağlarına profil satışı yapmıyoruz.</p>
+
+  <h2>4. Üçüncü taraflar</h2>
+  <ul>
+    <li><strong>Harita:</strong> OpenStreetMap karoları (konum koordinatları harita sağlayıcısına gidebilir).</li>
+    <li><strong>Barındırma:</strong> site ve API sunucularımız (Türkiye / AB uyumlu altyapı).</li>
+    <li><strong>Analitik:</strong> web sitesinde anonim ziyaretçi ölçümü (ör. GA4); uygulama içinde kişisel profille eşleştirilmez.</li>
+  </ul>
+  <p>Ödeme kartı veya banka bilgisi <strong>toplanmaz</strong>; BursaApp ücretsiz bir rehberdir.</p>
+
+  <h2>5. Saklama süresi</h2>
+  <p>
+    Hesabınız aktif olduğu sürece verileriniz tutulur. Hesap silme veya e-posta onayı yapılmaması durumunda ilgili kayıtlar makul süre içinde silinir.
+    Yasal zorunluluk dışında pazarlama amaçlı liste tutulmaz.
+  </p>
+
+  <h2>6. Haklarınız (KVKK md. 11)</h2>
+  <p>
+    Kişisel verilerinize erişme, düzeltme, silme, işlemeyi kısıtlama ve itiraz etme haklarına sahipsiniz.
+    Taleplerinizi <a href="/iletisim">İletişim</a> veya <a href="mailto:jemkaya@gmail.com">jemkaya@gmail.com</a> üzerinden iletebilirsiniz.
+    Ayrıntılı KVKK metni için <a href="/kvkk">KVKK sayfasına</a> bakın.
+  </p>
+
+  <h2>7. Çocuklar</h2>
+  <p>Hizmet 13 yaş altına yönelik değildir. Bilerek çocuklardan veri toplamıyoruz.</p>
+
+  <h2>8. Güvenlik</h2>
+  <p>HTTPS, şifreli oturum ve erişim kontrolleri kullanıyoruz. Hiçbir yöntem %100 güvenlik garantisi vermez; şüpheli aktiviteyi bize bildirin.</p>
+
+  <h2>9. Değişiklikler</h2>
+  <p>Bu sayfa güncellenebilir. Önemli değişiklikler sitede yayımlanır. Uygulamayı kullanmaya devam etmeniz güncel metni kabul ettiğiniz anlamına gelir.</p>
+
+  <h2>10. TestFlight / beta</h2>
+  <p>
+    iOS beta sürümleri yalnızca test amaçlıdır. Beta geri bildirimleri belirttiğiniz e-posta üzerinden toplanır; production sürümüyle aynı gizlilik ilkeleri geçerlidir.
+  </p>
+
+  <nav class="seo-cross">
+    <a href="/">Keşfet</a>
+    <a href="/kvkk">KVKK</a>
+    <a href="/iletisim">İletişim</a>
+    <a href="/blog">Blog</a>
+  </nav>
+</article>
+{% endblock %}

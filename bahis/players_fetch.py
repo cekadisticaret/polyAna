@@ -14,9 +14,11 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(_DIR))
 DATA_DIR = os.path.join(_DIR, "data")
 OUT = os.path.join(DATA_DIR, "players.json")
 LEAGUE_ID = 71
+ACTIVE = None
 UA = {
     "User-Agent": (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -102,7 +104,8 @@ def fetch_league() -> dict:
 
 
 def fetch_stat(season_tid: int, stat_name: str) -> list[dict]:
-    url = f"https://data.fotmob.com/stats/{LEAGUE_ID}/season/{season_tid}/{stat_name}.json"
+    lid = LEAGUE_ID
+    url = f"https://data.fotmob.com/stats/{lid}/season/{season_tid}/{stat_name}.json"
     data = _get(url)
     lists = data.get("TopLists") or []
     if not lists:
@@ -269,8 +272,11 @@ def _table_rows(league: dict) -> list[dict]:
     return out
 
 
-def main() -> int:
-    print("Fotmob Süper Lig oyuncu verisi…", flush=True)
+def fetch_one(lg: dict) -> int:
+    global LEAGUE_ID, OUT
+    LEAGUE_ID = lg["fotmob"]
+    OUT = os.path.join(DATA_DIR, lg["players"])
+    print(f"Fotmob {lg['flag']} {lg['name']} oyuncu verisi…", flush=True)
     league = fetch_league()
     links = league.get("stats", {}).get("seasonStatLinks") or []
     player_stats = [
@@ -287,7 +293,7 @@ def main() -> int:
     squads = fetch_squads(table)
     pack = {
         "src": "fotmob",
-        "league": "Süper Lig",
+        "league": lg["name"],
         "league_id": LEAGUE_ID,
         "updated": datetime.now(TR).isoformat(timespec="seconds"),
         "updated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -303,6 +309,19 @@ def main() -> int:
     os.replace(tmp, OUT)
     n = sum(s["n_players"] for s in seasons)
     print(f"yazıldı {OUT} · {len(seasons)} sezon · {n} oyuncu-satır · {len(squads)} kadro", flush=True)
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    from bahis.leagues_cfg import LEAGUES, get
+    args = [a for a in (argv if argv is not None else sys.argv[1:]) if not a.startswith("-")]
+    want = [get(x) for x in args] if args else list(LEAGUES)
+    seen = []
+    for lg in want:
+        if lg["id"] in seen:
+            continue
+        seen.append(lg["id"])
+        fetch_one(lg)
     return 0
 
 

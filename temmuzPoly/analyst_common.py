@@ -30,6 +30,17 @@ TG_CHAT = chat_analist()  # 1. ANALİZ kanalına düşmez
 CLAUDE_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
 _TELEGRAM_LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analyst_telegram_log.jsonl")
 _TELEGRAM_LOG_MAX_LINES = 500
+_CONTROL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analyst_control.json")
+
+
+def is_paused() -> bool:
+    """Poly Algo Analist (3s + günlük) kapalıysa True — cron/elle çalıştırma no-op."""
+    try:
+        with open(_CONTROL_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        return bool(isinstance(data, dict) and data.get("paused"))
+    except Exception:
+        return False
 
 
 def required_env_missing() -> list[str]:

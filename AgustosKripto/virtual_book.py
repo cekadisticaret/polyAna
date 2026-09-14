@@ -28,6 +28,7 @@ from atr_profit_lock import (
     should_stop_out,
     update_lock,
 )
+import binance_um as um  # noqa: E402
 from fee_utils import DEFAULT_TAKER_FEE, estimate_fee, get_taker_rate, net_pnl
 
 _TZ = ZoneInfo("Europe/Istanbul")
@@ -263,8 +264,22 @@ def save_state(path: str, state: dict) -> None:
     save_json(path, state)
 
 
+_HIST_FILE_CACHE: dict[str, tuple[float, int, list]] = {}
+
+
 def load_history(path: str) -> list:
-    return load_json(path, list)
+    try:
+        st = os.stat(path)
+    except OSError:
+        return []
+    hit = _HIST_FILE_CACHE.get(path)
+    if hit and hit[0] == st.st_mtime and hit[1] == st.st_size:
+        return hit[2]
+    data = load_json(path, list)
+    if not isinstance(data, list):
+        data = []
+    _HIST_FILE_CACHE[path] = (st.st_mtime, st.st_size, data)
+    return data
 
 
 def save_history(path: str, history: list) -> None:
@@ -272,7 +287,6 @@ def save_history(path: str, history: list) -> None:
 
 
 _KLINE_URLS = (
-    "https://fapi.binance.com/fapi/v1/klines",
     "https://data-api.binance.vision/api/v3/klines",
     "https://api.binance.com/api/v3/klines",
 )
@@ -289,8 +303,11 @@ def _fapi_guard():
 def _parse_klines(raw) -> list[dict]:
     out = []
     for k in raw or []:
+        ot_ms = int(k[0])
         out.append({
-            "t": int(k[0]) // 1000,
+            "t": ot_ms // 1000,
+            "openTime": ot_ms,
+            "open_time": ot_ms,
             "o": float(k[1]),
             "h": float(k[2]),
             "l": float(k[3]),
@@ -420,12 +437,24 @@ def cached_status(key: str, builder) -> dict:
     return data
 
 
+_REFRESHING: set[str] = set()
+
+
 def refresh_status(key: str, builder) -> dict:
     """Zorla yenile + snapshot yaz (prewarm thread)."""
-    data = builder()
-    _STATUS_CACHE[key] = (time.time(), data)
-    write_snapshot(key, data)
-    return data
+    if key in _REFRESHING:
+        hit = _STATUS_CACHE.get(key)
+        if hit:
+            return hit[1]
+        return read_snapshot(key, max_age=1e12) or {}
+    _REFRESHING.add(key)
+    try:
+        data = builder()
+        _STATUS_CACHE[key] = (time.time(), data)
+        write_snapshot(key, data)
+        return data
+    finally:
+        _REFRESHING.discard(key)
 
 
 def qty_from_entry(
@@ -433,18 +462,33 @@ def qty_from_entry(
     *,
     margin_usd: float | None = None,
     leverage: int | None = None,
+    symbol: str = "",
 ) -> float:
     if entry <= 0:
         return 0.0
     m = MARGIN_USD if margin_usd is None else float(margin_usd)
     lev = LEVERAGE if leverage is None else int(leverage)
+    if symbol:
+        lev = um.clamp_leverage(symbol, lev)
+        return um.qty_from_notional(symbol, m * lev, entry)
     return round((m * lev) / entry, 6)
 
 
 def futures_pnl(side: str, entry: float, exit_px: float, qty: float) -> float:
-    if side == "LONG":
-        return round((exit_px - entry) * qty, 4)
-    return round((entry - exit_px) * qty, 4)
+    return round(um.gross(side, entry, exit_px, qty), 4)
+
+
+def _um_quotes(sym: str, fallback: float = 0.0) -> dict:
+    q = um.quotes(sym)
+    if float(q.get("mark") or 0) <= 0 and fallback > 0:
+        q = {
+            **q,
+            "mark": fallback,
+            "last": float(q.get("last") or 0) or fallback,
+            "bid": float(q.get("bid") or 0) or fallback,
+            "ask": float(q.get("ask") or 0) or fallback,
+        }
+    return q
 
 
 def slot_label(dt: datetime | None = None) -> str:
@@ -453,20 +497,21 @@ def slot_label(dt: datetime | None = None) -> str:
 
 
 def _virtual_upnl_net(pos: dict, mark: float) -> tuple[float, float, float]:
-    """(gross, net, commission)."""
+    """Anlık PnL — exit = mark. (gross, net, commission)."""
     entry = float(pos.get("entry_price") or 0)
-    qty = float(pos.get("qty") or qty_from_entry(entry))
+    qty = float(pos.get("qty") or qty_from_entry(entry, symbol=pos.get("symbol") or ""))
     side = pos.get("side") or "LONG"
+    fee_open = float(pos.get("entry_fee") or 0)
+    if fee_open <= 0:
+        fee_open = um.fee(qty, entry)
+    fee_close = um.fee(qty, mark)
+    funding = float(pos.get("funding_acc") or 0)
     pnl_gross = futures_pnl(side, entry, mark, qty)
-    entry_notional = float(pos.get("notional") or (entry * qty))
-    exit_notional = mark * qty
-    rate = real_taker_rate(pos.get("symbol") or "BTCUSDT")
-    entry_fee = float(pos.get("entry_fee") or 0)
-    if entry_fee <= 0:
-        entry_fee = estimate_fee(entry_notional, rate)
-    exit_fee = estimate_fee(exit_notional, rate)
-    commission = round(entry_fee + exit_fee, 6)
-    return pnl_gross, net_pnl(pnl_gross, commission), commission
+    pnl = um.net_pnl(
+        side, entry, mark, qty,
+        fee_open=fee_open, fee_close=fee_close, funding=funding,
+    )
+    return pnl_gross, round(pnl, 4), round(fee_open + fee_close, 6)
 
 
 def _settle_close(
@@ -478,20 +523,27 @@ def _settle_close(
     label: str,
     reason: str,
 ) -> float:
-    """Tek pozisyon kapat; net pnl döner."""
+    """Tek pozisyon kapat; net = gross − fee_open − fee_close + funding."""
     entry = float(pos.get("entry_price") or 0)
-    qty = float(pos.get("qty") or qty_from_entry(entry))
+    qty = float(pos.get("qty") or qty_from_entry(entry, symbol=pos.get("symbol") or ""))
     side = pos.get("side") or "LONG"
+    if reason == "liquidation":
+        liq = float(pos.get("liq") or 0) or um.liq_price(
+            side, entry, float(pos.get("leverage") or LEVERAGE)
+        )
+        if liq > 0:
+            exit_px = liq
+    fee_open = float(pos.get("entry_fee") or 0)
+    if fee_open <= 0:
+        fee_open = um.fee(qty, entry)
+    fee_close = um.fee(qty, exit_px)
+    funding = float(pos.get("funding_acc") or 0)
     pnl_gross = futures_pnl(side, entry, exit_px, qty)
-    entry_notional = float(pos.get("notional") or (entry * qty))
-    exit_notional = exit_px * qty
-    rate = real_taker_rate(pos.get("symbol") or "BTCUSDT")
-    entry_fee = float(pos.get("entry_fee") or 0)
-    if entry_fee <= 0:
-        entry_fee = estimate_fee(entry_notional, rate)
-    exit_fee = estimate_fee(exit_notional, rate)
-    commission = round(entry_fee + exit_fee, 6)
-    pnl = net_pnl(pnl_gross, commission)
+    pnl = round(um.net_pnl(
+        side, entry, exit_px, qty,
+        fee_open=fee_open, fee_close=fee_close, funding=funding,
+    ), 4)
+    commission = round(fee_open + fee_close, 6)
     state["balance"] = round(float(state["balance"]) + pnl, 2)
     state["total_pnl"] = round(float(state.get("total_pnl") or 0) + pnl, 4)
     state["total_commission"] = round(
@@ -502,8 +554,9 @@ def _settle_close(
         "exit_price": exit_px,
         "exit_time_tr": now_tr_iso(),
         "pnl_gross": pnl_gross,
-        "entry_fee": entry_fee,
-        "exit_fee": exit_fee,
+        "entry_fee": fee_open,
+        "exit_fee": fee_close,
+        "funding": funding,
         "commission": commission,
         "pnl": pnl,
         "win": pnl >= 0,
@@ -512,7 +565,8 @@ def _settle_close(
     })
     print(
         f"[{label}] close {pos.get('symbol')} {side} {entry}→{exit_px} "
-        f"gross={pnl_gross:+.2f} fee={commission:.4f} net={pnl:+.2f} ({reason})"
+        f"gross={pnl_gross:+.2f} fee={commission:.4f} fund={funding:+.4f} "
+        f"net={pnl:+.2f} ({reason})"
     )
     return pnl
 
@@ -604,8 +658,27 @@ def _close_all_positions_locked(
         if len(kl) < 2:
             remaining.append(pos)
             continue
-        # Bir önceki tamamlanmış mum kapanışı (settle)
-        exit_px = float(kl[-2]["c"])
+        # Binance kapanış dolumu; mum yedek
+        q = _um_quotes(sym, float(kl[-2]["c"]))
+        pos = um.apply_funding(pos, q)
+        if um.hit_liq(
+            pos.get("side") or "LONG",
+            float(q.get("mark") or 0),
+            float(pos.get("liq") or 0) or um.liq_price(
+                pos.get("side") or "LONG",
+                float(pos.get("entry_price") or 0),
+                float(pos.get("leverage") or LEVERAGE),
+            ),
+        ):
+            tur_pnl += _settle_close(
+                state, history, pos, exit_px=float(pos.get("liq") or 0),
+                label=label, reason="liquidation",
+            )
+            closed += 1
+            if sym:
+                closed_atr_syms.append(sym.upper())
+            continue
+        exit_px = um.fill_close(pos.get("side") or "LONG", q) or float(kl[-2]["c"])
         if not float(pos.get("atr_usd") or 0):
             pos = init_lock_fields(
                 pos,
@@ -680,7 +753,9 @@ def flatten_all_positions(
             if not kl:
                 remaining.append(pos)
                 continue
-            exit_px = float(kl[-1]["c"])
+            q = _um_quotes(sym, float(kl[-1]["c"]))
+            pos = um.apply_funding(pos, q)
+            exit_px = um.fill_close(pos.get("side") or "LONG", q) or float(kl[-1]["c"])
             if not float(pos.get("atr_usd") or 0) and len(kl) >= 30:
                 pos = init_lock_fields(
                     pos,
@@ -764,7 +839,27 @@ def _trail_positions_locked(
         if not kl:
             remaining.append(pos)
             continue
-        mark = float(kl[-1]["c"])
+        mark_kl = float(kl[-1]["c"])
+        q = _um_quotes(sym, mark_kl)
+        mark = float(q.get("mark") or mark_kl)
+        pos = um.apply_funding(pos, q)
+        if not pos.get("liq"):
+            pos = dict(pos)
+            pos["liq"] = um.liq_price(
+                pos.get("side") or "LONG",
+                float(pos.get("entry_price") or 0),
+                float(pos.get("leverage") or LEVERAGE),
+            )
+        close_px = um.fill_close(pos.get("side") or "LONG", q) or mark
+        if um.hit_liq(pos.get("side") or "LONG", mark, float(pos.get("liq") or 0)):
+            tur_pnl += _settle_close(
+                state, history, pos, exit_px=float(pos["liq"]),
+                label=label, reason="liquidation",
+            )
+            closed += 1
+            if sym:
+                closed_symbols.append(sym.upper())
+            continue
         if not float(pos.get("atr_usd") or 0):
             pos = init_lock_fields(
                 pos,
@@ -785,14 +880,14 @@ def _trail_positions_locked(
         limit_h = _pos_max_hold_h(pos2, policy)
         if limit_h and age_min >= limit_h * 60.0:
             tur_pnl += _settle_close(
-                state, history, pos2, exit_px=mark, label=label, reason="max_hold",
+                state, history, pos2, exit_px=close_px, label=label, reason="max_hold",
             )
             closed += 1
             if sym:
                 closed_symbols.append(sym.upper())
         elif should_loss_stop(pos2, upnl_net) and age_min >= LOSS_STOP_MIN_AGE_MIN:
             tur_pnl += _settle_close(
-                state, history, pos2, exit_px=mark, label=label, reason="atr_loss",
+                state, history, pos2, exit_px=close_px, label=label, reason="atr_loss",
             )
             closed += 1
             if sym:
@@ -803,7 +898,7 @@ def _trail_positions_locked(
             )
         elif should_stop_out(pos2, upnl_net):
             tur_pnl += _settle_close(
-                state, history, pos2, exit_px=mark, label=label, reason="atr_stop",
+                state, history, pos2, exit_px=close_px, label=label, reason="atr_stop",
             )
             closed += 1
             if sym:
@@ -899,9 +994,11 @@ def _close_reversal_positions_locked(
         if not kl:
             remaining.append(pos)
             continue
-        mark = float(kl[-1]["c"])
+        q = _um_quotes(sym, float(kl[-1]["c"]))
+        pos = um.apply_funding(pos, q)
+        exit_px = um.fill_close(pos.get("side") or "LONG", q) or float(kl[-1]["c"])
         tur_pnl += _settle_close(
-            state, history, pos, exit_px=mark, label=label, reason=reason,
+            state, history, pos, exit_px=exit_px, label=label, reason=reason,
         )
         closed += 1
         closed_symbols.append(sym)
@@ -1023,15 +1120,17 @@ def _open_signals_locked(
                 continue
         if len(kl) < 2:
             continue
-        entry = float(kl[-1]["c"]) if entry_price_mode == "live" else float(kl[-2]["c"])
+        kl_px = float(kl[-1]["c"]) if entry_price_mode == "live" else float(kl[-2]["c"])
+        q = _um_quotes(sym, kl_px)
+        entry = um.fill_open(side, q) or kl_px
         # Aday kendi marjını verebilir (kenar kapısı kademesi) — yoksa defter marjı
         m_c = float(cand.get("margin_usd") or m)
-        notional_c = m_c * lev
-        qty = qty_from_entry(entry, margin_usd=m_c, leverage=lev)
+        lev_c = um.clamp_leverage(sym, lev)
+        notional_c = m_c * lev_c
+        qty = qty_from_entry(entry, margin_usd=m_c, leverage=lev_c, symbol=sym)
         if qty <= 0:
             continue
-        rate = real_taker_rate(sym)
-        entry_fee = estimate_fee(notional_c, rate)
+        entry_fee = um.fee(qty, entry)
         kl_atr = kl if len(kl) >= 30 else cache.get(f"{sym}|{iv}")
         if not kl_atr or len(kl_atr) < 30:
             try:
@@ -1048,11 +1147,15 @@ def _open_signals_locked(
                 "score": cand.get("score"),
                 "interval": iv,
                 "qty": qty,
-                "leverage": lev,
+                "leverage": lev_c,
                 "margin_usd": m_c,
                 "entry_price": entry,
                 "notional": notional_c,
                 "entry_fee": entry_fee,
+                "liq": um.liq_price(side, entry, lev_c),
+                "funding_acc": 0.0,
+                "funding_event_ms": 0,
+                "fill_src": "ask" if side == "LONG" else "bid",
                 "entry_time_tr": now_tr_iso(),
                 "slot": slot,
                 "virtual": True,
@@ -1065,7 +1168,7 @@ def _open_signals_locked(
         held_syms.add(sym)
         print(
             f"[{label}] open {sym} {side} @{entry} qty={qty} {iv} "
-            f"margin=${m_c}x{lev} fee≈${entry_fee:.4f} "
+            f"margin=${m_c}x{lev_c} fee≈${entry_fee:.4f} "
             f"(held={len(existing)} +new={len(opened)}/{slots_left})"
         )
 
@@ -1142,14 +1245,9 @@ def book_status(
         side = pos.get("side") or "LONG"
         mark = entry
         if live_marks:
-            try:
-                _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                if _root not in sys.path:
-                    sys.path.insert(0, _root)
-                from binance_fapi_guard import get_mark  # noqa: WPS433
-                mx = get_mark(sym) if sym else None
-            except Exception:
-                mx = None
+            q = _um_quotes(sym, entry)
+            pos = um.apply_funding(dict(pos), q)
+            mx = float(q.get("mark") or 0)
             if mx:
                 mark = mx
             else:
@@ -1163,16 +1261,9 @@ def book_status(
                         kl = []
                 if kl:
                     mark = float(kl[-1]["c"])
-        gross = futures_pnl(side, entry, mark, qty)
-        entry_notional = float(pos.get("notional") or (entry * qty))
-        exit_notional = mark * qty
-        rate = real_taker_rate(sym)
-        entry_fee = float(pos.get("entry_fee") or 0)
-        if entry_fee <= 0:
-            entry_fee = estimate_fee(entry_notional, rate)
-        exit_fee = estimate_fee(exit_notional, rate)
-        commission = round(entry_fee + exit_fee, 6)
-        pnl = net_pnl(gross, commission)
+        gross, pnl, commission = _virtual_upnl_net(pos, mark)
+        entry_fee = float(pos.get("entry_fee") or um.fee(qty, entry))
+        exit_fee = um.fee(qty, mark)
         upnl += pnl
         upnl_gross += gross
         open_commission += commission
@@ -1216,7 +1307,7 @@ def book_status(
         "unrealized_pnl": round(upnl, 4),
         "open_commission_est": round(open_commission, 4),
         "equity": round(float(state.get("balance") or 0) + upnl, 2),
-        "taker_fee_rate": TAKER_FEE_RATE,
+        "taker_fee_rate": um.FEE_RATE,
         "history_n": n,
         "wins": wins,
         "wr": round(wins / n * 100, 1) if n else None,

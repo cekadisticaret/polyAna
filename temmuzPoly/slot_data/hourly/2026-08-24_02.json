@@ -1,0 +1,1612 @@
+{
+  "ts_tr": "2026-08-24T02:15:01.257282+03:00",
+  "tz": "Europe/Istanbul",
+  "window_days": 7,
+  "note": "saatlik A1/A2/A4/A6/A10/A15 + A2 Top17; 15m yok",
+  "books": {
+    "A1": {
+      "history_file": "poly_trader_analiz1_history.json",
+      "d7": {
+        "trades": 1,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -37.87,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -37.87
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -37.87
+          }
+        }
+      },
+      "d30": {
+        "trades": 1,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -37.87,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -37.87
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -37.87
+          }
+        }
+      }
+    },
+    "A2": {
+      "history_file": "poly_trader_analiz2_history.json",
+      "d7": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      },
+      "d30": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      }
+    },
+    "A6": {
+      "history_file": "poly_trader_analiz6_history.json",
+      "d7": {
+        "trades": 3,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -126.18,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.18
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.18
+          }
+        }
+      },
+      "d30": {
+        "trades": 3,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -126.18,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.18
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.18
+          }
+        }
+      }
+    },
+    "A15": {
+      "history_file": "poly_trader_analiz15_history.json",
+      "d7": {
+        "trades": 1,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -50.53,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -50.53
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -50.53
+          }
+        }
+      },
+      "d30": {
+        "trades": 1,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -50.53,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -50.53
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -50.53
+          }
+        }
+      }
+    },
+    "#01": {
+      "history_file": "poly_trader_a2_01_history.json",
+      "d7": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      },
+      "d30": {
+        "trades": 0,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": 0,
+        "force_hot_hours": [],
+        "by_hour": {},
+        "by_dow_hour": {}
+      }
+    },
+    "#02": {
+      "history_file": "poly_trader_a2_02_history.json",
+      "d7": {
+        "trades": 1,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -50.53,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -50.53
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -50.53
+          }
+        }
+      },
+      "d30": {
+        "trades": 1,
+        "wins": 0,
+        "wr": 0.0,
+        "pnl": -50.53,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -50.53
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -50.53
+          }
+        }
+      }
+    },
+    "#03": {
+      "history_file": "poly_trader_a2_03_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -85.4,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -112.69
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -112.69
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -85.4,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -112.69
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -112.69
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    },
+    "#04": {
+      "history_file": "poly_trader_a2_04_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -85.4,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -112.69
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -112.69
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -85.4,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -112.69
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -112.69
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    },
+    "#05": {
+      "history_file": "poly_trader_a2_05_history.json",
+      "d7": {
+        "trades": 3,
+        "wins": 2,
+        "wr": 66.67,
+        "pnl": -10.61,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -49.72
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 39.11
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -49.72
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 39.11
+          }
+        }
+      },
+      "d30": {
+        "trades": 3,
+        "wins": 2,
+        "wr": 66.67,
+        "pnl": -10.61,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -49.72
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 39.11
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 1,
+            "wr": 0.0,
+            "pnl": -49.72
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 39.11
+          }
+        }
+      }
+    },
+    "#06": {
+      "history_file": "poly_trader_a2_06_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -110.51,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -137.8
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -137.8
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -110.51,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -137.8
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -137.8
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    },
+    "#07": {
+      "history_file": "poly_trader_a2_07_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -110.51,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -137.8
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -137.8
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -110.51,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -137.8
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -137.8
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    },
+    "#08": {
+      "history_file": "poly_trader_a2_08_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -60.9,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -88.19
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -88.19
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -60.9,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -88.19
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -88.19
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    },
+    "#09": {
+      "history_file": "poly_trader_a2_09_history.json",
+      "d7": {
+        "trades": 3,
+        "wins": 3,
+        "wr": 100.0,
+        "pnl": 85.42,
+        "force_hot_hours": [
+          1
+        ],
+        "by_hour": {
+          "1": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        },
+        "by_dow_hour": {
+          "0_01": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        }
+      },
+      "d30": {
+        "trades": 3,
+        "wins": 3,
+        "wr": 100.0,
+        "pnl": 85.42,
+        "force_hot_hours": [
+          1
+        ],
+        "by_hour": {
+          "1": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        },
+        "by_dow_hour": {
+          "0_01": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        }
+      }
+    },
+    "#10": {
+      "history_file": "poly_trader_a2_10_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -60.52,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -87.81
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -87.81
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -60.52,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -87.81
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -87.81
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    },
+    "#11": {
+      "history_file": "poly_trader_a2_11_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -51.74,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -79.03
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -79.03
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -51.74,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -79.03
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -79.03
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    },
+    "#12": {
+      "history_file": "poly_trader_a2_12_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -60.52,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -87.81
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -87.81
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -60.52,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -87.81
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -87.81
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    },
+    "#13": {
+      "history_file": "poly_trader_a2_13_history.json",
+      "d7": {
+        "trades": 3,
+        "wins": 3,
+        "wr": 100.0,
+        "pnl": 85.42,
+        "force_hot_hours": [
+          1
+        ],
+        "by_hour": {
+          "1": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        },
+        "by_dow_hour": {
+          "0_01": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        }
+      },
+      "d30": {
+        "trades": 3,
+        "wins": 3,
+        "wr": 100.0,
+        "pnl": 85.42,
+        "force_hot_hours": [
+          1
+        ],
+        "by_hour": {
+          "1": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        },
+        "by_dow_hour": {
+          "0_01": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        }
+      }
+    },
+    "#14": {
+      "history_file": "poly_trader_a2_14_history.json",
+      "d7": {
+        "trades": 3,
+        "wins": 3,
+        "wr": 100.0,
+        "pnl": 85.42,
+        "force_hot_hours": [
+          1
+        ],
+        "by_hour": {
+          "1": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        },
+        "by_dow_hour": {
+          "0_01": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        }
+      },
+      "d30": {
+        "trades": 3,
+        "wins": 3,
+        "wr": 100.0,
+        "pnl": 85.42,
+        "force_hot_hours": [
+          1
+        ],
+        "by_hour": {
+          "1": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        },
+        "by_dow_hour": {
+          "0_01": {
+            "w": 3,
+            "t": 3,
+            "wr": 100.0,
+            "pnl": 85.42
+          }
+        }
+      }
+    },
+    "#15": {
+      "history_file": "poly_trader_a2_15_history.json",
+      "d7": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -19.05,
+        "force_hot_hours": [],
+        "by_hour": {
+          "1": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -19.05
+          }
+        },
+        "by_dow_hour": {
+          "0_01": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -19.05
+          }
+        }
+      },
+      "d30": {
+        "trades": 2,
+        "wins": 1,
+        "wr": 50.0,
+        "pnl": -19.05,
+        "force_hot_hours": [],
+        "by_hour": {
+          "1": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -19.05
+          }
+        },
+        "by_dow_hour": {
+          "0_01": {
+            "w": 1,
+            "t": 2,
+            "wr": 50.0,
+            "pnl": -19.05
+          }
+        }
+      }
+    },
+    "#16": {
+      "history_file": "poly_trader_a2_16_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -98.77,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.06
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.06
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -98.77,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.06
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.06
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    },
+    "#17": {
+      "history_file": "poly_trader_a2_17_history.json",
+      "d7": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -98.77,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.06
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.06
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      },
+      "d30": {
+        "trades": 5,
+        "wins": 2,
+        "wr": 40.0,
+        "pnl": -98.77,
+        "force_hot_hours": [],
+        "by_hour": {
+          "0": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.06
+          },
+          "1": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        },
+        "by_dow_hour": {
+          "0_00": {
+            "w": 0,
+            "t": 3,
+            "wr": 0.0,
+            "pnl": -126.06
+          },
+          "0_01": {
+            "w": 2,
+            "t": 2,
+            "wr": 100.0,
+            "pnl": 27.29
+          }
+        }
+      }
+    }
+  },
+  "winners_prev_hour": [
+    {
+      "book": "#03",
+      "entry_time_tr": "2026-08-24T01:02:17.218283+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#03",
+      "entry_time_tr": "2026-08-24T01:02:17.218283+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    },
+    {
+      "book": "#04",
+      "entry_time_tr": "2026-08-24T01:02:18.617458+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#04",
+      "entry_time_tr": "2026-08-24T01:02:18.617458+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    },
+    {
+      "book": "#05",
+      "entry_time_tr": "2026-08-24T01:02:14.516146+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 21.27,
+      "symbol": "BTC",
+      "amount": 36.0
+    },
+    {
+      "book": "#05",
+      "entry_time_tr": "2026-08-24T01:02:14.516146+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 17.84,
+      "symbol": "ETH",
+      "amount": 36.0
+    },
+    {
+      "book": "#06",
+      "entry_time_tr": "2026-08-24T01:02:18.847657+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#06",
+      "entry_time_tr": "2026-08-24T01:02:18.847657+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    },
+    {
+      "book": "#07",
+      "entry_time_tr": "2026-08-24T01:02:18.982642+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#07",
+      "entry_time_tr": "2026-08-24T01:02:18.982642+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    },
+    {
+      "book": "#08",
+      "entry_time_tr": "2026-08-24T01:02:19.093833+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#08",
+      "entry_time_tr": "2026-08-24T01:02:19.093833+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    },
+    {
+      "book": "#09",
+      "entry_time_tr": "2026-08-24T01:02:19.165809+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 22.4,
+      "symbol": "BTC",
+      "amount": 36.0
+    },
+    {
+      "book": "#09",
+      "entry_time_tr": "2026-08-24T01:02:19.165809+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 18.51,
+      "symbol": "ETH",
+      "amount": 36.0
+    },
+    {
+      "book": "#09",
+      "entry_time_tr": "2026-08-24T01:02:19.165809+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 44.51,
+      "symbol": "SOL",
+      "amount": 36.0
+    },
+    {
+      "book": "#10",
+      "entry_time_tr": "2026-08-24T01:02:19.284588+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#10",
+      "entry_time_tr": "2026-08-24T01:02:19.284588+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    },
+    {
+      "book": "#11",
+      "entry_time_tr": "2026-08-24T01:02:19.371856+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#11",
+      "entry_time_tr": "2026-08-24T01:02:19.371856+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    },
+    {
+      "book": "#12",
+      "entry_time_tr": "2026-08-24T01:02:19.474005+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#12",
+      "entry_time_tr": "2026-08-24T01:02:19.474005+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    },
+    {
+      "book": "#13",
+      "entry_time_tr": "2026-08-24T01:02:19.614820+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 22.4,
+      "symbol": "BTC",
+      "amount": 36.0
+    },
+    {
+      "book": "#13",
+      "entry_time_tr": "2026-08-24T01:02:19.614820+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 18.51,
+      "symbol": "ETH",
+      "amount": 36.0
+    },
+    {
+      "book": "#13",
+      "entry_time_tr": "2026-08-24T01:02:19.614820+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 44.51,
+      "symbol": "SOL",
+      "amount": 36.0
+    },
+    {
+      "book": "#14",
+      "entry_time_tr": "2026-08-24T01:02:19.770743+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 22.4,
+      "symbol": "BTC",
+      "amount": 36.0
+    },
+    {
+      "book": "#14",
+      "entry_time_tr": "2026-08-24T01:02:19.770743+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 18.51,
+      "symbol": "ETH",
+      "amount": 36.0
+    },
+    {
+      "book": "#14",
+      "entry_time_tr": "2026-08-24T01:02:19.770743+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 44.51,
+      "symbol": "SOL",
+      "amount": 36.0
+    },
+    {
+      "book": "#15",
+      "entry_time_tr": "2026-08-24T01:02:19.893614+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 18.51,
+      "symbol": "ETH",
+      "amount": 36.0
+    },
+    {
+      "book": "#16",
+      "entry_time_tr": "2026-08-24T01:02:20.001732+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#16",
+      "entry_time_tr": "2026-08-24T01:02:20.001732+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    },
+    {
+      "book": "#17",
+      "entry_time_tr": "2026-08-24T01:02:20.094334+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 14.93,
+      "symbol": "BTC",
+      "amount": 24.0
+    },
+    {
+      "book": "#17",
+      "entry_time_tr": "2026-08-24T01:02:20.094334+03:00",
+      "dow": 0,
+      "day": "Pzt",
+      "hour": 1,
+      "win": true,
+      "pnl": 12.36,
+      "symbol": "ETH",
+      "amount": 24.0
+    }
+  ],
+  "prev_hour_tr": "2026-08-24T01:00:00+03:00"
+}

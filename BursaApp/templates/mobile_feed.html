@@ -6,10 +6,10 @@
 {% block sub %}{% endblock %}
 
 {% block main %}
-<div class="m-feed">
-  <header class="m-feed-head">
+<div class="m-feed bv2-feed">
+  <header class="m-feed-head bv2-feed-head">
     <h1>Akış</h1>
-    <div class="m-feed-tabs">
+    <div class="m-feed-tabs bv2-feed-tabs">
       <a class="{% if tab=='recents' %}on{% endif %}" href="/feed?tab=recents">Yeni</a>
       <a class="{% if tab=='popular' %}on{% endif %}" href="/feed?tab=popular">Popüler</a>
       {% if u %}<a class="{% if tab=='friends' %}on{% endif %}" href="/feed?tab=friends">Takip</a>{% endif %}
@@ -23,22 +23,34 @@
   </header>
 
   {% if u %}
-  <form class="m-compose" method="post" action="/hesap/profil/post" enctype="multipart/form-data">
-    <div class="m-compose-row">
-      <div class="m-compose-av">{% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="{{ u.name }} profil fotoğrafı">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}</div>
-      <textarea name="body" rows="1" placeholder="Bir şey paylaş… kamp, etkinlik, gezi" maxlength="2000"></textarea>
+  <a class="as-feed-promo bv2-feed-promo" href="/arkadas-ara">
+    <span class="as-feed-promo-ico">🎾</span>
+    <span><b>Arkadaş / partner ara</b> — okey 4., tenis, halı saha…</span>
+    <span class="as-feed-promo-go">→</span>
+  </a>
+  <form class="ff-card ff-compose bv2-feed-compose" method="post" action="/hesap/profil/post" enctype="multipart/form-data">
+    <div class="ff-compose-inner">
+      <div class="ff-avatar sm">{% if u.avatar_url %}<img src="{{ u.avatar_url }}" alt="{{ u.name }} profil fotoğrafı">{% else %}<span>{{ (u.name or 'U')[0]|upper }}</span>{% endif %}</div>
+      <textarea name="body" rows="2" placeholder="Bir şey paylaş… kamp, etkinlik, gezi" maxlength="2000"></textarea>
     </div>
-    <div class="m-compose-tools">
-      <label class="m-tool"><span>📷</span> Görsel<input type="file" name="photos" accept="image/*" multiple hidden></label>
-      <select name="place_slug" class="m-tool-select">
-        <option value="">Konum</option>
-        {% for s in picker_places %}{% if s %}<option value="{{ s.slug }}">{{ s.title }}</option>{% endif %}{% endfor %}
-      </select>
-      <button type="submit" class="m-btn-pri sm">Gönder</button>
+    <div class="ff-compose-tools">
+      <label class="ff-chip-tool" title="Foto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="1.5"/><path d="M21 15l-5-5L8 19"/></svg> Görsel<input type="file" name="photos" accept="image/*" multiple hidden></label>
+      <label class="ff-chip-tool ff-place-pick"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        <select name="place_slug">
+          <option value="">Konum</option>
+          {% for s in picker_places %}{% if s %}<option value="{{ s.slug }}">{{ s.title }}</option>{% endif %}{% endfor %}
+        </select>
+      </label>
+      <button type="submit" class="ff-btn ff-send">Gönder</button>
     </div>
   </form>
   {% else %}
-  <div class="m-login-card">
+  <a class="as-feed-promo bv2-feed-promo" href="/arkadas-ara">
+    <span class="as-feed-promo-ico">🎾</span>
+    <span><b>Arkadaş / partner ara</b> — okey, tenis, koşu…</span>
+    <span class="as-feed-promo-go">→</span>
+  </a>
+  <div class="m-login-card bv2-feed-login">
     <p>Paylaşım yapmak için giriş yap.</p>
     <a class="m-btn-pri" href="/giris?next=/feed">Giriş yap</a>
   </div>

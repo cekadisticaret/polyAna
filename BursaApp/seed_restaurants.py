@@ -10,7 +10,7 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
 
 from catalog import infer_food_subcategory, tags_dump
-from models import Place, SessionLocal, init_db
+from models import Place, SessionLocal, init_db, merge_place_extra
 
 SRC = os.path.join(_DIR, "data", "restaurants.json")
 HIDE = ("iskender", "pideli-kofte", "kemalpasa", "kestane-sekeri")
@@ -55,10 +55,21 @@ def main() -> None:
                 fields["lng"] = float(raw["lng"])
             if p is None:
                 db.add(Place(slug=slug, **fields))
+                np = db.query(Place).filter(Place.slug == slug).first()
+                if np and fields.get("rating_admin"):
+                    merge_place_extra(
+                        np,
+                        {"rating_verified": True, "rating_source": "restaurants_json", "source": "restaurants_json"},
+                    )
                 n_new += 1
             else:
                 for k, v in fields.items():
                     setattr(p, k, v)
+                if fields.get("rating_admin"):
+                    merge_place_extra(
+                        p,
+                        {"rating_verified": True, "rating_source": "restaurants_json", "source": "restaurants_json"},
+                    )
                 n_upd += 1
         for slug in HIDE:
             p = db.query(Place).filter(Place.slug == slug).first()

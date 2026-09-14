@@ -26,7 +26,6 @@ _TRADER_STATE = {
     "analiz5": os.path.join(_DIR, "poly_trader_analiz5_state.json"),
     "analiz2_live": os.path.join(_DIR, "poly_trader_analiz2_live_state.json"),
     "analiz6_live": os.path.join(_DIR, "poly_trader_analiz6_live_state.json"),
-    "analiz10_live": os.path.join(_DIR, "poly_trader_analiz10_live_state.json"),
     "manual": os.path.join(_DIR, "poly_trader_manual_state.json"),
 }
 
@@ -35,7 +34,6 @@ _TRADER_SYMBOLS: dict[str, frozenset[str] | None] = {
     "analiz5": frozenset({"BTCUSDT", "SOLUSDT"}),
     "analiz2_live": frozenset({"SOLUSDT"}),
     "analiz6_live": frozenset({"BTCUSDT", "SOLUSDT", "ETHUSDT"}),
-    "analiz10_live": frozenset({"BTCUSDT", "SOLUSDT"}),
     "manual": None,
 }
 

@@ -6,6 +6,7 @@ import os
 from functools import lru_cache
 
 from bahis.league import team_info, team_key
+from bahis.leagues_cfg import current_league, get as get_league
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(_DIR, "data", "players.json")
@@ -42,16 +43,27 @@ LEADER_STATS = [
 ]
 
 
-@lru_cache(maxsize=1)
-def load() -> dict:
-    if not os.path.isfile(DATA):
+def _players_path(league: str | None = None) -> str:
+    lg = get_league(league)
+    return os.path.join(_DIR, "data", lg["players"])
+
+
+@lru_cache(maxsize=8)
+def _load_for(league: str) -> dict:
+    path = _players_path(league)
+    if not os.path.isfile(path):
         return {}
-    with open(DATA, encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
+def load(league: str | None = None) -> dict:
+    lid = get_league(league)["id"] if league else current_league()
+    return _load_for(lid)
+
+
 def reload() -> None:
-    load.cache_clear()
+    _load_for.cache_clear()
 
 
 def _pub_player(p: dict, *, stats: bool = True) -> dict:

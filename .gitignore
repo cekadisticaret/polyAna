@@ -1,51 +1,25 @@
-.env
-EylulForex/mt5-demo/.env
-EylulForex/mt5-demo/config/
-EylulForex/data/ctrader_token.json
-EylulForex/data/oapi_live_state.json
-EylulForex/data/oapi_live.lock
-EylulForex/data/ctrader_symbol.json
-EylulForex/data/capital_session.json
-EylulForex/data/forex_analyst_feed.jsonl
+# Günlük arşivler — taşımada gereksiz (~5 GB)
+backups/
+
+# Paket zip'leri — ops/package_*.py ile yeniden üretilir
+dist/
+
+# Node bağımlılıkları
 crypto-news-monitor/node_modules/
-crypto-news-monitor/data/
-twitter_bot/data/
-AgustosKripto/Test/data/minute_cache/
-AgustosKripto/Test/data/maker_events_*.json
-AgustosKripto/Test/data/maker_sim_*.json
-telegram_config.py
+
+# Python önbellek
 __pycache__/
 *.pyc
-backups/
-bist_signal_hunter_history.json
+*.pyo
+
+# Log / geçici
 *.log
 /tmp/
-analiz/analiz_config.py
-analiz/state.json
 *.bak
 *.bak[0-9]*
-temmuzPoly/poly_trader_analiz1_state.json
-temmuzPoly/poly_trader_analiz1_history.json
-temmuzPoly/analyst_journal.jsonl
-temmuzPoly/analyst_daily_reports.jsonl
-temmuzPoly/analyst_feed.jsonl
-temmuzPoly/analyst_telegram_log.jsonl
-AgustosKripto/Test/kripto_analyst_feed.jsonl
-temmuzPoly/poly_trader_analiz2_state.json
-temmuzPoly/poly_trader_analiz2_history.json
-temmuzPoly/poly_trader_5m_sol_210_state.json
-temmuzPoly/poly_trader_5m_sol_210_history.json
-temmuzPoly/poly_trader_analiz4_state.json
-temmuzPoly/poly_trader_analiz4_history.json
-temmuzPoly/poly_trader_analiz5_state.json
-temmuzPoly/poly_trader_analiz5_history.json
-temmuzPoly/pm_balance_hourly.json
-temmuzPoly/poly_trader_analiz6_history.json
-temmuzPoly/poly_trader_analiz15_history.json
-temmuzPoly/poly_trader_analiz15_state.json
-temmuzPoly/hourly_path/
+
+# Aktif kilit dosyaları (yeni sunucuda sorun çıkarır)
 *.lock
-*.zip
+
+# İç içe kopya
 /aiProject/
-BursaApp/data/bursaapp.db
-BursaApp/data/bursaapp.db-journal

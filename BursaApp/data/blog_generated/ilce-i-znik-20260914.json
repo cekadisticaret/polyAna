@@ -1,0 +1,31 @@
+{
+  "slug": "ilce-i-znik-20260914",
+  "title": "İznik gezi rehberi — kısa liste",
+  "h1": "İznik: gezilecek ve yeme-içme",
+  "desc": "İznik ilçesinde öne çıkan duraklar — BursaApp onaylı kayıtlardan.",
+  "date": "2026-09-14",
+  "image": "/static/visit/iznik-surlar.jpg",
+  "cta_path": "/gezilecek?ilce=İznik",
+  "cta_label": "İznik gezilecek",
+  "kind": "gezi",
+  "generated": true,
+  "sections": [
+    {
+      "h2": "İznik — gezilecek",
+      "image": "/static/visit/iznik-surlar.jpg",
+      "paras": [
+        "<a href=\"/bursa-iznik-ayasofya\">İznik Ayasofya</a> — (İznik) — Nikaia Ayasofyası. Konsil tarihi, cami olarak da ziyaret.",
+        "<a href=\"/bursa-iznik-yesil-cami\">İznik Yeşil Cami</a> — (İznik) — Erken Osmanlı, minare çinisi. İznik merkez.",
+        "<a href=\"/bursa-iznik-golu\">İznik Gölü</a> — (İznik) — Göl kenarı, gün batımı. Sur ve çini ile aynı gün.",
+        "<a href=\"/bursa-iznik-lefke-kapisi\">İznik Lefke Kapısı</a> — (İznik) — Doğu sur kapısı. İznik sur turunun duraklarından.",
+        "<a href=\"/gezilecek?ilce=İznik\">Tüm İznik gezilecek</a>"
+      ]
+    }
+  ],
+  "related": [
+    [
+      "bursa-1-gunluk-gezi-plani",
+      "1 günde Bursa"
+    ]
+  ]
+}

@@ -478,5 +478,365 @@
     "symbol": "BTCUSDT",
     "hata_turu": "order_basarisiz",
     "detay": "dir=DOWN amount=8.0"
+  },
+  {
+    "zaman": "2026-08-17T23:05:29.666804+03:00",
+    "symbol": "95981481262062374298",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14639500'}]"
+  },
+  {
+    "zaman": "2026-08-17T23:05:29.668719+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=14.0"
+  },
+  {
+    "zaman": "2026-08-18T02:05:27.176575+03:00",
+    "symbol": "10196030143457898665",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14492080'}]"
+  },
+  {
+    "zaman": "2026-08-18T02:05:27.179652+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=14.0"
+  },
+  {
+    "zaman": "2026-08-18T07:05:26.071767+03:00",
+    "symbol": "11016026694058876460",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10514500'}]"
+  },
+  {
+    "zaman": "2026-08-18T07:05:26.072956+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=10.0"
+  },
+  {
+    "zaman": "2026-08-18T10:05:26.111846+03:00",
+    "symbol": "62303871554382112003",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14492080'}]"
+  },
+  {
+    "zaman": "2026-08-18T10:05:26.113495+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=14.0"
+  },
+  {
+    "zaman": "2026-08-18T14:05:28.272509+03:00",
+    "symbol": "82180446761914297118",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10654450'}]"
+  },
+  {
+    "zaman": "2026-08-18T14:05:28.273553+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=10.0"
+  },
+  {
+    "zaman": "2026-08-18T19:05:28.429096+03:00",
+    "symbol": "80539108803747696363",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 7255870'}]"
+  },
+  {
+    "zaman": "2026-08-18T19:05:28.432218+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=7.0"
+  },
+  {
+    "zaman": "2026-08-18T20:05:27.909219+03:00",
+    "symbol": "61339787504135786284",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10502110'}]"
+  },
+  {
+    "zaman": "2026-08-18T20:05:27.911222+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=10.0"
+  },
+  {
+    "zaman": "2026-08-18T23:05:28.410597+03:00",
+    "symbol": "78466514379837041312",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10510980'}]"
+  },
+  {
+    "zaman": "2026-08-18T23:05:28.415168+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=10.0"
+  },
+  {
+    "zaman": "2026-08-19T05:05:36.248283+03:00",
+    "symbol": "82689293169224099132",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10489240'}]"
+  },
+  {
+    "zaman": "2026-08-19T05:05:36.255823+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=10.0"
+  },
+  {
+    "zaman": "2026-08-19T05:05:47.329370+03:00",
+    "symbol": "19609434696244595839",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14717290'}]"
+  },
+  {
+    "zaman": "2026-08-19T05:05:47.339720+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=14.0"
+  },
+  {
+    "zaman": "2026-08-19T06:05:28.932088+03:00",
+    "symbol": "95350217126154942222",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10816870'}]"
+  },
+  {
+    "zaman": "2026-08-19T06:05:28.936238+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=10.0"
+  },
+  {
+    "zaman": "2026-08-19T07:05:29.523539+03:00",
+    "symbol": "13618894887435570782",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=503, error_message={'error': 'trading is disabled'}]"
+  },
+  {
+    "zaman": "2026-08-19T07:05:29.531157+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=UP amount=10.0"
+  },
+  {
+    "zaman": "2026-08-19T15:05:29.784987+03:00",
+    "symbol": "32603179427461183675",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14426060'}]"
+  },
+  {
+    "zaman": "2026-08-19T15:05:29.791039+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=14.0"
+  },
+  {
+    "zaman": "2026-08-19T16:05:30.008556+03:00",
+    "symbol": "65839781706855672979",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14294000'}]"
+  },
+  {
+    "zaman": "2026-08-19T16:05:30.010114+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=14.0"
+  },
+  {
+    "zaman": "2026-08-19T17:05:28.052113+03:00",
+    "symbol": "35439512145283075811",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 7375100'}]"
+  },
+  {
+    "zaman": "2026-08-19T17:05:28.053930+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=7.0"
+  },
+  {
+    "zaman": "2026-08-19T18:05:28.523820+03:00",
+    "symbol": "93958752583494014405",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10665460'}]"
+  },
+  {
+    "zaman": "2026-08-19T18:05:28.526029+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=10.0"
+  },
+  {
+    "zaman": "2026-08-19T18:05:39.044746+03:00",
+    "symbol": "71549011268518063777",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14696490'}]"
+  },
+  {
+    "zaman": "2026-08-19T18:05:39.046619+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=14.0"
+  },
+  {
+    "zaman": "2026-08-19T19:05:34.106580+03:00",
+    "symbol": "84472358023503933106",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 7340020'}]"
+  },
+  {
+    "zaman": "2026-08-19T19:05:34.114456+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=7.0"
+  },
+  {
+    "zaman": "2026-08-19T19:05:44.804519+03:00",
+    "symbol": "53033019109633076637",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10572970'}]"
+  },
+  {
+    "zaman": "2026-08-19T19:05:44.838325+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=9.8"
+  },
+  {
+    "zaman": "2026-08-19T20:05:32.741172+03:00",
+    "symbol": "29062807162597437711",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10568820'}]"
+  },
+  {
+    "zaman": "2026-08-19T20:05:32.753722+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=10.0"
+  },
+  {
+    "zaman": "2026-08-19T20:05:43.533676+03:00",
+    "symbol": "10337929866904065100",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14431200'}]"
+  },
+  {
+    "zaman": "2026-08-19T20:05:43.535722+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=14.0"
+  },
+  {
+    "zaman": "2026-08-19T21:05:35.072123+03:00",
+    "symbol": "10765852386413198120",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10401300'}]"
+  },
+  {
+    "zaman": "2026-08-19T21:05:35.075413+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=10.0"
+  },
+  {
+    "zaman": "2026-08-19T21:05:45.619805+03:00",
+    "symbol": "12829547279741174152",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14255170'}]"
+  },
+  {
+    "zaman": "2026-08-19T21:05:45.621148+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=14.0"
+  },
+  {
+    "zaman": "2026-08-19T22:05:28.549941+03:00",
+    "symbol": "42541290945007207299",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10401300'}]"
+  },
+  {
+    "zaman": "2026-08-19T22:05:28.558642+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=10.0"
+  },
+  {
+    "zaman": "2026-08-19T22:05:39.393973+03:00",
+    "symbol": "14266858952308416111",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14523520'}]"
+  },
+  {
+    "zaman": "2026-08-19T22:05:39.408002+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=14.0"
+  },
+  {
+    "zaman": "2026-08-19T23:05:29.611204+03:00",
+    "symbol": "27760971759912073997",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10402390'}]"
+  },
+  {
+    "zaman": "2026-08-19T23:05:29.620462+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=10.0"
+  },
+  {
+    "zaman": "2026-08-20T00:05:30.770207+03:00",
+    "symbol": "95215910956930167799",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10476000'}]"
+  },
+  {
+    "zaman": "2026-08-20T00:05:30.774593+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=10.0"
+  },
+  {
+    "zaman": "2026-08-20T00:05:41.265973+03:00",
+    "symbol": "76330206175237194666",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14843590'}]"
+  },
+  {
+    "zaman": "2026-08-20T00:05:41.267638+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=14.0"
+  },
+  {
+    "zaman": "2026-08-20T01:05:28.913781+03:00",
+    "symbol": "54080390741932464153",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 10413150'}]"
+  },
+  {
+    "zaman": "2026-08-20T01:05:28.915447+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=10.0"
+  },
+  {
+    "zaman": "2026-08-20T01:05:39.606062+03:00",
+    "symbol": "81605619340288734370",
+    "hata_turu": "order_exception",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'not enough balance / allowance: the balance is not enough -> balance: 0, order amount: 14924580'}]"
+  },
+  {
+    "zaman": "2026-08-20T01:05:39.614066+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "order_basarisiz",
+    "detay": "dir=DOWN amount=14.0"
   }
 ]

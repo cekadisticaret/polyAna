@@ -1,25 +1,25 @@
 {
   "mapping": {
     "BTC": {
-      "book": "b1_mum",
-      "label": "B1#03 MUM",
-      "wr": 60.6,
-      "w": 43,
-      "t": 71
+      "book": "analiz6",
+      "label": "A6",
+      "wr": 50.0,
+      "w": 3,
+      "t": 6
     },
     "SOL": {
-      "book": "a2_02",
-      "label": "A2#02",
-      "wr": 62.8,
-      "w": 27,
-      "t": 43
+      "book": "analiz6",
+      "label": "A6",
+      "wr": 60.0,
+      "w": 3,
+      "t": 5
     },
     "ETH": {
-      "book": "b1_mum",
-      "label": "B1#03 MUM",
-      "wr": 61.8,
-      "w": 47,
-      "t": 76
+      "book": "a2_08",
+      "label": "A2#08",
+      "wr": 70.0,
+      "w": 7,
+      "t": 10
     }
   },
   "min_trades": 5,

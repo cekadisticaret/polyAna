@@ -14,7 +14,7 @@ MAX_ITER = 300
 HOME_ADV = 0.25
 RHO = -0.05
 MAX_GOALS = 8
-MIN_EDGE = 0.03
+MIN_EDGE = 0.04
 UPCOMING_DAYS = 21
 UPCOMING_LIMIT = 24
 
@@ -140,9 +140,13 @@ class DixonColesModel:
         mu = a["attack"] * h["defense"] * self.avg_goals
         return {"lambda": lam, "mu": mu}
 
-    def score_matrix(self, home: str, away: str, max_goals: int = MAX_GOALS) -> list[list[float]]:
-        xg = self.expected_goals(home, away)
-        lam, mu = xg["lambda"], xg["mu"]
+    def score_matrix(
+        self, home: str, away: str, max_goals: int = MAX_GOALS,
+        *, lam: float | None = None, mu: float | None = None,
+    ) -> list[list[float]]:
+        if lam is None or mu is None:
+            xg = self.expected_goals(home, away)
+            lam, mu = xg["lambda"], xg["mu"]
         matrix = []
         for x in range(max_goals + 1):
             row = []
@@ -153,8 +157,11 @@ class DixonColesModel:
         total = sum(p for row in matrix for p in row) or 1.0
         return [[p / total for p in row] for row in matrix]
 
-    def markets(self, home: str, away: str, max_goals: int = MAX_GOALS) -> dict:
-        m = self.score_matrix(home, away, max_goals)
+    def markets(
+        self, home: str, away: str, max_goals: int = MAX_GOALS,
+        *, lam: float | None = None, mu: float | None = None,
+    ) -> dict:
+        m = self.score_matrix(home, away, max_goals, lam=lam, mu=mu)
         n = len(m)
         p_home = p_draw = p_away = btts = 0.0
         tot_dist: dict[int, float] = {}
@@ -178,7 +185,10 @@ class DixonColesModel:
         for line in (0.5, 1.5, 2.5, 3.5, 4.5):
             under = sum(tot_dist.get(g, 0.0) for g in range(int(math.floor(line)) + 1))
             over_under[str(line)] = {"under": under, "over": 1 - under}
-        xg = self.expected_goals(home, away)
+        if lam is None or mu is None:
+            xg = self.expected_goals(home, away)
+        else:
+            xg = {"lambda": lam, "mu": mu}
         return {
             "matchResult": {"1": p_home, "X": p_draw, "2": p_away},
             "doubleChance": {
@@ -194,12 +204,15 @@ class DixonColesModel:
         }
 
     @staticmethod
-    def find_value(model_prob: float, market_odds: float, min_edge: float = MIN_EDGE) -> dict:
-        implied = 1 / market_odds
-        edge = model_prob - implied
+    def find_value(model_prob: float, market_odds: float, min_edge: float = MIN_EDGE,
+                   fair_implied: float | None = None) -> dict:
+        from bahis.value import edges
+        ev = edges(model_prob, market_odds, fair_implied, min_edge)
+        edge = ev["edgeFair"]
         return {
-            "edge": edge,
-            "isValue": edge >= min_edge,
+            "edge": ev["edge"],
+            "edgeFair": edge,
+            "isValue": ev["isValue"],
             "kellyFraction": (edge / (market_odds - 1)) if edge > 0 else 0.0,
         }
 
@@ -223,11 +236,18 @@ def _train_rows() -> list[dict]:
     return rows
 
 
-@lru_cache(maxsize=1)
-def _fitted() -> DixonColesModel:
+@lru_cache(maxsize=8)
+def _fitted_for(league: str) -> DixonColesModel:
+    from bahis.leagues_cfg import set_league
+    set_league(league)
     model = DixonColesModel(_train_rows())
     model.fit()
     return model
+
+
+def _fitted() -> DixonColesModel:
+    from bahis.leagues_cfg import current_league
+    return _fitted_for(current_league())
 
 
 def _round_p(p: float) -> float:
@@ -241,17 +261,20 @@ def _pct(p: float) -> int:
 def _value_pack(mr: dict, odds: dict | None) -> list[dict]:
     if not odds:
         return []
+    from bahis.value import fair_1x2
+    fair = fair_1x2(odds) or {}
+    fair_p = fair.get("fair") or {}
     out = []
     for key, field in (("1", "home"), ("X", "draw"), ("2", "away")):
         o = odds.get(field)
         if not o or o <= 1:
             continue
-        v = DixonColesModel.find_value(mr[key], float(o))
+        v = DixonColesModel.find_value(mr[key], float(o), fair_implied=fair_p.get(key))
         if v["isValue"]:
             out.append({
                 "pick": key,
                 "odds": round(float(o), 2),
-                "edge": _round_p(v["edge"]),
+                "edge": _round_p(v["edgeFair"]),
                 "kelly": _round_p(v["kellyFraction"]),
             })
     return out
@@ -264,9 +287,15 @@ def _when(ko: str | None) -> str:
     return dt.strftime("%d.%m %H:%M")
 
 
-def _card(m: dict, mk: dict) -> dict:
+def _card(m: dict, mk: dict, meta: dict | None = None) -> dict:
+    from bahis.league import _fill_odds, h2h
     hi, ai = m["home"], m["away"]
     mr = mk["matchResult"]
+    raw_od = m.get("odds") or {}
+    filled = _fill_odds(m, h2h)
+    odds_src = "fd" if (raw_od.get("home") and raw_od.get("draw") and raw_od.get("away")) else (
+        "h2h" if filled.get("home") else None
+    )
     pick = max(mr, key=mr.get)
     if pick == "1":
         text = f"{hi['name']} kazanır"
@@ -284,7 +313,8 @@ def _card(m: dict, mk: dict) -> dict:
         "venue": m.get("venue"),
         "home": hi,
         "away": ai,
-        "odds": m.get("odds") or {},
+        "odds": filled,
+        "odds_src": odds_src,
         "xg": {"home": _round_p(xg["lambda"]), "away": _round_p(xg["mu"])},
         "matchResult": {k: _round_p(v) for k, v in mr.items()},
         "doubleChance": {k: _round_p(v) for k, v in mk["doubleChance"].items()},
@@ -299,6 +329,25 @@ def _card(m: dict, mk: dict) -> dict:
         "text": text,
         "pct": _pct(mr[pick]),
         "value": _value_pack(mr, m.get("odds")),
+        "blend": (meta or {}).get("notes"),
+        "ctx": _pub_ctx((meta or {}).get("ctx")),
+    }
+
+
+def _pub_ctx(ctx: dict | None) -> dict | None:
+    if not ctx:
+        return None
+    inj = ctx.get("injuries") or {}
+    return {
+        "rest_h": ctx.get("rest_h"),
+        "rest_a": ctx.get("rest_a"),
+        "shape_h": ctx.get("shape_h"),
+        "shape_a": ctx.get("shape_a"),
+        "line": ctx.get("line"),
+        "inj_h": [x.get("name") for x in (inj.get("home") or [])][:6],
+        "inj_a": [x.get("name") for x in (inj.get("away") or [])][:6],
+        "n_inj_h": inj.get("n_h") or 0,
+        "n_inj_a": inj.get("n_a") or 0,
     }
 
 
@@ -316,8 +365,10 @@ def upcoming_preds(team: str | None = None, limit: int = UPCOMING_LIMIT) -> dict
             continue
         if team and team not in (m["home"]["key"], m["away"]["key"]):
             continue
-        mk = model.markets(m["home"]["key"], m["away"]["key"])
-        rows.append(_card(m, mk))
+        from bahis.features import pair_lambda
+        lam, mu, meta = pair_lambda(m["home"]["key"], m["away"]["key"], m, fetch_inj=False)
+        mk = model.markets(m["home"]["key"], m["away"]["key"], lam=lam, mu=mu)
+        rows.append(_card(m, mk, meta))
         if len(rows) >= limit:
             break
     strengths = [
@@ -333,7 +384,7 @@ def upcoming_preds(team: str | None = None, limit: int = UPCOMING_LIMIT) -> dict
     return {
         "ok": True,
         "model": "dixon-coles",
-        "note": f"{len(model.matches)} maç · {HALF_LIFE_DAYS} gün yarı ömür",
+        "note": f"{len(model.matches)} maç · {HALF_LIFE_DAYS}g · ELO λ karışım",
         "half_life_days": HALF_LIFE_DAYS,
         "matches_used": len(model.matches),
         "horizon_days": UPCOMING_DAYS,

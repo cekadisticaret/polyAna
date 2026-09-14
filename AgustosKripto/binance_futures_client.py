@@ -243,9 +243,8 @@ class BinanceFuturesClient:
         return []
 
     def account(self, *, ignore_ban: bool = False) -> dict:
-        fx = os.path.join(os.path.dirname(_DIR), "EylulForex")
-        if fx not in sys.path:
-            sys.path.insert(0, fx)
+        if _DIR not in sys.path:
+            sys.path.insert(0, _DIR)
         from binance_um_wallet import fetch
         w = fetch() or {}
         return {

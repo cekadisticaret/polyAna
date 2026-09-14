@@ -49,6 +49,7 @@
     <a class="{% if tab=='media' %}on{% endif %}" href="/hesap/profil?tab=media">Albüm</a>
     <a class="{% if tab=='visits' %}on{% endif %}" href="/hesap/profil?tab=visits">Yerler</a>
     <a class="{% if tab=='going' %}on{% endif %}" href="/hesap/profil?tab=going">Gideceğim{% if going_n %} {{ going_n }}{% endif %}</a>
+    <a href="/arkadas-ara">Partner ara</a>
     <a href="/hesap/ayarlar">Ayar</a>
   </nav>
 
@@ -92,18 +93,23 @@
         <svg class="ff-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         Gideceğim{% if going_n %}<i class="ff-badge">{{ going_n }}</i>{% endif %}
       </a>
+      <a href="/arkadas-ara" class="{% if nav=='buddy' %}on{% endif %}">
+        <svg class="ff-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Partner ara{% if buddy_open_n %}<i class="ff-badge">{{ buddy_open_n }}</i>{% endif %}
+      </a>
       <a href="/hesap/ayarlar">
         <svg class="ff-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
         Settings
       </a>
     </nav>
-    <div class="ff-card ff-promo">
+    <div class="ff-card ff-promo ff-promo-buddy">
       <div class="ff-promo-orbs" aria-hidden="true">
         <span></span><span></span><span></span>
       </div>
-      <b>BursaApp</b>
-      <p>Gittiğin yerleri paylaş, şehri birlikte keşfet.</p>
-      <a class="ff-btn sm" href="/album">Şehir albümü</a>
+      <b>Partner ara</b>
+      <p>Okey 4., tenis, halı saha, koşu — Bursa'da aktivite arkadaşı bul.</p>
+      {% if buddy_open_n %}<p class="ff-muted sm">{{ buddy_open_n }} açık ilan</p>{% endif %}
+      <a class="ff-btn sm" href="/arkadas-ara">İlanlara git</a>
     </div>
   </aside>
 
@@ -133,6 +139,7 @@
           <a class="ff-interest tone-b" href="/konserler"><span>🎵</span><b>Müzik</b></a>
           <a class="ff-interest tone-c" href="/yeme-icme"><span>🍽</span><b>Lezzet</b></a>
           <a class="ff-interest tone-d" href="/kamp"><span>⛰</span><b>Doğa</b></a>
+          <a class="ff-interest tone-b" href="/arkadas-ara"><span>🎾</span><b>Partner</b></a>
         </div>
       </div>
     </div>
@@ -239,6 +246,25 @@
       </div>
     </div>
 
+    <div class="ff-card ff-panel-tight ff-buddy-side">
+      <h3 class="ff-h2">Partner ara</h3>
+      <p class="ff-muted sm">Okey · tenis · halı saha · koşu</p>
+      {% if buddy_samples %}
+      {% for s in buddy_samples[:3] %}
+      <a class="ff-suggest ff-buddy-row" href="/arkadas-ara?type={{ s.activity_type }}">
+        <div class="ff-avatar sm"><span>{{ s.emoji }}</span></div>
+        <div class="ff-suggest-meta">
+          <b>{{ s.title[:42] }}{% if s.title|length>42 %}…{% endif %}</b>
+          <small>{{ s.activity_label }}{% if s.ilce %} · {{ s.ilce }}{% endif %} · {{ s.spots_left }} boş</small>
+        </div>
+      </a>
+      {% endfor %}
+      {% else %}
+      <p class="ff-muted sm">Henüz açık ilan yok — ilk ilanı sen ver.</p>
+      {% endif %}
+      <a class="ff-btn sm dark" href="/arkadas-ara" style="width:100%;margin-top:10px;text-align:center">Tüm ilanlar{% if buddy_open_n %} ({{ buddy_open_n }}){% endif %}</a>
+    </div>
+
     <div class="ff-card">
       <h3 class="ff-h2">Takip öner</h3>
       {{ follow_panel() }}
@@ -251,6 +277,7 @@
         <a class="ff-interest tone-b" href="/konserler"><span>🎵</span><b>Müzik</b></a>
         <a class="ff-interest tone-c" href="/yeme-icme"><span>🍽</span><b>Lezzet</b></a>
         <a class="ff-interest tone-d" href="/kamp"><span>⛰</span><b>Doğa</b></a>
+        <a class="ff-interest tone-b" href="/arkadas-ara"><span>🎾</span><b>Partner</b></a>
       </div>
     </div>
 

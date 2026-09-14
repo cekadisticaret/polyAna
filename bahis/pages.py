@@ -78,6 +78,12 @@ body{display:flex}
 }
 .tcirc.on{border-color:var(--g);box-shadow:0 0 12px rgba(0,255,136,.35)}
 .tcirc img{width:100%;height:100%;object-fit:contain;background:#fff}
+.lgbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.lgchip{
+  border:1px solid var(--line);background:#171b1f;color:#c5cdc8;border-radius:999px;
+  padding:7px 12px;font:800 11px/1 Manrope,sans-serif;letter-spacing:.06em;cursor:pointer
+}
+.lgchip.on{background:var(--g);color:var(--ink);border-color:var(--g)}
 .liveb{
   display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
   padding:14px 20px;margin-bottom:16px;border-radius:18px;
@@ -230,6 +236,8 @@ body{display:flex}
 .tstr .chip{background:#171b1f;border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700;color:#c8d0cc}
 .tcard.kind-elo{border-color:#f5c518}
 .tcard.kind-bankroll{border-color:#00ff88}
+.tcard.kind-coupon{border-color:#f5c518}
+.tcard.kind-backtest{border-color:#7aa2ff}
 .tcard.pas{opacity:.62}
 .elo-n{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1}
 .elo-d{font-size:11px;color:var(--muted);font-weight:700;margin-top:4px}
@@ -281,6 +289,7 @@ body{display:flex}
       <button class="tab" type="button">CASINO</button>
       <button class="tab on" type="button">SPORT</button>
       <a class="tab" href="/site" style="display:inline-flex;align-items:center">SITE</a>
+      <a class="tab" href="/bahis/kuponlar" style="display:inline-flex;align-items:center">KUPONLAR</a>
     </div>
     <div class="sp"></div>
     <div class="ico">⌕</div>
@@ -290,8 +299,9 @@ body{display:flex}
   <div class="page">
   <div class="shell">
   <div>
+    <div class="lgbar" id="lgbar"></div>
     <section class="hero">
-      <div class="glow-ring"><b>1.LİG</b></div>
+      <div class="glow-ring"><b id="lgshort">TR</b></div>
       <div>
         <h1 id="ttl">SÜPER LİG</h1>
         <p id="sub">Son 10 yıl · kim kiminle oynayacak</p>
@@ -305,6 +315,7 @@ body{display:flex}
       <button class="ptab" type="button" data-pane="t" data-engine="dixon">DIXON-COLES</button>
       <button class="ptab" type="button" data-pane="t" data-engine="elo">ELO</button>
       <button class="ptab" type="button" data-pane="t" data-engine="bankroll">BANKROLL</button>
+      <a class="ptab" href="/bahis/kuponlar">KUPONLAR</a>
     </div>
 
     <div id="pane-m">
@@ -448,6 +459,17 @@ body{display:flex}
 const $ = id => document.getElementById(id);
 const ENGINES = (()=>{ try{ return JSON.parse(($('engines-json').textContent||'[]').trim()); }catch(e){ return []; } })();
 let SUM=null, TEAM='', CH={}, PLAY=null, PSTAT='goals', PSEA='', PRED=null, ENGINE=(ENGINES[0]&&ENGINES[0].id)||'';
+let LEAGUE = new URLSearchParams(location.search).get('league') || 'tr';
+function withLg(url){
+  const join = url.includes('?') ? '&' : '?';
+  return url + join + 'league=' + encodeURIComponent(LEAGUE);
+}
+function paintLeagues(list){
+  const box=$('lgbar'); if(!box) return;
+  box.innerHTML = (list||[]).map(x=>
+    `<button class="lgchip${x.id===LEAGUE?' on':''}" type="button" data-id="${esc(x.id)}">${esc(x.flag)} ${esc(x.short)}</button>`
+  ).join('');
+}
 
 function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));}
 function crest(t, cls){
@@ -586,7 +608,9 @@ function paintGrid(rows){
 }
 
 async function loadSum(){
-  SUM = await (await fetch('/bahis/api/summary',{cache:'no-store'})).json();
+  SUM = await (await fetch(withLg('/bahis/api/summary'),{cache:'no-store'})).json();
+  paintLeagues(SUM.leagues||[]);
+  if($('lgshort')) $('lgshort').textContent = (SUM.league_id||'tr').toUpperCase();
   $('ttl').textContent = (SUM.league||'SÜPER LİG').toUpperCase();
   $('sub').textContent = `${SUM.played_n} maç · ${SUM.upcoming_n} fikstür · 10 sezon`;
   $('trow').innerHTML = (SUM.teams||[]).map(t=>`
@@ -608,7 +632,7 @@ async function loadSum(){
 async function loadHist(){
   const qs = new URLSearchParams({status:'played'});
   if(TEAM) qs.set('team', TEAM);
-  const rows = await (await fetch('/bahis/api/matches?'+qs,{cache:'no-store'})).json();
+  const rows = await (await fetch(withLg('/bahis/api/matches?'+qs),{cache:'no-store'})).json();
   $('hist').innerHTML = rows.slice(0,40).map(m=>`
     <div class="hrow" onclick="location.href='/site/mac/'+encodeURIComponent('${esc(m.id||'')}')">
       <div>${esc(m.when)}</div>
@@ -618,7 +642,7 @@ async function loadHist(){
 }
 
 async function openH2H(a,b, silent){
-  const d = await (await fetch(`/bahis/api/h2h?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`,{cache:'no-store'})).json();
+  const d = await (await fetch(withLg(`/bahis/api/h2h?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`),{cache:'no-store'})).json();
   paintCmp(d);
   chartsH2H(d);
   if(silent) return;
@@ -685,14 +709,14 @@ async function loadPlayers(sort){
   const q=($('pq').value||'').trim();
   if(q) qs.set('q', q);
   const [d, sum] = await Promise.all([
-    (await fetch('/bahis/api/players?'+qs,{cache:'no-store'})).json(),
-    (await fetch('/bahis/api/players?kind=summary'+(PSEA?'&season='+encodeURIComponent(PSEA):''),{cache:'no-store'})).json(),
+    (await fetch(withLg('/bahis/api/players?'+qs),{cache:'no-store'})).json(),
+    (await fetch(withLg('/bahis/api/players?kind=summary'+(PSEA?'&season='+encodeURIComponent(PSEA):'')),{cache:'no-store'})).json(),
   ]);
   if(sum&&sum.ok) paintLeaders(sum.leaders);
   $('pttl').textContent = `${(d.season&&d.season.label)||''} · ${d.count||0} oyuncu · ${PSTAT}`;
   paintPTable(d.players||[], PSTAT);
   if(TEAM){
-    const sq=await (await fetch('/bahis/api/players?kind=squad&team='+encodeURIComponent(TEAM),{cache:'no-store'})).json();
+    const sq=await (await fetch(withLg('/bahis/api/players?kind=squad&team='+encodeURIComponent(TEAM)),{cache:'no-store'})).json();
     const groups=(sq.squad&&sq.squad.groups)||[];
     $('psquad').innerHTML = groups.filter(g=>g.role!=='coach').map(g=>`
       <div class="pcard"><div class="h">${esc(g.role).toUpperCase()} · ${g.players.length}</div>
@@ -700,7 +724,7 @@ async function loadPlayers(sort){
   } else $('psquad').innerHTML='';
 }
 async function loadPlaySum(){
-  PLAY=await (await fetch('/bahis/api/players?kind=summary',{cache:'no-store'})).json();
+  PLAY=await (await fetch(withLg('/bahis/api/players?kind=summary'),{cache:'no-store'})).json();
   if(!PLAY||!PLAY.ok) return;
   PSEA = (PLAY.season&&PLAY.season.id)||'';
   $('psea').innerHTML=(PLAY.seasons||[]).map(s=>`<option value="${s.id}">${esc(s.label)} · ${s.n}</option>`).join('');
@@ -709,7 +733,7 @@ async function loadPlaySum(){
   loadPlayers(PSTAT);
 }
 async function openPlayer(id){
-  const d=await (await fetch('/bahis/api/players?id='+id,{cache:'no-store'})).json();
+  const d=await (await fetch(withLg('/bahis/api/players?id='+id),{cache:'no-store'})).json();
   if(!d.ok) return;
   const c=d.career||{};
   const ov=$('ov'); ov.className='ov on';
@@ -744,9 +768,9 @@ $('trow').addEventListener('click', async e=>{
   const b=e.target.closest('.tcirc'); if(!b) return;
   TEAM = TEAM===b.dataset.k ? '' : b.dataset.k;
   document.querySelectorAll('.tcirc').forEach(x=>x.classList.toggle('on', x.dataset.k===TEAM && TEAM));
-  const qs = new URLSearchParams({status:'upcoming', season:'2627'});
+  const qs = new URLSearchParams({status:'upcoming', season:(SUM&&SUM.current)||'2627'});
   if(TEAM) qs.set('team', TEAM);
-  const rows = await (await fetch('/bahis/api/matches?'+qs,{cache:'no-store'})).json();
+  const rows = await (await fetch(withLg('/bahis/api/matches?'+qs),{cache:'no-store'})).json();
   paintGrid(rows);
   loadHist();
   if($('pane-p').style.display==='block') loadPlayers();
@@ -785,6 +809,7 @@ function paintDixonCard(m, label){
       <div class="box"><s>2.5 alt / üst</s><b>%${pct(ou.under)} / %${pct(ou.over)}</b></div>
       <div class="box"><s>KG var / yok</s><b>%${pct(m.bttsYes)} / %${pct(m.bttsNo)}</b></div>
     </div>
+    ${m.ctx?`<div class="when">dinlenme ev ${m.ctx.rest_h??'—'}g · dep ${m.ctx.rest_a??'—'}g${m.ctx.n_inj_h||m.ctx.n_inj_a?` · sakat ${m.ctx.n_inj_h||0}/${m.ctx.n_inj_a||0}`:''}</div>`:''}
     <div class="tsc">${scores}</div>
   </div>`;
 }
@@ -808,14 +833,48 @@ function paintBankCard(m){
     <div>${esc(e.label||e.selection)}</div>
     <div>${e.odds==null?'—':Number(e.odds).toFixed(2)}</div>
     <div>%${pct(e.model_prob)}</div>
-    <div class="${e.edge>=0.03?'ok':'no'}">${e.edge>=0?'+':''}${(e.edge*100).toFixed(1)}p</div>
+    <div class="${e.edge>=0.04?'ok':'no'}">${e.edge>=0?'+':''}${(e.edge*100).toFixed(1)}p</div>
     <div class="${e.should_bet?'ok':'no'}">${e.should_bet? ('AL '+e.stake) : ('PAS · '+esc(e.reason||''))}</div>
   </div>`).join('');
   return `<div class="tcard kind-bankroll${ok?'':' pas'}" data-id="${esc(m.id||'')}" data-h="${esc(m.home.key)}" data-a="${esc(m.away.key)}">
     ${vsHead(m, '', '')}
-    <div class="tpick">${esc(m.text)}${ok?`<span class="vbadge">AL</span>`:''}<small>¼ Kelly · Dixon olasılığı × piyasa oranı</small></div>
+    <div class="tpick">${esc(m.text)}${ok?`<span class="vbadge">AL</span>`:''}<small>¼ Kelly · fair kenar (vig’siz)</small></div>
     <div class="erow" style="color:#8b9590;font-size:10px;letter-spacing:.06em"><div>SEÇİM</div><div>ORAN</div><div>MODEL</div><div>EDGE</div><div>KARAR</div></div>
     ${rows||'<div class="ltime">oran yok</div>'}
+  </div>`;
+}
+function paintCouponHead(c){
+  if(!c) return '<div class="tcard kind-coupon pas"><div class="tpick">Kupon yok<small>fair kenar ≥%4 bacak bulunamadı · emir yok</small></div></div>';
+  const legs=(c.legs||[]).map(l=>`<div class="erow">
+    <div>${esc(l.label)}</div>
+    <div>${Number(l.odds).toFixed(2)}</div>
+    <div>%${pct(l.model_p)}</div>
+    <div class="ok">+${((l.edge_fair||0)*100).toFixed(1)}p</div>
+    <div>${esc(l.home)} — ${esc(l.away)}</div>
+  </div>`).join('');
+  return `<div class="tcard kind-coupon">
+    <div class="when">kâğıt kupon · emir yok · ${esc(c.corr||'')}</div>
+    <div class="tpick">birleşik ${c.odds_product} · %${pct(c.p_joint)} · kenar +${(c.edge*100).toFixed(1)}p
+      ${c.should?`<span class="vbadge">ÖNERİ ${c.stake}</span>`:''}
+      <small>bağımsız çarpım %${pct(c.p_indep)} · Kelly /√${c.n} = ${c.kelly}</small>
+    </div>
+    <div class="erow" style="color:#8b9590;font-size:10px;letter-spacing:.06em"><div>SEÇİM</div><div>ORAN</div><div>MODEL</div><div>FAIR</div><div>MAÇ</div></div>
+    ${legs}
+  </div>`;
+}
+function paintBackCard(m){
+  const s=m.stats||{};
+  const bins=(m.bins||[]).map(b=>`<i>${esc(b.bin)} <em>p ${pct(b.pred)} · gerçek ${pct(b.actual)}</em></i>`).join('');
+  return `<div class="tcard kind-backtest">
+    <div class="when">walk-forward · ${esc(m.when||'')}</div>
+    <div class="tpick">${esc(m.text)}<small>${esc(m.home&&m.home.name||'')} · isabet≠kâr</small></div>
+    <div class="tmk">
+      <div class="box"><s>Brier</s><b>${s.brier??'—'}</b></div>
+      <div class="box"><s>log-loss</s><b>${s.logloss??'—'}</b></div>
+      <div class="box"><s>value n / ROI</s><b>${s.value_n??0} · ${s.value_roi==null?'—':('%'+s.value_roi)}</b></div>
+      <div class="box"><s>naive</s><b>${s.naive_score??'—'} · oran yok</b></div>
+    </div>
+    <div class="tsc">${bins}</div>
   </div>`;
 }
 function paintPreds(d){
@@ -827,6 +886,22 @@ function paintPreds(d){
   if(kind==='bankroll'&&d.bankroll){
     const b=d.bankroll;
     $('tstr').innerHTML = `<span class="chip">kasa ${b.current_bankroll}</span><span class="chip">${d.taken_n||0} AL</span><span class="chip">DD %${b.current_drawdown_pct}</span>`;
+  } else if(kind==='coupon'){
+    const cl=d.clv||{};
+    $('tstr').innerHTML = [
+      `<span class="chip">${(d.coupon&&d.coupon.n)||0} ayak</span>`,
+      `<span class="chip">${d.candidates_n||0} value bacak</span>`,
+      cl.n?`<span class="chip">CLV ${cl.beat_pct}% · n ${cl.n}</span>`:`<span class="chip">CLV henüz yok</span>`,
+    ].join('');
+  } else if(kind==='backtest'){
+    const bt=d.backtest||{};
+    const e=bt.elo||{}, x=bt.dixon||{};
+    $('tstr').innerHTML = [
+      `<span class="chip">n ${bt.n_matches||0}</span>`,
+      `<span class="chip">oranlı ${bt.n_odds||0}</span>`,
+      e.brier!=null?`<span class="chip">ELO Brier ${e.brier}</span>`:'',
+      x.brier!=null?`<span class="chip">DC Brier ${x.brier}</span>`:'',
+    ].join('');
   } else if(kind==='elo'){
     $('tstr').innerHTML = (d.strengths||[]).slice(0,12).map(t=>
       `<span class="chip">${esc(t.short)} ELO ${t.attack} · RD ${t.defense}</span>`).join('');
@@ -834,8 +909,9 @@ function paintPreds(d){
     $('tstr').innerHTML = (d.strengths||[]).slice(0,12).map(t=>
       `<span class="chip">${esc(t.short)} atk ${t.attack} · def ${t.defense}</span>`).join('');
   }
-  const paint = kind==='elo' ? paintEloCard : kind==='bankroll' ? paintBankCard : paintDixonCard;
-  $('tgrid').innerHTML = (d.preds||[]).map(m=>paint(m, name)).join('') || '<div class="ltime">Yakın maç yok</div>';
+  const paint = kind==='elo' ? paintEloCard : kind==='backtest' ? paintBackCard : (kind==='bankroll'||kind==='coupon') ? paintBankCard : paintDixonCard;
+  const head = kind==='coupon' ? paintCouponHead(d.coupon) : '';
+  $('tgrid').innerHTML = head + ((d.preds||[]).map(m=>paint(m, name)).join('') || (kind==='coupon'?'':'<div class="ltime">Yakın maç yok</div>'));
 }
 async function loadPreds(){
   if(!ENGINE){ $('tmeta').textContent='Motor yok'; return; }
@@ -843,7 +919,7 @@ async function loadPreds(){
   $('tgrid').innerHTML = '';
   const qs=new URLSearchParams({limit:'24', engine:ENGINE});
   if(TEAM) qs.set('team', TEAM);
-  const d=await (await fetch('/bahis/api/preds?'+qs,{cache:'no-store'})).json();
+  const d=await (await fetch(withLg('/bahis/api/preds?'+qs),{cache:'no-store'})).json();
   if((d.engine||d.model) && ENGINE && d.engine && d.engine!==ENGINE) return;
   paintPreds(d);
 }
@@ -870,6 +946,18 @@ $('ptabs').addEventListener('click', e=>{
   if(b.dataset.pane==='p' && !PLAY) loadPlaySum();
   else if(b.dataset.pane==='p') loadPlayers();
   else if(b.dataset.pane==='t'){ ENGINE=b.dataset.engine||ENGINE; loadPreds(); }
+});
+$('lgbar').addEventListener('click', e=>{
+  const b=e.target.closest('.lgchip'); if(!b) return;
+  LEAGUE = b.dataset.id || 'tr';
+  TEAM=''; PLAY=null;
+  const u=new URL(location.href);
+  u.searchParams.set('league', LEAGUE);
+  history.replaceState(null,'',u);
+  document.querySelectorAll('.lgchip').forEach(x=>x.classList.toggle('on', x.dataset.id===LEAGUE));
+  loadSum();
+  if($('pane-p').style.display==='block') loadPlaySum();
+  if($('pane-t').style.display==='block') loadPreds();
 });
 $('psea').addEventListener('change', ()=>{ PSEA=$('psea').value; loadPlayers(); });
 $('pq').addEventListener('input', ()=>{ clearTimeout($('pq')._t); $('pq')._t=setTimeout(()=>loadPlayers(), 220); });

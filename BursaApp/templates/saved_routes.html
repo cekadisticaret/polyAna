@@ -3,14 +3,37 @@
 {% block hello %}Rotalarım{% endblock %}
 {% block sub %}Kaydedilmiş 1 günlük programlar{% endblock %}
 {% block main %}
-{% for it in items %}
-<section class="panel" style="margin-bottom:14px">
-  <h3>{{ it.route.title }} · {{ it.route.budget_tl }} TL bütçe</h3>
-  {% for s in it.slots %}
-  <p class="empty">{{ s.slot_time }} · <a href="/yer/{{ s.slug }}">{{ s.title }}</a></p>
+<div class="sr-list">
+  {% for it in items %}
+  <section class="sr-card panel">
+    <header class="sr-card-head">
+      <div>
+        <h3>{{ it.route.title }}</h3>
+        <p class="sr-card-meta">
+          {% if it.route.budget_tl %}{{ it.route.budget_tl }} TL bütçe{% endif %}
+          {% if it.est_total %} · ~{{ it.est_total }} TL tahmini{% endif %}
+          · {{ it.slots|length }} durak
+        </p>
+      </div>
+      <div class="sr-card-actions">
+        <a class="btn sm ghost" href="/hesap/rotalar/{{ it.route.id }}/duzenle">Düzenle</a>
+        <form method="post" action="/hesap/rotalar/{{ it.route.id }}/sil" class="sr-del-form" onsubmit="return confirm('Bu rota silinsin mi?');">
+          <button class="btn sm sr-del-btn" type="submit">Sil</button>
+        </form>
+      </div>
+    </header>
+    <ol class="sr-card-slots">
+      {% for s in it.slots %}
+      <li>
+        <time>{{ s.slot_time }}</time>
+        <a href="{{ s.path or ('/yer/' ~ s.slug) }}">{{ s.title }}</a>
+        {% if s.slot_label %}<small>{{ s.slot_label }}</small>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% else %}
+  <div class="empty-box"><p>Kayıtlı rota yok. <a href="/rota">Rota oluştur</a></p></div>
   {% endfor %}
-</section>
-{% else %}
-<div class="empty-box"><p>Kayıtlı rota yok. <a href="/rota">Rota oluştur</a></p></div>
-{% endfor %}
+</div>
 {% endblock %}

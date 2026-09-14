@@ -34,10 +34,8 @@ def main() -> int:
     ok = _run("Doruk hekim kadrosu", "doruk_doctors_fetch.py", required=False) and ok
     ok = (
         _run(
-            "Diş hekimleri (MHRS/resmi + seed)",
+            "Diş hekimleri (OSM + Nominatim + MHRS + seed)",
             "dentists_fetch.py",
-            "--no-photon",
-            "--no-skrs",
             "--seed",
         )
         and ok

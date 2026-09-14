@@ -214,7 +214,7 @@
       <a class="{{ 'on' if price_filter=='18plus' else '' }}" href="{{ hotel_link(price='18plus') }}">18.000 TL üstü</a>
     </div>
   </form>
-  <p class="ht-note">{{ places|length }} otel · örnek gecelik fiyat{% if sort=='price_asc' %} · en ucuz üstte{% elif sort=='price_desc' %} · en pahalı üstte{% endif %}{% if price_filter %} · fiyat filtresi aktif{% endif %}</p>
+  <p class="ht-note">{{ places|length }} otel · {% if price_meta and price_meta.check_in %}gecelik fiyat ({{ price_meta.check_in }} → {{ price_meta.check_out }}){% else %}gecelik fiyat{% endif %}{% if sort=='price_asc' %} · en ucuz üstte{% elif sort=='price_desc' %} · en pahalı üstte{% endif %}{% if price_filter %} · fiyat filtresi aktif{% endif %}{% if price_meta and price_meta.fetched_at %} · güncellendi {{ price_meta.fetched_at[:16].replace('T',' ') }}{% endif %}</p>
 </div>
 
 <section class="ht-section">
@@ -263,7 +263,7 @@
       <div class="ht-card-body">
         <p class="ht-price">
           {% if p.extra and p.extra.price_min %}{{ p.extra.price_min }}{% else %}Fiyat sor{% endif %}
-          <small> / gece örnek</small>
+          <small> / gece{% if p.extra and p.extra.price_check_in %} · {{ p.extra.price_check_in }}{% endif %}</small>
         </p>
         <p class="ht-addr">{{ p.title }}</p>
         <p class="ht-addr2">{{ p.ilce or 'Bursa' }}{% if p.address %} · {{ p.address.split(',')[0] }}{% endif %}</p>
@@ -301,7 +301,7 @@
       <div class="ht-card-body">
         <p class="ht-price">
           {% if p.extra and p.extra.price_min %}{{ p.extra.price_min }}{% else %}Fiyat sor{% endif %}
-          <small> / gece örnek</small>
+          <small> / gece{% if p.extra and p.extra.price_check_in %} · {{ p.extra.price_check_in }}{% endif %}</small>
         </p>
         <p class="ht-addr">{{ p.title }}</p>
         <p class="ht-addr2">{{ p.ilce or 'Bursa' }}</p>

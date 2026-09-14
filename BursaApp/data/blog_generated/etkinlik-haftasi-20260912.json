@@ -1,0 +1,34 @@
+{
+  "slug": "etkinlik-haftasi-20260912",
+  "title": "Bu hafta Bursa etkinlikleri",
+  "h1": "Önümüzdeki günler: konser, tiyatro, etkinlik",
+  "desc": "Onaylı etkinlik kayıtları — bilet satışı BursaApp’ten yapılmaz.",
+  "date": "2026-09-12",
+  "image": "/static/event/eve-swiss-very-berry-day-20260912.png",
+  "cta_path": "/etkinlikler",
+  "cta_label": "Tüm etkinlikler",
+  "kind": "plan",
+  "generated": true,
+  "sections": [
+    {
+      "h2": "Takvim",
+      "paras": [
+        "12.09 10:00 · <a href=\"/yer/eve-swiss-very-berry-day-20260912\">Swiss Very Berry Day</a> (Osmangazi)",
+        "12.09 10:00 · <a href=\"/yer/eve-the-mindful-escape-20260912\">The Mindful Escape</a> (Osmangazi)",
+        "12.09 13:00 · <a href=\"/yer/eve-kuromi-dostlari-20260912\">Kuromi & Dostları</a> (Osmangazi)",
+        "12.09 13:00 · <a href=\"/yer/eve-kurbaga-prens-20260912\">Kurbağa Prens</a> (Osmangazi)",
+        "12.09 13:00 · <a href=\"/yer/eve-kucuk-prens-muzikli-cocuk-tiyatrosu-20260912\">Küçük Prens Müzikli Çocuk Tiyatrosu</a> (Osmangazi)",
+        "12.09 14:30 · <a href=\"/yer/eve-buyuk-kovalamaca-20260912\">Büyük Kovalamaca</a> (Osmangazi)",
+        "12.09 16:00 · <a href=\"/yer/eve-star-paws-doga-devriyesi-20260912\">Star Paws Doğa Devriyesi</a> (Osmangazi)",
+        "12.09 20:00 · <a href=\"/yer/eve-bursa-kahve-festivali-20260912\">Bursa Kahve Festivali</a> (Osmangazi)",
+        "<a href=\"/etkinlikler\">Etkinlik listesi</a>"
+      ]
+    }
+  ],
+  "related": [
+    [
+      "bursa-hafta-sonu-2-gun",
+      "Hafta sonu planı"
+    ]
+  ]
+}

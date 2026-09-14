@@ -475,6 +475,17 @@ body.is-near-explore .wa-wrap {
   background: #eef2f7;
   font-family: inherit;
 }
+.nx-canvas .nx-map-pin {
+  cursor: pointer;
+  pointer-events: none !important;
+}
+.nx-canvas .nx-map-hit {
+  cursor: pointer;
+}
+.nx-canvas .leaflet-nxNoHit-pane,
+.nx-canvas .nx-radius-ring {
+  pointer-events: none !important;
+}
 
 /* Sağ sabit detay paneli */
 .nx-rail-detail {

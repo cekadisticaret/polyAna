@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from bahis.bankroll_manager import BankrollManager
 from bahis import dixon_coles
+from bahis.value import fair_1x2
 
 STARTING = 10000.0
 _SEL = {"1": "1 Ev", "X": "X Beraberlik", "2": "2 Dep"}
@@ -17,6 +18,7 @@ def upcoming_preds(team: str | None = None, limit: int = 24) -> dict:
         mr = src.get("matchResult") or {}
         odds = src.get("odds") or {}
         evals = []
+        fair = (fair_1x2(odds) or {}).get("fair") or {}
         for sel, field in (("1", "home"), ("X", "draw"), ("2", "away")):
             o = odds.get(field)
             if not o or o <= 1:
@@ -27,6 +29,7 @@ def upcoming_preds(team: str | None = None, limit: int = 24) -> dict:
                 selection=sel,
                 model_prob=float(mr.get(sel) or 0),
                 market_odds=float(o),
+                fair_implied=fair.get(sel),
             )
             evals.append({
                 "selection": sel,
@@ -75,7 +78,7 @@ def upcoming_preds(team: str | None = None, limit: int = 24) -> dict:
     return {
         "ok": True,
         "model": "bankroll",
-        "note": f"kasa {int(STARTING)} · ¼ Kelly · min edge %3 · {taken_n} AL",
+        "note": f"kasa {int(STARTING)} · ¼ Kelly · fair kenar ≥%4 · {taken_n} AL",
         "matches_used": dc.get("matches_used"),
         "horizon_days": dc.get("horizon_days"),
         "updated": dc.get("updated"),

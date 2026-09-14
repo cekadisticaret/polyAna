@@ -1,6 +1,7 @@
 """1 günlük rota + otobüs/araç + kural tabanlı AI öneri."""
 from __future__ import annotations
 
+import random
 import re
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -37,6 +38,29 @@ def _pick(rows: list[Place], *, exclude: set[int] | None = None) -> Place | None
     exclude = exclude or set()
     ranked = sorted((p for p in rows if p.id not in exclude), key=_rating, reverse=True)
     return ranked[0] if ranked else None
+
+
+def _pick_varied(rows: list[Place], *, exclude: set[int] | None = None, pool: int = 6) -> Place | None:
+    """En yüksek puanlı ilk N adaydan rastgele seç — her rota turunda çeşitlilik."""
+    exclude = exclude or set()
+    ranked = sorted((p for p in rows if p.id not in exclude), key=_rating, reverse=True)
+    if not ranked:
+        return None
+    top = ranked[: max(1, min(pool, len(ranked)))]
+    return random.choice(top)
+
+
+def _pick_cafe(food: list[Place], *, used: set[int], near: Place | None = None) -> Place | None:
+    cafes = [p for p in food if (p.subcategory or "") == "cafe"]
+    if near and (near.ilce or ""):
+        ilce = near.ilce
+        local = [p for p in cafes if p.id not in used and (p.ilce or "") == ilce]
+        if len(local) >= 2:
+            pick = _pick_varied(local, exclude=used, pool=5)
+            if pick:
+                return pick
+    pick = _pick_varied(cafes, exclude=used, pool=8)
+    return pick or _pick_varied(food, exclude=used, pool=8)
 
 
 def _meal_cost(p: Place | None, default: int) -> int:
@@ -143,7 +167,7 @@ def build_day_route(
     if cumali:
         used.add(cumali.id)
 
-    cafe = _pick([p for p in food if (p.subcategory or "") == "cafe"], exclude=used) or _pick(food, exclude=used)
+    cafe = _pick_cafe(food, used=used, near=cumali)
     if cafe:
         used.add(cafe.id)
     dinner_pool = [p for p in food if (p.subcategory or "") not in ("cafe", "tatli", "pastane")]
@@ -159,7 +183,7 @@ def build_day_route(
         ] or dinner_pool
     if cheap:
         dinner_pool = sorted(dinner_pool, key=lambda p: _meal_cost(p, 300))
-    dinner = _pick(dinner_pool, exclude=used) or _pick(food, exclude=used)
+    dinner = _pick_varied(dinner_pool, exclude=used, pool=6) or _pick_varied(food, exclude=used, pool=6)
 
     # Otobüs rotasında daha sıkı saat (aktarma payı)
     if transport == "bus":
@@ -276,10 +300,10 @@ def _nature_route(db, *, people: int, budget: int, transport: str) -> dict:
             used.add(second.id)
         title = "Doğa / sakin rota"
 
-    cafe = _pick([p for p in food if (p.subcategory or "") == "cafe"], exclude=used)
+    cafe = _pick_cafe(food, used=used, near=second)
     if cafe:
         used.add(cafe.id)
-    dinner = _pick(food, exclude=used)
+    dinner = _pick_varied(food, exclude=used, pool=6)
     slots_raw = [
         ("10:00", "Doğa", first, 0),
         ("12:30", "Kahvaltı / öğle", kahvalti, _meal_cost(kahvalti, 250) * people),
@@ -416,8 +440,8 @@ def ai_suggest(db, prompt: str) -> dict:
         muze = next((p for p in visit if "panorama" in (p.slug or "") or "muze" in tags_load(p.tags)), None)
         if muze:
             used.add(muze.id)
-        cafe = _pick([p for p in food if (p.subcategory or "") == "cafe"], exclude=used)
-        dinner = _pick(food, exclude=used)
+        cafe = _pick_cafe(food, used=used, near=muze or koza)
+        dinner = _pick_varied(food, exclude=used, pool=6)
         slots_raw = [
             ("11:00", "Han / kapalı", koza, 0),
             ("13:00", "Müze", muze, 80 * people),

@@ -36,6 +36,16 @@ _MIN_INTERVAL_HOURS = 3.0
 _CRON_SLOT_HOURS = 3
 _FEED_FILE = os.path.join(_DIR, "kripto_analyst_feed.jsonl")
 _FEED_MAX_LINES = 500
+_CONTROL_FILE = os.path.join(_DIR, "kripto_analyst_control.json")
+
+
+def is_paused() -> bool:
+    try:
+        with open(_CONTROL_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        return bool(isinstance(data, dict) and data.get("paused"))
+    except Exception:
+        return False
 
 LAB_TOKEN = os.environ.get("TELEGRAM_LAB_BOT_TOKEN", "")
 LAB_CHAT = os.environ.get("TELEGRAM_LAB_CHAT_ID", "")
@@ -218,6 +228,9 @@ def build_user_prompt(digest: dict, prev_entries: list[dict]) -> str:
 
 
 def main() -> int:
+    if is_paused():
+        print("[kripto_analyst] durduruldu (kripto_analyst_control.json paused)")
+        return 0
     if not ac.ANTHROPIC_KEY:
         print("[kripto_analyst] ANTHROPIC_API_KEY eksik", file=sys.stderr)
         return 1

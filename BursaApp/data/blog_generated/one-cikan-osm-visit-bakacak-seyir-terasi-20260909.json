@@ -1,0 +1,33 @@
+{
+  "slug": "one-cikan-osm-visit-bakacak-seyir-terasi-20260909",
+  "title": "Öne çıkan: Bakacak Seyir Terası",
+  "h1": "Gezilecek: Bakacak Seyir Terası",
+  "desc": "Bursa manzara · Yıldırım.",
+  "date": "2026-09-09",
+  "image": "/static/visit/tophane.jpg",
+  "cta_path": "/bursa-osm-visit-bakacak-seyir-terasi",
+  "cta_label": "Detay sayfası",
+  "kind": "gezi",
+  "generated": true,
+  "sections": [
+    {
+      "h2": "Neden listede?",
+      "paras": [
+        "<a href=\"/bursa-osm-visit-bakacak-seyir-terasi\">Bakacak Seyir Terası</a> — (Yıldırım) — ★ 4.3 — Bursa manzara · Yıldırım.",
+        "Adres ve harita: <a href=\"/bursa-osm-visit-bakacak-seyir-terasi\">Bakacak Seyir Terası detay</a>."
+      ]
+    },
+    {
+      "h2": "Rotaya ekle",
+      "paras": [
+        "Yer detayından rotaya ekleyebilir veya <a href=\"/rota\">/rota</a> planlayıcı ile birleştirebilirsin."
+      ]
+    }
+  ],
+  "related": [
+    [
+      "bursa-1-gunluk-gezi-plani",
+      "1 günlük rota"
+    ]
+  ]
+}

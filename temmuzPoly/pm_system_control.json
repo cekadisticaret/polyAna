@@ -1,7 +1,6 @@
 {
   "analiz5_paused": true,
   "analiz2_paused": true,
-  "analiz10_paused": true,
   "analiz6_live_paused": true,
   "a2_16_live_paused": true,
   "a2_02_live_paused": true,
@@ -17,6 +16,8 @@
   "b1_05_live_paused": true,
   "b1_mum_live_paused": true,
   "a3a8_signal_strict": true,
-  "updated_at_tr": "2026-08-14T22:00:02.267413+03:00",
-  "updated_by": "weekend_cron"
+  "user_live_hold": true,
+  "updated_at_tr": "2026-09-14T10:33:54.735678+03:00",
+  "updated_by": "algo_islemler_fresh_start",
+  "analiz10_paused": true
 }

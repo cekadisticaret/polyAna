@@ -174,6 +174,7 @@ Son güncelleme: {datetime.utcnow().strftime("%Y-%m-%d")} UTC
 
 ## Güven / yasal
 - {base}/kvkk
+- {base}/gizlilik
 
 {_citation_block(base)}
 

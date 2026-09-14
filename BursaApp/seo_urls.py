@@ -36,6 +36,8 @@ SEO_PATH_CATEGORIES = {
     "family",
     "fun",
     "org",
+    "wedding",
+    "nightlife",
 }
 
 

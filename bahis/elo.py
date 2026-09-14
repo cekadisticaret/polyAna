@@ -52,27 +52,31 @@ class EloModel:
     def goal_diff_multiplier(goal_diff: float) -> float:
         return math.sqrt(max(goal_diff, 1))
 
+    def apply_match(self, m: dict) -> None:
+        """Tek maçı işler — walk-forward: önce predict, sonra apply."""
+        home = self._get(m["home"])
+        away = self._get(m["away"])
+        if m["homeGoals"] > m["awayGoals"]:
+            actual_home = 1.0
+        elif m["homeGoals"] == m["awayGoals"]:
+            actual_home = 0.5
+        else:
+            actual_home = 0.0
+        expected_home = self.expected_score(home["elo"] + self.home_adv, away["elo"])
+        goal_diff = abs(m["homeGoals"] - m["awayGoals"])
+        mult = self.goal_diff_multiplier(goal_diff)
+        k_home = self.base_k * mult * (home["rd"] / self.base_rd)
+        k_away = self.base_k * mult * (away["rd"] / self.base_rd)
+        home["elo"] += k_home * (actual_home - expected_home)
+        away["elo"] += k_away * ((1 - actual_home) - (1 - expected_home))
+        home["matchCount"] += 1
+        away["matchCount"] += 1
+        home["rd"] = max(self.min_rd, self.base_rd / math.sqrt(home["matchCount"]))
+        away["rd"] = max(self.min_rd, self.base_rd / math.sqrt(away["matchCount"]))
+
     def fit(self) -> dict:
         for m in self.matches:
-            home = self._get(m["home"])
-            away = self._get(m["away"])
-            if m["homeGoals"] > m["awayGoals"]:
-                actual_home = 1.0
-            elif m["homeGoals"] == m["awayGoals"]:
-                actual_home = 0.5
-            else:
-                actual_home = 0.0
-            expected_home = self.expected_score(home["elo"] + self.home_adv, away["elo"])
-            goal_diff = abs(m["homeGoals"] - m["awayGoals"])
-            mult = self.goal_diff_multiplier(goal_diff)
-            k_home = self.base_k * mult * (home["rd"] / self.base_rd)
-            k_away = self.base_k * mult * (away["rd"] / self.base_rd)
-            home["elo"] += k_home * (actual_home - expected_home)
-            away["elo"] += k_away * ((1 - actual_home) - (1 - expected_home))
-            home["matchCount"] += 1
-            away["matchCount"] += 1
-            home["rd"] = max(self.min_rd, self.base_rd / math.sqrt(home["matchCount"]))
-            away["rd"] = max(self.min_rd, self.base_rd / math.sqrt(away["matchCount"]))
+            self.apply_match(m)
         return self.ratings
 
     def predict_match(self, home: str, away: str) -> dict:
@@ -116,11 +120,18 @@ class EloModel:
         ]
 
 
-@lru_cache(maxsize=1)
-def _fitted() -> EloModel:
+@lru_cache(maxsize=8)
+def _fitted_for(league: str) -> EloModel:
+    from bahis.leagues_cfg import set_league
+    set_league(league)
     model = EloModel(_train_rows())
     model.fit()
     return model
+
+
+def _fitted() -> EloModel:
+    from bahis.leagues_cfg import current_league
+    return _fitted_for(current_league())
 
 
 def _card(m: dict, pred: dict) -> dict:

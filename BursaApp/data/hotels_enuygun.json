@@ -12,6 +12,10 @@
     "rating_admin": 5.0,
     "min_price": 12923,
     "formatted_price": "12.923 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/heybeli-garden-bursa-one-cikan-resim-76563105.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/heybeli-garden-bursa-dis-mekan-76563125.jpg",
@@ -25,7 +29,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/heybeli-garden-hotel/",
-    "blurb": "Mudanya. Butik · Spa. örnek gecelik 12.923 TL. misafir 10,0/10",
+    "blurb": "Mudanya. Butik · Spa. gecelik 12.923 TL. misafir 10,0/10",
     "featured": true
   },
   {
@@ -41,6 +45,10 @@
     "rating_admin": 5.0,
     "min_price": 14770,
     "formatted_price": "14.770 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/heybeli-bursa-bursa-one-cikan-resim-76507788.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/heybeli-bursa-bursa-dis-mekan-76507825.jpg",
@@ -55,7 +63,7 @@
       "Ekonomik"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/heybeli-otel-bursa-529767/",
-    "blurb": "Mudanya. Balayı · Romantik · Ekonomik. örnek gecelik 14.770 TL. misafir 10,0/10",
+    "blurb": "Mudanya. Balayı · Romantik · Ekonomik. gecelik 14.770 TL. misafir 10,0/10",
     "featured": true
   },
   {
@@ -71,6 +79,10 @@
     "rating_admin": 5.0,
     "min_price": 20251,
     "formatted_price": "20.251 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/karinna-orman-evleri-bursa-dis-mekan-76603194.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/karinna-orman-evleri-bursa-one-cikan-resim-76603164.jpg",
@@ -84,7 +96,7 @@
       "Bungalov"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/karinna-orman-evleri-528747/",
-    "blurb": "Osmangazi. Kayak Oteli · Bungalov. örnek gecelik 20.251 TL. misafir 10,0/10",
+    "blurb": "Osmangazi. Kayak Oteli · Bungalov. gecelik 20.251 TL. misafir 10,0/10",
     "featured": true
   },
   {
@@ -100,6 +112,10 @@
     "rating_admin": 5.0,
     "min_price": 15177,
     "formatted_price": "15.177 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/kerimbey-otel-bursa-one-cikan-resim-76758167.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/kerimbey-otel-bursa-dis-mekan-76758199.jpg",
@@ -110,7 +126,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/kerimbey-otel-590478/",
-    "blurb": "Gemlik. örnek gecelik 15.177 TL. misafir 10,0/10",
+    "blurb": "Gemlik. gecelik 15.177 TL. misafir 10,0/10",
     "featured": true
   },
   {
@@ -126,6 +142,10 @@
     "rating_admin": 5.0,
     "min_price": 9000,
     "formatted_price": "9.000 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/la-fontaine-butik-otel-bursa-genel-78531167.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/la-fontaine-butik-otel-bursa-oda-78961151.jpg",
@@ -137,7 +157,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/la-fontaine-butik-otel-1201671/",
-    "blurb": "Mudanya. örnek gecelik 9.000 TL. misafir 10,0/10",
+    "blurb": "Mudanya. gecelik 9.000 TL. misafir 10,0/10",
     "featured": true
   },
   {
@@ -153,6 +173,10 @@
     "rating_admin": 5.0,
     "min_price": 19535,
     "formatted_price": "19.535 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/masklavi-bursa-genel-78539389.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/masklavi-bursa-dis-mekan-40818904.jpg",
@@ -168,7 +192,7 @@
       "Bungalov"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/masklavi/",
-    "blurb": "Kestel. Butik · Romantik · Bungalov. örnek gecelik 19.535 TL. misafir 10,0/10",
+    "blurb": "Kestel. Butik · Romantik · Bungalov. gecelik 19.535 TL. misafir 10,0/10",
     "featured": true
   },
   {
@@ -182,8 +206,12 @@
     "subcategory": "termal",
     "review_score": "10,0",
     "rating_admin": 5.0,
-    "min_price": 24001,
-    "formatted_price": "24.001 TL",
+    "min_price": 8000,
+    "formatted_price": "8.000 TL",
+    "price_fetched_at": "2026-09-09T00:56:11+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Triple Oda",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/oylat-kaplicalari-caglayan-otel-bursa-dis-mekan-77426782.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/oylat-kaplicalari-caglayan-otel-bursa-dis-mekan-38368566.jpg",
@@ -198,7 +226,7 @@
       "Bebek Dostu"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/oylat-kaplicalari-caglayan-otel/",
-    "blurb": "İnegöl. Balayı · İslami · Bebek Dostu. örnek gecelik 24.001 TL. misafir 10,0/10",
+    "blurb": "İnegöl. Balayı · İslami · Bebek Dostu. gecelik 8.000 TL. misafir 10,0/10",
     "featured": true
   },
   {
@@ -214,6 +242,10 @@
     "rating_admin": 4.95,
     "min_price": 18479,
     "formatted_price": "18.479 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/movenpick-thermal-spa-bursa-bursa-one-cikan-resim-78200697.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/movenpick-thermal-spa-bursa-bursa-one-cikan-resim-76430120.jpg",
@@ -228,7 +260,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/movenpick-hotel-thermal-spa-bursa-529678/",
-    "blurb": "Osmangazi. Balayı · Romantik · Spa. örnek gecelik 18.479 TL. misafir 9,9/10",
+    "blurb": "Osmangazi. Balayı · Romantik · Spa. gecelik 18.479 TL. misafir 9,9/10",
     "featured": true
   },
   {
@@ -244,6 +276,10 @@
     "rating_admin": 4.8,
     "min_price": 11761,
     "formatted_price": "11.761 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/inegol-royal-hotel-bursa-dis-mekan-76617195.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/inegol-royal-hotel-bursa-one-cikan-resim-76617154.jpg",
@@ -257,7 +293,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/inegol-royal-hotel-587331/",
-    "blurb": "İnegöl. Balayı · Aile Oteli. örnek gecelik 11.761 TL. misafir 9,6/10",
+    "blurb": "İnegöl. Balayı · Aile Oteli. gecelik 11.761 TL. misafir 9,6/10",
     "featured": false
   },
   {
@@ -273,6 +309,10 @@
     "rating_admin": 4.75,
     "min_price": 7500,
     "formatted_price": "7.500 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/alpas-yasam-bursa-dis-mekan-80006835.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/alpas-yasam-bursa-oda-80006837.jpg",
@@ -285,7 +325,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/hotel-alpas-yasam-747623/",
-    "blurb": "Nilüfer. Aile Oteli. örnek gecelik 7.500 TL. misafir 9,5/10",
+    "blurb": "Nilüfer. Aile Oteli. gecelik 7.500 TL. misafir 9,5/10",
     "featured": false
   },
   {
@@ -301,6 +341,10 @@
     "rating_admin": 4.75,
     "min_price": 15660,
     "formatted_price": "15.660 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/levor-hotel-bursa-one-cikan-resim-76482339.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/levor-hotel-bursa-dis-mekan-79007818.jpg",
@@ -311,7 +355,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/levor-hotel-1/",
-    "blurb": "Nilüfer. örnek gecelik 15.660 TL. misafir 9,5/10",
+    "blurb": "Nilüfer. gecelik 15.660 TL. misafir 9,5/10",
     "featured": false
   },
   {
@@ -327,6 +371,10 @@
     "rating_admin": 4.7,
     "min_price": 13614,
     "formatted_price": "13.614 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/armistis-hotel-bursa-one-cikan-resim-76761156.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/armistis-hotel-bursa-dis-mekan-40626479.jpg",
@@ -341,37 +389,7 @@
       "Ekonomik"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/armistis-hotel-1/",
-    "blurb": "Mudanya. Balayı · Konsept · Ekonomik. örnek gecelik 13.614 TL. misafir 9,4/10",
-    "featured": false
-  },
-  {
-    "enuygun_id": 188139,
-    "slug": "marigold-thermal-spa-hotel",
-    "title": "Marigold Thermal Spa Hotel",
-    "ilce": "Osmangazi",
-    "lat": 40.201213,
-    "lng": 29.018929,
-    "price_band": "termal",
-    "subcategory": "termal",
-    "review_score": "9,4",
-    "rating_admin": 4.7,
-    "min_price": 14400,
-    "formatted_price": "14.400 TL",
-    "image_urls": [
-      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-39561530.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-one-cikan-resim-76409768.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-39561531.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-77378209.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-77378224.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-77378227.jpg"
-    ],
-    "suitabilities": [
-      "Balayı",
-      "Spa",
-      "Termal"
-    ],
-    "detail_link": "https://www.enuygun.com/otel/detay/marigold-thermal-spa-hotel-188139/",
-    "blurb": "Osmangazi. Balayı · Spa · Termal. örnek gecelik 14.400 TL. misafir 9,4/10",
+    "blurb": "Mudanya. Balayı · Konsept · Ekonomik. gecelik 13.614 TL. misafir 9,4/10",
     "featured": false
   },
   {
@@ -385,15 +403,19 @@
     "subcategory": "termal",
     "review_score": "9,4",
     "rating_admin": 4.7,
-    "min_price": 14157,
-    "formatted_price": "14.157 TL",
+    "min_price": 5592,
+    "formatted_price": "5.592 TL",
+    "price_fetched_at": "2026-09-09T00:55:49+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Premium Room",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-one-cikan-resim-76397171.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-one-cikan-resim-78897496.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-dis-mekan-78897504.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-oda-78897455.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-oda-78897456.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-oda-78897457.jpg"
+      "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-dis-mekan-83513413.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-dis-mekan-83513415.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-dis-mekan-83513420.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/celik-palace-convention-center-thermal-spa-bursa-dis-mekan-83513422.jpg"
     ],
     "suitabilities": [
       "Balayı",
@@ -401,7 +423,7 @@
       "Termal"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/celik-palace-hotel-convention-center-thermal-spa-28093/",
-    "blurb": "Osmangazi. Balayı · Spa · Termal. örnek gecelik 14.157 TL. misafir 9,4/10",
+    "blurb": "Osmangazi. Balayı · Spa · Termal. gecelik 5.592 TL. misafir 9,4/10",
     "featured": false
   },
   {
@@ -415,8 +437,12 @@
     "subcategory": "termal",
     "review_score": "9,3",
     "rating_admin": 4.65,
-    "min_price": 19392,
-    "formatted_price": "19.392 TL",
+    "min_price": 6502,
+    "formatted_price": "6.502 TL",
+    "price_fetched_at": "2026-09-09T00:56:00+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Cift Kisilik Yatakli, Sigara Icilemez Standard Oda",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/hampton-by-hilton-bursa-bursa-one-cikan-resim-76410772.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/hampton-by-hilton-bursa-bursa-dis-mekan-76410814.jpg",
@@ -429,7 +455,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/hampton-by-hilton-bursa-bursa-turkiye-383527/",
-    "blurb": "Osmangazi. Spa. örnek gecelik 19.392 TL. misafir 9,3/10",
+    "blurb": "Osmangazi. Spa. gecelik 6.502 TL. misafir 9,3/10",
     "featured": false
   },
   {
@@ -443,8 +469,12 @@
     "subcategory": "termal",
     "review_score": "9,3",
     "rating_admin": 4.65,
-    "min_price": 9300,
-    "formatted_price": "9.300 TL",
+    "min_price": 3393,
+    "formatted_price": "3.393 TL",
+    "price_fetched_at": "2026-09-09T00:56:01+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Economic Oda",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/anatolia-bursa-manzara-peyzaj-77388277.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/anatolia-bursa-one-cikan-resim-76493073.jpg",
@@ -460,7 +490,41 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/hotel-anatolia-bursa-232720/",
-    "blurb": "Osmangazi. Balayı · Kayak Oteli · Spa. örnek gecelik 9.300 TL. misafir 9,3/10",
+    "blurb": "Osmangazi. Balayı · Kayak Oteli · Spa. gecelik 3.393 TL. misafir 9,3/10",
+    "featured": false
+  },
+  {
+    "enuygun_id": 188139,
+    "slug": "marigold-thermal-spa-hotel",
+    "title": "Marigold Thermal Spa Hotel",
+    "ilce": "Osmangazi",
+    "lat": 40.201213,
+    "lng": 29.018929,
+    "price_band": "termal",
+    "subcategory": "termal",
+    "review_score": "9,3",
+    "rating_admin": 4.65,
+    "min_price": 6176,
+    "formatted_price": "6.176 TL",
+    "price_fetched_at": "2026-09-09T00:55:56+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standard Oda",
+    "image_urls": [
+      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-39561530.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-one-cikan-resim-76409768.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-84025253.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-39561531.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-77378209.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/marigold-thermal--bursa-dis-mekan-77378224.jpg"
+    ],
+    "suitabilities": [
+      "Balayı",
+      "Spa",
+      "Termal"
+    ],
+    "detail_link": "https://www.enuygun.com/otel/detay/marigold-thermal-spa-hotel-188139/",
+    "blurb": "Osmangazi. Balayı · Spa · Termal. gecelik 6.176 TL. misafir 9,3/10",
     "featured": false
   },
   {
@@ -476,6 +540,10 @@
     "rating_admin": 4.65,
     "min_price": 21001,
     "formatted_price": "21.001 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/oylat-kaplicalari-asiyan-otel-bursa-dis-mekan-77426834.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/oylat-kaplicalari-asiyan-otel-bursa-dis-mekan-39523071.jpg",
@@ -491,7 +559,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/oylat-kaplicalari-asiyan-otel/",
-    "blurb": "İnegöl. Balayı · İslami · Spa. örnek gecelik 21.001 TL. misafir 9,3/10",
+    "blurb": "İnegöl. Balayı · İslami · Spa. gecelik 21.001 TL. misafir 9,3/10",
     "featured": false
   },
   {
@@ -507,6 +575,10 @@
     "rating_admin": 4.6,
     "min_price": 19531,
     "formatted_price": "19.531 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/blue-mudanya-hotel-bursa-one-cikan-resim-76442393.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/blue-mudanya-hotel-bursa-dis-mekan-39702507.jpg",
@@ -521,7 +593,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/blue-mudanya-hotel/",
-    "blurb": "Mudanya. Balayı · Denize Sıfır · Spa. örnek gecelik 19.531 TL. misafir 9,2/10",
+    "blurb": "Mudanya. Balayı · Denize Sıfır · Spa. gecelik 19.531 TL. misafir 9,2/10",
     "featured": false
   },
   {
@@ -535,8 +607,12 @@
     "subcategory": "termal",
     "review_score": "9,2",
     "rating_admin": 4.6,
-    "min_price": 17100,
-    "formatted_price": "17.100 TL",
+    "min_price": 5700,
+    "formatted_price": "5.700 TL",
+    "price_fetched_at": "2026-09-09T00:55:54+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standard Oda",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/crowne-plaza-bursa-convention-center-termal-spa-bursa-one-cikan-resim-76409546.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/crowne-plaza-bursa-convention-center-termal-spa-bursa-one-cikan-resim-86436521.jpg",
@@ -551,7 +627,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/crowne-plaza-bursa-an-ihg-hotel-184700/",
-    "blurb": "Nilüfer. Balayı · Bebek Dostu · Spa. örnek gecelik 17.100 TL. misafir 9,2/10",
+    "blurb": "Nilüfer. Balayı · Bebek Dostu · Spa. gecelik 5.700 TL. misafir 9,2/10",
     "featured": false
   },
   {
@@ -567,6 +643,10 @@
     "rating_admin": 4.6,
     "min_price": 6001,
     "formatted_price": "6.001 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/tok-epik-hotel-bursa-genel-78533133.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/tok-epik-hotel-bursa-oda-78533075.jpg",
@@ -582,7 +662,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/tok-epik-hotel-1201710/",
-    "blurb": "Osmangazi. Konsept · Çevreye Duyarlı · Aile Oteli. örnek gecelik 6.001 TL. misafir 9,2/10",
+    "blurb": "Osmangazi. Konsept · Çevreye Duyarlı · Aile Oteli. gecelik 6.001 TL. misafir 9,2/10",
     "featured": false
   },
   {
@@ -596,8 +676,12 @@
     "subcategory": "termal",
     "review_score": "9,1",
     "rating_admin": 4.55,
-    "min_price": 26100,
-    "formatted_price": "26.100 TL",
+    "min_price": 4050,
+    "formatted_price": "4.050 TL",
+    "price_fetched_at": "2026-09-09T00:55:52+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standart Oda, ,",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/gold-majesty-bursa-one-cikan-resim-76404212.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/gold-majesty-bursa-dis-mekan-77363974.jpg",
@@ -612,7 +696,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/hotel-gold-majesty-81390/",
-    "blurb": "Nilüfer. Balayı · Kayak Oteli · Spa. örnek gecelik 26.100 TL. misafir 9,1/10",
+    "blurb": "Nilüfer. Balayı · Kayak Oteli · Spa. gecelik 4.050 TL. misafir 9,1/10",
     "featured": false
   },
   {
@@ -628,6 +712,10 @@
     "rating_admin": 4.55,
     "min_price": 12420,
     "formatted_price": "12.420 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/ramada-bursa-nilufer-bursa-dis-mekan-80064198.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/ramada-bursa-nilufer-bursa-one-cikan-resim-80064205.jpg",
@@ -642,7 +730,7 @@
       "Çevreye Duyarlı"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/ramada-bursa-nilufer-528915/",
-    "blurb": "Nilüfer. Balayı · Alkolsüz · Çevreye Duyarlı. örnek gecelik 12.420 TL. misafir 9,1/10",
+    "blurb": "Nilüfer. Balayı · Alkolsüz · Çevreye Duyarlı. gecelik 12.420 TL. misafir 9,1/10",
     "featured": false
   },
   {
@@ -658,6 +746,10 @@
     "rating_admin": 4.5,
     "min_price": 10801,
     "formatted_price": "10.801 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/olea-suites-gemlik-bursa-genel-76359224.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/olea-suites-gemlik-bursa-oda-78912125.jpg",
@@ -669,7 +761,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/olea-suites-gemliks-1196681/",
-    "blurb": "Gemlik. örnek gecelik 10.801 TL. misafir 9,0/10",
+    "blurb": "Gemlik. gecelik 10.801 TL. misafir 9,0/10",
     "featured": false
   },
   {
@@ -683,53 +775,27 @@
     "subcategory": "termal",
     "review_score": "9,0",
     "rating_admin": 4.5,
-    "min_price": 7130,
-    "formatted_price": "7.130 TL",
+    "min_price": 3112,
+    "formatted_price": "3.112 TL",
+    "price_fetched_at": "2026-09-09T00:56:09+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standard Oda",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-oda-manzaralari-76501554.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-one-cikan-resim-76501520.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-dis-mekan-76501589.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-oda-39563376.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-oda-39563377.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-oda-39563379.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-genel-76501574.jpg"
+      "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-genel-76501574.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-spa-76501564.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/ruba-palace-thermal-hotel-bursa-genel-77424798.jpg"
     ],
     "suitabilities": [
       "Balayı",
       "Termal"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/ruba-palace-thermal-hotel-431182/",
-    "blurb": "Osmangazi. Balayı · Termal. örnek gecelik 7.130 TL. misafir 9,0/10",
-    "featured": false
-  },
-  {
-    "enuygun_id": 16945,
-    "slug": "almira-hotel-thermal-spa-convention-center",
-    "title": "Almira Hotel Thermal Spa & Convention Center",
-    "ilce": "Osmangazi",
-    "lat": 40.197571,
-    "lng": 29.057926,
-    "price_band": "termal",
-    "subcategory": "termal",
-    "review_score": "8,9",
-    "rating_admin": 4.45,
-    "min_price": 17075,
-    "formatted_price": "17.075 TL",
-    "image_urls": [
-      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-one-cikan-resim-76394846.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-39513746.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-76464817.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-76395046.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-76395047.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-79026832.jpg"
-    ],
-    "suitabilities": [
-      "Balayı",
-      "Bebek Dostu",
-      "Spa"
-    ],
-    "detail_link": "https://www.enuygun.com/otel/detay/almira-hotel-thermal-spa-convention-center-16945/",
-    "blurb": "Osmangazi. Balayı · Bebek Dostu · Spa. örnek gecelik 17.075 TL. misafir 8,9/10",
+    "blurb": "Osmangazi. Balayı · Termal. gecelik 3.112 TL. misafir 9,0/10",
     "featured": false
   },
   {
@@ -743,8 +809,12 @@
     "subcategory": "termal",
     "review_score": "8,9",
     "rating_admin": 4.45,
-    "min_price": 8326,
-    "formatted_price": "8.326 TL",
+    "min_price": 2319,
+    "formatted_price": "2.319 TL",
+    "price_fetched_at": "2026-09-09T00:56:07+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standard Oda",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/kadi-konagi-thermal-hotel-bursa-one-cikan-resim-76422876.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/kadi-konagi-thermal-hotel-bursa-dis-mekan-38115367.jpg",
@@ -759,7 +829,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/kadi-konagi-thermal-hotel-430561/",
-    "blurb": "Osmangazi. Butik · Termal · Aile Oteli. örnek gecelik 8.326 TL. misafir 8,9/10",
+    "blurb": "Osmangazi. Butik · Termal · Aile Oteli. gecelik 2.319 TL. misafir 8,9/10",
     "featured": false
   },
   {
@@ -775,6 +845,10 @@
     "rating_admin": 4.4,
     "min_price": 17249,
     "formatted_price": "17.249 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/ramada-by-wyndham-bursa-cekirge-thermal-spa-bursa-one-cikan-resim-76425319.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/ramada-by-wyndham-bursa-cekirge-thermal-spa-bursa-one-cikan-resim-78202322.jpg",
@@ -789,7 +863,41 @@
       "Termal"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/ramada-by-wyndham-bursa-cekirge-thermal-spa-528752/",
-    "blurb": "Osmangazi. Balayı · Spa · Termal. örnek gecelik 17.249 TL. misafir 8,8/10",
+    "blurb": "Osmangazi. Balayı · Spa · Termal. gecelik 17.249 TL. misafir 8,8/10",
+    "featured": false
+  },
+  {
+    "enuygun_id": 16945,
+    "slug": "almira-hotel-thermal-spa-convention-center",
+    "title": "Almira Hotel Thermal Spa & Convention Center",
+    "ilce": "Osmangazi",
+    "lat": 40.197571,
+    "lng": 29.057926,
+    "price_band": "termal",
+    "subcategory": "termal",
+    "review_score": "8,7",
+    "rating_admin": 4.35,
+    "min_price": 5690,
+    "formatted_price": "5.690 TL",
+    "price_fetched_at": "2026-09-09T00:55:48+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Superior Oda",
+    "image_urls": [
+      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-one-cikan-resim-76394846.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-39513746.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-76464817.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-76395046.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-76395047.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/almira-thermal-spa-convention-center-bursa-dis-mekan-79026832.jpg"
+    ],
+    "suitabilities": [
+      "Balayı",
+      "Bebek Dostu",
+      "Spa"
+    ],
+    "detail_link": "https://www.enuygun.com/otel/detay/almira-hotel-thermal-spa-convention-center-16945/",
+    "blurb": "Osmangazi. Balayı · Bebek Dostu · Spa. gecelik 5.690 TL. misafir 8,7/10",
     "featured": false
   },
   {
@@ -803,8 +911,12 @@
     "subcategory": "termal",
     "review_score": "8,7",
     "rating_admin": 4.35,
-    "min_price": 7749,
-    "formatted_price": "7.749 TL",
+    "min_price": 3091,
+    "formatted_price": "3.091 TL",
+    "price_fetched_at": "2026-09-09T00:56:04+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standard Double Çift Kişilik Oda",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/gorukle-oruc-spa-bursa-one-cikan-resim-76417672.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/gorukle-oruc-spa-bursa-dis-mekan-38294790.jpg",
@@ -819,7 +931,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/gorukle-oruc-hotel-spa-416132/",
-    "blurb": "Nilüfer. Balayı · Spa · Aile Oteli. örnek gecelik 7.749 TL. misafir 8,7/10",
+    "blurb": "Nilüfer. Balayı · Spa · Aile Oteli. gecelik 3.091 TL. misafir 8,7/10",
     "featured": false
   },
   {
@@ -835,6 +947,10 @@
     "rating_admin": 4.35,
     "min_price": 12000,
     "formatted_price": "12.000 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/kavala-hotel-bursa-oda-80006489.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/kavala-hotel-bursa-one-cikan-resim-80006491.jpg",
@@ -849,7 +965,7 @@
       "Çevreye Duyarlı"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/kavala-hotel-bursa/",
-    "blurb": "Nilüfer. Balayı · Çevreye Duyarlı. örnek gecelik 12.000 TL. misafir 8,7/10",
+    "blurb": "Nilüfer. Balayı · Çevreye Duyarlı. gecelik 12.000 TL. misafir 8,7/10",
     "featured": false
   },
   {
@@ -865,6 +981,10 @@
     "rating_admin": 4.3,
     "min_price": 10290,
     "formatted_price": "10.290 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/four-points-flex-by-sheraton-bursa-nilufer-bursa-one-cikan-resim-76442925.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/four-points-flex-by-sheraton-bursa-nilufer-bursa-dis-mekan-39721827.jpg",
@@ -877,7 +997,7 @@
       "Engelli Dostu"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/four-points-flex-by-sheraton-bursa-nilufer-586000/",
-    "blurb": "Nilüfer. Engelli Dostu. örnek gecelik 10.290 TL. misafir 8,6/10",
+    "blurb": "Nilüfer. Engelli Dostu. gecelik 10.290 TL. misafir 8,6/10",
     "featured": false
   },
   {
@@ -893,6 +1013,10 @@
     "rating_admin": 4.3,
     "min_price": 13111,
     "formatted_price": "13.111 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/velmore-spa-bursa-genel-78493523.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/velmore-spa-bursa-oda-78493407.jpg",
@@ -907,7 +1031,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/velmore-hotel-spa-1200861/",
-    "blurb": "Kestel. Spa · Aile Oteli. örnek gecelik 13.111 TL. misafir 8,6/10",
+    "blurb": "Kestel. Spa · Aile Oteli. gecelik 13.111 TL. misafir 8,6/10",
     "featured": false
   },
   {
@@ -923,6 +1047,10 @@
     "rating_admin": 4.25,
     "min_price": 10321,
     "formatted_price": "10.321 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/grand-turkuaz-hotel-bursa-dis-mekan-76425255.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/grand-turkuaz-hotel-bursa-one-cikan-resim-76425219.jpg",
@@ -935,7 +1063,7 @@
       "Ekonomik"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/grand-turkuaz-hotel/",
-    "blurb": "Osmangazi. Ekonomik. örnek gecelik 10.321 TL. misafir 8,5/10",
+    "blurb": "Osmangazi. Ekonomik. gecelik 10.321 TL. misafir 8,5/10",
     "featured": false
   },
   {
@@ -951,6 +1079,10 @@
     "rating_admin": 4.25,
     "min_price": 15000,
     "formatted_price": "15.000 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/ramada-by-wyndham-gemlik-bursa-dis-mekanlar-76502765.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/ramada-by-wyndham-gemlik-bursa-one-cikan-resim-76502729.jpg",
@@ -966,7 +1098,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/ramada-by-wyndham-gemlik-hotel-spa-528645/",
-    "blurb": "Gemlik. Balayı · Romantik · Spa. örnek gecelik 15.000 TL. misafir 8,5/10",
+    "blurb": "Gemlik. Balayı · Romantik · Spa. gecelik 15.000 TL. misafir 8,5/10",
     "featured": false
   },
   {
@@ -982,6 +1114,10 @@
     "rating_admin": 4.2,
     "min_price": 21163,
     "formatted_price": "21.163 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/guler-park-hotel-bursa-one-cikan-resim-76434861.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/guler-park-hotel-bursa-dis-mekan-76434920.jpg",
@@ -996,7 +1132,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/guler-park-hotel/",
-    "blurb": "Nilüfer. Balayı · Spa · Aile Oteli. örnek gecelik 21.163 TL. misafir 8,4/10",
+    "blurb": "Nilüfer. Balayı · Spa · Aile Oteli. gecelik 21.163 TL. misafir 8,4/10",
     "featured": false
   },
   {
@@ -1010,22 +1146,26 @@
     "subcategory": "termal",
     "review_score": "8,4",
     "rating_admin": 4.2,
-    "min_price": 9109,
-    "formatted_price": "9.109 TL",
+    "min_price": 3232,
+    "formatted_price": "3.232 TL",
+    "price_fetched_at": "2026-09-09T00:55:46+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/royal-termal-hotel-bursa-dis-mekan-78201839.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/royal-termal-hotel-bursa-one-cikan-resim-78201838.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/royal-termal-hotel-bursa-one-cikan-resim-85375459.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/royal-termal-hotel-bursa-one-cikan-resim-78201837.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/royal-termal-hotel-bursa-one-cikan-resim-76625985.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/royal-termal-hotel-bursa-dis-mekan-76626041.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/royal-termal-hotel-bursa-dis-mekan-76626045.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/royal-termal-hotel-bursa-dis-mekan-76626042.jpg"
+      "https://cdn3.enuygun.com/media/lib/uploads/image/royal-termal-hotel-bursa-dis-mekan-85375451.jpg"
     ],
     "suitabilities": [
       "Termal"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/royal-termal-hotel-1/",
-    "blurb": "Osmangazi. Termal. örnek gecelik 9.109 TL. misafir 8,4/10",
+    "blurb": "Osmangazi. Termal. gecelik 3.232 TL. misafir 8,4/10",
     "featured": false
   },
   {
@@ -1041,6 +1181,10 @@
     "rating_admin": 4.2,
     "min_price": 10100,
     "formatted_price": "10.100 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/ipekyolu-hotel-bursa-one-cikan-resim-78202018.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/ipekyolu-hotel-bursa-one-cikan-resim-78194470.jpg",
@@ -1051,7 +1195,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/ipekyolu-hotel-17113220/",
-    "blurb": "Osmangazi. örnek gecelik 10.100 TL. misafir 8,4/10",
+    "blurb": "Osmangazi. gecelik 10.100 TL. misafir 8,4/10",
     "featured": false
   },
   {
@@ -1067,6 +1211,10 @@
     "rating_admin": 4.1,
     "min_price": 9078,
     "formatted_price": "9.078 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/optimal-hotel-bursa-dis-mekan-78194401.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/optimal-hotel-bursa-oda-78194395.jpg",
@@ -1079,7 +1227,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/optimal-hotel-113571777/",
-    "blurb": "Osmangazi. Aile Oteli. örnek gecelik 9.078 TL. misafir 8,2/10",
+    "blurb": "Osmangazi. Aile Oteli. gecelik 9.078 TL. misafir 8,2/10",
     "featured": false
   },
   {
@@ -1095,6 +1243,10 @@
     "rating_admin": 4.1,
     "min_price": 19501,
     "formatted_price": "19.501 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/uludag-orman-koskleri-bursa-manzara-peyzaj-77434304.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/uludag-orman-koskleri-bursa-one-cikan-resim-76504001.jpg",
@@ -1110,7 +1262,7 @@
       "Ekonomik"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/uludag-orman-koskleri/",
-    "blurb": "Osmangazi. Balayı · Kayak Oteli · Ekonomik. örnek gecelik 19.501 TL. misafir 8,2/10",
+    "blurb": "Osmangazi. Balayı · Kayak Oteli · Ekonomik. gecelik 19.501 TL. misafir 8,2/10",
     "featured": false
   },
   {
@@ -1126,6 +1278,10 @@
     "rating_admin": 4.0,
     "min_price": 11280,
     "formatted_price": "11.280 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/bursa-koza-hotel-bursa-one-cikan-resim-86438754.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/bursa-koza-hotel-bursa-dis-mekan-86438760.jpg",
@@ -1136,7 +1292,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/bursa-koza-hotel-1/",
-    "blurb": "Nilüfer. örnek gecelik 11.280 TL. misafir 8,0/10",
+    "blurb": "Nilüfer. gecelik 11.280 TL. misafir 8,0/10",
     "featured": false
   },
   {
@@ -1152,6 +1308,10 @@
     "rating_admin": 4.0,
     "min_price": 9158,
     "formatted_price": "9.158 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/keyfe-kadir-garden-butik-otel-bursa-one-cikan-resim-78202490.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/keyfe-kadir-garden-butik-otel-bursa-one-cikan-resim-78202897.jpg",
@@ -1165,7 +1325,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/keyfe-kadir-garden-butik-otel-114779909/",
-    "blurb": "Orhangazi. Butik · Aile Oteli. örnek gecelik 9.158 TL. misafir 8,0/10",
+    "blurb": "Orhangazi. Butik · Aile Oteli. gecelik 9.158 TL. misafir 8,0/10",
     "featured": false
   },
   {
@@ -1181,6 +1341,10 @@
     "rating_admin": 4.0,
     "min_price": 6900,
     "formatted_price": "6.900 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/yesil-pera-pansiyon-bursa-genel-78438387.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/yesil-pera-pansiyon-bursa-oda-78438389.jpg",
@@ -1196,7 +1360,7 @@
       "Pansiyon"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/yesil-pera-pansiyon-1199704/",
-    "blurb": "Osmangazi. Aile Oteli · Tarihi · Pansiyon. örnek gecelik 6.900 TL. misafir 8,0/10",
+    "blurb": "Osmangazi. Aile Oteli · Tarihi · Pansiyon. gecelik 6.900 TL. misafir 8,0/10",
     "featured": false
   },
   {
@@ -1210,8 +1374,12 @@
     "subcategory": "dag-evi",
     "review_score": "7,9",
     "rating_admin": 3.95,
-    "min_price": 6591,
-    "formatted_price": "6.591 TL",
+    "min_price": 2010,
+    "formatted_price": "2.010 TL",
+    "price_fetched_at": "2026-09-09T00:56:02+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standard Double/Twin Room",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/grand-heykel-hotel-bursa-dis-mekan-85820971.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/grand-heykel-hotel-bursa-one-cikan-resim-85820972.jpg",
@@ -1225,7 +1393,7 @@
       "Kayak Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/grand-heykel-hotel-308919/",
-    "blurb": "Osmangazi. Balayı · Kayak Oteli. örnek gecelik 6.591 TL. misafir 7,9/10",
+    "blurb": "Osmangazi. Balayı · Kayak Oteli. gecelik 2.010 TL. misafir 7,9/10",
     "featured": false
   },
   {
@@ -1239,8 +1407,12 @@
     "subcategory": "termal",
     "review_score": "7,9",
     "rating_admin": 3.95,
-    "min_price": 6693,
-    "formatted_price": "6.693 TL",
+    "min_price": 2862,
+    "formatted_price": "2.862 TL",
+    "price_fetched_at": "2026-09-09T00:55:58+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standart Oda",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/tiara-termal-spa-bursa-one-cikan-resim-80006732.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/tiara-termal-spa-bursa-dis-mekan-80006734.jpg",
@@ -1255,7 +1427,7 @@
       "Termal"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/tiara-termal-hotel-spa-193711/",
-    "blurb": "Osmangazi. Balayı · Spa · Termal. örnek gecelik 6.693 TL. misafir 7,9/10",
+    "blurb": "Osmangazi. Balayı · Spa · Termal. gecelik 2.862 TL. misafir 7,9/10",
     "featured": false
   },
   {
@@ -1271,6 +1443,10 @@
     "rating_admin": 3.9,
     "min_price": 8776,
     "formatted_price": "8.776 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/burcman-visne-bursa-genel-40745692.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/burcman-visne-bursa-oda-78926075.jpg",
@@ -1281,37 +1457,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/burcman-hotel-visne/",
-    "blurb": "Yıldırım. örnek gecelik 8.776 TL. misafir 7,8/10",
-    "featured": false
-  },
-  {
-    "enuygun_id": 747234,
-    "slug": "erta-soyak-thermal-bursa",
-    "title": "Erta Soyak Thermal Bursa",
-    "ilce": "Osmangazi",
-    "lat": 40.2004,
-    "lng": 29.0355,
-    "price_band": "termal",
-    "subcategory": "termal",
-    "review_score": "7,8",
-    "rating_admin": 3.9,
-    "min_price": 6824,
-    "formatted_price": "6.824 TL",
-    "image_urls": [
-      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-dis-mekan-76720169.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-one-cikan-resim-76720148.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-dis-mekan-76720170.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-dis-mekan-76720168.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-dis-mekan-76720171.jpg",
-      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-oda-40818924.jpg"
-    ],
-    "suitabilities": [
-      "Balayı",
-      "Spa",
-      "Termal"
-    ],
-    "detail_link": "https://www.enuygun.com/otel/detay/erta-soyak-thermal-bursa/",
-    "blurb": "Osmangazi. Balayı · Spa · Termal. örnek gecelik 6.824 TL. misafir 7,8/10",
+    "blurb": "Yıldırım. gecelik 8.776 TL. misafir 7,8/10",
     "featured": false
   },
   {
@@ -1327,6 +1473,10 @@
     "rating_admin": 3.9,
     "min_price": 12000,
     "formatted_price": "12.000 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/nefes-dagyenice-dogada-bursa-one-cikan-resim-76451183.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/nefes-dagyenice-dogada-bursa-oda-79024248.jpg",
@@ -1339,7 +1489,7 @@
       "Bungalov"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/nefes-dagyenice-dogada-747994/",
-    "blurb": "Nilüfer. Bungalov. örnek gecelik 12.000 TL. misafir 7,8/10",
+    "blurb": "Nilüfer. Bungalov. gecelik 12.000 TL. misafir 7,8/10",
     "featured": false
   },
   {
@@ -1355,6 +1505,10 @@
     "rating_admin": 3.9,
     "min_price": 6981,
     "formatted_price": "6.981 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/royal-capital-hotel-bursa-genel-78969038.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/royal-capital-hotel-bursa-oda-77346447.jpg",
@@ -1370,7 +1524,7 @@
       "Tarihi"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/royal-capital-hotel-suites-109961689/",
-    "blurb": "Osmangazi. Spa · Termal · Tarihi. örnek gecelik 6.981 TL. misafir 7,8/10",
+    "blurb": "Osmangazi. Spa · Termal · Tarihi. gecelik 6.981 TL. misafir 7,8/10",
     "featured": false
   },
   {
@@ -1386,6 +1540,10 @@
     "rating_admin": 3.85,
     "min_price": 7483,
     "formatted_price": "7.483 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/golden-pars-hotel-bursa-oda-78195936.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/golden-pars-hotel-bursa-dis-mekan-39499101.jpg",
@@ -1397,7 +1555,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/golden-pars-hotel-584245/",
-    "blurb": "Osmangazi. örnek gecelik 7.483 TL. misafir 7,7/10",
+    "blurb": "Osmangazi. gecelik 7.483 TL. misafir 7,7/10",
     "featured": false
   },
   {
@@ -1413,6 +1571,10 @@
     "rating_admin": 3.85,
     "min_price": 20963,
     "formatted_price": "20.963 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/kar-beyaz-bursa-bursa-general-40612807.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/kar-beyaz-bursa-bursa-dis-mekan-78926316.jpg",
@@ -1424,7 +1586,41 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/kar-beyaz-hotel-bursa/",
-    "blurb": "Osmangazi. örnek gecelik 20.963 TL. misafir 7,7/10",
+    "blurb": "Osmangazi. gecelik 20.963 TL. misafir 7,7/10",
+    "featured": false
+  },
+  {
+    "enuygun_id": 747234,
+    "slug": "erta-soyak-thermal-bursa",
+    "title": "Erta Soyak Thermal Bursa",
+    "ilce": "Osmangazi",
+    "lat": 40.2004,
+    "lng": 29.0355,
+    "price_band": "termal",
+    "subcategory": "termal",
+    "review_score": "7,6",
+    "rating_admin": 3.8,
+    "min_price": 2532,
+    "formatted_price": "2.532 TL",
+    "price_fetched_at": "2026-09-09T00:55:46+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "",
+    "image_urls": [
+      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-dis-mekan-76720169.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-one-cikan-resim-76720148.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-dis-mekan-76720170.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-dis-mekan-83712382.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-dis-mekan-76720168.jpg",
+      "https://cdn3.enuygun.com/media/lib/uploads/image/erta-soyak-thermal-bursa-bursa-dis-mekan-76720171.jpg"
+    ],
+    "suitabilities": [
+      "Balayı",
+      "Spa",
+      "Termal"
+    ],
+    "detail_link": "https://www.enuygun.com/otel/detay/erta-soyak-thermal-bursa/",
+    "blurb": "Osmangazi. Balayı · Spa · Termal. gecelik 2.532 TL. misafir 7,6/10",
     "featured": false
   },
   {
@@ -1438,8 +1634,12 @@
     "subcategory": "otel",
     "review_score": "7,6",
     "rating_admin": 3.8,
-    "min_price": 7841,
-    "formatted_price": "7.841 TL",
+    "min_price": 2450,
+    "formatted_price": "2.450 TL",
+    "price_fetched_at": "2026-09-09T00:55:46+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/grand-bursa-hotel-bursa-one-cikan-resim-76425418.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/grand-bursa-hotel-bursa-one-cikan-resim-78201831.jpg",
@@ -1453,7 +1653,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/grand-bursa-hotel-528755/",
-    "blurb": "Osmangazi. Ekonomik · Aile Oteli. örnek gecelik 7.841 TL. misafir 7,6/10",
+    "blurb": "Osmangazi. Ekonomik · Aile Oteli. gecelik 2.450 TL. misafir 7,6/10",
     "featured": false
   },
   {
@@ -1469,6 +1669,10 @@
     "rating_admin": 3.65,
     "min_price": 8701,
     "formatted_price": "8.701 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/grand-rimedya-mudanya-bursa-oda-78987574.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/grand-rimedya-mudanya-bursa-one-cikan-resim-57021647.jpg",
@@ -1480,7 +1684,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/grand-rimedya-hotel-mudanya-83234902/",
-    "blurb": "Mudanya. örnek gecelik 8.701 TL. misafir 7,3/10",
+    "blurb": "Mudanya. gecelik 8.701 TL. misafir 7,3/10",
     "featured": false
   },
   {
@@ -1494,8 +1698,12 @@
     "subcategory": "otel",
     "review_score": "7,2",
     "rating_admin": 3.6,
-    "min_price": 9833,
-    "formatted_price": "9.833 TL",
+    "min_price": 3225,
+    "formatted_price": "3.225 TL",
+    "price_fetched_at": "2026-09-09T00:55:51+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standard Oda",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/euro-park-bursa-bursa-one-cikan-resim-76400030.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/euro-park-bursa-bursa-one-cikan-resim-78202307.jpg",
@@ -1510,7 +1718,7 @@
       "Çevreye Duyarlı"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/euro-park-hotel-bursa-44781/",
-    "blurb": "Nilüfer. Balayı · Bebek Dostu · Çevreye Duyarlı. örnek gecelik 9.833 TL. misafir 7,2/10",
+    "blurb": "Nilüfer. Balayı · Bebek Dostu · Çevreye Duyarlı. gecelik 3.225 TL. misafir 7,2/10",
     "featured": false
   },
   {
@@ -1526,6 +1734,10 @@
     "rating_admin": 3.5,
     "min_price": 14197,
     "formatted_price": "14.197 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/turkish-retreat-bursa-dis-mekan-57003213.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/turkish-retreat-bursa-one-cikan-resim-56994658.jpg",
@@ -1539,7 +1751,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/turkish-retreat-1182733/",
-    "blurb": "İnegöl. Romantik · Spa. örnek gecelik 14.197 TL. misafir 7,0/10",
+    "blurb": "İnegöl. Romantik · Spa. gecelik 14.197 TL. misafir 7,0/10",
     "featured": false
   },
   {
@@ -1553,8 +1765,12 @@
     "subcategory": "butik",
     "review_score": "6,8",
     "rating_admin": 3.4,
-    "min_price": 4001,
-    "formatted_price": "4.001 TL",
+    "min_price": 1400,
+    "formatted_price": "1.400 TL",
+    "price_fetched_at": "2026-09-09T00:56:05+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Standart Oda, Şehir Manzaralı,",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/onuncu-koy-hotel-bursa-ilgi-noktasi-78952797.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/onuncu-koy-hotel-bursa-oda-77421508.jpg",
@@ -1570,7 +1786,7 @@
       "Yetişkin Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/onuncu-koy-hotel-adults-only-429647/",
-    "blurb": "Yıldırım. Balayı · Butik · Yetişkin Oteli. örnek gecelik 4.001 TL. misafir 6,8/10",
+    "blurb": "Yıldırım. Balayı · Butik · Yetişkin Oteli. gecelik 1.400 TL. misafir 6,8/10",
     "featured": false
   },
   {
@@ -1586,6 +1802,10 @@
     "rating_admin": 3.3,
     "min_price": 11761,
     "formatted_price": "11.761 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/morrian-hotel-bursa-dis-mekan-77432564.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/morrian-hotel-bursa-dis-mekan-78205023.jpg",
@@ -1601,7 +1821,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/morrian-hotel-528743/",
-    "blurb": "İnegöl. Balayı · Spa · Aile Oteli. örnek gecelik 11.761 TL. misafir 6,6/10",
+    "blurb": "İnegöl. Balayı · Spa · Aile Oteli. gecelik 11.761 TL. misafir 6,6/10",
     "featured": false
   },
   {
@@ -1617,6 +1837,10 @@
     "rating_admin": 3.25,
     "min_price": 7454,
     "formatted_price": "7.454 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/elite-world-go-inegol-bursa-genel-78927875.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/elite-world-go-inegol-bursa-one-cikan-resim-78202561.jpg",
@@ -1630,7 +1854,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/elite-world-go-inegol-111228564/",
-    "blurb": "İnegöl. Aile Oteli. örnek gecelik 7.454 TL. misafir 6,5/10",
+    "blurb": "İnegöl. Aile Oteli. gecelik 7.454 TL. misafir 6,5/10",
     "featured": false
   },
   {
@@ -1644,8 +1868,12 @@
     "subcategory": "otel",
     "review_score": "6,4",
     "rating_admin": 3.2,
-    "min_price": 6498,
-    "formatted_price": "6.498 TL",
+    "min_price": 2895,
+    "formatted_price": "2.895 TL",
+    "price_fetched_at": "2026-09-09T00:56:04+03:00",
+    "price_check_in": "10.09.2026",
+    "price_check_out": "11.09.2026",
+    "price_room_from": "Basic İki Ayrı Yataklı Oda - 2 Tek Kişilik Yatak",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/mudanya-otel-bursa-general-76225865.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/mudanya-otel-bursa-dis-mekan-76225878.jpg",
@@ -1657,7 +1885,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/mudanya-otel-427734/",
-    "blurb": "Mudanya. örnek gecelik 6.498 TL. misafir 6,4/10",
+    "blurb": "Mudanya. gecelik 2.895 TL. misafir 6,4/10",
     "featured": false
   },
   {
@@ -1673,6 +1901,10 @@
     "rating_admin": 3.1,
     "min_price": 5566,
     "formatted_price": "5.566 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/guner-city-hotel-bursa-lobi-56980495.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/guner-city-hotel-bursa-oda-56968099.jpg",
@@ -1684,7 +1916,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/guner-city-hotel-91895444/",
-    "blurb": "Osmangazi. örnek gecelik 5.566 TL. misafir 6,2/10",
+    "blurb": "Osmangazi. gecelik 5.566 TL. misafir 6,2/10",
     "featured": false
   },
   {
@@ -1700,6 +1932,10 @@
     "rating_admin": 3.0,
     "min_price": 10800,
     "formatted_price": "10.800 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/atamer-bursa-general-39909908.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/atamer-bursa-dis-mekan-77495483.jpg",
@@ -1714,7 +1950,7 @@
       "Spa"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/hotel-atamer/",
-    "blurb": "Gemlik. Denize Sıfır · Spa. örnek gecelik 10.800 TL. misafir 6,0/10",
+    "blurb": "Gemlik. Denize Sıfır · Spa. gecelik 10.800 TL. misafir 6,0/10",
     "featured": false
   },
   {
@@ -1730,6 +1966,10 @@
     "rating_admin": 3.0,
     "min_price": 9696,
     "formatted_price": "9.696 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/oz-butik-antik-kent-myrleia-bursa-dis-mekan-76569866.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/oz-butik-antik-kent-myrleia-bursa-dis-mekan-78859186.jpg",
@@ -1744,7 +1984,7 @@
       "Alkolsüz"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/oz-butik-otel-antik-kent-myrleia-741062/",
-    "blurb": "Mudanya. Balayı · Konsept · Alkolsüz. örnek gecelik 9.696 TL. misafir 6,0/10",
+    "blurb": "Mudanya. Balayı · Konsept · Alkolsüz. gecelik 9.696 TL. misafir 6,0/10",
     "featured": false
   },
   {
@@ -1760,6 +2000,10 @@
     "rating_admin": null,
     "min_price": 12209,
     "formatted_price": "12.209 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/araz-white-house-bursa-oda-78531043.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/araz-white-house-bursa-oda-78531041.jpg",
@@ -1774,7 +2018,7 @@
       "Aile Oteli"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/araz-white-house-1201668/",
-    "blurb": "Mudanya. Butik · Aile Oteli. örnek gecelik 12.209 TL",
+    "blurb": "Mudanya. Butik · Aile Oteli. gecelik 12.209 TL",
     "featured": false
   },
   {
@@ -1790,6 +2034,10 @@
     "rating_admin": null,
     "min_price": 14776,
     "formatted_price": "14.776 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/bella-mudanya-bursa-genel-76327458.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/bella-mudanya-bursa-oda-78925812.jpg",
@@ -1805,7 +2053,7 @@
       "Denize Sıfır"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/bella-otel-mudanya-29341/",
-    "blurb": "Mudanya. Bebek Dostu · Butik · Denize Sıfır. örnek gecelik 14.776 TL",
+    "blurb": "Mudanya. Bebek Dostu · Butik · Denize Sıfır. gecelik 14.776 TL",
     "featured": false
   },
   {
@@ -1821,6 +2069,10 @@
     "rating_admin": null,
     "min_price": 31449,
     "formatted_price": "31.449 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/ceylan-splendor-uludag-autograph-collection-bursa-genel-79939770.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/ceylan-splendor-uludag-autograph-collection-bursa-genel-79939771.jpg",
@@ -1831,7 +2083,7 @@
     ],
     "suitabilities": [],
     "detail_link": "https://www.enuygun.com/otel/detay/ceylan-splendor-uludag-autograph-collection/",
-    "blurb": "Osmangazi. örnek gecelik 31.449 TL",
+    "blurb": "Osmangazi. gecelik 31.449 TL",
     "featured": false
   },
   {
@@ -1847,6 +2099,10 @@
     "rating_admin": null,
     "min_price": 12451,
     "formatted_price": "12.451 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/mazi-butik-otel-bursa-genel-40724500.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/mazi-butik-otel-bursa-oda-40724511.jpg",
@@ -1861,7 +2117,7 @@
       "Butik"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/mazi-butik-otel/",
-    "blurb": "Mudanya. Balayı · Butik. örnek gecelik 12.451 TL",
+    "blurb": "Mudanya. Balayı · Butik. gecelik 12.451 TL",
     "featured": false
   },
   {
@@ -1877,6 +2133,10 @@
     "rating_admin": null,
     "min_price": 46801,
     "formatted_price": "46.801 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/uludag-tatil-evleri-dogus-bursa-genel-78525899.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/uludag-tatil-evleri-dogus-bursa-genel-78525900.jpg",
@@ -1891,7 +2151,7 @@
       "Bungalov"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/uludag-tatil-evleri-villa-dogus-1201549/",
-    "blurb": "Osmangazi. Kayak Oteli · Aile Oteli · Bungalov. örnek gecelik 46.801 TL",
+    "blurb": "Osmangazi. Kayak Oteli · Aile Oteli · Bungalov. gecelik 46.801 TL",
     "featured": false
   },
   {
@@ -1907,6 +2167,10 @@
     "rating_admin": null,
     "min_price": 61201,
     "formatted_price": "61.201 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/uludag-tatil-evleri-seyir-bursa-genel-78921570.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/uludag-tatil-evleri-seyir-bursa-oda-78486587.jpg",
@@ -1922,7 +2186,7 @@
       "Bungalov"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/uludag-tatil-evleri-villa-seyir-1200711/",
-    "blurb": "Osmangazi. Kayak Oteli · Aile Oteli · Bungalov. örnek gecelik 61.201 TL",
+    "blurb": "Osmangazi. Kayak Oteli · Aile Oteli · Bungalov. gecelik 61.201 TL",
     "featured": false
   },
   {
@@ -1938,6 +2202,10 @@
     "rating_admin": null,
     "min_price": 33846,
     "formatted_price": "33.846 TL",
+    "price_fetched_at": "",
+    "price_check_in": "",
+    "price_check_out": "",
+    "price_room_from": "",
     "image_urls": [
       "https://cdn3.enuygun.com/media/lib/uploads/image/kurtuldu-bursa-genel-78435982.jpg",
       "https://cdn3.enuygun.com/media/lib/uploads/image/kurtuldu-bursa-oda-78962415.jpg",
@@ -1953,7 +2221,7 @@
       "Butik"
     ],
     "detail_link": "https://www.enuygun.com/otel/detay/villa-kurtuldu-1199650/",
-    "blurb": "Gemlik. İslami · Bebek Dostu · Butik. örnek gecelik 33.846 TL",
+    "blurb": "Gemlik. İslami · Bebek Dostu · Butik. gecelik 33.846 TL",
     "featured": false
   }
 ]

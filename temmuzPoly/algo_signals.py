@@ -858,8 +858,18 @@ def run():
                 with open(ACCURACY_FILE) as f:
                     acc = json.load(f)
 
+            prev_hour = prev_data.get("written_hour")
+            cur_hour = now.hour
+            if prev_hour is not None and int(prev_hour) == cur_hour:
+                print(f"[{now.strftime('%H:%M')}] aynı saat refresh — accuracy atlandı")
+                updated_any = False
+                skip_acc = True
+            else:
+                skip_acc = False
             updated_any = False
             for sym, pair in SYMBOLS.items():
+                if skip_acc:
+                    break
                 kl = kl_1h.get(sym, [])
                 if len(kl) < 3:
                     continue
@@ -891,7 +901,10 @@ def run():
                 with open(ACCURACY_FILE, "w") as f:
                     json.dump(acc, f, indent=2, ensure_ascii=False)
                 print(f"[{now.strftime('%H:%M')}] algo_accuracy.json güncellendi")
-        if prev_data and prev_data.get("consensus"):
+        if prev_data and prev_data.get("consensus") and not (
+            prev_data.get("written_hour") is not None
+            and int(prev_data["written_hour"]) == now.hour
+        ):
             from chart_signal_accuracy import update_consensus_accuracy
             update_consensus_accuracy(
                 prev_data["consensus"],
@@ -913,7 +926,10 @@ def run():
     # Mevcut sinyalleri önce prev'e yaz, sonra out'a
     try:
         with open(PREV_FILE, "w") as f:
-            json.dump({"signals": signals, "consensus": consensus}, f, indent=2, ensure_ascii=False)
+            json.dump(
+                {"signals": signals, "consensus": consensus, "written_hour": now.hour},
+                f, indent=2, ensure_ascii=False,
+            )
     except Exception:
         pass
 

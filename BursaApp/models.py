@@ -263,6 +263,69 @@ class EventGoing(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
+class ActivitySeek(Base):
+    """Aktivite arkadaşı ilanı — okey 4., tenis partneri vb."""
+
+    __tablename__ = "activity_seeks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    activity_type: Mapped[str] = mapped_column(String(24), nullable=False, default="other", index=True)
+    title: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    slots_needed: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    ilce: Mapped[str] = mapped_column(String(48), nullable=False, default="")
+    venue: Mapped[str] = mapped_column(String(160), nullable=False, default="")
+    when_label: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    when_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    note: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    skill_level: Mapped[str] = mapped_column(String(16), nullable=False, default="any")
+    points_min: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    contact_hint: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    place_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("places.id"), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="open", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    user: Mapped["User"] = relationship("User")
+    joins: Mapped[list["ActivitySeekJoin"]] = relationship(
+        "ActivitySeekJoin", back_populates="seek", cascade="all, delete-orphan"
+    )
+
+
+class ActivitySeekJoin(Base):
+    """İlana katılım — pending → host onayı → joined."""
+
+    __tablename__ = "activity_seek_joins"
+    __table_args__ = (UniqueConstraint("seek_id", "user_id", name="uq_seek_join_user"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    seek_id: Mapped[int] = mapped_column(Integer, ForeignKey("activity_seeks.id"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    seek: Mapped["ActivitySeek"] = relationship("ActivitySeek", back_populates="joins")
+    user: Mapped["User"] = relationship("User")
+
+
+class UserPointLog(Base):
+    """Puan hareketleri — tekrar ödül engeli + geçmiş."""
+
+    __tablename__ = "user_point_logs"
+    __table_args__ = (
+        UniqueConstraint("user_id", "reason", "ref_type", "ref_id", name="uq_point_log_ref"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    delta: Mapped[int] = mapped_column(Integer, nullable=False)
+    reason: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    ref_type: Mapped[str] = mapped_column(String(24), nullable=False, default="")
+    ref_id: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+
 class PostLike(Base):
     __tablename__ = "post_likes"
     __table_args__ = (UniqueConstraint("user_id", "post_id", name="uq_like_user_post"),)
@@ -593,6 +656,12 @@ def _migrate_sqlite() -> None:
             conn.execute(text("ALTER TABLE claim_requests ADD COLUMN tax_doc_url VARCHAR(500) DEFAULT ''"))
         if clx and "id_doc_url" not in clx:
             conn.execute(text("ALTER TABLE claim_requests ADD COLUMN id_doc_url VARCHAR(500) DEFAULT ''"))
+        asex = _table_cols(conn, "activity_seeks")
+        if asex and "place_id" not in asex:
+            conn.execute(text("ALTER TABLE activity_seeks ADD COLUMN place_id INTEGER"))
+        asjx = _table_cols(conn, "activity_seek_joins")
+        if asjx and "responded_at" not in asjx:
+            conn.execute(text("ALTER TABLE activity_seek_joins ADD COLUMN responded_at DATETIME"))
         # admin hesabı e-posta doğrulanmış sayılsın
         conn.execute(text("UPDATE users SET email_verified=1 WHERE role='admin' AND (email_verified IS NULL OR email_verified=0)"))
         conn.execute(text("UPDATE users SET email_verified=1 WHERE role='editor' AND (email_verified IS NULL OR email_verified=0)"))
@@ -663,6 +732,9 @@ def init_db() -> None:
     try:
         seed_admin(db)
         seed_places(db)
+        from activity_seek import seed_demo_seeks
+
+        seed_demo_seeks(db)
         db.commit()
     finally:
         db.close()

@@ -41,7 +41,7 @@ EXCLUDED_KEYS = ("b1_01", "b1_02", "b1_04", "b1_05", "analiz2")
 _HISTORY_ALIASES = {"melez": "analiz6_v4"}
 
 _LABELS = {
-    "analiz1": "A1",
+    "analiz1": "F16",
     "analiz6": "A6",
     "analiz6_v2": "A6V2",
     "analiz6_v3": "A6V3",

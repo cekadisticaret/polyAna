@@ -1,266 +1,246 @@
 {
- "olusturma": "2026-08-16T00:00:33+03:00",
+ "olusturma": "2026-09-14T00:00:08+03:00",
  "ozet": {
-  "defter": 123,
-  "islem": 52355,
-  "gun": 9.6,
-  "ilk": "2026-08-06T08:07:17",
-  "son": "2026-08-15T23:30:43",
-  "wr": 49.5,
-  "brut": 451.0,
-  "net": -21906.52,
-  "komisyon": 22357.53,
-  "hacim": 22362125.0,
-  "fee_oran": 0.1,
-  "brut_kenar": 0.002,
-  "islem_basi": -0.418,
-  "maker_net": -8493.85
+  "defter": 14,
+  "islem": 2699,
+  "gun": 5.7,
+  "ilk": "2026-09-08T07:00:33",
+  "son": "2026-09-13T23:00:27",
+  "wr": 74.9,
+  "brut": 202.93,
+  "net": -1453.71,
+  "komisyon": 1618.03,
+  "hacim": 1619400.0,
+  "fee_oran": 0.0999,
+  "brut_kenar": 0.0125,
+  "islem_basi": -0.539,
+  "maker_net": -444.83
  },
  "mfe": [
   {
    "band": "0-0.5",
-   "n": 41164,
-   "pay": 78.6,
-   "ort": -1.17,
-   "wr": 23.9,
-   "net": -48149.35
+   "n": 1029,
+   "pay": 38.1,
+   "ort": -13.59,
+   "wr": 33.8,
+   "net": -13981.82
   },
   {
    "band": "0.5-1",
-   "n": 7604,
-   "pay": 14.5,
-   "ort": 1.6,
-   "wr": 88.2,
-   "net": 12148.13
+   "n": 1266,
+   "pay": 46.9,
+   "ort": 5.58,
+   "wr": 98.6,
+   "net": 7070.39
   },
   {
    "band": "1-1.4",
-   "n": 1673,
-   "pay": 3.2,
-   "ort": 2.48,
-   "wr": 97.6,
-   "net": 4156.5
+   "n": 177,
+   "pay": 6.6,
+   "ort": 6.6,
+   "wr": 97.7,
+   "net": 1167.84
   },
   {
    "band": "1.4-1.7",
-   "n": 534,
-   "pay": 1.0,
-   "ort": 3.22,
-   "wr": 99.4,
-   "net": 1719.75
+   "n": 60,
+   "pay": 2.2,
+   "ort": 9.53,
+   "wr": 98.3,
+   "net": 571.59
   },
   {
    "band": "1.7-2.5",
-   "n": 655,
-   "pay": 1.3,
-   "ort": 3.15,
-   "wr": 99.8,
-   "net": 2065.32
+   "n": 85,
+   "pay": 3.1,
+   "ort": 14.26,
+   "wr": 97.6,
+   "net": 1212.21
   },
   {
    "band": "2.5-4",
-   "n": 505,
-   "pay": 1.0,
-   "ort": 5.23,
+   "n": 58,
+   "pay": 2.1,
+   "ort": 19.12,
    "wr": 100.0,
-   "net": 2641.46
+   "net": 1109.18
   },
   {
    "band": "4+",
-   "n": 220,
-   "pay": 0.4,
-   "ort": 15.96,
-   "wr": 99.1,
-   "net": 3511.68
+   "n": 24,
+   "pay": 0.9,
+   "ort": 58.2,
+   "wr": 95.8,
+   "net": 1396.91
   }
  ],
  "kapanis": [
   {
-   "sebep": "1h_close",
-   "n": 36510,
-   "wr": 46.9,
-   "net": -17755.07,
-   "brut": -3348.3,
-   "komisyon": 14406.77,
-   "skill": -0.0239,
-   "t": -11.83
-  },
-  {
-   "sebep": "4h_close",
-   "n": 5394,
-   "wr": 47.0,
-   "net": -5030.84,
-   "brut": -1816.81,
-   "komisyon": 3214.03,
-   "skill": -0.0707,
-   "t": -4.48
+   "sebep": "atr_stop",
+   "n": 1462,
+   "wr": 98.6,
+   "net": 9637.32,
+   "brut": 10586.15,
+   "komisyon": 876.3,
+   "skill": 1.2098,
+   "t": 26.49
   },
   {
    "sebep": "signal_reversal",
-   "n": 4282,
-   "wr": 57.8,
-   "net": -1018.22,
-   "brut": 1537.42,
-   "komisyon": 2555.64,
-   "skill": 0.0594,
-   "t": 5.06
-  },
-  {
-   "sebep": "atr_stop",
-   "n": 2463,
-   "wr": 97.2,
-   "net": 8935.46,
-   "brut": 9849.04,
-   "komisyon": 913.58,
-   "skill": 0.939,
-   "t": 25.59
-  },
-  {
-   "sebep": "hourly",
-   "n": 2210,
-   "wr": 49.1,
-   "net": -711.57,
-   "brut": -40.8,
-   "komisyon": 670.78,
-   "skill": -0.01,
-   "t": -0.87
+   "n": 853,
+   "wr": 66.2,
+   "net": 653.92,
+   "brut": 1133.9,
+   "komisyon": 510.96,
+   "skill": 0.2377,
+   "t": 3.24
   },
   {
    "sebep": "atr_loss",
-   "n": 958,
+   "n": 245,
    "wr": 0.0,
-   "net": -6296.78,
-   "brut": -5932.24,
-   "komisyon": 364.54,
-   "skill": -1.4287,
-   "t": -34.56
+   "net": -9121.09,
+   "brut": -8948.19,
+   "komisyon": 147.88,
+   "skill": -6.0724,
+   "t": -34.0
   },
   {
-   "sebep": "flatten",
-   "n": 537,
-   "wr": 55.9,
-   "net": -115.55,
-   "brut": 116.1,
-   "komisyon": 231.65,
-   "skill": 0.0341,
-   "t": 3.9
+   "sebep": "max_hold",
+   "n": 131,
+   "wr": 12.2,
+   "net": -1834.52,
+   "brut": -1788.13,
+   "komisyon": 77.89,
+   "skill": -1.8443,
+   "t": -8.32
+  },
+  {
+   "sebep": "liquidation",
+   "n": 8,
+   "wr": 0.0,
+   "net": -789.33,
+   "brut": -780.8,
+   "komisyon": 5.0,
+   "skill": -16.2667,
+   "t": -7637732224583732.0
   }
  ],
  "drift": [
   {
-   "coin": "KAITOUSDT",
-   "nL": 401,
-   "nS": 505,
-   "skill": 0.1477,
-   "drift": 0.7718,
-   "mL": -0.6241,
-   "mS": 0.9196
+   "coin": "ARKUSDT",
+   "nL": 16,
+   "nS": 38,
+   "skill": -1.5628,
+   "drift": -2.6951,
+   "mL": 1.1323,
+   "mS": -4.2579
   },
   {
-   "coin": "UNIUSDT",
-   "nL": 416,
-   "nS": 466,
-   "skill": 0.0346,
-   "drift": 0.2205,
-   "mL": -0.1859,
-   "mS": 0.2551
+   "coin": "BICOUSDT",
+   "nL": 33,
+   "nS": 35,
+   "skill": -0.6203,
+   "drift": 1.4401,
+   "mL": -2.0604,
+   "mS": 0.8198
   },
   {
-   "coin": "WLDUSDT",
-   "nL": 311,
-   "nS": 410,
-   "skill": -0.0619,
-   "drift": -0.2182,
-   "mL": 0.1563,
-   "mS": -0.2802
+   "coin": "AVAUSDT",
+   "nL": 25,
+   "nS": 32,
+   "skill": -1.0285,
+   "drift": -1.2856,
+   "mL": 0.2571,
+   "mS": -2.3141
   },
   {
-   "coin": "LINKUSDT",
-   "nL": 406,
-   "nS": 422,
-   "skill": -0.0131,
-   "drift": -0.155,
-   "mL": 0.1419,
-   "mS": -0.1682
+   "coin": "BBUSDT",
+   "nL": 34,
+   "nS": 18,
+   "skill": -0.0386,
+   "drift": 1.2249,
+   "mL": -1.2634,
+   "mS": 1.1863
   },
   {
-   "coin": "INJUSDT",
-   "nL": 417,
-   "nS": 489,
-   "skill": -0.0299,
-   "drift": 0.1169,
-   "mL": -0.1468,
-   "mS": 0.087
+   "coin": "COTIUSDT",
+   "nL": 11,
+   "nS": 29,
+   "skill": 0.5537,
+   "drift": 1.0355,
+   "mL": -0.4818,
+   "mS": 1.5892
   },
   {
-   "coin": "TIAUSDT",
-   "nL": 436,
-   "nS": 582,
-   "skill": 0.0014,
-   "drift": 0.104,
-   "mL": -0.1026,
-   "mS": 0.1054
+   "coin": "DOGSUSDT",
+   "nL": 13,
+   "nS": 30,
+   "skill": -0.686,
+   "drift": 0.9675,
+   "mL": -1.6535,
+   "mS": 0.2815
   },
   {
-   "coin": "ADAUSDT",
-   "nL": 2189,
-   "nS": 3025,
-   "skill": -0.0085,
-   "drift": 0.0987,
-   "mL": -0.1071,
-   "mS": 0.0902
+   "coin": "ALLOUSDT",
+   "nL": 43,
+   "nS": 57,
+   "skill": -0.2598,
+   "drift": 0.7555,
+   "mL": -1.0153,
+   "mS": 0.4957
   },
   {
    "coin": "ATOMUSDT",
-   "nL": 683,
-   "nS": 667,
-   "skill": -0.0109,
-   "drift": -0.0814,
-   "mL": 0.0705,
-   "mS": -0.0923
+   "nL": 48,
+   "nS": 53,
+   "skill": -0.6352,
+   "drift": 0.7119,
+   "mL": -1.3471,
+   "mS": 0.0767
   }
  ],
  "konsensus": [
   {
    "ad": "tam uzlaşı ≥95%",
-   "nL": 338,
-   "nS": 293,
-   "skill": -0.0921,
-   "t": -2.29,
-   "mL": -0.0801,
-   "mS": -0.1041
+   "nL": 45,
+   "nS": 45,
+   "skill": 0.2106,
+   "t": 0.55,
+   "mL": 1.0184,
+   "mS": -0.5971
   },
   {
    "ad": "güçlü 80-95%",
-   "nL": 1168,
-   "nS": 1396,
-   "skill": 0.0477,
-   "t": 1.75,
-   "mL": -0.0601,
-   "mS": 0.1555
+   "nL": 57,
+   "nS": 98,
+   "skill": 0.3423,
+   "t": 1.86,
+   "mL": 0.1338,
+   "mS": 0.5508
   },
   {
    "ad": "orta 65-80%",
-   "nL": 1852,
-   "nS": 5327,
-   "skill": -0.0452,
-   "t": -1.07,
-   "mL": -0.1211,
-   "mS": 0.0308
+   "nL": 71,
+   "nS": 51,
+   "skill": -0.3564,
+   "t": -1.18,
+   "mL": -0.3516,
+   "mS": -0.3611
   },
   {
    "ad": "bölünmüş <65%",
-   "nL": 6565,
-   "nS": 12052,
-   "skill": -0.0022,
-   "t": 1.41,
-   "mL": -0.0302,
-   "mS": 0.0258
+   "nL": 73,
+   "nS": 76,
+   "skill": 0.4166,
+   "t": 2.58,
+   "mL": 0.4189,
+   "mS": 0.4143
   }
  ],
  "beceri": {
-  "olculebilir": 108,
-  "iki_yon_pozitif": 13
+  "olculebilir": 13,
+  "iki_yon_pozitif": 2
  },
  "live": {
   "hayalet": [],
@@ -274,21 +254,14 @@
  "rejim": {
   "aktif": "zaman kapanışı yok · 24s tavan · 3×ATR stop",
   "gecis_tr": "2026-08-15T00:17:43+03:00",
-  "eski": {
-   "n": 50823,
-   "net": -21581.33,
-   "brut": -43.74,
-   "komisyon": 21537.6,
-   "skill": -0.0036,
-   "t": -0.1
-  },
+  "eski": {},
   "yeni": {
-   "n": 1532,
-   "net": -325.19,
-   "brut": 494.74,
-   "komisyon": 819.93,
-   "skill": 0.0792,
-   "t": 3.12
+   "n": 2699,
+   "net": -1453.71,
+   "brut": 202.93,
+   "komisyon": 1618.03,
+   "skill": -0.0007,
+   "t": 0.21
   },
   "olcum": {
    "kaynak": "Test/exit_lab.py · 50.892 işlem · 06–14 Ağu 2026",
@@ -306,17 +279,7 @@
   {
    "tip": "kritik",
    "baslik": "Sistem piyasada değil, komisyonda kaybediyor",
-   "metin": "Brüt sonuç $+451.00 — pratikte sıfır. Komisyon $22,357.53. Kenar maliyetin 50 katı küçük."
-  },
-  {
-   "tip": "uyari",
-   "baslik": "İşlemlerin %79'i doğru anda ölü",
-   "metin": "41,164 işlem 0,5 ATR bile lehe gitmiyor (toplam $-48,149). Sorun çıkışlarda değil, giriş ayrım gücünde."
-  },
-  {
-   "tip": "uyari",
-   "baslik": "Zamanlı kapanış sessiz katil",
-   "metin": "1h_close: 36,510 işlem, brüt $-3,348.30, net $-17,755.07. Üçte ikiden fazlası süre dolduğu için kapanıyor."
+   "metin": "Brüt sonuç $+202.93 — pratikte sıfır. Komisyon $1,618.03. Kenar maliyetin 8 katı küçük."
   },
   {
    "tip": "iyi",
@@ -329,19 +292,14 @@
    "metin": "En iyi çıkış rejiminin brüt kenarı %0,059; taker gidiş-dönüş maliyeti %0,100. Gün bazlı kümelenmiş t = +0,85, yani sıfırdan ayırt edilemez. Geçmiş başarıya göre defter seçmek walk-forward'da TERS çalıştı (seçilen %0,062 · filtresiz %0,084). Kalan açık çıkışla değil, giriş kalitesi veya maker maliyetiyle kapanır."
   },
   {
-   "tip": "uyari",
-   "baslik": "Çoğunluk oyu ters çalışıyor",
-   "metin": "Tam uzlaşı (≥%95) SKILL %-0.0921 — istatistiksel olarak negatif. Kripto tarafında konsensüs filtresi zarar veriyor olabilir."
-  },
-  {
    "tip": "bilgi",
    "baslik": "Defter bazında beceri testi",
-   "metin": "Her iki yönde de pozitif getiri üreten defter: 13 / 108. Saf şans eseri beklenen ~27."
+   "metin": "Her iki yönde de pozitif getiri üreten defter: 2 / 13. Saf şans eseri beklenen ~3."
   },
   {
    "tip": "iyi",
    "baslik": "Maker geçişi en büyük tek kaldıraç",
-   "metin": "Taker ile net $-21,907; aynı evrende maker ile tahmini $-8,494 (komisyon %0,04 gidiş-dönüş)."
+   "metin": "Taker ile net $-1,454; aynı evrende maker ile tahmini $-445 (komisyon %0,04 gidiş-dönüş)."
   }
  ]
 }

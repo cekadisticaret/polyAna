@@ -43,8 +43,10 @@ from catalog import (
     VISIT_FEE,
     VISIT_KIND,
     VISIT_TAG,
+    food_intent_for_query,
     food_matches,
     food_price_marks,
+    food_suggest_for_query,
     visit_fee_tier,
     visit_matches,
     hospital_staff_groups,
@@ -84,7 +86,7 @@ _TZ = ZoneInfo("Europe/Istanbul")
 def _static_asset_v() -> str:
     """CSS/JS cache-bust — dosya mtime değişince tarayıcı yeni sürümü çeker."""
     mt = 0
-    for name in ("app.css", "seo-pages.css", "utilities-pages.css", "nearby-explore.css", "nearby-explore.js"):
+    for name in ("app.css", "seo-pages.css", "bursa-v2.css", "utilities-pages.css", "nearby-explore.css", "nearby-explore.js"):
         try:
             mt = max(mt, int(os.path.getmtime(os.path.join(_DIR, "static", name))))
         except OSError:
@@ -131,7 +133,7 @@ def _mobile_tab() -> str:
     path = request.path or ""
     if path in ("/", "/etrafimda") or path.startswith("/harita"):
         return "home"
-    if path.startswith("/feed"):
+    if path.startswith("/feed") or path.startswith("/arkadas-ara"):
         return "feed"
     if path.startswith("/rota"):
         return "route"
@@ -237,6 +239,31 @@ def tesekkur_page():
     )
 
 
+def _live_pulse() -> dict:
+    feed = _load_nobetci_feed()
+    rx = feed.get("pharmacies") or []
+    count = feed.get("total") or len(rx)
+    duty = feed.get("duty_date") or ""
+    teleferik_label = "Güncel bilgi"
+    try:
+        import json as _json
+        tp = os.path.join(_DIR, "data", "teleferik.json")
+        if os.path.isfile(tp):
+            tdata = _json.loads(open(tp, encoding="utf-8").read())
+            probe = (tdata.get("official_probe") or {})
+            if probe.get("ok"):
+                teleferik_label = "Açık"
+            elif tdata.get("generated_label"):
+                teleferik_label = "Sezon · kontrol edin"
+    except Exception:
+        pass
+    return {
+        "pharmacy_count": count,
+        "duty_date": duty,
+        "teleferik_label": teleferik_label,
+    }
+
+
 @app.context_processor
 def _inject():
     from seo import resolve_seo, site_base
@@ -247,8 +274,13 @@ def _inject():
 
     user = load_user()
     path = request.path or "/"
+    from user_points import points_level, user_points as _user_points
+
+    pts = _user_points(user)
     return {
         "nav_user": user,
+        "user_points": pts,
+        "user_points_level": points_level(pts) if user else "",
         "can_admin_panel": can_access_panel(user),
         "can_review": can_review(user),
         "email_verify_banner": verify_banner(user),
@@ -269,6 +301,7 @@ def _inject():
         "phone_e164": PHONE_E164,
         "static_v": _static_asset_v(),
         "mobile_tab": _mobile_tab(),
+        "live_pulse": _live_pulse(),
     }
 
 
@@ -562,20 +595,27 @@ def home():
                     featured.append(p)
                 if len(featured) >= 8:
                     break
-        place_count = db.query(Place).filter(Place.status == "approved").count()
+        from place_stats import home_stats
+
+        stats = home_stats(db)
         cal = _cal(_month_shows(db))
         from seo import for_home
         from blog_posts import all_blog_posts, blog_posts_sorted
         from news_pages import headline_articles
+        from instagram_bursa import load_hero_slides
 
         return render_template(
             "home.html",
             featured=[place_public(p) for p in featured],
             news_headlines=headline_articles(limit=4),
+            hero_slides=load_hero_slides(limit=12),
             q=q,
             weather=_weather(),
             ilce_n=len(ILCELER),
-            place_count=place_count,
+            place_count=stats["place_count"],
+            visit_count=stats["visit_count"],
+            places_new_week=stats["places_new_week"],
+            places_new_last_night=stats["places_new_last_night"],
             nav="kesfet",
             seo=for_home(),
             blog_teasers=blog_posts_sorted()[:4],
@@ -784,6 +824,13 @@ def kvkk_page():
     return render_template("kvkk.html", nav="kvkk", seo=for_kvkk())
 
 
+@app.route("/gizlilik")
+def gizlilik_page():
+    from seo import for_gizlilik
+
+    return render_template("gizlilik.html", nav="gizlilik", seo=for_gizlilik())
+
+
 @app.route("/iletisim")
 def iletisim_page():
     from seo import for_iletisim
@@ -799,6 +846,199 @@ def bugun():
         return render_template("today.html", today=data, nav="bugun", weather=_weather())
     finally:
         db.close()
+
+
+@app.route("/arkadas-ara", methods=["GET", "POST"])
+def arkadas_ara():
+    from urllib.parse import urlencode
+
+    from activity_seek import (
+        ACTIVITY_TYPES,
+        SKILL_LEVELS,
+        create_seek,
+        join_seek,
+        leave_seek,
+        list_open_seeks,
+        seek_public,
+    )
+    from catalog import ILCELER
+    from seo import page as seo_page
+
+    user = load_user()
+    activity_type = (request.args.get("type") or "").strip().lower()
+    ilce = (request.args.get("ilce") or "").strip()
+    if activity_type and activity_type not in ACTIVITY_TYPES:
+        activity_type = ""
+
+    if request.method == "POST":
+        if not user:
+            return redirect("/giris?next=/arkadas-ara")
+        if not rate_ok("activity_seek", limit=8):
+            flash("Çok hızlı — biraz bekle.", "err")
+            return redirect("/arkadas-ara")
+        db = SessionLocal()
+        try:
+            u = db.get(User, user.id)
+            if not u:
+                return redirect("/giris?next=/arkadas-ara")
+            payload = {
+                "activity_type": request.form.get("activity_type"),
+                "title": request.form.get("title"),
+                "slots_needed": request.form.get("slots_needed"),
+                "ilce": request.form.get("ilce"),
+                "venue": request.form.get("venue"),
+                "when_label": request.form.get("when_label"),
+                "note": request.form.get("note"),
+                "skill_level": request.form.get("skill_level"),
+                "points_min": request.form.get("points_min"),
+                "contact_hint": request.form.get("contact_hint"),
+            }
+            seek, err = create_seek(db, u, payload)
+            if err:
+                flash(err, "err")
+            else:
+                flash("İlan yayında — katılımcılar seni görebilir.", "ok")
+        finally:
+            db.close()
+        q = {}
+        if activity_type:
+            q["type"] = activity_type
+        if ilce:
+            q["ilce"] = ilce
+        return redirect("/arkadas-ara" + ("?" + urlencode(q) if q else ""))
+
+    db = SessionLocal()
+    try:
+        u = db.get(User, user.id) if user else None
+        rows = list_open_seeks(db, activity_type=activity_type or None, ilce=ilce or None)
+        seeks = [seek_public(db, s, u) for s in rows]
+        highlight_id = 0
+        try:
+            highlight_id = int(request.args.get("ilan") or 0)
+        except (TypeError, ValueError):
+            highlight_id = 0
+        seo = seo_page(
+            title="Arkadaş / partner ara",
+            description="Okey 4., tenis partneri, halı saha oyuncusu — Bursa'da aktivite arkadaşı bul.",
+            path="/arkadas-ara",
+            breadcrumbs=[("Ana Sayfa", "/"), ("Arkadaş ara", "/arkadas-ara")],
+        )
+        return render_template(
+            "activity_seek.html",
+            seeks=seeks,
+            activity_types=ACTIVITY_TYPES,
+            skill_levels=SKILL_LEVELS,
+            ilceler=ILCELER,
+            filter_type=activity_type,
+            filter_ilce=ilce,
+            highlight_id=highlight_id,
+            u=u,
+            nav="feed",
+            seo=seo,
+        )
+    finally:
+        db.close()
+
+
+@app.route("/arkadas-ara/<int:seek_id>/katil", methods=["POST"])
+def arkadas_ara_katil(seek_id: int):
+    from activity_seek import join_seek
+
+    user = load_user()
+    if not user:
+        return redirect(f"/giris?next=/arkadas-ara")
+    if not rate_ok("activity_join", limit=20):
+        flash("Çok hızlı — biraz bekle.", "err")
+        return redirect("/arkadas-ara")
+    db = SessionLocal()
+    try:
+        u = db.get(User, user.id)
+        if not u:
+            return redirect("/giris?next=/arkadas-ara")
+        _, err = join_seek(db, u, seek_id)
+        if err:
+            flash(err, "err")
+        else:
+            flash("İstek gönderildi — ilan sahibi onaylayınca katılımcıları görebilirsin.", "ok")
+    finally:
+        db.close()
+    return redirect("/arkadas-ara")
+
+
+@app.route("/arkadas-ara/<int:seek_id>/onayla/<int:join_user_id>", methods=["POST"])
+def arkadas_ara_onayla(seek_id: int, join_user_id: int):
+    from activity_seek import approve_join
+
+    user = load_user()
+    if not user:
+        return redirect("/giris?next=/arkadas-ara")
+    db = SessionLocal()
+    try:
+        u = db.get(User, user.id)
+        if not u:
+            return redirect("/giris?next=/arkadas-ara")
+        _, err = approve_join(db, u, seek_id, join_user_id)
+        flash(err or "Katılım onaylandı.", "err" if err else "ok")
+    finally:
+        db.close()
+    return redirect("/arkadas-ara")
+
+
+@app.route("/arkadas-ara/<int:seek_id>/reddet/<int:join_user_id>", methods=["POST"])
+def arkadas_ara_reddet(seek_id: int, join_user_id: int):
+    from activity_seek import reject_join
+
+    user = load_user()
+    if not user:
+        return redirect("/giris?next=/arkadas-ara")
+    db = SessionLocal()
+    try:
+        u = db.get(User, user.id)
+        if not u:
+            return redirect("/giris?next=/arkadas-ara")
+        _, err = reject_join(db, u, seek_id, join_user_id)
+        flash(err or "İstek reddedildi.", "err" if err else "ok")
+    finally:
+        db.close()
+    return redirect("/arkadas-ara")
+
+
+@app.route("/arkadas-ara/<int:seek_id>/ayril", methods=["POST"])
+def arkadas_ara_ayril(seek_id: int):
+    from activity_seek import leave_seek
+
+    user = load_user()
+    if not user:
+        return redirect("/giris?next=/arkadas-ara")
+    db = SessionLocal()
+    try:
+        u = db.get(User, user.id)
+        if not u:
+            return redirect("/giris?next=/arkadas-ara")
+        _, err = leave_seek(db, u, seek_id)
+        flash(err or "Ayrıldın.", "err" if err else "ok")
+    finally:
+        db.close()
+    return redirect("/arkadas-ara")
+
+
+@app.route("/arkadas-ara/<int:seek_id>/iptal", methods=["POST"])
+def arkadas_ara_iptal(seek_id: int):
+    from activity_seek import cancel_seek
+
+    user = load_user()
+    if not user:
+        return redirect("/giris?next=/arkadas-ara")
+    db = SessionLocal()
+    try:
+        u = db.get(User, user.id)
+        if not u:
+            return redirect("/giris?next=/arkadas-ara")
+        err = cancel_seek(db, u, seek_id)
+        flash(err or "İlan kapatıldı.", "err" if err else "ok")
+    finally:
+        db.close()
+    return redirect("/arkadas-ara")
 
 
 @app.route("/bu-aksam")
@@ -1542,6 +1782,7 @@ def teleferik_guide():
 
 @app.route("/kamp")
 def kamp_list():
+    from camp_pages import CAMP_HERO, VIBE_CHIPS, location_label, pick_featured, price_label
     from seo import page as seo_page
 
     vibe = (request.args.get("vibe") or "").strip().lower()
@@ -1585,17 +1826,23 @@ def kamp_list():
                 (p.get("title") or ""),
             )
         )
-        featured = [p for p in places if p.get("featured")][:8]
+        for p in places:
+            p["loc_label"] = location_label(p)
+            p["price_label"] = price_label(p)
+        featured = pick_featured(places)
+        total_all = db.query(Place).filter(Place.status == "approved", Place.category == "camp").count()
         return render_template(
             "camps.html",
             places=places,
             featured=featured,
-            groups=[],
+            total=total_all,
             vibe=vibe,
+            vibe_chips=VIBE_CHIPS,
+            hero_img=CAMP_HERO,
             nav="camp",
             seo=seo_page(
                 title="Bursa kamp yerleri",
-                description="42 kamp noktası: Çobankaya, Yalıntaş, Kilimli, Kapanca, Trilye, Longoz, Gölyazı ve Balıkesir kaçışları — BursaApp rehberi.",
+                description=f"{total_all} kamp noktası: Çobankaya, Yalıntaş, Kilimli, Kapanca, Trilye, Longoz, Gölyazı ve Balıkesir kaçışları — BursaApp rehberi.",
                 path="/kamp",
                 breadcrumbs=[("Keşfet", "/"), ("Kamp", "/kamp")],
                 keywords="bursa kamp, çobankaya, kapanca, gölyazı kamp, uludağ kamp, karacabey longoz",
@@ -1603,6 +1850,19 @@ def kamp_list():
         )
     finally:
         db.close()
+
+
+def _hotel_price_meta() -> dict:
+    import json
+
+    path = os.path.join(os.path.dirname(__file__), "data", "hotels_price_meta.json")
+    if not os.path.isfile(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {}
 
 
 def _hotel_price_tl(place: dict) -> int | None:
@@ -1703,6 +1963,7 @@ def hotels_list():
                 featured = places[:8]
         featured_slugs = {p.get("slug") for p in featured}
         districts = list(ILCELER)
+        price_meta = _hotel_price_meta()
         return render_template(
             "hotels.html",
             places=places,
@@ -1714,6 +1975,7 @@ def hotels_list():
             band=band,
             sort=sort,
             price_filter=price_filter,
+            price_meta=price_meta,
             hotel_link=_hotel_link,
             subs=subcategories_for("hotel"),
             districts=districts,
@@ -1811,10 +2073,144 @@ def gezilecek_yerler_redirect():
     return redirect("/gezilecek", 301)
 
 
+@app.route("/ara")
+def site_search():
+    """Üst arama — yemek niyetini yeme-içme'ye, diğerini gezilecek'e yönlendirir."""
+    q = (request.args.get("q") or "").strip()
+    if not q:
+        return redirect("/gezilecek")
+    dish = food_intent_for_query(q)
+    if dish:
+        return redirect(f"/yeme-icme?q={quote(q)}&dish={dish}")
+    db = SessionLocal()
+    try:
+        _fr, food_n = query_places(db, category="food", q=q, limit=1)
+        _vr, visit_n = query_places(db, category="visit", q=q, limit=1)
+    finally:
+        db.close()
+    if food_n and not visit_n:
+        return redirect(f"/yeme-icme?q={quote(q)}")
+    return redirect(f"/gezilecek?q={quote(q)}")
+
+
+@app.route("/bursaapp.com/gece-hayati")
+def gece_hayati_bad_url():
+    return redirect("/gece-hayati", 301)
+
+
+@app.route("/gece-hayati")
+def nightlife_list():
+    from seo import for_category
+    from nightlife_pages import (
+        NIGHTLIFE_HERO,
+        group_nightlife_places,
+        nightlife_brand_rank,
+        pick_featured,
+        sort_nightlife_places,
+    )
+
+    ilce = (request.args.get("ilce") or "").strip()
+    sub = (request.args.get("sub") or "").strip()
+    cat = CAT_BY_PATH["/gece-hayati"]
+    tax_subs = subcategories_for("nightlife")
+    db = SessionLocal()
+    try:
+        rows, _total = query_places(
+            db,
+            category="nightlife",
+            ilce=ilce or None,
+            subcategory=sub or None,
+            order="rating",
+            limit=500,
+        )
+        places = [place_public(p) for p in rows]
+        for p in places:
+            p["brand_rank"] = nightlife_brand_rank(p)
+        places = sort_nightlife_places(places)
+        featured = pick_featured(places)
+        if sub:
+            from catalog import SUBCAT_LABEL
+
+            groups = [{"label": SUBCAT_LABEL.get(sub, sub), "places": places}]
+        else:
+            groups = group_nightlife_places(places, tax_subs)
+        from features import annotate_favorites
+
+        flat = [p for g in groups for p in g["places"]]
+        annotate_favorites(db, load_user(), flat)
+        return render_template(
+            "nightlife.html",
+            cat=cat,
+            places=places,
+            featured=featured,
+            groups=groups,
+            total=len(places),
+            ilce=ilce,
+            sub=sub,
+            sub_chips=tax_subs,
+            districts=list(ILCELER),
+            hero_img=NIGHTLIFE_HERO,
+            nav="nightlife",
+            seo=for_category(cat, ilce=ilce, sub=sub, total=len(places), places=places),
+        )
+    finally:
+        db.close()
+
+
+@app.route("/spor")
+def sport_list():
+    from seo import for_category
+    from sport_pages import SPORT_HERO, group_sport_places, sort_sport_places, sport_brand_rank
+
+    ilce = (request.args.get("ilce") or "").strip()
+    sub = (request.args.get("sub") or "").strip()
+    cat = CAT_BY_PATH["/spor"]
+    tax_subs = subcategories_for("sport")
+    db = SessionLocal()
+    try:
+        rows, _total = query_places(
+            db,
+            category="sport",
+            ilce=ilce or None,
+            subcategory=sub or None,
+            order="rating",
+            limit=200,
+        )
+        places = [place_public(p) for p in rows]
+        for p in places:
+            p["brand_rank"] = sport_brand_rank(p)
+        places = sort_sport_places(places)
+        if sub:
+            from catalog import SUBCAT_LABEL
+
+            groups = [{"label": SUBCAT_LABEL.get(sub, sub), "places": places}]
+        else:
+            groups = group_sport_places(places, tax_subs)
+        from features import annotate_favorites
+
+        flat = [p for g in groups for p in g["places"]]
+        annotate_favorites(db, load_user(), flat)
+        return render_template(
+            "sports.html",
+            cat=cat,
+            places=places,
+            groups=groups,
+            total=len(places),
+            ilce=ilce,
+            sub=sub,
+            sub_chips=tax_subs,
+            districts=list(ILCELER),
+            hero_img=SPORT_HERO,
+            nav="sport",
+            seo=for_category(cat, ilce=ilce, sub=sub, total=len(places), places=places),
+        )
+    finally:
+        db.close()
+
+
 @app.route("/yeme-icme")
 @app.route("/gezilecek")
 @app.route("/alisveris")
-@app.route("/spor")
 @app.route("/aile")
 @app.route("/konserler")
 @app.route("/tiyatro")
@@ -1822,6 +2218,7 @@ def gezilecek_yerler_redirect():
 @app.route("/eglence")
 @app.route("/etkinlikler")
 @app.route("/organizasyonlar")
+@app.route("/dugun-salonlari")
 @app.route("/hastaneler")
 @app.route("/doktorlar")
 def category_list():
@@ -1834,6 +2231,7 @@ def category_list():
     sub = (request.args.get("sub") or "").strip()
     food = cat["key"] == "food"
     visit = cat["key"] == "visit"
+    nightlife = cat["key"] == "nightlife"
     doctor = cat["key"] == "doctor"
     hospital = cat["key"] == "hospital"
     tax_subs = subcategories_for(cat["key"])
@@ -1852,10 +2250,10 @@ def category_list():
             q=q or None,
             from_=request.args.get("from"),
             to=request.args.get("to"),
-            order="rating" if (food or visit or hospital) else ("date" if kinds else None),
+            order="rating" if (food or visit or hospital or nightlife) else ("date" if kinds else None),
             price_band=band or None,
             subcategory=sub or None,
-            limit=2500 if (food or visit) else (200 if grouped or hospital else 60),
+            limit=2500 if (food or visit) else (500 if nightlife else (200 if grouped or hospital else 60)),
         )
         places = [place_public(p) for p in rows]
         if food:
@@ -1907,6 +2305,10 @@ def category_list():
                 for p in filtered[:3]:
                     if p.get("img_url"):
                         food_hero.append(p)
+            from features import annotate_favorites
+
+            annotate_favorites(db, load_user(), page_rows)
+            annotate_favorites(db, load_user(), food_hero)
             food_curated_rows = []
             for c in FOOD_CURATED:
                 kw: dict = {"page": ""}
@@ -1991,7 +2393,15 @@ def category_list():
                 gals = ex.get("gallery") if isinstance(ex.get("gallery"), list) else []
                 p["gallery"] = [p.get("img_url")] + [g for g in gals if g and g != p.get("img_url")]
                 p["gallery"] = [g for g in p["gallery"] if g][:6]
+            from features import annotate_favorites
+
+            annotate_favorites(db, load_user(), page_rows)
             from seo import for_category
+
+            food_suggest = []
+            food_dish = None
+            if q and total_f == 0:
+                food_suggest, food_dish = food_suggest_for_query(db, q, limit=8)
 
             return render_template(
                 "visits_list.html",
@@ -2011,6 +2421,8 @@ def category_list():
                 visit_fee=VISIT_FEE,
                 visit_tag=VISIT_TAG,
                 visit_href=_visit_href,
+                food_suggest=food_suggest,
+                food_dish=food_dish,
                 nav="visit",
                 seo=for_category(cat, ilce=ilce, sub=sub, total=total_f, places=page_rows),
             )
@@ -2440,11 +2852,26 @@ def detail(slug: str):
                 is not None
             )
         from feed_social import going_count as _going_count, user_is_going
+        from activity_seek import (
+            get_user_open_place_seek,
+            partner_eligible,
+            _default_place_seek_title,
+        )
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
 
         going_count = _going_count(db, p.id)
         if user:
             is_going = user_is_going(db, user.id, p.id)
         dims = review_dimension_avgs(db, p.id)
+        partner_ok = partner_eligible(p.category)
+        my_place_seek = None
+        partner_seek_title = _default_place_seek_title(p.title) if partner_ok else ""
+        min_partner_date = datetime.now(ZoneInfo("Europe/Istanbul")).strftime("%Y-%m-%d")
+        if user and partner_ok:
+            open_seek = get_user_open_place_seek(db, user.id, p.id)
+            if open_seek:
+                my_place_seek = {"id": open_seek.id, "title": open_seek.title}
         from seo import for_place
         from models import PlacePhoto
 
@@ -2485,6 +2912,10 @@ def detail(slug: str):
             is_fav=is_fav,
             is_going=is_going,
             going_count=going_count,
+            partner_eligible=partner_ok,
+            my_place_seek=my_place_seek,
+            partner_seek_title=partner_seek_title,
+            min_partner_date=min_partner_date,
             user_photos=user_photos,
             nav=p.category,
             seo=for_place(d),
@@ -2702,6 +3133,10 @@ def kayit():
                         )
                         db.commit()
                         db.refresh(u)
+                        from user_points import award_signup
+
+                        award_signup(db, u.id)
+                        db.commit()
                         try:
                             result = send_verify_email(email=email, name=name, token=u.email_token)
                         except Exception:
@@ -2878,6 +3313,11 @@ def hesap_profil():
         picker_places = feed_picker_places(db, u.id, limit=20)
         follow_suggestions = _profile_follow_suggestions(db, u.id, limit=3)
         social_counts = follow_counts(db, u.id)
+        from activity_seek import list_open_seeks, seek_public
+
+        buddy_rows = list_open_seeks(db, limit=12)
+        buddy_open_n = len(buddy_rows)
+        buddy_samples = [seek_public(db, s, u) for s in buddy_rows[:3]]
         resp = app.make_response(
             render_template(
             "profile_feed.html",
@@ -2896,6 +3336,8 @@ def hesap_profil():
             picker_places=picker_places,
             events=upcoming_events(db, 8),
             visit_places=visit_places,
+            buddy_open_n=buddy_open_n,
+            buddy_samples=buddy_samples,
             nav="hesap",
             )
         )
@@ -2930,7 +3372,7 @@ def hesap_profil_feed():
         return {
             "html": html,
             "has_more": has_more,
-            "next_offset": offset + len(feed),
+            "next_offset": offset + limit,
         }
     finally:
         db.close()
@@ -3318,6 +3760,47 @@ def yer_gidecegim(slug: str):
         db.close()
 
 
+@app.route("/yer/<slug>/partner-ara", methods=["POST"])
+@login_required
+def yer_partner_ara(slug: str):
+    from activity_seek import create_place_seek
+    from seo_urls import place_seo_path
+
+    user = load_user()
+    db = SessionLocal()
+    try:
+        p = db.query(Place).filter(Place.slug == slug, Place.status == "approved").first()
+        if not p:
+            flash("Kayıt yok", "err")
+            return redirect("/")
+        if not rate_ok("activity_seek", limit=8):
+            flash("Çok hızlı — biraz bekle.", "err")
+            return redirect(place_seo_path(p) + "#partner-bul")
+        u = db.get(User, user.id)
+        if not u:
+            return redirect(f"/giris?next={place_seo_path(p)}")
+        try:
+            slots = int(request.form.get("slots_needed") or 1)
+        except (TypeError, ValueError):
+            slots = 1
+        slots = max(1, min(slots, 5))
+        seek, err = create_place_seek(
+            db,
+            u,
+            p,
+            when_date=(request.form.get("when_date") or "").strip(),
+            slots_needed=slots,
+            note=(request.form.get("note") or "").strip(),
+        )
+        if err:
+            flash(err, "err")
+            return redirect(place_seo_path(p) + "#partner-bul")
+        flash("Partner ilanın yayında — katılmak isteyenler seni görebilir.", "ok")
+        return redirect(f"/arkadas-ara?ilan={seek.id}")
+    finally:
+        db.close()
+
+
 @app.route("/hesap/email-onay")
 def hesap_email_onay():
     token = (request.args.get("token") or "").strip()
@@ -3332,6 +3815,9 @@ def hesap_email_onay():
             return redirect("/giris")
         u.email_verified = True
         u.email_token = ""
+        from user_points import award_email_verified
+
+        award_email_verified(db, u.id)
         db.commit()
         login_user(u)
         return redirect("/tesekkur?from=email")
@@ -3372,8 +3858,95 @@ def hesap_rotalar():
                 slots = _json.loads(r.slots_json or "[]")
             except Exception:
                 slots = []
-            items.append({"route": r, "slots": slots})
+            est = sum(int(s.get("slot_cost_tl") or 0) for s in slots)
+            items.append({"route": r, "slots": slots, "est_total": est})
         return render_template("saved_routes.html", items=items, nav="hesap")
+    finally:
+        db.close()
+
+
+def _user_saved_route(db, user_id: int, route_id: int):
+    from models import SavedRoute
+
+    r = db.get(SavedRoute, route_id)
+    if not r or r.user_id != user_id:
+        return None
+    return r
+
+
+@app.route("/hesap/rotalar/<int:route_id>/sil", methods=["POST"])
+@login_required
+def hesap_rota_sil(route_id: int):
+    user = load_user()
+    db = SessionLocal()
+    try:
+        r = _user_saved_route(db, user.id, route_id)
+        if not r:
+            flash("Rota bulunamadı.", "err")
+            return redirect("/hesap/rotalar")
+        db.delete(r)
+        db.commit()
+        flash("Rota silindi.", "ok")
+        return redirect("/hesap/rotalar")
+    finally:
+        db.close()
+
+
+@app.route("/hesap/rotalar/<int:route_id>/duzenle", methods=["GET", "POST"])
+@login_required
+def hesap_rota_duzenle(route_id: int):
+    import json as _json
+
+    user = load_user()
+    db = SessionLocal()
+    try:
+        r = _user_saved_route(db, user.id, route_id)
+        if not r:
+            flash("Rota bulunamadı.", "err")
+            return redirect("/hesap/rotalar")
+        try:
+            slots = _json.loads(r.slots_json or "[]")
+        except Exception:
+            slots = []
+
+        if request.method == "POST":
+            title = (request.form.get("title") or "").strip()[:160] or "1 günlük rota"
+            try:
+                budget = max(0, int(request.form.get("budget_tl") or 0))
+            except ValueError:
+                budget = 0
+            drops = {x for x in request.form.getlist("slot_drop")}
+            times = request.form.getlist("slot_time")
+            payloads = request.form.getlist("slot_payload")
+            new_slots: list[dict] = []
+            for i, raw in enumerate(payloads):
+                if str(i) in drops:
+                    continue
+                try:
+                    slot = _json.loads(raw)
+                except Exception:
+                    continue
+                if i < len(times) and times[i].strip():
+                    t = times[i].strip()
+                    if len(t) == 5 and ":" in t:
+                        slot["slot_time"] = t
+                new_slots.append(slot)
+            if not new_slots:
+                flash("En az bir durak kalmalı.", "err")
+                return render_template(
+                    "saved_route_edit.html",
+                    route=r,
+                    slots=slots,
+                    nav="hesap",
+                )
+            r.title = title
+            r.budget_tl = budget
+            r.slots_json = _json.dumps(new_slots, ensure_ascii=False)
+            db.commit()
+            flash("Rota güncellendi.", "ok")
+            return redirect("/hesap/rotalar")
+
+        return render_template("saved_route_edit.html", route=r, slots=slots, nav="hesap")
     finally:
         db.close()
 

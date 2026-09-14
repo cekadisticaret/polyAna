@@ -1,0 +1,50 @@
+{# Yer / etkinlik detay — partner ilanı #}
+{% if partner_eligible %}
+<div class="ff-partner-bar" id="partner-bul">
+  <div>
+    <b>Birlikte gitmek ister misin?</b>
+    <div class="empty" style="margin:4px 0 0">Tarih seç, ilan ver — katılmak isteyenler Partner ara’da görür.</div>
+  </div>
+  {% if nav_user %}
+    {% if my_place_seek %}
+    <a class="ff-btn ff-btn-outline" href="/arkadas-ara?ilan={{ my_place_seek.id }}">✓ İlanın yayında · gör</a>
+    {% else %}
+    <button class="ff-btn ff-btn-outline" type="button" id="partner-open">👥 Partner bul</button>
+    <dialog class="ff-partner-modal" id="partner-modal" aria-labelledby="partner-modal-title">
+      <form method="post" action="/yer/{{ place.slug }}/partner-ara">
+        <h3 id="partner-modal-title">Partner ilanı</h3>
+        <p class="ff-partner-preview">{{ partner_seek_title or (place.title ~ "'a gideceğim — benimle gelmek isteyen var mı?") }}</p>
+        <label>Gidiş tarihi
+          <input type="date" name="when_date" required min="{{ min_partner_date }}" value="{{ min_partner_date }}">
+        </label>
+        <label>Kaç kişi arıyorsun?
+          <input type="number" name="slots_needed" min="1" max="5" value="1">
+        </label>
+        <label>Not <small>(isteğe bağlı)</small>
+          <textarea name="note" rows="2" maxlength="400" placeholder="Saat, buluşma noktası…"></textarea>
+        </label>
+        <div class="ff-partner-actions">
+          <button type="button" class="ff-btn sm" id="partner-cancel">Vazgeç</button>
+          <button type="submit" class="ff-btn">İlanı yayınla</button>
+        </div>
+      </form>
+    </dialog>
+    <script>
+    (function () {
+      var dlg = document.getElementById("partner-modal");
+      var open = document.getElementById("partner-open");
+      var cancel = document.getElementById("partner-cancel");
+      if (!dlg || !open) return;
+      open.addEventListener("click", function () { dlg.showModal(); });
+      if (cancel) cancel.addEventListener("click", function () { dlg.close(); });
+      dlg.addEventListener("click", function (e) {
+        if (e.target === dlg) dlg.close();
+      });
+    })();
+    </script>
+    {% endif %}
+  {% else %}
+  <a class="ff-btn ff-btn-outline" href="/giris?next={{ ('/yer/' ~ place.slug ~ '#partner-bul') | urlencode }}">Giriş yap · partner bul</a>
+  {% endif %}
+</div>
+{% endif %}

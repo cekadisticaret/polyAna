@@ -1,0 +1,74 @@
+{
+  "updated_at_tr": "2026-09-14T21:30:16.667280+03:00",
+  "generation": 66,
+  "source": "fallback_wr",
+  "note": "Anthropic API bakiyesi yetersiz — console.anthropic.com Plans & Billing",
+  "ideas": [
+    {
+      "id": "wr_btc",
+      "symbol": "BTCUSDT",
+      "dir_mode": "follow",
+      "book": "analiz1",
+      "ask_min": null,
+      "ask_max": 0.5,
+      "path_bps_min": null,
+      "path_bps_max": null,
+      "path_abs_bps": 6.0,
+      "entry_min": null,
+      "entry_max": null,
+      "why": "yedek WR 56.9% · n=65 · +407.1$",
+      "lesson": "ilk fikir — pahalı bileti kes"
+    },
+    {
+      "id": "wr_eth",
+      "symbol": "ETHUSDT",
+      "dir_mode": "follow",
+      "book": "a1_12",
+      "ask_min": null,
+      "ask_max": 0.5,
+      "path_bps_min": null,
+      "path_bps_max": null,
+      "path_abs_bps": 6.0,
+      "entry_min": null,
+      "entry_max": null,
+      "why": "yedek WR 60.0% · n=125 · +847.5$",
+      "lesson": "ilk fikir — pahalı bileti kes"
+    },
+    {
+      "id": "wr_sol",
+      "symbol": "SOLUSDT",
+      "dir_mode": "follow",
+      "book": "a1_27",
+      "ask_min": null,
+      "ask_max": 0.5,
+      "path_bps_min": null,
+      "path_bps_max": null,
+      "path_abs_bps": 6.0,
+      "entry_min": null,
+      "entry_max": null,
+      "why": "yedek WR 53.6% · n=209 · -57.4$",
+      "lesson": "ilk fikir — pahalı bileti kes"
+    }
+  ],
+  "sources": {
+    "BTCUSDT": {
+      "book": "analiz1",
+      "why": "yedek WR 56.9% · n=65 · +407.1$",
+      "idea": "wr_btc",
+      "dir_mode": "follow"
+    },
+    "ETHUSDT": {
+      "book": "a1_12",
+      "why": "yedek WR 60.0% · n=125 · +847.5$",
+      "idea": "wr_eth",
+      "dir_mode": "follow"
+    },
+    "SOLUSDT": {
+      "book": "a1_27",
+      "why": "yedek WR 53.6% · n=209 · -57.4$",
+      "idea": "wr_sol",
+      "dir_mode": "follow"
+    }
+  },
+  "scan_books": 16
+}

@@ -1,0 +1,34 @@
+{
+  "slug": "etkinlik-haftasi-20260911",
+  "title": "Bu hafta Bursa etkinlikleri",
+  "h1": "Önümüzdeki günler: konser, tiyatro, etkinlik",
+  "desc": "Onaylı etkinlik kayıtları — bilet satışı BursaApp’ten yapılmaz.",
+  "date": "2026-09-11",
+  "image": "/static/theater/the-gece-yarisi-kutuphanesi-20260911.png",
+  "cta_path": "/etkinlikler",
+  "cta_label": "Tüm etkinlikler",
+  "kind": "plan",
+  "generated": true,
+  "sections": [
+    {
+      "h2": "Takvim",
+      "paras": [
+        "11.09 16:00 · <a href=\"/yer/the-gece-yarisi-kutuphanesi-20260911\">Gece Yarısı Kütüphanesi</a> (Osmangazi)",
+        "11.09 17:10 · <a href=\"/yer/the-cali-kusu-20260911\">Çalı Kuşu</a> (Osmangazi)",
+        "11.09 18:00 · <a href=\"/yer/eve-kadin-kadina-gelisim-festivali-punch-canta-worksho-20260911\">Kadın Kadına Gelişim Festivali: Punch Çanta Workshop</a> (Osmangazi)",
+        "11.09 18:30 · <a href=\"/yer/the-kutuphanedeki-ceset-20260911\">Kütüphanedeki Ceset</a> (Osmangazi)",
+        "11.09 19:30 · <a href=\"/yer/the-kurk-mantolu-madonna-20260911\">Kürk Mantolu Madonna</a> (Osmangazi)",
+        "11.09 20:00 · <a href=\"/yer/etkinlik-kahve-festivali-2026\">Bursa Kahve Festivali</a> (Osmangazi)",
+        "11.09 20:30 · <a href=\"/yer/oyun-hamlet-20260911\">Hamlet</a> (Osmangazi)",
+        "11.09 20:30 · <a href=\"/yer/con-underground-black-metal-alliance-bursa-20260911\">UNDERGROUND BLACK METAL ALLIANCE — Bursa</a> (Osmangazi)",
+        "<a href=\"/etkinlikler\">Etkinlik listesi</a>"
+      ]
+    }
+  ],
+  "related": [
+    [
+      "bursa-hafta-sonu-2-gun",
+      "Hafta sonu planı"
+    ]
+  ]
+}

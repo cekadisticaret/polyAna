@@ -121,6 +121,9 @@ def build_user_prompt(day_summary: list[dict], newly: dict, sig: dict, prev_repo
 
 
 def main() -> int:
+    if ac.is_paused():
+        print("[daily_report] durduruldu (analyst_control.json paused)")
+        return 0
     missing = ac.required_env_missing()
     if missing:
         print(f"[daily_report] Eksik env: {missing}", file=sys.stderr)

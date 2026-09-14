@@ -32,7 +32,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16.png') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
-  <meta name="theme-color" content="#DCE8DC">
+  <meta name="theme-color" content="#047857">
   <meta name="application-name" content="BursaApp">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -62,9 +62,66 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v={{ static_v }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='seo-pages.css') }}?v={{ static_v }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='mobile-travel.css') }}?v={{ static_v }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='bursa-v2.css') }}?v={{ static_v }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   {% block head %}{% endblock %}
 </head>
-<body class="is-mobile-app m-app-shell{% if nav=='hesap' %} is-feed{% endif %}{% block body_class %}{% endblock %}"{% block body_attrs %}{% endblock %}>
+<body class="bv2 is-mobile-app m-app-shell{% if nav=='hesap' %} is-feed{% endif %}{% block body_class %}{% endblock %}"{% block body_attrs %}{% endblock %}>
+{% from "_bv2_nav.html" import bv2_nav_links %}
+
+<div class="bv2-live" role="status" aria-live="polite">
+  <div class="bv2-live-inner">
+    <div class="bv2-live-text">
+      <span class="bv2-live-badge">Canlı Bursa</span>
+      🚡 Teleferik: <strong>{{ live_pulse.teleferik_label|default('Güncel') }}</strong>
+      &bull; 💊 <strong>{{ live_pulse.pharmacy_count|default('—') }} nöbetçi eczane</strong>
+      {% if live_pulse.duty_date %}&bull; {{ live_pulse.duty_date }}{% endif %}
+    </div>
+    <a class="bv2-live-link" href="/uludag-teleferik">Uludağ durumu →</a>
+  </div>
+</div>
+
+<header class="bv2-header">
+  <div class="bv2-header-inner">
+    <div class="bv2-header-row">
+      <a class="bv2-brand" href="/">
+        <div class="bv2-brand-icon" aria-hidden="true">B</div>
+        <div>
+          <div class="bv2-brand-title">bursa<span>app</span><span class="bv2-brand-tag">Şehir Rehberi</span></div>
+          <p class="bv2-brand-sub">Yeşil Bursa'nın dijital yaşam portalı</p>
+        </div>
+      </a>
+      <form class="bv2-search-wrap" action="/ara" method="get" role="search">
+        <div class="bv2-search-form">
+          <span class="ico" aria-hidden="true">🔍</span>
+          <input name="q" placeholder="Mekan, eczane, lezzet veya etkinlik ara…" autocomplete="off" aria-label="Site içi arama">
+        </div>
+      </form>
+      <div class="bv2-actions">
+        {% if nav_user %}
+        <a class="bv2-btn bv2-btn-ghost" href="/hesap/profil" rel="nofollow">{{ nav_user.name.split()[0] }}</a>
+        {% else %}
+        <a class="bv2-btn bv2-btn-primary" href="/giris" rel="nofollow">Giriş</a>
+        {% endif %}
+        <a class="bv2-icon-btn" href="{% if nav_user %}/hesap/favoriler{% else %}/giris{% endif %}" title="Favoriler" rel="nofollow">❤️</a>
+        {% if can_admin_panel %}
+        <a class="bv2-btn bv2-btn-ghost" href="/admin/dashboard" rel="nofollow">Admin</a>
+        {% endif %}
+        <button type="button" class="bv2-icon-btn bv2-menu-toggle" id="bv2-menu-toggle" aria-expanded="false" aria-controls="bv2-drawer">☰</button>
+      </div>
+    </div>
+    <nav class="bv2-nav-strip" aria-label="Ana menü">{{ bv2_nav_links(nav|default('')) }}</nav>
+    <div class="bv2-drawer" id="bv2-drawer">
+      <form action="/ara" method="get" role="search">
+        <input name="q" placeholder="Bursa'da ara…" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0" aria-label="Mobil arama">
+      </form>
+      <div class="bv2-drawer-grid">{{ bv2_nav_links(nav|default('')) }}</div>
+    </div>
+  </div>
+</header>
+
 <header class="m-top" aria-label="Üst bar">
   <a class="m-top-user" href="{% if nav_user %}/hesap{% else %}/giris{% endif %}" rel="nofollow">
     <span class="m-top-av">{% if nav_user and nav_user.avatar_url %}<img src="{{ nav_user.avatar_url }}" alt="{{ nav_user.name }} profil fotoğrafı">{% elif nav_user %}<span>{{ nav_user.name[0]|upper }}</span>{% else %}<span>👋</span>{% endif %}</span>
@@ -78,6 +135,7 @@
     <a class="m-icon-btn" href="{% if nav_user %}/hesap/bildirimler{% else %}/giris{% endif %}" aria-label="Bildirimler" rel="nofollow">🔔</a>
   </div>
 </header>
+<div class="bv2-main">
 <div class="wa-wrap">
   <header class="wa-top">
     <a class="wa-brand" href="/">
@@ -102,6 +160,7 @@
           {% endif %}
         </span>
         <span class="wa-user-chip-name">{{ nav_user.name.split()[0] }}</span>
+        <span class="wa-user-chip-pts">🏅 {{ user_points }}</span>
       </a>
       <a class="wa-btn wa-btn-ghost" href="/cikis" title="Çıkış" aria-label="Çıkış yap" rel="nofollow">Çıkış</a>
       {% else %}
@@ -142,6 +201,7 @@
         <a href="/album">Albüm</a>
         <a href="/sinema">Sinema</a>
         <a href="/tiyatro">Tiyatro</a>
+        <a class="{{ 'on' if nav=='nightlife' else '' }}" href="/gece-hayati"><b>Gece hayatı</b></a>
         <a href="/eglence">Eğlence</a>
         <a href="/etkinlikler">Etkinlikler</a>
         <a href="/organizasyonlar">Organizasyonlar</a>
@@ -151,6 +211,7 @@
         <a href="/iletisim">İletişim</a>
         <a href="/ilce">İlçeler</a>
         <a href="/harita">Harita</a>
+        <a href="/arkadas-ara"><b>Arkadaş / partner ara</b></a>
         <a href="/rota">Rota</a>
         <a href="/ai">AI</a>
         <a href="/#kategoriler">Tüm kategoriler</a>
@@ -211,6 +272,70 @@
 
   {% block main %}{% endblock %}
 </div>
+</div>
+
+<footer class="bv2-footer">
+  <div class="bv2-footer-inner">
+    <div class="bv2-footer-grid">
+      <div>
+        <div class="bv2-brand" style="margin-bottom:12px">
+          <div class="bv2-brand-icon">B</div>
+          <span class="bv2-brand-title" style="color:#fff">bursa<span>app</span></span>
+        </div>
+        <p style="font-size:12px;line-height:1.6;max-width:320px;margin:0">Bursa'nın kültürel mirası, nöbetçi eczaneleri, lezzet durakları, etkinlikleri ve sosyal topluluğu — tek modern arayüzde.</p>
+      </div>
+      <div>
+        <h4>Hızlı Erişim</h4>
+        <ul>
+          <li><a href="/feed">Şehir Akışı</a></li>
+          <li><a href="/rota">1 Günlük Rota</a></li>
+          <li><a href="/etrafimda">Etrafımda Ne Var</a></li>
+          <li><a href="/harita">Harita</a></li>
+          <li><a href="/nobetci-eczaneler">Nöbetçi Eczaneler</a></li>
+          <li><a href="/uludag-teleferik">Uludağ Teleferik</a></li>
+          <li><a href="/kategoriler">Tüm Kategoriler</a></li>
+          <li><a href="/#nasil">Nasıl İşler</a></li>
+          <li><a href="/#sss">SSS</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Kategoriler</h4>
+        <ul>
+          <li><a href="/yeme-icme">Yeme-içme</a></li>
+          <li><a href="/gezilecek">Gezilecek</a></li>
+          <li><a href="/oteller">Oteller</a></li>
+          <li><a href="/kamp">Kamp</a></li>
+          <li><a href="/hastaneler">Sağlık</a></li>
+          <li><a href="/faturalar">Su · Elektrik · Gaz</a></li>
+          <li><a href="/bursaspor">Bursaspor</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/haberler">Haberler</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>İletişim</h4>
+        <ul>
+          <li><a href="/iletisim">İletişim formu</a></li>
+          <li><a href="/gizlilik">Gizlilik</a></li>
+          <li><a href="/kvkk">KVKK</a></li>
+          <li><a href="https://wa.me/905535469948" rel="noopener">WhatsApp destek</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="bv2-footer-bottom">
+      <span>© 2026 BursaApp · Ücretsiz rehber · rezervasyon yok</span>
+      <span>Bursa için sevgiyle tasarlandı ❤️</span>
+    </div>
+  </div>
+</footer>
+
+<nav class="bv2-mtab" aria-label="Mobil menü">
+  <a class="{{ 'on' if mobile_tab=='home' else '' }}" href="/"><span class="ico">🌿</span>Keşfet</a>
+  <a class="{{ 'on' if mobile_tab=='feed' else '' }}" href="/feed"><span class="ico">🔥</span>Akış</a>
+  <a class="{{ 'on' if mobile_tab=='route' else '' }}" href="/nobetci-eczaneler"><span class="ico">💊</span>Eczane</a>
+  <a href="/harita"><span class="ico">🗺</span>Harita</a>
+  <a class="{{ 'on' if mobile_tab=='profile' else '' }}" href="{% if nav_user %}/hesap{% else %}/giris{% endif %}" rel="nofollow"><span class="ico">👤</span>Profil</a>
+</nav>
 
 <footer class="seo-foot">
   <div class="seo-foot-inner">
@@ -223,6 +348,7 @@
       <a href="/#nasil">Nasıl</a>
     </nav>
     <div class="meta">
+      <a href="/gizlilik">Gizlilik</a>
       <a href="/kvkk">KVKK</a>
       <a href="/iletisim">İletişim</a>
       <span>Ücretsiz rehber · rezervasyon yok</span>
@@ -274,6 +400,18 @@
   </a>
 </nav>
 
+<script>
+(function(){
+  var btn = document.getElementById('bv2-menu-toggle');
+  var drawer = document.getElementById('bv2-drawer');
+  if (btn && drawer) {
+    btn.addEventListener('click', function(){
+      var open = drawer.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  }
+})();
+</script>
 <script src="{{ url_for('static', filename='analytics.js') }}?v={{ static_v }}" defer></script>
 </body>
 </html>

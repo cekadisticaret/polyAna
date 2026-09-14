@@ -31,6 +31,7 @@ from seed_panorama_food import guess_ilce as guess_ilce_addr
 from seed_panorama_food import main as panorama_main
 from seed_visit_expand import SUB_IMG as VISIT_STOCK
 from seed_visit_expand import import_osm_delta as visit_osm_delta
+from seed_osm_city import import_osm_delta as city_osm_delta
 
 LOCK_PATH = "/tmp/bursaapp_nightly.lock"
 LAST_PATH = "/tmp/bursaapp_nightly_last.json"
@@ -271,6 +272,21 @@ def main() -> int:
             summary["upd"] += int(s.get("upd") or 0)
         if err:
             summary["errors"].append(f"osm_visit: {err}")
+
+        def _city():
+            db = SessionLocal()
+            try:
+                return city_osm_delta(db, max_age_h=CACHE_MAX_AGE_H)
+            finally:
+                db.close()
+
+        s, err = step("1 osm otel-alışveriş-spor", _city)
+        if s:
+            summary["osm_city"] = s
+            summary["new"] += int(s.get("new") or 0)
+            summary["upd"] += int(s.get("upd") or 0)
+        if err:
+            summary["errors"].append(f"osm_city: {err}")
     else:
         log("OSM atlandı")
 
@@ -299,6 +315,17 @@ def main() -> int:
             summary["reject"] += int(s.get("dup") or 0)
         if err:
             summary["errors"].append(f"repair: {err}")
+
+        def _food_geocode():
+            from food_coverage import geocode_missing
+
+            return geocode_missing(limit=40, apply=True)
+
+        s, err = step("3b yeme-içme geocode (Nominatim)", _food_geocode)
+        if s:
+            summary["food_geocode"] = s
+        if err:
+            summary["errors"].append(f"food_geocode: {err}")
     else:
         log("Onarım atlandı")
 
@@ -318,6 +345,37 @@ def main() -> int:
     else:
         log("SEO atlandı")
 
+    def _wedding_seed():
+        p = os.path.join(_DIR, "data", "wedding_venues.json")
+        if not os.path.isfile(p):
+            return "skip (json yok)"
+        import seed_wedding
+
+        seed_wedding.main()
+        return "ok"
+
+    s, err = step("5b düğün salonu seed", _wedding_seed)
+    summary["wedding_seed"] = s if s else (err or "")
+    if err:
+        summary["errors"].append(f"wedding_seed: {err}")
+
+    def _nightlife_seed():
+        p = os.path.join(_DIR, "data", "nightlife_venues.json")
+        if not os.path.isfile(p):
+            return "skip (json yok)"
+        import seed_nightlife
+
+        seed_nightlife.main()
+        import seed_nightlife_media
+
+        seed_nightlife_media.main()
+        return "ok"
+
+    s, err = step("5c gece hayatı seed", _nightlife_seed)
+    summary["nightlife_seed"] = s if s else (err or "")
+    if err:
+        summary["errors"].append(f"nightlife_seed: {err}")
+
     if not args.skip_images:
         def _imgs():
             cmd = [
@@ -326,6 +384,8 @@ def main() -> int:
                 "--dirs",
                 "food",
                 "visit",
+                "nightlife",
+                "cache/nightlife",
             ]
             r = subprocess.run(cmd, cwd="/root/aiProject", capture_output=True, text=True, timeout=1800)
             tail = ((r.stdout or "") + (r.stderr or ""))[-800:]

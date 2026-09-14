@@ -53,6 +53,7 @@
     {% endif %}
   </div>
   {% endif %}
+  {% include "_partner_seek.html" %}
   {% if dims and dims.count %}
   <div class="dim-grid">
     {% if place.slug and place.slug.startswith('film-') %}
@@ -122,8 +123,11 @@
   <section class="panel" id="fragman">
     <h3>Fragman</h3>
     <div class="trailer-wrap">
-      <iframe src="{{ place.extra.trailer_url }}" title="Fragman" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      <iframe src="{{ place.extra.trailer_url }}" title="Fragman" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
     </div>
+    {% if place.extra.trailer_watch_url %}
+    <p class="trailer-fallback"><a href="{{ place.extra.trailer_watch_url }}" target="_blank" rel="noopener noreferrer">YouTube'da aç</a></p>
+    {% endif %}
   </section>
   {% endif %}
 
@@ -147,9 +151,9 @@
   </section>
   {% endif %}
 
-  {% if place.category in ('hotel','sport') and (place.phone or place.web or (place.extra and place.extra.reservation_note)) %}
+  {% if place.category in ('hotel','sport','wedding') and (place.phone or place.web or (place.extra and place.extra.reservation_note)) %}
   <div class="panel" style="margin:14px 0;padding:14px">
-    <h3 style="margin-top:0">{% if place.category=='hotel' %}Rezervasyon{% else %}İletişim{% endif %}</h3>
+    <h3 style="margin-top:0">{% if place.category=='hotel' %}Rezervasyon{% elif place.category=='wedding' %}Teklif &amp; rezervasyon{% else %}İletişim{% endif %}</h3>
     {% if place.extra and place.extra.reservation_note %}<p class="empty">{{ place.extra.reservation_note }}</p>{% endif %}
     <p>{% if place.phone %}<a class="btn" href="tel:{{ place.phone }}">{{ place.phone }}</a>{% endif %}
     {% if place.web %} · <a href="{{ place.web }}" target="_blank" rel="noopener">Web / rezervasyon</a>{% endif %}</p>
@@ -182,6 +186,13 @@
     {% elif place.menu_text %}
     <pre style="white-space:pre-wrap;font-family:inherit">{{ place.menu_text }}</pre>
     {% endif %}
+  </section>
+  {% endif %}
+
+  {% if place.category == 'wedding' and place.extra and place.extra.facilities %}
+  <section class="panel" style="margin:14px 0">
+    <h3>Salon özellikleri</h3>
+    <p>{% for f in place.extra.facilities %}<span class="chip" style="display:inline-block;margin:0 6px 6px 0">{{ f }}</span>{% endfor %}</p>
   </section>
   {% endif %}
 
@@ -232,7 +243,7 @@
     <div><dt>Şubeler</dt><dd>{{ place.extra.branch_note }}</dd></div>
     {% endif %}
     {% if place.subcategory_label %}<div><dt>Tür</dt><dd>{{ place.subcategory_label }}</dd></div>{% endif %}
-    {% if place.price_band %}<div><dt>{% if place.category=='doctor' %}Branş{% elif place.category in ('concert','vet','hospital') %}Tür{% else %}Fiyat{% endif %}</dt><dd>{{ place.price_band }}</dd></div>{% endif %}
+    {% if place.price_band %}<div><dt>{% if place.category=='doctor' %}Branş{% elif place.category in ('concert','vet','hospital') %}Tür{% elif place.category=='wedding' %}Fiyat politikası{% else %}Fiyat{% endif %}</dt><dd>{{ place.price_band }}</dd></div>{% endif %}
     {% if place.phone %}<div><dt>Tel</dt><dd>{{ place.phone }}</dd></div>{% endif %}
     {% if place.web %}<div><dt>Web</dt><dd><a href="{{ place.web }}" target="_blank" rel="noopener">{{ place.web }}</a></dd></div>{% endif %}
     {% if place.category == 'market' and (market_campaign or (place.extra and place.extra.catalog_url)) %}
@@ -253,7 +264,7 @@
 {% set is_eventish = place.category in ('event','concert','theater','cinema','family','fun') %}
 {% set gal_has = (place.extra and place.extra.gallery) or user_photos %}
 <section class="panel" id="galeri" style="margin-top:22px">
-  <h3>{% if is_eventish %}Senin karelerin{% elif place.category == 'visit' %}Sen de foto ekle{% elif place.category == 'food' %}Restoran fotoğrafları{% elif place.category == 'hotel' %}Otel / oda fotoğrafları{% else %}Yerden kareler{% endif %}</h3>
+  <h3>{% if is_eventish %}Senin karelerin{% elif place.category == 'visit' %}Sen de foto ekle{% elif place.category == 'food' %}Restoran fotoğrafları{% elif place.category == 'hotel' %}Otel / oda fotoğrafları{% elif place.category == 'wedding' %}Salon fotoğrafları{% else %}Yerden kareler{% endif %}</h3>
   {% if user_photos and place.category != 'visit' %}
   <div class="ph-grid" style="margin:0 0 12px">
     {% for ph in user_photos %}

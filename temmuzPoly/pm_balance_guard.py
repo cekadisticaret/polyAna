@@ -13,7 +13,6 @@ _LABEL_GROUPS = {
     "A1 LIVE": "analiz5",
     "5. ANALİZ": "analiz5",  # geriye uyumluluk
     "2. ANALİZ LIVE": "analiz2",
-    "10. ANALİZ LIVE": "analiz10",
     "6. ANALİZ LIVE": "analiz6_live",
     "A2#16 Supertrend Live": "a2_16_live",
     "A2#02 RSI Div Live": "a2_02_live",
@@ -30,25 +29,24 @@ _LABEL_GROUPS = {
     "B1#03 MUM Live": "b1_mum_live",
 }
 _VALID_GROUPS = frozenset({
-    "analiz5", "analiz2", "analiz10", "analiz6_live", "analiz6_v2_live", "analiz6_v3_live",
+    "analiz5", "analiz2", "analiz6_live", "analiz6_v2_live", "analiz6_v3_live",
     "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live",
     "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live", "b1_05_live", "b1_mum_live",
 })
 # 15M 309 Live kaldırıldı
 _WEEKEND_GROUPS = (
-    "analiz5", "analiz2", "analiz10", "analiz6_live", "analiz6_v2_live", "analiz6_v3_live",
+    "analiz5", "analiz2", "analiz6_live", "analiz6_v2_live", "analiz6_v3_live",
     "a2_16_live", "a2_02_live", "a2_08_live", "a2_03_live", "a2_04_live",
     "a2_05_live", "a2_06_live", "a2_07_live", "analiz15_live", "b1_05_live", "b1_mum_live",
 )
 # Varsayılan açık olanlar; listede olmayan her grup varsayılan KAPALI
-_DEFAULT_OPEN_GROUPS = frozenset({"analiz5", "analiz2", "analiz10"})
+_DEFAULT_OPEN_GROUPS = frozenset({"analiz5", "analiz2"})
 
 
 def _load_control() -> dict:
     defaults = {
         "analiz5_paused": False,
         "analiz2_paused": False,
-        "analiz10_paused": False,
         "analiz6_live_paused": True,
         "a2_16_live_paused": True,
         "a2_02_live_paused": True,
@@ -219,16 +217,16 @@ def set_pm_open_paused(paused: bool, *, source: str = "dashboard") -> dict:
 
 
 _WEEKEND_EARLY_GROUPS = ("analiz6_live", "a2_16_live", "analiz15_live")  # Pzt 11:00
-_WEEKEND_LATE_GROUPS = ("analiz5", "analiz2", "analiz10")  # A1/A2/A10 — Pzt 12:00
+_WEEKEND_LATE_GROUPS = ("analiz5", "analiz2")  # A1/A2 Live — Pzt 12:00
 
 
 def weekend_pause_all(*, source: str = "weekend_cron") -> dict:
-    """Cuma 22:00 — dashboard anahtarlarını kapat (A1+A2+A10 + diğerleri)."""
+    """Cuma 22:00 — dashboard anahtarlarını kapat (A1+A2 + diğerleri)."""
     return set_pm_open_paused(True, source=source)
 
 
 def weekend_resume_early(*, source: str = "weekend_cron") -> dict:
-    """Pazartesi 11:00 — A1/A2/A10 hariç weekend gruplarını aç."""
+    """Pazartesi 11:00 — A1/A2 hariç weekend gruplarını aç."""
     if is_user_live_hold():
         print("[PM SYSTEM] user_live_hold — Pazartesi erken açılış yok", file=sys.stderr)
         return get_pm_system_control()
@@ -242,9 +240,9 @@ def weekend_resume_early(*, source: str = "weekend_cron") -> dict:
 
 
 def weekend_resume_a1a2a10(*, source: str = "weekend_cron") -> dict:
-    """Pazartesi 12:00 — A1 Live + A2 Live + A10 Live aç."""
+    """Pazartesi 12:00 — A1 Live + A2 Live aç."""
     if is_user_live_hold():
-        print("[PM SYSTEM] user_live_hold — Pazartesi A1/A2/A10 açılış yok", file=sys.stderr)
+        print("[PM SYSTEM] user_live_hold — Pazartesi A1/A2 açılış yok", file=sys.stderr)
         return get_pm_system_control()
     data = _load_control()
     for g in _WEEKEND_LATE_GROUPS:

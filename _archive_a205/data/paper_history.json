@@ -1,0 +1,27 @@
+[
+  {
+    "symbol": "SOLUSDT",
+    "predicted_dir": "DOWN",
+    "actual_dir": "UP",
+    "win": false,
+    "entry_price": 76.18,
+    "exit_price": 76.21,
+    "entry_time_tr": "2026-08-14T01:02:02.203373+03:00",
+    "entry_hour_tr": 1,
+    "entry_dow": 4,
+    "entry_is_weekend": false,
+    "amount": 16.0,
+    "exit_time_tr": "2026-08-14T02:02:02.394997+03:00",
+    "pnl": -16.0,
+    "algo_signal": "DOWN",
+    "algo_name": "Mean Reversion (Z-Score)",
+    "algo_num": 5,
+    "pm_spent": 16.0,
+    "pm_size": 30.48,
+    "pm_entry_price": 0.525,
+    "to_win": 30.48,
+    "pm_slug": "solana-up-or-down-august-13-2026-6pm-et",
+    "hot_hour_boost": false,
+    "cold_hour_cut": false
+  }
+]

@@ -1,4 +1,4 @@
-"""COMBO — A1 + C1#01 + A2#05 V2 oy defteri. Sanal, gerçek PM yok.
+"""COMBO — F16 + C1#01 + A2#05 V2 oy defteri. Sanal, gerçek PM yok.
 
 Kaynaklar :02'de açar; COMBO :02:25'te onların açık pozisyonuna bakar.
 Çatışmada açmaz. Kademe sembol WR $16/$24/$32. Ask ≤ 0,50. Kasa $1000.
@@ -48,7 +48,7 @@ STATE_FILE = os.path.join(_DIR, "poly_trader_combo_state.json")
 HISTORY_FILE = os.path.join(_DIR, "poly_trader_combo_history.json")
 LABEL = "COMBO"
 BOOK_KEY = "combo"
-ALGO_NAME = "COMBO · A1+C101+A2#05V2 oy"
+ALGO_NAME = "COMBO · F16+C101+A2#05V2 oy"
 INITIAL_BALANCE = 1000.0
 # Ask tavanı: yalnız p≤0.50 — kazanç ≥ zarar. Üstünü açma.
 COMBO_MAX_ASK = float(os.getenv("COMBO_MAX_ASK") or 0.50)
@@ -193,7 +193,7 @@ def run_open() -> None:
     next_h = f"{(now_tr.hour + 1) % 24:02d}:00"
     tg_send(
         f"{sep}\n🧪 <b>{LABEL}</b>  {now_tr:%d.%m.%Y} {now_tr.hour:02d}:00→{next_h}\n"
-        f"<i>A1 + C1#01 + A2#05 V2 oy · sanal $300</i>\n"
+        f"<i>F16 + C1#01 + A2#05 V2 oy · sanal $300</i>\n"
         + "\n".join(lines) + "\n"
         f"💰 Bakiye: ${state['balance']:.2f}\n{sep}"
     )

@@ -1,0 +1,25 @@
+{# BursaApp v2 navigasyon — tasarım + sitedeki ek alanlar #}
+{% macro bv2_nav_links(active) %}
+<a class="bv2-nav-link {{ 'on' if active=='kesfet' or nav=='kesfet' else '' }}" href="/">🌿 Gezilecek</a>
+<a class="bv2-nav-link {{ 'on' if active=='feed' else '' }}" href="/feed">🔥 Şehir Akışı <span class="bv2-nav-badge live">Canlı</span></a>
+<a class="bv2-nav-link {{ 'on' if active=='rota' else '' }}" href="/rota">🧳 1 Günlük Rota <span class="bv2-nav-badge new">Popüler</span></a>
+<a class="bv2-nav-link {{ 'on' if active=='etrafimda' else '' }}" href="/etrafimda">📍 Etrafımda Ne Var</a>
+<a class="bv2-nav-link {{ 'on' if active=='harita' else '' }}" href="/harita">🗺 Harita</a>
+<a class="bv2-nav-link {{ 'on' if nav=='hotel' or nav=='camp' else '' }}" href="/oteller">🏨 Oteller & Kamp</a>
+<a class="bv2-nav-link {{ 'on' if nav=='news' else '' }}" href="/haberler">📰 Bursa Gündemi</a>
+<a class="bv2-nav-link {{ 'on' if nav=='pharmacy' else '' }}" href="/nobetci-eczaneler">💊 Nöbetçi Eczane <span class="bv2-nav-badge live">Canlı</span></a>
+<a class="bv2-nav-link {{ 'on' if nav=='teleferik' else '' }}" href="/uludag-teleferik">🚡 Uludağ Teleferik</a>
+<a class="bv2-nav-link {{ 'on' if nav=='food' else '' }}" href="/yeme-icme">🍽 Lezzet Durakları</a>
+<a class="bv2-nav-link {{ 'on' if request.path=='/kategoriler' else '' }}" href="/kategoriler">📂 Tüm Kategoriler</a>
+<a class="bv2-nav-link {{ 'on' if nav in ('concert','event','theater') else '' }}" href="/konserler">🎵 Etkinlikler</a>
+<a class="bv2-nav-link {{ 'on' if nav=='blog' else '' }}" href="/blog">✍️ Gezi Blogu</a>
+<a class="bv2-nav-link {{ 'on' if nav=='market' else '' }}" href="/marketler">🛒 Marketler</a>
+<a class="bv2-nav-link {{ 'on' if nav=='nightlife' else '' }}" href="/gece-hayati">🍸 Gece Hayatı</a>
+<a class="bv2-nav-link" href="/arkadas-ara">👥 Sosyal & Partner <span class="bv2-nav-badge new">Yeni</span></a>
+<a class="bv2-nav-link {{ 'on' if nav=='bursaspor' else '' }}" href="/bursaspor">🟢 Bursaspor</a>
+<a class="bv2-nav-link {{ 'on' if nav in ('hospital','doctor','dentist','vet','school') else '' }}" href="/hastaneler">🏥 Sağlık & Acil</a>
+<a class="bv2-nav-link" href="/faturalar">⚡ Su · Elektrik · Gaz</a>
+<a class="bv2-nav-link" href="/ai">✨ AI Rehber</a>
+<a class="bv2-nav-link" href="/#nasil">🧭 Nasıl İşler?</a>
+<a class="bv2-nav-link" href="/#sss">❓ SSS</a>
+{% endmacro %}

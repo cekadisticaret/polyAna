@@ -1,4 +1,4 @@
-"""Süper Lig (1. Lig) — son 10 sezon + 2026/27 fikstür. Emir yok."""
+"""Lig maçları — TR + 6 lig, son 10 sezon + güncel fikstür. Emir yok."""
 from __future__ import annotations
 
 import csv
@@ -8,27 +8,22 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from zoneinfo import ZoneInfo
 
+from bahis.leagues_cfg import (
+    EXTRA_ALIAS,
+    current_league,
+    get as get_league,
+    list_public,
+    season_label,
+    season_weights,
+    set_league,
+)
+
 TR = ZoneInfo("Europe/Istanbul")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-SEASONS = (
-    "1617", "1718", "1819", "1920", "2021",
-    "2122", "2223", "2324", "2425", "2526", "2627",
-)
-SEASON_LABEL = {
-    "1617": "2016/17",
-    "1718": "2017/18",
-    "1819": "2018/19",
-    "1920": "2019/20",
-    "2021": "2020/21",
-    "2122": "2021/22",
-    "2223": "2022/23",
-    "2324": "2023/24",
-    "2425": "2024/25",
-    "2526": "2025/26",
-    "2627": "2026/27",
-}
-_SEASON_W = {s: 0.32 + i * 0.068 for i, s in enumerate(SEASONS)}
-CURRENT = "2627"
+SEASONS = get_league("tr")["seasons"]
+SEASON_LABEL = dict(get_league("tr")["labels"])
+_SEASON_W = season_weights("tr")
+CURRENT = get_league("tr")["current"]
 
 # folded key → (görünen ad, kısa, renk, api-sports id)
 TEAMS = {
@@ -83,6 +78,7 @@ _ALIAS = {
     "gaziantepfk": "gaziantep",
     "gazisehirgaziantep": "gaziantep",
     "erzurumsporfk": "erzurumspor",
+    **EXTRA_ALIAS,
 }
 
 
@@ -102,16 +98,49 @@ def team_key(name: str) -> str:
     return _ALIAS.get(folded, folded)
 
 
+@lru_cache(maxsize=16)
+def _overlay(league: str) -> dict[str, dict]:
+    path = os.path.join(DATA_DIR, f"teams_{league}.json")
+    if not os.path.isfile(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            raw = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    out: dict[str, dict] = {}
+    for name, info in (raw or {}).items():
+        if not isinstance(info, dict):
+            continue
+        out[team_key(name)] = info
+        if info.get("name"):
+            out[team_key(info["name"])] = info
+    return out
+
+
 def team_info(name: str) -> dict:
     key = team_key(name)
     raw = TEAMS.get(key)
+    ov = _overlay(current_league()).get(key)
     if raw and len(raw) >= 3:
         label, short, color = raw[0], raw[1], raw[2]
         tid = raw[3] if len(raw) > 3 else 0
-    else:
-        label, short, color, tid = name, (name or "?")[:3].upper(), "#00df81", 0
-    crest = f"https://media.api-sports.io/football/teams/{tid}.png" if tid else ""
-    return {"key": key, "name": label, "short": short, "color": color, "crest": crest}
+        crest = f"https://media.api-sports.io/football/teams/{tid}.png" if tid else ""
+        if ov and ov.get("crest"):
+            crest = ov["crest"]
+        return {"key": key, "name": label, "short": short, "color": color, "crest": crest}
+    if ov:
+        label = ov.get("name") or name
+        short = ov.get("short") or (label or "?")[:3].upper()
+        return {
+            "key": key,
+            "name": label,
+            "short": short,
+            "color": "#00df81",
+            "crest": ov.get("crest") or "",
+        }
+    label, short, color = name, (name or "?")[:3].upper(), "#00df81"
+    return {"key": key, "name": label, "short": short, "color": color, "crest": ""}
 
 
 def _f(v):
@@ -158,29 +187,65 @@ def _parse_utc(s: str) -> datetime | None:
 
 
 def _odds(row: dict) -> dict:
-    h = _f(row.get("AvgH") or row.get("B365H"))
-    d = _f(row.get("AvgD") or row.get("B365D"))
-    a = _f(row.get("AvgA") or row.get("B365A"))
-    return {"home": h, "draw": d, "away": a}
+    open_h = _f(row.get("B365H") or row.get("AvgH") or row.get("PSH"))
+    open_d = _f(row.get("B365D") or row.get("AvgD") or row.get("PSD"))
+    open_a = _f(row.get("B365A") or row.get("AvgA") or row.get("PSA"))
+    close_h = _f(row.get("B365CH") or row.get("AvgCH") or row.get("PSCH"))
+    close_d = _f(row.get("B365CD") or row.get("AvgCD") or row.get("PSCD"))
+    close_a = _f(row.get("B365CA") or row.get("AvgCA") or row.get("PSCA"))
+    h = close_h or open_h
+    d = close_d or open_d
+    a = close_a or open_a
+    ou_o = _f(row.get("Avg>2.5") or row.get("B365>2.5"))
+    ou_u = _f(row.get("Avg<2.5") or row.get("B365<2.5"))
+    ou_co = _f(row.get("AvgC>2.5") or row.get("B365C>2.5"))
+    ou_cu = _f(row.get("AvgC<2.5") or row.get("B365C<2.5"))
+    return {
+        "home": h, "draw": d, "away": a,
+        "open": {"home": open_h, "draw": open_d, "away": open_a},
+        "close": {"home": close_h, "draw": close_d, "away": close_a},
+        "avg": {
+            "home": _f(row.get("AvgH")),
+            "draw": _f(row.get("AvgD")),
+            "away": _f(row.get("AvgA")),
+        },
+        "max": {
+            "home": _f(row.get("MaxH")),
+            "draw": _f(row.get("MaxD")),
+            "away": _f(row.get("MaxA")),
+        },
+        "ou25": {
+            "over": ou_co or ou_o,
+            "under": ou_cu or ou_u,
+            "open": {"over": ou_o, "under": ou_u},
+            "close": {"over": ou_co, "under": ou_cu},
+        },
+    }
 
 
-def _match_id(dt: datetime | None, home: str, away: str) -> str:
+def _match_id(dt: datetime | None, home: str, away: str, league: str | None = None) -> str:
+    lid = league or current_league()
     day = dt.strftime("%Y%m%d") if dt else "00000000"
-    return f"{day}-{team_key(home)}-{team_key(away)}"
+    body = f"{day}-{team_key(home)}-{team_key(away)}"
+    if lid == "tr":
+        return body
+    return f"{lid}-{body}"
 
 
-def _from_csv_row(row: dict, season: str) -> dict | None:
-    home = (row.get("HomeTeam") or "").strip()
-    away = (row.get("AwayTeam") or "").strip()
+def _from_csv_row(row: dict, season: str, league: str | None = None) -> dict | None:
+    home = (row.get("HomeTeam") or row.get("Home") or "").strip()
+    away = (row.get("AwayTeam") or row.get("Away") or "").strip()
     if not home or not away:
         return None
+    lid = league or current_league()
     dt = _parse_date(row.get("Date") or "", row.get("Time"))
-    hg, ag = _i(row.get("FTHG")), _i(row.get("FTAG"))
+    hg, ag = _i(row.get("FTHG") or row.get("HG")), _i(row.get("FTAG") or row.get("AG"))
     played = hg is not None and ag is not None
     return {
-        "id": _match_id(dt, home, away),
+        "id": _match_id(dt, home, away, lid),
+        "league": lid,
         "season": season,
-        "season_label": SEASON_LABEL.get(season, season),
+        "season_label": season_label(lid, season),
         "week": None,
         "kickoff": dt.isoformat() if dt else None,
         "venue": None,
@@ -200,6 +265,8 @@ def _from_csv_row(row: dict, season: str) -> dict | None:
         "as_s": _i(row.get("AS")),
         "hst": _i(row.get("HST")),
         "ast": _i(row.get("AST")),
+        "hxg": _f(row.get("HxG") or row.get("HomeXG")),
+        "axg": _f(row.get("AxG") or row.get("AwayXG")),
         "result": (row.get("FTR") or "").strip() or None,
         "played": played,
         "odds": _odds(row),
@@ -207,11 +274,13 @@ def _from_csv_row(row: dict, season: str) -> dict | None:
     }
 
 
-def _from_fix_row(row: dict) -> dict | None:
+def _from_fix_row(row: dict, league: str | None = None) -> dict | None:
     home = (row.get("HomeTeam") or "").strip()
     away = (row.get("AwayTeam") or "").strip()
     if not home or not away:
         return None
+    lid = league or current_league()
+    lg = get_league(lid)
     dt = _parse_utc(row.get("DateUtc") or "")
     hg, ag = _i(row.get("HomeTeamScore")), _i(row.get("AwayTeamScore"))
     played = hg is not None and ag is not None
@@ -219,9 +288,10 @@ def _from_fix_row(row: dict) -> dict | None:
     if played:
         result = "H" if hg > ag else ("A" if ag > hg else "D")
     return {
-        "id": _match_id(dt, home, away),
-        "season": CURRENT,
-        "season_label": SEASON_LABEL[CURRENT],
+        "id": _match_id(dt, home, away, lid),
+        "league": lid,
+        "season": lg["current"],
+        "season_label": season_label(lid, lg["current"]),
         "week": _i(row.get("RoundNumber")),
         "kickoff": dt.isoformat() if dt else None,
         "venue": (row.get("Location") or "").strip() or None,
@@ -232,6 +302,7 @@ def _from_fix_row(row: dict) -> dict | None:
         "result": result,
         "played": played,
         "odds": {"home": None, "draw": None, "away": None},
+        "fotmob_id": row.get("FotmobId") or row.get("fotmob_id"),
         "src": "fix",
     }
 
@@ -248,6 +319,11 @@ def _merge(a: dict, b: dict) -> dict:
         out["result"] = b.get("result")
     if not out.get("kickoff") and b.get("kickoff"):
         out["kickoff"] = b["kickoff"]
+    if not out.get("fotmob_id") and b.get("fotmob_id"):
+        out["fotmob_id"] = b["fotmob_id"]
+    for k in ("hxg", "axg"):
+        if out.get(k) is None and b.get(k) is not None:
+            out[k] = b[k]
     od = out.get("odds") or {}
     if od.get("home") is None:
         out["odds"] = b.get("odds") or od
@@ -257,35 +333,42 @@ def _merge(a: dict, b: dict) -> dict:
     return out
 
 
-def _load_raw() -> list[dict]:
+def _load_raw(league: str | None = None) -> list[dict]:
+    lg = get_league(league)
+    lid = lg["id"]
+    set_league(lid)
     by_id: dict[str, dict] = {}
-    for season in SEASONS:
-        path = os.path.join(DATA_DIR, f"T1_{season}.csv")
+    for season in lg["seasons"]:
+        path = os.path.join(DATA_DIR, f"{lg['fd']}_{season}.csv")
         if not os.path.isfile(path):
             continue
         with open(path, encoding="utf-8-sig", newline="") as f:
             for row in csv.DictReader(f):
-                m = _from_csv_row(row, season)
-                if m:
-                    by_id[m["id"]] = m
-    fix_csv = os.path.join(DATA_DIR, "fixtures.csv")
-    if os.path.isfile(fix_csv):
-        with open(fix_csv, encoding="utf-8-sig", newline="") as f:
-            for row in csv.DictReader(f):
-                if (row.get("Div") or "").strip() != "T1":
-                    continue
-                m = _from_csv_row(row, CURRENT)
+                m = _from_csv_row(row, season, lid)
                 if not m:
                     continue
-                m["src"] = "fixcsv"
-                prev = by_id.get(m["id"])
-                by_id[m["id"]] = _merge(prev, m) if prev else m
-    fix_json = os.path.join(DATA_DIR, "superlig_2026_fixtures.json")
+                if not m["played"] and season != lg["current"]:
+                    continue
+                by_id[m["id"]] = m
+    if lid == "tr":
+        fix_csv = os.path.join(DATA_DIR, "fixtures.csv")
+        if os.path.isfile(fix_csv):
+            with open(fix_csv, encoding="utf-8-sig", newline="") as f:
+                for row in csv.DictReader(f):
+                    if (row.get("Div") or "").strip() != "T1":
+                        continue
+                    m = _from_csv_row(row, lg["current"], lid)
+                    if not m:
+                        continue
+                    m["src"] = "fixcsv"
+                    prev = by_id.get(m["id"])
+                    by_id[m["id"]] = _merge(prev, m) if prev else m
+    fix_json = os.path.join(DATA_DIR, lg["fix_json"])
     if os.path.isfile(fix_json):
         with open(fix_json, encoding="utf-8") as f:
             rows = json.load(f)
         for row in rows:
-            m = _from_fix_row(row)
+            m = _from_fix_row(row, lid)
             if not m:
                 continue
             prev = by_id.get(m["id"])
@@ -296,9 +379,41 @@ def _load_raw() -> list[dict]:
     )
 
 
-@lru_cache(maxsize=1)
-def all_matches() -> tuple[dict, ...]:
-    return tuple(_load_raw())
+@lru_cache(maxsize=8)
+def _all_matches_cached(league: str) -> tuple[dict, ...]:
+    return tuple(_load_raw(league))
+
+
+def all_matches(league: str | None = None) -> tuple[dict, ...]:
+    lid = get_league(league)["id"] if league else current_league()
+    return _all_matches_cached(lid)
+
+
+def reload_matches() -> None:
+    _all_matches_cached.cache_clear()
+    _overlay.cache_clear()
+    _forms_for.cache_clear()
+    _predict_for.cache_clear()
+    try:
+        from bahis.dixon_coles import _fitted_for
+        _fitted_for.cache_clear()
+    except Exception:
+        pass
+    try:
+        from bahis.elo import _fitted_for as _elo_fit_for
+        _elo_fit_for.cache_clear()
+    except Exception:
+        pass
+    try:
+        from bahis.match_intel import _played_for
+        _played_for.cache_clear()
+    except Exception:
+        pass
+    try:
+        from bahis.features import clear_caches
+        clear_caches()
+    except Exception:
+        pass
 
 
 def _implied(h2h: dict) -> dict:
@@ -373,10 +488,10 @@ def h2h(a: str, b: str) -> dict:
     return pack
 
 
-@lru_cache(maxsize=4)
-def _forms(n: int = 5) -> dict[str, tuple[str, ...]]:
+@lru_cache(maxsize=32)
+def _forms_for(league: str, n: int = 5) -> dict[str, tuple[str, ...]]:
     acc: dict[str, list[str]] = {}
-    for m in reversed(all_matches()):
+    for m in reversed(all_matches(league)):
         if not m["played"]:
             continue
         hk, ak = m["home"]["key"], m["away"]["key"]
@@ -393,6 +508,10 @@ def _forms(n: int = 5) -> dict[str, tuple[str, ...]]:
     return {k: tuple(v) for k, v in acc.items()}
 
 
+def _forms(n: int = 5) -> dict[str, tuple[str, ...]]:
+    return _forms_for(current_league(), n)
+
+
 def form(key: str, n: int = 5) -> list[str]:
     return list(_forms(n).get(team_key(key), ()))
 
@@ -405,19 +524,20 @@ def _form_pts(key: str, n: int = 8) -> float:
     return pts / (3 * max(len(seq), 1))
 
 
-@lru_cache(maxsize=512)
-def predict(home: str, away: str) -> dict:
+@lru_cache(maxsize=2048)
+def _predict_for(league: str, home: str, away: str) -> dict:
     """10 yıl H2H + form + ev avantajı. Bahis değil, çıkarım."""
     hk, ak = team_key(home), team_key(away)
     hi, ai = team_info(hk), team_info(ak)
     wh = wd = wa = 0.0
     n = 0
-    for m in all_matches():
+    weights = season_weights(league)
+    for m in all_matches(league):
         if not m["played"]:
             continue
         if {m["home"]["key"], m["away"]["key"]} != {hk, ak}:
             continue
-        w = _SEASON_W.get(m["season"], 0.5)
+        w = weights.get(m["season"], 0.5)
         n += 1
         home_won = (
             (m["home"]["key"] == hk and m["result"] == "H")
@@ -465,17 +585,25 @@ def predict(home: str, away: str) -> dict:
     }
 
 
+def predict(home: str, away: str) -> dict:
+    return _predict_for(current_league(), team_key(home), team_key(away))
+
+
 def _now() -> datetime:
     return datetime.now(TR)
 
 
 def summary() -> dict:
-    ms = all_matches()
+    lg = get_league()
+    ms = all_matches(lg["id"])
     now = _now()
     played = [m for m in ms if m["played"]]
     upcoming = [
         m for m in ms
-        if not m["played"] and m.get("kickoff") and m["kickoff"] >= now.isoformat()[:10]
+        if m["season"] == lg["current"]
+        and not m["played"]
+        and m.get("kickoff")
+        and m["kickoff"] >= now.isoformat()[:10]
     ]
     today = now.date().isoformat()
     live = []
@@ -487,19 +615,21 @@ def summary() -> dict:
         if d == today:
             live.append(m)
     current_teams = sorted(
-        {m["home"]["key"] for m in ms if m["season"] == CURRENT}
-        | {m["away"]["key"] for m in ms if m["season"] == CURRENT}
+        {m["home"]["key"] for m in ms if m["season"] == lg["current"]}
+        | {m["away"]["key"] for m in ms if m["season"] == lg["current"]}
     )
     goals = []
-    for s in SEASONS:
+    for s in lg["seasons"]:
         rows = [m for m in played if m["season"] == s]
         g = sum((m.get("hg") or 0) + (m.get("ag") or 0) for m in rows)
-        goals.append({"id": s, "label": SEASON_LABEL[s], "n": len(rows), "goals": g})
+        goals.append({"id": s, "label": season_label(lg["id"], s), "n": len(rows), "goals": g})
     latest = [_public(m, extra=False) for m in played[-8:][::-1]]
     return {
-        "league": "Trendyol Süper Lig",
-        "seasons": [{"id": s, "label": SEASON_LABEL[s]} for s in SEASONS],
-        "current": CURRENT,
+        "league": lg["name"],
+        "league_id": lg["id"],
+        "leagues": list_public(),
+        "seasons": [{"id": s, "label": season_label(lg["id"], s)} for s in lg["seasons"]],
+        "current": lg["current"],
         "teams": [team_info(k) for k in current_teams],
         "played_n": len(played),
         "upcoming_n": len(upcoming),
@@ -545,8 +675,11 @@ def list_matches(season: str | None = None, team: str | None = None, status: str
             continue
         if status == "played" and not m["played"]:
             continue
-        if status == "upcoming" and (m["played"] or not m.get("kickoff") or m["kickoff"] < now[:10]):
-            continue
+        if status == "upcoming":
+            if m["played"] or not m.get("kickoff") or m["kickoff"] < now[:10]:
+                continue
+            if not season and m["season"] != get_league()["current"]:
+                continue
         out.append(_public(m, extra=(status != "played")))
     if status == "played":
         out.reverse()
@@ -561,8 +694,9 @@ def pair_h2h(a: str, b: str) -> dict:
     # bu sezon kim kiminle oynayacak
     ka, kb = pack["a"]["key"], pack["b"]["key"]
     future = []
+    cur = get_league()["current"]
     for m in all_matches():
-        if m["season"] != CURRENT or m["played"]:
+        if m["season"] != cur or m["played"]:
             continue
         if {m["home"]["key"], m["away"]["key"]} == {ka, kb}:
             future.append(_public(m))
@@ -574,3 +708,18 @@ def pair_h2h(a: str, b: str) -> dict:
     except Exception:
         pack["scorers"] = {"a": [], "b": []}
     return pack
+
+
+def find_match(mid: str) -> dict | None:
+    from bahis.leagues_cfg import league_from_id
+    lid = league_from_id(mid)
+    set_league(lid)
+    for m in all_matches(lid):
+        if m["id"] == mid:
+            return m
+    if lid != "tr":
+        set_league("tr")
+        for m in all_matches("tr"):
+            if m["id"] == mid:
+                return m
+    return None

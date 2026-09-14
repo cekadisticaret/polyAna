@@ -11,6 +11,7 @@ from __future__ import annotations
 import fcntl
 import json
 import math
+import os
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -54,6 +55,8 @@ LOCK_TRAIL_AT = 0.75    # hedefin 3/4'ünde kârın yarısı kilit
 LOCK_BE_USD = 15.0      # +$15 olunca stop başabaşa
 LOCK_TRAIL_USD = 25.0   # +$25 olunca zirve kârın yarısı kilit — +$51'in $22'ye inmesi bir daha olmasın
 TP_MARGIN_PCT = 0.35    # giriş marjının %35'i kârda otomatik kapat ($20 → +$7)
+LOSS_MARGIN_PCT = float(os.environ.get("GPSUSDT_LOSS_MARGIN_PCT", "0.35"))
+# Zarar tavanı: marjın %35'i (tp35 simetriği). $100 marj → ~−$35, tam marj wipe olmaz.
 COOLDOWN_WIN = 900      # kârlı kapanış sonrası 15 dk
 COOLDOWN_LOSS = 1800    # zararlı kapanış sonrası 30 dk
 COOLDOWN_LOSS_A2 = 300  # Algoritma 2 — zarar sonrası 5 dk
@@ -630,10 +633,23 @@ def _close_one(
     return hist[-1]
 
 
+def _display_pnl(row: dict) -> float:
+    """Liste ekranı — ham PnL, sl35/tp35 tavanından kötü gösterilmez."""
+    pnl = float(row.get("pnl") or 0)
+    if pnl >= 0:
+        return round(pnl, 2)
+    margin = float(row.get("margin") or MARGIN)
+    cap = -round(margin * LOSS_MARGIN_PCT, 2)
+    comm = float(row.get("commission") or 0)
+    return round(max(pnl, cap - comm), 2)
+
+
 def _protect(st: dict, hist: list, bid: float, ask: float, rail=None, levels=None, book: str = "gps", mark: float | None = None) -> bool:
     """Tetik: mark (Binance isolated). Dolum: MARKET VWAP."""
     closed = False
     stopout = -MARGIN * STOPOUT_RATIO
+    loss_cap = -MARGIN * LOSS_MARGIN_PCT
+    tp_cap = MARGIN * TP_MARGIN_PCT
     for pos in list(_plist(st)):
         if (pos.get("target") is None or pos.get("stop") is None) and levels:
             plan = _plan(pos["side"], float(pos["entry"]), levels, book=book)
@@ -641,7 +657,12 @@ def _protect(st: dict, hist: list, bid: float, ask: float, rail=None, levels=Non
                 _apply_plan(pos, plan)
         trig = float(mark) if mark else _exit_px(pos["side"], bid, ask)
         _update_lock(pos, trig)
-        if _net_float(pos, bid, ask) is not None and _net_float(pos, bid, ask) <= stopout:
+        net = _net_float(pos, bid, ask)
+        if net is not None and net >= tp_cap:
+            reason = "tp35"
+        elif net is not None and net <= loss_cap:
+            reason = "sl35"
+        elif net is not None and net <= stopout:
             reason = "stopout"
         elif pos.get("liq_price") is not None and (
             (pos["side"] == "buy" and trig <= float(pos["liq_price"]))
@@ -1004,7 +1025,11 @@ def snapshot(bid: float | None = None, ask: float | None = None, book: str = "gp
         "trade_count": int(st.get("seq") or 0) or (len(hist) + len(rows)),
         "position": rows[0] if rows else None,
         "positions": rows,
-        "history": list(reversed(hist[-200:])),
+        "history": [
+            {**t, "display_pnl": _display_pnl(t)} for t in reversed(hist[-200:])
+        ],
+        "loss_margin_pct": LOSS_MARGIN_PCT,
+        "tp_margin_pct": TP_MARGIN_PCT,
         "margin": MARGIN,
         "leverage": _lev(book),
         "last_dir": st.get("last_dir"),

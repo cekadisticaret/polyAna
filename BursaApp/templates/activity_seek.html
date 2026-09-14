@@ -1,0 +1,173 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else 'Arkadaş ara · BursaApp' }}{% endblock %}
+{% block hello %}Arkadaş bul{% endblock %}
+{% block sub %}Okey · tenis · halı saha · koşu — Bursa'da partner ara{% endblock %}
+{% block body_class %} is-activity-seek{% endblock %}
+
+{% block main %}
+<section class="as-page">
+  <header class="as-head">
+    <p class="as-lead">Bir aktivite için eksik kişi mi arıyorsun, yoksa gruba mı katılmak istiyorsun? İlan ver veya aşağıdan katıl.</p>
+    {% if u %}
+    <p class="as-points-bar">🏅 Senin puanın: <b>{{ user_points }}</b> · {{ user_points_level }} · <a href="/kuponlar">Kupon çevir</a></p>
+    {% endif %}
+    <div class="as-filters chips">
+      <a class="chip {{ 'on' if not filter_type else '' }}" href="/arkadas-ara{% if filter_ilce %}?ilce={{ filter_ilce|urlencode }}{% endif %}">Tümü</a>
+      {% for key, meta in activity_types.items() %}
+      <a class="chip {{ 'on' if filter_type == key else '' }}" href="/arkadas-ara?type={{ key }}{% if filter_ilce %}&ilce={{ filter_ilce|urlencode }}{% endif %}">{{ meta.emoji }} {{ meta.label }}</a>
+      {% endfor %}
+    </div>
+  </header>
+
+  {% if u %}
+  <details class="as-compose ff-card" {% if request.args.get('yeni') %}open{% endif %}>
+    <summary class="as-compose-sum">＋ İlan ver</summary>
+    <form class="as-form" method="post" action="/arkadas-ara{% if filter_type %}?type={{ filter_type }}{% endif %}">
+      <label>Aktivite
+        <select name="activity_type" required>
+          {% for key, meta in activity_types.items() %}
+          <option value="{{ key }}" {% if filter_type == key %}selected{% endif %}>{{ meta.emoji }} {{ meta.label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Başlık
+        <input type="text" name="title" maxlength="120" placeholder="Örn. 4. oyuncu arıyorum">
+      </label>
+      <div class="as-form-row">
+        <label>Kaç kişi lazım?
+          <input type="number" name="slots_needed" min="1" max="10" value="1">
+        </label>
+        <label>İlçe
+          <select name="ilce">
+            <option value="">Fark etmez</option>
+            {% for il in ilceler %}
+            <option value="{{ il }}" {% if filter_ilce == il %}selected{% endif %}>{{ il }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      <label>Ne zaman?
+        <input type="text" name="when_label" maxlength="80" placeholder="Bu akşam 21:00, yarın, esnek…">
+      </label>
+      <label>Bulışma yeri (isteğe bağlı)
+        <input type="text" name="venue" maxlength="160" placeholder="Kafe, kort, park…">
+      </label>
+      <label>Not
+        <textarea name="note" rows="3" maxlength="800" placeholder="Seviye, kurallar, kaç kişisiniz…"></textarea>
+      </label>
+      <div class="as-form-row">
+        <label>Seviye
+          <select name="skill_level">
+            {% for key, label in skill_levels.items() %}
+            <option value="{{ key }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Min. puan
+          <input type="number" name="points_min" min="0" max="5000" value="0">
+        </label>
+      </div>
+      <label>İletişim ipucu <small>(onaylı katılımcılar görür)</small>
+        <input type="text" name="contact_hint" maxlength="120" placeholder="WhatsApp, Telegram @…">
+      </label>
+      <button type="submit" class="m-btn-pri">İlanı yayınla</button>
+    </form>
+  </details>
+  {% else %}
+  <div class="as-login ff-card">
+    <p>İlan vermek veya katılmak için giriş yap.</p>
+    <a class="m-btn-pri" href="/giris?next=/arkadas-ara">Giriş yap</a>
+  </div>
+  {% endif %}
+
+  <div class="as-list">
+    {% for s in seeks %}
+    <article class="as-card ff-card{% if highlight_id and highlight_id == s.id %} as-card-focus{% endif %}" id="ilan-{{ s.id }}">
+      <div class="as-card-top">
+        <span class="as-emoji">{{ s.emoji }}</span>
+        <div>
+          <h2>{{ s.title }}</h2>
+          <p class="as-meta">{{ s.host }} · 🏅 {{ s.host_points }} puan · {{ s.ilce or 'Bursa' }} · {{ s.time_label }} · {{ s.ago }}</p>
+        </div>
+        <span class="as-badge">{{ s.spots_left }} kontenjan</span>
+      </div>
+      {% if s.note %}<p class="as-note">{{ s.note }}</p>{% endif %}
+      {% if s.place_path %}
+      <p class="as-venue">📍 <a href="{{ s.place_path }}">{{ s.place_title or s.venue }}</a></p>
+      {% elif s.venue %}<p class="as-venue">📍 {{ s.venue }}</p>{% endif %}
+      <p class="as-tags">
+        <span>{{ s.activity_label }}</span>
+        {% if s.skill_label != 'Fark etmez' %}<span>{{ s.skill_label }}</span>{% endif %}
+        {% if s.points_min %}<span>{{ s.points_min }}+ puan</span>{% endif %}
+        <span>{{ s.slots_filled }}/{{ s.slots_needed }} dolu</span>
+        {% if s.pending_count %}<span class="as-tag-warn">{{ s.pending_count }} onay bekliyor</span>{% endif %}
+      </p>
+
+      {% if s.is_mine and s.pending_requests %}
+      <div class="as-pending">
+        <p class="as-pending-title">Onay bekleyen istekler</p>
+        {% for pr in s.pending_requests %}
+        <div class="as-pending-row">
+          <div>
+            <strong>{{ pr.name }}</strong>
+            <small>{{ pr.handle }} · 🏅 {{ pr.points }} puan · {{ pr.ago }}</small>
+          </div>
+          <div class="as-pending-actions">
+            <form method="post" action="/arkadas-ara/{{ s.id }}/onayla/{{ pr.user_id }}">
+              <button type="submit" class="m-btn-pri sm">Kabul et</button>
+            </form>
+            <form method="post" action="/arkadas-ara/{{ s.id }}/reddet/{{ pr.user_id }}">
+              <button type="submit" class="m-btn-ghost sm">Reddet</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if s.joined and s.joiners %}
+      <ul class="as-joiners">
+        {% for j in s.joiners %}
+        <li>{{ j.name }} <small>{{ j.handle }} · 🏅 {{ j.points }} puan</small></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% if s.contact_hint and (s.joined or s.is_mine) %}
+      <p class="as-contact">💬 {{ s.contact_hint }}</p>
+      {% endif %}
+      <div class="as-actions">
+        {% if s.is_mine %}
+        <form method="post" action="/arkadas-ara/{{ s.id }}/iptal" onsubmit="return confirm('İlanı kapat?');">
+          <button type="submit" class="m-btn-ghost sm">Kapat</button>
+        </form>
+        {% elif s.joined %}
+        <form method="post" action="/arkadas-ara/{{ s.id }}/ayril">
+          <button type="submit" class="m-btn-ghost sm">Ayrıl</button>
+        </form>
+        {% elif s.pending %}
+        <span class="as-wait">Onay bekleniyor</span>
+        <form method="post" action="/arkadas-ara/{{ s.id }}/ayril">
+          <button type="submit" class="m-btn-ghost sm">İsteği geri çek</button>
+        </form>
+        {% elif s.spots_left > 0 %}
+          {% if u %}
+          <form method="post" action="/arkadas-ara/{{ s.id }}/katil">
+            <button type="submit" class="m-btn-pri sm">Katıl</button>
+          </form>
+          {% else %}
+          <a class="m-btn-pri sm" href="/giris?next=/arkadas-ara">Katılmak için giriş</a>
+          {% endif %}
+        {% else %}
+        <span class="as-full">Dolu</span>
+        {% endif %}
+      </div>
+    </article>
+    {% else %}
+    <div class="ff-card ff-empty as-empty">
+      <p>Bu filtrede açık ilan yok. İlk ilanı sen ver — okey 4., tenis partneri, halı saha…</p>
+      {% if u %}<a href="/arkadas-ara?yeni=1" class="m-btn-pri sm">İlan ver</a>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

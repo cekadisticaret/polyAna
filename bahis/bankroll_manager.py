@@ -54,10 +54,12 @@ class BankrollManager:
         max_stake_pct: float = 0.03,          # tek bahiste bankroll'un max %'si
         max_daily_risk_pct: float = 0.08,     # günlük toplam risk tavanı
         max_open_positions: int = 5,          # aynı anda açık bahis sayısı limiti
-        min_edge: float = 0.03,               # bu edge'in altında bahis alma
+        min_edge: float = 0.04,               # fair kenar eşiği (3–5 bant)
         max_drawdown_pct: float = 0.25,       # bu kadar kaybedince sistem durur
         min_odds: float = 1.30,               # çok düşük oranlı bahisleri ele
         max_odds: float = 6.00,               # çok yüksek oran = model güvenilirliği düşük
+        max_weekly_risk_pct: float = 0.20,    # haftalık risk tavanı
+        use_circuit: bool = True,
     ):
         self.starting_bankroll = starting_bankroll
         self.bankroll = starting_bankroll
@@ -71,6 +73,8 @@ class BankrollManager:
         self.max_drawdown_pct = max_drawdown_pct
         self.min_odds = min_odds
         self.max_odds = max_odds
+        self.max_weekly_risk_pct = max_weekly_risk_pct
+        self.use_circuit = use_circuit
 
         self.bets: list[BetRecord] = []
         self.halted = False
@@ -123,6 +127,8 @@ class BankrollManager:
         selection: str,
         model_prob: float,
         market_odds: float,
+        fair_implied: float | None = None,
+        n_legs: int = 1,
     ) -> dict:
         """
         Bir bahis fırsatını değerlendirir, alınmalı mı, ne kadar
@@ -145,6 +151,13 @@ class BankrollManager:
             "edge": 0.0,
         }
 
+        if self.use_circuit:
+            from bahis.risk import snapshot
+            rs = snapshot()
+            if rs.get("halted"):
+                result["reject_reason"] = f"Kesici: {rs.get('halt_reason')}"
+                return result
+
         if self.halted:
             result["reject_reason"] = f"Sistem durduruldu: {self.halt_reason}"
             return result
@@ -153,32 +166,42 @@ class BankrollManager:
             result["reject_reason"] = f"Oran aralık dışı ({self.min_odds}-{self.max_odds})"
             return result
 
-        implied_prob = 1 / market_odds
+        implied_raw = 1 / market_odds
+        implied_prob = fair_implied if fair_implied is not None else implied_raw
         edge = model_prob - implied_prob
         result["edge"] = edge
+        result["implied_raw"] = implied_raw
+        result["implied_fair"] = implied_prob
 
         if edge < self.min_edge:
-            result["reject_reason"] = f"Edge yetersiz ({edge:.3f} < {self.min_edge})"
+            result["reject_reason"] = f"Fair kenar yetersiz ({edge:.3f} < {self.min_edge})"
             return result
 
         if self.open_positions_count() >= self.max_open_positions:
             result["reject_reason"] = "Açık pozisyon limiti doldu"
             return result
 
-        # Fractional Kelly
+        # Fractional Kelly — kupon ayak sayısı varyansı 1/√n
         f_raw = self.kelly_fraction(model_prob, market_odds)
-        f_applied = f_raw * self.kelly_multiplier
+        n = max(int(n_legs or 1), 1)
+        f_applied = f_raw * self.kelly_multiplier / (n ** 0.5)
         f_applied = min(f_applied, self.max_stake_pct)  # tek bahis tavanı
 
         stake = self.bankroll * f_applied
 
-        # Günlük risk tavanı kontrolü
         remaining_daily_budget = (self.bankroll * self.max_daily_risk_pct) - self.today_risked_amount()
         if remaining_daily_budget <= 0:
             result["reject_reason"] = "Günlük risk tavanı doldu"
             return result
-
         stake = min(stake, remaining_daily_budget)
+
+        if self.use_circuit:
+            from bahis.risk import allow
+            ok, why, clipped = allow(stake)
+            if not ok:
+                result["reject_reason"] = why or "kesici"
+                return result
+            stake = min(stake, clipped)
 
         if stake <= 0:
             result["reject_reason"] = "Hesaplanan stake sıfır veya negatif"

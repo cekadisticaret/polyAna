@@ -1,0 +1,493 @@
+{
+  "ok": true,
+  "src": "spot_ticker_24hr",
+  "note": "fapi kapalı — 24s rolling, evren USDT-M listesi; scan=aktif 30+30",
+  "asof_tr": "2026-09-14T22:00:18+03:00",
+  "universe_hit": 344,
+  "up": [
+    {
+      "symbol": "SENTUSDT",
+      "name": "SENT",
+      "pct": 18.01,
+      "last": 0.01704,
+      "quote_vol": 4765828.0
+    },
+    {
+      "symbol": "ARKUSDT",
+      "name": "ARK",
+      "pct": 15.6,
+      "last": 0.1682,
+      "quote_vol": 13324975.0
+    },
+    {
+      "symbol": "MTLUSDT",
+      "name": "MTL",
+      "pct": 13.52,
+      "last": 0.319,
+      "quote_vol": 6137376.0
+    },
+    {
+      "symbol": "PENDLEUSDT",
+      "name": "PENDLE",
+      "pct": 10.75,
+      "last": 2.37,
+      "quote_vol": 5986239.0
+    },
+    {
+      "symbol": "LAUSDT",
+      "name": "LA",
+      "pct": 9.06,
+      "last": 0.071,
+      "quote_vol": 4642645.0
+    },
+    {
+      "symbol": "XLMUSDT",
+      "name": "XLM",
+      "pct": 8.72,
+      "last": 0.1957,
+      "quote_vol": 27434642.0
+    },
+    {
+      "symbol": "RONINUSDT",
+      "name": "RONIN",
+      "pct": 8.69,
+      "last": 0.0588,
+      "quote_vol": 1675031.0
+    },
+    {
+      "symbol": "NEARUSDT",
+      "name": "NEAR",
+      "pct": 8.68,
+      "last": 2.566,
+      "quote_vol": 42027758.0
+    },
+    {
+      "symbol": "XRPUSDT",
+      "name": "XRP",
+      "pct": 8.67,
+      "last": 1.4765,
+      "quote_vol": 258798858.0
+    },
+    {
+      "symbol": "ZECUSDT",
+      "name": "ZEC",
+      "pct": 8.53,
+      "last": 1203.27,
+      "quote_vol": 260620870.0
+    },
+    {
+      "symbol": "TUSDT",
+      "name": "T",
+      "pct": 8.35,
+      "last": 0.0048,
+      "quote_vol": 9438513.0
+    },
+    {
+      "symbol": "SAGAUSDT",
+      "name": "SAGA",
+      "pct": 6.95,
+      "last": 0.01846,
+      "quote_vol": 2135951.0
+    },
+    {
+      "symbol": "REDUSDT",
+      "name": "RED",
+      "pct": 6.88,
+      "last": 0.1398,
+      "quote_vol": 2287811.0
+    },
+    {
+      "symbol": "CTKUSDT",
+      "name": "CTK",
+      "pct": 6.72,
+      "last": 0.1255,
+      "quote_vol": 203874.0
+    },
+    {
+      "symbol": "OPUSDT",
+      "name": "OP",
+      "pct": 6.59,
+      "last": 0.1052,
+      "quote_vol": 6763916.0
+    },
+    {
+      "symbol": "JTOUSDT",
+      "name": "JTO",
+      "pct": 6.5,
+      "last": 0.4635,
+      "quote_vol": 2618959.0
+    },
+    {
+      "symbol": "IOTAUSDT",
+      "name": "IOTA",
+      "pct": 5.28,
+      "last": 0.0439,
+      "quote_vol": 5042081.0
+    },
+    {
+      "symbol": "LITUSDT",
+      "name": "LIT",
+      "pct": 5.24,
+      "last": 0.743,
+      "quote_vol": 799655.0
+    },
+    {
+      "symbol": "WAXPUSDT",
+      "name": "WAXP",
+      "pct": 5.12,
+      "last": 0.00534,
+      "quote_vol": 1976919.0
+    },
+    {
+      "symbol": "SIGNUSDT",
+      "name": "SIGN",
+      "pct": 5.02,
+      "last": 0.01067,
+      "quote_vol": 429687.0
+    },
+    {
+      "symbol": "CAKEUSDT",
+      "name": "CAKE",
+      "pct": 4.9,
+      "last": 2.377,
+      "quote_vol": 8935303.0
+    },
+    {
+      "symbol": "XMRUSDT",
+      "name": "XMR",
+      "pct": 4.77,
+      "last": 118.7,
+      "quote_vol": 574681.0
+    },
+    {
+      "symbol": "KAVAUSDT",
+      "name": "KAVA",
+      "pct": 4.66,
+      "last": 0.06575,
+      "quote_vol": 2898628.0
+    },
+    {
+      "symbol": "UNIUSDT",
+      "name": "UNI",
+      "pct": 4.59,
+      "last": 6.63,
+      "quote_vol": 30693127.0
+    },
+    {
+      "symbol": "NOTUSDT",
+      "name": "NOT",
+      "pct": 4.5,
+      "last": 0.000464,
+      "quote_vol": 1136152.0
+    },
+    {
+      "symbol": "BANKUSDT",
+      "name": "BANK",
+      "pct": 4.04,
+      "last": 0.0283,
+      "quote_vol": 8116596.0
+    },
+    {
+      "symbol": "BROCCOLI714USDT",
+      "name": "BROCCOLI714",
+      "pct": 3.98,
+      "last": 0.01829,
+      "quote_vol": 1011445.0
+    },
+    {
+      "symbol": "XPLUSDT",
+      "name": "XPL",
+      "pct": 3.79,
+      "last": 0.08437,
+      "quote_vol": 7923484.0
+    },
+    {
+      "symbol": "GPSUSDT",
+      "name": "GPS",
+      "pct": 3.71,
+      "last": 0.01063,
+      "quote_vol": 677317.0
+    },
+    {
+      "symbol": "PUMPUSDT",
+      "name": "PUMP",
+      "pct": 3.5,
+      "last": 0.003725,
+      "quote_vol": 15491848.0
+    }
+  ],
+  "down": [
+    {
+      "symbol": "LSKUSDT",
+      "name": "LSK",
+      "pct": -54.53,
+      "last": 0.4412,
+      "quote_vol": 71342886.0
+    },
+    {
+      "symbol": "VTHOUSDT",
+      "name": "VTHO",
+      "pct": -17.9,
+      "last": 0.000665,
+      "quote_vol": 9969611.0
+    },
+    {
+      "symbol": "MINAUSDT",
+      "name": "MINA",
+      "pct": -16.72,
+      "last": 0.0827,
+      "quote_vol": 4839593.0
+    },
+    {
+      "symbol": "REZUSDT",
+      "name": "REZ",
+      "pct": -16.51,
+      "last": 0.004087,
+      "quote_vol": 21615897.0
+    },
+    {
+      "symbol": "STEEMUSDT",
+      "name": "STEEM",
+      "pct": -13.1,
+      "last": 0.05604,
+      "quote_vol": 4576998.0
+    },
+    {
+      "symbol": "FFUSDT",
+      "name": "FF",
+      "pct": -11.91,
+      "last": 0.1268,
+      "quote_vol": 3339433.0
+    },
+    {
+      "symbol": "ZILUSDT",
+      "name": "ZIL",
+      "pct": -7.91,
+      "last": 0.002947,
+      "quote_vol": 1711416.0
+    },
+    {
+      "symbol": "CVCUSDT",
+      "name": "CVC",
+      "pct": -7.33,
+      "last": 0.03263,
+      "quote_vol": 15392307.0
+    },
+    {
+      "symbol": "XTZUSDT",
+      "name": "XTZ",
+      "pct": -6.36,
+      "last": 0.2738,
+      "quote_vol": 2522477.0
+    },
+    {
+      "symbol": "METUSDT",
+      "name": "MET",
+      "pct": -6.04,
+      "last": 0.2195,
+      "quote_vol": 2405605.0
+    },
+    {
+      "symbol": "SOPHUSDT",
+      "name": "SOPH",
+      "pct": -5.95,
+      "last": 0.00411,
+      "quote_vol": 1459338.0
+    },
+    {
+      "symbol": "POWRUSDT",
+      "name": "POWR",
+      "pct": -5.3,
+      "last": 0.0589,
+      "quote_vol": 1905324.0
+    },
+    {
+      "symbol": "RSRUSDT",
+      "name": "RSR",
+      "pct": -5.17,
+      "last": 0.001469,
+      "quote_vol": 402306.0
+    },
+    {
+      "symbol": "AVAUSDT",
+      "name": "AVA",
+      "pct": -5.14,
+      "last": 0.166,
+      "quote_vol": 1073610.0
+    },
+    {
+      "symbol": "FLOWUSDT",
+      "name": "FLOW",
+      "pct": -4.92,
+      "last": 0.02843,
+      "quote_vol": 399717.0
+    },
+    {
+      "symbol": "CELOUSDT",
+      "name": "CELO",
+      "pct": -4.8,
+      "last": 0.08105,
+      "quote_vol": 569287.0
+    },
+    {
+      "symbol": "CATIUSDT",
+      "name": "CATI",
+      "pct": -4.69,
+      "last": 0.06281,
+      "quote_vol": 394545.0
+    },
+    {
+      "symbol": "KATUSDT",
+      "name": "KAT",
+      "pct": -4.54,
+      "last": 0.00441,
+      "quote_vol": 1269228.0
+    },
+    {
+      "symbol": "EDUUSDT",
+      "name": "EDU",
+      "pct": -4.47,
+      "last": 0.0491,
+      "quote_vol": 252196.0
+    },
+    {
+      "symbol": "BERAUSDT",
+      "name": "BERA",
+      "pct": -4.41,
+      "last": 0.1866,
+      "quote_vol": 1074464.0
+    },
+    {
+      "symbol": "HOLOUSDT",
+      "name": "HOLO",
+      "pct": -4.33,
+      "last": 0.0596,
+      "quote_vol": 11195629.0
+    },
+    {
+      "symbol": "BLURUSDT",
+      "name": "BLUR",
+      "pct": -4.25,
+      "last": 0.01757,
+      "quote_vol": 1078368.0
+    },
+    {
+      "symbol": "CVXUSDT",
+      "name": "CVX",
+      "pct": -4.09,
+      "last": 2.041,
+      "quote_vol": 511512.0
+    },
+    {
+      "symbol": "THETAUSDT",
+      "name": "THETA",
+      "pct": -3.97,
+      "last": 0.1958,
+      "quote_vol": 981788.0
+    },
+    {
+      "symbol": "BREVUSDT",
+      "name": "BREV",
+      "pct": -3.9,
+      "last": 0.0764,
+      "quote_vol": 213621.0
+    },
+    {
+      "symbol": "ASTRUSDT",
+      "name": "ASTR",
+      "pct": -3.75,
+      "last": 0.006125,
+      "quote_vol": 199529.0
+    },
+    {
+      "symbol": "BABYUSDT",
+      "name": "BABY",
+      "pct": -3.72,
+      "last": 0.01166,
+      "quote_vol": 2369055.0
+    },
+    {
+      "symbol": "BMTUSDT",
+      "name": "BMT",
+      "pct": -3.63,
+      "last": 0.01779,
+      "quote_vol": 685288.0
+    },
+    {
+      "symbol": "ENJUSDT",
+      "name": "ENJ",
+      "pct": -3.62,
+      "last": 0.02612,
+      "quote_vol": 264446.0
+    },
+    {
+      "symbol": "NMRUSDT",
+      "name": "NMR",
+      "pct": -3.5,
+      "last": 9.11,
+      "quote_vol": 247716.0
+    }
+  ],
+  "scan": [
+    "SENTUSDT",
+    "ARKUSDT",
+    "MTLUSDT",
+    "PENDLEUSDT",
+    "LAUSDT",
+    "XLMUSDT",
+    "RONINUSDT",
+    "NEARUSDT",
+    "XRPUSDT",
+    "ZECUSDT",
+    "TUSDT",
+    "SAGAUSDT",
+    "REDUSDT",
+    "CTKUSDT",
+    "OPUSDT",
+    "JTOUSDT",
+    "IOTAUSDT",
+    "LITUSDT",
+    "WAXPUSDT",
+    "SIGNUSDT",
+    "CAKEUSDT",
+    "XMRUSDT",
+    "KAVAUSDT",
+    "UNIUSDT",
+    "NOTUSDT",
+    "BANKUSDT",
+    "BROCCOLI714USDT",
+    "XPLUSDT",
+    "GPSUSDT",
+    "PUMPUSDT",
+    "LSKUSDT",
+    "VTHOUSDT",
+    "MINAUSDT",
+    "REZUSDT",
+    "STEEMUSDT",
+    "FFUSDT",
+    "ZILUSDT",
+    "CVCUSDT",
+    "XTZUSDT",
+    "METUSDT",
+    "SOPHUSDT",
+    "POWRUSDT",
+    "RSRUSDT",
+    "AVAUSDT",
+    "FLOWUSDT",
+    "CELOUSDT",
+    "CATIUSDT",
+    "KATUSDT",
+    "EDUUSDT",
+    "BERAUSDT",
+    "HOLOUSDT",
+    "BLURUSDT",
+    "CVXUSDT",
+    "THETAUSDT",
+    "BREVUSDT",
+    "ASTRUSDT",
+    "BABYUSDT",
+    "BMTUSDT",
+    "ENJUSDT",
+    "NMRUSDT"
+  ]
+}

@@ -35,7 +35,8 @@ from media_cache import ensure_cached
 from models import Place, SessionLocal, init_db
 
 UA = "BursaApp/1.0 (https://bursaapp.com)"
-BBOX = "40.05,28.70,40.45,29.35"
+# Bursa ili — OSM yeme-içme (ücretsiz; Google Places yok)
+BBOX = "40.00,28.55,40.55,29.55"
 
 IMG = {
     "cafe": "https://commons.wikimedia.org/wiki/Special:FilePath/Coffee_shop.jpg?width=1200",
@@ -217,30 +218,6 @@ CURATED_KAHVALTI = [
     {"title": "Nev-i Çeşni", "ilce": "Nilüfer", "address": "Odunluk Erdoğan Binyücel Cd.", "lat": 40.215, "lng": 28.985, "rating": 4.4, "blurb": "Odunluk serpme ve çeşni sofrası."},
     {"title": "Cumalıkızık Köy Kahvaltısı Baba Ocağı", "ilce": "Yıldırım", "address": "Cumalıkızık", "lat": 40.1678, "lng": 29.1708, "rating": 4.3, "blurb": "Klasik köy sofra · aile işletmesi."},
     {"title": "Laleli Bahçe Cumalıkızık", "ilce": "Yıldırım", "address": "Cumalıkızık", "lat": 40.1702, "lng": 29.1722, "rating": 4.2, "blurb": "Bahçeli köy kahvaltısı."},
-    {"title": "Bursa Kahvaltı Osmangazi", "ilce": "Osmangazi", "address": "Merkez", "lat": 40.192, "lng": 29.06, "rating": 4.3, "blurb": "Şehir içi serpme kahvaltı noktası."},
-    # semt / ilçe genişletme — bilinen tipik noktalar
-    {"title": "Görükle Sabah Sofrası", "ilce": "Nilüfer", "address": "Görükle", "lat": 40.225, "lng": 28.875, "rating": 4.3, "blurb": "Üniversite çevresi serpme kahvaltı."},
-    {"title": "Özlüce Kahvaltı Bahçesi", "ilce": "Nilüfer", "address": "Özlüce", "lat": 40.218, "lng": 28.968, "rating": 4.3, "blurb": "Nilüfer serpme · bahçe masası."},
-    {"title": "Beşevler Sabah Kahvaltı", "ilce": "Nilüfer", "address": "Beşevler", "lat": 40.208, "lng": 28.998, "rating": 4.2, "blurb": "Beşevler serpme ve gözleme."},
-    {"title": "İhsaniye Serpme Kahvaltı", "ilce": "Nilüfer", "address": "İhsaniye", "lat": 40.212, "lng": 28.99, "rating": 4.2, "blurb": "FSM hattı kahvaltı."},
-    {"title": "Ataevler Kahvaltı Salonu", "ilce": "Nilüfer", "address": "Ataevler", "lat": 40.21, "lng": 28.978, "rating": 4.2, "blurb": "Semt kahvaltı salonu."},
-    {"title": "Çekirge Termal Kahvaltı", "ilce": "Osmangazi", "address": "Çekirge", "lat": 40.198, "lng": 29.03, "rating": 4.3, "blurb": "Çekirge sırtı serpme."},
-    {"title": "Soğanlı Park Kahvaltı", "ilce": "Osmangazi", "address": "Soğanlı Botanik civarı", "lat": 40.19, "lng": 29.04, "rating": 4.2, "blurb": "Park kenarı aile kahvaltısı."},
-    {"title": "Kayhan Sabah Sofrası", "ilce": "Osmangazi", "address": "Kayhan", "lat": 40.185, "lng": 29.068, "rating": 4.2, "blurb": "Kayhan çarşısı kahvaltı."},
-    {"title": "Setbaşı Kahvaltı Evi", "ilce": "Osmangazi", "address": "Setbaşı", "lat": 40.183, "lng": 29.07, "rating": 4.1, "blurb": "Setbaşı serpme."},
-    {"title": "Heykel Sabah Cafe", "ilce": "Osmangazi", "address": "Heykel", "lat": 40.184, "lng": 29.062, "rating": 4.1, "blurb": "Merkez hızlı kahvaltı + kahve."},
-    {"title": "Yıldırım Esenevler Kahvaltı", "ilce": "Yıldırım", "address": "Esenevler", "lat": 40.19, "lng": 29.12, "rating": 4.2, "blurb": "Yıldırım semt kahvaltısı."},
-    {"title": "Arabayatağı Serpme", "ilce": "Yıldırım", "address": "Arabayatağı", "lat": 40.195, "lng": 29.13, "rating": 4.1, "blurb": "Semt serpme kahvaltı."},
-    {"title": "Mudanya Sahil Kahvaltı", "ilce": "Mudanya", "address": "Mudanya iskele", "lat": 40.375, "lng": 28.882, "rating": 4.4, "blurb": "Sahil manzaralı serpme."},
-    {"title": "Tirilye Sabah Kahvaltı", "ilce": "Mudanya", "address": "Tirilye", "lat": 40.39, "lng": 28.795, "rating": 4.4, "blurb": "Zeytinbağı köy kahvaltısı."},
-    {"title": "Gemlik Sahil Kahvaltı", "ilce": "Gemlik", "address": "Gemlik sahil", "lat": 40.43, "lng": 29.155, "rating": 4.3, "blurb": "Gemlik sahil serpme."},
-    {"title": "İnegöl Meydan Kahvaltı", "ilce": "İnegöl", "address": "İnegöl merkez", "lat": 40.078, "lng": 29.513, "rating": 4.2, "blurb": "İnegöl merkez serpme."},
-    {"title": "İznik Göl Kahvaltı", "ilce": "İznik", "address": "İznik göl kenarı", "lat": 40.429, "lng": 29.721, "rating": 4.3, "blurb": "Göl manzaralı kahvaltı."},
-    {"title": "Orhangazi Sabah Sofrası", "ilce": "Orhangazi", "address": "Orhangazi", "lat": 40.489, "lng": 29.309, "rating": 4.1, "blurb": "İlçe merkez kahvaltı."},
-    {"title": "Karacabey Kahvaltı Salonu", "ilce": "Karacabey", "address": "Karacabey", "lat": 40.213, "lng": 28.361, "rating": 4.1, "blurb": "Karacabey serpme."},
-    {"title": "Mustafakemalpaşa Sabah", "ilce": "Mustafakemalpaşa", "address": "MKPaşa merkez", "lat": 40.038, "lng": 28.408, "rating": 4.1, "blurb": "MKPaşa kahvaltı salonu."},
-    {"title": "Kestel Sabah Kahvaltı", "ilce": "Kestel", "address": "Kestel", "lat": 40.198, "lng": 29.212, "rating": 4.0, "blurb": "Kestel semt kahvaltısı."},
-    {"title": "Gürsu Kahvaltı Evi", "ilce": "Gürsu", "address": "Gürsu", "lat": 40.218, "lng": 29.195, "rating": 4.0, "blurb": "Gürsu serpme."},
 ]
 
 CURATED_CAFE = [
@@ -355,9 +332,39 @@ def make_slug(title: str, prefix: str = "") -> str:
     return base[:80]
 
 
-def upsert(db, *, slug: str, sub: str, title: str, ilce: str, address: str,
-           lat, lng, blurb: str, rating: float | None, img: str, tags: list,
-           phone: str = "", web: str = "", featured: bool = False) -> str:
+def _price_band_for_sub(sub: str) -> str:
+    if sub in ("fast-food", "doner", "pastane", "tatli"):
+        return "$"
+    if sub in ("restoran", "balik", "meyhane", "iskender", "kebap", "inegol-kofte"):
+        return "$$"
+    return "$$"
+
+
+def upsert(
+    db,
+    *,
+    slug: str,
+    sub: str,
+    title: str,
+    ilce: str,
+    address: str,
+    lat,
+    lng,
+    blurb: str,
+    rating: float | None,
+    img: str,
+    tags: list,
+    phone: str = "",
+    web: str = "",
+    featured: bool = False,
+    extra: dict | None = None,
+) -> str:
+    from models import merge_place_extra
+
+    removed_titles, removed_slugs = _removed_place_keys()
+    nm = slugify(title)
+    if nm in removed_titles or slug in removed_slugs:
+        return "skip"
     fields = dict(
         title=title[:200],
         category="food",
@@ -369,7 +376,7 @@ def upsert(db, *, slug: str, sub: str, title: str, ilce: str, address: str,
         phone=(phone or "")[:40],
         web=(web or "")[:280],
         hours_text="",
-        price_band=sub,
+        price_band=_price_band_for_sub(sub),
         blurb=(blurb or "")[:400],
         body=(blurb or "")[:2000],
         img_url=img or "",
@@ -380,7 +387,6 @@ def upsert(db, *, slug: str, sub: str, title: str, ilce: str, address: str,
     )
     p = db.query(Place).filter(Place.slug == slug).first()
     if p is None:
-        # aynı title'dan üretilmiş başka slug olabilir — benzersiz yap
         final = slug
         n = 2
         while db.query(Place).filter(Place.slug == final).first() is not None:
@@ -388,6 +394,13 @@ def upsert(db, *, slug: str, sub: str, title: str, ilce: str, address: str,
             n += 1
         db.add(Place(slug=final, **fields))
         db.flush()
+        p = db.query(Place).filter(Place.slug == final).first()
+        patch = dict(extra or {})
+        if rating and patch.get("rating_verified") is None:
+            patch["rating_verified"] = True
+            patch.setdefault("rating_source", "curated")
+        if p and patch:
+            merge_place_extra(p, patch)
         return "new"
     if p.category == "food" and (p.subcategory or "") in (
         "", "kafe", "cafe", "kahvalti", "meyhane", "cantik", "bar", "kofte", sub
@@ -395,43 +408,96 @@ def upsert(db, *, slug: str, sub: str, title: str, ilce: str, address: str,
         for k, v in fields.items():
             if k == "img_url" and p.img_url and not v:
                 continue
+            if k == "rating_admin" and v is None:
+                continue
             setattr(p, k, v)
+        patch = dict(extra or {})
+        if rating and patch.get("rating_verified") is None:
+            patch["rating_verified"] = True
+            patch.setdefault("rating_source", "curated")
+        if patch:
+            merge_place_extra(p, patch)
         return "upd"
     return "skip"
 
 
 def import_osm_delta(db, *, max_age_h: float | None = 16.0, imgs: dict | None = None) -> dict:
-    """Yalnız OSM yeme-içme — yeni kayıt, mevcut başlık atlanır. Curated upsert yok."""
+    """OSM yeme-içme — yeni kayıt + mevcut eşleşmeye osm_id/adres/telefon güncelle."""
+    from models import Place, merge_place_extra
+
     imgs = imgs or LOCAL_IMG
-    stats = {"new": 0, "upd": 0, "skip": 0}
+    stats = {"new": 0, "upd": 0, "skip": 0, "merge": 0}
     removed_titles, removed_slugs = _removed_place_keys()
-    existing_names = {
-        slugify(p.title) for p in db.query(Place).filter(Place.category == "food").all()
-    } | removed_titles
-    for amenity, sub, tags, base_rating, tag in (
-        ("cafe", "cafe", ["cafe", "kahve", "osm"], 4.1, "amenity"),
-        ("bar", "bar", ["bar", "alkol", "osm"], 4.0, "amenity"),
-        ("pub", "bar", ["bar", "pub", "alkol", "osm"], 4.0, "amenity"),
-        ("restaurant", "restoran", ["restoran", "osm"], 4.1, "amenity"),
-        ("fast_food", "fast-food", ["fast-food", "osm"], 4.0, "amenity"),
-        ("ice_cream", "tatli", ["tatli", "osm"], 4.0, "amenity"),
-        ("bakery", "pastane", ["pastane", "osm"], 4.0, "shop"),
-    ):
+    by_title: dict[str, Place] = {}
+    for p in db.query(Place).filter(Place.category == "food").all():
+        nm = slugify(p.title or "")
+        if nm and nm not in by_title:
+            by_title[nm] = p
+    existing_names = set(by_title.keys()) | removed_titles
+
+    osm_amenities = (
+        ("cafe", "cafe", ["cafe", "kahve", "osm"], "amenity"),
+        ("restaurant", "restoran", ["restoran", "osm"], "amenity"),
+        ("fast_food", "fast-food", ["fast-food", "osm"], "amenity"),
+        ("food_court", "fast-food", ["fast-food", "osm", "food_court"], "amenity"),
+        ("biergarten", "restoran", ["restoran", "osm", "biergarten"], "amenity"),
+        ("ice_cream", "tatli", ["tatli", "osm"], "amenity"),
+        ("bar", "bar", ["bar", "alkol", "osm"], "amenity"),
+        ("pub", "bar", ["bar", "pub", "alkol", "osm"], "amenity"),
+        ("bakery", "pastane", ["pastane", "osm"], "shop"),
+        ("confectionery", "tatli", ["tatli", "osm"], "shop"),
+    )
+
+    def _patch_existing(p: Place, raw: dict, amenity: str) -> None:
+        merge_place_extra(
+            p,
+            {
+                "source": "osm",
+                "osm_id": raw.get("osm_id"),
+                "osm_amenity": amenity,
+            },
+        )
+        if raw.get("address") and not (p.address or "").strip():
+            p.address = raw["address"][:280]
+        if raw.get("phone") and not (p.phone or "").strip():
+            p.phone = raw["phone"][:40]
+        if raw.get("web") and not (p.web or "").strip():
+            p.web = raw["web"][:280]
+        hours = raw.get("hours") or ""
+        if hours and not (p.hours_text or "").strip():
+            p.hours_text = hours[:160]
+        if raw.get("lat") and raw.get("lng"):
+            if p.lat is None:
+                p.lat = raw["lat"]
+            if p.lng is None:
+                p.lng = raw["lng"]
+
+    for amenity, sub, tags, tag in osm_amenities:
         try:
             pts = osm_points(amenity, tag=tag, max_age_h=max_age_h)
         except Exception as e:
-            print("osm fail", amenity, e)
+            print("osm fail", amenity, e, flush=True)
             pts = []
-        print(f"osm {amenity}: {len(pts)}")
-        for i, raw in enumerate(pts):
+        print(f"osm {amenity}: {len(pts)}", flush=True)
+        for raw in pts:
             nm = slugify(raw["title"])
             slug = make_slug(raw["title"], prefix=f"osm-{amenity}")
-            if not nm or nm in existing_names or slug in removed_slugs:
+            if not nm or nm in removed_titles or slug in removed_slugs:
+                stats["skip"] = stats.get("skip", 0) + 1
+                continue
+            if nm in by_title:
+                _patch_existing(by_title[nm], raw, amenity)
+                stats["merge"] = stats.get("merge", 0) + 1
+                continue
+            if nm in existing_names:
                 stats["skip"] = stats.get("skip", 0) + 1
                 continue
             existing_names.add(nm)
-            sub_use = cuisine_sub(raw.get("cuisine") or "", amenity) if amenity in ("restaurant", "fast_food") else sub
-            rating = round(base_rating + max(0, 0.4 - (i * 0.002)), 1)
+            sub_use = (
+                cuisine_sub(raw.get("cuisine") or "", amenity)
+                if amenity in ("restaurant", "fast_food", "food_court", "biergarten")
+                else sub
+            )
             hours = raw.get("hours") or ""
             blurb = f"Bursa {sub_use} · {raw['ilce']}."
             if raw.get("cuisine"):
@@ -446,17 +512,25 @@ def import_osm_delta(db, *, max_age_h: float | None = 16.0, imgs: dict | None = 
                 lat=raw.get("lat"),
                 lng=raw.get("lng"),
                 blurb=blurb[:400],
-                rating=min(4.6, rating),
+                rating=None,
                 img=imgs.get(sub_use) or imgs.get("restoran") or imgs.get("cafe") or "",
                 tags=list(tags) + ([sub_use] if sub_use not in tags else []),
                 phone=raw.get("phone") or "",
                 web=raw.get("web") or "",
+                extra={"source": "osm", "osm_id": raw.get("osm_id"), "osm_amenity": amenity},
             )
             if hours and st == "new":
                 p = db.query(Place).filter(Place.slug == slug).first()
                 if p and not p.hours_text:
                     p.hours_text = hours[:160]
-            stats[st] = stats.get(st, 0) + 1
+            if st == "new":
+                np = db.query(Place).filter(Place.slug == slug).first()
+                if np:
+                    by_title[nm] = np
+            if st in ("new", "upd"):
+                stats[st] = stats.get(st, 0) + 1
+            else:
+                stats["skip"] = stats.get("skip", 0) + 1
         db.commit()
     return stats
 

@@ -1,0 +1,42 @@
+{
+  "slug": "liste-balik-20260910",
+  "title": "Bursa Balık: öne çıkan 5 mekan",
+  "h1": "Bursa Balık listesi — güncel seçim",
+  "desc": "Puan ve kayıt kalitesine göre Balık önerileri. Rezervasyon BursaApp’ten yapılmaz.",
+  "date": "2026-09-10",
+  "image": "/static/food/deniz-2.jpg",
+  "cta_path": "/yeme-icme?kind=balik",
+  "cta_label": "Balık listesi",
+  "kind": "yeme",
+  "generated": true,
+  "sections": [
+    {
+      "h2": "Öne çıkan Balık mekanları",
+      "paras": [
+        "<a href=\"/bursa-ayvalik-restaurant-mudanya\">Ayvalık Restaurant</a> — (Mudanya) — ★ 4.6 — Mudanya yolu. Balık, Ege tabağı.",
+        "<a href=\"/bursa-balikci-golyazi\">Gölyazı Balıkçısı</a> — (Nilüfer) — ★ 4.6 — Gölyazı Balıkçısı — Nilüfer’de yeme-içme noktası.",
+        "<a href=\"/bursa-balikci-yunus\">Balıkçı Yunus</a> — (Mudanya) — ★ 4.5 — Mudanya’da taze balık ve mezeler.",
+        "<a href=\"/bursa-golyazi-balik\">Gölyazı Balık Restaurant</a> — (Nilüfer) — ★ 4.4 — Göl manzaralı balık ve meze.",
+        "<a href=\"/bursa-osm-restaurant-ablanin-yeri\">Ablanin Yeri</a> — (Mudanya) — ★ 4.3 — fish, turkish · Mudanya.",
+        "Tüm liste: <a href=\"/yeme-icme?kind=balik\">Bursa Balık mekanları</a>."
+      ]
+    },
+    {
+      "h2": "Nasıl kullanılır?",
+      "paras": [
+        "Detay sayfasında adres, saat ve harita linki var.",
+        "<a href=\"/rota\">Rota planlayıcı</a> ile aynı güne ekleyebilirsin."
+      ]
+    }
+  ],
+  "related": [
+    [
+      "bursa-da-kahvalti-nerede",
+      "Kahvaltı rehberi"
+    ],
+    [
+      "bursa-iskender-nerede-yenir",
+      "İskender rehberi"
+    ]
+  ]
+}

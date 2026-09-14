@@ -177,7 +177,7 @@ def scan_symbols(n: int | None = None) -> list[str]:
 TEST_SYMBOLS: list[str] = scan_symbols()
 
 _ISLEMLER_POLY: list[tuple[str, str, str]] = [
-    ("analiz1",    "A1",    "1. Analiz · RSI+MACD+EMA"),
+    ("analiz1",    "F16",   "F16 · RSI+MACD+EMA"),
     ("analiz2",    "A2",    "2. Analiz · A1 motoru SOL"),
     ("analiz6",    "A6",    "6. Analiz · MACD+RSI"),
     ("analiz6_v2", "A6V2",  "6. Analiz V2 · BTC+ETH"),
@@ -317,3 +317,11 @@ ALL_BOOKS.append({
     "source_key": "cebu",
     "max_opens": 8,
 })
+
+# /kripto/test — 2026-09-04: bakiye < $1005 olanlar ekranda yok, cron açmaz.
+_KEEP_UIDS = {
+    "melez", "analiz10",
+    "a2_01", "a2_02", "a2_04", "a2_06", "a2_07", "a2_10", "a2_14",
+    "a1_03", "a1_07", "a1_11", "a1_16", "a1_33",
+}
+ALL_BOOKS[:] = [b for b in ALL_BOOKS if b.get("uid") in _KEEP_UIDS]

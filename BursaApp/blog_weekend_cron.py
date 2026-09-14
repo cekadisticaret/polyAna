@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Her Perşembe 1–2 alternatif hafta sonu rota blog yazısı üretir.
+"""Her Perşembe hafta sonu rota blog yazısı — blog_cron.py sarmalayıcı.
+
+Tercih edilen cron: blog_cron.py (günlük). Bu betik geriye uyumluluk içindir.
 
   python3 BursaApp/blog_weekend_cron.py
   python3 BursaApp/blog_weekend_cron.py --dry-run
-  python3 BursaApp/blog_weekend_cron.py --count 1
 
-Cron (İST Perşembe 09:00 ≈ UTC 06:00):
-  0 6 * * 4 cd /root/aiProject && python3 BursaApp/blog_weekend_cron.py >> /tmp/blog_weekend_cron.log 2>&1
+Cron (yedek — asıl: blog_cron.py):
+  0 6 * * 4 cd /root/aiProject && python3 BursaApp/blog_cron.py --weekend-only >> /tmp/blog_cron.log 2>&1
 """
 from __future__ import annotations
 
@@ -18,8 +19,8 @@ import sys
 _DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _DIR)
 
+from blog_generate import ensure_weekend_blogs
 from models import SessionLocal, init_db
-from weekend_blog import generate_weekend_blogs
 
 
 def main() -> None:
@@ -43,9 +44,9 @@ def main() -> None:
             pub = datetime.now(ZoneInfo("Europe/Istanbul")).strftime("%Y-%m-%d")
             for th in themes:
                 post = build_weekend_post(db, th, sat=sat, sun=sun, pub_date=pub)
-                print(json.dumps({"slug": post["slug"], "h1": post["h1"], "sections": len(post["sections"])}, ensure_ascii=False))
+                print(json.dumps({"slug": post["slug"], "h1": post["h1"]}, ensure_ascii=False))
             return
-        posts = generate_weekend_blogs(db, count=count)
+        posts = ensure_weekend_blogs(db, count=count)
         if not posts:
             print("skip — bu hafta sonu için yazı zaten var")
             return

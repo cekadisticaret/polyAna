@@ -310,6 +310,12 @@ def dashboard():
             "hotels": db.query(Place)
             .filter(Place.status == "approved", Place.category == "hotel")
             .count(),
+            "weddings": db.query(Place)
+            .filter(Place.status == "approved", Place.category == "wedding")
+            .count(),
+            "nightlife": db.query(Place)
+            .filter(Place.status == "approved", Place.category == "nightlife")
+            .count(),
             "matches": db.query(SportMatch).filter(SportMatch.club == "bursaspor").count(),
             "logins_7d": member_login_query(db)
             .filter(ActivityLog.created_at >= since)
@@ -330,6 +336,12 @@ def dashboard():
             kpi["pharmacies"] = int(_feed.get("total") or len(_feed.get("pharmacies") or []))
         except Exception:
             kpi["pharmacies"] = 0
+        try:
+            from news_pages import load_news_feed
+
+            kpi["news"] = len(load_news_feed().get("articles") or [])
+        except Exception:
+            kpi["news"] = 0
         from analytics import (
             engagement_summary as traffic_engagement,
             summary as traffic_summary,
@@ -669,7 +681,9 @@ def review_approve(rid: int):
                 recompute_place_rating(db, p)
             u = db.get(User, r.user_id)
             if u:
-                u.loyalty_points = int(u.loyalty_points or 0) + 10
+                from user_points import award_review_approved
+
+                award_review_approved(db, u.id, r.id)
             db.commit()
             flash("Yorum onaylandı.", "ok")
         return redirect(request.referrer or "/admin/reviews?status=pending")

@@ -1,133 +1,250 @@
 {% extends "_shell.html" %}
-{% block title %}{{ seo.title_full if seo else 'Kamp · BursaApp' }}{% endblock %}
+{% block title %}{{ seo.title_full if seo else 'Bursa Kamp · BursaApp' }}{% endblock %}
 {% block page_head %}{% endblock %}
+{% block body_class %} is-camp-premium{% endblock %}
 {% block head %}
 <style>
-/* Airbnb-benzeri kamp keşif grid’i — BursaApp paleti */
-.kp-page{margin:-6px 0 0}
-.kp-cats{
-  display:flex;align-items:stretch;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;
-  scrollbar-width:none;padding:4px 0 12px;border-bottom:1px solid rgba(27,59,43,.08);margin-bottom:18px;
+.is-camp-premium .wa-wrap{background:#0a120e;color:#eef4ea}
+.is-camp-premium .crumbs a,.is-camp-premium .crumbs span{color:#8fa892}
+.is-camp-premium .seo-foot{background:#060a08;border-top:1px solid rgba(125,184,154,.18)}
+.is-camp-premium .seo-foot a{color:#7db89a}
+.km-bleed{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+.km-hero{
+  position:relative;min-height:min(58vh,520px);display:flex;align-items:flex-end;
+  background:#152018 center/cover no-repeat;color:#fff;overflow:hidden;
 }
-.kp-cats::-webkit-scrollbar{display:none}
-.kp-cat{
-  flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;
-  min-width:72px;padding:8px 10px 10px;color:#6B7A72;text-decoration:none;border-bottom:2px solid transparent;
-  font-size:12px;font-weight:700;white-space:nowrap;
+.km-hero::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(10,18,14,.25) 0%,rgba(10,18,14,.78) 68%,#0a120e 100%);
 }
-.kp-cat .ic{font-size:22px;line-height:1;opacity:.85}
-.kp-cat.on{color:#1A2E24;border-bottom-color:#1A2E24}
-.kp-cat.on .ic{opacity:1}
-.kp-cat:hover{color:#1A2E24}
-.kp-filter{
-  flex:0 0 auto;margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:8px;
-  border:1px solid rgba(27,59,43,.18);border-radius:999px;padding:10px 14px;font-weight:700;font-size:13px;
-  background:#fff;color:#1A2E24;text-decoration:none;white-space:nowrap;
+.km-hero::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 55% at 25% 15%,rgba(125,184,154,.18),transparent 62%);
+  pointer-events:none;
 }
-.kp-note{font-size:12px;color:#6B7A72;margin:0 0 14px;line-height:1.45}
+.km-hero-inner{position:relative;z-index:1;width:min(1180px,100%);margin:0 auto;padding:48px 22px 56px}
+.km-kicker{
+  display:inline-block;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:#7db89a;margin:0 0 14px;
+}
+.km-hero h1{
+  margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(32px,5vw,54px);
+  line-height:1.05;letter-spacing:-.02em;font-weight:400;max-width:18ch;
+}
+.km-hero h1 em{font-style:italic;color:#a8d4b8}
+.km-lead{margin:16px 0 0;color:rgba(255,255,255,.82);font-size:15px;line-height:1.6;max-width:48ch}
+.km-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.km-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 22px;border-radius:999px;font-size:13px;font-weight:800;letter-spacing:.04em;
+  text-decoration:none;transition:transform .15s ease, background .15s ease;
+}
+.km-btn:hover{transform:translateY(-1px)}
+.km-btn-main{background:#7db89a;color:#0a120e;border:1px solid #7db89a}
+.km-btn-main:hover{background:#96c9ad;color:#0a120e}
+.km-btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}
+.km-btn-ghost:hover{border-color:#7db89a;color:#a8d4b8}
+.km-stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.km-stats span{
+  font-size:12px;font-weight:700;color:rgba(255,255,255,.88);
+  background:rgba(255,255,255,.08);border:1px solid rgba(125,184,154,.22);
+  padding:7px 14px;border-radius:999px;
+}
 
-.kp-grid{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;
+.km-wrap{width:min(1180px,100%);margin:0 auto;padding:0 22px 56px}
+.km-feats{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+  margin:-28px auto 28px;position:relative;z-index:2;
 }
-@media (min-width:720px){.kp-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 16px}}
-@media (min-width:1100px){.kp-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 18px}}
+@media(min-width:720px){.km-feats{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}}
+.km-feat{
+  background:#121a15;border:1px solid rgba(125,184,154,.16);border-radius:14px;padding:16px 12px;text-align:center;
+}
+.km-feat .ic{font-size:22px;display:block;margin-bottom:8px}
+.km-feat b{display:block;font-size:12px;color:#eef4ea;letter-spacing:.02em}
+.km-feat small{display:block;margin-top:4px;font-size:11px;color:#8fa892;line-height:1.35}
 
-.kp-card{display:block;color:inherit;text-decoration:none;min-width:0}
-.kp-media{
-  position:relative;aspect-ratio:1/1;width:100%;border-radius:14px;overflow:hidden;background:#E8F2EA;margin-bottom:10px;
+.km-chips{
+  display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px;align-items:center;
 }
-.kp-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}
-.kp-media .ph{position:absolute;inset:0;display:grid;place-items:center;font-size:42px;color:#6B7A72}
-.kp-badge{
-  position:absolute;left:10px;top:10px;background:rgba(255,255,255,.95);color:#1A2E24;
-  font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.08);
+.km-chips a{
+  padding:9px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.02em;
+  background:#121a15;color:#8fa892;text-decoration:none;border:1px solid rgba(255,255,255,.08);
+  display:inline-flex;align-items:center;gap:6px;
 }
-.kp-heart{
-  position:absolute;right:10px;top:10px;width:30px;height:30px;display:grid;place-items:center;
-  color:#fff;font-size:18px;text-shadow:0 1px 4px rgba(0,0,0,.45);filter:drop-shadow(0 1px 2px rgba(0,0,0,.3));
+.km-chips a.on,.km-chips a:hover{background:#7db89a;color:#0a120e;border-color:#7db89a}
+.km-chips .km-filter{
+  margin-left:auto;background:#1B3B2B;color:#eef4ea;border-color:rgba(125,184,154,.3);
 }
-.kp-dots{
-  position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:4px;pointer-events:none;
-}
-.kp-dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.45);display:block}
-.kp-dots i.on{background:#fff;transform:scale(1.15)}
+.km-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 20px;flex-wrap:wrap}
+.km-bar span{font-size:13px;color:#8fa892;font-weight:600;line-height:1.45;max-width:52ch}
 
-.kp-row1{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0}
-.kp-loc{font-size:14px;font-weight:700;letter-spacing:-.2px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kp-star{font-size:13px;font-weight:600;flex:0 0 auto;white-space:nowrap}
-.kp-sub{margin:2px 0 0;font-size:13px;color:#6B7A72;line-height:1.35;
-  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-.kp-meta{margin:2px 0 0;font-size:13px;color:#6B7A72}
-.kp-price{margin:6px 0 0;font-size:14px;font-weight:700}
-.kp-price u{text-decoration:underline;text-underline-offset:3px}
+.km-section{margin-top:36px}
+.km-section-h{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px;
+  border-bottom:1px solid rgba(125,184,154,.14);padding-bottom:12px;
+}
+.km-section-h h2{
+  margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(22px,3vw,28px);
+  font-weight:400;color:#eef4ea;
+}
+.km-section-h span{font-size:12px;color:#8fa892;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 
-.kp-map-fab{
+.km-featured{
+  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);
+  gap:16px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;
+}
+.km-featured::-webkit-scrollbar{height:6px}
+.km-featured::-webkit-scrollbar-thumb{background:rgba(125,184,154,.35);border-radius:999px}
+
+.km-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(min-width:720px){.km-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){.km-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+.km-card{
+  background:#121a15;border:1px solid rgba(125,184,154,.12);border-radius:16px;overflow:hidden;
+  display:flex;flex-direction:column;color:inherit;text-decoration:none;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.km-card:hover{
+  transform:translateY(-3px);border-color:rgba(125,184,154,.42);
+  box-shadow:0 16px 40px rgba(0,0,0,.35);
+}
+.km-media{position:relative;aspect-ratio:4/5;background:#1a241c;overflow:hidden}
+.km-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.km-media .ph{
+  position:absolute;inset:0;display:grid;place-items:center;font-size:40px;
+  background:linear-gradient(145deg,#1a241c,#0a120e);color:#7db89a;
+}
+.km-media::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 42%,rgba(10,18,14,.88) 100%);
+  pointer-events:none;
+}
+.km-badge{
+  position:absolute;left:10px;top:10px;z-index:1;
+  background:rgba(125,184,154,.92);color:#0a120e;font-size:10px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;
+}
+.km-body{padding:14px 14px 16px;flex:1;display:flex;flex-direction:column;gap:6px}
+.km-body h3{margin:0;font-size:15px;line-height:1.25;color:#eef4ea;letter-spacing:-.2px}
+.km-meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#8fa892;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.km-star{color:#a8d4b8;white-space:nowrap}
+.km-blurb{margin:0;font-size:12px;color:#8fa892;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.km-price{margin:0;font-size:13px;font-weight:800;color:#7db89a}
+.km-cta{
+  margin-top:auto;padding-top:10px;font-size:11px;font-weight:800;letter-spacing:.08em;
+  color:#7db89a;text-transform:uppercase;
+}
+.km-map-fab{
   position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:50;
-  display:inline-flex;align-items:center;gap:8px;background:#1A2E24;color:#fff;
-  border-radius:999px;padding:12px 18px;font-weight:700;font-size:14px;
-  box-shadow:0 8px 24px rgba(0,0,0,.28);text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;background:#7db89a;color:#0a120e;
+  border-radius:999px;padding:12px 20px;font-weight:800;font-size:13px;letter-spacing:.04em;
+  box-shadow:0 10px 32px rgba(0,0,0,.45);text-decoration:none;
 }
-.kp-map-fab:hover{background:#244A38;color:#fff}
-.kp-empty{padding:40px 12px;text-align:center;color:#6B7A72}
+.km-map-fab:hover{background:#96c9ad;color:#0a120e}
+.km-empty{padding:48px 16px;text-align:center;color:#8fa892}
 </style>
 {% endblock %}
 {% block main %}
-<div class="kp-page">
-  <nav class="kp-cats" aria-label="Kamp filtreleri">
-    <a class="kp-cat {{ 'on' if not vibe else '' }}" href="/kamp"><span class="ic">⛺</span>Tümü</a>
-    <a class="kp-cat {{ 'on' if vibe=='instagram' else '' }}" href="/kamp?vibe=instagram"><span class="ic">⭐</span>Favori</a>
-    <a class="kp-cat {{ 'on' if vibe=='uludag' else '' }}" href="/kamp?vibe=uludag"><span class="ic">🏔</span>Uludağ</a>
-    <a class="kp-cat {{ 'on' if vibe=='deniz' else '' }}" href="/kamp?vibe=deniz"><span class="ic">🌊</span>Deniz</a>
-    <a class="kp-cat {{ 'on' if vibe=='gol' else '' }}" href="/kamp?vibe=gol"><span class="ic">💧</span>Göl</a>
-    <a class="kp-cat {{ 'on' if vibe=='yayla' else '' }}" href="/kamp?vibe=yayla"><span class="ic">🌿</span>Yayla</a>
-    <a class="kp-cat {{ 'on' if vibe=='kanyon' else '' }}" href="/kamp?vibe=kanyon"><span class="ic">🪨</span>Kanyon</a>
-    <a class="kp-cat {{ 'on' if vibe=='ucretsiz' else '' }}" href="/kamp?vibe=ucretsiz"><span class="ic">🆓</span>Ücretsiz</a>
-    <a class="kp-cat {{ 'on' if vibe=='balikesir' else '' }}" href="/kamp?vibe=balikesir"><span class="ic">🛤</span>Balıkesir</a>
-    <a class="kp-filter" href="/harita?cat=camp">Filtreler</a>
+{% set hero_bg = hero_img or (featured[0].img_url if featured else (places[0].img_url if places else '')) %}
+<section class="km-bleed km-hero" {% if hero_bg %}style="background-image:url('{{ hero_bg }}')"{% endif %}>
+  <div class="km-hero-inner">
+    <p class="km-kicker">Bursa &amp; çevresi kamp</p>
+    <h1>Doğada <em>kal.</em> Keşfet.</h1>
+    <p class="km-lead">Uludağ, göl, deniz ve Balıkesir kaçışları — {{ total }} kamp noktası. Gitmeden orman/yangın kurallarını teyit et; rezervasyon siteden yapılmaz.</p>
+    <div class="km-hero-actions">
+      <a class="km-btn km-btn-main" href="#liste">Kamp yerlerini gör</a>
+      <a class="km-btn km-btn-ghost" href="/harita?cat=camp">Haritada aç</a>
+    </div>
+    <div class="km-stats">
+      <span>{{ total }} nokta</span>
+      <span>Çadır · karavan · glamping</span>
+      <span>Ücretsiz rehber</span>
+    </div>
+  </div>
+</section>
+
+<div class="km-wrap">
+  <div class="km-feats" aria-label="Kamp türleri">
+    <div class="km-feat"><span class="ic">🏔</span><b>Uludağ</b><small>Milli park</small></div>
+    <div class="km-feat"><span class="ic">🌊</span><b>Deniz</b><small>Mudanya · Trilye</small></div>
+    <div class="km-feat"><span class="ic">💧</span><b>Göl</b><small>Gölyazı · İznik</small></div>
+    <div class="km-feat"><span class="ic">🌿</span><b>Yayla</b><small>Keles · orman</small></div>
+    <div class="km-feat"><span class="ic">🆓</span><b>Ücretsiz</b><small>Koy &amp; gölet</small></div>
+  </div>
+
+  <nav class="km-chips" aria-label="Kamp filtreleri">
+    {% for key, lab, ico in vibe_chips %}
+    <a class="{{ 'on' if vibe==key else '' }}" href="/kamp{% if key %}?vibe={{ key }}{% endif %}"><span aria-hidden="true">{{ ico }}</span>{{ lab }}</a>
+    {% endfor %}
+    <a class="km-filter" href="/harita?cat=camp">Filtreler</a>
   </nav>
 
-  <p class="kp-note">{{ places|length }} yer · Gitmeden orman/yangın ve kayıt kurallarını teyit et. Rezervasyon siteden yapılmaz.</p>
-
-  {% if places %}
-  <div class="kp-grid">
-    {% for p in places %}
-    {% set city = (p.extra.city if p.extra else '') or '' %}
-    {% set loc = ((city ~ ', ' ~ p.ilce) if city and p.ilce else (p.ilce or city or 'Bursa')) %}
-    {% set band = (p.price_band or '')|lower %}
-    {% if 'ücretsiz' in band or 'ucretsiz' in band %}
-      {% set price_label = 'Ücretsiz' %}
-    {% elif 'tesis' in band or 'milli' in band %}
-      {% set price_label = (p.price_band or 'Tesisli') %}
-    {% else %}
-      {% set price_label = (p.price_band or p.hours_text or 'Kamp alanı') %}
-    {% endif %}
-    {% set n_dots = (p.extra.gallery|length if p.extra and p.extra.gallery else 0) %}
-    {% if n_dots < 1 %}{% set n_dots = 3 if p.img_url else 0 %}{% endif %}
-    <a class="kp-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
-      <div class="kp-media">
-        {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">⛺</div>{% endif %}
-        {% if p.featured %}<span class="kp-badge">Misafir favorisi</span>{% endif %}
-        <span class="kp-heart" aria-hidden="true">♡</span>
-        {% if n_dots > 1 %}
-        <span class="kp-dots" aria-hidden="true">
-          {% for i in range(n_dots if n_dots < 6 else 5) %}<i class="{{ 'on' if i==0 else '' }}"></i>{% endfor %}
-        </span>
-        {% endif %}
-      </div>
-      <div class="kp-row1">
-        <p class="kp-loc">{{ loc }}</p>
-        {% if p.rating %}<span class="kp-star">★ {{ '%.2f'|format(p.rating) }}</span>{% endif %}
-      </div>
-      <p class="kp-sub">{{ p.title }}</p>
-      <p class="kp-meta">{{ p.hours_text or p.subcategory_label or 'Kamp' }}</p>
-      <p class="kp-price"><u>{{ price_label }}</u></p>
-    </a>
-    {% endfor %}
+  <div class="km-bar">
+    <span>{{ total }} yer{% if vibe %} · {{ vibe_chips|selectattr('0','equalto',vibe)|map(attribute='1')|first or 'Filtre' }}{% endif %} · Gitmeden kayıt ve yangın kurallarını kontrol et.</span>
   </div>
-  {% else %}
-  <div class="kp-empty"><p>Bu filtrede kamp yok.</p><a href="/kamp">Tümüne dön</a></div>
+
+  {% if featured and not vibe %}
+  <section class="km-section" aria-labelledby="km-feat-h">
+    <div class="km-section-h">
+      <h2 id="km-feat-h">Misafir favorileri</h2>
+      <span>Seçki</span>
+    </div>
+    <div class="km-featured">
+      {% for p in featured %}
+      <a class="km-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+        <div class="km-media">
+          {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">⛺</div>{% endif %}
+          {% if p.featured %}<span class="km-badge">Favori</span>{% endif %}
+        </div>
+        <div class="km-body">
+          <h3>{{ p.title }}</h3>
+          <div class="km-meta">
+            <span>{{ p.loc_label }}</span>
+            {% if p.rating %}<span class="km-star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+          </div>
+          {% if p.hours_text %}<p class="km-blurb">{{ p.hours_text }}</p>{% endif %}
+          <p class="km-price">{{ p.price_label }}</p>
+          <span class="km-cta">Detay →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
   {% endif %}
+
+  <section class="km-section" id="liste">
+    <div class="km-section-h">
+      <h2>{% if vibe %}Filtrelenmiş liste{% else %}Tüm kamp noktaları{% endif %}</h2>
+      <span>{{ places|length }} yer</span>
+    </div>
+    {% if places %}
+    <div class="km-grid">
+      {% for p in places %}
+      <a class="km-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+        <div class="km-media">
+          {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">⛺</div>{% endif %}
+          {% if p.featured %}<span class="km-badge">Favori</span>{% endif %}
+        </div>
+        <div class="km-body">
+          <h3>{{ p.title }}</h3>
+          <div class="km-meta">
+            <span>{{ p.loc_label }}</span>
+            {% if p.rating %}<span class="km-star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+          </div>
+          <p class="km-blurb">{{ p.hours_text or p.subcategory_label or 'Kamp' }}</p>
+          <p class="km-price">{{ p.price_label }}</p>
+          <span class="km-cta">Detay →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="km-empty"><p>Bu filtrede kamp yok.</p><a class="km-btn km-btn-main" href="/kamp">Tümüne dön</a></div>
+    {% endif %}
+  </section>
 </div>
 
-<a class="kp-map-fab" href="/harita?cat=camp">🗺 Haritada göster</a>
+<a class="km-map-fab" href="/harita?cat=camp">🗺 Haritada göster</a>
 {% endblock %}

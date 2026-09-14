@@ -1,4 +1,7 @@
 {% for it in feed %}
+{% if it.kind == 'buddy_promo' %}
+{% include "_feed_buddy_promo.html" %}
+{% else %}
 {% set engage_id = it.post_id or (it.id if it.kind == 'post' else none) %}
 {% set can_engage = engage_id and it.status == 'approved' and it.kind in ('post', 'visit') %}
 <article class="ff-card ff-post tone-{{ (loop.index0 + (tone_offset or 0)) % 3 }}" data-post-id="{{ engage_id or '' }}">
@@ -61,6 +64,7 @@
     {% endif %}
   </div>
 </article>
+{% endif %}
 {% else %}
 {% if show_empty %}
 <div class="ff-card ff-empty"><p class="ff-muted">Feed boş — ilk postunu aşağıdan paylaş.</p></div>

@@ -1,0 +1,270 @@
+{% extends "_shell.html" %}
+{% block title %}{{ seo.title_full if seo else 'Bursa Gece Hayatı · BursaApp' }}{% endblock %}
+{% block page_head %}{% endblock %}
+{% block body_class %} is-nightlife{% endblock %}
+{% block head %}
+<style>
+.is-nightlife .wa-wrap{background:#070707;color:#f5f0e6}
+.is-nightlife .crumbs a,.is-nightlife .crumbs span{color:#a89f8a}
+.is-nightlife .seo-foot{background:#050505;border-top:1px solid rgba(201,169,98,.15)}
+.is-nightlife .seo-foot a{color:#c9a962}
+.nl-bleed{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+.nl-hero{
+  position:relative;min-height:min(58vh,520px);display:flex;align-items:flex-end;
+  background:#111 center/cover no-repeat;color:#fff;overflow:hidden;
+}
+.nl-hero::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.82) 72%,#070707 100%);
+}
+.nl-hero::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 70% 20%,rgba(201,169,98,.12),transparent 60%);
+  pointer-events:none;
+}
+.nl-hero-inner{position:relative;z-index:1;width:min(1180px,100%);margin:0 auto;padding:48px 22px 56px}
+.nl-kicker{
+  display:inline-block;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:#c9a962;margin:0 0 14px;
+}
+.nl-hero h1{
+  margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(32px,5vw,54px);
+  line-height:1.05;letter-spacing:-.02em;font-weight:400;max-width:16ch;
+}
+.nl-hero h1 em{font-style:italic;color:#c9a962}
+.nl-lead{margin:16px 0 0;color:rgba(255,255,255,.78);font-size:15px;line-height:1.6;max-width:46ch}
+.nl-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.nl-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 22px;border-radius:999px;font-size:13px;font-weight:800;letter-spacing:.04em;
+  text-decoration:none;transition:transform .15s ease, background .15s ease;
+}
+.nl-btn:hover{transform:translateY(-1px)}
+.nl-btn-gold{background:#c9a962;color:#111;border:1px solid #c9a962}
+.nl-btn-gold:hover{background:#d4b978;color:#111}
+.nl-btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}
+.nl-btn-ghost:hover{border-color:#c9a962;color:#c9a962}
+.nl-stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.nl-stats span{
+  font-size:12px;font-weight:700;color:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.08);border:1px solid rgba(201,169,98,.2);
+  padding:7px 14px;border-radius:999px;
+}
+
+.nl-wrap{width:min(1180px,100%);margin:0 auto;padding:0 22px 56px}
+.nl-feats{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+  margin:-28px auto 32px;position:relative;z-index:2;
+}
+@media(min-width:720px){.nl-feats{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}}
+.nl-feat{
+  background:#111;border:1px solid rgba(201,169,98,.14);border-radius:14px;padding:16px 12px;text-align:center;
+}
+.nl-feat .ic{font-size:22px;display:block;margin-bottom:8px}
+.nl-feat b{display:block;font-size:12px;color:#f5f0e6;letter-spacing:.02em}
+.nl-feat small{display:block;margin-top:4px;font-size:11px;color:#8a8272;line-height:1.35}
+
+.nl-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 18px;flex-wrap:wrap}
+.nl-bar span{font-size:13px;color:#8a8272;font-weight:600}
+.nl-bar label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#a89f8a}
+.nl-bar select{
+  border:1px solid rgba(201,169,98,.25);border-radius:12px;padding:9px 12px;
+  background:#111;color:#f5f0e6;font-weight:600;
+}
+
+.nl-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}
+.nl-chips a{
+  padding:9px 16px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.03em;
+  background:#111;color:#8a8272;text-decoration:none;border:1px solid rgba(255,255,255,.08);
+}
+.nl-chips a.on,.nl-chips a:hover{background:#c9a962;color:#111;border-color:#c9a962}
+
+.nl-section{margin-top:36px}
+.nl-section-h{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px;
+  border-bottom:1px solid rgba(201,169,98,.12);padding-bottom:12px;
+}
+.nl-section-h h2{
+  margin:0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(22px,3vw,28px);
+  font-weight:400;color:#f5f0e6;
+}
+.nl-section-h span{font-size:12px;color:#8a8272;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+.nl-featured{
+  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);
+  gap:16px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;
+}
+.nl-featured::-webkit-scrollbar{height:6px}
+.nl-featured::-webkit-scrollbar-thumb{background:rgba(201,169,98,.35);border-radius:999px}
+
+.nl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(min-width:720px){.nl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){.nl-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+.nl-card{
+  background:#0f0f0f;border:1px solid rgba(201,169,98,.12);border-radius:16px;overflow:hidden;
+  display:flex;flex-direction:column;color:inherit;text-decoration:none;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.nl-card:hover{
+  transform:translateY(-3px);border-color:rgba(201,169,98,.45);
+  box-shadow:0 16px 40px rgba(0,0,0,.45);
+}
+.nl-media{position:relative;aspect-ratio:4/5;background:#1a1a1a;overflow:hidden}
+.nl-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.nl-media .ph{
+  position:absolute;inset:0;display:grid;place-items:center;font-size:40px;
+  background:linear-gradient(145deg,#1a1a1a,#0a0a0a);color:#c9a962;
+}
+.nl-media::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.85) 100%);
+  pointer-events:none;
+}
+.nl-badge{
+  position:absolute;left:10px;top:10px;z-index:1;
+  background:rgba(201,169,98,.92);color:#111;font-size:10px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;
+}
+.nl-body{padding:14px 14px 16px;flex:1;display:flex;flex-direction:column;gap:6px}
+.nl-body h3{margin:0;font-size:15px;line-height:1.25;color:#f5f0e6;letter-spacing:-.2px}
+.nl-meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#8a8272;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.nl-star{color:#c9a962;white-space:nowrap}
+.nl-blurb{margin:0;font-size:12px;color:#a89f8a;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nl-cta{
+  margin-top:auto;padding-top:10px;font-size:11px;font-weight:800;letter-spacing:.08em;
+  color:#c9a962;text-transform:uppercase;
+}
+
+.nl-map-fab{
+  position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:50;
+  display:inline-flex;align-items:center;gap:8px;background:#c9a962;color:#111;
+  border-radius:999px;padding:12px 20px;font-weight:800;font-size:13px;letter-spacing:.04em;
+  box-shadow:0 10px 32px rgba(0,0,0,.5);text-decoration:none;
+}
+.nl-map-fab:hover{background:#d4b978;color:#111}
+.nl-empty{padding:48px 16px;text-align:center;color:#8a8272}
+.is-nightlife .seo-block{color:#a89f8a}
+.is-nightlife .seo-block h2{color:#f5f0e6;font-family:Georgia,serif;font-weight:400}
+.is-nightlife .seo-cross a{background:#111;border-color:rgba(201,169,98,.2);color:#c9a962}
+</style>
+{% endblock %}
+{% block main %}
+{% set hero_bg = hero_img or (featured[0].img_url if featured else '') %}
+<section class="nl-bleed nl-hero" {% if hero_bg %}style="background-image:url('{{ hero_bg }}')"{% endif %}>
+  <div class="nl-hero-inner">
+    <p class="nl-kicker">Bursa gece hayatı</p>
+    <h1>Geceyi <em>yaşa.</em> Mekânı keşfet.</h1>
+    <p class="nl-lead">Bar, pub, gece kulübü ve meyhane — Nilüfer, Osmangazi ve Mudanya hattında {{ total }} mekân. Rezervasyon siteden yapılmaz.</p>
+    <div class="nl-hero-actions">
+      <a class="nl-btn nl-btn-gold" href="#liste">Mekanları gör</a>
+      <a class="nl-btn nl-btn-ghost" href="/harita?cat=nightlife">Haritada aç</a>
+    </div>
+    <div class="nl-stats">
+      <span>{{ total }} mekân</span>
+      <span>Bar · kulüp · meyhane</span>
+      <span>Ücretsiz rehber</span>
+    </div>
+  </div>
+</section>
+
+<div class="nl-wrap">
+  <div class="nl-feats" aria-label="Gece hayatı türleri">
+    <div class="nl-feat"><span class="ic">🪩</span><b>Gece kulübü</b><small>DJ &amp; konser</small></div>
+    <div class="nl-feat"><span class="ic">🍸</span><b>Bar &amp; pub</b><small>Kokteyl &amp; biralar</small></div>
+    <div class="nl-feat"><span class="ic">🎵</span><b>Canlı müzik</b><small>Sahne &amp; akustik</small></div>
+    <div class="nl-feat"><span class="ic">🍷</span><b>Meyhane</b><small>Rakı &amp; meze</small></div>
+    <div class="nl-feat"><span class="ic">📍</span><b>Harita</b><small>Yakınındakiler</small></div>
+  </div>
+
+  {% if sub_chips %}
+  <nav class="nl-chips" aria-label="Tür filtresi">
+    <a class="{{ 'on' if not sub else '' }}" href="/gece-hayati{% if ilce %}?ilce={{ ilce|urlencode }}{% endif %}">Tümü</a>
+    {% for key, lab in sub_chips %}
+    <a class="{{ 'on' if sub==key else '' }}" href="/gece-hayati?sub={{ key }}{% if ilce %}&amp;ilce={{ ilce|urlencode }}{% endif %}">{{ lab }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  <div class="nl-bar">
+    <span>{{ total }} yer · bilinen mekânlar üstte</span>
+    <label>
+      Bölge
+      <select aria-label="İlçe seç" onchange="if(this.value) location.href=this.value">
+        <option value="/gece-hayati{% if sub %}?sub={{ sub }}{% endif %}" {% if not ilce %}selected{% endif %}>Tüm ilçeler</option>
+        {% for ad in districts %}
+        <option value="/gece-hayati?ilce={{ ad }}{% if sub %}&amp;sub={{ sub }}{% endif %}" {% if ilce==ad %}selected{% endif %}>{{ ad }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  {% if featured and not sub %}
+  <section class="nl-section" aria-labelledby="nl-feat-h">
+    <div class="nl-section-h">
+      <h2 id="nl-feat-h">Öne çıkan mekânlar</h2>
+      <span>Seçki</span>
+    </div>
+    <div class="nl-featured">
+      {% for p in featured %}
+      <a class="nl-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+        <div class="nl-media">
+          {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🍸</div>{% endif %}
+          {% if p.featured or p.brand_rank <= 10 %}<span class="nl-badge">Öne çıkan</span>{% endif %}
+        </div>
+        <div class="nl-body">
+          <h3>{{ p.title }}</h3>
+          <div class="nl-meta">
+            <span>{{ p.subcategory_label or 'Gece' }}{% if p.ilce %} · {{ p.ilce }}{% endif %}</span>
+            {% if p.rating %}<span class="nl-star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+          </div>
+          {% if p.blurb %}<p class="nl-blurb">{{ p.blurb }}</p>{% endif %}
+          <span class="nl-cta">Detay →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div id="liste">
+  {% if groups %}
+    {% for g in groups %}
+    <section class="nl-section" id="grp-{{ g.label|replace(' ','-')|lower }}">
+      <div class="nl-section-h">
+        <h2>{{ g.label }}</h2>
+        <span>{{ g.places|length }} mekân</span>
+      </div>
+      <div class="nl-grid">
+        {% for p in g.places %}
+        <a class="nl-card" href="{{ p.path or ('/yer/' ~ p.slug) }}">
+          <div class="nl-media">
+            {% if p.img_url %}<img src="{{ p.img_url }}" alt="{{ p.title }}" loading="lazy">{% else %}<div class="ph">🍸</div>{% endif %}
+            {% if p.brand_rank <= 10 %}<span class="nl-badge">Popüler</span>{% endif %}
+          </div>
+          <div class="nl-body">
+            <h3>{{ p.title }}</h3>
+            <div class="nl-meta">
+              <span>{% if p.ilce %}{{ p.ilce }}{% else %}Bursa{% endif %}</span>
+              {% if p.rating %}<span class="nl-star">★ {{ '%.1f'|format(p.rating) }}</span>{% endif %}
+            </div>
+            {% if p.hours_text %}<p class="nl-blurb">{{ p.hours_text }}</p>{% elif p.blurb %}<p class="nl-blurb">{{ p.blurb }}</p>{% endif %}
+            <span class="nl-cta">Detay →</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  {% else %}
+    <div class="nl-empty"><p>Bu filtrede mekân yok.</p><a class="nl-btn nl-btn-gold" href="/gece-hayati">Tümüne dön</a></div>
+  {% endif %}
+  </div>
+
+  {% if seo_vertical %}
+  {% include "_seo_vertical_after.html" %}
+  {% endif %}
+</div>
+
+<a class="nl-map-fab" href="/harita?cat=nightlife">🗺 Haritada göster</a>
+{% endblock %}

@@ -3,6 +3,7 @@
 
 fstream `/market` `!markPrice@arr` + `!miniTicker@arr`
 → `/tmp/binance_mark_cache.json`
+→ `temmuzPoly/hourly_path/` (BTC/ETH/SOL dakika yolu, disk ~15 sn)
 `/private` ACCOUNT_UPDATE → `/tmp/binance_um_positions.json`
 
   python3 binance_ws_marks.py          # daemon (flock)
@@ -17,6 +18,7 @@ import os
 import sys
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 
 import websockets
@@ -46,11 +48,15 @@ BOOK_WS_URL = (
     "?streams=gpsusdt@bookTicker/xauusdt@bookTicker"
 )
 _WRITE_MIN_GAP = 0.8
+_PATH_SYMBOLS = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
+_PATH_FLUSH_SEC = 15.0
 _rows: dict[str, dict] = {}
 _last_write = 0.0
 _dirty = False
 _started = False
 _lock_fd: int | None = None
+_hp_last_flush = 0.0
+_hp_last_min = -1
 
 
 def _try_lock() -> int | None:
@@ -121,7 +127,14 @@ def _apply_mini_arr(items) -> None:
             continue
         if last <= 0:
             continue
-        _rows.setdefault(sym, {})["last"] = last
+        row = _rows.setdefault(sym, {})
+        row["last"] = last
+        try:
+            qv = float(it.get("q") or 0)
+            if qv > 0:
+                row["quote_vol"] = qv
+        except (TypeError, ValueError):
+            pass
         _dirty = True
 
 
@@ -168,6 +181,49 @@ def _ingest(msg: dict) -> None:
             _apply_mini_arr(data)
 
 
+def _hourly_path_prices() -> dict[str, float]:
+    out: dict[str, float] = {}
+    for sym in _PATH_SYMBOLS:
+        row = _rows.get(sym) or {}
+        px = row.get("last") or row.get("mark")
+        try:
+            v = float(px or 0)
+        except (TypeError, ValueError):
+            continue
+        if v > 0:
+            out[sym] = v
+    return out
+
+
+def _hourly_path_touch() -> None:
+    """Saatlik yol JSON — WS fiyatı, disk en fazla 15 sn veya dakika değişiminde."""
+    global _hp_last_flush, _hp_last_min
+    prices = _hourly_path_prices()
+    if len(prices) < len(_PATH_SYMBOLS):
+        return
+    try:
+        from zoneinfo import ZoneInfo
+
+        minute = datetime.now(ZoneInfo("Europe/Istanbul")).minute
+    except Exception:
+        minute = int(time.localtime().tm_min)
+    now = time.time()
+    if minute == _hp_last_min and now - _hp_last_flush < _PATH_FLUSH_SEC:
+        return
+    temmuz = _ROOT / "temmuzPoly"
+    if str(temmuz) not in sys.path:
+        sys.path.insert(0, str(temmuz))
+    try:
+        from hourly_path_log import apply_prices
+
+        apply_prices(prices)
+    except Exception as e:
+        print(f"[hourly_path] {e}", flush=True)
+        return
+    _hp_last_flush = now
+    _hp_last_min = minute
+
+
 def _flush(*, force: bool = False) -> None:
     global _last_write, _dirty
     if not _rows:
@@ -187,6 +243,7 @@ def _flush(*, force: bool = False) -> None:
     os.replace(tmp, MARK_CACHE_FILE)
     _last_write = now
     _dirty = False
+    _hourly_path_touch()
 
 
 async def _run_book() -> None:
@@ -281,7 +338,7 @@ def _apply_wallet(msg: dict) -> None:
             upnl += float(p.get("up") or p.get("unRealizedProfit") or 0)
         except (TypeError, ValueError):
             pass
-    fx = str(_ROOT / "EylulForex")
+    fx = str(_ROOT / "AgustosKripto")
     if fx not in sys.path:
         sys.path.insert(0, fx)
     from binance_um_wallet import apply_ws

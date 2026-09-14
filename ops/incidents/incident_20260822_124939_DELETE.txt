@@ -1,0 +1,58 @@
+Zaman: 2026-08-22 12:49:39 +03
+Tür: DELETE
+Path: /root/aiProject/web/forex_pages.py
+
+=== Process şüpheliler ===
+pid=847 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+  cwd=/
+pid=2742133 ppid=1 uid=0 exe=/opt/digitalocean/bin/droplet-agent
+  cmd=/opt/digitalocean/bin/droplet-agent
+  cwd=/
+pid=3905897 ppid=3905723 uid=0 exe=/usr/bin/dash
+  cmd=sh /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/bin/cursor-server --start-server --host 127.0.0.1 --port 0 --connection-token-file /run/user/0/cursor-remote-code.token.6ca0869f6193ac0d40fa6ae74ed01260 --teleme
+  cwd=/root
+pid=3905905 ppid=3905897 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/server-main.js --start-server --host 127.0.0.1 --port 0 --connection-token-file
+  cwd=/root
+pid=3906850 ppid=3905905 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=ptyHost --logsPath /root/.cursor-server/data/logs/2026082
+  cwd=/root
+pid=3962278 ppid=3962158 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/multiplex-server/e0e6952a313d583840d50b387ab40c7bba7e66b79d95be1f22b3e7fc0706ae74.js 98afa8ed-9bfc-418e-bb93-f4a6d0a36b5f 0
+  cwd=/root
+pid=3982204 ppid=3905905 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=3985598 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /root/aiProject/binance_ws_marks.py
+  cwd=/root/aiProject
+pid=3987044 ppid=3905905 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out
+  cwd=/root
+pid=3987062 ppid=3905905 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=3987110 ppid=3987044 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProc
+  cwd=/root/aiProject
+pid=3987131 ppid=3987044 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clie
+  cwd=/root/aiProject
+pid=4000410 ppid=3905905 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out
+  cwd=/root
+pid=4000421 ppid=3905905 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=4000688 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /root/aiProject/web/poly_dashboard.py
+  cwd=/root/aiProject
+
+=== git status (D) ===
+bash: line 1: rg: command not found
+
+=== audit ===
+(failed: Command '['ausearch', '-k', 'aiproject_del', '-ts', 'recent', '-i']' timed out after 4.0 seconds)
+
+Tam JSON: /root/aiProject/ops/incidents/incident_20260822_124939_DELETE.json

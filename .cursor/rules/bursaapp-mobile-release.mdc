@@ -1,0 +1,37 @@
+---
+description: BursaApp mobil TestFlight / Codemagic release kuralları
+globs: mobile-ios/**,codemagic.yaml
+alwaysApply: false
+---
+
+# BursaApp Mobil Release (SwiftUI)
+
+## Her mobil değişiklikten sonra
+
+1. **`mobile-ios/project.yml`** — `CURRENT_PROJECT_VERSION` · CI `ios_resolve_build.sh` ile otomatik artırır.
+2. **Commit + push** → Codemagic **Start new build** (Retry değil).
+3. **Retry kullanma** — aynı IPA tekrar yüklenir → 90189.
+
+## Codemagic
+
+- Workflow: `bursaapp-ios-native` · `working_directory: mobile-ios`
+- Upload: `app-store-connect publish --path` (**`--testflight` YOK**)
+- `ITSAppUsesNonExemptEncryption=false` Info.plist'te
+- Duplicate skip: `ios_resolve_build.sh should-upload`
+
+## App Store Connect — bir kez doldur
+
+https://appstoreconnect.apple.com/apps/6809813024/testflight/test-info
+
+Build yüklendikten sonra: TestFlight → Export Compliance → test grubuna ata.
+
+## FireVibe tasarım
+
+Tasarım kaynağı FireVibe **BursaVibe** projesi; merge kuralları `bursaapp-firevibe-mobile.mdc`.
+
+## Yerel build numarası
+
+```bash
+cd mobile-ios
+bash scripts/ios_resolve_build.sh resolve project.yml
+```

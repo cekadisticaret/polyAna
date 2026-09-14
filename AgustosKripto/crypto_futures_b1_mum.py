@@ -63,7 +63,12 @@ LEVERAGE = 20
 STATE_LOCK_WAIT_SEC = 90.0
 
 
+_VIRTUAL_ONLY = os.path.exists(os.path.join(_DIR, ".CEBU_VIRTUAL_ONLY"))
+
+
 def _env_enabled() -> bool:
+    if _VIRTUAL_ONLY:
+        return False
     return os.getenv("CRYPTO_FUTURES_B1_MUM_ENABLED", "true").lower() in ("1", "true", "yes")
 
 
@@ -104,6 +109,11 @@ def save_live_control(data: dict, *, source: str = "dashboard") -> dict:
 
 
 def set_live_paused(paused: bool, *, source: str = "dashboard") -> dict:
+    if _VIRTUAL_ONLY and not paused:
+        return save_live_control(
+            {"live_paused": True, "reason": "CEBU yalnız sanal · Binance live kapalı"},
+            source=source,
+        )
     return save_live_control({"live_paused": bool(paused)}, source=source)
 
 
@@ -216,7 +226,7 @@ def _paper_slot(pp: dict | None) -> str:
 
 def _refresh_usdt_from_um() -> dict | None:
     try:
-        fx = os.path.join(_ROOT, "EylulForex")
+        fx = os.path.join(_ROOT, "AgustosKripto")
         if fx not in sys.path:
             sys.path.insert(0, fx)
         from binance_um_wallet import fetch  # noqa: WPS433
@@ -244,7 +254,7 @@ def _refresh_usdt_from_um() -> dict | None:
 
 def _account_isolated_empty() -> bool:
     try:
-        fx = os.path.join(_ROOT, "EylulForex")
+        fx = os.path.join(_ROOT, "AgustosKripto")
         if fx not in sys.path:
             sys.path.insert(0, fx)
         from binance_um_wallet import fetch  # noqa: WPS433

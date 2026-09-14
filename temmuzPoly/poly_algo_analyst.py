@@ -85,6 +85,9 @@ def build_user_prompt(digest: dict, journal: dict, pattern_stats: dict) -> str:
 
 
 def main() -> int:
+    if ac.is_paused():
+        print("[analyst] durduruldu (analyst_control.json paused)")
+        return 0
     missing = ac.required_env_missing()
     if missing:
         print(f"[analyst] Eksik env: {missing}", file=sys.stderr)

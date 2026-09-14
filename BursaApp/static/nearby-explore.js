@@ -98,6 +98,92 @@
   var map;
   var routeLayer;
   var markers = [];
+  var routeReqId = 0;
+  var selectPlace = function () {};
+  var clearSelection = function () {};
+
+  var routeStyle = {
+    color: "#1B3B2B",
+    weight: 4,
+    opacity: 0.88,
+    lineJoin: "round",
+    lineCap: "round",
+  };
+
+  function mapPadForDetail() {
+    var pad = { top: 48, right: 48, bottom: 48, left: 48 };
+    if (!isMobile) return pad;
+    var detailEl = document.getElementById("nx-detail");
+    var sheetH = 0;
+    if (detailEl && !detailEl.classList.contains("is-empty")) {
+      sheetH = detailEl.getBoundingClientRect().height || 0;
+    }
+    pad.bottom = Math.max(pad.bottom, Math.round(sheetH + 72));
+    return pad;
+  }
+
+  function focusMapOnPlace(lat, lng) {
+    if (!map || lat == null || lng == null) return;
+    var pad = mapPadForDetail();
+    try {
+      var llb = L.latLngBounds([center, [lat, lng]]);
+      map.fitBounds(llb, {
+        paddingTopLeft: L.point(pad.left, pad.top),
+        paddingBottomRight: L.point(pad.right, pad.bottom),
+        maxZoom: 16,
+        animate: true,
+        duration: 0.35,
+      });
+    } catch (e) {
+      map.panTo([lat, lng], { animate: true, duration: 0.35 });
+    }
+  }
+
+  function drawStraightRoute(destLat, destLng) {
+    L.polyline([center, [destLat, destLng]], Object.assign({}, routeStyle, {
+      opacity: 0.45,
+      dashArray: "6 10",
+      interactive: false,
+      pane: "nxNoHit",
+    })).addTo(routeLayer);
+  }
+
+  function drawRoadRoute(destLat, destLng) {
+    routeLayer.clearLayers();
+    if (destLat == null || destLng == null) return;
+    var reqId = ++routeReqId;
+    fetch(
+      "/api/route?from_lat=" +
+        encodeURIComponent(center[0]) +
+        "&from_lng=" +
+        encodeURIComponent(center[1]) +
+        "&to_lat=" +
+        encodeURIComponent(destLat) +
+        "&to_lng=" +
+        encodeURIComponent(destLng) +
+        "&profile=foot"
+    )
+      .then(function (res) {
+        return res.json();
+      })
+      .then(function (data) {
+        if (reqId !== routeReqId) return;
+        routeLayer.clearLayers();
+        if (data.ok && data.coordinates && data.coordinates.length > 1) {
+          L.polyline(data.coordinates, Object.assign({}, routeStyle, {
+            interactive: false,
+            pane: "nxNoHit",
+          })).addTo(routeLayer);
+          return;
+        }
+        drawStraightRoute(destLat, destLng);
+      })
+      .catch(function () {
+        if (reqId !== routeReqId) return;
+        routeLayer.clearLayers();
+        drawStraightRoute(destLat, destLng);
+      });
+  }
 
   function resizeMap() {
     if (!map) return;
@@ -141,6 +227,10 @@
       zoomControl: false,
     }).setView(center, 14);
 
+    map.createPane("nxNoHit");
+    var noHitPane = map.getPane("nxNoHit");
+    if (noHitPane) noHitPane.style.pointerEvents = "none";
+
     L.control.zoom({ position: "topright" }).addTo(map);
 
     function addTileLayers(target, layers) {
@@ -172,28 +262,45 @@
         fillColor: "#2563eb",
         fillOpacity: 0.05,
         dashArray: "4 8",
+        interactive: false,
+        pane: "nxNoHit",
+        className: "nx-radius-ring",
       }).addTo(map);
     }
 
     routeLayer = L.layerGroup().addTo(map);
     markers = [];
     var bounds = [center];
+    var dotR = isMobile ? 14 : 12;
+    var hitR = isMobile ? 26 : 20;
 
     pins.forEach(function (p, idx) {
       if (p.lat == null || p.lng == null) return;
-      var m = L.circleMarker([p.lat, p.lng], {
-        radius: 8,
+      var latlng = [p.lat, p.lng];
+      var hit = L.circleMarker(latlng, {
+        radius: hitR,
+        stroke: false,
+        fillColor: colorFor(p),
+        fillOpacity: 0.01,
+        interactive: true,
+        className: "nx-map-hit",
+      }).addTo(map);
+      var dot = L.circleMarker(latlng, {
+        radius: dotR,
         color: "#fff",
         weight: 2,
         fillColor: colorFor(p),
         fillOpacity: 0.95,
+        interactive: false,
+        className: "nx-map-pin",
       }).addTo(map);
-      m._nxIdx = idx;
-      m.on("click", function () {
+      hit._nxIdx = idx;
+      hit.on("click", function (ev) {
+        L.DomEvent.stopPropagation(ev);
         selectPlace(idx);
       });
-      markers.push(m);
-      bounds.push([p.lat, p.lng]);
+      markers.push({ hit: hit, dot: dot, _nxIdx: idx });
+      bounds.push(latlng);
     });
 
     if (bounds.length > 1) {
@@ -290,23 +397,25 @@
     if (detailRail) detailRail.classList.toggle("is-empty", !show);
     if (detailEmpty) detailEmpty.hidden = show;
     if (detailPanel) detailPanel.hidden = !show;
-    if (stageEl) stageEl.classList.toggle("has-detail", show && isMobile);
-    if (show && isMobile) scheduleMapResize();
   }
 
   function clearSelection() {
     selectedIdx = -1;
+    routeReqId += 1;
     showDetailPanel(false);
     routeLayer.clearLayers();
     listButtons.forEach(function (btn) {
       btn.classList.remove("on");
     });
-    markers.forEach(function (m) {
-      m.setRadius(8);
+    markers.forEach(function (pair) {
+      var dotR = isMobile ? 14 : 12;
+      var hitR = isMobile ? 26 : 20;
+      pair.hit.setRadius(hitR);
+      pair.dot.setRadius(dotR);
     });
   }
 
-  function selectPlace(idx) {
+  selectPlace = function (idx) {
     var p = pins[idx];
     if (!p) return;
     selectedIdx = idx;
@@ -314,23 +423,18 @@
     listButtons.forEach(function (btn) {
       btn.classList.toggle("on", Number(btn.getAttribute("data-idx")) === idx);
     });
-    markers.forEach(function (m) {
-      if (m._nxIdx === idx) {
-        m.setRadius(11);
-        m.bringToFront();
-      } else {
-        m.setRadius(8);
-      }
+    markers.forEach(function (pair) {
+      var sel = pair._nxIdx === idx;
+      var dotR = sel ? (isMobile ? 18 : 16) : (isMobile ? 14 : 12);
+      var hitR = sel ? dotR + 12 : (isMobile ? 26 : 20);
+      pair.dot.setRadius(dotR);
+      pair.hit.setRadius(hitR);
+      if (sel) pair.hit.bringToFront();
     });
 
     routeLayer.clearLayers();
     if (p.lat != null && p.lng != null) {
-      L.polyline([center, [p.lat, p.lng]], {
-        color: "#2563eb",
-        weight: 3,
-        opacity: 0.55,
-        dashArray: "6 10",
-      }).addTo(routeLayer);
+      drawRoadRoute(p.lat, p.lng);
     }
 
     showDetailPanel(true);
@@ -396,14 +500,9 @@
       detailLink.href = p.path || (p.slug ? "/yer/" + p.slug : "#");
     }
 
-    if (p.lat != null && p.lng != null) {
-      map.panTo([p.lat, p.lng], { animate: true, duration: 0.4 });
-      if (isMobile) {
-        setTimeout(function () {
-          map.panBy([0, 90], { animate: true });
-        }, 120);
-      }
-    }
+    requestAnimationFrame(function () {
+      focusMapOnPlace(p.lat, p.lng);
+    });
   }
 
   listButtons.forEach(function (btn) {
@@ -435,6 +534,37 @@
   });
 
   if (usedFallback) goGeo();
+
+  function haversineM(a, b) {
+    var R = 6371000;
+    var dLat = ((b.lat - a.lat) * Math.PI) / 180;
+    var dLng = ((b.lng - a.lng) * Math.PI) / 180;
+    var lat1 = (a.lat * Math.PI) / 180;
+    var lat2 = (b.lat * Math.PI) / 180;
+    var h =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  function findPinNear(latlng, maxM) {
+    var best = -1;
+    var bestD = maxM;
+    pins.forEach(function (p, idx) {
+      if (p.lat == null || p.lng == null) return;
+      var d = haversineM(latlng, L.latLng(p.lat, p.lng));
+      if (d < bestD) {
+        bestD = d;
+        best = idx;
+      }
+    });
+    return best;
+  }
+
+  map.on("click", function (e) {
+    var idx = findPinNear(e.latlng, isMobile ? 280 : 180);
+    if (idx >= 0) selectPlace(idx);
+  });
 
   if (pins.length && listButtons.length && !isMobile) {
     selectPlace(0);

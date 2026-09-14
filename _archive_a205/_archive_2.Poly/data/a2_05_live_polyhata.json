@@ -1,0 +1,266 @@
+[
+  {
+    "zaman": "2026-08-11T21:06:23.852095+03:00",
+    "symbol": "59749830056059752621",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-11T21:06:44.663631+03:00",
+    "symbol": "78637933827972885143",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-11T21:07:05.375723+03:00",
+    "symbol": "34614758953706603744",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-11T22:06:23.562941+03:00",
+    "symbol": "59640152267269765288",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-11T22:06:44.280310+03:00",
+    "symbol": "80902943760818833703",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-11T22:07:05.228505+03:00",
+    "symbol": "84574127403954490349",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-11T23:06:23.371080+03:00",
+    "symbol": "77687781506636427567",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-11T23:06:44.081824+03:00",
+    "symbol": "51073414901995172322",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T00:06:23.542523+03:00",
+    "symbol": "77089598064367326080",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T00:06:44.254207+03:00",
+    "symbol": "71643142049743945551",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T01:06:23.545207+03:00",
+    "symbol": "34126951704187097889",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T01:06:44.217774+03:00",
+    "symbol": "96714339768952408423",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T01:07:04.885040+03:00",
+    "symbol": "10737694865323485593",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T02:06:23.461476+03:00",
+    "symbol": "14328066167193087410",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T02:06:23.744844+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "profit_low",
+    "detay": "PM kazanç düşük: +$5.19 (%32) < %50 (+$8.00 gerekli, @0.76)"
+  },
+  {
+    "zaman": "2026-08-12T03:06:23.218018+03:00",
+    "symbol": "96834923298158722315",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T03:06:43.857094+03:00",
+    "symbol": "19366756871485942061",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T04:06:23.076143+03:00",
+    "symbol": "92343409784575227070",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T04:06:43.773147+03:00",
+    "symbol": "23481991349331756765",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T05:06:23.316880+03:00",
+    "symbol": "27007035137135544531",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T05:06:43.982856+03:00",
+    "symbol": "85488695430784933042",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T06:06:23.649745+03:00",
+    "symbol": "34377463225004723951",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T06:06:44.312285+03:00",
+    "symbol": "74829605241134244153",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T07:06:23.663931+03:00",
+    "symbol": "10521852505769268160",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T07:06:44.458958+03:00",
+    "symbol": "70716698047753346555",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T08:06:02.176052+03:00",
+    "symbol": "ETHUSDT",
+    "hata_turu": "profit_low",
+    "detay": "PM kazanç düşük: +$7.88 (%49) < %50 (+$8.00 gerekli, @0.67)"
+  },
+  {
+    "zaman": "2026-08-12T08:06:23.678698+03:00",
+    "symbol": "39511846604922505387",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T09:06:23.404258+03:00",
+    "symbol": "35050490604086011862",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T09:06:44.019280+03:00",
+    "symbol": "63811897704247417600",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T10:06:23.105545+03:00",
+    "symbol": "60081909210911746499",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T11:06:23.946411+03:00",
+    "symbol": "95656626586987351453",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T11:06:44.633733+03:00",
+    "symbol": "10091336429197672198",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T11:07:05.302829+03:00",
+    "symbol": "75513670604777146593",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T12:06:23.419594+03:00",
+    "symbol": "53404207004574226388",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T12:06:44.190818+03:00",
+    "symbol": "31509998353007698243",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T13:06:23.930277+03:00",
+    "symbol": "16258961210455840939",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T13:06:44.669854+03:00",
+    "symbol": "36212665463681843480",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T13:07:05.457130+03:00",
+    "symbol": "56810232870662936795",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=400, error_message={'error': 'maker address not allowed, please use the deposit wallet flow'}]"
+  },
+  {
+    "zaman": "2026-08-12T18:06:03.883719+03:00",
+    "symbol": "SOLUSDT",
+    "hata_turu": "profit_low",
+    "detay": "PM kazanç düşük: +$5.91 (%49) < %50 (+$6.00 gerekli, @0.67)"
+  },
+  {
+    "zaman": "2026-08-12T23:06:02.300622+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "profit_low",
+    "detay": "PM kazanç düşük: +$7.59 (%38) < %50 (+$10.00 gerekli, @0.72)"
+  },
+  {
+    "zaman": "2026-08-13T09:07:15.276813+03:00",
+    "symbol": "48863355916644993101",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=425, error_message={'error': 'order manager not ready, please retry'}]"
+  },
+  {
+    "zaman": "2026-08-13T09:08:26.624988+03:00",
+    "symbol": "47569419721575462972",
+    "hata_turu": "order_basarisiz",
+    "detay": "PolyApiException[status_code=503, error_message={'error': 'post-only mode: only post-only orders and cancels are allowed', 'code': 'post_only_mode', 'retry_after_seconds': 115}]"
+  },
+  {
+    "zaman": "2026-08-13T10:06:02.004902+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "profit_low",
+    "detay": "PM kazanç düşük: +$7.02 (%44) < %50 (+$8.00 gerekli, @0.69)"
+  },
+  {
+    "zaman": "2026-08-13T13:06:02.544199+03:00",
+    "symbol": "BTCUSDT",
+    "hata_turu": "profit_low",
+    "detay": "PM kazanç düşük: +$6.70 (%42) < %50 (+$8.00 gerekli, @0.70)"
+  }
+]

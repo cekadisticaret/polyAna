@@ -1,0 +1,55 @@
+{% extends "_shell.html" %}
+{% block title %}Rotayı düzenle · BursaApp{% endblock %}
+{% block hello %}Rotayı düzenle{% endblock %}
+{% block sub %}{{ route.title }}{% endblock %}
+{% block main %}
+<div class="sr-edit-page">
+  <p class="sr-edit-back"><a href="/hesap/rotalar">← Rotalarım</a></p>
+
+  <form method="post" class="sr-edit-form panel">
+    <label class="sr-edit-field">
+      <span>Rota adı</span>
+      <input type="text" name="title" value="{{ route.title }}" maxlength="160" required>
+    </label>
+    <label class="sr-edit-field">
+      <span>Bütçe (TL)</span>
+      <input type="number" name="budget_tl" value="{{ route.budget_tl or '' }}" min="0" step="50" inputmode="numeric">
+    </label>
+
+    <div class="sr-edit-slots-head">
+      <h3>Duraklar</h3>
+      <p>Saatleri değiştirebilir veya istemediğin durakları kaldırabilirsin.</p>
+    </div>
+
+    <ol class="sr-edit-slots">
+      {% for s in slots %}
+      <li class="sr-edit-slot">
+        <label class="sr-edit-time">
+          <span class="visually-hidden">Saat</span>
+          <input type="time" name="slot_time" value="{{ s.slot_time }}" step="900">
+        </label>
+        <div class="sr-edit-slot-body">
+          <strong><a href="{{ s.path or ('/yer/' ~ s.slug) }}">{{ s.title }}</a></strong>
+          {% if s.slot_label %}<small>{{ s.slot_label }}{% if s.slot_cost_tl %} · ~{{ s.slot_cost_tl }} TL{% endif %}</small>{% endif %}
+        </div>
+        <label class="sr-edit-drop" title="Durak kaldır">
+          <input type="checkbox" name="slot_drop" value="{{ loop.index0 }}">
+          <span>Kaldır</span>
+        </label>
+        <input type="hidden" name="slot_payload" value='{{ s | tojson }}'>
+      </li>
+      {% endfor %}
+    </ol>
+
+    {% if not slots %}
+    <div class="empty-box"><p>Durak kalmadı. <a href="/rota">Yeni rota oluştur</a></p></div>
+    {% endif %}
+
+    <div class="sr-edit-actions">
+      <button class="btn" type="submit">Kaydet</button>
+      <a class="btn ghost" href="/rota?budget={{ route.budget_tl or '' }}">Yeniden oluştur</a>
+      <a class="btn ghost" href="/hesap/rotalar">Vazgeç</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

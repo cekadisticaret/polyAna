@@ -5,7 +5,7 @@ BAHIS_SITE_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MATCHDAY · Süper Lig</title>
+<title>MATCHDAY</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23F5C518'/><circle cx='16' cy='16' r='7' fill='%23080c14'/></svg>">
@@ -45,6 +45,12 @@ img{max-width:100%}
   background:var(--y);color:var(--ink);border:0;border-radius:6px;
   padding:10px 18px;font:800 12px/1 Oswald,sans-serif;letter-spacing:.1em;
 }
+.lgbar{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:12px 16px;background:#05070c;border-bottom:1px solid rgba(245,197,24,.18)}
+.lgchip{
+  border:1px solid rgba(245,197,24,.28);background:#101826;color:#e8e8e8;border-radius:999px;
+  padding:7px 12px;font:700 11px/1 Oswald,sans-serif;letter-spacing:.08em;cursor:pointer
+}
+.lgchip.on{background:var(--y);color:var(--ink);border-color:var(--y)}
 .hero{
   position:relative;overflow:hidden;min-height:78vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -187,11 +193,13 @@ img{max-width:100%}
     <a href="#home">MAÇLAR</a>
     <a href="#kuponlar">FİKSTÜR</a>
     <a href="/site/biten">BİTMİŞ</a>
+    <a href="/site/kuponlar">KUPONLAR</a>
     <a href="#kuponlar">TAHMİN</a>
   </nav>
   <div class="sp"></div>
   <a class="cta" href="#kuponlar">TAHMİNİ GÖR</a>
 </header>
+<div class="lgbar" id="lgbar"></div>
 
 <section class="hero" id="home">
   <div class="kicker" id="kicker">SÜPER LİG · 2026/27</div>
@@ -239,23 +247,34 @@ img{max-width:100%}
   <div class="fgrid">
     <div>
       <div class="logo" style="margin-bottom:10px"><i>⚽</i> MATCHDAY</div>
-      <p>Süper Lig fikstür ve 10 yıl kafa kafaya. Bu sayfa kupon açmaz, bahis iletmez.</p>
+      <p>7 lig · 10 yıl kafa kafaya. Bu sayfa kupon açmaz, bahis iletmez.</p>
     </div>
     <div>
       <h4>BAĞLANTILAR</h4>
-      <a href="#home">Maçlar</a><br><a href="#kuponlar">Fikstür</a><br><a href="/site/biten">Bitmiş</a>
+      <a href="#home">Maçlar</a><br><a href="#kuponlar">Fikstür</a><br><a href="/site/biten">Bitmiş</a><br><a href="/site/kuponlar">Kuponlar</a>
     </div>
     <div>
       <h4>BİLGİ</h4>
       <p>Veri: football-data + fikstür. Tahmin çıkarım, garanti değil.</p>
     </div>
   </div>
-  <div class="copy">© MATCHDAY · Süper Lig · kupon yok</div>
+  <div class="copy">© MATCHDAY · 7 lig · kupon yok</div>
 </footer>
 <div class="ov" id="ov" onclick="if(event.target===this)this.className='ov'"></div>
 <script>
 const $ = id => document.getElementById(id);
 let SUM=null, TEAM='', FEAT=null, TMR=null;
+let LEAGUE = new URLSearchParams(location.search).get('league') || 'tr';
+function withLg(url){
+  const join = url.includes('?') ? '&' : '?';
+  return url + join + 'league=' + encodeURIComponent(LEAGUE);
+}
+function paintLeagues(list){
+  const box=$('lgbar'); if(!box) return;
+  box.innerHTML = (list||[]).map(x=>
+    `<button class="lgchip${x.id===LEAGUE?' on':''}" type="button" data-id="${esc(x.id)}">${esc(x.flag)} ${esc(x.short)}</button>`
+  ).join('');
+}
 function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));}
 function crest(t, cls){
   if(t&&t.crest) return `<img class="${cls||''}" src="${esc(t.crest)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:(cls||'')+' fb',style:'--c:${t.color}',textContent:'${esc(t.short)}'}))">`;
@@ -308,16 +327,17 @@ function tick(){
   $('cds').textContent = String(s%60).padStart(2,'0');
 }
 async function openH2H(a,b){
-  const d = await (await fetch(`/site/api/h2h?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`,{cache:'no-store'})).json();
+  const d = await (await fetch(withLg(`/site/api/h2h?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`),{cache:'no-store'})).json();
   const feat = (d.upcoming&&d.upcoming[0]) || FEAT;
   const ov = $('ov'); ov.className='ov on';
   ov.innerHTML = `<div class="ovc">${feat?kupon(feat):''}
     <button class="cta" style="width:100%;margin-top:12px" type="button" onclick="document.getElementById('ov').className='ov'">KAPAT</button></div>`;
 }
 async function load(){
-  SUM = await (await fetch('/site/api/summary',{cache:'no-store'})).json();
+  SUM = await (await fetch(withLg('/site/api/summary'),{cache:'no-store'})).json();
+  paintLeagues(SUM.leagues||[]);
   FEAT = (SUM.today&&SUM.today[0]) || (SUM.next&&SUM.next[0]);
-  $('kicker').textContent = (SUM.league||'SÜPER LİG')+' · 2026/27';
+  $('kicker').textContent = (SUM.league||'SÜPER LİG')+' · '+(SUM.current||'');
   paintHero(FEAT);
   if(FEAT&&FEAT.id){
     document.querySelectorAll('a.cta').forEach(a=>{ a.href='/site/mac/'+encodeURIComponent(FEAT.id); });
@@ -332,14 +352,23 @@ $('rew').addEventListener('click', async e=>{
   const b=e.target.closest('.rew'); if(!b) return;
   TEAM = TEAM===b.dataset.k ? '' : b.dataset.k;
   document.querySelectorAll('.rew').forEach(x=>x.classList.toggle('on', x.dataset.k===TEAM && TEAM));
-  const qs = new URLSearchParams({status:'upcoming', season:'2627'});
+  const qs = new URLSearchParams({status:'upcoming', season:(SUM&&SUM.current)||'2627'});
   if(TEAM) qs.set('team', TEAM);
-  const rows = await (await fetch('/site/api/matches?'+qs,{cache:'no-store'})).json();
+  const rows = await (await fetch(withLg('/site/api/matches?'+qs),{cache:'no-store'})).json();
   $('kgrid').innerHTML = rows.slice(0,8).map(kupon).join('');
 });
 document.addEventListener('click', e=>{
   const b=e.target.closest('.kodds button'); if(!b) return;
   b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b));
+});
+$('lgbar').addEventListener('click', e=>{
+  const b=e.target.closest('.lgchip'); if(!b) return;
+  LEAGUE = b.dataset.id || 'tr';
+  TEAM='';
+  const u=new URL(location.href);
+  u.searchParams.set('league', LEAGUE);
+  history.replaceState(null,'',u);
+  load();
 });
 load();
 </script>

@@ -1,0 +1,8 @@
+<a class="ff-card ff-buddy-promo as-feed-promo" href="{{ it.href or '/arkadas-ara' }}">
+  <span class="as-feed-promo-ico">{{ it.emoji or '🎾' }}</span>
+  <span>
+    <b>{{ it.title or 'Partner ara' }}</b>
+    {% if it.body %}<small class="ff-buddy-promo-sub">{{ it.body }}</small>{% endif %}
+  </span>
+  <span class="as-feed-promo-go">{{ it.cta or '→' }}</span>
+</a>

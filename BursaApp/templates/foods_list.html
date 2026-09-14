@@ -173,9 +173,12 @@
             </p>
             {% if p.blurb %}<p class="food-card-snip">{{ p.blurb[:90] }}{% if p.blurb|length > 90 %}…{% endif %}</p>{% endif %}
             <div class="food-card-foot">
-              {% if p.has_menu %}
-              <a class="food-card-link" href="{{ p.path or ('/yer/' ~ p.slug) }}#menu">Menü</a>
-              {% endif %}
+              <div class="food-card-foot-left">
+                {% if p.has_menu %}
+                <a class="food-card-link" href="{{ p.path or ('/yer/' ~ p.slug) }}#menu">Menü</a>
+                {% endif %}
+                {% include "_fav_place_btn.html" %}
+              </div>
               <a class="food-card-btn" href="{{ p.path or ('/yer/' ~ p.slug) }}">Detay →</a>
             </div>
           </div>

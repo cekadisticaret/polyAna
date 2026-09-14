@@ -1,0 +1,10 @@
+{
+  "balance": 1000.0,
+  "deposit": 1000.0,
+  "open_positions": [],
+  "total_pnl": 0.0,
+  "total_commission": 0.0,
+  "updated_at_tr": "2026-09-04T13:36:12.917476+03:00",
+  "last_open_slot": "",
+  "atr_skip_syms": []
+}

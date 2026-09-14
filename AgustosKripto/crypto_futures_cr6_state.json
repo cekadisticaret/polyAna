@@ -1,49 +1,49 @@
 {
   "open_positions": [],
-  "updated_at_tr": "2026-08-15T21:32:13.324306+03:00",
+  "updated_at_tr": "2026-08-30T00:18:05.368027+03:00",
   "last_scan": [
     {
       "symbol": "SOLUSDT",
       "signal": "DOWN",
       "score": 3.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 75.49,
+      "price": 105.29,
       "tier": 1,
       "tier_label": "major"
     },
     {
       "symbol": "XRPUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 3.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 1.0001,
+      "price": 1.3964,
       "tier": 1,
       "tier_label": "major"
     },
     {
       "symbol": "DOGEUSDT",
-      "signal": "UP",
-      "score": 2.0,
-      "algo": "algo_05+algo_06+algo1_11",
-      "price": 0.06976,
+      "signal": "DOWN",
+      "score": 2.5,
+      "algo": "algo_05+algo_06+algo_07+algo1_11",
+      "price": 0.08527,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "ADAUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.1773,
+      "price": 0.2016,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "AVAXUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 6.492,
+      "price": 7.326,
       "tier": 2,
       "tier_label": "alt"
     },
@@ -52,92 +52,92 @@
       "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 9.557,
+      "price": 11.471,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "DOTUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.769,
+      "price": 0.844,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "LTCUSDT",
-      "signal": "DOWN",
-      "score": 2.5,
-      "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 44.15,
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 48.96,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "NEARUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 1.634,
+      "price": 1.865,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "SUIUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.6789,
+      "price": 0.7451,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "APTUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.536,
+      "price": 0.543,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "ARBUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.07392,
+      "price": 0.0881,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "OPUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.0853,
+      "price": 0.0893,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "INJUSDT",
-      "signal": "UP",
+      "signal": "DOWN",
       "score": 2.5,
       "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 4.183,
+      "price": 5.16,
       "tier": 2,
       "tier_label": "alt"
     },
     {
       "symbol": "TIAUSDT",
-      "signal": "UP",
-      "score": 2.5,
-      "algo": "algo_05+algo_06+algo_07+algo1_11",
-      "price": 0.3031,
+      "signal": "NEUTRAL",
+      "score": 0.0,
+      "algo": "Hurst+A1#11 MR+Z-Score MR+Mean Reversion",
+      "price": 0.339,
       "tier": 2,
       "tier_label": "alt"
     }
   ],
-  "last_scan_at_tr": "2026-08-15T21:32:13.324287+03:00",
+  "last_scan_at_tr": "2026-08-30T00:18:05.367968+03:00",
   "last_open_slot": "2026-08-08 17:00"
 }

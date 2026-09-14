@@ -43,14 +43,15 @@ IMG = {
     "kids": "https://commons.wikimedia.org/wiki/Special:FilePath/Playground.jpg?width=1200",
 }
 
+# YouTube video ID — enrich_films youtube_embed_url ile nocookie embed'e çevirir
 TRAILERS = {
-    "film-the-odyssey": "https://www.youtube.com/embed/qQlr9amcHHc",
-    "film-orumbcek-adam": "https://www.youtube.com/embed/BbXJ3_QlV68",
-    "film-ataturk-zaferin-safagi": "https://www.youtube.com/embed/1Q8fG0TtVAY",
-    "film-minyonlar-canavarlar": "https://www.youtube.com/embed/SvGmQfOGxLE",
-    "film-coyote-acme": "https://www.youtube.com/embed/pnkxBvKFuc4",
-    "film-ruhlar-bolgesi": "https://www.youtube.com/embed/JuDEmp1vG8A",
-    "film-tadin-sihirli-lambasi": "https://www.youtube.com/embed/SvGmQfOGxLE",
+    "film-the-odyssey": "f_bKjZeJBBI",  # Universal resmi fragman
+    "film-orumbcek-adam": "BbXJ3_QlV68",
+    "film-ataturk-zaferin-safagi": "1Q8fG0TtVAY",
+    "film-minyonlar-canavarlar": "SvGmQfOGxLE",
+    "film-coyote-acme": "pnkxBvKFuc4",
+    "film-ruhlar-bolgesi": "JuDEmp1vG8A",
+    "film-tadin-sihirli-lambasi": "oGSs5kdUoqo",
 }
 
 SPORT_FEES = {
@@ -270,13 +271,15 @@ def enrich_hotels(db) -> int:
 
 
 def enrich_films(db) -> int:
+    from catalog import youtube_embed_url
+
     n = 0
     for slug, trailer in TRAILERS.items():
         p = db.query(Place).filter(Place.slug == slug).first()
         if not p:
             continue
         ex = place_extra(p)
-        ex["trailer_url"] = trailer
+        ex["trailer_url"] = youtube_embed_url(trailer)
         set_place_extra(p, ex)
         n += 1
     return n

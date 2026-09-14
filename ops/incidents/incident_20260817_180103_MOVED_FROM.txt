@@ -1,0 +1,52 @@
+Zaman: 2026-08-17 18:01:03 +03
+Tür: MOVED_FROM
+Path: /root/aiProject/web/forex_data.py
+
+=== Process şüpheliler ===
+pid=775 ppid=1 uid=0 exe=/opt/digitalocean/bin/droplet-agent
+  cmd=/opt/digitalocean/bin/droplet-agent
+  cwd=/
+pid=847 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+  cwd=/
+pid=2387168 ppid=2387025 uid=0 exe=/usr/bin/dash
+  cmd=sh /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/bin/cursor-server --start-server --host 127.0.0.1 --port 0 --connection-token-file /run/user/0/cursor-remote-code.token.6ca0869f6193ac0d40fa6ae74ed01260 --teleme
+  cwd=/root
+pid=2387180 ppid=2387168 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/server-main.js --start-server --host 127.0.0.1 --port 0 --connection-token-file
+  cwd=/root
+pid=2388089 ppid=2387180 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=ptyHost --logsPath /root/.cursor-server/data/logs/2026081
+  cwd=/root
+pid=2401135 ppid=2401014 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/multiplex-server/e0e6952a313d583840d50b387ab40c7bba7e66b79d95be1f22b3e7fc0706ae74.js 5791c4b8-3440-412c-8ed4-6aced9a3e895 0
+  cwd=/root
+pid=2401187 ppid=2387180 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node --dns-result-order=ipv4first --inspect-port=0 --experimental-network-inspection /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out
+  cwd=/root
+pid=2401198 ppid=2387180 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/out/bootstrap-fork --type=fileWatcher
+  cwd=/root
+pid=2401244 ppid=2401187 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProc
+  cwd=/root/aiProject
+pid=2401270 ppid=2401187 uid=0 exe=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node
+  cmd=/root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/node /root/.cursor-server/bin/linux-x64/a1f686545fd0ce8917bbd2449f733551a9bce420/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clie
+  cwd=/root/aiProject
+pid=2402938 ppid=1 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 /root/aiProject/web/poly_dashboard.py
+  cwd=/root/aiProject
+pid=2404813 ppid=2404799 uid=0 exe=/usr/bin/dash
+  cmd=/bin/sh -c cd /root/aiProject && /usr/bin/python3 AgustosKripto/Test/runner.py scan >> /tmp/agustos_kripto_test_scan.log 2>&1
+  cwd=/root/aiProject
+pid=2404825 ppid=2404813 uid=0 exe=/usr/bin/python3.12
+  cmd=/usr/bin/python3 AgustosKripto/Test/runner.py scan
+  cwd=/root/aiProject
+
+=== git status (D) ===
+bash: line 1: rg: command not found
+
+=== audit ===
+<no matches>
+
+Tam JSON: /root/aiProject/ops/incidents/incident_20260817_180103_MOVED_FROM.json

@@ -144,7 +144,7 @@ def _is_algo_islemler_label(label: str) -> bool:
     u = label.strip().upper()
     if u == "A2" or u.startswith("A2#") or u.startswith("A1#"):
         return True
-    for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#", "C1#", "X1#", "E01", "COMBO", "F16"):
+    for prefix in ("1. ANALİZ", "2. ANALİZ", "6. ANALİZ", "15. ANALİZ", "B1#", "C1#", "X1#", "E01", "COMBO", "F16", "JARVIS"):
         if label.startswith(prefix):
             return True
     return False
@@ -239,12 +239,12 @@ SANAL_TRADE_AMOUNT_LOW = 12.0
 # Algoritma-işlemler sanal — sembol WR kademesi (soğuk saat −%30 ayrıca)
 COMBO_FAMILY_KEYS = frozenset({"analiz1", "c101", "a2_05_v2", "combo"})
 COMBO_FAMILY_INIT = 1000.0
-COMBO_FAMILY_WR = (24.0, 36.0, 48.0)
+COMBO_FAMILY_WR = (8.0, 10.0, 12.0)
 SANAL_WR_DEFAULT = COMBO_FAMILY_WR
 
 
 def symbol_wr_amount(history: list, symbol: str) -> float:
-    """Sembol WR → $24 / $36 / $48 (veri yok → orta)."""
+    """Sembol WR → $8 / $10 / $12 (veri yok → orta)."""
     low, mid, high = SANAL_WR_DEFAULT
     return wr_tier_amount(history, symbol, low, mid, high)
 
@@ -266,10 +266,8 @@ def wr_tier_amount(
 
 
 def sanal_wr_amount_defaults(book_key: str) -> tuple[float, float, float]:
-    if book_key == "combo":
-        return (16.0, 24.0, 32.0)
-    if book_key == "combo2":
-        return (64.0, 64.0, 64.0)
+    if book_key in ("combo", "jarvis2026", "combo2"):
+        return (8.0, 10.0, 12.0)
     return SANAL_WR_DEFAULT
 
 
@@ -1004,11 +1002,19 @@ def pm_sanal_quote(symbol: str, direction: str, amount_usd: float, now: datetime
     }
 
 
-def apply_pm_quote(pos: dict, symbol: str, direction: str, amount: float, now: datetime) -> dict:
+def apply_pm_quote(
+    pos: dict,
+    symbol: str,
+    direction: str,
+    amount: float,
+    now: datetime,
+    min_profit_ratio: float | None = None,
+) -> dict:
     q = pm_sanal_quote(symbol, direction, amount, now)
     if q:
         pos.update(q)
-        ok, msg = pm_hourly_profit_entry_ok(pos)
+        ratio = HOURLY_MIN_NET_PROFIT_RATIO if min_profit_ratio is None else float(min_profit_ratio)
+        ok, msg = pm_hourly_profit_entry_ok(pos, min_ratio=ratio)
         if not ok:
             pos["entry_skip"] = msg
     return pos

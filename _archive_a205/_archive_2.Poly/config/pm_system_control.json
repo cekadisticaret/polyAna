@@ -1,0 +1,21 @@
+{
+  "analiz5_paused": false,
+  "analiz2_paused": false,
+  "analiz10_paused": false,
+  "analiz6_live_paused": true,
+  "15m_309_live_paused": false,
+  "a2_16_live_paused": true,
+  "a2_02_live_paused": true,
+  "a2_08_live_paused": true,
+  "a2_03_live_paused": true,
+  "a2_04_live_paused": true,
+  "a2_05_live_paused": false,
+  "a2_06_live_paused": true,
+  "a2_07_live_paused": true,
+  "analiz15_live_paused": true,
+  "analiz6_v2_live_paused": true,
+  "analiz6_v3_live_paused": true,
+  "a3a8_signal_strict": true,
+  "updated_at_tr": "2026-08-13T02:37:08.629300+03:00",
+  "updated_by": "dashboard"
+}

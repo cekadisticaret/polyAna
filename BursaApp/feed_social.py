@@ -550,7 +550,61 @@ def build_feed(
         if pid:
             x["comment_list"] = comments_map.get(int(pid), [])
     has_more = len(items) > offset + limit
+    page = inject_buddy_promos(page, offset, tab=tab)
     return page, has_more
+
+
+_BUDDY_PROMO_COPY = (
+    ("okey", "4. oyuncu mu arıyorsun? Okey masasına ilan ver."),
+    ("tennis", "Tenis partneri — hafta sonu maçı için ilan aç."),
+    ("football", "Halı saha takımına oyuncu lazım mı?"),
+    ("running", "Koşu arkadaşı bul — tempo ve ilçe yaz."),
+    ("hiking", "Uludağ veya şehir yürüyüşü için grup kur."),
+    ("padel", "Padel partneri arayanlar burada."),
+    ("basketball", "Basketbol maçı için eksik oyuncu?"),
+    ("board", "Masa oyunu gecesi — katılımcı ara."),
+)
+
+
+def _buddy_promo_item(slot: int) -> dict:
+    from activity_seek import ACTIVITY_TYPES
+
+    keys = list(ACTIVITY_TYPES.keys())
+    key = keys[slot % len(keys)]
+    meta = ACTIVITY_TYPES[key]
+    copy_pool = [t for k, t in _BUDDY_PROMO_COPY if k == key] or [f"{meta['label']} arkadaşı ara"]
+    line = copy_pool[slot % len(copy_pool)]
+    return {
+        "kind": "buddy_promo",
+        # Mobil API int bekler; string id JSON parse hatası veriyordu.
+        "id": -(slot + 1),
+        "emoji": meta["emoji"],
+        "activity_type": key,
+        "activity_label": meta["label"],
+        "title": "Partner ara",
+        "body": line,
+        "href": f"/arkadas-ara?type={key}",
+        "cta": "İlanlara bak",
+    }
+
+
+def inject_buddy_promos(page: list[dict], offset: int, *, tab: str) -> list[dict]:
+    """Feed içine ara ara partner-ara kartı — sayfalama offset'ine göre deterministik."""
+    if tab == "mine" or not page:
+        if offset == 0 and tab != "mine":
+            return [_buddy_promo_item(0)] + page
+        return page
+    out: list[dict] = []
+    slot = offset // 5
+    for i, it in enumerate(page):
+        out.append(it)
+        global_pos = offset + i + 1
+        if global_pos > 0 and global_pos % 5 == 0:
+            slot += 1
+            out.append(_buddy_promo_item(slot))
+    if offset == 0 and not any(x.get("kind") == "buddy_promo" for x in out):
+        out.insert(min(2, len(out)), _buddy_promo_item(0))
+    return out
 
 
 def _post_comments_map(db, post_ids: list[int], limit_each: int = 8) -> dict[int, list[dict]]:

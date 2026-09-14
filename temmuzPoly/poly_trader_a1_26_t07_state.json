@@ -1,0 +1,36 @@
+{
+  "balance": 993.59,
+  "open_positions": [
+    {
+      "symbol": "ETHUSDT",
+      "predicted_dir": "UP",
+      "entry_price": 2538.86,
+      "entry_time_tr": "2026-09-14T22:08:08.290816+03:00",
+      "entry_hour_tr": 22,
+      "entry_dow": 0,
+      "entry_is_weekend": false,
+      "amount": 10.0,
+      "hot_hour_boost": false,
+      "cold_hour_cut": false,
+      "algo_signal": "UP",
+      "algo_name": "MACD Histogram Diverjansı",
+      "algo_num": 26,
+      "pm_slug": "ethereum-up-or-down-september-14-2026-3pm-et",
+      "pm_title": "Ethereum Up or Down - September 14, 3PM ET",
+      "pm_token_dir": "UP",
+      "pm_entry_price": 0.46,
+      "pm_quote_src": "book",
+      "pm_fill_vwap": 0.4608,
+      "pm_mid_price": 0.355,
+      "pm_fee": 0.38254,
+      "pm_spent": 10.12,
+      "pm_size": 22.0,
+      "to_win": 22.0,
+      "pm_win_payout": 22.0,
+      "pm_win_profit": 11.5
+    }
+  ],
+  "total_pnl": -6.41,
+  "balance_reset_at_tr": "2026-09-14T10:34:21.420186+03:00",
+  "balance_reset_note": "t07 reset $1000"
+}
