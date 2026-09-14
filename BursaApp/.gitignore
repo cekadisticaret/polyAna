@@ -1,6 +1,6 @@
 .env
 .cursor/mcp.json
 data/notify_outbox.jsonl
-data/*.db
+# data/*.db — taşımada bursaapp.db gerekli; journal hariç
 data/*.db-journal
 static/cache/
