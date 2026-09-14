@@ -1,14 +1,14 @@
 {
   "hour_tr": "2026-09-14T22:00:00+03:00",
   "hour_key": "2026-09-14_22",
-  "updated_at_tr": "2026-09-14T22:29:15.822179+03:00",
+  "updated_at_tr": "2026-09-14T22:31:16.042515+03:00",
   "sealed": false,
   "coins": {
     "BTC": {
       "symbol": "BTCUSDT",
       "ref": 79226.0,
       "ref_src": "hour_open",
-      "last": 79109.0,
+      "last": 79085.4,
       "end": null,
       "hi": 79190.7,
       "lo": 78989.0,
@@ -16,10 +16,10 @@
       "max_dn_usd": 237.0,
       "max_up_bps": 0.0,
       "max_dn_bps": 29.914,
-      "now_vs_ref_usd": -117.0,
-      "now_vs_ref_bps": -14.768,
+      "now_vs_ref_usd": -140.6,
+      "now_vs_ref_bps": -17.747,
       "above_n": 0,
-      "below_n": 30,
+      "below_n": 32,
       "flat_n": 0,
       "winner": null,
       "minutes": [
@@ -262,6 +262,22 @@
           "d_usd": -117.0,
           "d_bps": -14.768,
           "d_pct": -0.14768
+        },
+        {
+          "m": 30,
+          "t": "22:30",
+          "px": 79067.7,
+          "d_usd": -158.3,
+          "d_bps": -19.981,
+          "d_pct": -0.19981
+        },
+        {
+          "m": 31,
+          "t": "22:31",
+          "px": 79085.4,
+          "d_usd": -140.6,
+          "d_bps": -17.747,
+          "d_pct": -0.17747
         }
       ]
     },
@@ -269,7 +285,7 @@
       "symbol": "ETHUSDT",
       "ref": 2538.86,
       "ref_src": "hour_open",
-      "last": 2543.44,
+      "last": 2541.6,
       "end": null,
       "hi": 2548.32,
       "lo": 2533.65,
@@ -277,9 +293,9 @@
       "max_dn_usd": 5.21,
       "max_up_bps": 37.261,
       "max_dn_bps": 20.521,
-      "now_vs_ref_usd": 4.58,
-      "now_vs_ref_bps": 18.04,
-      "above_n": 13,
+      "now_vs_ref_usd": 2.74,
+      "now_vs_ref_bps": 10.792,
+      "above_n": 15,
       "below_n": 17,
       "flat_n": 0,
       "winner": null,
@@ -519,10 +535,26 @@
         {
           "m": 29,
           "t": "22:29",
-          "px": 2543.44,
-          "d_usd": 4.58,
-          "d_bps": 18.04,
-          "d_pct": 0.1804
+          "px": 2543.69,
+          "d_usd": 4.83,
+          "d_bps": 19.024,
+          "d_pct": 0.19024
+        },
+        {
+          "m": 30,
+          "t": "22:30",
+          "px": 2539.92,
+          "d_usd": 1.06,
+          "d_bps": 4.175,
+          "d_pct": 0.04175
+        },
+        {
+          "m": 31,
+          "t": "22:31",
+          "px": 2541.6,
+          "d_usd": 2.74,
+          "d_bps": 10.792,
+          "d_pct": 0.10792
         }
       ]
     },
@@ -530,7 +562,7 @@
       "symbol": "SOLUSDT",
       "ref": 103.63,
       "ref_src": "hour_open",
-      "last": 103.4,
+      "last": 103.3,
       "end": null,
       "hi": 103.58,
       "lo": 103.17,
@@ -538,10 +570,10 @@
       "max_dn_usd": 0.46,
       "max_up_bps": 0.0,
       "max_dn_bps": 44.389,
-      "now_vs_ref_usd": -0.23,
-      "now_vs_ref_bps": -22.194,
+      "now_vs_ref_usd": -0.33,
+      "now_vs_ref_bps": -31.844,
       "above_n": 0,
-      "below_n": 30,
+      "below_n": 32,
       "flat_n": 0,
       "winner": null,
       "minutes": [
@@ -780,10 +812,26 @@
         {
           "m": 29,
           "t": "22:29",
-          "px": 103.4,
-          "d_usd": -0.23,
-          "d_bps": -22.194,
-          "d_pct": -0.22194
+          "px": 103.36,
+          "d_usd": -0.27,
+          "d_bps": -26.054,
+          "d_pct": -0.26054
+        },
+        {
+          "m": 30,
+          "t": "22:30",
+          "px": 103.25,
+          "d_usd": -0.38,
+          "d_bps": -36.669,
+          "d_pct": -0.36669
+        },
+        {
+          "m": 31,
+          "t": "22:31",
+          "px": 103.3,
+          "d_usd": -0.33,
+          "d_bps": -31.844,
+          "d_pct": -0.31844
         }
       ]
     }

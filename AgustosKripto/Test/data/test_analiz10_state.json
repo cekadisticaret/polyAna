@@ -226,8 +226,8 @@
       "notional": 600.0,
       "entry_fee": 0.29981343,
       "liq": 599.97088,
-      "funding_acc": 0.0,
-      "funding_event_ms": 0,
+      "funding_acc": 0.05986592,
+      "funding_event_ms": 1789401600000,
       "fill_src": "bid",
       "entry_time_tr": "2026-09-14T22:28:56.773618+03:00",
       "slot": "2026-09-14 22:00",
@@ -235,16 +235,17 @@
       "atr": 3.03003872,
       "atr_usd": 3.523096,
       "atr_period": 14,
-      "peak_upnl": 0.0,
+      "peak_upnl": 0.4283,
       "stop_upnl": null,
       "stop_level": 0,
       "lock_armed": false,
-      "lock_history": []
+      "lock_history": [],
+      "loss_stop_atr": 3.0
     }
   ],
   "total_pnl": 512.0802,
   "total_commission": 110.336816,
-  "updated_at_tr": "2026-09-14T22:28:56.773779+03:00",
+  "updated_at_tr": "2026-09-14T22:30:19.949833+03:00",
   "last_open_slot": "2026-09-14 19:00",
   "atr_skip_syms": [
     "EULUSDT"
