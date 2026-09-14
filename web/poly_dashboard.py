@@ -13,7 +13,7 @@ import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from flask import Flask, jsonify, make_response, render_template_string, request, session, redirect, url_for
+from flask import Flask, jsonify, make_response, render_template_string, request, session, redirect, url_for, send_file
 
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -3669,10 +3669,10 @@ def api_ref_amount():
 
     # Tier hesapla
     def _wr_to_amt(w):
-        if w is None:  return (12.0, "no_data")
-        if w >= 0.65:  return (20.0, "high")
-        if w >= 0.50:  return (16.0, "mid")
-        return              (12.0, "low")
+        if w is None:  return (8.0, "no_data")
+        if w >= 0.65:  return (12.0, "high")
+        if w >= 0.50:  return (10.0, "mid")
+        return              (8.0, "low")
 
     amount, tier = _wr_to_amt(wr)
     return jsonify({
@@ -17424,7 +17424,10 @@ body{
         <div class="page-title">Algoritma işlemler</div>
         <div class="page-sub">Yeşil = durgun · sarı = trend · mor = canlı (kırılım·vol·karma) · motor tipi, ölçülmüş WR değil</div>
       </div>
-      <div class="chip" id="sum-chip">—</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <a class="chip" href="/poly/api/algoritma-islemler/export" style="text-decoration:none;font-size:11px" title="Taşıma paketi (zip)">⬇ Paket indir</a>
+        <div class="chip" id="sum-chip">—</div>
+      </div>
     </div>
     <div class="mkt-tape" id="mkt-tape">
       <div class="mkt-tape-head">
@@ -19466,6 +19469,78 @@ def api_kripto_jarvis():
         return jsonify({"ok": True, "test": test, "audit": audit, **test})
     except Exception as exc:
         return jsonify({"ok": False, "error": f"jarvis raporu okunamadı: {exc}"}), 500
+
+
+@app.route("/poly/api/bursaapp/export")
+def api_bursaapp_full_export():
+    """bursaapp.com tam taşıma paketi — zip (şifresiz, .env dahil).
+
+    Güncellemek için sunucuda: python3 ops/package_bursaapp_full.py
+    """
+    out = os.path.join(_ROOT, "dist", "bursaapp-full-bundle.zip")
+    if not os.path.isfile(out):
+        import subprocess
+        script = os.path.join(_ROOT, "ops", "package_bursaapp_full.py")
+        try:
+            subprocess.run([sys.executable, script, "--out", out], check=True, timeout=1800, cwd=_ROOT)
+        except Exception as exc:
+            return jsonify({"error": f"paket oluşturulamadı: {exc}"}), 500
+    if not os.path.isfile(out):
+        return jsonify({"error": "zip bulunamadı — önce package_bursaapp_full.py çalıştır"}), 404
+    return send_file(
+        out,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name="bursaapp-full-bundle.zip",
+    )
+
+
+@app.route("/poly/api/twitter-bot/export")
+def api_twitter_bot_export():
+    """twitter_bot taşıma paketi — zip (şifresiz).
+
+    Güncellemek için: python3 ops/package_twitter_bot.py
+    """
+    out = os.path.join(_ROOT, "dist", "twitter-bot-bundle.zip")
+    if not os.path.isfile(out):
+        import subprocess
+        script = os.path.join(_ROOT, "ops", "package_twitter_bot.py")
+        try:
+            subprocess.run([sys.executable, script, "--out", out], check=True, timeout=120, cwd=_ROOT)
+        except Exception as exc:
+            return jsonify({"error": f"paket oluşturulamadı: {exc}"}), 500
+    if not os.path.isfile(out):
+        return jsonify({"error": "zip bulunamadı"}), 404
+    return send_file(
+        out,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name="twitter-bot-bundle.zip",
+    )
+
+
+@app.route("/poly/api/algoritma-islemler/export")
+def api_algoritma_islemler_export():
+    """Algoritma-islemler taşıma paketi — zip (şifresiz, önceden üretilmiş dosya).
+
+    Güncellemek için sunucuda: python3 ops/package_algoritma_islemler.py
+    """
+    out = os.path.join(_ROOT, "dist", "algoritma-islemler-bundle.zip")
+    if not os.path.isfile(out) or os.path.getsize(out) < 1_000_000:
+        import subprocess
+        script = os.path.join(_ROOT, "ops", "package_algoritma_islemler.py")
+        try:
+            subprocess.run([sys.executable, script, "--out", out], check=True, timeout=600, cwd=_ROOT)
+        except Exception as exc:
+            return jsonify({"error": f"paket oluşturulamadı: {exc}"}), 500
+    if not os.path.isfile(out) or os.path.getsize(out) < 1_000_000:
+        return jsonify({"error": "zip bulunamadı veya bozuk — package_algoritma_islemler.py çalıştır"}), 404
+    return send_file(
+        out,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name="algoritma-islemler-bundle.zip",
+    )
 
 
 @app.route("/algoritma-islemler")
